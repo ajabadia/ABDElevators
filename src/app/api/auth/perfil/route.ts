@@ -1,52 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
-import { UsuarioSchema } from '@/lib/schemas';
+import { UpdateProfileSchema } from '@/lib/schemas';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import crypto from 'crypto';
 
+/**
+ * GET /api/auth/perfil
+ * Obtiene el perfil del usuario autenticado.
+ * SLA: P95 < 300ms
+ */
 export async function GET() {
-    const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
-        if (!user) {
-            return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        // No devolver la contraseña
+        const db = await connectDB();
+        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+
+        if (!user) {
+            throw new NotFoundError('Usuario no encontrado');
+        }
+
         const { password, ...safeUser } = user;
         return NextResponse.json(safeUser);
-    } catch (error) {
-        console.error('Error fetching profile:', error);
-        return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
+    } catch (error: any) {
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_PERFIL',
+            accion: 'GET_PROFILE_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
+        return NextResponse.json(
+            new AppError('INTERNAL_ERROR', 500, 'Error al obtener perfil').toJSON(),
+            { status: 500 }
+        );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 300) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_PERFIL',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `GET /api/auth/perfil tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }
 
+/**
+ * PATCH /api/auth/perfil
+ * Actualiza el perfil del usuario autenticado.
+ * SLA: P95 < 500ms
+ */
 export async function PATCH(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const body = await req.json();
+
+        // REGLA #2: Zod Validation BEFORE Processing
+        const validated = UpdateProfileSchema.parse(body);
+
         const db = await connectDB();
 
-        // Solo permitir actualizar ciertos campos
-        const updateData: any = {
+        const updateData = {
+            ...validated,
             modificado: new Date()
         };
-
-        if (body.nombre) updateData.nombre = body.nombre;
-        if (body.apellidos) updateData.apellidos = body.apellidos;
-        if (body.puesto) updateData.puesto = body.puesto;
-        if (body.foto_url) updateData.foto_url = body.foto_url;
-        if (body.foto_cloudinary_id) updateData.foto_cloudinary_id = body.foto_cloudinary_id;
 
         const result = await db.collection('usuarios').updateOne(
             { email: session.user.email },
@@ -54,7 +94,7 @@ export async function PATCH(req: NextRequest) {
         );
 
         if (result.matchedCount === 0) {
-            return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+            throw new NotFoundError('Usuario no encontrado');
         }
 
         await logEvento({
@@ -62,13 +102,46 @@ export async function PATCH(req: NextRequest) {
             origen: 'API_PERFIL',
             accion: 'UPDATE_PROFILE',
             mensaje: `Perfil actualizado para ${session.user.email}`,
-            correlacion_id: `profile-update-${Date.now()}`,
-            detalles: { updatedFields: Object.keys(updateData) }
+            correlacion_id,
+            detalles: { updatedFields: Object.keys(validated) }
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return NextResponse.json(
+                new ValidationError('Datos de perfil inválidos', error.errors).toJSON(),
+                { status: 400 }
+            );
+        }
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_PERFIL',
+            accion: 'UPDATE_PROFILE_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
+
+        return NextResponse.json(
+            new AppError('INTERNAL_ERROR', 500, 'Error al actualizar perfil').toJSON(),
+            { status: 500 }
+        );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 500) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_PERFIL',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `PATCH /api/auth/perfil tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }

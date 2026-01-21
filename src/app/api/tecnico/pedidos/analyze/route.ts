@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
+import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
@@ -7,19 +7,28 @@ import { extractModelsWithGemini } from '@/lib/llm';
 import { performTechnicalSearch } from '@/lib/rag-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { PedidoSchema } from '@/lib/schemas';
+import crypto from 'crypto';
 
 /**
  * POST /api/tecnico/pedidos/analyze
  * Orquestador RAG para técnicos.
+ * SLA: P95 < 10000ms
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = uuidv4();
-    const start = Date.now();
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
+        // Regla #9: Security Check
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
+        // Regla #2: Zod First (o validación manual inmediata)
         if (!file) {
             throw new ValidationError('Pedido no proporcionado');
         }
@@ -43,6 +52,7 @@ export async function POST(req: NextRequest) {
         const resultsConContexto = await Promise.all(
             modelosDetectados.map(async (m: { tipo: string; modelo: string }) => {
                 const query = `${m.tipo} modelo ${m.modelo}`;
+                // performTechnicalSearch ya maneja su propio performance logging
                 const context = await performTechnicalSearch(query, correlacion_id, 2);
                 return {
                     ...m,
@@ -51,7 +61,7 @@ export async function POST(req: NextRequest) {
             })
         );
 
-        // 4. Guardar resultado en DB (Colección pedidos)
+        // 4. Guardar resultado en DB
         const db = await connectDB();
         const pedidoData = {
             numero_pedido: file.name.split('.')[0],
@@ -66,22 +76,11 @@ export async function POST(req: NextRequest) {
             creado: new Date()
         };
 
-        // Validar con Zod antes de insertar
         const validatedPedido = PedidoSchema.parse(pedidoData);
         const insertResult = await db.collection('pedidos').insertOne({
             ...validatedPedido,
-            contexto_rag_full: resultsConContexto, // Guardamos el contexto extendido fuera del schema estricto si es necesario, o lo manejamos dinámicamente
+            contexto_rag_full: resultsConContexto,
             correlacion_id
-        });
-
-        const duration = Date.now() - start;
-        await logEvento({
-            nivel: 'INFO',
-            origen: 'API_PEDIDOS_ANALYZE',
-            accion: 'FINISH',
-            mensaje: `Análisis finalizado en ${duration}ms`,
-            correlacion_id,
-            detalles: { modelos_count: modelosDetectados.length, duration_ms: duration }
         });
 
         return NextResponse.json({
@@ -89,26 +88,37 @@ export async function POST(req: NextRequest) {
             pedido_id: insertResult.insertedId,
             modelos: resultsConContexto,
             correlacion_id,
-            duracion_ms: duration
         });
 
-    } catch (error) {
-        const duration = Date.now() - start;
-        console.error('RAG Pipeline Error:', error);
+    } catch (error: any) {
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
 
         await logEvento({
             nivel: 'ERROR',
             origen: 'API_PEDIDOS_ANALYZE',
-            accion: 'ERROR',
-            mensaje: error instanceof Error ? error.message : 'Error fatal en pipeline',
+            accion: 'ERROR_FATAL',
+            mensaje: error.message,
             correlacion_id,
-            stack: error instanceof Error ? error.stack : undefined
+            stack: error.stack
         });
 
-        return NextResponse.json({
-            success: false,
-            message: 'Error procesando el pedido RAG',
-            error: error instanceof Error ? error.message : 'Unknown'
-        }, { status: 500 });
+        return NextResponse.json(
+            new AppError('INTERNAL_ERROR', 500, 'Error procesando el pedido RAG').toJSON(),
+            { status: 500 }
+        );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 10000) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_PEDIDOS_ANALYZE',
+                accion: 'SLA_VIOLATION',
+                mensaje: `Análisis RAG lento: ${duracion}ms`,
+                correlacion_id,
+                detalles: { duration_ms: duracion }
+            });
+        }
     }
 }

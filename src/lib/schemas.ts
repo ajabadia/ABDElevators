@@ -112,9 +112,46 @@ export const UsuarioSchema = z.object({
     foto_cloudinary_id: z.string().optional(),
     rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
     activo: z.boolean().default(true),
-    ultimo_acceso: z.date().optional(),
     creado: z.date(),
     modificado: z.date(),
+});
+
+/**
+ * Esquema para Actualización de Perfil (Usuario)
+ */
+export const UpdateProfileSchema = z.object({
+    nombre: z.string().min(2, 'Nombre demasiado corto').optional(),
+    apellidos: z.string().min(2, 'Apellidos demasiado cortos').optional(),
+    puesto: z.string().optional(),
+    foto_url: z.string().url().optional(),
+    foto_cloudinary_id: z.string().optional(),
+});
+
+/**
+ * Esquema para Cambio de Contraseña
+ */
+export const ChangePasswordSchema = z.object({
+    currentPassword: z.string().min(1, 'Contraseña actual requerida'),
+    newPassword: z.string().min(8, 'La nueva contraseña debe tener al menos 8 caracteres'),
+});
+
+/**
+ * Esquema para Creación de Usuario (Admin)
+ */
+export const CreateUserSchema = z.object({
+    email: z.string().email('Email inválido'),
+    nombre: z.string().min(2, 'Nombre requerido'),
+    apellidos: z.string().min(2, 'Apellidos requeridos'),
+    puesto: z.string().optional(),
+    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
+});
+
+/**
+ * Esquema para Actualización de Usuario (Admin)
+ */
+export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
+    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']).optional(),
+    activo: z.boolean().optional(),
 });
 
 /**

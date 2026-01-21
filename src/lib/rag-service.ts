@@ -1,8 +1,7 @@
 import { connectDB } from "./db";
 import { generateEmbedding } from "./llm";
 import { logEvento } from "./logger";
-import { DocumentChunkSchema } from "./schemas";
-import { ObjectId } from "mongodb";
+import { DatabaseError, AppError } from "./errors";
 
 export interface RagResult {
     texto: string;
@@ -14,21 +13,23 @@ export interface RagResult {
 
 /**
  * Servicio RAG para búsqueda semántica en el corpus técnico.
+ * SLA: P95 < 500ms (excluyendo generación de embedding)
  */
 export async function performTechnicalSearch(
     query: string,
     correlacion_id: string,
     limit = 5
 ): Promise<RagResult[]> {
-    const start = Date.now();
+    const inicio = Date.now();
+
+    // El embedding ya mide su propio performance en lib/llm.ts
     const embedding = await generateEmbedding(query, correlacion_id);
+    const inicioSearch = Date.now();
 
     try {
         const db = await connectDB();
         const collection = db.collection('document_chunks');
 
-        // Búsqueda Vectorial en MongoDB Atlas
-        // Nota: El índice 'vector_index' debe estar configurado en Atlas
         const pipeline = [
             {
                 "$vectorSearch": {
@@ -37,7 +38,7 @@ export async function performTechnicalSearch(
                     "queryVector": embedding,
                     "numCandidates": 100,
                     "limit": limit,
-                    "filter": { "estado": { "$ne": "obsoleto" } } // Solo manuales vigentes
+                    "filter": { "estado": { "$ne": "obsoleto" } }
                 }
             },
             {
@@ -52,15 +53,14 @@ export async function performTechnicalSearch(
         ];
 
         const results = await collection.aggregate(pipeline).toArray() as any[];
-        const duration = Date.now() - start;
 
         await logEvento({
-            nivel: 'INFO',
+            nivel: 'DEBUG',
             origen: 'RAG_SERVICE',
-            accion: 'SEARCH',
-            mensaje: `RAG search for "${query}" completed in ${duration}ms`,
+            accion: 'SEARCH_SUCCESS',
+            mensaje: `Búsqueda RAG para "${query}" devolvió ${results.length} resultados`,
             correlacion_id,
-            detalles: { results_count: results.length, duration_ms: duration }
+            detalles: { limit, query }
         });
 
         return results.map(r => ({
@@ -71,10 +71,32 @@ export async function performTechnicalSearch(
             modelo: r.modelo
         }));
 
-    } catch (error) {
-        console.error('Vector Search Error:', error);
-        // Fallback: Si el índice no existe o falla, logueamos y devolvemos vacío
-        // En producción esto debería lanzar un DatabaseError
-        return [];
+    } catch (error: any) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'RAG_SERVICE',
+            accion: 'SEARCH_ERROR',
+            mensaje: `Error en búsqueda vectorial: ${error.message}`,
+            correlacion_id,
+            stack: error.stack
+        });
+
+        // Regla #7: Fallar explícitamente si es un error de infraestructura
+        throw new DatabaseError('Error en motor de búsqueda vectorial Atlas', error);
+    } finally {
+        const duracionSearch = Date.now() - inicioSearch;
+        const duracionTotal = Date.now() - inicio;
+
+        // SLA: La búsqueda base de Atlas debe ser < 500ms
+        if (duracionSearch > 500) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'RAG_SERVICE',
+                accion: 'SLA_VIOLATION',
+                mensaje: `Búsqueda Atlas Vector Search lenta: ${duracionSearch}ms`,
+                correlacion_id,
+                detalles: { duracion_search_ms: duracionSearch, duracion_total_ms: duracionTotal }
+            });
+        }
     }
 }

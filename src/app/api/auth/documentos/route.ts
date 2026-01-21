@@ -4,18 +4,27 @@ import { connectDB } from '@/lib/db';
 import { uploadUserDocument } from '@/lib/cloudinary';
 import { DocumentoUsuarioSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
-import { ObjectId } from 'mongodb';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import crypto from 'crypto';
 
+/**
+ * GET /api/auth/documentos
+ * Lista todos los documentos del usuario autenticado.
+ * SLA: P95 < 200ms
+ */
 export async function GET() {
-    const session = await auth();
-    if (!session?.user?.id && !session?.user?.email) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const db = await connectDB();
         const user = await db.collection('usuarios').findOne({ email: session.user.email });
-        if (!user) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+        if (!user) throw new NotFoundError('Usuario no encontrado');
 
         const documentos = await db.collection('documentos_usuarios')
             .find({ usuario_id: user._id.toString() })
@@ -23,29 +32,63 @@ export async function GET() {
             .toArray();
 
         return NextResponse.json(documentos);
-    } catch (error) {
-        return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
+    } catch (error: any) {
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_DOCS_USUARIO',
+            accion: 'GET_DOCS_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
+        return NextResponse.json(
+            new AppError('INTERNAL_ERROR', 500, 'Error al obtener documentos').toJSON(),
+            { status: 500 }
+        );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 200) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_DOCS_USUARIO',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `GET /api/auth/documentos tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }
 
+/**
+ * POST /api/auth/documentos
+ * Sube un nuevo documento personal para el usuario.
+ * SLA: P95 < 2000ms (debido al upload a Cloudinary)
+ */
 export async function POST(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user?.id && !session?.user?.email) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const descripcion = formData.get('descripcion') as string;
 
         if (!file) {
-            return NextResponse.json({ error: 'No se subió ningún archivo' }, { status: 400 });
+            throw new ValidationError('No se subió ningún archivo');
         }
 
         const db = await connectDB();
         const user = await db.collection('usuarios').findOne({ email: session.user.email });
-        if (!user) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+        if (!user) throw new NotFoundError('Usuario no encontrado');
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const uploadResult = await uploadUserDocument(buffer, file.name, user._id.toString());
@@ -53,7 +96,7 @@ export async function POST(req: NextRequest) {
         const docData = {
             usuario_id: user._id.toString(),
             nombre_original: file.name,
-            nombre_guardado: uploadResult.publicId, // Cloudinary publicId
+            nombre_guardado: uploadResult.publicId,
             cloudinary_url: uploadResult.secureUrl,
             cloudinary_public_id: uploadResult.publicId,
             tipo_mime: file.type,
@@ -62,6 +105,7 @@ export async function POST(req: NextRequest) {
             creado: new Date(),
         };
 
+        // REGLA #2: Zod Validation BEFORE Processing (final persist)
         const validated = DocumentoUsuarioSchema.parse(docData);
         await db.collection('documentos_usuarios').insertOne(validated);
 
@@ -70,12 +114,46 @@ export async function POST(req: NextRequest) {
             origen: 'API_DOCS_USUARIO',
             accion: 'UPLOAD_DOC',
             mensaje: `Documento subido por ${user.email}: ${file.name}`,
-            correlacion_id: `user-upload-${Date.now()}`
+            correlacion_id,
+            detalles: { filename: file.name, size: file.size }
         });
 
         return NextResponse.json({ success: true, url: uploadResult.secureUrl });
     } catch (error: any) {
-        console.error('Error uploading user document:', error);
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        if (error.name === 'ZodError') {
+            return NextResponse.json(
+                new ValidationError('Metadatos de documento inválidos', error.errors).toJSON(),
+                { status: 400 }
+            );
+        }
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_DOCS_USUARIO',
+            accion: 'UPLOAD_DOC_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
+
+        return NextResponse.json(
+            new AppError('INTERNAL_ERROR', 500, 'Error al subir documento').toJSON(),
+            { status: 500 }
+        );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 2000) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_DOCS_USUARIO',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `POST /api/auth/documentos tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }

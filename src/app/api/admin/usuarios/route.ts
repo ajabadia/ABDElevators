@@ -1,49 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import { UsuarioSchema } from '@/lib/schemas';
+import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-
-const CreateUserSchema = z.object({
-    email: z.string().email(),
-    nombre: z.string().min(1),
-    apellidos: z.string().min(1),
-    puesto: z.string().optional(),
-    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
-});
+import { CreateUserSchema, UsuarioSchema } from '@/lib/schemas';
+import { AppError, ValidationError, DatabaseError } from '@/lib/errors';
+import crypto from 'crypto';
 
 /**
  * GET /api/admin/usuarios
  * Lista todos los usuarios (solo ADMIN)
+ * SLA: P95 < 200ms
  */
 export async function GET(req: NextRequest) {
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
+
     try {
+        const session = await auth();
+        if (session?.user?.role !== 'ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const db = await connectDB();
         const usuarios = await db.collection('usuarios')
-            .find({}, { projection: { password: 0 } }) // No devolver contraseñas
+            .find({}, { projection: { password: 0 } })
             .sort({ creado: -1 })
             .toArray();
 
         return NextResponse.json({ usuarios });
-    } catch (error) {
-        console.error('Error fetching users:', error);
+    } catch (error: any) {
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_ADMIN_USUARIOS',
+            accion: 'GET_USERS_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
         return NextResponse.json(
-            { error: 'Error al obtener usuarios' },
+            new AppError('INTERNAL_ERROR', 500, 'Error al obtener usuarios').toJSON(),
             { status: 500 }
         );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 200) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_ADMIN_USUARIOS',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `GET /api/admin/usuarios tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }
 
 /**
  * POST /api/admin/usuarios
  * Crea un nuevo usuario (solo ADMIN)
+ * SLA: P95 < 1000ms
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = `create-user-${Date.now()}`;
+    const correlacion_id = crypto.randomUUID();
+    const inicio = Date.now();
 
     try {
+        const session = await auth();
+        if (session?.user?.role !== 'ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
         const body = await req.json();
+
+        // REGLA #2: Zod Validation BEFORE Processing
         const validated = CreateUserSchema.parse(body);
 
         const db = await connectDB();
@@ -54,10 +88,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (existingUser) {
-            return NextResponse.json(
-                { error: 'El email ya está registrado' },
-                { status: 400 }
-            );
+            throw new ValidationError('El email ya está registrado');
         }
 
         // Generar contraseña temporal
@@ -76,12 +107,17 @@ export async function POST(req: NextRequest) {
             modificado: new Date(),
         };
 
+        // Validar contra el esquema maestro de base de datos
         const validatedUser = UsuarioSchema.parse(nuevoUsuario);
         const result = await db.collection('usuarios').insertOne(validatedUser);
 
+        if (!result.insertedId) {
+            throw new DatabaseError('No se pudo insertar el usuario');
+        }
+
         await logEvento({
             nivel: 'INFO',
-            origen: 'API_USUARIOS',
+            origen: 'API_ADMIN_USUARIOS',
             accion: 'CREATE_USER',
             mensaje: `Usuario creado: ${validated.email}`,
             correlacion_id,
@@ -91,21 +127,43 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             usuario_id: result.insertedId,
-            temp_password: tempPassword, // Devolver para que admin lo comunique
+            temp_password: tempPassword,
         });
-    } catch (error) {
-        console.error('Error creating user:', error);
-
-        if (error instanceof z.ZodError) {
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
             return NextResponse.json(
-                { error: 'Datos inválidos', details: error.errors },
+                new ValidationError('Datos de usuario inválidos', error.errors).toJSON(),
                 { status: 400 }
             );
         }
+        if (error instanceof AppError) {
+            return NextResponse.json(error.toJSON(), { status: error.status });
+        }
+
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'API_ADMIN_USUARIOS',
+            accion: 'CREATE_USER_ERROR',
+            mensaje: error.message,
+            correlacion_id,
+            stack: error.stack
+        });
 
         return NextResponse.json(
-            { error: 'Error al crear usuario' },
+            new AppError('INTERNAL_ERROR', 500, 'Error al crear usuario').toJSON(),
             { status: 500 }
         );
+    } finally {
+        const duracion = Date.now() - inicio;
+        if (duracion > 1000) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_ADMIN_USUARIOS',
+                accion: 'PERFORMANCE_SLA_VIOLATION',
+                mensaje: `POST /api/admin/usuarios tomó ${duracion}ms`,
+                correlacion_id,
+                detalles: { duracion_ms: duracion }
+            });
+        }
     }
 }

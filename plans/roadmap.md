@@ -7,10 +7,16 @@ Este documento es la **fuente de verdad** para el desarrollo. Se basa en la Espe
 
 ### 🏛️ PILARES DEL PRODUCTO PROFESIONAL
 Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
-1.  **Trazabilidad Total**: Cada prompt enviado a Gemini y su respuesta deben quedar registrados en `auditoria_rag`.
-2.  **Observabilidad**: Uso de `correlacion_id` en logs para seguir el flujo desde el upload hasta el informe.
-3.  **Estándares UI/UX taller**: Contraste WCAG AAA, fuentes grandes (16px+), y señales visuales de estado (Vigente/Obsoleto).
-4.  **Integridad de Datos**: Nunca se borra información; los documentos se marcan como `obsoletos` o `archivados`.
+1.  **Reglas de Oro (No Negociables)**: Ver `Documentación/02/instrucciones-cursor-antigrávity`.
+    -   **TypeScript Strict**: Sin `any`, tipos explícitos.
+    -   **Zod First**: Validación preemptiva de todos los inputs.
+    -   **AppError**: Uso de excepciones personalizadas, no `Error` genérico.
+    -   **Logging Estructurado**: `logEvento` con `correlacion_id`.
+    -   **Performance**: Medir y loguear si excede SLA.
+2.  **Trazabilidad Total**: Cada prompt enviado a Gemini y su respuesta deben quedar registrados en `auditoria_rag`.
+3.  **Observabilidad**: Uso de `correlacion_id` en logs para seguir el flujo desde el upload hasta el informe.
+4.  **Estándares UI/UX taller**: Contraste WCAG AAA, fuentes grandes (16px+), y señales visuales de estado (Vigente/Obsoleto).
+5.  **Integridad de Datos**: Nunca se borra información; los documentos se marcan como `obsoletos` o `archivados`.
 
 ---
 
