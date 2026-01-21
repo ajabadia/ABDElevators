@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { LayoutDashboard, FileText, History, Settings, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, History, Settings, MessageSquare, Users, Shield } from 'lucide-react';
 
 const menuItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Documentos', href: '/admin/documentos', icon: FileText },
+    { name: 'Tipos Doc.', href: '/admin/tipos-documento', icon: Settings },
+    { name: 'Mis Archivos', href: '/admin/mis-documentos', icon: Shield },
+    { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
     { name: 'Auditoría', href: '/admin/auditoria', icon: History },
-    { name: 'Configuración', href: '/admin/settings', icon: Settings },
-    { name: 'Incidencias', href: '/admin/incidencias', icon: MessageSquare },
 ];
 
 export function AdminSidebar() {
