@@ -21,11 +21,6 @@ export default function Home() {
               Iniciar Sesión
             </Button>
           </Link>
-          <Link href="/pedidos">
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full px-6">
-              Acceso Técnicos
-            </Button>
-          </Link>
         </div>
       </nav>
 
@@ -41,17 +36,6 @@ export default function Home() {
           Plataforma de análisis técnico avanzado para la industria del transporte vertical.
           Auditamos pedidos, extraemos modelos y consultamos manuales corporativos en milisegundos.
         </p>
-
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/pedidos">
-            <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg px-10 h-14 rounded-xl shadow-xl shadow-teal-600/20 gap-2">
-              Empezar Ahora <ArrowRight size={20} />
-            </Button>
-          </Link>
-          <Button size="lg" variant="outline" className="border-slate-200 text-slate-600 font-bold text-lg px-10 h-14 rounded-xl">
-            Ver Demo
-          </Button>
-        </div>
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-32 max-w-6xl w-full">
