@@ -1,0 +1,384 @@
+# ÍNDICE CENTRAL: REGLAS DE ORO
+## Guía de Navegación por Documentos
+
+---
+
+## 📚 DOCUMENTOS CREADOS (Enero 21, 2026)
+
+### 1. **reglas-de-oro-desarrollo-ia.md** 
+**👥 Audiencia:** Desarrolladores + Code Reviewers + Tech Lead  
+**⏱️ Tiempo lectura:** 45 min  
+**📋 Propósito:** Guía completa y definitiva
+
+**Contenido:**
+- PARTE I: 10 Reglas No Negociables (con ejemplos ✅/❌)
+- PARTE II: 10 Mejores Prácticas (type safety, small functions, retry, etc)
+- PARTE III: RED FLAGS (auto-rechazar)
+- PARTE IV: Checklist Pre-Commit
+- PARTE V: Cómo Darle Contexto a IA
+
+**Cuándo leer:**
+- Primera vez onboarding (lectura completa)
+- Revisión profunda de una regla
+- Referencia cuando hay dudas
+
+---
+
+### 2. **instrucciones-cursor-antigrávity.md**
+**👥 Audiencia:** Developers usando IA (Cursor, Antigrávity, Claude)  
+**⏱️ Tiempo lectura:** 20 min  
+**📋 Propósito:** Prompt master para IA
+
+**Contenido:**
+- Contexto del proyecto (stack, duración, etc)
+- 10 Reglas no negociables (checklist format)
+- RED FLAGS (rechazar automático)
+- Mejores prácticas
+- Template de endpoint nuevo
+- Cómo pedir código a IA (ejemplos)
+
+**Cuándo usar:**
+- **Copiar-pegá COMPLETO** en Cursor rules
+- Pegar en chat antes de generar código
+- Referencia cuando IA viola reglas
+
+**Quick usage:**
+```bash
+# Crear .cursor/rules
+cat instrucciones-cursor-antigrávity.md > .cursor/rules
+
+# O copy-paste en Cursor settings
+```
+
+---
+
+### 3. **checklist-pre-commit-ejecutable.md**
+**👥 Audiencia:** Developers antes de hacer commit  
+**⏱️ Tiempo lectura:** 10-15 min ejecución  
+**📋 Propósito:** Validación antes de push
+
+**Contenido:**
+- FASE 1-3: Linting, Type-check, Build (automatizado)
+- FASE 4: Code review manual (7 secciones)
+- FASE 5: RED FLAGS detection
+- FASE 6-7: Comments + Naming
+- Flujo completo (bash script)
+- Checklist final
+
+**Cuándo usar:**
+```bash
+# Ejecutar antes de commit
+npm run pre-commit
+
+# O manual checklist vs documento
+```
+
+**Resultados:**
+- ✅ Linting: 0 problems
+- ✅ TypeScript: 0 errors
+- ✅ Tests: all pass
+- ✅ Build: success
+- ✅ Manual: código correcto
+
+---
+
+### 4. **resumen-ejecutivo-stakeholders.md**
+**👥 Audiencia:** Tech Lead, CTO, Product Manager  
+**⏱️ Tiempo lectura:** 15 min  
+**📋 Propósito:** Comunicar valor a stakeholders
+
+**Contenido:**
+- Problema sin reglas
+- Solución (10 reglas)
+- Resultados esperados (tabla métricas)
+- Implementación (roadmap)
+- ROI (32x en 30 días)
+- FAQ
+
+**Cuándo usar:**
+- Presentación a management
+- Comunicar importancia a equipo
+- Documentar decisión
+
+---
+
+### 5. **reference-card-1-page.md**
+**👥 Audiencia:** Developers en coding  
+**⏱️ Tiempo lectura:** 2-3 min  
+**📋 Propósito:** Quick lookup
+
+**Contenido:**
+- RED FLAGS (copy en monitor)
+- 10 Reglas (tabla resumen)
+- Funciones helper (quick snippets)
+- Template endpoint
+- Performance SLAs
+- Security checklist
+
+**Cuándo usar:**
+- **IMPRIMIR Y PIN EN MONITOR**
+- Lookup rápido durante coding
+- Reference vs detalle
+
+---
+
+### 6. **casos-uso-reales-ejemplos.md**
+**👥 Audiencia:** Developers que necesitan ejemplos  
+**⏱️ Tiempo lectura:** 30 min  
+**📋 Propósito:** Ejemplos completos, listos para copiar
+
+**Contenido:**
+- CASO 1: Upload PDF (entrada)
+- CASO 2: Llamada Gemini (external service + retry)
+- CASO 3: Informe con Transaction (complex DB)
+- CASO 4: Dashboard Admin (performance + pagination)
+- CASO 5: Export PDF (client + server validation)
+- PATRÓN UNIVERSAL (cómo combinar reglas)
+
+**Cuándo usar:**
+- "¿Cómo hago [endpoint]?"
+- Ejemplo real de [regla]
+- Template base para nuevo endpoint
+
+---
+
+## 🗺️ MAPA DE LECTURA POR TIPO DE USUARIO
+
+### 👨‍💻 Developer (Día 1 Onboarding)
+
+```
+1. reference-card-1-page.md (5 min)
+   ↓
+2. instrucciones-cursor-antigrávity.md (10 min)
+   ↓
+3. casos-uso-reales-ejemplos.md (20 min)
+   ↓
+4. reglas-de-oro-desarrollo-ia.md (30 min) - lectura profunda
+   ↓
+5. checklist-pre-commit-ejecutable.md - bookmark para usar
+
+TOTAL: 65 min training
+```
+
+### 👨‍💼 Code Reviewer
+
+```
+1. reference-card-1-page.md (5 min)
+   ↓
+2. reglas-de-oro-desarrollo-ia.md (45 min) - lectura completa
+   ↓
+3. checklist-pre-commit-ejecutable.md (10 min)
+   ↓
+4. casos-uso-reales-ejemplos.md (30 min) - referencia
+
+TOTAL: 90 min training
+```
+
+### 🤖 AI (Cursor/Claude/Antigrávity)
+
+```
+1. instrucciones-cursor-antigrávity.md - COPY COMPLETE
+   ↓
+2. casos-uso-reales-ejemplos.md - reference
+   ↓
+3. reglas-de-oro-desarrollo-ia.md - sección específica si needed
+
+TRIGGER: Siempre usar instrucciones-cursor-antigrávity como base
+```
+
+### 👔 Tech Lead / Manager
+
+```
+1. resumen-ejecutivo-stakeholders.md (15 min)
+   ↓
+2. reference-card-1-page.md (2 min)
+   ↓
+3. reglas-de-oro-desarrollo-ia.md (SKIM - solo secciones key)
+
+TOTAL: 30 min
+```
+
+---
+
+## 📁 ESTRUCTURA CARPETAS RECOMENDADA
+
+```
+proyecto-root/
+├── docs/
+│   ├── reglas-de-oro-desarrollo-ia.md
+│   ├── instrucciones-cursor-antigrávity.md
+│   ├── checklist-pre-commit-ejecutable.md
+│   ├── resumen-ejecutivo-stakeholders.md
+│   ├── reference-card-1-page.md
+│   ├── casos-uso-reales-ejemplos.md
+│   └── INDEX.md (este archivo)
+│
+├── .cursor/
+│   └── rules (copy-paste de instrucciones-cursor-antigrávity.md)
+│
+├── scripts/
+│   └── pre-commit.sh (from checklist-pre-commit-ejecutable.md)
+│
+├── package.json
+└── [... resto del proyecto]
+```
+
+---
+
+## 🔗 REFERENCIAS CRUZADAS
+
+### Dentro de cada documento
+
+Ejemplo: reglas-de-oro-desarrollo-ia.md menciona:
+```
+"SI ROMPES: Rechazamos tu PR sin piedad."
+→ Ver checklist-pre-commit-ejecutable.md FASE 4 para cómo verificar
+```
+
+Ejemplo: instrucciones-cursor-antigrávity.md menciona:
+```
+"REGLA #2: Zod Validation BEFORE Processing"
+→ Ver reglas-de-oro-desarrollo-ia.md REGLA #2 para detalles completos
+```
+
+---
+
+## 📊 TABLA COMPARATIVA
+
+| Aspecto | Reglas de Oro | Instrucciones IA | Checklist | Reference Card | Casos Uso | Resumen Exec |
+|---------|---|---|---|---|---|---|
+| **Completitud** | 100% | 100% | 80% | 40% | 70% | 60% |
+| **Detalle** | Alto | Alto | Medio | Bajo | Muy Alto | Bajo |
+| **Referencia Rápida** | Sí (índice) | Sí (tabla) | Sí (fases) | Sí (1 pág) | No | No |
+| **Ejemplos Código** | Muchos | Algunos | Pocos | 1 Template | Muchos (5 casos) | Cero |
+| **Para Humanos** | Sí | No/Sí | Sí | Sí | Sí | Sí |
+| **Para IA** | Referencia | **Directo** | N/A | Referencia | Referencia | N/A |
+| **Imprimible** | No | No | Sí | **Sí** | No | No |
+
+---
+
+## 🚀 FLUJO DE TRABAJO TÍPICO
+
+### Developer genera código nuevo
+
+```
+1. Abre Cursor
+2. Copia instrucciones-cursor-antigrávity.md → .cursor/rules
+3. Describe qué necesita al chat
+4. IA genera código (siguiendo rules)
+5. Guarda código
+6. Ejecuta: npm run pre-commit (checklist-pre-commit-ejecutable.md)
+7. Si falla: lookup en reference-card-1-page.md o casos-uso-reales-ejemplos.md
+8. Corrige, reintenta pre-commit
+9. git push cuando TODO pase
+10. PR review usa checklist automático (reduce 60% tiempo)
+```
+
+---
+
+## 🆘 TROUBLESHOOTING
+
+### "¿Dónde encuentro [X]?"
+
+| Buscas | Archivo |
+|--------|---------|
+| Explicación completa de regla #3 | reglas-de-oro-desarrollo-ia.md → REGLA #3 |
+| Cómo darle contexto a IA | reglas-de-oro-desarrollo-ia.md → PARTE V |
+| Template de endpoint | casos-uso-reales-ejemplos.md → CASO 1+ |
+| Qué es RED FLAG | reference-card-1-page.md (top) |
+| Performance SLAs | reference-card-1-page.md (tabla) |
+| ROI de implementar esto | resumen-ejecutivo-stakeholders.md → ROI |
+| Checklist pre-commit | checklist-pre-commit-ejecutable.md (FASE 4+) |
+| Metricas de éxito | resumen-ejecutivo-stakeholders.md → MÉTRICAS |
+
+---
+
+## 📅 ROADMAP IMPLEMENTACIÓN
+
+### Semana 1 - Setup
+- [ ] Leer reglas-de-oro (tech lead)
+- [ ] Comunicar resumen-ejecutivo a equipo
+- [ ] Copy instrucciones-cursor-antigrávity.md → .cursor/rules
+- [ ] Setup pre-commit scripts (checklist-pre-commit-ejecutable.md)
+- [ ] Team training (30 min each: reference-card + instrucciones)
+
+### Semana 2-4
+- [ ] Primer endpoint aplicando TODAS las reglas
+- [ ] Code review con checklist automático
+- [ ] Feedback: qué confundió, qué faltó
+- [ ] Iterar en docs si es necesario
+
+### Semana 5+
+- [ ] 100% de PRs usan checklist
+- [ ] 0 RED FLAGS en main
+- [ ] Performance dashboard activo
+- [ ] Logs centralizados (Axiom/Datadog)
+
+---
+
+## 📞 CONTACTOS
+
+| Pregunta | Contacto |
+|----------|----------|
+| ¿Cómo interpretar REGLA #X? | Tech Lead (ver reglas-de-oro.md primero) |
+| ¿Cómo generar código con IA? | Ver instrucciones-cursor-antigrávity.md |
+| ¿Mi código pasa checklist? | Ejecuta npm run pre-commit |
+| ¿Por qué rechazaron mi PR? | Ver reference-card RED FLAGS |
+| ¿Ejemplo de [X]? | Ver casos-uso-reales-ejemplos.md |
+| ¿Cómo explicar a manager? | Ver resumen-ejecutivo-stakeholders.md |
+
+---
+
+## ✨ QUICK START (30 SEGUNDOS)
+
+```bash
+# 1. Leer quick overview
+cat reference-card-1-page.md
+
+# 2. Setup IA
+cp instrucciones-cursor-antigrávity.md .cursor/rules
+
+# 3. Generar código
+# → Abre Cursor, describe qué necesitas, IA genera respetando rules
+
+# 4. Validar antes de commit
+npm run pre-commit
+
+# 5. Push si TODO green ✅
+git push origin feature/nombre
+```
+
+---
+
+## 📋 VERSIÓN & UPDATES
+
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| 1.0 | 21 Ene 2026 | Release inicial (6 docs) |
+| TBD | Semana 8 | Feedback post-Fase 1 |
+
+---
+
+## 🎯 ÉXITO = CUANDO...
+
+✅ **Desarrollo:**
+- [ ] Todos los devs leen reference-card en Día 1
+- [ ] Primer endpoint en Semana 1 sigue 10 reglas
+- [ ] 100% PRs pasan npm run pre-commit
+
+✅ **Código:**
+- [ ] 0 `any` en main
+- [ ] 0 RED FLAGS
+- [ ] 100% TypeScript strict
+
+✅ **Operacional:**
+- [ ] Code review < 15 min
+- [ ] 0 security vulns
+- [ ] Logs centralizados con correlacion_id
+
+---
+
+**ÍNDICE CENTRAL v1.0**  
+**21 de Enero de 2026**  
+**Bookmark this page 📌**
+

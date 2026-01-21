@@ -1,0 +1,794 @@
+# PLAN DE IMPLEMENTACIÓN SEMANA-A-SEMANA
+## De Reglas a Producción (4 Semanas)
+
+---
+
+## 📅 VISIÓN GENERAL
+
+```
+SEMANA 1: Setup + Foundation
+├─ Comunicación
+├─ Configuración (linting, TypeScript)
+├─ Primer endpoint (prueba de concepto)
+└─ Training equipo
+
+SEMANA 2: API Core
+├─ Upload endpoint (Regla #1-10)
+├─ Análisis Gemini (retry, logging)
+├─ Tests (unit + integration)
+└─ Code review estandarizado
+
+SEMANA 3: Informe + Audit
+├─ Informe endpoint (transactions, RAG prep)
+├─ Admin logs (pagination, performance)
+├─ PDF export
+└─ Observabilidad (Axiom/logging)
+
+SEMANA 4: Polish + Deploy
+├─ Performance optimization
+├─ Security audit
+├─ E2E tests
+├─ Deploy a Vercel
+└─ Post-launch monitoring
+```
+
+---
+
+## SEMANA 1: SETUP (5 DÍAS)
+
+### LUNES: Comunicación & Setup
+
+**Mañana (Tech Lead)**
+```
+1. Comunicar a equipo (30 min):
+   - "Tenemos sistema de reglas para garantizar calidad"
+   - Mostrar: reference-card-1-page.md
+   - Beneficios: 40-60 hrs/sprint, 0 bugs
+
+2. Setup documentación (1 hr):
+   - [ ] Crear carpeta /docs
+   - [ ] Copiar 7 archivos MD
+   - [ ] Crear INDEX-central-documentos.md (ya hecho)
+   - [ ] Añadir link a README
+
+3. Setup .cursor/rules (30 min):
+   - [ ] Crear carpeta .cursor
+   - [ ] Copy instrucciones-cursor-antigrávity.md → .cursor/rules
+   - [ ] Test en Cursor
+```
+
+**Tarde (Devs)**
+```
+1. Lectura individual (1 hr):
+   - Cada dev lee reference-card-1-page.md
+   - Luego: instrucciones-cursor-antigrávity.md
+   - Dudas = Tech Lead resuelve
+
+2. Setup local (1 hr):
+   - [ ] npm install (todas las deps)
+   - [ ] Crear .env.local (usar .env.example)
+   - [ ] Verificar: npm run type-check (0 errors)
+```
+
+**Resultado Lunes:** Team informed, setup completo
+
+---
+
+### MARTES: TypeScript Strict + Linting
+
+**Tech Lead (1 hr)**
+```
+1. Verificar tsconfig.json:
+   "compilerOptions": {
+     "strict": true,
+     "noImplicitAny": true,
+     "strictNullChecks": true,
+     "strictFunctionTypes": true
+   }
+
+2. Crear .eslintrc.json:
+   - "@next/eslint-config-next"
+   - "react-hooks" plugin
+   - Rule: "no-explicit-any": "error"
+   - Rule: "@typescript-eslint/explicit-function-return-types": "warn"
+
+3. Crear .prettierrc:
+   "semi": true
+   "singleQuote": true
+   "trailingComma": "es5"
+```
+
+**Devs (verificación, 30 min)**
+```
+npm run lint
+npm run type-check
+npm run format
+
+Si todo 0 errors/0 problems → ✅
+```
+
+**Resultado Martes:** Strict mode activo, linting automático
+
+---
+
+### MIÉRCOLES: Pre-Commit Scripts
+
+**Tech Lead (1.5 hr)**
+```
+1. Crear scripts/pre-commit.sh:
+   - Basado en: checklist-pre-commit-ejecutable.md
+   - Ejecutar: lint, type-check, format, test, build
+   - Si falla cualquiera → exit 1 (bloquea commit)
+
+2. Setup package.json:
+   "scripts": {
+     "lint": "eslint src --ext .ts,.tsx",
+     "type-check": "tsc --noEmit",
+     "format": "prettier --write src",
+     "test": "vitest",
+     "build": "next build",
+     "pre-commit": "bash scripts/pre-commit.sh"
+   }
+
+3. Setup Git hooks (husky):
+   npm install husky --save-dev
+   npx husky install
+   npx husky add .husky/pre-commit "npm run pre-commit"
+```
+
+**Devs (test, 15 min)**
+```
+npm run pre-commit
+# Debe tomar ~30 segundos
+# Output: ✅ ALL CHECKS PASSED
+```
+
+**Resultado Miércoles:** Pre-commit automático antes de push
+
+---
+
+### JUEVES: Primer Endpoint Prueba (Upload)
+
+**Tech Lead + Devs (4 hrs)**
+
+```typescript
+// PASO 1: Schema (lib/schemas.ts - 30 min)
+import { z } from 'zod'
+
+export const AnalyzePedidoSchema = z.object({
+  file: z.instanceof(File).optional(),
+  texto: z.string().min(10).max(100000).optional()
+}).refine(
+  data => data.file || data.texto,
+  "File or text required"
+)
+
+// PASO 2: Errors (lib/errors.ts - 30 min)
+export class ValidationError extends AppError {
+  constructor(message: string, details?: Record<string, any>) {
+    super('VALIDATION_ERROR', 400, message, details)
+  }
+}
+
+// PASO 3: Logger (lib/logger.ts - 30 min)
+export async function logEvento(entry: LogEntry) {
+  const db = await connectDB()
+  await db.collection('logs_aplicacion').insertOne({
+    ...entry,
+    timestamp: new Date(),
+    ambiente: process.env.NODE_ENV
+  })
+  console.log(JSON.stringify(entry))
+}
+
+// PASO 4: Endpoint (app/api/pedidos/analyze/route.ts - 1 hr)
+// Ver: casos-uso-reales-ejemplos.md CASO 1
+
+// PASO 5: Frontend (components/PedidoUpload.tsx - 1 hr)
+// Simple form, validación con Zod, upload
+
+// PASO 6: Test (test/api.test.ts - 1 hr)
+import { describe, it, expect } from 'vitest'
+
+describe('POST /api/pedidos/analyze', () => {
+  it('should accept PDF file', async () => {
+    // Test implementation
+  })
+})
+
+// PASO 7: Run checks
+npm run pre-commit
+# ✅ Debe pasar
+```
+
+**Resultado Jueves:** Primer endpoint COMPLETO respetando TODAS las reglas
+
+---
+
+### VIERNES: Code Review Standardizado
+
+**Code Reviewers (2 hrs)**
+
+```
+PREPARACIÓN:
+1. Leer completamente reglas-de-oro-desarrollo-ia.md
+2. Familiarizarse con checklist-pre-commit-ejecutable.md
+3. Entender casos-uso-reales-ejemplos.md
+
+SETUP:
+1. Crear plantilla de PR:
+   docs/PR_TEMPLATE.md:
+   - [ ] Pre-commit checks passed
+   - [ ] Zod validation for inputs
+   - [ ] AppError handling
+   - [ ] Logging included
+   - [ ] No RED FLAGS
+   - [ ] TypeScript strict
+   - [ ] 70%+ test coverage
+   - [ ] Docs updated
+
+2. Crear CONTRIBUTING.md:
+   "Follow rules-de-oro-desarrollo-ia.md"
+   "Use checklist-pre-commit-ejecutable.md"
+
+REVIEW DEL ENDPOINT:
+1. Abrir PR del endpoint upload
+2. Usar checklist automático:
+   ✅ npm run pre-commit (ya pasó)
+   ✅ Type safety
+   ✅ Zod validation
+   ✅ AppError handling
+   ✅ Logging
+   ✅ No localStorage
+   ✅ Performance (SLA check)
+3. Comentar mejoras minor
+4. Approve si TODO ✅
+```
+
+**Resultado Viernes:** 
+- ✅ Primer endpoint producción-listo
+- ✅ Code review standardizado
+- ✅ Team aligned en reglas
+- ✅ Pre-commit automático funciona
+
+---
+
+## SEMANA 2: API CORE (5 DÍAS)
+
+### LUNES: Análisis Gemini
+
+**Dev A (6 hrs)**
+
+Crear endpoint `/api/pedidos/analyze` completo:
+
+```typescript
+// lib/llm.ts - extractModelsWithGemini()
+// - Llamada a Gemini API
+// - Parse JSON response
+// - Retry con backoff (withRetry)
+// - Logging completo
+// - Ver: casos-uso-reales-ejemplos.md CASO 2
+
+// app/api/pedidos/analyze/route.ts UPDATE
+// - Integrar extractModelsWithGemini()
+// - Performance medida (log si > 2000ms)
+// - Error handling robusto
+
+// tests/integration/gemini.test.ts
+// - Mock Gemini response
+// - Test success path
+// - Test error recovery (retry)
+// - Test validation
+```
+
+**Resultado:** Gemini integration robusto
+
+---
+
+### MARTES: Database Transactions
+
+**Dev B (6 hrs)**
+
+Upgrade MongoDB connection:
+
+```typescript
+// lib/db.ts - SESSION SUPPORT
+export async function connectDB() {
+  // Cambiar a MongoClient (no Mongoose)
+  // Agregar: startSession() para transactions
+}
+
+// lib/db.ts - Helper function
+export async function withTransaction<T>(
+  callback: (session: ClientSession) => Promise<T>
+) {
+  const session = client.startSession()
+  try {
+    return await session.withTransaction(callback)
+  } finally {
+    await session.endSession()
+  }
+}
+
+// Test: casos-uso-reales-ejemplos.md CASO 3
+// - CREATE documento
+// - UPDATE usuario
+// - Everything atomic (no partial state)
+```
+
+**Resultado:** DB transactions guarante consistencia
+
+---
+
+### MIÉRCOLES: Informe Endpoint
+
+**Dev A + Dev B (6 hrs)**
+
+```typescript
+// app/api/pedidos/[id]/informe/route.ts
+// - Recuperar pedido (validado)
+// - Buscar documentos técnicos relevantes
+// - Crear registro informe (transaction)
+// - Performance: < 1000ms (P95)
+// - Logging con todas las métricas
+// - Ver: casos-uso-reales-ejemplos.md CASO 3
+
+// components/PedidoInforme.tsx
+// - Render informe data
+// - Cliente validation
+// - Show loading state
+// - Error handling
+
+// tests/
+// - Unit: informe generation logic
+// - Integration: full flow (upload → analyze → informe)
+```
+
+**Resultado:** Informe endpoint production-ready
+
+---
+
+### JUEVES: Tests + Coverage
+
+**Dev C (6 hrs)**
+
+```bash
+# tests/unit/
+# - schemas.test.ts (Zod validations)
+# - llm.test.ts (Gemini extraction)
+# - pdf-utils.test.ts (PDF parsing)
+
+# tests/integration/
+# - api-pedidos.test.ts (full upload → analyze → informe)
+# - db.test.ts (transactions)
+
+# tests/e2e/ (Playwright)
+# - flujo-completo.spec.ts (user journey)
+
+npm run test:coverage
+# Target: > 70% coverage
+```
+
+**Resultado:** Test suite covers critical paths
+
+---
+
+### VIERNES: Merge + Retrospective
+
+**Team (2 hrs)**
+
+```
+MERGE:
+1. Merge Semana 2 PRs a main
+2. npm run build (verify)
+3. npm run type-check (0 errors)
+
+RETROSPECTIVE:
+1. ¿Las reglas funcionan?
+2. ¿Falta algo?
+3. ¿Fue más rápido el code review?
+4. Adjust docs si needed
+
+METRICS:
+- ✅ 0 RED FLAGS en PRs
+- ✅ Avg code review: 15-20 min
+- ✅ 0 type errors
+- ✅ 70%+ test coverage
+```
+
+**Resultado:** Semana 2 complete, MVP core funciona
+
+---
+
+## SEMANA 3: INFORME + AUDIT (5 DÍAS)
+
+### LUNES: Admin Dashboard
+
+**Dev A (6 hrs)**
+
+```typescript
+// app/api/admin/logs/route.ts
+// - List logs (pagination: 50 per page)
+// - Filters: date range, nivel, origen
+// - Performance: < 500ms P95
+// - Metrics logging
+// - Ver: casos-uso-reales-ejemplos.md CASO 4
+
+// components/AdminLogs.tsx
+// - Table with filters
+// - Pagination controls
+// - Export as CSV
+
+// Security check:
+// - [ ] Authentication required (NextAuth / JWT)
+// - [ ] Authorization (admin role only)
+// - [ ] Rate limiting
+```
+
+**Resultado:** Admin logs accessible
+
+---
+
+### MARTES: PDF Export
+
+**Dev B (4 hrs)**
+
+```typescript
+// app/api/pedidos/export-pdf/route.ts
+// - Client validation (Zod)
+// - Server validation (Zod)
+// - Generate PDF (jsPDF)
+// - Return binary
+// - Ver: casos-uso-reales-ejemplos.md CASO 5
+
+// components/ExportButton.tsx
+// - Trigger export
+// - Show loading
+// - Download file
+
+// Test:
+// - PDF generation
+// - Client + server validation
+```
+
+**Resultado:** PDF export funciona
+
+---
+
+### MIÉRCOLES: Observabilidad
+
+**Dev C (6 hrs)**
+
+```
+SETUP LOGGING CENTRAL:
+
+1. Axiom o Datadog:
+   - [ ] Account creado
+   - [ ] API key en .env
+   - [ ] Flujo logs → cloud
+
+2. Dashboards:
+   - [ ] Error rate (target: < 1%)
+   - [ ] API latency (target: P95 < SLA)
+   - [ ] Throughput (requests/s)
+   - [ ] Trace visualization (correlacion_id flow)
+
+3. Alerts:
+   - [ ] Email on error spike
+   - [ ] SMS on downtime
+   - [ ] Slack on deployments
+
+// lib/logger.ts UPDATE
+// Enviar logs a Axiom además de console
+```
+
+**Resultado:** Full observabilidad en place
+
+---
+
+### JUEVES: Security Audit
+
+**Tech Lead + Dev C (6 hrs)**
+
+```
+CHECKLIST DE SEGURIDAD:
+
+1. CORS:
+   - [ ] Whitelist establecido (no *)
+   - [ ] Preflight responde correctamente
+   - [ ] Test con curl
+
+2. Rate Limiting:
+   - [ ] Implementado (100 req/h per IP)
+   - [ ] Test: exceder límite → 429
+
+3. Input Validation:
+   - [ ] Todos inputs validados (Zod)
+   - [ ] SQL injection impossible (MongoDB + Zod)
+   - [ ] XSS impossible (no innerHTML)
+
+4. Secrets:
+   - [ ] 0 API keys en código
+   - [ ] 0 secrets en logs
+   - [ ] .env.local en .gitignore
+   - [ ] Vercel env vars setup
+
+5. HTTPS:
+   - [ ] Prod domain configurado
+   - [ ] SSL cert (auto via Vercel)
+
+6. Headers:
+   - [ ] X-Content-Type-Options: nosniff
+   - [ ] X-Frame-Options: DENY
+   - [ ] Referrer-Policy establecido
+
+// Test: npm run security-audit (si script exists)
+```
+
+**Resultado:** Security posture strong
+
+---
+
+### VIERNES: Integration + Deploy Staging
+
+**Team (4 hrs)**
+
+```
+TESTING:
+1. E2E tests (Playwright):
+   - [ ] Upload → Analyze → Informe → Export
+   - [ ] Admin dashboard
+   - [ ] Error scenarios
+
+2. Performance tests:
+   - [ ] Upload: < 500ms
+   - [ ] Analyze: < 2000ms
+   - [ ] Informe: < 1000ms
+
+3. Load testing:
+   - [ ] 10 concurrent users
+   - [ ] 0 errors
+
+DEPLOY TO STAGING:
+1. git tag v0.1.0-beta
+2. git push --tags
+3. Vercel auto-deploys staging
+4. Test in staging environment
+5. Verify all endpoints
+6. Check logs in Axiom
+
+RESULT: Ready for production
+```
+
+**Resultado:** Semana 3 complete, staging deployment successful
+
+---
+
+## SEMANA 4: POLISH + PRODUCTION (5 DÍAS)
+
+### LUNES: Performance Optimization
+
+**Dev A (4 hrs)**
+
+```
+PROFILING:
+1. Medir todas las operaciones:
+   - PDF extraction: target < 200ms
+   - Gemini call: target < 1500ms (inc retry)
+   - DB queries: target < 100ms
+   - Total: target < 2000ms
+
+2. Optimize slowest paths:
+   - Add indexes (MongoDB)
+   - Cache frequent queries
+   - Parallel calls (where possible)
+
+// lib/benchmark.ts - helper
+export async function benchmark<T>(
+  name: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const inicio = Date.now()
+  const result = await fn()
+  const duracion = Date.now() - inicio
+  console.log(`${name}: ${duracion}ms`)
+  return result
+}
+
+Test:
+npm run load-test
+# Verify SLAs met
+```
+
+**Resultado:** Performance optimized
+
+---
+
+### MARTES: UI Polish
+
+**Frontend Dev (4 hrs)**
+
+```
+COMPONENTS:
+- [ ] Loading states
+- [ ] Error messages (user-friendly)
+- [ ] Success confirmations
+- [ ] Responsive design (mobile-friendly)
+
+DESIGN SYSTEM:
+- [ ] Colors consistent
+- [ ] Spacing consistent
+- [ ] Typography consistent
+- [ ] Accessibility (WCAG AA)
+
+Lighthouse:
+- [ ] Performance: > 90
+- [ ] Accessibility: > 95
+- [ ] Best Practices: > 95
+- [ ] SEO: > 90
+```
+
+**Resultado:** UI production-ready
+
+---
+
+### MIÉRCOLES: Documentation
+
+**Tech Lead (3 hrs)**
+
+```
+UPDATE:
+- [ ] README.md (setup, run)
+- [ ] API.md (endpoint specs)
+- [ ] DEPLOYMENT.md (prod deployment)
+- [ ] TROUBLESHOOTING.md (common issues)
+- [ ] ARCHITECTURE.md (system design)
+- [ ] CONTRIBUTING.md (dev workflow)
+
+For users:
+- [ ] Admin guide
+- [ ] Troubleshooting
+- [ ] FAQ
+
+FOR DEVELOPERS:
+- [ ] Already done (all 7 docs + this)
+```
+
+**Resultado:** Complete documentation
+
+---
+
+### JUEVES: Production Deploy
+
+**Tech Lead + Dev C (4 hrs)**
+
+```
+PRE-DEPLOY:
+1. Final code review (all PRs)
+2. npm run build && npm run type-check (0 errors)
+3. npm run test (all pass)
+4. npm run security-audit (if script)
+
+DEPLOY STEPS:
+1. Tag release:
+   git tag v1.0.0
+   git push --tags
+
+2. Vercel deployment:
+   - Main branch → production
+   - Auto-deploy enabled
+   - Environment variables set
+   - Build successful
+
+3. Smoke tests:
+   - [ ] Home page loads
+   - [ ] Upload works
+   - [ ] Analyze works
+   - [ ] Informe appears
+   - [ ] Logs appear in Axiom
+
+4. Monitor:
+   - [ ] Error rate: 0%
+   - [ ] Latency: < SLA
+   - [ ] Uptime: 100%
+
+RESULT: Production live ✅
+```
+
+---
+
+### VIERNES: Post-Launch
+
+**Team (2 hrs)**
+
+```
+MONITORING:
+1. Dashboard checks (hourly):
+   - Error rate
+   - Latency P95
+   - Throughput
+   - User feedback
+
+2. Logs review:
+   - Any ERROR level?
+   - Any performance issues?
+   - Any security alerts?
+
+DOCUMENTATION:
+- [ ] Runbook para incidents
+- [ ] Escalation process
+- [ ] On-call rotation
+
+CELEBRATION 🎉
+- MVP is live
+- 0 bugs on launch
+- Full auditability
+- Production-ready
+
+NEXT PHASE PLANNING:
+- Semana 5-8: RAG integration
+- Semana 9-12: Checklists
+- Semana 13+: Admin panel
+```
+
+---
+
+## 📊 MÉTRICAS POR SEMANA
+
+| Semana | Code Review Time | PRs | Type Errors | Bugs Found | Deployment Time |
+|--------|-----------------|-----|-------------|-----------|-----------------|
+| 1 | N/A (setup) | 1 | 0 | 0 | N/A |
+| 2 | 15 min avg | 4 | 0 | 0 | N/A |
+| 3 | 12 min avg | 5 | 0 | 0 | N/A |
+| 4 | 10 min avg | 3 | 0 | 0 | 15 min |
+| **TOTAL** | **12 min avg** | **13** | **0** | **0** | **✅ Live** |
+
+---
+
+## ✅ CHECKLIST FINAL
+
+**ANTES DE LAUNCH:**
+
+Code Quality:
+- [ ] 0 `any` types
+- [ ] 0 RED FLAGS
+- [ ] 0 type errors
+- [ ] 70%+ test coverage
+- [ ] 0 security vulns
+
+Operational:
+- [ ] Logging centralized
+- [ ] Performance SLAs met
+- [ ] Error handling robust
+- [ ] Monitoring configured
+- [ ] Alerts setup
+
+Documentation:
+- [ ] All 7 rule documents
+- [ ] API documentation
+- [ ] Deployment runbook
+- [ ] Troubleshooting guide
+- [ ] Architecture diagram
+
+---
+
+## 🚀 RESULTADO FINAL
+
+✅ **MVP Production-Ready en 4 semanas**
+
+**Cumplimos:**
+- 10 Reglas 100% adherencia
+- 0 deuda técnica
+- Full observability
+- Complete audit trail
+- Scalable architecture
+
+**Para Fase 2-3:**
+- Mismas reglas = consistencia
+- Codebase sólido = velocidad
+- 18 meses sin refactoring salvaje
+- Ready para 10x growth
+
+---
+
+**Plan de Implementación v1.0 | 21 Enero 2026**

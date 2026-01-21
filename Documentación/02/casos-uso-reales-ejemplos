@@ -1,0 +1,860 @@
+# CASOS DE USO REALES
+## Cómo Aplicar las Reglas en Situaciones Concretas
+
+---
+
+## 📚 ÍNDICE DE CASOS
+
+1. Endpoint upload PDF (formidable complexity)
+2. Análisis con Gemini (external service + retry)
+3. Informe con RAG (multiple DB operations + transaction)
+4. Dashboard admin (performance critical + pagination)
+5. Export PDF (client + server interaction)
+6. Background job (logging + error recovery)
+
+---
+
+## CASO 1: Upload PDF (Entrada del Sistema)
+
+### Requisitos
+- Aceptar FormData con PDF o texto
+- Validar tamaño, formato
+- Guardar en BD
+- Retornar ID para siguiente paso
+
+### Implementación Correcta
+
+```typescript
+// lib/schemas.ts
+import { z } from 'zod'
+
+export const AnalyzePedidoSchema = z.object({
+  file: z.instanceof(File).optional(),
+  texto: z.string().min(10).max(100000).optional()
+}).refine(
+  data => data.file || data.texto,
+  "Either file or text is required"
+)
+
+// Tipo TypeScript generado automáticamente
+export type AnalyzePedidoInput = z.infer<typeof AnalyzePedidoSchema>
+
+// app/api/pedidos/analyze/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { AnalyzePedidoSchema } from '@/lib/schemas'
+import { logEvento } from '@/lib/logger'
+import { ValidationError, DatabaseError } from '@/lib/errors'
+import { connectDB } from '@/lib/db'
+import { generateUUID } from '@/lib/utils'
+
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '50000000') // Env variable
+
+export async function POST(request: NextRequest) {
+  const correlacion_id = generateUUID()
+  const inicio = Date.now()
+
+  // Log inicio
+  await logEvento({
+    nivel: 'INFO',
+    origen: 'API_PEDIDOS',
+    accion: 'ANALYZE_START',
+    mensaje: 'Iniciando análisis de pedido',
+    correlacion_id,
+    detalles: { timestamp: new Date().toISOString() }
+  })
+
+  try {
+    // 1. VALIDAR INPUT (REGLA #2)
+    const formData = await request.formData()
+    const validated = AnalyzePedidoSchema.parse({
+      file: formData.get('file'),
+      texto: formData.get('texto')
+    })
+
+    // 2. VALIDAR TAMAÑO FILE (REGLA #2 + #8)
+    if (validated.file && validated.file.size > MAX_FILE_SIZE) {
+      throw new ValidationError(
+        `File too large: ${validated.file.size} bytes (max: ${MAX_FILE_SIZE})`,
+        { maxSize: MAX_FILE_SIZE, received: validated.file.size }
+      )
+    }
+
+    // 3. EXTRAER TEXTO (REGLA #8 - performance)
+    const extractInicio = Date.now()
+    let texto: string
+
+    if (validated.file) {
+      const { extractTextFromPDF } = await import('@/lib/pdf-utils')
+      const buffer = await validated.file.arrayBuffer()
+      texto = await extractTextFromPDF(Buffer.from(buffer))
+    } else {
+      texto = validated.texto!
+    }
+
+    const extractDuracion = Date.now() - extractInicio
+
+    // 4. GUARDAR EN BD (REGLA #7 - atomic)
+    const db = await connectDB()
+    const resultado = await db.collection('pedidos').insertOne({
+      numero_pedido: `PED-${Date.now()}`, // Simple sequence
+      nombre_archivo: validated.file?.name || 'manual_texto',
+      texto_original: texto,
+      fecha_upload: new Date(),
+      tamaño_bytes: validated.file?.size || texto.length,
+      estado: 'uploaded',
+      creado: new Date(),
+      actualizado: new Date()
+    })
+
+    // 5. LOG SUCCESS (REGLA #4)
+    const duracion = Date.now() - inicio
+    await logEvento({
+      nivel: duracion > 2000 ? 'WARN' : 'INFO',
+      origen: 'API_PEDIDOS',
+      accion: 'ANALYZE_UPLOADED',
+      mensaje: `Pedido subido exitosamente en ${duracion}ms`,
+      correlacion_id,
+      detalles: {
+        pedido_id: resultado.insertedId.toString(),
+        duracion_total_ms: duracion,
+        duracion_extract_ms: extractDuracion,
+        tamaño_texto_chars: texto.length,
+        tipo_entrada: validated.file ? 'pdf' : 'texto'
+      }
+    })
+
+    // 6. RETURN SUCCESS (REGLA #3 implícito - estructura clara)
+    return NextResponse.json({
+      success: true,
+      pedido_id: resultado.insertedId.toString(),
+      numero_pedido: `PED-${Date.now()}`,
+      texto_preview: texto.substring(0, 200),
+      tamaño_total_chars: texto.length
+    }, { status: 201 })
+
+  } catch (error) {
+    // 7. LOG ERROR (REGLA #4)
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'API_PEDIDOS',
+      accion: 'ANALYZE_FAILED',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id,
+      stack: error instanceof Error ? error.stack : undefined,
+      detalles: {
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        duracion_ms: Date.now() - inicio
+      }
+    })
+
+    // 8. RETURN ERROR (REGLA #3)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'VALIDATION_ERROR',
+          message: error.errors[0].message,
+          details: error.errors
+        },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: error.code,
+          message: error.message,
+          details: error.details
+        },
+        { status: error.statusCode }
+      )
+    }
+
+    // Desconocido → 500
+    return NextResponse.json(
+      { success: false, code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Reglas aplicadas:** #1 (tipos), #2 (Zod), #3 (AppError), #4 (logging), #8 (performance), #10 (env variables)
+
+---
+
+## CASO 2: Llamada a Gemini (External Service con Retry)
+
+### Requisitos
+- Llamar Gemini API
+- Parsear respuesta JSON
+- Retry si falla (con backoff)
+- Loguear tiempos
+
+### Implementación Correcta
+
+```typescript
+// lib/llm.ts
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { withRetry } from '@/lib/retry'
+import { logEvento } from '@/lib/logger'
+import { ExternalServiceError } from '@/lib/errors'
+
+const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+
+interface ExtractedModel {
+  tipo: 'botonera' | 'motor' | 'cuadro' | 'puerta' | 'sensor' | 'cable'
+  modelo: string
+  confianza: number // 0-1
+}
+
+/**
+ * Extrae modelos de componentes del texto usando Gemini.
+ * Implementa retry con exponential backoff ante fallas temporales.
+ * 
+ * @param text - Texto del pedido a analizar
+ * @param traceId - ID de traza para observabilidad
+ * @returns Promise<ExtractedModel[]>
+ * @throws ExternalServiceError si Gemini falla después de retries
+ * 
+ * @example
+ * const models = await extractModelsWithGemini(
+ *   'Especificación: Botonera BTN-1234...',
+ *   'trace-uuid-123'
+ * )
+ */
+export async function extractModelsWithGemini(
+  text: string,
+  traceId: string
+): Promise<ExtractedModel[]> {
+  const inicio = Date.now()
+
+  // Log intent
+  await logEvento({
+    nivel: 'INFO',
+    origen: 'LLM_GEMINI',
+    accion: 'EXTRACT_MODELS_START',
+    mensaje: 'Extrayendo modelos con Gemini',
+    correlacion_id: traceId,
+    detalles: { text_length: text.length }
+  })
+
+  try {
+    // REGLA #2: Retry con Backoff (recomendación)
+    const models = await withRetry(
+      async () => {
+        const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash' })
+
+        const prompt = `
+          Analiza este documento de pedido de ascensores y extrae una lista JSON
+          con los modelos de componentes mencionados.
+
+          Tipos permitidos: botonera, motor, cuadro, puerta, sensor, cable
+          Confianza: número 0-1 indicando qué tan seguro estás (0=baja, 1=alta)
+
+          Formato EXACTO (VÁLIDO JSON):
+          [
+            { "tipo": "botonera", "modelo": "BTN-1234", "confianza": 0.95 },
+            { "tipo": "motor", "modelo": "MTR-5678", "confianza": 0.87 }
+          ]
+
+          Si no encuentras modelos, devuelve: []
+          Devuelve SOLO el JSON (sin markdown, sin explicaciones).
+
+          DOCUMENTO:
+          ${text.substring(0, 3000)}
+        `
+
+        const response = await model.generateContent(prompt)
+        const content = response.response.text()
+
+        // Validation + parsing
+        try {
+          const parsed = JSON.parse(content) as unknown
+
+          if (!Array.isArray(parsed)) {
+            throw new Error('Response is not an array')
+          }
+
+          // REGLA #1: Type validation at runtime
+          return parsed.map(item => {
+            if (
+              typeof item !== 'object' ||
+              !item ||
+              !('tipo' in item) ||
+              !('modelo' in item) ||
+              !('confianza' in item)
+            ) {
+              throw new Error('Invalid model structure')
+            }
+
+            const typedItem = item as Record<string, unknown>
+
+            if (!['botonera', 'motor', 'cuadro', 'puerta', 'sensor', 'cable'].includes(
+              typedItem.tipo as string
+            )) {
+              throw new Error(`Invalid tipo: ${typedItem.tipo}`)
+            }
+
+            return {
+              tipo: typedItem.tipo as ExtractedModel['tipo'],
+              modelo: String(typedItem.modelo),
+              confianza: Math.min(1, Math.max(0, Number(typedItem.confianza) || 0.5))
+            }
+          })
+        } catch (parseError) {
+          throw new Error(`JSON parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
+        }
+      },
+      {
+        maxRetries: 3,
+        initialDelayMs: 100,
+        backoffMultiplier: 2
+      }
+    )
+
+    const duracion = Date.now() - inicio
+
+    // Log success
+    await logEvento({
+      nivel: 'INFO',
+      origen: 'LLM_GEMINI',
+      accion: 'EXTRACT_MODELS_SUCCESS',
+      mensaje: `Extrayeron ${models.length} modelos en ${duracion}ms`,
+      correlacion_id: traceId,
+      detalles: {
+        models_count: models.length,
+        duracion_ms: duracion,
+        avg_confianza: models.length > 0 
+          ? (models.reduce((sum, m) => sum + m.confianza, 0) / models.length).toFixed(2)
+          : 0
+      }
+    })
+
+    return models
+
+  } catch (error) {
+    const duracion = Date.now() - inicio
+
+    // Log error with detailed context
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'LLM_GEMINI',
+      accion: 'EXTRACT_MODELS_FAILED',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id: traceId,
+      stack: error instanceof Error ? error.stack : undefined,
+      detalles: {
+        duracion_ms: duracion,
+        retries_exhausted: true
+      }
+    })
+
+    throw new ExternalServiceError(
+      'Gemini',
+      `Failed to extract models: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
+  }
+}
+```
+
+**Reglas aplicadas:** #1 (tipos), #3 (AppError), #4 (logging con traceId), #8 (performance), recomendación de retry
+
+---
+
+## CASO 3: Generar Informe con Transaction (Complex DB)
+
+### Requisitos
+- Lectura de pedido
+- Búsqueda de documentos RAG
+- Crear registro de informe
+- TODO atómico (consistencia garantizada)
+
+### Implementación Correcta
+
+```typescript
+// app/api/pedidos/[id]/informe/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
+import { connectDB } from '@/lib/db'
+import { logEvento } from '@/lib/logger'
+import { DatabaseError, NotFoundError, ValidationError } from '@/lib/errors'
+import { generateUUID } from '@/lib/utils'
+import { z } from 'zod'
+
+const PedidoIdSchema = z.string().regex(/^[0-9a-f]{24}$/, 'Invalid pedido ID')
+
+/**
+ * Genera informe técnico para un pedido.
+ * - Recupera pedido y modelos detectados
+ * - Busca documentos técnicos relevantes (RAG)
+ * - Crea registro de informe (atomic transaction)
+ * - Retorna datos para render
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const correlacion_id = generateUUID()
+  const inicio = Date.now()
+
+  // Log inicio
+  await logEvento({
+    nivel: 'INFO',
+    origen: 'API_PEDIDOS',
+    accion: 'INFORME_GENERATE',
+    mensaje: 'Generando informe',
+    correlacion_id,
+    detalles: { pedido_id: params.id }
+  })
+
+  const client = await connectDB()
+  const session = client.startSession()
+
+  try {
+    // 1. VALIDAR PARAM (REGLA #2)
+    const validatedId = PedidoIdSchema.parse(params.id)
+
+    // 2. INICIAR TRANSACTION (REGLA #7)
+    await session.withTransaction(async () => {
+      // 2a. Recuperar pedido
+      const db = client
+      const pedido = await db.collection('pedidos').findOne(
+        { _id: new ObjectId(validatedId) },
+        { session }
+      )
+
+      if (!pedido) {
+        throw new NotFoundError(`Pedido ${validatedId} no encontrado`)
+      }
+
+      // 2b. Buscar documentos relevantes
+      const documentos = await db.collection('documentos_tecnicos').find(
+        { modelos_asociados: { $in: pedido.modelos_detectados.map((m: any) => m.tipo) } },
+        { session }
+      ).limit(50).toArray()
+
+      // 2c. Crear registro de informe (atomic = dentro de transaction)
+      const informe = await db.collection('informes').insertOne({
+        pedido_id: pedido._id,
+        numero_pedido: pedido.numero_pedido,
+        documentos_consultados: documentos.map(d => d._id),
+        modelos_encontrados: pedido.modelos_detectados,
+        fecha_generacion: new Date(),
+        estado: 'generado',
+        creado: new Date()
+      }, { session })
+
+      // 2d. UPDATE pedido estado (atomic)
+      await db.collection('pedidos').updateOne(
+        { _id: pedido._id },
+        {
+          $set: { estado: 'informe_generado' },
+          $push: { informes: informe.insertedId }
+        },
+        { session }
+      )
+
+      // Si cualquier operación falla → rollback automático
+
+      const duracion = Date.now() - inicio
+
+      // Log success
+      await logEvento({
+        nivel: 'INFO',
+        origen: 'API_PEDIDOS',
+        accion: 'INFORME_GENERATED',
+        mensaje: `Informe generado exitosamente en ${duracion}ms`,
+        correlacion_id,
+        detalles: {
+          informe_id: informe.insertedId.toString(),
+          documentos_consultados: documentos.length,
+          duracion_ms: duracion
+        }
+      })
+
+      // Return to client
+      return {
+        success: true,
+        informe_id: informe.insertedId.toString(),
+        documentos_count: documentos.length,
+        modelos_count: pedido.modelos_detectados.length
+      }
+    })
+
+  } catch (error) {
+    // Error logging
+    const duracion = Date.now() - inicio
+
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'API_PEDIDOS',
+      accion: 'INFORME_FAILED',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id,
+      stack: error instanceof Error ? error.stack : undefined,
+      detalles: { duracion_ms: duracion }
+    })
+
+    // Error response
+    if (error instanceof NotFoundError) {
+      return NextResponse.json(
+        { success: false, code: 'NOT_FOUND', message: error.message },
+        { status: 404 }
+      )
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, code: 'VALIDATION_ERROR', message: error.message },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof DatabaseError) {
+      return NextResponse.json(
+        { success: false, code: 'DATABASE_ERROR', message: 'Failed to generate report' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(
+      { success: false, code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+      { status: 500 }
+    )
+
+  } finally {
+    // Always close session
+    await session.endSession()
+  }
+}
+```
+
+**Reglas aplicadas:** #1 (tipos), #2 (Zod validation), #3 (AppError), #4 (logging con transaction context), #7 (atomic operations con transaction), #8 (performance)
+
+---
+
+## CASO 4: Dashboard Admin (Performance + Pagination)
+
+### Requisitos
+- Listar logs (tabla grande)
+- Pagination (no traer todo)
+- Filtros (date range, nivel)
+- Medir performance
+
+### Implementación Correcta
+
+```typescript
+// app/api/admin/logs/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { connectDB } from '@/lib/db'
+import { logEvento } from '@/lib/logger'
+import { z } from 'zod'
+import { generateUUID } from '@/lib/utils'
+
+// REGLA #2: Zod schema para query params
+const LogsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().min(10).max(100).default(50),
+  nivel: z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR']).optional(),
+  origen: z.string().optional(),
+  desde: z.string().datetime().optional(),
+  hasta: z.string().datetime().optional()
+})
+
+export async function GET(request: NextRequest) {
+  const correlacion_id = generateUUID()
+  const inicio = Date.now()
+
+  try {
+    // REGLA #2: Validar query params
+    const query = LogsQuerySchema.parse(
+      Object.fromEntries(request.nextUrl.searchParams)
+    )
+
+    // Build MongoDB filter
+    const filter: Record<string, any> = {}
+
+    if (query.nivel) filter.nivel = query.nivel
+    if (query.origen) filter.origen = new RegExp(query.origen, 'i')
+    if (query.desde || query.hasta) {
+      filter.timestamp = {}
+      if (query.desde) filter.timestamp.$gte = new Date(query.desde)
+      if (query.hasta) filter.timestamp.$lte = new Date(query.hasta)
+    }
+
+    const db = await connectDB()
+
+    // REGLA #8: Contadores para paginnation
+    const total = await db.collection('logs_aplicacion').countDocuments(filter)
+
+    // REGLA #8: LIMIT para queries grandes (prevent query explosion)
+    const skip = (query.page - 1) * query.pageSize
+    const logs = await db
+      .collection('logs_aplicacion')
+      .find(filter)
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(query.pageSize)
+      .toArray()
+
+    const duracion = Date.now() - inicio
+
+    // REGLA #4: Log con métricas
+    await logEvento({
+      nivel: duracion > 200 ? 'WARN' : 'INFO',
+      origen: 'API_ADMIN',
+      accion: 'LOGS_LIST',
+      mensaje: `Listed ${logs.length}/${total} logs en ${duracion}ms`,
+      correlacion_id,
+      detalles: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        duracion_ms: duracion,
+        filters: { nivel: query.nivel, origen: query.origen }
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: logs,
+      pagination: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        pages: Math.ceil(total / query.pageSize)
+      }
+    })
+
+  } catch (error) {
+    const duracion = Date.now() - inicio
+
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'API_ADMIN',
+      accion: 'LOGS_LIST_FAILED',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id,
+      stack: error instanceof Error ? error.stack : undefined,
+      detalles: { duracion_ms: duracion }
+    })
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, code: 'VALIDATION_ERROR', message: error.errors[0].message },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { success: false, code: 'INTERNAL_ERROR', message: 'Failed to fetch logs' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Reglas aplicadas:** #1 (tipos), #2 (Zod query validation), #4 (logging con métricas), #8 (pagination, performance)
+
+---
+
+## CASO 5: Export PDF (Client + Server Validation)
+
+### Requisitos
+- Formulario en cliente
+- Validar en cliente (UX rápida)
+- Validar en servidor (seguridad)
+- Generar PDF
+- Exportar
+
+### Implementación Correcta
+
+```typescript
+// components/ExportPdfForm.tsx (CLIENT)
+'use client'
+
+import { useState } from 'react'
+import { z } from 'zod'
+
+// REGLA #6: Mismo schema en cliente
+const ExportSchema = z.object({
+  pedidoId: z.string().regex(/^[0-9a-f]{24}$/),
+  incluirModelos: z.boolean().default(true),
+  incluirDocumentos: z.boolean().default(true)
+})
+
+type ExportInput = z.infer<typeof ExportSchema>
+
+export function ExportPdfForm({ pedidoId }: { pedidoId: string }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleExport = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    setError(null)
+
+    // REGLA #6: Validar en CLIENTE primero
+    try {
+      const validated = ExportSchema.parse({
+        pedidoId,
+        incluirModelos: true,
+        incluirDocumentos: true
+      })
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message)
+      }
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // ENVIAR AL SERVIDOR
+      const response = await fetch('/api/pedidos/export-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pedidoId,
+          incluirModelos: true,
+          incluirDocumentos: true
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Export failed')
+      }
+
+      // Download file
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Informe_${pedidoId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleExport}>
+      <button type="submit" disabled={loading}>
+        {loading ? 'Exportando...' : 'Descargar PDF'}
+      </button>
+      {error && <div className="error">{error}</div>}
+    </form>
+  )
+}
+
+// app/api/pedidos/export-pdf/route.ts (SERVER)
+import { NextRequest, NextResponse } from 'next/server'
+import { jsPDF } from 'jspdf'
+import { z } from 'zod'
+import { logEvento } from '@/lib/logger'
+import { generateUUID } from '@/lib/utils'
+
+// REGLA #6: Mismo schema en servidor
+const ExportSchema = z.object({
+  pedidoId: z.string().regex(/^[0-9a-f]{24}$/),
+  incluirModelos: z.boolean(),
+  incluirDocumentos: z.boolean()
+})
+
+export async function POST(request: NextRequest) {
+  const correlacion_id = generateUUID()
+  const inicio = Date.now()
+
+  try {
+    // REGLA #6: Validar OTRA VEZ en servidor
+    const body = await request.json()
+    const validated = ExportSchema.parse(body)
+
+    // Generar PDF
+    const pdf = new jsPDF()
+    pdf.text('Informe Técnico', 10, 10)
+    // ... más contenido
+
+    // Log
+    const duracion = Date.now() - inicio
+    await logEvento({
+      nivel: 'INFO',
+      origen: 'API_PEDIDOS',
+      accion: 'EXPORT_PDF',
+      mensaje: `PDF exportado en ${duracion}ms`,
+      correlacion_id,
+      detalles: { pedido_id: validated.pedidoId, duracion_ms: duracion }
+    })
+
+    // Return PDF
+    const pdfBytes = pdf.output('arraybuffer')
+    return new NextResponse(pdfBytes, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Informe_${validated.pedidoId}.pdf"`
+      }
+    })
+
+  } catch (error) {
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'API_PEDIDOS',
+      accion: 'EXPORT_PDF_FAILED',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id,
+      stack: error instanceof Error ? error.stack : undefined
+    })
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, message: error.errors[0].message },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { success: false, message: 'Export failed' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Reglas aplicadas:** #1 (tipos), #2 (Zod), #6 (client + server validation), #4 (logging)
+
+---
+
+## RESUMEN: PATRÓN UNIVERSAL
+
+Todos los casos aplican:
+
+```
+1. ENTRADA: Validar input (Zod)
+   ↓
+2. LÓGICA: Procesar de forma type-safe
+   ↓
+3. DB: Usar transactions si múltiples ops
+   ↓
+4. PERFORMANCE: Medir tiempo, loguear
+   ↓
+5. ERROR: AppError + logging
+   ↓
+6. SALIDA: Respuesta estructurada
+```
+
+**Aplicar estos 5 casos como template para otros endpoints.**
+
+---
+
+**Casos de Uso v1.0 | 21 Enero 2026 | Para referencia durante coding**

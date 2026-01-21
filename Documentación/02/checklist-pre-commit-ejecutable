@@ -1,0 +1,515 @@
+# CHECKLIST PRE-COMMIT EJECUTABLE
+## Validar código antes de Push
+
+---
+
+## 🚀 CÓMO USAR
+
+1. **En tu terminal**, antes de hacer `git push`:
+```bash
+npm run pre-commit
+```
+
+2. **O manual**, sigue esta checklist línea por línea.
+
+3. **Si algo falla**, regresa y corrige el código.
+
+---
+
+## 📝 CHECKLIST DESARROLLO
+
+### FASE 1: Linting & Formatting (Automatizado)
+
+```bash
+# ESLint - detecta issues
+npm run lint
+# Output esperado: "0 problems"
+
+# TypeScript type checking
+npm run type-check
+# Output esperado: "0 errors"
+
+# Prettier - formatting
+npm run format
+# Output esperado: "no changes needed" (si ya está formateado)
+```
+
+**✅ Si pasan todos:** Continúa a Fase 2.  
+**❌ Si alguno falla:** `npm run lint -- --fix && npm run format` y reintenta.
+
+---
+
+### FASE 2: Tests (Automatizado)
+
+```bash
+# Unit tests
+npm run test:unit
+# Output esperado: "All tests passed"
+
+# Integration tests (si hay)
+npm run test:integration
+# Output esperado: "All tests passed"
+
+# Coverage mínimo
+npm run test:coverage
+# Output esperado: > 70% coverage
+```
+
+**✅ Si pasan todos:** Continúa a Fase 3.  
+**❌ Si alguno falla:** Revisar output, añadir tests faltantes.
+
+---
+
+### FASE 3: Build Check (Automatizado)
+
+```bash
+# Full build (asegura que todo compila)
+npm run build
+# Output esperado: "Build complete" con 0 errors
+
+# (Si hay, probablemente TypeScript strict mode)
+```
+
+**✅ Si compila:** Continúa a Fase 4.  
+**❌ Si falla:** Revisar errores de TypeScript, corregir tipos.
+
+---
+
+### FASE 4: Code Review Manual
+
+Revisa los archivos que modificaste línea por línea. Para cada bloque:
+
+#### REGLA #1: TypeScript Strict ✅
+
+```typescript
+// ❌ RECHAZAR
+const data: any = ...
+function f(x) { ... }
+let data;  // sin tipo
+
+// ✅ ACEPTAR
+const data: string = ...
+function f(x: string): void { ... }
+let data: string;
+```
+
+**Checklist:**
+- [ ] Todas las variables tienen tipo explícito
+- [ ] Todas las funciones tienen tipos en parámetros
+- [ ] Todas las funciones tienen tipo de retorno
+- [ ] No hay `any` en el código
+
+---
+
+#### REGLA #2: Zod Validation ✅
+
+Para endpoints/funciones que reciben input externo:
+
+```typescript
+// ❌ RECHAZAR - sin validación
+export async function POST(req) {
+  const file = req.formData().get('file')
+  if (file.size > MAX) { ... }  // Validación DESPUÉS
+}
+
+// ✅ ACEPTAR - validación PRIMERO
+export async function POST(req) {
+  const validated = UploadSchema.parse(await req.formData())
+  // Procesar validated (tipo-seguro)
+}
+```
+
+**Checklist:**
+- [ ] ¿Recibe el código input externo? (form, query, body, file)
+- [ ] ¿Si sí, hay Zod schema?
+- [ ] ¿Schema se llama ANTES de procesar? (.parse() en primera línea)
+- [ ] ¿Hay error handling para schema failures?
+
+---
+
+#### REGLA #3: AppError ✅
+
+```typescript
+// ❌ RECHAZAR
+throw new Error("Failed")
+throw "error"
+throw { message: "..." }
+
+// ✅ ACEPTAR
+throw new ValidationError("Invalid input")
+throw new DatabaseError("Query failed")
+throw new ExternalServiceError("Gemini", "Rate limited")
+```
+
+**Checklist:**
+- [ ] ¿Hay try/catch en la función?
+- [ ] ¿Si sí, ¿qué se hace en catch?
+- [ ] ¿Lanzas AppError o subclass?
+- [ ] ¿Nunca lanzas Error() genérico?
+
+---
+
+#### REGLA #4: Logging Estructurado ✅
+
+```typescript
+// ❌ RECHAZAR
+console.log("Starting analysis")
+logEvento(...)  // sin await
+
+// ✅ ACEPTAR
+await logEvento({
+  nivel: 'INFO',
+  origen: 'API_PEDIDOS',
+  accion: 'ANALIZAR_PEDIDO',
+  mensaje: 'Iniciando análisis',
+  correlacion_id,
+  detalles: { file_size: file.size }
+})
+```
+
+**Checklist:**
+- [ ] ¿Hay logEvento() al inicio?
+- [ ] ¿Hay await frente a logEvento?
+- [ ] ¿Hay correlacion_id?
+- [ ] ¿Hay origen y accion?
+- [ ] ¿Hay detalles relevantes?
+- [ ] ¿Si error, hay logEvento con nivel ERROR?
+
+---
+
+#### REGLA #5: NO Browser Storage ✅
+
+```typescript
+// ❌ RECHAZAR EN SERVIDOR
+if (typeof window !== 'undefined') {
+  localStorage.getItem('token')  // Aún puede fallar
+}
+
+sessionStorage.setItem('data', x)
+document.cookie = 'x=y'
+
+// ✅ ACEPTAR
+await getCookie('token')  // Server-side
+```
+
+**Checklist:**
+- [ ] ¿Hay `localStorage` en el código? → RECHAZAR
+- [ ] ¿Hay `sessionStorage`? → RECHAZAR
+- [ ] ¿Hay `document.cookie`? (directo) → RECHAZAR
+- [ ] ¿Hay `IndexedDB`? → RECHAZAR
+
+---
+
+#### REGLA #6: Validación Cliente + Servidor ✅
+
+```typescript
+// CLIENTE
+'use client'
+try {
+  const validated = Schema.parse(data)
+} catch (err) {
+  setError(err.message)  // Feedback inmediato
+  return
+}
+await fetch(...)
+
+// SERVIDOR
+export async function POST(req) {
+  const validated = Schema.parse(await req.formData())  // Validar OTRA VEZ
+  if (!validated) throw new ValidationError(...)
+}
+```
+
+**Checklist:**
+- [ ] ¿Si hay formulario, valida el cliente?
+- [ ] ¿Muestra error al usuario en cliente?
+- [ ] ¿El servidor TAMBIÉN valida?
+- [ ] ¿Mismo schema Zod en ambos lados?
+
+---
+
+#### REGLA #7: DB Operaciones Atómicas ✅
+
+```typescript
+// ❌ RECHAZAR - sin transaction
+await pedidos.insertOne(data)
+await usuarios.updateOne(...)  // Si falla aquí, inconsistencia
+
+// ✅ ACEPTAR - con transaction
+await session.withTransaction(async () => {
+  await pedidos.insertOne(data, { session })
+  await usuarios.updateOne(..., { session })
+})
+```
+
+**Checklist:**
+- [ ] ¿Hay múltiples operaciones DB? (INSERT + UPDATE, etc)
+- [ ] ¿Si sí, ¿usa session.withTransaction?
+- [ ] ¿Todas las operaciones incluyen { session }?
+
+---
+
+#### REGLA #8: Performance Medible ✅
+
+```typescript
+// ❌ RECHAZAR - sin medir
+export async function POST() {
+  // ... procesamiento
+  return success
+}
+
+// ✅ ACEPTAR - midiendo
+export async function POST() {
+  const inicio = Date.now()
+  await logEvento({ ..., accion: 'INIT' })
+  
+  try {
+    // ... procesamiento
+    const duracion = Date.now() - inicio
+    if (duracion > 2000) {
+      await logEvento({ nivel: 'WARN', detalles: { duracion_ms } })
+    }
+  } catch (error) {
+    await logEvento({ nivel: 'ERROR', ... })
+    throw error
+  }
+}
+```
+
+**Checklist:**
+- [ ] ¿Es un endpoint (GET/POST)?
+- [ ] ¿Si sí, ¿mide tiempo?
+- [ ] ¿Loguea si excede threshold (e.g., 500ms)?
+- [ ] ¿Incluye timing en logs?
+
+---
+
+#### REGLA #9: Security Headers ✅
+
+**Checklist:**
+- [ ] ¿Editaste middleware.ts?
+  - [ ] Si sí, ¿incluye X-Content-Type-Options?
+  - [ ] ¿Incluye X-Frame-Options?
+  - [ ] ¿Incluye CORS whitelist (no *))?
+  - [ ] ¿Incluye rate limiting?
+- [ ] ¿Editaste endpoint con query params?
+  - [ ] ¿Escapas valores para prevenir injection?
+
+---
+
+#### REGLA #10: NO Secrets ✅
+
+**Checklist:**
+- [ ] ¿Hay API keys hardcodeadas? → RECHAZAR
+- [ ] ¿Hay URLs hardcodeadas? → Probablemente use env
+- [ ] ¿Hay tokens en código? → RECHAZAR
+- [ ] ¿Todos los secrets usan process.env.*? → ✅
+- [ ] ¿Hay NEXT_PUBLIC_* para valores públicos solamente?
+- [ ] ¿.env.local está en .gitignore?
+
+---
+
+### FASE 5: RED FLAGS (Auto-Rechazar)
+
+Busca estos patrones. Si los encuentras → NO commits:
+
+```bash
+# Script para detectar RED FLAGS
+grep -r "const.*any" src/
+grep -r "console.log.*API" src/
+grep -r "process.env.GEMINI_API_KEY.*=" src/
+grep -r "localStorage" src/ --exclude-dir=node_modules
+grep -r "sessionStorage" src/ --exclude-dir=node_modules
+grep -r "document.cookie" src/ --exclude-dir=node_modules
+grep -r "\.find({}).toArray" src/  # Sin limit
+grep -r "\.get(\).*" src/  # Floating promises
+```
+
+**Si encuentras algo:** Regresa y corrige.
+
+---
+
+### FASE 6: Comments Utility ✅
+
+```typescript
+// ❌ RECHAZAR - inútil
+// Get user by ID
+function getUser(id: string) { ... }
+
+// ✅ ACEPTAR - útil
+/**
+ * Recupera usuario por ID de BD.
+ * Usa new ObjectId() para prevenir BSON injection.
+ * @param id - String representación de ObjectId
+ * @returns Promise<User | null>
+ */
+function getUser(id: string): Promise<User | null> { ... }
+```
+
+**Checklist:**
+- [ ] ¿Hay comentarios?
+- [ ] ¿Si sí, explican PORQUÉ (no QUÉ)?
+- [ ] ¿Tiene JSDoc las funciones públicas?
+- [ ] ¿Ningún comentario "TODO" sin contexto?
+
+---
+
+### FASE 7: Nombrado Consistente ✅
+
+```typescript
+// ❌ RECHAZAR
+const d = new Date()
+const f = (x) => x * 2
+function analyzePDFAndSaveAndNotify() { ... }
+
+// ✅ ACEPTAR
+const createdAt = new Date()
+const doubleValue = (x: number): number => x * 2
+function analyzePDF() { ... }  // Una responsabilidad
+```
+
+**Checklist:**
+- [ ] ¿Variables tienen nombres descriptivos?
+- [ ] ¿Funciones tienen responsabilidad única?
+- [ ] ¿Constantes en UPPER_CASE?
+- [ ] ¿Sin prefijos extraños (resp, arr, etc)?
+
+---
+
+## 🎬 FLUJO COMPLETO PRE-COMMIT
+
+```bash
+#!/bin/bash
+# scripts/pre-commit.sh
+
+echo "🔍 PRE-COMMIT CHECK"
+echo ""
+
+echo "1️⃣ Linting..."
+npm run lint || exit 1
+
+echo "2️⃣ Type checking..."
+npm run type-check || exit 1
+
+echo "3️⃣ Formatting..."
+npm run format || exit 1
+
+echo "4️⃣ Unit tests..."
+npm run test:unit || exit 1
+
+echo "5️⃣ Build check..."
+npm run build || exit 1
+
+echo ""
+echo "✅ ALL CHECKS PASSED!"
+echo ""
+echo "📋 MANUAL CHECKLIST:"
+echo "  [ ] TypeScript strict (no `any`)"
+echo "  [ ] Zod validation (inputs)"
+echo "  [ ] AppError (error handling)"
+echo "  [ ] Logging (logEvento con correlacion_id)"
+echo "  [ ] No localStorage/sessionStorage"
+echo "  [ ] Validación cliente + servidor"
+echo "  [ ] DB atómicas (transactions)"
+echo "  [ ] Performance medida (logs de tiempo)"
+echo "  [ ] Security headers (si middleware)"
+echo "  [ ] NO secrets hardcodeados"
+echo "  [ ] NO RED FLAGS (any, secrets en logs, floating promises)"
+echo "  [ ] Comments útiles (PORQUÉ, no QUÉ)"
+echo "  [ ] Nombrado consistente"
+echo ""
+echo "Ejecuta: npm run pre-commit -- manual"
+echo "Para confirmar manual checklist."
+```
+
+En `package.json`:
+```json
+{
+  "scripts": {
+    "pre-commit": "bash scripts/pre-commit.sh"
+  }
+}
+```
+
+---
+
+## ✅ CHECKLIST FINAL (ANTES DE PUSH)
+
+```
+AUTOMATIZADO:
+  ☑️ npm run lint → 0 problems
+  ☑️ npm run type-check → 0 errors
+  ☑️ npm run test:unit → all pass
+  ☑️ npm run build → success
+
+MANUAL (código review):
+  ☑️ No `any` type
+  ☑️ Zod validation para inputs
+  ☑️ AppError (no Error())
+  ☑️ logEvento con await y correlacion_id
+  ☑️ No localStorage/sessionStorage/cookies(directo)
+  ☑️ Validación cliente + servidor
+  ☑️ DB transactions (si múltiples ops)
+  ☑️ Tiempo medido (endpoints)
+  ☑️ Security headers (si middleware)
+  ☑️ NO secrets hardcodeados
+  ☑️ No RED FLAGS
+  ☑️ JSDoc en funciones públicas
+  ☑️ Nombres descriptivos
+
+COMMIT:
+  ☑️ git add [archivos]
+  ☑️ git commit -m "[TYPE]: Brief description"
+  ☑️ git push origin feature/nombre
+  ☑️ Abrir PR en GitHub
+```
+
+**Si TODO está ☑️:** Ready for PR! 🚀
+
+---
+
+## 🚨 SI ALGO FALLA
+
+| Fallo | Acción |
+|-------|--------|
+| `npm run lint` | `npm run lint -- --fix` |
+| `npm run type-check` | Revisar errores TypeScript, añadir tipos |
+| `npm run test:unit` | Revisar test output, arreglar test o código |
+| `npm run build` | Revisar errores TypeScript |
+| Manual checklist fail | Revisar sección correspondiente, corregir |
+
+---
+
+## 📞 ESCALATION
+
+Si algo no está claro:
+
+```
+1. Revisa la sección en reglas-de-oro.md
+2. Revisa ejemplo en código existente
+3. Si aún no sabes → ASK IN PR COMMENT
+   (Code review lead o tech lead)
+```
+
+---
+
+## ✨ RESULTADO
+
+Después de ejecutar todo esto:
+
+✅ **Código type-safe**  
+✅ **Inputs validados**  
+✅ **Errores claros**  
+✅ **Logging completo**  
+✅ **Performance medible**  
+✅ **Seguridad garantizada**  
+✅ **Cero deuda técnica**  
+
+**= Production-Ready desde día 1**
+
+---
+
+**Checklist:** PRE-COMMIT  
+**Versión:** 1.0  
+**Vigente:** 21 de enero de 2026+  
+**Responsable:** Developer (auto-enforce)

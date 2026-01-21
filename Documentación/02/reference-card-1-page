@@ -1,0 +1,290 @@
+# REFERENCE CARD (1 PÁGINA)
+## Reglas de Oro - Quick Reference
+
+---
+
+## 🚨 RED FLAGS = RECHAZAR PR (Automático)
+
+```
+❌ const x: any
+❌ console.log('API Key:', key)
+❌ logEvento(...) sin await
+❌ localStorage / sessionStorage / IndexedDB
+❌ .find({}).toArray() sin .limit()
+❌ Hardcoded: MAX_FILE_SIZE = 50000000
+❌ Comentario que no matchea código
+❌ Función que hace 3+ responsabilidades
+❌ Query en loop (N+1)
+❌ setTimeout/Promise sin await
+```
+
+---
+
+## ✅ 10 REGLAS NO NEGOCIABLES
+
+| # | Regla | Checklist | Archivo |
+|---|-------|----------|---------|
+| 1 | **TypeScript Strict** | `noImplicitAny: true` | tsconfig.json |
+| 2 | **Zod Validation BEFORE** | Schema.parse() línea 1 | lib/schemas.ts |
+| 3 | **AppError** | throw ValidationError/DatabaseError | lib/errors.ts |
+| 4 | **Logging Estructurado** | await logEvento({...correlacion_id}) | lib/logger.ts |
+| 5 | **NO Browser Storage** | ✅ Cookies HTTP, ✅ React Context | lib/cookies.ts |
+| 6 | **Validación Ambos Lados** | Cliente + Servidor mismo schema | app/api + components |
+| 7 | **DB Atómicas** | session.withTransaction() | lib/db.ts |
+| 8 | **Performance Medida** | Loguear tiempo, alertar si > SLA | middleware.ts |
+| 9 | **Security Headers** | CORS whitelist, rate limiting | middleware.ts |
+| 10 | **NO Secrets** | process.env.*, no hardcode | .env.local |
+
+---
+
+## 🎯 FUNCIONES HELPER (Ya Existen)
+
+```typescript
+// Validación
+import { AnalyzePedidoSchema } from '@/lib/schemas'
+const validated = AnalyzePedidoSchema.parse(data)
+
+// Errors
+import { ValidationError, DatabaseError } from '@/lib/errors'
+throw new ValidationError("message", { field: value })
+
+// Logging
+import { logEvento } from '@/lib/logger'
+await logEvento({
+  nivel: 'INFO|WARN|ERROR',
+  origen: 'API_PEDIDOS|RAG|LLM',
+  accion: 'ANALIZAR_PEDIDO',
+  mensaje: 'text',
+  correlacion_id,
+  detalles: {}
+})
+
+// DB
+import { connectDB } from '@/lib/db'
+const db = await connectDB()
+
+// LLM
+import { extractModelsWithGemini } from '@/lib/llm'
+const models = await extractModelsWithGemini(text)
+
+// PDF
+import { extractTextFromPDF } from '@/lib/pdf-utils'
+const text = await extractTextFromPDF(buffer)
+
+// Cookies
+import { getCookie, setCookie } from '@/lib/cookies'
+const token = await getCookie('token')
+
+// Retry
+import { withRetry } from '@/lib/retry'
+return withRetry(() => geminiCall(), { maxRetries: 3 })
+```
+
+---
+
+## 🔄 ANTES DE CADA COMMIT
+
+```bash
+# Automatizado
+npm run lint          # 0 problems
+npm run type-check    # 0 errors
+npm run format        # no changes
+npm run test          # all pass
+npm run build         # success
+
+# Manual (vs checklist-pre-commit-ejecutable.md)
+✅ No `any` type
+✅ Zod validation (si input externo)
+✅ AppError (no Error())
+✅ logEvento con correlacion_id
+✅ Performance medida (si endpoint)
+✅ NO secrets hardcodeados
+✅ Comments explican PORQUÉ
+```
+
+---
+
+## 📝 TEMPLATE: ENDPOINT NUEVO
+
+```typescript
+// app/api/[feature]/[action]/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { logEvento } from '@/lib/logger'
+import { ValidationError, DatabaseError } from '@/lib/errors'
+import { generateUUID } from '@/lib/utils'
+
+// 1. SCHEMA VALIDATION
+const InputSchema = z.object({
+  // define fields
+})
+
+export async function POST(request: NextRequest) {
+  const correlacion_id = generateUUID()
+  const inicio = Date.now()
+
+  // 2. LOG INICIO
+  await logEvento({
+    nivel: 'INFO',
+    origen: 'API_FEATURE',
+    accion: 'ACTION',
+    mensaje: 'Iniciando procesamiento',
+    correlacion_id,
+    detalles: {}
+  })
+
+  try {
+    // 3. VALIDAR INPUT
+    const data = await request.json()
+    const validated = InputSchema.parse(data)
+
+    // 4. PROCESAR
+    const result = await processData(validated)
+
+    // 5. LOG SUCCESS
+    const duracion = Date.now() - inicio
+    await logEvento({
+      nivel: duracion > 500 ? 'WARN' : 'INFO',
+      origen: 'API_FEATURE',
+      accion: 'ACTION',
+      mensaje: `Completado en ${duracion}ms`,
+      correlacion_id,
+      detalles: { duracion_ms: duracion, result_size: JSON.stringify(result).length }
+    })
+
+    return NextResponse.json({ success: true, data: result })
+
+  } catch (error) {
+    // 6. LOG ERROR
+    await logEvento({
+      nivel: 'ERROR',
+      origen: 'API_FEATURE',
+      accion: 'ACTION',
+      mensaje: error instanceof Error ? error.message : 'Unknown error',
+      correlacion_id,
+      stack: error instanceof Error ? error.stack : undefined,
+      detalles: {}
+    })
+
+    // 7. RETURN ERROR
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, code: 'VALIDATION_ERROR', message: error.errors[0].message },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { success: false, code: error.code, message: error.message },
+        { status: error.statusCode }
+      )
+    }
+
+    // Desconocido
+    return NextResponse.json(
+      { success: false, code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+---
+
+## 📊 DOCUMENTACIÓN RELACIONADA
+
+| Doc | Usa si... |
+|-----|----------|
+| **reglas-de-oro-desarrollo-ia.md** | Necesitas versión completa de reglas |
+| **instrucciones-cursor-antigrávity.md** | Generar código con IA (copy-paste) |
+| **checklist-pre-commit-ejecutable.md** | Revisar código antes de commit |
+| **resumen-ejecutivo-stakeholders.md** | Presentar a manager/CTO |
+| **ESTE (reference-card.md)** | Quick lookup (1 página) |
+
+---
+
+## 🎬 PROMPT PARA IA
+
+```
+Eres desarrollador. Debes cumplir REGLAS 1-10 SIN EXCEPCIÓN:
+
+1. TypeScript strict (noImplicitAny)
+2. Zod validation primero
+3. AppError (no Error())
+4. logEvento con correlacion_id
+5. No localStorage/sessionStorage
+6. Validación cliente + servidor
+7. DB transactions (múltiples ops)
+8. Tiempo medido (endpoints)
+9. Security headers
+10. NO secrets hardcodeados
+
+RED FLAGS = RECHAZAR:
+- any, secrets en logs, floating promises
+- queries sin limit, N+1, hardcoded values
+
+Cuando generes código, auto-checklist:
+✅ Tipos explícitos
+✅ Zod schema
+✅ AppError handling
+✅ logEvento con await
+✅ Performance medida
+✅ Comments PORQUÉ
+```
+
+---
+
+## 🆘 QUICK TROUBLESHOOT
+
+| Error | Solución |
+|-------|----------|
+| `Type 'X' is not assignable to type 'any'` | Añade tipo explícito (`: string`) |
+| `Cannot find module 'zod'` | `npm install zod` |
+| `AppError is not defined` | `import { AppError } from '@/lib/errors'` |
+| `ValidationError: Expected...` | Debug: `console.error(error.errors)` |
+| `Rate limited by Gemini` | Usar `withRetry()` con exponential backoff |
+| `MongoDB connection timeout` | Check `MONGODB_URI` en `.env.local` |
+| `localStorage not defined` | Use React Context o cookies HTTP |
+
+---
+
+## 📈 PERFORMANCE SLA TARGETS
+
+```
+/api/pedidos/analyze
+  P95: 500ms
+  P99: 2000ms
+  MAX: 3000ms (timeout)
+
+/api/pedidos/[id]/informe
+  P95: 300ms
+  P99: 800ms
+  MAX: 1500ms
+
+/api/admin/logs
+  P95: 200ms
+  P99: 500ms
+  MAX: 1000ms
+```
+
+---
+
+## 🔐 SECURITY CHECKLIST
+
+```
+☑️ CORS whitelist (no *)
+☑️ X-Content-Type-Options: nosniff
+☑️ X-Frame-Options: DENY
+☑️ Rate limit: 100 req/h per IP
+☑️ SQL/BSON injection prevenidos (Zod)
+☑️ XSS prevenido (textContent, no innerHTML)
+☑️ CSRF tokens si forms
+☑️ HTTPS en producción
+☑️ API keys en environment
+☑️ Sensitive data NO loguada
+```
+
+---
+
+**Reference Card v1.0 | 21 Enero 2026 | Print & Pin en Monitor**

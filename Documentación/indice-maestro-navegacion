@@ -1,0 +1,554 @@
+# ÍNDICE MAESTRO DE DELIVERABLES
+## Sistema RAG de Documentación Técnica para Ascensores
+### Documento de Referencia Central
+
+---
+
+## 📚 ESTRUCTURA COMPLETA DE DOCUMENTACIÓN
+
+### NIVEL 0: ESTE DOCUMENTO
+**Propósito:** Mapa de navegación de todos los deliverables.  
+**Audiencia:** Todos los stakeholders.  
+**Lectura estimada:** 5 min.
+
+---
+
+## NIVEL 1: DOCUMENTACIÓN ESTRATÉGICA
+
+### 1.1 📄 Especificación Técnica Profesional v2.0
+**Archivo:** `especificacion-tecnica-profesional-v2.0.md`  
+**Páginas:** 50+  
+**Propósito:** Documento técnico completo, fuente de verdad para desarrollo.
+
+**Secciones:**
+1. Prefacio Ejecutivo
+2. Visión y Objetivos
+3. Arquitectura Técnica Empresarial
+4. Stack Tecnológico
+5. Flujo de Datos Completo
+6. Modelo de Datos (9 colecciones MongoDB)
+7. Arquitectura de Componentes (Next.js estructura)
+8. Guía de Desarrollo Profesional
+9. Integración con Sistemas Externos
+10. Seguridad & Conformidad
+11. UX/UI Profesional
+12. Roadmap 18 Meses
+13. Deployment & Operación
+
+**Cuándo usar:**
+- Arquitectos: todo el documento.
+- Devs: secciones 3–9.
+- DevOps: sección 12.
+- QA: secciones 8, 9.
+
+**Versión:** 2.0 (Enterprise-Ready)  
+**Estado:** ✅ Listo
+
+---
+
+### 1.2 📊 Resumen Ejecutivo
+**Archivo:** `resumen-ejecutivo.md`  
+**Páginas:** 4  
+**Propósito:** Pitch para C-level, stakeholders, inversores.
+
+**Secciones:**
+1. Problema y Oportunidad
+2. Solución Propuesta
+3. Stack Tecnológico
+4. Modelo de Datos (Simplificado)
+5. Flujo de Usuario (Técnico)
+6. Flujo Admin
+7. Casos de Éxito Esperados
+8. Beneficios Cuantificables
+9. Roadmap de Implementación
+10. Riesgos y Mitigación
+11. Presupuesto Estimado
+12. Next Steps
+
+**Cuándo usar:**
+- C-level: sección 1–2, 8, 11.
+- Stakeholders: todo el documento.
+- Sales: para presupuesto.
+- Investors: ROI y timeline.
+
+**Formato:** PDF con gráficas si es posible.  
+**Estado:** ✅ Listo
+
+---
+
+### 1.3 🎨 Guía de UX/UI Profesional
+**Archivo:** `guia-ux-ui-profesional.md`  
+**Páginas:** 30+  
+**Propósito:** Especificación detallada de diseño visual y comportamental.
+
+**Secciones:**
+1. Filosofía de Diseño (Contextos: técnico vs admin)
+2. Pantalla 1: Upload de Especificación
+3. Pantalla 2: Informe Técnico con Checklists
+4. Pantalla 3: Admin - Gestión Corpus
+5. Pantalla 4: Auditoría
+6. Directrices de Componentes
+7. Paleta de Colores
+8. Tipografía
+9. Espaciado y Layout
+10. Animaciones y Transiciones
+11. Responsive Design
+12. Accesibilidad (WCAG)
+
+**Cuándo usar:**
+- UX/UI Designers: todo el documento.
+- Frontend Devs: secciones 6–12.
+- Product Manager: 1–5.
+- QA: sección 12 (accesibilidad).
+
+**Detalle:** Listo para implementación en Figma/Storybook.  
+**Estado:** ✅ Listo
+
+---
+
+### 1.4 ✅ Deliverables Final Summary
+**Archivo:** `deliverables-final-summary.md`  
+**Páginas:** 10  
+**Propósito:** Resumen ejecutivo de QUÉ se entrega y CÓMO usarlo.
+
+**Secciones:**
+1. Paquete Completo Entregado (resumen)
+2. Cómo usar estos deliverables (por rol)
+3. Métricas de Éxito (tracking)
+4. Próximos Pasos
+5. Checklist Pre-implementación
+
+**Cuándo usar:**
+- Product Manager: primera lectura después de este índice.
+- Tech Lead: para ver overall picture.
+- Todos: para saber qué documentos revisar primero.
+
+**Estado:** ✅ Listo
+
+---
+
+## NIVEL 2: MOCKUPS VISUALES (UX)
+
+### 2.1 🖼️ Screen 1: Upload de Especificación
+**Archivo:** `mockup-screen-1-upload.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Elementos visuales:**
+- Header con logo, navegación, user profile.
+- Drag-drop zone prominente (teal accent).
+- Textarea alternativo para pegar texto (acordeón).
+- Botón "Analizar Pedido" (CTA principal).
+- Dark mode (#1f2937).
+
+**Caso de uso:** Técnico en `/pedidos/nuevo`.  
+**Referencia en docs:** Guía UX/UI, sección 2.  
+**Estado:** ✅ Listo
+
+---
+
+### 2.2 🖼️ Screen 2: Technical Report with Checklists
+**Archivo:** `mockup-screen-2-report.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Elementos visuales:**
+- Header: nº pedido, fecha, badges de componentes.
+- Acordeones por componente (BOTONERA, MOTOR, SENSOR).
+- Tabla documentación con badges de estado (vigente ✓, obsoleto ⊘, nuevo, revisar).
+- Fragmentos de texto con contexto (antes/después).
+- Barras de relevancia (92%, 87%).
+- Checklist integrada (críticos obligatorios).
+- Botones: "Exportar PDF", "Reportar Incidencia", "Volver".
+
+**Caso de uso:** Técnico en `/pedidos/[id]`.  
+**Referencia en docs:** Guía UX/UI, sección 3.  
+**Estado:** ✅ Listo
+
+---
+
+### 2.3 🖼️ Screen 3: Admin Corpus Management
+**Archivo:** `mockup-screen-3-admin.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Elementos visuales:**
+- Sidebar izquierda (Documentos, Logs, Auditoría, Estadísticas).
+- Título: "Corpus Documentos Técnicos".
+- Stats: "3 vigentes | 1 obsoleto | 1,247 chunks".
+- Tabla: Documento | Versión | Estado | Chunks | Acciones.
+- Rows con badges (vigente verde, obsoleto gris).
+- Botón "+ Nuevo documento".
+- Filas obsoletas con menor opacidad.
+
+**Caso de uso:** Admin en `/admin/documentos`.  
+**Referencia en docs:** Guía UX/UI, sección 4.  
+**Estado:** ✅ Listo
+
+---
+
+### 2.4 🖼️ Screen 4: Audit Trail & RAG Traceability
+**Archivo:** `mockup-screen-4-audit.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Elementos visuales:**
+- Sidebar izquierda (navegación admin).
+- Título: "Auditoría RAG - Trazabilidad Completa".
+- Filtros: [Acción ▼] [Período ▼] [Usuario ▼] [Nivel ▼].
+- Timeline vertical de eventos.
+- Cada evento: timestamp | icono (✓/ℹ️/⚠️/❌) | acción | detalles.
+- Colores por nivel: azul (info), ámbar (warning), rojo (error).
+- Eventos expandibles.
+
+**Caso de uso:** Admin en `/admin/auditoria`.  
+**Referencia en docs:** Guía UX/UI, sección 5.  
+**Estado:** ✅ Listo
+
+---
+
+## NIVEL 3: DIAGRAMAS TÉCNICOS (ARQUITECTURA)
+
+### 3.1 📐 Technical Architecture Diagram
+**Archivo:** `technical-architecture-diagram.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Contenido:**
+- **Izquierda:** INGESTA BATCH (PDF → Embeddings → MongoDB).
+- **Centro-arriba:** Gemini API (embeddings + LLM).
+- **Centro:** MongoDB Atlas con 9 colecciones.
+- **Derecha arriba:** Vercel hosting (Next.js frontend + API).
+- **Derecha:** Dos flujos (TÉCNICO, ADMIN).
+- **Bottom-right:** ERP/MES systems (API REST v1 + webhooks).
+
+**Propósito:** Vista ejecutiva completa del sistema.  
+**Audiencia:** Arquitectos, stakeholders técnicos.  
+**Referencia en docs:** Especificación, sección 2.2.  
+**Estado:** ✅ Listo
+
+---
+
+### 3.2 📊 Data Flow & Process Architecture Diagram
+**Archivo:** `data-flow-architecture.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Contenido:**
+- **Ingesta Process:** PDF → text → chunks → embeddings → vectors.
+- **Request Process:** upload → extract models → vector search → aggregate.
+- **Timings:** 100ms, ~500ms anotados.
+- **Services:** Gemini API conexiones.
+- **MongoDB:** índices, audit trail, colecciones.
+- **Data flow arrows:** azul (data), verde (process), rojo (external).
+
+**Propósito:** Detalle de flujos de procesamiento.  
+**Audiencia:** Arquitectos, devs senior.  
+**Referencia en docs:** Especificación, sección 2.3.  
+**Estado:** ✅ Listo
+
+---
+
+### 3.3 🗄️ MongoDB Schema & Relationships Diagram
+**Archivo:** `mongodb-schema-diagram.png`  
+**Resolución:** 1920×1080 (16:9)  
+**Formato:** PNG professional.
+
+**Contenido:**
+- **9 colecciones MongoDB:**
+  - MASTER DATA: documentos_tecnicos, componentes.
+  - CONTENT: document_chunks.
+  - OPERATIONS: pedidos, checklists_templates, checklists_pedido.
+  - AUDIT: logs_aplicacion, auditoria_rag, incidencias_taller.
+  - ANALYTICS: estadisticas_diarias.
+- **Relaciones:** arrows mostrando one-to-many, references.
+- **Color-coding:** azul (master), verde (operational), naranja (audit), púrpura (analytics).
+- **Índices** etiquetados.
+
+**Propósito:** DBAs entienden modelo de datos.  
+**Audiencia:** Arquitectos, DBAs, devs backend.  
+**Referencia en docs:** Especificación, sección 3.  
+**Estado:** ✅ Listo
+
+---
+
+## NIVEL 4: REFERENCIA RÁPIDA POR ROL
+
+### Para Product Manager / Stakeholders
+**Lectura recomendada (1 hora total):**
+1. Este índice (5 min).
+2. Resumen Ejecutivo (20 min).
+3. 4 Mockups (15 min).
+4. Technical Architecture Diagram (10 min).
+5. Deliverables Final Summary (10 min).
+
+**Outcome:** Entender propuesta, presupuesto, ROI, timeline.
+
+---
+
+### Para Tech Lead / Arquitecto
+**Lectura recomendada (3 horas):**
+1. Este índice (5 min).
+2. Especificación Técnica Completa (1.5 horas).
+3. 3 Diagramas técnicos (20 min).
+4. Guía UX/UI (secciones 1, 6–12, 30 min).
+5. Deliverables Final Summary (10 min).
+
+**Outcome:** Planificación de sprints, asignación tareas, decisiones técnicas.
+
+---
+
+### Para UX/UI Designer
+**Lectura recomendada (2 horas):**
+1. Este índice (5 min).
+2. Guía UX/UI Profesional (1 hora).
+3. 4 Mockups (30 min).
+4. Resumen Ejecutivo (secciones 4–5, 15 min).
+
+**Outcome:** Design system, Figma setup, component library.
+
+---
+
+### Para Frontend Developer
+**Lectura recomendada (3 horas):**
+1. Este índice (5 min).
+2. Especificación Técnica (secciones 4, 5, 7, 1 hora).
+3. Guía UX/UI (secciones 6–12, 45 min).
+4. 4 Mockups como referencia visual (20 min).
+5. Guía de Desarrollo (secciones 5.1, 5.2, 30 min).
+
+**Outcome:** Componentes implementados, TypeScript strict, tests.
+
+---
+
+### Para Backend Developer
+**Lectura recomendada (3 horas):**
+1. Este índice (5 min).
+2. Especificación Técnica (secciones 2–3, 6, 1 hora).
+3. MongoDB Schema Diagram (20 min).
+4. Data Flow Diagram (20 min).
+5. Guía de Desarrollo (secciones 5.1, 5.2, 5.3, 1 hora).
+
+**Outcome:** APIs implementadas, validaciones, logging, observabilidad.
+
+---
+
+### Para QA / Testing
+**Lectura recomendada (2 horas):**
+1. Este índice (5 min).
+2. Especificación Técnica (secciones 5, 8, 30 min).
+3. Guía de Desarrollo (sección 5.2, 45 min).
+4. Guía UX/UI (sección 12, 20 min).
+5. 4 Mockups (15 min).
+
+**Outcome:** Test plan, E2E scenarios, accesibilidad validación.
+
+---
+
+### Para DevOps / Infrastructure
+**Lectura recomendada (1.5 horas):**
+1. Este índice (5 min).
+2. Especificación Técnica (secciones 2.2, 10, 12, 45 min).
+3. Technical Architecture Diagram (15 min).
+4. Resumen Ejecutivo (sección 11, 10 min).
+
+**Outcome:** Infrastructure as Code, monitoring, alerts, backups.
+
+---
+
+## NIVEL 5: MAPA DE RELACIONES ENTRE DOCUMENTOS
+
+```
+                    ┌─────────────────────────┐
+                    │  ÍNDICE MAESTRO         │
+                    │  (Este documento)       │
+                    └────────────┬────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+        ┌─────────────┐   ┌──────────────┐   ┌──────────────┐
+        │ ESTRATÉGICO │   │   VISUALES   │   │   TÉCNICO    │
+        └─────────────┘   └──────────────┘   └──────────────┘
+              │                  │                  │
+     ┌────────┼────────┐         │         ┌────────┼────────┐
+     │        │        │         │         │        │        │
+     ▼        ▼        ▼         ▼         ▼        ▼        ▼
+   SPEC     EXEC      UX/UI   MOCKUPS    ARCH     DATA    SCHEMA
+   TECH     SUMM      PROF      (4x)      DIAG    FLOW    DIAG
+    │        │         │         │         │        │        │
+    │        │         └─────────┼─────────┘        │        │
+    │        │                   │                  │        │
+    └────────┴───────────────────┼──────────────────┴────────┘
+             │                   │
+             └───────────────────┼────────────┬──────────────┐
+                                 │            │              │
+                        ┌────────▼──┐   ┌────▼──┐   ┌───────▼─┐
+                        │ ALL ROLES  │   │ DEVS  │   │ DEVOPS  │
+                        │ REFERENCE  │   │ GUIDE │   │ GUIDE   │
+                        └────────────┘   └───────┘   └─────────┘
+```
+
+---
+
+## NIVEL 6: CHECKLIST DE DOCUMENTACIÓN
+
+- ✅ Índice maestro (este documento).
+- ✅ Especificación técnica profesional v2.0 (50+ páginas).
+- ✅ Resumen ejecutivo (4 páginas).
+- ✅ Guía de UX/UI profesional (30+ páginas).
+- ✅ Deliverables final summary (10 páginas).
+- ✅ Mockup screen 1: upload.
+- ✅ Mockup screen 2: report.
+- ✅ Mockup screen 3: admin.
+- ✅ Mockup screen 4: audit.
+- ✅ Technical architecture diagram.
+- ✅ Data flow & process diagram.
+- ✅ MongoDB schema & relationships diagram.
+
+**Total de documentos:** 12  
+**Total de páginas (text):** 100+  
+**Total de diagramas/imágenes:** 7  
+**Tiempo lectura completa:** 10–15 horas  
+**Tiempo recomendado por rol:** 1–3 horas  
+
+---
+
+## NIVEL 7: CÓMO NAVEGAR EFICIENTEMENTE
+
+### Escenario 1: "Quiero entender el proyecto en 1 hora"
+1. Lee este índice (5 min).
+2. Lee Resumen Ejecutivo (20 min).
+3. Mira 4 mockups (15 min).
+4. Mira Technical Architecture Diagram (10 min).
+5. Mira Deliverables Summary (10 min).
+
+**Outcome:** Visión completa, decisiones pueden tomar.
+
+---
+
+### Escenario 2: "Necesito implementar en Cursor/Antigrávity"
+1. Lee Especificación Técnica (1.5 horas).
+2. Revisa MongoDB Schema Diagram (20 min).
+3. Lee Guía de Desarrollo Profesional (45 min).
+4. Copia prompt a Cursor: secciones 2–9 de Especificación.
+5. Comienzo desarrollo.
+
+**Outcome:** Prompt context completo, listo para codificar.
+
+---
+
+### Escenario 3: "Estoy diseñando en Figma"
+1. Lee Guía UX/UI (1.5 horas).
+2. Importa 4 mockups como referencias.
+3. Valida paleta de colores (contraste WCAG AAA).
+4. Crea design system Tailwind + Shadcn.
+5. Comienza design tokens.
+
+**Outcome:** Design system profesional, componentes reutilizables.
+
+---
+
+### Escenario 4: "Estoy haciendo tests"
+1. Lee Especificación (sección 8, 30 min).
+2. Lee Guía de Desarrollo (sección 5.2, 45 min).
+3. Lee Guía UX/UI (sección 12, 20 min).
+4. Crea test plan basado en mockups.
+5. Comienza test automation.
+
+**Outcome:** Test cases completos, E2E scenarios.
+
+---
+
+## NIVEL 8: VERSIONADO Y UPDATES
+
+### Versión Actual: 2.0 (FINAL)
+**Fecha:** 21 de enero de 2026  
+**Estado:** ✅ LISTO PARA IMPLEMENTACIÓN  
+**Cambios desde v1.0:**
+- +200% detalle en arquitectura.
+- +50% en guía de desarrollo.
+- +3 diagramas técnicos adicionales.
+- +1 pantalla admin.
+- Métricas de éxito cuantificadas.
+- Presupuesto y ROI calculado.
+
+### Cómo solicitar updates
+- Cambios en specs: contactar Tech Lead.
+- Nuevos mockups: contactar UX/UI.
+- Nuevos diagramas: contactar Arquitecto.
+- Updates de roadmap: contactar PM.
+
+---
+
+## NIVEL 9: CONTACTO Y SOPORTE
+
+### Preguntas sobre...
+
+**Especificación técnica?**  
+→ Contacta Tech Lead  
+→ Referencia: `especificacion-tecnica-profesional-v2.0.md`
+
+**UX/UI?**  
+→ Contacta UX/UI Designer  
+→ Referencia: `guia-ux-ui-profesional.md` + 4 mockups
+
+**Arquitectura?**  
+→ Contacta Arquitecto  
+→ Referencia: 3 diagramas técnicos
+
+**Presupuesto/ROI?**  
+→ Contacta Product Manager  
+→ Referencia: `resumen-ejecutivo.md`
+
+**Testing?**  
+→ Contacta QA Lead  
+→ Referencia: `especificacion-tecnica` sección 8
+
+---
+
+## 🎯 CONCLUSIÓN
+
+Este índice es tu **punto de entrada único** a todo el conocimiento del proyecto.
+
+- **Si eres nuevo en el proyecto:** empieza por aquí.
+- **Si necesitas un documento específico:** busca en las secciones de nivel 1–3.
+- **Si tienes un rol específico:** salta a la sección "Referencia Rápida por Rol".
+- **Si necesitas navegar eficientemente:** usa "Escenarios de Navegación".
+
+**El proyecto está 100% documentado. No hay preguntas sin respuesta. ✅**
+
+---
+
+**Índice versión:** 2.0  
+**Última actualización:** 21 de enero de 2026  
+**Próxima revisión:** Semana 5 (post-demo)  
+**Responsable:** Consultoría Senior en Ingeniería Software & IA
+
+---
+
+## APÉNDICE: ARCHIVOS GENERADOS (DESCARGABLES)
+
+```
+📁 Proyecto RAG Ascensores/
+├── 📄 indice-maestro.md (este documento)
+├── 📄 especificacion-tecnica-profesional-v2.0.md
+├── 📄 resumen-ejecutivo.md
+├── 📄 guia-ux-ui-profesional.md
+├── 📄 deliverables-final-summary.md
+├── 🖼️ mockup-screen-1-upload.png
+├── 🖼️ mockup-screen-2-report.png
+├── 🖼️ mockup-screen-3-admin.png
+├── 🖼️ mockup-screen-4-audit.png
+├── 📊 technical-architecture-diagram.png
+├── 📊 data-flow-architecture.png
+├── 📊 mongodb-schema-diagram.png
+└── 📁 [Ready for GitHub repo]
+```
+
+**Total deliverables:** 12 documentos + imágenes  
+**Tamaño aproximado:** 200+ MB (con imágenes high-res)  
+**Formato:** Markdown + PNG  
+**Compatible con:** GitHub, Figma, Jira, Confluence, Notion  
+
+✅ **Listo para pasar a desarrollo.**

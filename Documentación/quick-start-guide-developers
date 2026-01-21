@@ -1,0 +1,668 @@
+# QUICK START GUIDE
+## Para Desarrolladores: De Cero a MVP en 4 Semanas
+
+---
+
+## 🚀 VISIÓN GENERAL (5 MIN)
+
+Este es tu **ruta rápida** para comenzar desarrollo inmediato.
+
+### ¿Qué vas a construir?
+App web que analiza PDFs de pedidos de ascensores usando IA, busca documentación relevante (RAG), genera informes, y registra auditoría completa.
+
+### Stack
+```
+Frontend:  Next.js 15 + React 19 + TypeScript + Tailwind + Shadcn/ui
+Backend:   Next.js API Routes + Server Actions
+DB:        MongoDB Atlas (cloud, free tier para demo)
+LLM/AI:    Gemini API (embeddings + extraction)
+Hosting:   Vercel (auto-deploy)
+```
+
+### Tiempo estimado
+- **Semana 1:** Setup + pantalla upload.
+- **Semana 2:** API análisis + RAG.
+- **Semana 3:** Informe + checklists.
+- **Semana 4:** PDF export + testing + deploy.
+
+**Total:** 4 semanas para MVP funcional.
+
+---
+
+## 📦 SETUP INICIAL (DONE ONCE)
+
+### 1. Clone o Crea Proyecto Next.js
+
+```bash
+# Opción A: Crear nuevo
+npx create-next-app@latest rag-ascensores \
+  --typescript \
+  --tailwind \
+  --eslint \
+  --app \
+  --srcdir
+cd rag-ascensores
+
+# Opción B: Clone (si hay repo existente)
+git clone <repo-url> rag-ascensores
+cd rag-ascensores
+npm install
+```
+
+### 2. Instala Dependencias Clave
+
+```bash
+npm install \
+  langchain \
+  @langchain/mongodb \
+  @langchain/google-vertexai \
+  @langchain/community \
+  mongodb \
+  pdf-parse \
+  pdfjs-dist \
+  jspdf \
+  html2canvas \
+  zod \
+  dotenv \
+  @google/generative-ai
+```
+
+### 3. Setup Variables de Entorno
+
+```bash
+# .env.local
+MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/ascensores"
+GEMINI_API_KEY="your-gemini-api-key-here"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NODE_ENV="development"
+```
+
+### 4. MongoDB Atlas Setup (5 min)
+
+1. Ir a [mongodb.com/cloud](https://mongodb.com/cloud).
+2. Crear cuenta gratuita.
+3. Cluster "rag-ascensores" (M0 free tier).
+4. Database "ascensores".
+5. Copiar connection string → `.env.local`.
+
+### 5. Gemini API Key (2 min)
+
+1. Ir a [ai.google.dev](https://ai.google.dev).
+2. "Get API Key" → crear key.
+3. Copiar → `.env.local`.
+
+### 6. Vercel Deploy (opcional, pero recomendado)
+
+```bash
+npm i -g vercel
+vercel link  # conecta con Vercel
+vercel env add MONGODB_URI
+vercel env add GEMINI_API_KEY
+vercel deploy
+```
+
+---
+
+## 📂 ESTRUCTURA INICIAL (SIMPLIFIED FOR MVP)
+
+```
+rag-ascensores/
+├── app/
+│   ├── layout.tsx           # Layout raíz
+│   ├── page.tsx             # Dashboard home
+│   ├── pedidos/
+│   │   ├── nuevo/
+│   │   │   └── page.tsx     # Upload page
+│   │   └── [id]/
+│   │       └── page.tsx     # Report page
+│   └── api/
+│       ├── pedidos/
+│       │   ├── analyze/
+│       │   │   └── route.ts
+│       │   └── [id]/
+│       │       └── informe/
+│       │           └── route.ts
+├── lib/
+│   ├── db.ts                # MongoDB connection
+│   ├── llm.ts               # Gemini functions
+│   ├── rag.ts               # RAG logic
+│   ├── pdf-utils.ts         # PDF parsing
+│   └── schemas.ts           # Zod schemas
+├── components/
+│   ├── PedidoUpload.tsx
+│   ├── PedidoInforme.tsx
+│   └── ExportPdf.tsx
+├── .env.local               # NOT in git
+├── package.json
+└── tsconfig.json (strict: true)
+```
+
+---
+
+## 🔧 PASO 1: SEMANA 1 - UPLOAD & HOME
+
+### 1.1 Setup Rutas Básicas
+
+```typescript
+// app/layout.tsx
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="es">
+      <head>
+        <title>RAG Ascensores</title>
+      </head>
+      <body className="bg-gray-900 text-gray-100">
+        <header className="bg-gray-800 p-4">
+          <h1>RAG Pedidos Ascensores</h1>
+        </header>
+        <main className="p-6">
+          {children}
+        </main>
+      </body>
+    </html>
+  )
+}
+```
+
+```typescript
+// app/page.tsx
+import Link from 'next/link'
+
+export default function Home() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Análisis de Pedidos RAG</h1>
+      <Link href="/pedidos/nuevo" className="btn btn-primary">
+        Analizar Nuevo Pedido
+      </Link>
+    </div>
+  )
+}
+```
+
+### 1.2 Componente Upload
+
+```typescript
+// components/PedidoUpload.tsx
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function PedidoUpload() {
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!file) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/pedidos/analyze', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+
+      if (!data.success) {
+        throw new Error(data.error)
+      }
+
+      router.push(`/pedidos/${data.pedido_id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="border-2 border-dashed border-cyan-500 p-8 rounded-lg text-center">
+        <input
+          type="file"
+          accept=".pdf"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          className="hidden"
+          id="file-input"
+        />
+        <label
+          htmlFor="file-input"
+          className="cursor-pointer block"
+        >
+          <p className="text-xl mb-2">📄 Arrastra PDF aquí o haz clic</p>
+          {file && <p className="text-sm text-green-400">✓ {file.name}</p>}
+        </label>
+      </div>
+
+      {error && <div className="text-red-500">{error}</div>}
+
+      <button
+        type="submit"
+        disabled={!file || loading}
+        className="bg-cyan-600 text-white px-6 py-3 rounded disabled:opacity-50"
+      >
+        {loading ? 'Analizando...' : 'Analizar Pedido'}
+      </button>
+    </form>
+  )
+}
+```
+
+### 1.3 Pantalla Upload
+
+```typescript
+// app/pedidos/nuevo/page.tsx
+import PedidoUpload from '@/components/PedidoUpload'
+
+export default function NuevoPedido() {
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Nuevo Análisis de Pedido</h1>
+      <PedidoUpload />
+    </div>
+  )
+}
+```
+
+### 1.4 MongoDB Connection
+
+```typescript
+// lib/db.ts
+import { MongoClient, Db } from 'mongodb'
+
+let cachedClient: MongoClient | null = null
+let cachedDb: Db | null = null
+
+export async function connectDB(): Promise<Db> {
+  if (cachedDb) return cachedDb
+
+  const uri = process.env.MONGODB_URI
+  if (!uri) throw new Error('MONGODB_URI no definido')
+
+  const client = new MongoClient(uri)
+  await client.connect()
+
+  cachedClient = client
+  cachedDb = client.db('ascensores')
+
+  return cachedDb
+}
+```
+
+**Resultado Semana 1:** App carga, upload funciona, archivo se enva a servidor. ✅
+
+---
+
+## 🧠 PASO 2: SEMANA 2 - API & RAG
+
+### 2.1 Extracción de PDF
+
+```typescript
+// lib/pdf-utils.ts
+import pdfParse from 'pdf-parse'
+
+export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
+  try {
+    const pdf = await pdfParse(buffer)
+    return pdf.text
+  } catch (e) {
+    throw new Error('Error al parsear PDF')
+  }
+}
+```
+
+### 2.2 Función Gemini
+
+```typescript
+// lib/llm.ts
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+
+export async function extractModelsWithGemini(text: string) {
+  const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash' })
+
+  const prompt = `
+    Analiza este documento de pedido de ascensores y extrae una lista JSON 
+    con los modelos de componentes mencionados.
+    
+    Formato esperado:
+    [
+      { "tipo": "botonera", "modelo": "BTN-1234" },
+      { "tipo": "motor", "modelo": "MTR-5678" }
+    ]
+    
+    Devuelve SOLO el JSON.
+    
+    Documento:
+    ${text.substring(0, 2000)}
+  `
+
+  const response = await model.generateContent(prompt)
+  const content = response.response.text()
+
+  try {
+    return JSON.parse(content)
+  } catch {
+    console.error('JSON parse error:', content)
+    return []
+  }
+}
+```
+
+### 2.3 API Endpoint Análisis
+
+```typescript
+// app/api/pedidos/analyze/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
+import { connectDB } from '@/lib/db'
+import { extractTextFromPDF } from '@/lib/pdf-utils'
+import { extractModelsWithGemini } from '@/lib/llm'
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+
+    if (!file) {
+      return NextResponse.json(
+        { success: false, error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+
+    // Extraer texto
+    const buffer = await file.arrayBuffer()
+    const text = await extractTextFromPDF(Buffer.from(buffer))
+
+    // Analizar con Gemini
+    const modelos = await extractModelsWithGemini(text)
+
+    // Guardar en BD
+    const db = await connectDB()
+    const resultado = await db.collection('pedidos').insertOne({
+      numero_pedido: `PED-${Date.now()}`,
+      nombre_archivo: file.name,
+      texto_original: text,
+      modelos_detectados: modelos,
+      fecha_analisis: new Date(),
+      estado: 'analizado',
+      creado: new Date(),
+    })
+
+    return NextResponse.json({
+      success: true,
+      pedido_id: resultado.insertedId,
+      numero_pedido: `PED-${Date.now()}`,
+      modelos_detectados: modelos,
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Error analyzing document' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Resultado Semana 2:** Upload → Análisis → Guardado en BD. ✅
+
+---
+
+## 📋 PASO 3: SEMANA 3 - INFORME & CHECKLISTS
+
+### 3.1 Componente Informe Básico
+
+```typescript
+// components/PedidoInforme.tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+
+export default function PedidoInforme({ pedidoId }: { pedidoId: string }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`/api/pedidos/${pedidoId}/informe`)
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .finally(() => setLoading(false))
+  }, [pedidoId])
+
+  if (loading) return <div>Cargando informe...</div>
+  if (!data?.success) return <div>Error: {data?.error}</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gray-800 p-4 rounded">
+        <h1>Informe Técnico</h1>
+        <p>Pedido: {data.pedido.numero_pedido}</p>
+        <p>Fecha: {new Date(data.pedido.fecha_analisis).toLocaleDateString()}</p>
+      </div>
+
+      {data.modelos?.map((modelo: any) => (
+        <div key={`${modelo.tipo}-${modelo.modelo}`} className="border p-4 rounded">
+          <h2 className="text-xl font-bold">
+            {modelo.tipo.toUpperCase()}: {modelo.modelo}
+          </h2>
+          <p className="text-sm text-gray-400">
+            {modelo.documentos?.length || 0} documentos encontrados
+          </p>
+        </div>
+      ))}
+
+      <button
+        onClick={() => window.history.back()}
+        className="bg-gray-700 px-4 py-2 rounded"
+      >
+        ← Volver
+      </button>
+    </div>
+  )
+}
+```
+
+### 3.2 API Informe (Sin RAG aún)
+
+```typescript
+// app/api/pedidos/[id]/informe/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
+import { connectDB } from '@/lib/db'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const db = await connectDB()
+    const pedido = await db.collection('pedidos').findOne({
+      _id: new ObjectId(params.id),
+    })
+
+    if (!pedido) {
+      return NextResponse.json(
+        { success: false, error: 'Pedido no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      pedido: {
+        id: pedido._id,
+        numero_pedido: pedido.numero_pedido,
+        fecha_analisis: pedido.fecha_analisis,
+      },
+      modelos: pedido.modelos_detectados.map((m: any) => ({
+        tipo: m.tipo,
+        modelo: m.modelo,
+        documentos: [],
+      })),
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Error fetching report' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### 3.3 Pantalla Informe
+
+```typescript
+// app/pedidos/[id]/page.tsx
+import PedidoInforme from '@/components/PedidoInforme'
+
+export default function PedidoPage({ params }: { params: { id: string } }) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <PedidoInforme pedidoId={params.id} />
+    </div>
+  )
+}
+```
+
+**Resultado Semana 3:** Upload → Informe muestra datos del pedido. ✅
+
+---
+
+## 📊 PASO 4: SEMANA 4 - EXPORT PDF & DEPLOY
+
+### 4.1 Botón Exportar PDF
+
+```typescript
+// components/ExportPdf.tsx
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+
+export function ExportPdfButton() {
+  const handleExport = async () => {
+    const element = document.getElementById('informe-content')
+    if (!element) return
+
+    const canvas = await html2canvas(element)
+    const pdf = new jsPDF()
+    const imgData = canvas.toDataURL('image/png')
+
+    pdf.addImage(imgData, 'PNG', 10, 10, 190, 277)
+    pdf.save('Informe_Pedido.pdf')
+  }
+
+  return (
+    <button
+      onClick={handleExport}
+      className="bg-green-600 px-6 py-2 rounded text-white"
+    >
+      📥 Exportar a PDF
+    </button>
+  )
+}
+```
+
+### 4.2 Deploy a Vercel
+
+```bash
+# Commit y push
+git add .
+git commit -m "MVP RAG Ascensores"
+git push origin main
+
+# Vercel deploy automático
+# (Si ya conectaste con `vercel link`)
+# O desde Vercel dashboard: conecta repo
+```
+
+**Resultado Semana 4:** App completa en Vercel, MVP funcional. ✅
+
+---
+
+## 🎯 CHECKLIST MVP (4 SEMANAS)
+
+- ✅ Semana 1: Upload + home page.
+- ✅ Semana 2: PDF parsing + Gemini API + guardado en BD.
+- ✅ Semana 3: Informe básico (sin RAG aún, solo modelos detectados).
+- ✅ Semana 4: PDF export + deploy Vercel.
+- ✅ Dark mode dark theme (#1f2937).
+- ✅ Manejo de errores básico.
+- ✅ MongoDB estructura mínima (colección `pedidos`).
+
+**Total tiempo desarrollo:** ~80 horas (1 dev full-time + 1 parte-time QA).
+
+---
+
+## 🚀 PRÓXIMOS PASOS DESPUÉS DEL MVP
+
+### Semana 5–8: RAG Integrado
+- Crear colecciones `documentos_tecnicos`, `document_chunks`.
+- Implementar vector search.
+- Mostrar documentación en informe.
+
+### Semana 9–12: Checklists
+- Crear `checklists_templates`, `checklists_pedido`.
+- UI para marcar checklists.
+- Críticos obligatorios.
+
+### Semana 13+: Admin + Auditoría
+- Panel admin: corpus, logs, auditoría.
+- Logging centralizado.
+- Integración ERP (API REST).
+
+---
+
+## 📚 REFERENCIAS RÁPIDAS
+
+**Especificación completa:** Ver `especificacion-tecnica-profesional-v2.0.md`  
+**UX/UI Detalle:** Ver `guia-ux-ui-profesional.md`  
+**Diagramas técnicos:** Ver `technical-architecture-diagram.png`  
+
+---
+
+## 💡 TIPS PRO
+
+1. **TypeScript Strict:** Agrega `"strict": true` a `tsconfig.json` desde inicio.
+2. **Env Secrets:** Usa `NEXT_PUBLIC_` solo para valores públicos.
+3. **Git Flow:** `main` = producción, `develop` = staging, feature branches.
+4. **Testing:** Empieza con simple console.log, agrega tests Vitest en semana 4.
+5. **Performance:** No optimices antes de tener datos reales. Primero funcionar, luego rápido.
+
+---
+
+## ✅ READY TO CODE!
+
+Tienes todo lo que necesitas. 
+
+**Comando para comenzar:**
+
+```bash
+npm run dev
+```
+
+Abre `http://localhost:3000` y empieza a construir.
+
+¡Que disfrutes! 🚀
+
+---
+
+**Guía preparada:** 21 de enero de 2026  
+**Duración estimada:** 4 semanas MVP  
+**Siguiente:** Especificación técnica completa si necesitas más detalle
