@@ -46,6 +46,11 @@ GEMINI_API_KEY=AIzaSy...
 # Auth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=genera_con_openssl_rand_base64_32
+
+# Cloudinary (para almacenar PDFs)
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
 4. **Crear usuarios iniciales**

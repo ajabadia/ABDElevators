@@ -78,18 +78,18 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 ### 🔴 FASE 4: FUNCIONES ENTERPRISE Y CIERRE (SEMANA 4)
 **Objetivo:** Auditoría, exportación y despliegue.
 
-- [ ] **4.1 Gestión de Usuarios y Permisos (Básica)**
-  - Implementación de NextAuth.js v5 (Auth.js).
-  - Roles básicos: `ADMIN`, `TECNICO`, `INGENIERIA`.
-  - Arquitectura desacoplada para futura integración con SSO/Enterprise Identity (Azure AD, Okta, etc.).
-- [ ] **4.2 Exportación y Reportes**
-  - Generación de PDF profesional (`jsPDF` + `html2canvas`).
-  - Reporte de incidencias desde el informe.
-- [ ] **4.3 Observabilidad**
-  - Implementación de logging estructurado y dashboard de auditoría.
-- [ ] **4.4 Deployment y QA**
-  - Tests E2E con Playwright.
-  - Deployment final en Vercel.
+- [x] **4.1 Gestión de Usuarios y Permisos (Básica)**
+  - [x] Implementación de NextAuth.js v5 (Auth.js).
+  - [x] Roles básicos: `ADMIN`, `TECNICO`, `INGENIERIA`.
+  - [x] Arquitectura desacoplada para futura integración con SSO/Enterprise Identity (Azure AD, Okta, etc.).
+- [x] **4.2 Exportación y Reportes**
+  - [x] Generación de PDF profesional (`jsPDF` + `html2canvas`).
+  - [x] Reporte de incidencias desde el informe.
+- [x] **4.3 Observabilidad**
+  - [x] Implementación de logging estructurado y dashboard de auditoría.
+- [x] **4.4 Deployment y QA**
+  - [x] Tests E2E con Playwright.
+  - [x] Deployment final en Vercel.
 
 ---
 
@@ -97,5 +97,5 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 - **Fase 1:** 100%
 - **Fase 2:** 100%
 - **Fase 3:** 100%
-- **Fase 4:** 0%
-- **GLOBAL:** 75%
+- **Fase 4:** 100%
+- **GLOBAL:** 100%

@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
-import { DocumentChunkSchema } from '@/lib/schemas';
+import { DocumentChunkSchema, DocumentoTecnicoSchema } from '@/lib/schemas';
 import { ValidationError, AppError } from '@/lib/errors';
 import { generateEmbedding, extractModelsWithGemini } from '@/lib/llm';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
+import { uploadPDFToCloudinary } from '@/lib/cloudinary';
 import { z } from 'zod';
 import { PROMPTS } from '@/lib/prompts';
 
@@ -23,18 +24,9 @@ const IngestMetadataSchema = z.object({
  * Regla de Oro #8: Medir performance.
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = uuidv4();
     const inicio = Date.now();
 
     try {
-        await logEvento({
-            nivel: 'INFO',
-            origen: 'API_INGEST',
-            accion: 'RECEIVE_FILE',
-            mensaje: 'Iniciando ingestión de documento',
-            correlacion_id
-        });
-
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const metadataRaw = {
@@ -48,8 +40,34 @@ export async function POST(req: NextRequest) {
         }
         const metadata = IngestMetadataSchema.parse(metadataRaw);
 
-        // 2. Extraer Texto (Regla #3)
-        const text = await extractTextFromPDF(Buffer.from(await file.arrayBuffer()));
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const correlacion_id = `ingest-${Date.now()}`;
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'API_INGEST',
+            accion: 'INICIO',
+            mensaje: `Iniciando ingesta de ${file.name}`,
+            correlacion_id,
+            detalles: { filename: file.name, size: file.size }
+        });
+
+        // 1. Subir PDF a Cloudinary
+        const cloudinaryResult = await uploadPDFToCloudinary(buffer, file.name);
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'API_INGEST',
+            accion: 'CLOUDINARY_UPLOAD',
+            mensaje: 'PDF subido a Cloudinary',
+            correlacion_id,
+            detalles: {
+                url: cloudinaryResult.secureUrl,
+                publicId: cloudinaryResult.publicId
+            }
+        });
+
+        // 2. Extraer texto del PDF
+        const text = await extractTextFromPDF(buffer);
 
         // 3. Extraer modelos mencionados en el documento completo (Contexto Global)
         const modelosDetectados = await extractModelsWithGemini(text, correlacion_id);
@@ -60,8 +78,27 @@ export async function POST(req: NextRequest) {
 
         // 5. Generar Embeddings e Indexar
         const db = await connectDB();
-        const collection = db.collection('document_chunks');
+        const documentChunksCollection = db.collection('document_chunks');
+        const documentosTecnicosCollection = db.collection('documentos_tecnicos');
 
+        // 5.1. Guardar metadatos del documento en la colección 'documentos_tecnicos'
+        const documentoMetadata = {
+            nombre_archivo: file.name,
+            tipo_componente: metadata.tipo,
+            modelo: modeloPrincipal,
+            version: metadata.version,
+            fecha_revision: new Date(), // Usar la fecha actual para la revisión del documento
+            estado: 'vigente' as const,
+            cloudinary_url: cloudinaryResult.secureUrl,
+            cloudinary_public_id: cloudinaryResult.publicId,
+            total_chunks: chunks.length,
+            creado: new Date(),
+        };
+
+        const validatedDocumentoMetadata = DocumentoTecnicoSchema.parse(documentoMetadata);
+        await documentosTecnicosCollection.insertOne(validatedDocumentoMetadata);
+
+        // 5.2. Procesar y guardar los chunks
         for (const chunkText of chunks) {
             const embedding = await generateEmbedding(chunkText, correlacion_id);
 
@@ -73,12 +110,14 @@ export async function POST(req: NextRequest) {
                 fecha_revision: new Date(),
                 texto_chunk: chunkText,
                 embedding: embedding,
+                cloudinary_url: cloudinaryResult.secureUrl,
+                cloudinary_public_id: cloudinaryResult.publicId,
                 creado: new Date(),
             };
 
             // Validar objeto final antes de insertar (Regla #2)
             const validatedChunk = DocumentChunkSchema.parse(documentChunk);
-            await collection.insertOne(validatedChunk);
+            await documentChunksCollection.insertOne(validatedChunk);
         }
 
         const duracion = Date.now() - inicio;

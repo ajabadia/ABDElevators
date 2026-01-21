@@ -70,7 +70,25 @@ export const LogAplicacionSchema = z.object({
     timestamp: z.date(),
 });
 
+/**
+ * Esquema para Documentos Técnicos (metadatos)
+ */
+export const DocumentoTecnicoSchema = z.object({
+    _id: z.any().optional(),
+    nombre_archivo: z.string(),
+    tipo_componente: z.string(),
+    modelo: z.string(),
+    version: z.string(),
+    fecha_revision: z.date(),
+    estado: z.enum(['vigente', 'obsoleto', 'borrador']),
+    cloudinary_url: z.string().optional(),
+    cloudinary_public_id: z.string().optional(),
+    total_chunks: z.number(),
+    creado: z.date(),
+});
+
 export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
 export type Pedido = z.infer<typeof PedidoSchema>;
 export type AuditoriaRag = z.infer<typeof AuditoriaRagSchema>;
 export type LogAplicacion = z.infer<typeof LogAplicacionSchema>;
+export type DocumentoTecnico = z.infer<typeof DocumentoTecnicoSchema>;
