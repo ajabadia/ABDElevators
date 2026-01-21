@@ -15,11 +15,18 @@ export default function Home() {
           <a href="#" className="hover:text-teal-600 transition-colors">Tecnología</a>
           <a href="#" className="hover:text-teal-600 transition-colors">Contacto</a>
         </div>
-        <Link href="/pedidos">
-          <Button className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full px-6">
-            Acceso Técnicos
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/login">
+            <Button variant="outline" className="border-slate-300 hover:bg-slate-50 font-bold">
+              Iniciar Sesión
+            </Button>
+          </Link>
+          <Link href="/pedidos">
+            <Button className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full px-6">
+              Acceso Técnicos
+            </Button>
+          </Link>
+        </div>
       </nav>
 
       {/* Hero Section */}
