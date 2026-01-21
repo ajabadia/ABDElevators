@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ABDElevators RAG System
 
-## Getting Started
+Sistema de Análisis RAG (Retrieval-Augmented Generation) para el departamento técnico de una fábrica de ascensores.
 
-First, run the development server:
+## 🚀 Inicio Rápido
 
+### Windows
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+start_app.bat
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Linux/Mac
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📋 Requisitos Previos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+ 
+- MongoDB Atlas (cuenta gratuita)
+- Google AI Studio API Key (Gemini)
 
-## Learn More
+## ⚙️ Configuración
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/ajabadia/ABDElevators.git
+cd ABDElevators
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Instalar dependencias**
+```bash
+npm install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Configurar variables de entorno**
 
-## Deploy on Vercel
+Crear archivo `.env.local`:
+```env
+# Database
+MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/ABDElevators
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# AI
+GEMINI_API_KEY=AIzaSy...
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Auth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=genera_con_openssl_rand_base64_32
+```
+
+4. **Crear usuarios iniciales**
+```bash
+npm run seed-users
+```
+
+5. **Iniciar servidor de desarrollo**
+```bash
+npm run dev
+```
+
+## 👥 Usuarios de Prueba
+
+| Email | Password | Rol | Permisos |
+|-------|----------|-----|----------|
+| admin@abd.com | admin123 | ADMIN | Acceso completo |
+| tecnico@abd.com | tecnico123 | TECNICO | Portal técnico |
+| ingenieria@abd.com | ingenieria123 | INGENIERIA | Solo lectura |
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── (admin)/          # Panel administrativo
+│   ├── (tecnico)/        # Portal técnico
+│   ├── api/              # API routes
+│   └── login/            # Autenticación
+├── components/
+│   ├── admin/            # Componentes admin
+│   ├── tecnico/          # Componentes técnicos
+│   └── shared/           # Componentes compartidos
+└── lib/
+    ├── auth.ts           # NextAuth config
+    ├── db.ts             # MongoDB connection
+    ├── llm.ts            # Gemini integration
+    ├── rag-service.ts    # Vector search
+    └── pdf-export.ts     # PDF generation
+```
+
+## 🔧 Scripts Disponibles
+
+```bash
+npm run dev          # Servidor desarrollo
+npm run build        # Build producción
+npm run start        # Servidor producción
+npm run seed-users   # Crear usuarios prueba
+npm run lint         # Linter
+```
+
+## 🌐 Deployment en Vercel
+
+1. Conectar repositorio en Vercel
+2. Configurar variables de entorno
+3. Deploy automático en cada push a `main`
+
+## 📊 Características
+
+- ✅ Autenticación con NextAuth.js v5
+- ✅ Control de acceso basado en roles
+- ✅ Upload y procesamiento de PDFs
+- ✅ Análisis con Gemini 2.0 Flash
+- ✅ Búsqueda vectorial (MongoDB Atlas)
+- ✅ Exportación de informes a PDF
+- ✅ Dashboard de auditoría
+- ✅ Trazabilidad completa (correlacion_id)
+
+## 📝 Licencia
+
+Propietario - ABDElevators © 2026
