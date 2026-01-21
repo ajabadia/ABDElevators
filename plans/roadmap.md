@@ -37,41 +37,41 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 - [x] **1.2 Capa de Datos (MongoDB Atlas)**
   - [x] Configuración del cliente MongoDB con singleton pattern en `lib/db.ts`.
   - [x] Definición de Schemas Zod en `lib/schemas.ts`.
-  - [ ] Creación de índice de búsqueda vectorial en `document_chunks`.
-- [ ] **1.3 Integración de IA (Gemini)**
-  - Configuración del SDK en `lib/llm.ts`.
-  - Definición de utilidades para embeddings (`text-embedding-004`).
-  - Definición de prompts versionados en `lib/prompts.ts`.
+  - [x] Creación de índice de búsqueda vectorial en `document_chunks`.
+- [/] **1.3 Integración de IA (Gemini)**
+  - [x] Configuración del SDK en `lib/llm.ts`.
+  - [x] Definición de utilidades para embeddings (`text-embedding-004`).
+  - [x] Definición de prompts versionados en `lib/prompts.ts`.
 
 ---
 
 ### 🟡 FASE 2: GESTIÓN DE LA BASE DE CONOCIMIENTO - ADMIN (SEMANA 2)
 **Objetivo:** Permitir que ingeniería alimente el sistema con documentación oficial.
 
-- [ ] **2.1 Panel de Ingesta (UI Admin)**
-  - Sidebar de administración y vista de lista de documentos.
-  - Formulario de subida con metadatos y control de versiones.
-- [ ] **2.2 Pipeline de Procesamiento**
-  - Extracción de texto de PDF (`pdf-parse`).
-  - Estrategia de Chunking (500-800 chars, overlap 100).
-  - Almacenamiento con contexto `texto_antes` / `texto_despues`.
-- [ ] **2.3 Ciclo de Vida del Documento**
-  - Lógica de estados: `borrador` -> `vigente` -> `obsoleto`.
+- [x] **2.1 Panel de Ingesta (UI Admin)**
+  - [x] Sidebar de administración y vista de lista de documentos.
+  - [x] Formulario de subida con metadatos y control de versiones.
+- [x] **2.2 Pipeline de Procesamiento**
+  - [x] Extracción de texto de PDF (`pdf-parse`).
+  - [x] Estrategia de Chunking (500-800 chars, overlap 100).
+  - [x] Almacenamiento con contexto `texto_antes` / `texto_despues`.
+- [x] **2.3 Ciclo de Vida del Documento**
+  - [x] Lógica de estados: `borrador` -> `vigente` -> `obsoleto`.
 
 ---
 
 ### 🟠 FASE 3: ANÁLISIS DE PEDIDOS Y RAG (SEMANA 3)
 **Objetivo:** Ejecutar la búsqueda semántica y presentar el valor al técnico.
 
-- [ ] **3.1 Portal del Técnico (UI Taller)**
-  - Diseño Dark Mode optimizado (#1f2937).
-  - Zona de upload Drag-and-Drop premium.
-- [ ] **3.2 Orquestación RAG (LangChain)**
-  - Extracción de modelos con Gemini 2.0 Flash.
-  - Búsqueda vectorial filtrada por `estado: vigente`.
-- [ ] **3.3 Informe Dinámico con Checklists**
-  - Renderizado de fragmentos con barras de relevancia.
-  - Integración de checklists obligatorias.
+- [x] **3.1 Portal del Técnico (UI Taller)**
+  - [x] Diseño Dark Mode optimizado (#1f2937).
+  - [x] Zona de upload Drag-and-Drop premium.
+- [x] **3.2 Orquestación RAG (LangChain)**
+  - [x] Extracción de modelos con Gemini 2.0 Flash.
+  - [x] Búsqueda vectorial filtrada por `estado: vigente`.
+- [x] **3.3 Informe Dinámico con Checklists**
+  - [x] Renderizado de fragmentos con barras de relevancia.
+  - [x] Integración de checklists obligatorias.
 
 ---
 
@@ -94,8 +94,8 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 ---
 
 ### 📈 MÉTRICAS DE AVANCE
-- **Fase 1:** 50%
-- **Fase 2:** 0%
-- **Fase 3:** 0%
+- **Fase 1:** 100%
+- **Fase 2:** 100%
+- **Fase 3:** 100%
 - **Fase 4:** 0%
-- **GLOBAL:** 12%
+- **GLOBAL:** 75%
