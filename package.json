@@ -24,7 +24,6 @@
     "jspdf": "^4.0.0",
     "langchain": "^1.2.11",
     "lucide-react": "^0.562.0",
-    "Lucide-react": "npm:lucide-react@^0.562.0",
     "mongodb": "^7.0.0",
     "next": "16.1.4",
     "pdf-parse": "^2.4.5",
