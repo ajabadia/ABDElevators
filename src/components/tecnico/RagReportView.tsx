@@ -4,6 +4,7 @@ import { FileText, CheckCircle2, ChevronRight, BookOpen, AlertCircle } from "luc
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ExportButton } from "./ExportButton";
 
 interface RagContext {
     texto: string;

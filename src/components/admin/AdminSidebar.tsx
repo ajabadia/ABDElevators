@@ -3,9 +3,9 @@ import { LayoutDashboard, FileText, History, Settings, MessageSquare } from 'luc
 
 const menuItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Documentación', href: '/admin/documentos', icon: FileText },
-    { name: 'Auditoría RAG', href: '/admin/auditoria', icon: History },
-    { name: 'Logs', href: '/admin/logs', icon: Settings },
+    { name: 'Documentos', href: '/admin/documentos', icon: FileText },
+    { name: 'Auditoría', href: '/admin/auditoria', icon: History },
+    { name: 'Configuración', href: '/admin/settings', icon: Settings },
     { name: 'Incidencias', href: '/admin/incidencias', icon: MessageSquare },
 ];
 
