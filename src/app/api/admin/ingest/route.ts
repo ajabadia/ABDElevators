@@ -7,7 +7,7 @@ import { ValidationError, AppError } from '@/lib/errors';
 import { generateEmbedding, extractModelsWithGemini } from '@/lib/llm';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
-import { uploadPDFToCloudinary } from '@/lib/cloudinary';
+import { uploadRAGDocument } from '@/lib/cloudinary';
 import { z } from 'zod';
 import { PROMPTS } from '@/lib/prompts';
 
@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
             detalles: { filename: file.name, size: file.size }
         });
 
-        // 1. Subir PDF a Cloudinary
-        const cloudinaryResult = await uploadPDFToCloudinary(buffer, file.name);
+        // 1. Subir PDF a Cloudinary (carpeta RAG)
+        const cloudinaryResult = await uploadRAGDocument(buffer, file.name);
         await logEvento({
             nivel: 'INFO',
             origen: 'API_INGEST',

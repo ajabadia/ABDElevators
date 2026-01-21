@@ -105,7 +105,7 @@ export default function AuditoriaPage() {
                             {/* Mock data - en producción vendría de la API */}
                             {[1, 2, 3, 4, 5].map((i) => (
                                 <TableRow key={i} className="hover:bg-slate-50/50">
-                                    <TableCell className="font-mono text-xs">
+                                    <TableCell className="font-mono text-xs" suppressHydrationWarning>
                                         {new Date().toLocaleString('es-ES')}
                                     </TableCell>
                                     <TableCell>
