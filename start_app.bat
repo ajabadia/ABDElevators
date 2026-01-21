@@ -15,19 +15,26 @@ if not exist ".env.local" (
     echo   NEXTAUTH_URL=http://localhost:3000
     echo   NEXTAUTH_SECRET=tu_secret_generado
     echo.
-    pause
+    echo Presiona cualquier tecla para salir...
+    pause >nul
     exit /b 1
 )
 
 REM Verificar que node_modules existe
 if not exist "node_modules" (
     echo [INFO] Instalando dependencias...
+    echo.
     call npm install
     if errorlevel 1 (
+        echo.
         echo [ERROR] Fallo la instalacion de dependencias
-        pause
+        echo Presiona cualquier tecla para salir...
+        pause >nul
         exit /b 1
     )
+    echo.
+    echo [OK] Dependencias instaladas correctamente
+    echo.
 )
 
 echo [INFO] Iniciando servidor de desarrollo...
@@ -43,6 +50,12 @@ echo Presiona Ctrl+C para detener el servidor
 echo ========================================
 echo.
 
-npm run dev
+REM Usar call para que no se cierre la ventana si hay error
+call npm run dev
 
-pause
+REM Si npm run dev termina (por error o Ctrl+C), pausar antes de cerrar
+echo.
+echo.
+echo El servidor se ha detenido.
+echo Presiona cualquier tecla para cerrar esta ventana...
+pause >nul
