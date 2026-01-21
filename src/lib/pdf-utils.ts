@@ -6,8 +6,9 @@ import { ExternalServiceError } from './errors';
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     try {
-        // Importación dinámica para evitar errores en build de Vercel
-        const pdfParse = await import('pdf-parse');
+        // Importación dinámica usando require para compatibilidad con CommonJS
+        // pdf-parse es un módulo CommonJS que no tiene export default en ESM
+        const pdfParse = (await eval('import("pdf-parse")')).default || require('pdf-parse');
         const data = await pdfParse(buffer);
         return data.text;
     } catch (error) {
