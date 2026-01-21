@@ -10,15 +10,18 @@ import { ObjectId } from 'mongodb';
  */
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlacion_id = `reset-password-${Date.now()}`;
 
     try {
+        // Next.js 16: params es ahora una Promise
+        const { id } = await params;
+
         const db = await connectDB();
 
         const usuario = await db.collection('usuarios').findOne({
-            _id: new ObjectId(params.id)
+            _id: new ObjectId(id)
         });
 
         if (!usuario) {
@@ -33,7 +36,7 @@ export async function POST(
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         await db.collection('usuarios').updateOne(
-            { _id: new ObjectId(params.id) },
+            { _id: new ObjectId(id) },
             {
                 $set: {
                     password: hashedPassword,
@@ -48,7 +51,7 @@ export async function POST(
             accion: 'RESET_PASSWORD',
             mensaje: `Contraseña reseteada para: ${usuario.email}`,
             correlacion_id,
-            detalles: { usuario_id: params.id }
+            detalles: { usuario_id: id }
         });
 
         return NextResponse.json({

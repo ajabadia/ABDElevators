@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { logEvento } from '@/lib/logger';
+import { ObjectId } from 'mongodb';
 
+/**
+ * GET /api/admin/documentos/[id]/download
+ * Descarga el PDF original desde Cloudinary
+ */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Next.js 16: params es ahora una Promise
+        const { id } = await params;
+
         const db = await connectDB();
         const documento = await db.collection('documentos_tecnicos').findOne({
-            _id: new (require('mongodb').ObjectId)(params.id)
+            _id: new ObjectId(id)
         });
 
         if (!documento) {
@@ -35,7 +43,7 @@ export async function GET(
             accion: 'PDF_DOWNLOAD',
             mensaje: `Descarga de PDF: ${documento.nombre_archivo}`,
             correlacion_id: `download-${Date.now()}`,
-            detalles: { documento_id: params.id }
+            detalles: { documento_id: id }
         });
 
         // Redirigir a la URL de Cloudinary
