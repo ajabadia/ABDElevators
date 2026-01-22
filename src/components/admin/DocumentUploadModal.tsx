@@ -97,9 +97,9 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] border-none shadow-2xl">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold font-outfit text-slate-900">Subir Documentación Técnica</DialogTitle>
-                    <DialogDescription className="text-slate-500">
-                        Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG.
+                    <DialogTitle id="upload-dialog-title" className="text-2xl font-bold font-outfit text-slate-900">Subir Documentación Técnica</DialogTitle>
+                    <DialogDescription id="upload-dialog-desc" className="text-slate-500">
+                        Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.
                     </DialogDescription>
                 </DialogHeader>
 

@@ -14,7 +14,8 @@ import {
     LogOut,
     Zap,
     UserCircle,
-    CreditCard
+    CreditCard,
+    Building
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -79,6 +80,12 @@ export function AppSidebar() {
             roles: ['ADMIN']
         },
         {
+            name: 'Organización',
+            href: '/admin/tenants',
+            icon: Building,
+            roles: ['ADMIN']
+        },
+        {
             name: 'Auditoría',
             href: '/admin/auditoria',
             icon: History,
@@ -115,20 +122,23 @@ export function AppSidebar() {
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
-            <div className={cn(
-                "p-6 border-b border-slate-800 flex items-center justify-between overflow-hidden whitespace-nowrap",
-                isCollapsed && "px-4"
-            )}>
+            <Link
+                href="/"
+                className={cn(
+                    "p-6 border-b border-slate-800 flex items-center justify-between overflow-hidden whitespace-nowrap hover:bg-slate-800/50 transition-colors group",
+                    isCollapsed && "px-4"
+                )}
+            >
                 {!isCollapsed && (
                     <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-                        <h1 className="text-xl font-bold tracking-tight text-teal-400">ABD RAG Platform</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-teal-400 group-hover:text-teal-300 transition-colors">ABD RAG Platform</h1>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Vision 2.0</p>
                     </div>
                 )}
                 {isCollapsed && (
-                    <div className="mx-auto text-teal-400 font-bold text-xl">RAG</div>
+                    <div className="mx-auto text-teal-400 font-bold text-xl group-hover:text-teal-300 transition-colors">RAG</div>
                 )}
-            </div>
+            </Link>
 
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
                 {filteredItems.map((item) => {

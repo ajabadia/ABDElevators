@@ -1,0 +1,41 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "actions": "Actions"
+    },
+    "nav": {
+        "solutions": "Solutions",
+        "technology": "Technology",
+        "contact": "Contact",
+        "login": "Customer Access",
+        "demo": "Free Demo",
+        "security": "Security"
+    },
+    "hero": {
+        "badge": "Enterprise Knowledge Intelligence",
+        "title": "Transform your documents into active value.",
+        "subtitle": "The ultimate RAG platform for high-precision industries. Intelligent indexing, semantic search, and AI-assisted analysis powered by Gemini 2.0 Flash with full traceability.",
+        "cta_main": "Get started",
+        "cta_sec": "View architecture"
+    },
+    "stats": {
+        "accuracy": "RAG Accuracy",
+        "latency": "Inference Latency",
+        "compliant": "SOC2 Compliant",
+        "corpus_indexed": "Indexed Corpus"
+    },
+    "features": {
+        "title": "Elite Knowledge Engineering",
+        "subtitle": "Designed for sectors where misinterpretation is not an option.",
+        "f1_title": "Dual-Engine Extraction",
+        "f1_desc": "Combines advanced OCR with Gemini 2.0 Flash to extract tables, diagrams, and technical specs with pinpoint accuracy.",
+        "f2_title": "Hybrid Vector Search",
+        "f2_desc": "Contextual semantic search that understands engineer intent, not just keywords.",
+        "f3_title": "Audit-Trail Pro",
+        "f3_desc": "Full traceability: every generated paragraph includes a direct citation to the original source document."
+    }
+}

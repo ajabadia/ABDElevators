@@ -1,6 +1,6 @@
 # ABD Multi-Industry RAG Platform (Vision 2.0)
 
-Sistema RAG (Retrieval-Augmented Generation) genérico y multi-tenant diseñado para análisis de documentos técnicos, legales e industriales. Evolucionado desde el prototipo ABDElevators hacia una solución SaaS horizontal.
+Sistema RAG (Retrieval-Augmented Generation) genérico y multi-tenant diseñado para análisis de documentos técnicos, legales e industriales. Evolucionado desde el prototipo ABD RAG Plataform hacia una solución SaaS horizontal.
 
 ## 🚀 Inicio Rápido
 
@@ -121,4 +121,4 @@ npm run lint         # Linter
 
 ## 📝 Licencia
 
-Propietario - ABDElevators © 2026
+Propietario - ABD RAG Plataform © 2026

@@ -4,7 +4,9 @@ export type ErrorCode =
   | 'EXTERNAL_SERVICE_ERROR'
   | 'NOT_FOUND'
   | 'INTERNAL_ERROR'
-  | 'UNAUTHORIZED';
+  | 'UNAUTHORIZED'
+  | 'TENANT_CONFIG_ERROR'
+  | 'STORAGE_QUOTA_EXCEEDED';
 
 export class AppError extends Error {
   constructor(

@@ -268,6 +268,27 @@ export const DocumentoUsuarioSchema = z.object({
 });
 
 /**
+ * Esquema para Configuración de Tenant (Fase 7.4)
+ */
+export const TenantConfigSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    name: z.string(),
+    industry: IndustryTypeSchema,
+    storage: z.object({
+        provider: z.enum(['cloudinary', 'google_drive', 's3']).default('cloudinary'),
+        settings: z.object({
+            folder_prefix: z.string().optional(),
+            bucket_name: z.string().optional(),
+            credentials_ref: z.string().optional(), // Referencia a un secret manager
+        }),
+        quota_bytes: z.number().default(1024 * 1024 * 1024), // 1GB default
+    }),
+    active: z.boolean().default(true),
+    creado: z.date().default(() => new Date()),
+});
+
+/**
  * Esquema para Logs de Uso y Consumo (Visión 2.0 - Fase 7.4)
  */
 export const UsageLogSchema = z.object({

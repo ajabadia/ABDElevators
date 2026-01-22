@@ -1,7 +1,7 @@
 @echo off
 cls
 echo ========================================
-echo   ABDElevators RAG System - Startup
+echo   ABD RAG Plataform System - Startup
 echo ========================================
 echo.
 

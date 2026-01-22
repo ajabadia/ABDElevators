@@ -38,7 +38,7 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
         pdf.setTextColor(255, 255, 255);
         pdf.setFontSize(24);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('ABDElevators', 15, 15);
+        pdf.text('ABD RAG Plataform', 15, 15);
 
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'normal');
@@ -124,7 +124,7 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
             pdf.setFontSize(8);
             pdf.setTextColor(150, 150, 150);
             pdf.text(
-                `Página ${i} de ${totalPages} | Generado por ABDElevators RAG System`,
+                `Página ${i} de ${totalPages} | Generado por ABD RAG Plataform System`,
                 pageWidth / 2,
                 pageHeight - 10,
                 { align: 'center' }

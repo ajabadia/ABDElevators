@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, Filter, FileText, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+    Plus, Search, Filter, FileText, CheckCircle2,
+    AlertCircle, Clock, Trash2, Download, MoreVertical,
+    Archive, ShieldOff
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DocumentUploadModal } from "@/components/admin/DocumentUploadModal";
@@ -15,17 +19,136 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { logEventoCliente } from "@/lib/logger-client";
 
-// Mock data for initial UI dev
-const mockDocuments = [
-    { id: "1", nombre: "Manual_Botoneras_v2.1.pdf", tipo: "Botonera", version: "2.1", estado: "vigente", chunks: 124, fecha: "2026-01-15" },
-    { id: "2", nombre: "Especificación_Motores_S300.pdf", tipo: "Motor", version: "1.0", estado: "obsoleto", chunks: 85, fecha: "2025-11-20" },
-    { id: "3", nombre: "Protocolo_Seguridad_Puertas.pdf", tipo: "Puerta", version: "1.2", estado: "borrador", chunks: 0, fecha: "2026-01-20" },
-];
+interface Documento {
+    _id: string;
+    nombre_archivo: string;
+    tipo_componente: string;
+    modelo: string;
+    version: string;
+    estado: 'vigente' | 'obsoleto' | 'borrador' | 'archivado';
+    total_chunks: number;
+    creado: string;
+    fecha_revision: string;
+}
 
 export default function DocumentosPage() {
+    const [documentos, setDocumentos] = useState<Documento[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+    const { toast } = useToast();
+
+    const fetchDocumentos = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/admin/documentos');
+            const data = await res.json();
+            if (data.success) {
+                setDocumentos(data.documentos);
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo cargar el corpus técnico",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDocumentos();
+    }, []);
+
+    const handleStatusChange = async (documentId: string, nuevoEstado: string) => {
+        try {
+            const res = await fetch('/api/admin/documentos/status', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ documentId, nuevoEstado }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                toast({
+                    title: "Estado actualizado",
+                    description: `El documento ahora está en estado ${nuevoEstado}`,
+                });
+                fetchDocumentos();
+                logEventoCliente({
+                    nivel: 'INFO',
+                    origen: 'UI_DOCS',
+                    accion: 'STATUS_CHANGE',
+                    mensaje: `Cambiado estado a ${nuevoEstado}`,
+                    correlacion_id: documentId
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo actualizar el estado",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleDelete = async (documentId: string, nombre: string) => {
+        if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción borrará el archivo de Cloudinary y todos sus fragmentos indexados de forma permanente.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/documentos/${documentId}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                toast({
+                    title: "Documento eliminado",
+                    description: "El archivo y sus fragmentos han sido borrados de la base de datos.",
+                });
+                fetchDocumentos();
+                logEventoCliente({
+                    nivel: 'WARN',
+                    origen: 'UI_DOCS',
+                    accion: 'DELETE_DOC',
+                    mensaje: `Eliminado documento ${nombre}`,
+                    correlacion_id: documentId
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Fallo crítico al intentar eliminar el documento",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const filteredDocs = documentos.filter(doc =>
+        doc.nombre_archivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.tipo_componente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.modelo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const stats = {
+        vigentes: documentos.filter(d => d.estado === 'vigente').length,
+        totalChunks: documentos.reduce((acc, d) => acc + d.total_chunks, 0),
+        ultimaIngesta: documentos.length > 0 ? new Date(documentos[0].creado).toLocaleString() : '-'
+    };
 
     return (
         <div className="space-y-6">
@@ -45,26 +168,29 @@ export default function DocumentosPage() {
 
             <DocumentUploadModal
                 isOpen={isUploadOpen}
-                onClose={() => setIsUploadOpen(false)}
+                onClose={() => {
+                    setIsUploadOpen(false);
+                    fetchDocumentos();
+                }}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-none shadow-md bg-gradient-to-br from-teal-500 to-teal-600 text-white">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-teal-100 font-medium">Documentos Vigentes</CardDescription>
-                        <CardTitle className="text-4xl font-bold font-outfit">24</CardTitle>
+                        <CardTitle className="text-4xl font-bold font-outfit">{stats.vigentes}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card className="border-none shadow-md bg-white">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium">Chunks Indexados</CardDescription>
-                        <CardTitle className="text-4xl font-bold font-outfit text-slate-900">1,247</CardTitle>
+                        <CardTitle className="text-4xl font-bold font-outfit text-slate-900">{stats.totalChunks.toLocaleString()}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card className="border-none shadow-md bg-white">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium">Última Ingesta</CardDescription>
-                        <CardTitle className="text-xl font-bold font-outfit text-slate-900">Hoy, 14:20</CardTitle>
+                        <CardTitle className="text-lg font-bold font-outfit text-slate-900">{stats.ultimaIngesta}</CardTitle>
                     </CardHeader>
                 </Card>
             </div>
@@ -75,7 +201,7 @@ export default function DocumentosPage() {
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <Input
-                                placeholder="Buscar por nombre o componente..."
+                                placeholder="Buscar por nombre, componente o modelo..."
                                 className="pl-10 border-slate-200 focus:ring-teal-500/20"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -92,7 +218,7 @@ export default function DocumentosPage() {
                         <TableHeader className="bg-slate-50/50">
                             <TableRow>
                                 <TableHead className="w-[300px] font-bold text-slate-900">Documento</TableHead>
-                                <TableHead className="font-bold text-slate-900">Tipo</TableHead>
+                                <TableHead className="font-bold text-slate-900">Tipo / Modelo</TableHead>
                                 <TableHead className="font-bold text-slate-900">Versión</TableHead>
                                 <TableHead className="font-bold text-slate-900">Estado</TableHead>
                                 <TableHead className="font-bold text-slate-900">Fragmentos</TableHead>
@@ -100,23 +226,42 @@ export default function DocumentosPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockDocuments.map((doc) => (
-                                <TableRow key={doc.id} className="hover:bg-slate-50/50 transition-colors">
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+                                        Cargando documentos...
+                                    </TableCell>
+                                </TableRow>
+                            ) : filteredDocs.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+                                        No se encontraron documentos.
+                                    </TableCell>
+                                </TableRow>
+                            ) : filteredDocs.map((doc) => (
+                                <TableRow key={doc._id} className="hover:bg-slate-50/50 transition-colors">
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-slate-100 rounded text-slate-500">
                                                 <FileText size={18} />
                                             </div>
-                                            <div>
-                                                <p className="text-slate-900 font-semibold">{doc.nombre}</p>
-                                                <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">Revisado: {doc.fecha}</p>
+                                            <div className="max-w-[200px]">
+                                                <p className="text-slate-900 font-semibold truncate" title={doc.nombre_archivo}>
+                                                    {doc.nombre_archivo}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">
+                                                    Subido: {new Date(doc.creado).toLocaleDateString()}
+                                                </p>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
-                                            {doc.tipo}
-                                        </Badge>
+                                        <div className="space-y-1">
+                                            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] uppercase">
+                                                {doc.tipo_componente}
+                                            </Badge>
+                                            <p className="text-xs font-bold text-slate-700">{doc.modelo}</p>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="font-mono text-xs text-slate-500">v{doc.version}</TableCell>
                                     <TableCell>
@@ -126,8 +271,13 @@ export default function DocumentosPage() {
                                             </Badge>
                                         )}
                                         {doc.estado === "obsoleto" && (
-                                            <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100">
+                                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1 hover:bg-amber-100">
                                                 <AlertCircle size={12} /> Obsoleto
+                                            </Badge>
+                                        )}
+                                        {doc.estado === "archivado" && (
+                                            <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100">
+                                                <Archive size={12} /> Archivado
                                             </Badge>
                                         )}
                                         {doc.estado === "borrador" && (
@@ -138,16 +288,49 @@ export default function DocumentosPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold text-slate-900">{doc.chunks}</span>
+                                            <span className="text-sm font-semibold text-slate-900">{doc.total_chunks}</span>
                                             <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div className="bg-teal-500 h-full" style={{ width: doc.chunks > 0 ? "100%" : "0%" }}></div>
+                                                <div
+                                                    className="bg-teal-500 h-full transition-all duration-1000"
+                                                    style={{ width: `${Math.min(100, (doc.total_chunks / 100) * 100)}%` }}
+                                                ></div>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700 hover:bg-teal-50">
-                                            Editar
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                                <DropdownMenuItem
+                                                    onClick={() => window.open(`/api/admin/documentos/${doc._id}/download`, '_blank')}
+                                                >
+                                                    <Download className="mr-2 h-4 w-4" /> Ver / Descargar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuLabel className="text-[10px] text-slate-400">Cambiar Estado</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'vigente')}>
+                                                    <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" /> Marcar Vigente
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
+                                                    <AlertCircle className="mr-2 h-4 w-4 text-amber-500" /> Marcar Obsoleto
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'archivado')}>
+                                                    <Archive className="mr-2 h-4 w-4 text-slate-500" /> Archivar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => handleDelete(doc._id, doc.nombre_archivo)}
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar Permanente
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}

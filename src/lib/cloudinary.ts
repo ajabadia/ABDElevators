@@ -1,5 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { UsageService } from './usage-service';
+import { TenantService } from './tenant-service';
+import { AppError } from './errors';
 
 // Configurar Cloudinary
 cloudinary.config({
@@ -44,14 +46,23 @@ async function uploadToFolder(
 }
 
 /**
- * Sube un PDF técnico para el RAG (Carpeta compartida del tenant)
+ * Sube un PDF técnico para el RAG (Carpeta aislada por tenant)
  */
 export async function uploadRAGDocument(
     buffer: Buffer,
     filename: string,
     tenantId: string = 'default_tenant'
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const result = await uploadToFolder(buffer, filename, `abd-elevators/tenants/${tenantId}/documentos-rag`);
+    // 1. Verificar quota del tenant
+    const hasQuota = await TenantService.hasStorageQuota(tenantId, buffer.length);
+    if (!hasQuota) {
+        throw new AppError('STORAGE_QUOTA_EXCEEDED', 403, 'El tenant ha excedido su cuota de almacenamiento');
+    }
+
+    // 2. Obtener prefijo de carpeta según config del tenant
+    const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
+
+    const result = await uploadToFolder(buffer, filename, `${folderPrefix}/documentos-rag`);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-rag-docs');
     return result;
 }

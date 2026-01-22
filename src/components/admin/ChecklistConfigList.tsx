@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChecklistConfig } from '@/lib/schemas';
-import { logEvento } from '@/lib/logger';
+import { logEventoCliente } from '@/lib/logger-client';
 import { Plus, Edit, Trash2, CheckCircle, XCircle, LayoutGrid } from 'lucide-react';
 
 /**
@@ -28,7 +28,7 @@ export const ChecklistConfigList: React.FC = () => {
             setError(null);
         } catch (err: any) {
             setError(err.message);
-            await logEvento({
+            await logEventoCliente({
                 nivel: 'ERROR',
                 origen: 'CHECKLIST_CONFIG_UI',
                 accion: 'FETCH_LIST_ERROR',
@@ -56,7 +56,7 @@ export const ChecklistConfigList: React.FC = () => {
             if (!res.ok) throw new Error('Error al eliminar');
 
             await fetchConfigs();
-            await logEvento({
+            await logEventoCliente({
                 nivel: 'INFO',
                 origen: 'CHECKLIST_CONFIG_UI',
                 accion: 'DELETE_SUCCESS',

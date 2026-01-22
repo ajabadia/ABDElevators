@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { connectDB } from "./db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { logEvento } from "./logger";
 
 // Esquema de validación para login
 const LoginSchema = z.object({
@@ -30,23 +31,43 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                     // Conectar a MongoDB
                     const db = await connectDB();
+
                     const user = await db.collection("usuarios").findOne({
-                        email: email.toLowerCase()
+                        email: email.toLowerCase().trim()
                     });
 
                     if (!user) {
-                        console.log("[Auth INFO] User not found in DB:", email);
+                        await logEvento({
+                            nivel: 'WARN',
+                            origen: 'AUTH',
+                            accion: 'LOGIN_FAIL_USER_NOT_FOUND',
+                            mensaje: `Intento de login fallido: ${email} (no existe)`,
+                            correlacion_id: `auth-fail-${Date.now()}`
+                        });
                         return null;
                     }
 
                     // Verificar contraseña
                     const isValidPassword = await bcrypt.compare(password, user.password);
+
                     if (!isValidPassword) {
-                        console.log("[Auth WARN] Invalid password for user:", email);
+                        await logEvento({
+                            nivel: 'WARN',
+                            origen: 'AUTH',
+                            accion: 'LOGIN_FAIL_PASSWORD',
+                            mensaje: `Intento de login fallido: ${email} (contraseña incorrecta)`,
+                            correlacion_id: `auth-fail-${Date.now()}`
+                        });
                         return null;
                     }
 
-                    console.log("[Auth SUCCESS] Login successful for:", email);
+                    await logEvento({
+                        nivel: 'INFO',
+                        origen: 'AUTH',
+                        accion: 'LOGIN_SUCCESS',
+                        mensaje: `Usuario logueado: ${email}`,
+                        correlacion_id: `auth-${Date.now()}`
+                    });
 
                     // Retornar usuario con rol y tenant context
                     return {
@@ -59,8 +80,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
                         image: user.foto_url,
                     };
-                } catch (error) {
+                } catch (error: any) {
                     console.error("[Auth ERROR] Exception during authorize:", error);
+                    try {
+                        await logEvento({
+                            nivel: 'ERROR',
+                            origen: 'AUTH',
+                            accion: 'LOGIN_EXCEPTION',
+                            mensaje: error.message,
+                            correlacion_id: `auth-err-${Date.now()}`,
+                            stack: error.stack
+                        });
+                    } catch (e) {
+                        // Si falla el log a DB, no podemos hacer mucho más aquí
+                    }
                     return null;
                 }
             },
@@ -69,24 +102,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         async jwt({ token, user, trigger, session }) {
             if (user) {
-                // @ts-ignore
-                token.id = user.id;
-                // @ts-ignore
-                token.role = user.role;
-                // @ts-ignore
-                token.tenantId = user.tenantId;
-                // @ts-ignore
-                token.industry = user.industry;
-                // @ts-ignore
-                token.activeModules = user.activeModules;
-                // @ts-ignore
-                token.image = user.image;
+                token.id = user.id as string;
+                token.role = user.role as string;
+                token.tenantId = user.tenantId as string;
+                token.industry = user.industry as string;
+                token.activeModules = (user.activeModules as string[]) || [];
+                token.image = user.image as string | null | undefined;
             }
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
-                if (session.user.image) token.image = session.user.image;
-                if (session.user.name) token.name = session.user.name;
+                if (session.user.image) token.image = session.user.image as string;
+                if (session.user.name) token.name = session.user.name as string;
             }
 
             return token;
@@ -95,13 +122,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
-                // @ts-ignore
                 session.user.tenantId = token.tenantId as string;
-                // @ts-ignore
                 session.user.industry = token.industry as string;
-                // @ts-ignore
                 session.user.activeModules = token.activeModules as string[];
-                session.user.image = token.image as string;
+                session.user.image = token.image as string | null | undefined;
             }
             return session;
         },

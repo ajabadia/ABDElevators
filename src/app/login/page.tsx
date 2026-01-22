@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -45,12 +46,14 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
             <Card className="w-full max-w-md border-none shadow-2xl">
                 <CardHeader className="text-center pb-8">
-                    <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Lock className="text-white" size={32} />
-                    </div>
-                    <CardTitle className="text-3xl font-extrabold text-slate-900 font-outfit">
-                        ABD<span className="text-teal-600">Elevators</span>
-                    </CardTitle>
+                    <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
+                        <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-600/20">
+                            <Lock className="text-white" size={32} />
+                        </div>
+                        <CardTitle className="text-3xl font-extrabold text-slate-900 font-outfit">
+                            ABD<span className="text-teal-600"> RAG Plataform</span>
+                        </CardTitle>
+                    </Link>
                     <CardDescription className="text-base mt-2">
                         Sistema RAG de Análisis Técnico
                     </CardDescription>
@@ -65,7 +68,7 @@ export default function LoginPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="usuario@abdelevators.com"
+                                placeholder="usuario@abd.com"
                                 className="h-12"
                                 required
                             />

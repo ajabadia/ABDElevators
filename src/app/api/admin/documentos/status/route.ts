@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
-import { AppError, ValidationError } from '@/lib/errors';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
@@ -32,10 +32,31 @@ export async function PATCH(req: NextRequest) {
 
         const db = await connectDB();
 
-        // Regla #7: Atómico. Actualizamos chunks y el documento maestro
+        // 1. Verificar existencia del documento
+        const documento = await db.collection('documentos_tecnicos').findOne({
+            _id: new ObjectId(documentId)
+        });
+
+        if (!documento) {
+            throw new NotFoundError('Documento no encontrado');
+        }
+
+        const publicId = documento.cloudinary_public_id;
+
+        // 2. Regla #7: Atómico. Actualizamos el documento maestro y sus chunks
+        // Actualizar el documento maestro
+        await db.collection('documentos_tecnicos').updateOne(
+            { _id: new ObjectId(documentId) },
+            { $set: { estado: nuevoEstado, actualizado: new Date() } }
+        );
+
+        // Actualizar chunks asociados
+        const chunkFilter = publicId
+            ? { cloudinary_public_id: publicId }
+            : { origen_doc: documento.nombre_archivo };
+
         const resultChunks = await db.collection('document_chunks').updateMany(
-            { cloudinary_public_id: { $exists: true } }, // Filtro temporal, lo ideal es que compartan un ID de documento
-            // En este sistema actual, los chunks se identifican con el doc original a través de cloudinary_public_id o nombre_archivo
+            chunkFilter,
             { $set: { estado: nuevoEstado, actualizado: new Date() } }
         );
 
@@ -43,12 +64,16 @@ export async function PATCH(req: NextRequest) {
             nivel: 'INFO',
             origen: 'API_DOC_STATUS',
             accion: 'UPDATE_STATUS',
-            mensaje: `Documento ${documentId} actualizado a ${nuevoEstado}`,
+            mensaje: `Documento ${documento.nombre_archivo} actualizado a ${nuevoEstado}`,
             correlacion_id,
-            detalles: { documentId, nuevoEstado }
+            detalles: { documentId, nuevoEstado, chunksActualizados: resultChunks.modifiedCount }
         });
 
-        return NextResponse.json({ success: true, message: 'Estado actualizado' });
+        return NextResponse.json({
+            success: true,
+            message: `Estado actualizado a ${nuevoEstado}`,
+            chunksActualizados: resultChunks.modifiedCount
+        });
 
     } catch (error: any) {
         if (error.name === 'ZodError') {

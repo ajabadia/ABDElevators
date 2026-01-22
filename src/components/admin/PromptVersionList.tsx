@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { logEvento } from '@/lib/logger';
+import { logEventoCliente } from '@/lib/logger-client';
 
 interface Props {
     promptId: string;
@@ -34,7 +34,7 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
             setError(msg);
-            await logEvento({ nivel: 'ERROR', origen: 'PROMPT_UI', accion: 'FETCH_VERSIONS_ERROR', mensaje: msg, correlacion_id: crypto.randomUUID() });
+            await logEventoCliente({ nivel: 'ERROR', origen: 'PROMPT_UI', accion: 'FETCH_VERSIONS_ERROR', mensaje: msg, correlacion_id: crypto.randomUUID() });
         } finally {
             setLoading(false);
         }
@@ -54,12 +54,12 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
                 body: JSON.stringify({ versionId })
             });
             if (!res.ok) throw new Error('Rollback failed');
-            await logEvento({ nivel: 'INFO', origen: 'PROMPT_UI', accion: 'ROLLBACK_SUCCESS', mensaje: `Rollback to ${versionId}`, correlacion_id: crypto.randomUUID() });
+            await logEventoCliente({ nivel: 'INFO', origen: 'PROMPT_UI', accion: 'ROLLBACK_SUCCESS', mensaje: `Rollback to ${versionId}`, correlacion_id: crypto.randomUUID() });
             onRollback();
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
             setError(msg);
-            await logEvento({ nivel: 'ERROR', origen: 'PROMPT_UI', accion: 'ROLLBACK_ERROR', mensaje: msg, correlacion_id: crypto.randomUUID() });
+            await logEventoCliente({ nivel: 'ERROR', origen: 'PROMPT_UI', accion: 'ROLLBACK_ERROR', mensaje: msg, correlacion_id: crypto.randomUUID() });
         } finally {
             setLoading(false);
         }

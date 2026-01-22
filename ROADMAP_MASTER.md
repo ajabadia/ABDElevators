@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABDElevators RAG Platform
+# ROADMAP_MASTER – Source of Truth for ABD RAG Plataform
 
 ## 📖 Overview
 This document consolidates **all** roadmap information, implementation plans, and task checklist into a single, authoritative reference. It combines:
@@ -10,7 +10,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 🏛️ Detailed Phase Roadmap (from `plans/roadmap.md`)
 
-# PROYECTO: PROTOTIPO RAG ABDElevators
+# PROYECTO: PROTOTIPO RAG ABD RAG Plataform
 ## ROADMAP DETALLADO DE IMPLEMENTACIÓN (MASTER GUIDE)
 
 #### 🟢 FASE 1: INFRAESTRUCTURA Y FUNDAMENTOS (SEMANA 1)
@@ -143,6 +143,10 @@ This document consolidates **all** roadmap information, implementation plans, an
   - E2E Playwright suite (`validation-workflow.spec.ts`, `configurator.spec.ts`).
   - Coverage ≥ 80 % and performance benchmarks (Vector < 200 ms, Checklist < 500 ms).
   - Staging → producción deployment, monitoring dashboards.
+- **6.8 Gestión Avanzada de Documentos**
+  - Implementar borrado físico (DB + Cloudinary API).
+  - Sistema de deprecación/archivado de manuales (soft-delete/obsoleto).
+  - Historial de cambios en documentos del corpus.
 
 #### Phase 7 – Multi‑Industry & SaaS (Visión 2.0)
 - **7.2 Motor de Workflows Multinivel**
@@ -157,6 +161,10 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.
+- **7.7 Infraestructura de Almacenamiento Multi-tenant**
+  - Configuración de buckets/carpetas por cliente.
+  - Soporte inicial: Cloudinary (aislamiento por carpetas).
+  - Roadmap de integración: Google Drive, AWS S3, Azure Blob.
 - **Industry Abstraction Layer**
   - Crear plantillas de entidad por industria (elevators, HVAC, manufacturing, healthcare, IT assets).
   - UI para seleccionar plantilla al crear nuevo tenant.
@@ -164,6 +172,21 @@ This document consolidates **all** roadmap information, implementation plans, an
   - Multi‑language support, currency localisation, date/time formats, regional compliance.
 - **Final Deployment**
   - Vercel production rollout, CI/CD pipelines, automated smoke tests.
+
+#### Phase 8 – Enterprise Hardening & Global Expansion
+- **8.1 Accesibilidad (a11y)**
+  - Cumplimiento de normas WCAG 2.1 (Aria labels, contraste, navegación por teclado).
+  - Auditoría técnica de accesibilidad.
+- **8.2 Internacionalización (i18n)**
+  - Implementación de `next-intl` o similar.
+  - Traducción inicial: Español / Inglés.
+- **8.3 Optimización SEO & Core Web Vitals**
+  - Dynamic Metadata, Sitemap, JSON-LD.
+  - Optimización de imágenes y carga diferida.
+- **8.4 Auditoría de Seguridad & Compliance**
+  - Pentesting inicial.
+  - Verificación OWASP Top 10.
+  - Hardening de API Endpoints.
 
 ---
 

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChecklistConfig, ChecklistConfigSchema } from '@/lib/schemas';
-import { logEvento } from '@/lib/logger';
+import { logEventoCliente } from '@/lib/logger-client';
 import { ChecklistEditor } from '@/components/admin/checklist-editor/ChecklistEditor';
 import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -74,7 +74,7 @@ export default function ChecklistEditorPage() {
                 throw new Error(errData.message || 'Error al guardar');
             }
 
-            await logEvento({
+            await logEventoCliente({
                 nivel: 'INFO',
                 origen: 'CHECKLIST_EDITOR_UI',
                 accion: 'SAVE_SUCCESS',
