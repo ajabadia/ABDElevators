@@ -8,6 +8,9 @@ export interface LogEntry {
     accion: string;
     mensaje: string;
     correlacion_id: string;
+    tenantId?: string;       // Contexto Multi-tenant
+    materiaId?: string;      // Visión 2.0
+    departamentoId?: string; // Visión 2.0
     detalles?: Record<string, unknown>;
     stack?: string;
     timestamp?: Date;

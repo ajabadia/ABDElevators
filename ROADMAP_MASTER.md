@@ -43,9 +43,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 #### 🟣 FASE 6: RAG PROFESIONAL + CHECKLISTS DINÁMICOS (SEMANAS 5‑6)
 - **Objetivo:** Evolucionar a un motor de alta performance.
 - [ ] 6.1 Vector Search Sin LLM (Motor Principal)
-- [ ] 6.2 Checklists Dinámicos Configurables (API OK, pendiente UI)
+- [x] 6.2 Checklists Dinámicos Configurables
+- [x] 6.3 Configurador Admin Visual
 
-- [ ] 6.3 Configurador Admin Visual
 - [ ] 6.4 Validación Humana Estructurada
 - [ ] 6.5 Audit Trail Robusto
 - [ ] 6.6 Informe LLM Opcional

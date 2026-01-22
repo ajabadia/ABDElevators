@@ -354,6 +354,45 @@ export const ChecklistConfigSchema = z.object({
     actualizado: z.date().default(() => new Date()),
 });
 
+// Vector Search
+export const VectorSearchQuerySchema = z.object({
+    query: z.string().min(1),
+    limit: z.preprocess((val) => val ? Number(val) : undefined, z.number().int().positive().default(5)),
+    min_score: z.preprocess((val) => val ? Number(val) : undefined, z.number().min(0).max(1).optional().default(0.6))
+});
+
+export type VectorSearchQuery = z.infer<typeof VectorSearchQuerySchema>;
+
+// Validación Humana y Audit Trail (Fase 6.4)
+export const ItemValidacionSchema = z.object({
+    itemId: z.string().uuid(),
+    estado: z.enum(['OK', 'REVISAR', 'PENDIENTE']),
+    notas: z.string().optional(),
+});
+
+export const AuditoriaValidacionSchema = z.object({
+    _id: z.any().optional(),
+    pedidoId: z.string(),
+    usuarioId: z.string(),
+    tenantId: z.string(),
+    materiaId: z.string().default('ELEVATORS'), // Visión 2.0 placeholder
+    departamentoId: z.string().optional(),
+
+    // Snapshots para trazabilidad total
+    resultados_rag_ids: z.array(z.string()),
+    checklist_items: z.array(ItemValidacionSchema),
+
+    // Conclusiones finales
+    completa: z.boolean(),
+    notas_generales: z.string().optional(),
+    duracion_ms: z.number(),
+    firma_digital: z.string().optional(), // Hash o firma simple
+    timestamp: z.date().default(() => new Date()),
+});
+
+export type ItemValidacion = z.infer<typeof ItemValidacionSchema>;
+export type AuditoriaValidacion = z.infer<typeof AuditoriaValidacionSchema>;
+
 
 
 export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
