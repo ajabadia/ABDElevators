@@ -34,74 +34,85 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 ---
 
 ### 🟢 FASE 1: INFRAESTRUCTURA Y FUNDAMENTOS (SEMANA 1)
-**Objetivo:** Tener el esqueleto funcional y la base de datos conectada.
-
 - [x] **1.1 Inicialización de Proyecto**
-  - Next.js 15 (App Router), TypeScript (Strict Mode), Tailwind CSS.
-  - Instalación de Shadcn UI (Component Library).
-  - Configuración de variables de entorno (`.env.local`).
 - [x] **1.2 Capa de Datos (MongoDB Atlas)**
-  - [x] Configuración del cliente MongoDB con singleton pattern en `lib/db.ts`.
-  - [x] Definición de Schemas Zod en `lib/schemas.ts`.
-  - [x] Creación de índice de búsqueda vectorial en `document_chunks`.
-- [/] **1.3 Integración de IA (Gemini)**
-  - [x] Configuración del SDK en `lib/llm.ts`.
-  - [x] Definición de utilidades para embeddings (`text-embedding-004`).
-  - [x] Definición de prompts versionados en `lib/prompts.ts`.
+- [x] **1.3 Integración de IA (Gemini)**
 
 ---
 
 ### 🟡 FASE 2: GESTIÓN DE LA BASE DE CONOCIMIENTO - ADMIN (SEMANA 2)
-**Objetivo:** Permitir que ingeniería alimente el sistema con documentación oficial.
-
 - [x] **2.1 Panel de Ingesta (UI Admin)**
-  - [x] Sidebar de administración y vista de lista de documentos.
-  - [x] Formulario de subida con metadatos y control de versiones.
 - [x] **2.2 Pipeline de Procesamiento**
-  - [x] Extracción de texto de PDF (`pdf-parse`).
-  - [x] Estrategia de Chunking (500-800 chars, overlap 100).
-  - [x] Almacenamiento con contexto `texto_antes` / `texto_despues`.
 - [x] **2.3 Ciclo de Vida del Documento**
-  - [x] Lógica de estados: `borrador` -> `vigente` -> `obsoleto`.
 
 ---
 
 ### 🟠 FASE 3: ANÁLISIS DE PEDIDOS Y RAG (SEMANA 3)
-**Objetivo:** Ejecutar la búsqueda semántica y presentar el valor al técnico.
-
 - [x] **3.1 Portal del Técnico (UI Taller)**
-  - [x] Diseño Dark Mode optimizado (#1f2937).
-  - [x] Zona de upload Drag-and-Drop premium.
 - [x] **3.2 Orquestación RAG (LangChain)**
-  - [x] Extracción de modelos con Gemini 2.0 Flash.
-  - [x] Búsqueda vectorial filtrada por `estado: vigente`.
 - [x] **3.3 Informe Dinámico con Checklists**
-  - [x] Renderizado de fragmentos con barras de relevancia.
-  - [x] Integración de checklists obligatorias.
 
 ---
 
 ### 🔴 FASE 4: FUNCIONES ENTERPRISE Y CIERRE (SEMANA 4)
-**Objetivo:** Auditoría, exportación y despliegue.
-
 - [x] **4.1 Gestión de Usuarios y Permisos (Básica)**
-  - [x] Implementación de NextAuth.js v5 (Auth.js).
-  - [x] Roles básicos: `ADMIN`, `TECNICO`, `INGENIERIA`.
-  - [x] Arquitectura desacoplada para futura integración con SSO/Enterprise Identity (Azure AD, Okta, etc.).
 - [x] **4.2 Exportación y Reportes**
-  - [x] Generación de PDF profesional (`jsPDF` + `html2canvas`).
-  - [x] Reporte de incidencias desde el informe.
 - [x] **4.3 Observabilidad**
-  - [x] Implementación de logging estructurado y dashboard de auditoría.
 - [x] **4.4 Deployment y QA**
-  - [x] Tests E2E con Playwright.
-  - [x] Deployment final en Vercel.
+- [x] **4.5 Optimización Mobile y Sidebar Pro**
+
+---
+
+### 🔵 FASE 5: SISTEMA DE GESTIÓN DE USUARIOS (EN PROCESO)
+- [x] **5.1 Configuración Maestro de Usuarios**
+- [x] **5.2 Perfil de Usuario Pro**
+- [x] **5.3 Gestión de Tipos y Documentos Pro**
+  - [x] Repositorio personal de documentos de usuario (`/mis-documentos`).
+  - [x] Unificación de Layout y UX (Sidebar/Header global).
+
+---
+
+### 🟣 FASE 6: RAG PROFESIONAL + CHECKLISTS DINÁMICOS (SEMANAS 5-6)
+**Objetivo:** Evolucionar a un motor de alta performance.
+
+- [ ] **6.1 Vector Search Sin LLM (Motor de Alta Performance)**
+  - [ ] Implementar búsqueda pura en MongoDB Atlas Vector Search.
+  - [ ] Optimizar latencia < 200ms para grandes volúmenes de chunks.
+- [/] **6.2 Checklists Dinámicos Híbridos (Base Tecnológica)**
+  - [x] Motor de clasificación por keywords (ya iniciado).
+  - [ ] Implementar `dnd-kit` para reordenación manual de evidencias.
+- [ ] **6.3 Validación Humana Estructurada**
+  - [ ] Registro de firma digital y trazabilidad de cambios por ítem.
+- [ ] **6.4 Audit Trail & Export Pro**
+  - [ ] Reporte narrativo generado por LLM (Opcional).
+
+---
+
+### 🌐 FASE 7: GENERALIZACIÓN Y SAAS (VISIÓN 2.0)
+**Objetivo:** Adaptar la plataforma a múltiples industrias (Legal, TI, Calidad).
+
+- [x] **7.1 Abstracción del Modelo de Dominio (Core 2.0)**
+  - [x] **Entidad Genérica**: Refactorizar "Pedido" a "Caso/Expediente" con metadatos custom por tenant.
+  - [x] **Diccionario de Interfaz**: Sistema de labels dinámicos (Pedido vs Contrato vs Incidencia).
+  - [x] **Modularidad**: Toggle de módulos (Técnico, RAG) activables por perfil de usuario/cliente.
+- [ ] **7.2 Motor de Workflows y Aprobación Multinivel**
+  - [ ] **Estados Dinámicos**: Definición de estados (Pendiente, Revisión, Aprobado) por industria.
+  - [ ] **Chain of Command**: Implementar flujo Técnico → Supervisor → Compliance.
+  - [ ] **Double Check**: Requisito de firma secundaria para casos de alta criticidad.
+- [x] **7.3 Taxonomías y Metadatos Multi-tenant**
+  - [x] **Categorización RAG**: Metadatos genéricos (Área Legal, Tipo Activo, País).
+  - [x] **Configurador de Taxonomía**: Core service y API para definir etiquetas personalizadas.
+- [x] **7.4 Automatización de Negocio (SaaS Ready)**
+  - [ ] **Multi-tenant Aprovisionamiento**: Stripe webhooks (pendiente integración real).
+  - [x] **Billing por Uso**: Dashboard de consumo (Tokens, Storage, Vector Search Queries).
+- [x] **7.5 Metrics & Intelligence**
+  - [x] **Detección de Riesgos (LLM)**: Análisis automático de criticidad basado en precedentes (RAG).
+  - [ ] **Sugerencias Proactivas**: Sugerir componentes o acciones basadas en hallazgos.
 
 ---
 
 ### 📈 MÉTRICAS DE AVANCE
-- **Fase 1:** 100%
-- **Fase 2:** 100%
-- **Fase 3:** 100%
-- **Fase 4:** 100%
-- **GLOBAL:** 100%
+- **Fase 1-5:** 100%
+- **Fase 6:** 25% (Motor RAG Pro iniciado)
+- **Fase 7:** 10% (Estrategia Visión 2.0 definida)
+- **GLOBAL:** 90% (Hacia la generalización multi-industria)

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CreateUserModalProps {
     open: boolean;
@@ -39,6 +40,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         apellidos: "",
         puesto: "",
         rol: "TECNICO" as "ADMIN" | "TECNICO" | "INGENIERIA",
+        activeModules: ["TECHNICAL", "RAG"] as string[],
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -88,6 +90,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             apellidos: "",
             puesto: "",
             rol: "TECNICO",
+            activeModules: ["TECHNICAL", "RAG"],
         });
         setTempPassword(null);
         onClose();
@@ -184,6 +187,42 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                                     <SelectItem value="INGENIERIA">Ingeniería</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-3 p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                            <Label className="text-sm font-bold">Módulos Habilitados</Label>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="mod-technical"
+                                        checked={formData.activeModules.includes("TECHNICAL")}
+                                        onCheckedChange={(checked) => {
+                                            const modules = checked
+                                                ? [...formData.activeModules, "TECHNICAL"]
+                                                : formData.activeModules.filter(m => m !== "TECHNICAL");
+                                            setFormData({ ...formData, activeModules: modules });
+                                        }}
+                                    />
+                                    <label htmlFor="mod-technical" className="text-sm font-medium leading-none cursor-pointer">
+                                        Acceso Técnico (Pedidos/Casos)
+                                    </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="mod-rag"
+                                        checked={formData.activeModules.includes("RAG")}
+                                        onCheckedChange={(checked) => {
+                                            const modules = checked
+                                                ? [...formData.activeModules, "RAG"]
+                                                : formData.activeModules.filter(m => m !== "RAG");
+                                            setFormData({ ...formData, activeModules: modules });
+                                        }}
+                                    />
+                                    <label htmlFor="mod-rag" className="text-sm font-medium leading-none cursor-pointer">
+                                        Módulo RAG (Conocimiento)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
                         <DialogFooter>

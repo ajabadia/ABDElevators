@@ -1,37 +1,99 @@
+"use client";
+
 import Link from 'next/link';
-import { LayoutDashboard, FileText, History, Settings, MessageSquare, Users, Shield } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { LayoutDashboard, FileText, History, Settings, Shield, Users, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { useSidebar } from '@/context/SidebarContext';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Documentos', href: '/admin/documentos', icon: FileText },
     { name: 'Tipos Doc.', href: '/admin/tipos-documento', icon: Settings },
-    { name: 'Mis Archivos', href: '/admin/mis-documentos', icon: Shield },
+    { name: 'Mis Archivos', href: '/mis-documentos', icon: Shield },
     { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
     { name: 'Auditoría', href: '/admin/auditoria', icon: History },
 ];
 
 export function AdminSidebar() {
+    const { isCollapsed, toggleSidebar } = useSidebar();
+    const pathname = usePathname();
+
     return (
-        <div className="w-64 h-screen bg-slate-900 text-slate-100 flex flex-col border-r border-slate-800">
-            <div className="p-6 border-b border-slate-800">
-                <h1 className="text-xl font-bold tracking-tight text-teal-400">ABD Elevators</h1>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Admin Panel</p>
+        <aside
+            className={cn(
+                "h-screen bg-slate-900 text-slate-100 flex flex-col border-r border-slate-800 transition-all duration-300 ease-in-out",
+                isCollapsed ? "w-20" : "w-64"
+            )}
+        >
+            <div className={cn(
+                "p-6 border-b border-slate-800 flex items-center justify-between overflow-hidden whitespace-nowrap",
+                isCollapsed && "px-4"
+            )}>
+                {!isCollapsed && (
+                    <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+                        <h1 className="text-xl font-bold tracking-tight text-teal-400">ABD Elevators</h1>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Admin Panel</p>
+                    </div>
+                )}
+                {isCollapsed && (
+                    <div className="mx-auto text-teal-400 font-bold text-xl">ABD</div>
+                )}
             </div>
-            <nav className="flex-1 p-4 space-y-2">
-                {menuItems.map((item) => (
-                    <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors group"
-                    >
-                        <item.icon size={20} className="text-slate-400 group-hover:text-teal-400 transition-colors" />
-                        <span className="font-medium">{item.name}</span>
-                    </Link>
-                ))}
+
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+                {menuItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            title={isCollapsed ? item.name : ""}
+                            className={cn(
+                                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group",
+                                isActive
+                                    ? "bg-teal-600/10 text-teal-400"
+                                    : "hover:bg-slate-800 text-slate-400 hover:text-slate-100",
+                                isCollapsed && "justify-center px-2"
+                            )}
+                        >
+                            <item.icon
+                                size={20}
+                                className={cn(
+                                    "transition-colors",
+                                    isActive ? "text-teal-400" : "text-slate-400 group-hover:text-teal-400"
+                                )}
+                            />
+                            {!isCollapsed && (
+                                <span className="font-medium animate-in fade-in slide-in-from-left-2 duration-300">
+                                    {item.name}
+                                </span>
+                            )}
+                        </Link>
+                    )
+                })}
             </nav>
-            <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
-                v1.0.0 Professional Edition
+
+            <div className="p-4 border-t border-slate-800">
+                <div className={cn(
+                    "flex flex-col gap-2",
+                    isCollapsed ? "items-center" : "items-start"
+                )}>
+                    {!isCollapsed && (
+                        <div className="text-[10px] text-slate-600 font-mono mb-2 uppercase tracking-tighter">
+                            v1.0.0 Enterprise
+                        </div>
+                    )}
+                    <button className={cn(
+                        "flex items-center gap-3 w-full px-4 py-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all",
+                        isCollapsed && "justify-center px-2"
+                    )}>
+                        <LogOut size={18} />
+                        {!isCollapsed && <span className="text-sm font-medium">Cerrar Sesión</span>}
+                    </button>
+                </div>
             </div>
-        </div>
+        </aside>
     );
 }

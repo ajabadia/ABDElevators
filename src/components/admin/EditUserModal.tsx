@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
+
+import { ProfilePhotoUpload } from "@/components/perfil/ProfilePhotoUpload";
 
 interface EditUserModalProps {
     userId: string | null;
@@ -42,6 +45,9 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
         puesto: "",
         rol: "TECNICO" as "ADMIN" | "TECNICO" | "INGENIERIA",
         activo: true,
+        foto_url: "",
+        foto_cloudinary_id: "",
+        activeModules: [] as string[],
     });
 
     useEffect(() => {
@@ -63,6 +69,9 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                     puesto: data.puesto || "",
                     rol: data.rol,
                     activo: data.activo,
+                    foto_url: data.foto_url || "",
+                    foto_cloudinary_id: data.foto_cloudinary_id || "",
+                    activeModules: data.activeModules || ["TECHNICAL", "RAG"],
                 });
             }
         } catch (error) {
@@ -128,6 +137,16 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="flex justify-center pb-4 border-b">
+                            <ProfilePhotoUpload
+                                currentPhotoUrl={formData.foto_url}
+                                onUploadSuccess={(url, publicId) => {
+                                    setFormData(prev => ({ ...prev, foto_url: url, foto_cloudinary_id: publicId }));
+                                }}
+                                uploadUrl={`/api/admin/usuarios/${userId}/upload-photo`}
+                            />
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="edit-nombre">Nombre *</Label>
@@ -185,6 +204,42 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                                     <SelectItem value="INGENIERIA">Ingeniería</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-3 p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                            <Label className="text-sm font-bold">Módulos Habilitados</Label>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="edit-mod-technical"
+                                        checked={formData.activeModules.includes("TECHNICAL")}
+                                        onCheckedChange={(checked) => {
+                                            const modules = checked
+                                                ? [...formData.activeModules, "TECHNICAL"]
+                                                : formData.activeModules.filter(m => m !== "TECHNICAL");
+                                            setFormData({ ...formData, activeModules: modules });
+                                        }}
+                                    />
+                                    <label htmlFor="edit-mod-technical" className="text-sm font-medium leading-none cursor-pointer">
+                                        Acceso Técnico (Pedidos/Casos)
+                                    </label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="edit-mod-rag"
+                                        checked={formData.activeModules.includes("RAG")}
+                                        onCheckedChange={(checked) => {
+                                            const modules = checked
+                                                ? [...formData.activeModules, "RAG"]
+                                                : formData.activeModules.filter(m => m !== "RAG");
+                                            setFormData({ ...formData, activeModules: modules });
+                                        }}
+                                    />
+                                    <label htmlFor="edit-mod-rag" className="text-sm font-medium leading-none cursor-pointer">
+                                        Módulo RAG (Conocimiento)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50 dark:bg-slate-800/50">

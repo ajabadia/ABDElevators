@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "types": [
+      "jest",
+      "node"
+    ],
     "target": "ES2018",
     "lib": [
       "dom",

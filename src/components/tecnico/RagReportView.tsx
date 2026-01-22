@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ExportButton } from "./ExportButton";
+import { RiskAlerter, RiskFinding } from "../shared/RiskAlerter";
 
 interface RagContext {
     texto: string;
@@ -22,9 +23,10 @@ interface AnalyzedModel {
 interface RagReportViewProps {
     numeroPedido: string;
     modelos: AnalyzedModel[];
+    riesgos?: RiskFinding[];
 }
 
-export function RagReportView({ numeroPedido, modelos }: RagReportViewProps) {
+export function RagReportView({ numeroPedido, modelos, riesgos = [] }: RagReportViewProps) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center justify-between">
@@ -36,6 +38,9 @@ export function RagReportView({ numeroPedido, modelos }: RagReportViewProps) {
                     Validado por RAG
                 </Badge>
             </div>
+
+            {/* Panel de Riesgos e Inteligencia */}
+            <RiskAlerter risks={riesgos} />
 
             <div className="grid grid-cols-1 gap-6">
                 {modelos.map((m, idx) => (

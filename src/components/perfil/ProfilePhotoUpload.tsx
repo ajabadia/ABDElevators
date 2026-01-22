@@ -1,18 +1,27 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 
 interface ProfilePhotoUploadProps {
     currentPhotoUrl?: string;
-    onUploadSuccess: (url: string, publicId: string) => void;
+    onUploadSuccess?: (url: string, publicId: string) => void;
+    uploadUrl?: string; // Nuevo: permite al Admin subir fotos a otros usuarios
 }
 
-export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess }: ProfilePhotoUploadProps) {
+export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl = '/api/auth/perfil/upload-photo' }: ProfilePhotoUploadProps) {
     const [uploading, setUploading] = useState(false);
+    const [fotoUrl, setFotoUrl] = useState<string | undefined>(currentPhotoUrl);
     const { toast } = useToast();
+    const { data: session, update } = useSession();
+
+    // Sincronizar estado si cambia la prop externamente
+    useState(() => {
+        if (currentPhotoUrl !== fotoUrl) setFotoUrl(currentPhotoUrl);
+    });
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -43,26 +52,38 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess }: Profile
         formData.append('file', file);
 
         try {
-            // Reutilizamos el endpoint que crearemos para uploads
-            const res = await fetch('/api/auth/perfil/upload-photo', {
+            // Reutilizamos el endpoint que puede ser el del perfil propio o el de Admin
+            const res = await fetch(uploadUrl, {
                 method: 'POST',
                 body: formData,
             });
 
             if (res.ok) {
                 const data = await res.json();
-                onUploadSuccess(data.url, data.public_id);
+                setFotoUrl(data.url); // Actualización local inmediata
+
+                // Sincronizar con el Header (Session)
+                await update({
+                    ...session,
+                    user: {
+                        ...session?.user,
+                        image: data.url
+                    }
+                });
+
+                onUploadSuccess?.(data.url, data.public_id);
                 toast({
                     title: 'Foto actualizada',
                     description: 'Tu foto de perfil se ha actualizado correctamente.',
                 });
             } else {
-                throw new Error('Error al subir imagen');
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Error al subir imagen');
             }
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: 'Error',
-                description: 'No se pudo subir la imagen.',
+                description: error.message || 'No se pudo subir la imagen.',
                 variant: 'destructive',
             });
         } finally {
@@ -74,9 +95,9 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess }: Profile
         <div className="flex flex-col items-center gap-4">
             <div className="relative group cursor-pointer">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-lg bg-teal-50 dark:bg-slate-800 flex items-center justify-center relative">
-                    {currentPhotoUrl ? (
+                    {fotoUrl ? (
                         <Image
-                            src={currentPhotoUrl}
+                            src={fotoUrl}
                             alt="Foto de perfil"
                             fill
                             className="object-cover"

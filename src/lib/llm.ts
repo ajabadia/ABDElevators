@@ -1,53 +1,133 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ExternalServiceError } from './errors';
+import { z } from "zod";
+import { ExternalServiceError, AppError } from './errors';
 import { logEvento } from './logger';
+import { UsageService } from './usage-service';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+let genAIInstance: GoogleGenerativeAI | null = null;
+
+function getGenAI() {
+    if (!genAIInstance) {
+        if (!process.env.GEMINI_API_KEY) {
+            throw new ExternalServiceError('GEMINI_API_KEY is not defined in environment');
+        }
+        genAIInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
+    return genAIInstance;
+}
+
+const GenerateEmbeddingSchema = z.object({
+    text: z.string().min(1),
+    correlacion_id: z.string()
+});
 
 /**
- * Genera embeddings para un fragmento de texto usando text-embedding-004.
- * SLA: P95 < 1000ms
+ * Genera embeddings ...
  */
-export async function generateEmbedding(text: string, correlacion_id: string): Promise<number[]> {
+export async function generateEmbedding(text: string, tenantId: string, correlacion_id: string): Promise<number[]> {
+    GenerateEmbeddingSchema.parse({ text, correlacion_id });
     const start = Date.now();
     try {
-        const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+        const genAI = getGenAI();
+        const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
         const result = await model.embedContent(text);
-        const duration = Date.now() - start;
 
-        // Regla #8: Medir performance y loguear si excede SLA
-        if (duration > 1500) { // Tolerancia extra para red
+        const duration = Date.now() - start;
+        if (duration > 1000) {
             await logEvento({
                 nivel: 'WARN',
                 origen: 'GEMINI_EMBEDDING',
                 accion: 'SLA_VIOLATION',
-                mensaje: `Embeddings generados pero excedió SLA: ${duration}ms`,
+                mensaje: `Embedding lento: ${duration}ms`,
                 correlacion_id,
-                detalles: { duration_ms: duration }
+                detalles: { duration_ms: duration, text_length: text.length }
             });
         }
 
+        // Tracking de uso de AI (Aproximación para embeddings: 1 request = 1 unidad o tokens estimados)
+        await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlacion_id);
+
         return result.embedding.values;
-    } catch (error: any) {
+    } catch (error) {
         await logEvento({
             nivel: 'ERROR',
             origen: 'GEMINI_EMBEDDING',
-            accion: 'GENERATE_ERROR',
-            mensaje: `Fallo al generar embedding: ${error.message}`,
+            accion: 'EMBED_ERROR',
+            mensaje: `Fallo en embedding Gemini: ${(error as Error).message}`,
             correlacion_id,
-            stack: error.stack
+            stack: (error as Error).stack
         });
-        throw new ExternalServiceError('Error generatig embedding with Gemini', error);
+        throw new ExternalServiceError('Error generating embedding with Gemini', error as Error);
     }
 }
 
+const CallGeminiMiniSchema = z.object({
+    prompt: z.string().min(1),
+    tenantId: z.string(),
+    options: z.object({
+        correlacion_id: z.string().uuid(),
+        temperature: z.number().min(0).max(1).optional()
+    })
+});
+
+export async function callGeminiMini(
+    prompt: string,
+    tenantId: string,
+    options: { correlacion_id: string; temperature?: number }
+): Promise<string> {
+    CallGeminiMiniSchema.parse({ prompt, tenantId, options });
+    const { correlacion_id, temperature = 0.7 } = options;
+    const start = Date.now();
+
+    try {
+        const genAI = getGenAI();
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature }
+        });
+
+        const responseText = result.response.text();
+        const duration = Date.now() - start;
+
+        // Tracking de uso (Tokens reales)
+        const usage = (result.response as any).usageMetadata;
+        if (usage) {
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-2.0-flash', correlacion_id);
+        }
+
+        return responseText;
+    } catch (error) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'GEMINI_MINI',
+            accion: 'CALL_ERROR',
+            mensaje: `Error en Gemini Mini: ${(error as Error).message}`,
+            correlacion_id,
+            stack: (error as Error).stack
+        });
+        throw new AppError('EXTERNAL_SERVICE_ERROR', 500, 'Error in Gemini Mini call');
+    }
+}
+
+const ExtractModelsSchema = z.object({
+    text: z.string().min(1),
+    correlacion_id: z.string()
+});
+
+const ExtractedModelsArraySchema = z.array(z.object({
+    tipo: z.enum(["botonera", "motor", "cuadro", "puerta", "otros"]),
+    modelo: z.string()
+}));
+
 /**
- * Extrae modelos de componentes de un texto usando Gemini 2.0 Flash.
- * SLA: P95 < 3000ms
+ * Extrae modelos ...
  */
-export async function extractModelsWithGemini(text: string, correlacion_id: string) {
+export async function extractModelsWithGemini(text: string, tenantId: string, correlacion_id: string) {
+    ExtractModelsSchema.parse({ text, correlacion_id });
     const start = Date.now();
     try {
+        const genAI = getGenAI();
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const prompt = `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
     Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
@@ -62,41 +142,34 @@ export async function extractModelsWithGemini(text: string, correlacion_id: stri
 
         const jsonMatch = responseText.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
-            throw new Error('No valid JSON found in Gemini response');
+            throw new ExternalServiceError('No valid JSON found in Gemini response');
         }
 
-        const modelos = JSON.parse(jsonMatch[0]);
+        let modelos;
+        try {
+            modelos = JSON.parse(jsonMatch[0]);
+            // Zod validation for the parsed JSON
+            ExtractedModelsArraySchema.parse(modelos);
+        } catch (parseError) {
+            throw new ExternalServiceError('Failed to parse or validate Gemini response as expected JSON array', parseError as Error);
+        }
 
-        await logEvento({
-            nivel: 'DEBUG',
-            origen: 'GEMINI_EXTRACTION',
-            accion: 'EXTRACT_SUCCESS',
-            mensaje: `Modelos extraídos correctamente en ${duration}ms`,
-            correlacion_id,
-            detalles: { modelos_count: modelos.length, duration_ms: duration }
-        });
-
-        if (duration > 5000) {
-            await logEvento({
-                nivel: 'WARN',
-                origen: 'GEMINI_EXTRACTION',
-                accion: 'SLA_VIOLATION',
-                mensaje: `Extracción completada pero excedió SLA: ${duration}ms`,
-                correlacion_id,
-                detalles: { duration_ms: duration }
-            });
+        // Tracking de uso (Tokens reales)
+        const usage = (result.response as any).usageMetadata;
+        if (usage) {
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-2.0-flash', correlacion_id);
         }
 
         return modelos;
-    } catch (error: any) {
+    } catch (error) {
         await logEvento({
             nivel: 'ERROR',
             origen: 'GEMINI_EXTRACTION',
             accion: 'EXTRACT_ERROR',
-            mensaje: `Fallo en extracción Gemini: ${error.message}`,
+            mensaje: `Fallo en extracción Gemini: ${(error as Error).message}`,
             correlacion_id,
-            stack: error.stack
+            stack: (error as Error).stack
         });
-        throw new ExternalServiceError('Error extracting models with Gemini', error);
+        throw new ExternalServiceError('Error extracting models with Gemini', error as Error);
     }
 }

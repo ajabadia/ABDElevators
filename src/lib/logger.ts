@@ -8,7 +8,7 @@ export interface LogEntry {
     accion: string;
     mensaje: string;
     correlacion_id: string;
-    detalles?: any;
+    detalles?: Record<string, unknown>;
     stack?: string;
     timestamp?: Date;
 }

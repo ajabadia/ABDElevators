@@ -112,7 +112,7 @@ export default function UsuariosPage() {
                 <CardHeader className="border-b border-slate-100 dark:border-slate-800">
                     <CardTitle>Usuarios Registrados</CardTitle>
                     <CardDescription>
-                        {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} en el sistema
+                        {usuarios?.length || 0} usuario{(usuarios?.length || 0) !== 1 ? 's' : ''} en el sistema
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">

@@ -1,5 +1,10 @@
-import { connectDB } from '../src/lib/db';
+import { connectDB } from 'd:/desarrollos/ABDElevators/src/lib/db';
 import bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Cargar variables de entorno desde .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function seed() {
     console.log('🌱 Seed: Iniciando carga de usuarios...');

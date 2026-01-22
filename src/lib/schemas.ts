@@ -20,7 +20,95 @@ export const DocumentChunkSchema = z.object({
 });
 
 /**
- * Esquema para Pedidos de Ascensores
+ * Esquemas para la Visión 2.0 (Generalización)
+ */
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
+
+export const TaxonomyValueSchema = z.object({
+    id: z.string(),
+    label: z.string(),
+    color: z.string().optional(),
+});
+
+export const TaxonomySchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    industry: IndustryTypeSchema,
+    name: z.string(),                 // Ej: "Ubicación", "Criticidad"
+    key: z.string(),                  // Ej: "location", "criticality"
+    description: z.string().optional(),
+    options: z.array(TaxonomyValueSchema),
+    multiple: z.boolean().default(false),
+    required: z.boolean().default(false),
+    active: z.boolean().default(true),
+    creado: z.date().default(() => new Date()),
+});
+
+/**
+ * Esquemas para Detección de Riesgos (Visión 2.0 - Fase 7.5)
+ */
+export const RiskFindingSchema = z.object({
+    id: z.string(),
+    tipo: z.enum(['SEGURIDAD', 'COMPATIBILIDAD', 'LEGAL', 'NORMATIVA', 'GENERAL']),
+    severidad: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+    mensaje: z.string(),
+    referencia_rag: z.string().optional(),
+    sugerencia: z.string().optional(),
+});
+
+export const GenericCaseSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    industry: IndustryTypeSchema,
+    type: z.string(),
+    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+    status: z.string(),
+    metadata: z.object({
+        industry_specific: z.record(z.string(), z.any()),
+        taxonomies: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
+        tags: z.array(z.string()),
+        risks: z.array(RiskFindingSchema).optional(), // Hallazgos de inteligencia
+    }),
+    creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
+});
+
+/**
+ * Esquemas para el Motor de Workflows (Visión 2.0 - Fase 7.2)
+ */
+export const WorkflowStateSchema = z.object({
+    id: z.string(),
+    label: z.string(),
+    color: z.string().default('slate'), // slate, teal, amber, red, etc.
+    icon: z.string().optional(),       // nombre de icono de lucide
+    is_initial: z.boolean().default(false),
+    is_final: z.boolean().default(false),
+    permissions: z.array(z.string()).optional(), // Roles que pueden estar en este estado
+});
+
+export const WorkflowTransitionSchema = z.object({
+    from: z.string(),
+    to: z.string(),
+    label: z.string(),
+    action: z.string(),               // 'APPROVE', 'REJECT', 'SEND_TO_REVIEW'
+    roles: z.array(z.string()),       // Roles que pueden ejecutar esta transición
+    require_signature: z.boolean().default(false),
+    require_comment: z.boolean().default(false),
+});
+
+export const WorkflowConfigSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    industry: IndustryTypeSchema,
+    caseType: z.string(),             // 'MAINTENANCE', 'LEGAL_REVIEW', etc.
+    states: z.array(WorkflowStateSchema),
+    transitions: z.array(WorkflowTransitionSchema),
+    active: z.boolean().default(true),
+    creado: z.date().default(() => new Date()),
+});
+
+/**
+ * Esquema para Pedidos de Ascensores (Legacy compatibility wrapper)
  */
 export const PedidoSchema = z.object({
     _id: z.any().optional(),
@@ -34,6 +122,7 @@ export const PedidoSchema = z.object({
     fecha_analisis: z.date().default(() => new Date()),
     estado: z.enum(['procesando', 'analizado', 'error']).default('procesando'),
     error_mensaje: z.string().nullable().optional(),
+    tenantId: z.string().optional(), // Inyectado por el middleware/helper
     creado: z.date().default(() => new Date()),
 });
 
@@ -111,6 +200,9 @@ export const UsuarioSchema = z.object({
     foto_url: z.string().url().optional(),
     foto_cloudinary_id: z.string().optional(),
     rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
+    tenantId: z.string(),
+    industry: IndustryTypeSchema.default('ELEVATORS'),
+    activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
     activo: z.boolean().default(true),
     creado: z.date(),
     modificado: z.date(),
@@ -132,7 +224,10 @@ export const UpdateProfileSchema = z.object({
  */
 export const ChangePasswordSchema = z.object({
     currentPassword: z.string().min(1, 'Contraseña actual requerida'),
-    newPassword: z.string().min(8, 'La nueva contraseña debe tener al menos 8 caracteres'),
+    newPassword: z.string()
+        .min(8, 'La nueva contraseña debe tener al menos 8 caracteres')
+        .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+        .regex(/[0-9]/, 'Debe contener al menos un número'),
 });
 
 /**
@@ -144,6 +239,7 @@ export const CreateUserSchema = z.object({
     apellidos: z.string().min(2, 'Apellidos requeridos'),
     puesto: z.string().optional(),
     rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
+    activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 });
 
 /**
@@ -151,6 +247,7 @@ export const CreateUserSchema = z.object({
  */
 export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
     rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']).optional(),
+    activeModules: z.array(z.string()).optional(),
     activo: z.boolean().optional(),
 });
 
@@ -170,7 +267,98 @@ export const DocumentoUsuarioSchema = z.object({
     creado: z.date(),
 });
 
+/**
+ * Esquema para Logs de Uso y Consumo (Visión 2.0 - Fase 7.4)
+ */
+export const UsageLogSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST']),
+    valor: z.number(),                  // Cantidad (tokens, bytes, etc)
+    recurso: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
+    descripcion: z.string().optional(),
+    correlacion_id: z.string().optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+/**
+ * Esquemas para Gestión Dinámica de Prompts (Fase 7.6)
+ */
+export const PromptVariableSchema = z.object({
+    name: z.string().min(1),
+    type: z.enum(['string', 'number', 'array', 'boolean']),
+    description: z.string(),
+    required: z.boolean().default(true),
+    defaultValue: z.any().optional()
+});
+
+export const PromptSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    key: z.string().min(1).regex(/^[A-Z_]+$/),
+    name: z.string().min(1),
+    description: z.string(),
+    category: z.enum(['EXTRACTION', 'ANALYSIS', 'RISK', 'GENERAL', 'CHECKLIST']),
+    template: z.string().min(10),
+    // Optional maxLength metadata: undefined = no limit; if set, enforce length in UI.
+    maxLength: z.number().int().positive().optional(),
+    variables: z.array(PromptVariableSchema),
+    version: z.number().int().positive().default(1),
+    active: z.boolean().default(true),
+    createdBy: z.string(),
+    createdAt: z.date().default(() => new Date()),
+    updatedBy: z.string(),
+    updatedAt: z.date().default(() => new Date())
+});
+
+export const PromptVersionSchema = z.object({
+    _id: z.any().optional(),
+    promptId: z.any(),
+    tenantId: z.string(),
+    version: z.number().int().positive(),
+    template: z.string(),
+    variables: z.array(PromptVariableSchema),
+    changedBy: z.string(),
+    changeReason: z.string().min(10).max(500),
+    createdAt: z.date().default(() => new Date())
+});
+
+/**
+ * Esquemas para Configuración de Checklists Dinámicos (Fase 6.2)
+ */
+export const ChecklistCategorySchema = z.object({
+    id: z.string().uuid(),
+    nombre: z.string().min(1),
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    keywords: z.array(z.string().min(1)),
+    prioridad: z.number().int().positive(),
+    icono: z.string().optional()
+});
+
+export const ChecklistItemSchema = z.object({
+    id: z.string().uuid(),
+    description: z.string().min(1),
+    categoryId: z.string().uuid().nullable().optional(),
+    notes: z.string().optional()
+});
+
+export const ChecklistConfigSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    nombre: z.string().min(1),
+    categorias: z.array(ChecklistCategorySchema),
+    workflow_orden: z.array(z.string().uuid()),
+    activo: z.boolean().default(true),
+    creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
+});
+
+
+
 export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
+export type GenericCase = z.infer<typeof GenericCaseSchema>;
+export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 export type Pedido = z.infer<typeof PedidoSchema>;
 export type AuditoriaRag = z.infer<typeof AuditoriaRagSchema>;
 export type LogAplicacion = z.infer<typeof LogAplicacionSchema>;
@@ -178,3 +366,12 @@ export type DocumentoTecnico = z.infer<typeof DocumentoTecnicoSchema>;
 export type TipoDocumento = z.infer<typeof TipoDocumentoSchema>;
 export type Usuario = z.infer<typeof UsuarioSchema>;
 export type DocumentoUsuario = z.infer<typeof DocumentoUsuarioSchema>;
+export type UsageLog = z.infer<typeof UsageLogSchema>;
+export type Prompt = z.infer<typeof PromptSchema>;
+export type PromptVariable = z.infer<typeof PromptVariableSchema>;
+export type PromptVersion = z.infer<typeof PromptVersionSchema>;
+export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
+export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
+
+

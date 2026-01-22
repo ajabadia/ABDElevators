@@ -1,6 +1,6 @@
-# ABDElevators RAG System
+# ABD Multi-Industry RAG Platform (Vision 2.0)
 
-Sistema de Análisis RAG (Retrieval-Augmented Generation) para el departamento técnico de una fábrica de ascensores.
+Sistema RAG (Retrieval-Augmented Generation) genérico y multi-tenant diseñado para análisis de documentos técnicos, legales e industriales. Evolucionado desde el prototipo ABDElevators hacia una solución SaaS horizontal.
 
 ## 🚀 Inicio Rápido
 

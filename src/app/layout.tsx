@@ -20,12 +20,17 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarProvider } from "@/context/SidebarContext";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="es" suppressHydrationWarning>
       <body
@@ -37,7 +42,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SessionProvider session={session}>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

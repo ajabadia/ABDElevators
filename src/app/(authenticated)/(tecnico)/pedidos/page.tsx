@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight } from "lucide-react";
+import { Upload, FileText, Search, Zap, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RagReportView } from "@/components/tecnico/RagReportView";
-import { Loader2 } from "lucide-react";
+import { useLabels } from "@/hooks/use-labels";
 
 export default function PedidosPage() {
+    const labels = useLabels();
     const [isUploading, setIsUploading] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
     const [file, setFile] = useState<File | null>(null);
@@ -36,7 +37,7 @@ export default function PedidosPage() {
             if (data.success) {
                 setAnalysisResult(data);
             } else {
-                alert("Error en el análisis RAG: " + data.message);
+                alert(`Error en el análisis de ${labels.singular}: ` + data.message);
             }
         } catch (err) {
             console.error(err);
@@ -47,15 +48,15 @@ export default function PedidosPage() {
     };
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto py-6 px-4">
+        <div className="space-y-8">
             {/* Header Sección */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 font-outfit">
-                        Análisis de <span className="text-teal-600">Pedidos Técnico</span>
+                        Análisis de <span className="text-teal-600">{labels.plural} Técnico</span>
                     </h1>
                     <p className="text-slate-500 mt-2 text-lg">
-                        Sube un pedido en PDF para extraer modelos y consultar la base de conocimiento RAG.
+                        {labels.description}
                     </p>
                 </div>
                 <div className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest">
@@ -72,6 +73,7 @@ export default function PedidosPage() {
                     <RagReportView
                         numeroPedido={analysisResult.pedido_id}
                         modelos={analysisResult.modelos}
+                        riesgos={analysisResult.riesgos}
                     />
                 </div>
             ) : (
@@ -85,7 +87,7 @@ export default function PedidosPage() {
                             </div>
                             <CardHeader>
                                 <CardTitle className="text-xl font-bold">Nuevo Análisis</CardTitle>
-                                <CardDescription className="text-slate-400">Suelta el PDF del pedido aquí</CardDescription>
+                                <CardDescription className="text-slate-400">Suelta el PDF del {labels.singular.toLowerCase()} aquí</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div
@@ -103,7 +105,7 @@ export default function PedidosPage() {
                                         <Upload size={24} />
                                     </div>
                                     <p className="text-sm font-medium">{file ? file.name : "Haz clic para buscar"}</p>
-                                    <p className="text-xs text-slate-500 mt-1 uppercase font-bold">PDF de pedido (Max 10MB)</p>
+                                    <p className="text-xs text-slate-500 mt-1 uppercase font-bold">PDF de {labels.singular.toLowerCase()} (Max 10MB)</p>
                                 </div>
                                 <Button
                                     onClick={runAnalysis}
@@ -115,7 +117,7 @@ export default function PedidosPage() {
                                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                             Analizando con Gemini 2.0...
                                         </>
-                                    ) : "Iniciar Análisis RAG"}
+                                    ) : `Iniciar ${labels.action}`}
                                 </Button>
                             </CardContent>
                         </Card>
@@ -124,7 +126,7 @@ export default function PedidosPage() {
                             <CardContent className="pt-6 space-y-4">
                                 <div className="flex items-start gap-3">
                                     <CheckCircle2 className="text-teal-600 mt-1" size={18} />
-                                    <p className="text-sm text-slate-700">Detección automática de modelos (Botoneras, Motores...).</p>
+                                    <p className="text-sm text-slate-700">Detección automática de modelos y componentes.</p>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <CheckCircle2 className="text-teal-600 mt-1" size={18} />
@@ -141,17 +143,17 @@ export default function PedidosPage() {
                     {/* Lado Derecho: Historial / Recientes */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-slate-900">Análisis Recientes</h3>
+                            <h3 className="text-xl font-bold text-slate-900">{labels.recent_title}</h3>
                             <div className="flex items-center gap-2">
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <Input placeholder="Buscar pedido..." className="pl-9 w-64 bg-white border-slate-200" />
+                                    <Input placeholder={`Buscar ${labels.singular.toLowerCase()}...`} className="pl-9 w-64 bg-white border-slate-200" />
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            {/* Item de Pedido */}
+                            {/* Item de Pedido (Demo) */}
                             {[1, 2, 3].map((i) => (
                                 <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow bg-white group cursor-pointer border-l-4 border-l-teal-500">
                                     <CardContent className="p-4 flex items-center justify-between">
@@ -160,7 +162,7 @@ export default function PedidosPage() {
                                                 <FileText size={24} />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-slate-900 text-lg">PEDIDO_#2290{i}_VALENCIA</h4>
+                                                <h4 className="font-bold text-slate-900 text-lg">{labels.singular.toUpperCase()}_#2290{i}_VALENCIA</h4>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5">4 Modelos Detectados</Badge>
                                                     <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Hace 2 horas</span>

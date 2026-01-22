@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { UsageService } from './usage-service';
 
 // Configurar Cloudinary
 cloudinary.config({
@@ -8,7 +9,7 @@ cloudinary.config({
 });
 
 /**
- * Función genérica para subir a una carpeta específica
+ * Función genérica para subir a una carpeta específica (con aislamiento por tenant)
  */
 async function uploadToFolder(
     buffer: Buffer,
@@ -43,13 +44,16 @@ async function uploadToFolder(
 }
 
 /**
- * Sube un PDF técnico para el RAG
+ * Sube un PDF técnico para el RAG (Carpeta compartida del tenant)
  */
 export async function uploadRAGDocument(
     buffer: Buffer,
-    filename: string
+    filename: string,
+    tenantId: string = 'default_tenant'
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    return uploadToFolder(buffer, filename, 'abd-elevators/documentos-rag');
+    const result = await uploadToFolder(buffer, filename, `abd-elevators/tenants/${tenantId}/documentos-rag`);
+    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-rag-docs');
+    return result;
 }
 
 /**
@@ -58,9 +62,12 @@ export async function uploadRAGDocument(
 export async function uploadUserDocument(
     buffer: Buffer,
     filename: string,
+    tenantId: string,
     userId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    return uploadToFolder(buffer, filename, `abd-elevators/usuarios/${userId}/documentos`);
+    const result = await uploadToFolder(buffer, filename, `abd-elevators/tenants/${tenantId}/usuarios/${userId}/documentos`);
+    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-user-docs');
+    return result;
 }
 
 /**
@@ -69,23 +76,26 @@ export async function uploadUserDocument(
 export async function uploadProfilePhoto(
     buffer: Buffer,
     filename: string,
+    tenantId: string,
     userId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-elevators/usuarios/${userId}/perfil`,
+                folder: `abd-elevators/tenants/${tenantId}/usuarios/${userId}/perfil`,
                 public_id: `perfil_${Date.now()}`,
                 transformation: [
                     { width: 400, height: 400, crop: 'fill', gravity: 'face' },
                     { quality: 'auto', fetch_format: 'auto' }
                 ]
             },
-            (error, result) => {
+            async (error, result) => {
+
                 if (error) {
                     reject(error);
                 } else if (result) {
+                    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-profile-photos');
                     resolve({
                         url: result.url,
                         publicId: result.public_id,
@@ -108,9 +118,13 @@ export async function uploadProfilePhoto(
 export async function uploadPDFToCloudinary(
     buffer: Buffer,
     filename: string,
-    folder: string = 'abd-elevators/documentos'
+    tenantId: string = 'default_tenant',
+    folder: string = ''
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    return uploadToFolder(buffer, filename, folder);
+    const targetFolder = folder || `abd-elevators/tenants/${tenantId}/documentos`;
+    const result = await uploadToFolder(buffer, filename, targetFolder);
+    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-legacy-docs');
+    return result;
 }
 
 /**
@@ -122,7 +136,6 @@ export async function deleteFromCloudinary(publicId: string, resourceType: 'raw'
 
 /**
  * Elimina un PDF de Cloudinary
- * @deprecated Use deleteFromCloudinary instead
  */
 export async function deletePDFFromCloudinary(publicId: string): Promise<void> {
     await deleteFromCloudinary(publicId, 'raw');

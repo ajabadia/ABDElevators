@@ -36,13 +36,27 @@ export async function POST(req: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const result = await uploadProfilePhoto(buffer, file.name, user._id.toString());
+        const tenantId = user.tenantId || (session.user as any).tenantId || 'default_tenant';
+
+        const result = await uploadProfilePhoto(buffer, file.name, tenantId, user._id.toString());
+
+        // Actualizar el documento del usuario en la base de datos
+        await db.collection('usuarios').updateOne(
+            { email: session.user.email },
+            {
+                $set: {
+                    foto_url: result.secureUrl,
+                    foto_cloudinary_id: result.publicId,
+                    modificado: new Date()
+                }
+            }
+        );
 
         await logEvento({
             nivel: 'INFO',
             origen: 'API_PROFILE_PHOTO',
             accion: 'UPLOAD_PHOTO',
-            mensaje: `Foto de perfil actualizada para ${session.user.email}`,
+            mensaje: `Foto de perfil actualizada y persistida para ${session.user.email}`,
             correlacion_id,
             detalles: { public_id: result.publicId }
         });

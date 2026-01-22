@@ -56,15 +56,16 @@ export async function POST(req: NextRequest) {
         });
 
         const buffer = Buffer.from(await file.arrayBuffer());
+        const tenantId = (session.user as any).tenantId || 'default_tenant';
 
-        // 1. Subir PDF a Cloudinary
-        const cloudinaryResult = await uploadRAGDocument(buffer, file.name);
+        // 1. Subir PDF a Cloudinary (Aislamiento por tenant)
+        const cloudinaryResult = await uploadRAGDocument(buffer, file.name, tenantId);
 
         // 2. Extraer texto
         const text = await extractTextFromPDF(buffer);
 
         // 3. IA: Extraer modelos
-        const modelosDetectados = await extractModelsWithGemini(text, correlacion_id);
+        const modelosDetectados = await extractModelsWithGemini(text, tenantId, correlacion_id);
         const modeloPrincipal = modelosDetectados.length > 0 ? modelosDetectados[0].modelo : 'DESCONOCIDO';
 
         // 4. Chunking
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
 
         // 5.2. Procesar chunks
         for (const chunkText of chunks) {
-            const embedding = await generateEmbedding(chunkText, correlacion_id);
+            const embedding = await generateEmbedding(chunkText, tenantId, correlacion_id);
 
             const documentChunk = {
                 tipo_componente: metadata.tipo,

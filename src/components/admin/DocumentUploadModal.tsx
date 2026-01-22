@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, FileText, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,25 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [version, setVersion] = useState("1.0");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [tiposDocs, setTiposDocs] = useState<{ nombre: string }[]>([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchTypes();
+        }
+    }, [isOpen]);
+
+    const fetchTypes = async () => {
+        try {
+            const res = await fetch('/api/admin/tipos-documento');
+            if (res.ok) {
+                const data = await res.json();
+                setTiposDocs(data);
+            }
+        } catch (error) {
+            console.error('Error fetching types:', error);
+        }
+    };
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         setFile(acceptedFiles[0]);
@@ -132,11 +151,20 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                         <SelectValue placeholder="Seleccionar..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="botonera">Botonera</SelectItem>
-                                        <SelectItem value="motor">Motor</SelectItem>
-                                        <SelectItem value="cuadro">Cuadro de Control</SelectItem>
-                                        <SelectItem value="puerta">Operador de Puerta</SelectItem>
-                                        <SelectItem value="variador">Variador de Frecuencia</SelectItem>
+                                        {tiposDocs.map((t) => (
+                                            <SelectItem key={t.nombre} value={t.nombre.toLowerCase()}>
+                                                {t.nombre}
+                                            </SelectItem>
+                                        ))}
+                                        {tiposDocs.length === 0 && (
+                                            <>
+                                                <SelectItem value="botonera">Botonera</SelectItem>
+                                                <SelectItem value="motor">Motor</SelectItem>
+                                                <SelectItem value="cuadro">Cuadro de Control</SelectItem>
+                                                <SelectItem value="puerta">Operador de Puerta</SelectItem>
+                                                <SelectItem value="variador">Variador de Frecuencia</SelectItem>
+                                            </>
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
