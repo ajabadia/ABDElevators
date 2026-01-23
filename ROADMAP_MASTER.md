@@ -143,6 +143,13 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **6.6 Informe LLM Opcional**
   - Button “Generar Informe Profesional”.
   - Endpoint `POST /api/pedidos/[id]/generar-informe-llm` (LLM‑generated PDF).
+- [ ] **6.6.1 Gestión Avanzada de Informes LLM (Control de Costos & Auditoría)** ⭐ **CRÍTICO**
+  - **Control de Costos:** Feature flag por tenant, límites mensuales, estimación pre-generación
+  - **Almacenamiento:** PDFs en Cloudinary `/{tenantId}/informes/{pedidoId}/`, versionado automático
+  - **Auditoría:** Historial completo, tracking de tokens/costos, quién generó cuándo
+  - **UI:** Lista de informes en detalle del pedido, preview, descarga, comparación de versiones
+  - **Compliance:** Retención configurable, GDPR, encriptación de informes sensibles
+  - Ver diseño completo en documentación de fase
 - **6.7 Testing & Deploy**
   - Unit tests (`checklist-extractor.test.ts`, `auto-classifier.test.ts`).
   - Integration tests (`vector-search.test.ts`, `config-save.test.ts`).
