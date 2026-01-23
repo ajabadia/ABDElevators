@@ -271,17 +271,23 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [x] `.env.example` con todas las variables de Stripe.
   - [x] Documentación completa en `FASE_9.3_STRIPE.md`.
 
-#### 9.4 Notificaciones de Límites (PENDIENTE - SIGUIENTE)
-- [ ] **Email Alerts**
-  - [ ] Configurar servicio de email (Resend/SendGrid).
-  - [ ] Email template para alertas.
-  - [ ] Enviar email cuando se alcanza 80% del límite.
-  - [ ] Enviar email cuando se alcanza 100% (servicio suspendido).
-  - [ ] Email cuando pago falla (integrar en webhook).
-- [ ] **In-App Notifications**
-  - [ ] Componente `<LimitAlert />`.
-  - [ ] Banner en dashboard mostrando % de uso.
-  - [ ] Modal de upgrade cuando se excede el límite.
+#### 9.4 Notificaciones de Límites (COMPLETADO ✅ - 2026-01-23)
+- [x] **Email Alerts**
+  - [x] Configurar servicio de email (Resend).
+  - [x] Email templates HTML premium para alertas.
+  - [x] Enviar email cuando se alcanza 80% del límite.
+  - [x] Enviar email cuando se alcanza 100% (servicio suspendido).
+  - [x] Email cuando pago falla (integrar en webhook).
+  - [x] Suspensión automática tras 3 pagos fallidos.
+  - [x] Prevención de spam (1 email cada 24h por límite).
+- [x] **In-App Notifications**
+  - [x] Componente `<LimitAlert />` (banner flotante).
+  - [x] Componente `<LimitExceededModal />` (modal de bloqueo).
+  - [x] Banner dismissible con sessionStorage.
+  - [x] Colores dinámicos según severidad (amarillo/rojo).
+- [x] **Fixes Críticos**
+  - [x] Middleware: Rutas públicas (/, /privacy, /terms, /arquitectura, /features/*, /upgrade).
+  - [x] Documentación completa en `FASE_9.4_NOTIFICATIONS.md`.
 
 
 #### 9.5 Testing & Deployment
