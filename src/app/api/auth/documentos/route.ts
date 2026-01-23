@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
         if (!user) throw new NotFoundError('Usuario no encontrado');
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const uploadResult = await uploadUserDocument(buffer, file.name, user._id.toString());
+        const tenantId = user.tenantId || 'default_tenant';
+        const uploadResult = await uploadUserDocument(buffer, file.name, tenantId, user._id.toString());
 
         const docData = {
             usuario_id: user._id.toString(),
