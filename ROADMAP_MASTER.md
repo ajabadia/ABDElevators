@@ -64,10 +64,10 @@ This document consolidates **all** roadmap information, implementation plans, an
 ---
 
 ### 📊 Métricas de Avance (from `plans/roadmap.md`)
-- **Fase 1‑5:** 100 %
-- **Fase 6:** 25 % (Motor RAG Pro iniciado)
-- **Fase 7:** 10 % (Estrategia Visión 2.0 definida)
-- **GLOBAL:** 90 % (Hacia la generalización multi‑industria)
+- **Fase 1‑6:** 100 %
+- **Fase 7:** 90 % (Motor de Workflows y SaaS listo)
+- **Fase 10:** 60 % (Governance & Support en despliegue)
+- **GLOBAL:** 95 % (Hacia el cierre de la Visión 2.0)
 
 ---
 
@@ -153,18 +153,20 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] Definición de esquemas Zod (`WorkflowDefinitionSchema`).
 - [x] Implementación de `WorkflowEngine` (Motor de transiciones).
 - [x] Implementación de `WorkflowService` (Gestión y Seeding).
-- [ ] Endpoint `POST /api/pedidos/[id]/transition`.
-- [ ] UI visualizador de estados en el dashboard.
+- [x] Endpoint `POST /api/pedidos/[id]/transition`.
+- [x] UI visualizador de estados en el dashboard.
 
 ...
 
-#### 🏰 FASE 10: PLATFORM GOVERNANCE & SUPPORT (PRÓXIMAMENTE)
+#### 🏰 FASE 10: PLATFORM GOVERNANCE & SUPPORT (EN PROCESO 🛠️)
 - **Objetivo:** Control total de la plataforma y soporte al usuario final.
-- **Planes:**
-  - **SuperAdmin Role:** Usuario raíz con visibilidad total.
-  - **Notificaciones Unificadas:** Sistema in-app y push para avisos de plataforma y transacciones.
-  - **Centro de Soporte:** Formulario de contacto y zona de respuesta para administradores (basado en referencia ABDInst).
-  - **Métricas Globales:** Salud financiera y técnica de todos los tenants.
+- **Hitos:**
+  - [x] **SuperAdmin Role:** Usuario raíz con visibilidad total (script `create-super-admin`).
+  - [x] **Notificaciones Hub:** Sistema in-app con campana animada y polling (UI + Backend).
+  - [x] **Centro de Soporte:** Formulario para técnicos y panel de respuesta para admins (`/contacto` y `/admin/contacts`).
+  - [x] **Prompt Engineering UI:** Editor avanzado para mantenimiento de modelos Gemini.
+  - [ ] **Expansión SuperAdmin:** Revisar y ampliar opciones de gestión global (actualmente limitadas).
+  - [ ] **Métricas Globales:** Salud financiera y técnica de todos los tenants.
 - **7.3 Taxonomías y Metadatos Multi‑tenant** (already done) – mantener y expandir.
 - **7.4 Automatización SaaS**
   - Completar **trackeo de uso** (LLM, storage, search) – conectar a `UsageTracker`.

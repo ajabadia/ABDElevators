@@ -21,20 +21,17 @@ export async function POST(
         const { id } = await params;
         const body = await req.json();
 
-        // Extraemos industry y caseType (idealmente vendrían en el body o se inferirían del caso)
-        // Por ahora exigimos que el cliente los envíe para simplificar el motor genérico
-        const { action, industry, caseType, comment, signature } = body;
+        // En la Visión 2.0, el motor infiere el contexto del tenant y buscamos por toState
+        const { toState, comment, signature } = body;
 
-        if (!action || !industry || !caseType) {
-            throw new ValidationError('Faltan parámetros: action, industry o caseType');
+        if (!toState) {
+            throw new ValidationError('Faltan el parámetro: toState');
         }
 
         const result = await WorkflowEngine.executeTransition({
             caseId: id,
-            action,
+            toState,
             role: session.user.role,
-            industry,
-            caseType,
             correlacion_id,
             comment,
             signature
