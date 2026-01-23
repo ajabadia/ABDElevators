@@ -1,43 +1,18 @@
 /**
- * Shared interfaces for the RAG and Checklist modules.
+ * Shared types for the RAG and Checklist modules.
+ * This file re-exports types from schemas.ts to ensure consistency.
  */
 
-export type IndustryType = 'ELEVATORS' | 'LEGAL' | 'IT' | 'GENERIC';
+import {
+    IndustryType as SchemaIndustryType,
+    GenericCase as SchemaGenericCase,
+    ChecklistItem as SchemaChecklistItem,
+    ChecklistCategory as SchemaChecklistCategory,
+    ChecklistConfig as SchemaChecklistConfig
+} from './schemas';
 
-export interface GenericCase {
-    id: string;
-    tenantId: string;
-    industry: IndustryType;
-    type: string; // e.g., "Mantenimiento", "Demanda", "Ticket"
-    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-    status: string; // Estado dentro del workflow custom del tenant
-    metadata: {
-        industry_specific: Record<string, any>;
-        tags: string[];
-    };
-    creado: Date;
-    actualizado: Date;
-}
-
-export interface ChecklistItem {
-    id: string;
-    description: string;
-    categoryId?: string | null;
-    notes?: string;
-}
-
-export interface ChecklistCategory {
-    id: string;
-    nombre: string;
-    color: string;
-    keywords: string[];
-    prioridad: number;
-    icono?: string;
-}
-
-export interface ChecklistConfig {
-    nombre: string;
-    categorias: ChecklistCategory[];
-    workflow_orden: string[];
-    activo: boolean;
-}
+export type IndustryType = SchemaIndustryType;
+export type GenericCase = SchemaGenericCase;
+export type ChecklistItem = SchemaChecklistItem;
+export type ChecklistCategory = SchemaChecklistCategory;
+export type ChecklistConfig = SchemaChecklistConfig;

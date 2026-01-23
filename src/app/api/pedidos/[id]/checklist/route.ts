@@ -9,7 +9,7 @@ import { auth } from "@/lib/auth";
 
 import { extractChecklist } from "@/lib/checklist-extractor";
 import { autoClassify, smartSort } from "@/lib/checklist-auto-classifier";
-import { ChecklistItem, ChecklistConfig } from "@/lib/types";
+import { ChecklistItem, ChecklistConfig, Pedido } from "@/lib/schemas";
 import { logEvento } from "@/lib/logger";
 import { AppError, ValidationError, ExternalServiceError, DatabaseError } from "@/lib/errors";
 import { getRelevantDocuments } from "@/lib/rag-service";
