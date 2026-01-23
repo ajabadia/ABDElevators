@@ -392,6 +392,148 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Deletion Receipt:** Sistema de envío de email automático confirmando el borrado exitoso y el código de rastro de la operación.
 - [ ] **Review Landing Page:** Promocionar el cumplimiento GDPR 100% y el derecho al olvido automatizado.
 
+- **🔌 FASE 16: API PÚBLICA & INTEGRACIÓN DE SISTEMAS (PLANNED)**
+  - **Objetivo:** Exponer la funcionalidad RAG como API RESTful consumible por sistemas externos de clientes, siguiendo estándares OpenAPI 3.0 y mejores prácticas de API design.
+  - **Principios de Diseño:**
+    - [ ] **RESTful Architecture:** Endpoints semánticos, verbos HTTP correctos, códigos de estado apropiados.
+    - [ ] **Versionado:** API versionada (`/api/v1/...`) para compatibilidad hacia atrás.
+    - [ ] **Rate Limiting:** Límites por API key (ej. 1000 req/día tier Free, ilimitado Enterprise).
+    - [ ] **Autenticación:** API Keys + OAuth 2.0 para integraciones enterprise.
+    - [ ] **Documentación:** Swagger/OpenAPI spec auto-generada, ejemplos de código en múltiples lenguajes.
+  - **Endpoints Propuestos:**
+    - [ ] **POST /api/v1/documents/ingest**
+      - Descripción: Inyectar documentos del cliente directamente al corpus RAG.
+      - Payload: `{ file: binary, metadata: { category, tags }, tenantId }`
+      - Response: `{ documentId, status: "indexed", vectorsGenerated: 120 }`
+      - SLA: < 2s para PDFs < 10MB.
+    - [ ] **POST /api/v1/rag/query**
+      - Descripción: Consulta RAG pura (texto → resultados semánticos).
+      - Payload: `{ query: string, filters?: { category, dateRange }, topK: 10 }`
+      - Response: `{ results: [{ text, score, source, metadata }], processingTime }`
+      - SLA: < 500ms.
+    - [ ] **POST /api/v1/analysis/extract**
+      - Descripción: Análisis completo de pedido/caso (RAG + LLM + Validación).
+      - Payload: `{ caseId: string, autoValidate: boolean }`
+      - Response: `{ findings: [...], risks: [...], recommendations: [...], confidence }`
+      - SLA: < 3s.
+    - [ ] **GET /api/v1/results/{caseId}**
+      - Descripción: Obtener resultados procesados para integración en sistemas del cliente.
+      - Response: `{ caseId, status, validatedData, auditTrail, exportFormats: ["json", "pdf"] }`
+    - [ ] **POST /api/v1/webhooks/subscribe**
+      - Descripción: Suscribirse a eventos (documento indexado, análisis completado, validación aprobada).
+      - Payload: `{ url: "https://client.com/webhook", events: ["document.indexed", "analysis.completed"] }`
+  - **Seguridad y Compliance:**
+    - [ ] **API Key Management:** Panel de generación/revocación de keys en `/admin/api-keys`.
+    - [ ] **Scoped Permissions:** Keys con permisos granulares (read-only, write, admin).
+    - [ ] **IP Whitelisting:** Restricción de IPs permitidas por API key.
+    - [ ] **Audit Log:** Registro de todas las llamadas API con correlación a tenant.
+    - [ ] **Encryption:** TLS 1.3 obligatorio, payload encryption opcional para datos sensibles.
+  - **Developer Experience:**
+    - [ ] **SDKs Oficiales:** JavaScript/TypeScript, Python, C# (.NET).
+    - [ ] **Postman Collection:** Colección pre-configurada con ejemplos.
+    - [ ] **Sandbox Environment:** Entorno de pruebas con datos fake para desarrollo.
+    - [ ] **Status Page:** Página pública de estado de la API (uptime, latencia).
+  - **Monitoreo y Analytics:**
+    - [ ] **API Analytics Dashboard:** Métricas de uso por endpoint, errores, latencia.
+    - [ ] **Usage Quotas:** Alertas automáticas al cliente cuando se acerca al límite.
+    - [ ] **Error Tracking:** Integración con Sentry/Datadog para errores de API.
+
+- **♿ FASE 17: ACCESIBILIDAD (A11Y) & SEO AUDIT (PLANNED)**
+  - **Objetivo:** Garantizar que la aplicación cumple con estándares WCAG 2.1 AA y está optimizada para motores de búsqueda.
+  - **Accesibilidad (A11Y):**
+    - [ ] **Auditoría Automática:** Ejecutar Lighthouse, axe DevTools y WAVE en todas las páginas.
+    - [ ] **Navegación por Teclado:** Verificar que toda la UI es navegable sin mouse (Tab, Enter, Esc).
+    - [ ] **Screen Readers:** Probar con NVDA/JAWS (Windows) y VoiceOver (Mac).
+    - [ ] **Contraste de Color:** Asegurar ratio mínimo 4.5:1 (texto normal) y 3:1 (texto grande).
+    - [ ] **ARIA Labels:** Añadir `aria-label`, `aria-describedby` en componentes interactivos.
+    - [ ] **Focus Management:** Estados de foco visibles y lógicos en modales, dropdowns, etc.
+    - [ ] **Formularios Accesibles:** Labels asociados, mensajes de error descriptivos, validación en tiempo real.
+    - [ ] **Imágenes:** Alt text descriptivo en todas las imágenes (no decorativas).
+    - [ ] **Tablas de Datos:** Headers `<th>` con `scope`, caption descriptivo.
+  - **SEO (Search Engine Optimization):**
+    - [ ] **Meta Tags:** Title, description, Open Graph, Twitter Cards en todas las páginas públicas.
+    - [ ] **Semantic HTML:** Uso correcto de `<header>`, `<nav>`, `<main>`, `<article>`, `<footer>`.
+    - [ ] **Heading Hierarchy:** Un solo `<h1>` por página, jerarquía lógica (h1 → h2 → h3).
+    - [ ] **Sitemap.xml:** Generación automática con Next.js.
+    - [ ] **Robots.txt:** Configuración correcta para crawlers.
+    - [ ] **Canonical URLs:** Evitar contenido duplicado.
+    - [ ] **Performance:** Core Web Vitals (LCP < 2.5s, FID < 100ms, CLS < 0.1).
+    - [ ] **Mobile-First:** Diseño responsive verificado en múltiples dispositivos.
+    - [ ] **Structured Data:** Schema.org markup para rich snippets (Organization, Product, FAQ).
+  - **Herramientas y Testing:**
+    - [ ] **Lighthouse CI:** Integración en pipeline de CI/CD con umbrales mínimos (Accessibility: 90+, SEO: 90+).
+    - [ ] **Pa11y:** Tests automáticos de accesibilidad en cada PR.
+    - [ ] **Google Search Console:** Monitoreo de indexación y errores.
+    - [ ] **Hotjar/Clarity:** Heatmaps para identificar problemas de UX.
+
+- **🎨 FASE 18: WHITE-LABEL BRANDING & CORPORATE ASSETS (PLANNED)**
+  - **Objetivo:** Permitir que cada tenant personalice la plataforma con su identidad corporativa (logos, colores, fuentes) para white-labeling enterprise.
+  - **Gestión de Assets Corporativos:**
+    - [ ] **Schema Extension:** Añadir campo `brandingAssets` al modelo de Tenant:
+      ```typescript
+      brandingAssets: {
+        logo: { url, cloudinaryId, usage: 'header' | 'footer' | 'reports' | 'emails' },
+        logoSecondary: { url, cloudinaryId, usage: 'invoices' | 'watermark' },
+        favicon: { url, cloudinaryId },
+        colors: { primary, secondary, accent },
+        fonts: { heading, body }
+      }
+      ```
+    - [ ] **Cloudinary Folders:** Estructura `/{tenantId}/branding/{logo|favicon|...}` para aislamiento.
+    - [ ] **Image Validation:** Restricciones de tamaño (logo < 2MB), formatos (PNG, SVG, JPG), dimensiones recomendadas.
+  - **Módulo Genérico de Gestión de Imágenes (DRY):**
+    - [ ] **Component: `ImageAssetManager.tsx`**
+      - Props: `assetType`, `currentUrl`, `onUpload`, `onDelete`, `maxSize`, `acceptedFormats`.
+      - Features: Drag & drop, preview, crop tool, optimización automática.
+      - Reutilizable en: Tenant branding, user avatars, document thumbnails.
+    - [ ] **Service: `asset-upload.ts`**
+      - Función `uploadAsset(file, tenantId, assetType)` con validación y compresión.
+      - Función `deleteAsset(cloudinaryId)` con cleanup.
+      - Tracking de uso de storage por tenant.
+  - **UI de Gestión:**
+    - [ ] **Página: `/admin/tenants/[id]/branding`**
+      - Sección "Logos": Upload de logo principal, secundario, favicon.
+      - Sección "Colores": Color pickers para primary, secondary, accent.
+      - Sección "Tipografía": Selector de Google Fonts.
+      - Preview en tiempo real de cómo se verá en la plataforma.
+    - [ ] **Permisos:** Solo ADMIN y SUPER_ADMIN pueden modificar branding.
+  - **Aplicación de Branding:**
+    - [ ] **Informes PDF:** Incluir logo del tenant en header/footer.
+    - [ ] **Emails:** Usar logo en plantillas de invitación, notificaciones.
+    - [ ] **Header/Footer Web:** Opción de mostrar logo del tenant (si está configurado).
+    - [ ] **Favicon Dinámico:** Cambiar favicon según tenant activo (multi-tenant UX).
+  - **Mejores Prácticas SaaS:**
+    - [ ] **Fallback:** Si no hay logo configurado, usar logo genérico de ABD RAG.
+    - [ ] **CDN:** Servir assets desde Cloudinary CDN para performance.
+    - [ ] **Versionado:** Mantener historial de logos (rollback si es necesario).
+    - [ ] **Audit Trail:** Registrar quién cambió el branding y cuándo.
+
+- **🌍 FASE 19: INTERNACIONALIZACIÓN COMPLETA (i18n AUDIT) (PLANNED)**
+  - **Objetivo:** Verificar que toda la aplicación soporta múltiples idiomas (ES/EN mínimo) y está preparada para expansión global.
+  - **Auditoría de Cobertura:**
+    - [ ] **Páginas Públicas:** Landing, arquitectura, features, contacto → 100% traducidas.
+    - [ ] **Páginas Autenticadas:** Dashboard, pedidos, validación, admin → Verificar uso de `useTranslations()`.
+    - [ ] **Componentes UI:** Botones, modals, forms, tables → Textos hardcodeados identificados y migrados a `messages/`.
+    - [ ] **Emails:** Plantillas de invitación, notificaciones → Multilenguaje con fallback a ES.
+    - [ ] **Mensajes de Error:** API responses, validaciones Zod → Traducidos en ambos idiomas.
+    - [ ] **Informes PDF:** Generación de informes en idioma del tenant.
+  - **Estructura de Traducciones:**
+    - [ ] **Archivos:** `messages/es.json`, `messages/en.json` con estructura idéntica.
+    - [ ] **Namespaces:** Organizar por secciones (`common`, `nav`, `pedidos`, `admin`, `errors`).
+    - [ ] **Validación:** Script para detectar keys faltantes entre idiomas.
+  - **Selector de Idioma:**
+    - [ ] **UI Component:** Dropdown en header para cambiar idioma (persistir en cookies).
+    - [ ] **Tenant Default:** Configurar idioma por defecto por tenant (ej. tenant UK → EN).
+    - [ ] **User Preference:** Permitir que cada usuario elija su idioma preferido.
+  - **Formateo Regional:**
+    - [ ] **Fechas:** Usar `Intl.DateTimeFormat` con locale correcto.
+    - [ ] **Números:** Separadores de miles/decimales según región.
+    - [ ] **Moneda:** Formato de precios según país del tenant.
+  - **Testing:**
+    - [ ] **Pruebas Manuales:** Navegar toda la app en ES y EN verificando textos.
+    - [ ] **Automated Tests:** Playwright tests que cambien idioma y verifiquen traducciones.
+    - [ ] **Coverage Report:** Generar reporte de % de cobertura i18n por página.
+
 - **🎯 FASE 15: LANDING PAGE AUDIT & COMPLIANCE CERTIFICATION (PLANNED)**
   - **Objetivo:** Asegurar que la landing page refleja con precisión las capacidades reales de la plataforma y obtener certificaciones formales.
   - **Tareas de Revisión:**

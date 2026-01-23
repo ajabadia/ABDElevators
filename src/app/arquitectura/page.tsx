@@ -60,7 +60,7 @@ export default function Arquitectura() {
                             items={[
                                 "Next.js API Routes",
                                 "MongoDB Atlas (Vector Search)",
-                                "Gemini 2.0 Flash (LLM)",
+                                "Gemini, Perplexity, ChatGPT,... (LLM)",
                                 "LangChain (Orchestration)"
                             ]}
                         />
@@ -70,7 +70,7 @@ export default function Arquitectura() {
                             items={[
                                 "NextAuth.js (Authentication)",
                                 "Multi-Tenant Isolation",
-                                "Cloudinary (Asset Storage)",
+                                "Cloudinary, Google Drive, OneDrive,... (Asset Storage)",
                                 "Vercel Edge Network"
                             ]}
                         />

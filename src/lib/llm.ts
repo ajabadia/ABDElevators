@@ -173,3 +173,69 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
         throw new ExternalServiceError('Error extracting models with Gemini', error as Error);
     }
 }
+
+/**
+ * Llamada genérica a Gemini para generación de texto
+ * Útil para informes, resúmenes, etc.
+ */
+export async function callGemini(
+    prompt: string,
+    tenantId: string,
+    correlacion_id: string,
+    options?: {
+        temperature?: number;
+        maxTokens?: number;
+        model?: string;
+    }
+): Promise<string> {
+    const start = Date.now();
+    try {
+        const genAI = getGenAI();
+        const modelName = options?.model || 'gemini-2.0-flash-exp';
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+                temperature: options?.temperature ?? 0.7,
+                maxOutputTokens: options?.maxTokens ?? 2048,
+            }
+        });
+
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        const duration = Date.now() - start;
+
+        // Tracking de uso
+        const usage = (response as any).usageMetadata;
+        if (usage) {
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+        }
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'GEMINI_GENERATION',
+            accion: 'TEXT_GENERATED',
+            mensaje: `Texto generado con ${modelName}`,
+            correlacion_id,
+            detalles: {
+                duration_ms: duration,
+                tokens: usage?.totalTokenCount,
+                promptLength: prompt.length,
+                responseLength: text.length
+            }
+        });
+
+        return text;
+    } catch (error) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'GEMINI_GENERATION',
+            accion: 'GENERATION_ERROR',
+            mensaje: `Error en generación: ${(error as Error).message}`,
+            correlacion_id,
+            stack: (error as Error).stack
+        });
+        throw new ExternalServiceError('Error generating text with Gemini', error as Error);
+    }
+}
