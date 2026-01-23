@@ -259,3 +259,99 @@ function formatValue(value: number, type: string): string {
             return value.toString();
     }
 }
+
+/**
+ * Envía un email de invitación a la plataforma
+ */
+export async function sendInvitationEmail(params: {
+    to: string;
+    inviterName: string;
+    tenantName: string;
+    role: string;
+    inviteUrl: string;
+}): Promise<void> {
+    const { to, inviterName, tenantName, role, inviteUrl } = params;
+
+    const resend = getResend();
+
+    const roleNames = {
+        SUPER_ADMIN: 'Super Administrador Global',
+        ADMIN: 'Administrador de Organización',
+        TECNICO: 'Técnico Especialista',
+        INGENIERIA: 'Ingeniero de Proyectos',
+    };
+
+    const friendlyRole = roleNames[role as keyof typeof roleNames] || role;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
+        .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px; }
+        .invite-box { background: #f0fdfa; border: 1px border #99f6e4; padding: 25px; margin: 25px 0; border_radius: 8px; text-align: center; }
+        .role-badge { display: inline-block; background: #ccfbf1; color: #0f766e; padding: 4px 12px; border-radius: 9999px; font-weight: 600; font-size: 14px; margin-top: 10px; }
+        .cta-button { display: inline-block; background: #0d9488; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 30px 0; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .footer { text-align: center; color: #64748b; font-size: 12px; margin-top: 40px; }
+        .divider { height: 1px; background: #e2e8f0; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; font-size: 28px; letter-spacing: -0.025em;">ABD RAG Platform</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 18px;">Invitación a la Plataforma</p>
+        </div>
+        
+        <div class="content">
+            <h2 style="margin-top: 0; color: #0f172a; font-size: 22px;">¡Hola!</h2>
+            <p style="font-size: 16px; color: #475569;">
+                <strong>${inviterName}</strong> te ha invitado a unirte a la organización <strong>${tenantName}</strong> en ABD RAG Platform.
+            </p>
+
+            <div class="invite-box">
+                <p style="margin: 0; color: #0f766e; font-weight: 500;">Tu rol asignado será:</p>
+                <span class="role-badge">${friendlyRole}</span>
+            </div>
+
+            <p style="font-size: 15px; color: #64748b;">
+                Al unirte, tendrás acceso a las herramientas de análisis de pedidos, búsqueda técnica asistida por IA y gestión de cumplimiento de la plataforma.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="${inviteUrl}" class="cta-button">
+                    Aceptar Invitación y Configurar Cuenta
+                </a>
+            </div>
+
+            <p style="font-size: 13px; color: #94a3b8; text-align: center;">
+                Este enlace expirará en 7 días por motivos de seguridad.
+            </p>
+
+            <div class="divider"></div>
+
+            <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">
+                Si no esperabas esta invitación, puedes ignorar este correo de forma segura.
+            </p>
+
+            <div class="footer">
+                <p>© 2026 ABD RAG Platform. Todos los derechos reservados.</p>
+                <p>Seguridad y Privacidad de Grado Bancario.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'ABD RAG Platform <noreply@abdrag.com>',
+        to,
+        subject: `Invitación de ${inviterName} para unirte a ${tenantName}`,
+        html,
+    });
+}

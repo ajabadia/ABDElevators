@@ -11,7 +11,7 @@ import { extractChecklist } from "@/lib/checklist-extractor";
 import { autoClassify, smartSort } from "@/lib/checklist-auto-classifier";
 import { ChecklistItem, ChecklistConfig, Pedido } from "@/lib/schemas";
 import { logEvento } from "@/lib/logger";
-import { AppError, ValidationError, ExternalServiceError, DatabaseError } from "@/lib/errors";
+import { AppError, ValidationError, ExternalServiceError, DatabaseError, NotFoundError } from "@/lib/errors";
 import { getRelevantDocuments } from "@/lib/rag-service";
 import { getChecklistConfigById } from "@/lib/configs";
 
@@ -44,6 +44,28 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             throw new ValidationError("Invalid query parameters", parsed.error);
         }
         const { id: pedidoId, config_id } = parsed.data;
+
+        // 🛡️ Tenant Isolation Check
+        const db = await (await import("@/lib/db")).connectDB();
+        const pedido = await db.collection('pedidos').findOne({
+            _id: new (await import("mongodb")).ObjectId(pedidoId)
+        });
+
+        if (!pedido) {
+            throw new NotFoundError(`Pedido ${pedidoId} no encontrado`);
+        }
+
+        if (pedido.tenantId && pedido.tenantId !== tenantId) {
+            await logEvento({
+                nivel: "WARN",
+                origen: "CHECKLIST_ENDPOINT",
+                accion: "CROSS_TENANT_ACCESS_ATTEMPT",
+                mensaje: `Intento de acceso cruzado: Pedido ${pedidoId} por Tenant ${tenantId}`,
+                correlacion_id,
+                detalles: { pedidoId, tenantId, resourceTenant: pedido.tenantId }
+            });
+            throw new AppError('FORBIDDEN', 403, 'No tienes permiso para acceder a este pedido');
+        }
 
         // ----- 1️⃣ Retrieve relevant documents via vector search (top 15) -----
         const docs = await getRelevantDocuments(pedidoId, tenantId, { topK: 15, correlacion_id }); // returns [{id, content}]

@@ -37,4 +37,14 @@ export async function connectDB(): Promise<Db> {
     return connectedClient.db('ABDElevators');
 }
 
+/**
+ * Retorna el cliente de MongoDB para transacciones
+ */
+export async function getMongoClient(): Promise<MongoClient> {
+    if (!clientPromise) {
+        await connectDB();
+    }
+    return await clientPromise!;
+}
+
 export default clientPromise;

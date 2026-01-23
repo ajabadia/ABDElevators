@@ -75,6 +75,7 @@ export async function middleware(request: NextRequest) {
         '/arquitectura',
         '/features',
         '/upgrade',
+        '/auth/signup-invite',
     ];
 
     const isPublicPath = publicPaths.some(path => {

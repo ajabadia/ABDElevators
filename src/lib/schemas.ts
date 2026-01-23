@@ -222,6 +222,16 @@ export const TipoDocumentoSchema = z.object({
 });
 
 /**
+ * Esquema para acceso a tenants específicos
+ */
+export const TenantAccessSchema = z.object({
+    tenantId: z.string(),
+    name: z.string(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    industry: IndustryTypeSchema.default('ELEVATORS'),
+});
+
+/**
  * Esquema para Usuarios (extendido con perfil completo)
  */
 export const UsuarioSchema = z.object({
@@ -233,10 +243,14 @@ export const UsuarioSchema = z.object({
     puesto: z.string().optional(),
     foto_url: z.string().url().optional(),
     foto_cloudinary_id: z.string().optional(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
-    tenantId: z.string(),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']), // Rol principal/default
+    tenantId: z.string(), // Tenant actual/default
+    industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
+
+    // Multi-tenancy (Fase 11)
+    tenantAccess: z.array(TenantAccessSchema).optional(),
+
     activo: z.boolean().default(true),
     creado: z.date(),
     modificado: z.date(),
@@ -515,3 +529,63 @@ export const NotificationSchema = z.object({
 });
 
 export type Notification = z.infer<typeof NotificationSchema>;
+
+/**
+ * Esquema para Invitaciones a la Plataforma (Fase 11.1)
+ */
+export const InviteSchema = z.object({
+    _id: z.any().optional(),
+    email: z.string().email('Email inválido'),
+    tenantId: z.string(),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    industry: IndustryTypeSchema.default('ELEVATORS'),
+    nombre: z.string().min(2, 'Nombre requerido').optional(),
+    apellidos: z.string().min(2, 'Apellidos requeridos').optional(),
+    token: z.string(),
+    invitadoPor: z.string(), // ID del usuario que invita
+    estado: z.enum(['PENDIENTE', 'ACEPTADA', 'EXPIRADA', 'CANCELADA']).default('PENDIENTE'),
+    expira: z.date(),
+    creado: z.date().default(() => new Date()),
+    usadoAt: z.date().optional(),
+});
+
+export const AcceptInviteSchema = z.object({
+    token: z.string(),
+    password: z.string()
+        .min(8, 'La contraseña debe tener al menos 8 caracteres')
+        .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+        .regex(/[0-9]/, 'Debe contener al menos un número'),
+    nombre: z.string().min(2, 'Nombre requerido'),
+    apellidos: z.string().min(2, 'Apellidos requeridos'),
+});
+
+/**
+ * Esquema para Validación Humana Estructurada (Fase 6.4)
+ */
+export const ValidacionItemSchema = z.object({
+    campo: z.string(), // Nombre del campo validado (ej: "modelo", "componente_X")
+    valorOriginal: z.any(), // Valor sugerido por el RAG
+    valorCorregido: z.any().optional(), // Valor corregido por el técnico (si aplica)
+    estado: z.enum(['APROBADO', 'CORREGIDO', 'RECHAZADO']),
+    comentario: z.string().optional(), // Razón de la corrección/rechazo
+});
+
+export const ValidacionSchema = z.object({
+    _id: z.any().optional(),
+    pedidoId: z.string(),
+    tenantId: z.string(),
+    validadoPor: z.string(), // ID del técnico que valida
+    nombreTecnico: z.string(),
+    items: z.array(ValidacionItemSchema),
+    estadoGeneral: z.enum(['APROBADO', 'PARCIAL', 'RECHAZADO']),
+    tiempoValidacion: z.number().optional(), // Segundos empleados
+    observaciones: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+export type ValidacionItem = z.infer<typeof ValidacionItemSchema>;
+export type Validacion = z.infer<typeof ValidacionSchema>;
+
+export type Invite = z.infer<typeof InviteSchema>;
+export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
+

@@ -41,7 +41,7 @@
     "solutions": {
         "title": "Soluciones Sectoriales",
         "subtitle": "Especialización técnica integrada por defecto.",
-        "s1_title": "Ascensores & Industrial",
+        "s1_title": "Industrial",
         "s1_desc": "Análisis de pedidos técnicos y comparación automática con normativas de seguridad (EN 81-20/50).",
         "s2_title": "Legal & Compliance",
         "s2_desc": "Detección proactiva de riesgos en contratos complejos y verificación de cláusulas contra jurisprudencia.",
@@ -51,11 +51,11 @@
     "security": {
         "title": "Seguridad Nivel Enterprise",
         "subtitle": "Tus datos están blindados en cada capa del proceso.",
-        "f1_title": "Aislamiento Multi-Tenant",
-        "f1_desc": "Arquitectura de base de datos aislada físicamente por tenant, garantizando la privacidad absoluta.",
+        "f1_title": "Aislamiento Multi-Tenant Lógico",
+        "f1_desc": "Arquitectura de base de datos con filtrado estricto por tenantId, garantizando privacidad absoluta entre organizaciones.",
         "f2_title": "Cifrado Militar",
         "f2_desc": "Datos cifrados en reposo (AES-256) y en tránsito (TLS 1.3) bajo estándares de alta seguridad.",
-        "f3_title": "Soberanía de Datos",
-        "f3_desc": "Tú mantienes el control total sobre dónde se almacenan y cómo se procesan tus documentos."
+        "f3_title": "Soberanía de Datos (Roadmap BYODB)",
+        "f3_desc": "Arquitectura preparada para que puedas usar tu propia base de datos y almacenamiento (próximamente)."
     }
 }

@@ -8,9 +8,12 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'INTERNAL_ERROR'
   | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
   | 'TENANT_CONFIG_ERROR'
   | 'STORAGE_QUOTA_EXCEEDED'
-  | 'MISSING_VARIABLES';
+  | 'MISSING_VARIABLES'
+  | 'INVITE_ALREADY_USED'
+  | 'INVITE_EXPIRED';
 
 export class AppError extends Error {
   constructor(

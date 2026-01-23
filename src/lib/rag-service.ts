@@ -234,6 +234,11 @@ export async function getRelevantDocuments(
             throw new AppError('NOT_FOUND', 404, `Pedido ${pedidoId} not found`);
         }
 
+        // 🛡️ Tenant Isolation Check
+        if (pedido.tenantId && pedido.tenantId !== tenantId) {
+            throw new AppError('FORBIDDEN', 403, `No tienes permiso para acceder a este recurso`);
+        }
+
         const textoPedido = pedido.pdf_texto || "";
         if (!textoPedido) {
             return [];

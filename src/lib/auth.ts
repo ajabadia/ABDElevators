@@ -79,6 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
                         image: user.foto_url,
+                        tenantAccess: user.tenantAccess || []
                     };
                 } catch (error: any) {
                     console.error("[Auth ERROR] Exception during authorize:", error);
@@ -108,12 +109,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.industry = user.industry as string;
                 token.activeModules = (user.activeModules as string[]) || [];
                 token.image = user.image as string | null | undefined;
+                token.tenantAccess = user.tenantAccess;
             }
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
                 if (session.user.image) token.image = session.user.image as string;
                 if (session.user.name) token.name = session.user.name as string;
+                if (session.user.tenantId) token.tenantId = session.user.tenantId as string;
+                if (session.user.role) token.role = session.user.role as string;
+                if (session.user.industry) token.industry = session.user.industry as string;
             }
 
             return token;
@@ -126,6 +131,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 session.user.industry = token.industry as string;
                 session.user.activeModules = token.activeModules as string[];
                 session.user.image = token.image as string | null | undefined;
+                session.user.tenantAccess = token.tenantAccess as any;
             }
             return session;
         },

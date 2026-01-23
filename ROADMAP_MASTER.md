@@ -50,6 +50,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] 6.5 Audit Trail Robusto
 - [ ] 6.6 Informe LLM Opcional
 - [x] 6.7 Testing & Deploy
+- [ ] **Review Landing Page:** Actualizar secciones de "Features" o "Tecnología" con los avances de RAG Pro.
 
 #### 🌐 FASE 7: GENERALIZACIÓN Y SAAS (VISIÓN 2.0)
 - **Objetivo:** Adaptar la plataforma a múltiples industrias.
@@ -60,6 +61,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] 7.5 Metrics & Intelligence (Riesgos detectados)
 
 - [ ] 7.6 Sugerencias Proactivas
+- [ ] **Review Landing Page:** Resaltar la capacidad Multi-industria y Workflows en las secciones de "Soluciones".
 
 ---
 
@@ -127,10 +129,14 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **6.3 Configurador Admin Visual**
   - Full‑screen configurador (`ConfiguratorFull.tsx`).
   - Sidebar navigation, live preview.
-- **6.4 Validación Humana Estructurada**
-  - Collection `validaciones_empleados` (audit trail).
-  - Endpoint `POST /api/pedidos/[id]/validate`.
-  - Components `ValidationWorkflow.tsx`, `VectorResultsTable.tsx`, `DynamicChecklist.tsx`.
+- [x] **6.4 Validación Humana Estructurada**
+  - [x] Collection `validaciones_empleados` (audit trail).
+  - [x] Endpoint `POST /api/pedidos/[id]/validate` (guardar validación).
+  - [x] Endpoint `GET /api/pedidos/[id]/validate` (historial).
+  - [x] Component `ValidationWorkflow.tsx` (flujo completo de validación).
+  - [x] Schemas: `ValidacionSchema`, `ValidacionItemSchema`.
+  - [x] Performance monitoring (SLA < 300ms).
+  - [x] **Integración Completa:** Página `/pedidos/[id]/validar` actualizada con nuevo sistema.
 - [x] **6.5 Audit Trail Robusto**
   - [x] `AuditTrailViewer.tsx` / `audit-pdf-export.ts` (PDF export utility created).
   - [ ] Metrics: tiempo empleado, duración.
@@ -167,6 +173,7 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] **Prompt Engineering UI:** Editor avanzado para mantenimiento de modelos Gemini.
   - [ ] **Expansión SuperAdmin:** Revisar y ampliar opciones de gestión global (actualmente limitadas).
   - [ ] **Métricas Globales:** Salud financiera y técnica de todos los tenants.
+- [ ] **Review Landing Page:** Asegurar que las opciones de soporte y gobernanza se reflejan en la oferta Enterprise.
 - **7.3 Taxonomías y Metadatos Multi‑tenant** (already done) – mantener y expandir.
 - **7.4 Automatización SaaS**
   - Completar **trackeo de uso** (LLM, storage, search) – conectar a `UsageTracker`.
@@ -178,6 +185,8 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **7.7 Infraestructura de Almacenamiento Multi-tenant**
   - [x] Configuración de buckets/carpetas por cliente.
   - [x] Soporte inicial: Cloudinary (aislamiento por carpetas).
+  - [ ] **Estrategia de Almacenamiento Flexible (BYOS):** Evaluar y permitir configuración por tenant de credenciales propias (Azure Blob, S3, Google Drive) vs. Almacenamiento compartido administrado (carpetas aisladas).
+  - [ ] **Soberanía de Datos Pro (BYODB):** Capacidad para que un tenant premium configure su propia instancia/cluster de MongoDB. Requiere motor de inyección de conexiones dinámicas y centralización de telemetría para facturación.
   - [ ] Roadmap de integración: Google Drive, AWS S3, Azure Blob.
 - [x] **Industry Abstraction Layer**
   - [x] Crear plantillas de entidad por industria (elevators, HVAC, manufacturing, healthcare, IT assets).
@@ -317,17 +326,86 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 #### 🚀 FASE 11: ADVANCED MULTI-TENANCY & GLOBAL GOVERNANCE
 - **Objetivo:** Convertir la plataforma en un centro de control total donde la gestión multi-empresa sea transversal a todos los módulos.
+
+- **11.0: Análisis de Impactos y Hardening de Contexto (REVISIÓN DE SEGURIDAD 🛡️):**
+  - [x] **Identificación de Puntos Críticos:** Revisión de toda la stack para asegurar aislamiento total.
+  - [x] **Impacto en RAG:** Los `document_chunks` deben incluir `tenantId` (o `null` para globales) para evitar fugas de información entre empresas.
+  - [x] **Impacto en API (ID Enumeration):** Todos los endpoints `/[id]` deben validar que la entidad pertenece al `tenantId` de la sesión.
+  - [x] **Impacto en UI State:** El cambio de contexto debe forzar la limpieza de cachés y recarga de datos (Sync React Context).
+  - [x] **Impacto en Storage:** Verificación de aislamiento de carpetas en Cloudinary/S3 por cada contexto activo.
+- [ ] **Review Landing Page:** Potenciar el mensaje de Aislamiento y Seguridad Grado Bancario.
+
 - **Hitos de Infraestructura y Seguridad:**
-  - [ ] **Context Switching (Tenant Selector):** Selector global persistente para alternar entre contextos de empresa sin re-login.
-  - [ ] **RBAC Cross-Tenant:** Soporte para usuarios vinculados a múltiples organizaciones con roles independientes.
-  - [ ] **Data Isolation (Hardened):** Middleware de filtrado dinámico basado en `activeTenantContext`.
+  - [x] **Context Switching (Tenant Selector):** Selector global persistente para alternar entre contextos de empresa sin re-login (Componente `UserNav`).
+  - [x] **RBAC Cross-Tenant:** Soporte para usuarios vinculados a múltiples organizaciones con roles independientes (Esquema `tenantAccess`).
+  - [x] **Data Isolation (Hardened):** Middleware de filtrado dinámico basado en `activeTenantContext`.
   - [ ] **SuperAdmin Masquerading:** Capacidad de "emular" sesiones para soporte técnico avanzado.
 - **Hitos de Gestión Transversal (El "Control Plane"):**
-  - [ ] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins.
+  - [x] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins (API `/api/admin/global-stats`).
   - [ ] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
   - [ ] **Unified Support Hub:** Integración del sistema de tickets con el selector de tenant para ver logs y contexto del usuario de forma inmediata.
   - [ ] **Global Workflow & Prompt templates:** Capacidad de despliegue masivo de configuraciones maestras a múltiples tenants.
-  - [ ] **Consolidated Analytics:** Reportes de facturación, uso de AI y almacenamiento agregados por cliente y globalmente.
+  - [x] **Consolidated Analytics:** Reportes de facturación, uso de AI y almacenamiento agregados por cliente y globalmente.
+- **Hitos de Gestión de Usuarios Enterprise (Seguridad Grado Bancario):**
+  - [x] **Tenant User Provisioning:** Interfaz para que Administradores den de alta, editen y suspendan usuarios de su propia entidad.
+  - [x] **Granular RBAC UI:** Panel para asignar roles (`ADMIN`, `TECNICO`, `INGENIERIA`) y activar/desactivar módulos por usuario.
+  - [x] **Invitaciones Seguras:** Sistema de invitación vía email con tokens de un solo uso y expiración temporal.
+  - [ ] **Security Hardening:** Implementación de Multi-Factor Authentication (MFA) opcional y política de rotación de contraseñas.
+  - [ ] **User Audit Trail:** Registro inmutable de quién creó a quién y qué permisos fueron modificados (Regla de Oro #4).
+  - [ ] **Session Control:** Capacidad del administrador para revocar sesiones activas de usuarios comprometidos o dados de baja.
+- [ ] **Review Landing Page:** Mostrar capacidades de RBAC y Control Enterprise en la sección de Seguridad.
+  
+- **🚀 FASE 12: MODO DEMO EFÍMERO & FREE TRIAL (PLANNED)**
+  - **Objetivo:** Permitir que potenciales clientes prueben la plataforma en un entorno seguro y auto-limpiable.
+  - **Hitos:**
+    - [ ] **Ephemeral Tenant Factory:** Capacidad de crear un tenant de prueba con un solo click.
+    - [ ] **Auto-Cleanup Engine (TTL):** Proceso programado para borrar tenants de prueba tras N días (incluye Cloudinary, DB y Logs).
+    - [ ] **Demo Data Seeding:** Ingesta automática de documentos, pedidos y usuarios "fake" para una experiencia completa inmediata.
+    - [ ] **Simulated Billing:** Visualización de cómo sería la factura sin cargos reales.
+    - [ ] **Environment Isolation:** Investigación de despliegue en rama `demo` vs. Aislamiento lógico en `production`.
+- [ ] **Review Landing Page:** Añadir botón/sección "Pruébalo ahora (Demo Mode)" si aplica.
+
+- **🛡️ FASE 13: CONTINUIDAD, BACKUP & DISASTER RECOVERY (PLANNED)**
+  - **Objetivo:** Garantizar la integridad de los datos y la capacidad de recuperación ante desastres para todos los tenants.
+  - **Hitos y Estrategia Técnica:**
+    - [ ] **Unified Backup Engine (Logical):** 
+      - Scripting con `mongodump --query` para exportar datos JSON/BSON aislados por `tenantId`.
+      - Almacenamiento comprimido en bucket S3 independiente con política de ciclo de vida (retención 30 días).
+    - [ ] **Cloudinary Archiver:** 
+      - Uso de `rclone` o scripts personalizados con la API de Cloudinary para sincronizar carpetas de tenant hacia AWS S3 Glacier (Cold Storage).
+      - Verificación de hash para asegurar integridad de la copia.
+    - [ ] **Data Portability Service:** Interfaz para que el cliente descargue un "Knowledge Package" (ZIP) con sus documentos originales + exportación de pedidos en formato legible (JSON/CSV).
+    - [ ] **BYOS/BYODB Backup Bridge:** 
+      - Orquestación de backups nativos en la nube del cliente (ej. disparar snapshot de su MongoDB Atlas propio o bucket S3 propio) vía webhooks o API de proveedores.
+    - [ ] **WORM Audit Log Hardening:** Exportación mensual de `logs_aplicacion` a almacenamiento inmutable (WORM - Write Once Read Many) para cumplimiento normativo.
+- [ ] **Review Landing Page:** Destacar la Soberanía de Datos y Disaster Recovery en la sección Enterprise.
+
+- **⚖️ FASE 14: GDPR COMPLIANCE & DERECHO AL OLVIDO (PLANNED)**
+  - **Objetivo:** Implementar un sistema profesional de borrado de datos que cumpla con la normativa europea, manteniendo la integridad de auditoría de la plataforma.
+  - **Estrategia Técnica (Erasure Policy):**
+    - [ ] **Purge System (Hard Delete):** Eliminación total de datos PII (Personally Identifiable Information) de la colección `usuarios` y `pedidos`.
+    - [ ] **Document Shredding:** Borrado físico inmediato en Cloudinary de todo archivo vinculado al usuario/tenant solicitante.
+    - [ ] **Anonymization Engine:** Si existen datos transaccionales necesarios para estadísticas globales (facturación, uso AI), se anonimizan (se quita el vínculo al email/nombre) en lugar de borrar el log de uso.
+    - [ ] **Immutable Erasure Evidence:** 
+      - Generación de un log crítico en `logs_aplicacion` que registre: *"Entidad [ID] borrada el [Fecha] por solicitud [Ticket ID]"*.
+      - Este log NO contendrá datos privados, solo el ID interno y la acción, para demostrar cumplimiento ante inspecciones.
+    - [ ] **Deletion Receipt:** Sistema de envío de email automático confirmando el borrado exitoso y el código de rastro de la operación.
+- [ ] **Review Landing Page:** Promocionar el cumplimiento GDPR 100% y el derecho al olvido automatizado.
+
+- **🎯 FASE 15: LANDING PAGE AUDIT & COMPLIANCE CERTIFICATION (PLANNED)**
+  - **Objetivo:** Asegurar que la landing page refleja con precisión las capacidades reales de la plataforma y obtener certificaciones formales.
+  - **Tareas de Revisión:**
+    - [x] **Corrección de Claims Falsos:**
+      - [x] Cambiar "SOC2 Compliant" a "Enterprise Security Hardened" (no tenemos certificación formal).
+      - [x] Cambiar "Aislamiento físico" a "Aislamiento lógico certificado" (es filtrado por tenantId, no físico).
+      - [x] Actualizar "Soberanía de Datos" para reflejar que BYODB/BYOS está en roadmap.
+    - [x] **Nueva Sección Enterprise:** Añadida sección destacando Workflows, Invitaciones Seguras, Dashboard de Consumo y RBAC.
+    - [x] **Revisión de Métricas:** Eliminada métrica "99.9% Precisión RAG" no verificada. Reemplazada por "Multi-Tenant Aislamiento Total".
+  - **Certificaciones Formales (Roadmap):**
+    - [ ] **SOC2 Type II:** Contratar auditoría externa (6-12 meses).
+    - [ ] **ISO 27001:** Implementar controles de seguridad adicionales.
+    - [ ] **GDPR Compliance Seal:** Validación formal de cumplimiento europeo.
+    - [ ] **RAG Quality Metrics:** Implementar sistema de evaluación automática (RAGAS/LangSmith).
 
 ### Métricas de Éxito
 - ✅ **Trackeo preciso**: 100% de operaciones LLM/Storage/Search registradas.

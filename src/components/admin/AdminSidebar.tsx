@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Documentos', href: '/admin/documentos', icon: FileText },
     { name: 'Tipos Doc.', href: '/admin/tipos-documento', icon: Settings },
     { name: 'Checklists', href: '/admin/configs-checklist', icon: CheckSquare },

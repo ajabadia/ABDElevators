@@ -23,6 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { useSession } from "next-auth/react";
+
 interface CreateUserModalProps {
     open: boolean;
     onClose: () => void;
@@ -30,6 +32,9 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalProps) {
+    const { data: session } = useSession();
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+
     const [loading, setLoading] = useState(false);
     const [tempPassword, setTempPassword] = useState<string | null>(null);
     const { toast } = useToast();
@@ -39,7 +44,8 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         nombre: "",
         apellidos: "",
         puesto: "",
-        rol: "TECNICO" as "ADMIN" | "TECNICO" | "INGENIERIA",
+        rol: "TECNICO" as "SUPER_ADMIN" | "ADMIN" | "TECNICO" | "INGENIERIA",
+        tenantId: "", // Solo para SuperAdmins
         activeModules: ["TECHNICAL", "RAG"] as string[],
     });
 
@@ -90,6 +96,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             apellidos: "",
             puesto: "",
             rol: "TECNICO",
+            tenantId: "",
             activeModules: ["TECHNICAL", "RAG"],
         });
         setTempPassword(null);
@@ -162,6 +169,20 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                             />
                         </div>
 
+                        {isSuperAdmin && (
+                            <div className="space-y-2">
+                                <Label htmlFor="tenantId" className="text-teal-600 font-bold">Tenant ID (Global Admin Only) *</Label>
+                                <Input
+                                    id="tenantId"
+                                    placeholder="ej: tenant-123"
+                                    required
+                                    value={formData.tenantId}
+                                    onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                                    className="border-teal-200 focus:ring-teal-500"
+                                />
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <Label htmlFor="puesto">Puesto</Label>
                             <Input
@@ -182,6 +203,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    {isSuperAdmin && <SelectItem value="SUPER_ADMIN">Super Administrador</SelectItem>}
                                     <SelectItem value="ADMIN">Administrador</SelectItem>
                                     <SelectItem value="TECNICO">Técnico</SelectItem>
                                     <SelectItem value="INGENIERIA">Ingeniería</SelectItem>

@@ -38,6 +38,19 @@ export async function GET(
             throw new NotFoundError(`Pedido con ID ${id} no encontrado`);
         }
 
+        // 🛡️ Tenant Isolation Check
+        if (pedido.tenantId && pedido.tenantId !== tenantId) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'API_PEDIDOS_VECTOR',
+                accion: 'CROSS_TENANT_ACCESS_ATTEMPT',
+                mensaje: `Intento de acceso cruzado detectado para pedido ${id} por tenant ${tenantId}`,
+                correlacion_id,
+                detalles: { targetId: id, userTenant: tenantId, resourceTenant: pedido.tenantId }
+            });
+            throw new AppError('FORBIDDEN', 403, 'No tienes permiso para acceder a este pedido');
+        }
+
         // 2. Construir query optimizada basada en modelos detectados
         // Si no hay modelos, usamos el texto original (truncado para evitar latencia)
         let query = '';

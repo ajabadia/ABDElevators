@@ -16,7 +16,8 @@ export async function getTenantCollection(collectionName: string) {
     }
     const db = await connectDB();
 
-    // Obtenemos el tenantId de la sesión o del entorno (para modo single-tenant configurable)
+    // 🚀 BYODB Vision: Aquí es donde resolveremos la connection string dinámica
+    // si el tenant tiene configurado un cluster propio en TenantService.
     const tenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID;
 
     if (!tenantId) {

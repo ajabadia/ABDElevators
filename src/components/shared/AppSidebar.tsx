@@ -46,7 +46,11 @@ export function AppSidebar() {
     const activeModules = (session?.user as any)?.activeModules || [];
 
     const menuItems: MenuItem[] = [
-        { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+        {
+            name: 'Dashboard',
+            href: (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? '/admin' : (userRole === 'INGENIERIA' ? '/admin/documentos' : '/pedidos'),
+            icon: LayoutDashboard
+        },
         {
             name: `${labels.plural} Técnico`,
             href: '/pedidos',

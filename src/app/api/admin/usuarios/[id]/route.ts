@@ -21,7 +21,10 @@ export async function PATCH(
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        const isAdmin = session?.user?.role === 'ADMIN';
+        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+
+        if (!isAdmin && !isSuperAdmin) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -32,6 +35,25 @@ export async function PATCH(
         const validated = AdminUpdateUserSchema.parse(body);
 
         const db = await connectDB();
+
+        // Aislamiento: Si es Admin, verificar que el usuario a editar pertenezca a su tenant
+        if (isAdmin) {
+            const userToEdit = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+            if (!userToEdit) {
+                throw new NotFoundError('Usuario no encontrado');
+            }
+            if (userToEdit.tenantId !== session?.user?.tenantId) {
+                await logEvento({
+                    nivel: 'WARN',
+                    origen: 'API_ADMIN_USUARIOS',
+                    accion: 'CROSS_TENANT_ACCESS_ATTEMPT',
+                    mensaje: `Admin ${session?.user?.email} intentó modificar usuario de otro tenant: ${id}`,
+                    correlacion_id,
+                    detalles: { targetUserId: id, adminTenant: session?.user?.tenantId, userTenant: userToEdit.tenantId }
+                });
+                throw new AppError('FORBIDDEN', 403, 'No tienes permisos para modificar usuarios de otras organizaciones');
+            }
+        }
 
         const updateData: any = {
             ...validated,
@@ -110,7 +132,10 @@ export async function GET(
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        const isAdmin = session?.user?.role === 'ADMIN';
+        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+
+        if (!isAdmin && !isSuperAdmin) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -120,6 +145,11 @@ export async function GET(
 
         if (!usuario) {
             throw new NotFoundError('Usuario no encontrado');
+        }
+
+        // Aislamiento: Si es Admin, verificar tenantId
+        if (isAdmin && usuario.tenantId !== session?.user?.tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'No autorizado para ver este usuario');
         }
 
         const { password, ...safeUser } = usuario;

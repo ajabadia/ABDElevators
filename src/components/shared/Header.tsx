@@ -1,11 +1,10 @@
 "use client";
 
-import { Bell, User, Search, Menu } from 'lucide-react';
-import Image from 'next/image';
+import { Bell, Search, Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useSidebar } from '@/context/SidebarContext';
 import { NotificationBell } from './NotificationBell';
-
+import { UserNav } from './UserNav';
 import { useSession } from 'next-auth/react';
 
 export function Header() {
@@ -42,24 +41,7 @@ export function Header() {
                 <ThemeToggle />
                 <NotificationBell />
                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                <div className="flex items-center gap-3 pl-2">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.name || 'Invitado'}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-tighter">{user?.role || 'Visitante'}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400 rounded-full flex items-center justify-center font-bold shadow-inner relative overflow-hidden">
-                        {user?.image ? (
-                            <Image
-                                src={user.image}
-                                alt={user.name || "Usuario"}
-                                fill
-                                className="object-cover"
-                            />
-                        ) : (
-                            initials
-                        )}
-                    </div>
-                </div>
+                <UserNav />
             </div>
         </header>
     );

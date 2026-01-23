@@ -78,10 +78,37 @@ export async function PATCH(req: NextRequest) {
 
         const body = await req.json();
 
-        // REGLA #2: Zod Validation BEFORE Processing
         const validated = UpdateProfileSchema.parse(body);
-
         const db = await connectDB();
+
+        // Obtener datos actuales del usuario para verificar permisos (Regla de Oro #4 - Audit Trail)
+        const currentUser = await db.collection('usuarios').findOne({ email: session.user.email });
+        if (!currentUser) {
+            throw new NotFoundError('Usuario no encontrado');
+        }
+
+        const isPrivileged = ['ADMIN', 'SUPER_ADMIN'].includes(currentUser.rol);
+        const identityFields = ['nombre', 'apellidos', 'puesto'];
+        const isAttemptingIdentityChange = identityFields.some(field => body[field] !== undefined);
+
+        if (!isPrivileged && isAttemptingIdentityChange) {
+            // Verificar si el valor realmente cambia para evitar errores falsos
+            const hasActualChange = identityFields.some(field =>
+                body[field] !== undefined && body[field] !== currentUser[field]
+            );
+
+            if (hasActualChange) {
+                await logEvento({
+                    nivel: 'WARN',
+                    origen: 'API_PERFIL',
+                    accion: 'UNAUTHORIZED_IDENTITY_CHANGE_ATTEMPT',
+                    mensaje: `Usuario ${session.user.email} intentó cambiar campos protegidos`,
+                    correlacion_id,
+                    detalles: { attemptedFields: Object.keys(body).filter(k => identityFields.includes(k)) }
+                });
+                throw new AppError('FORBIDDEN', 403, 'No tienes permisos para modificar campos de identidad administrados.');
+            }
+        }
 
         const updateData = {
             ...validated,

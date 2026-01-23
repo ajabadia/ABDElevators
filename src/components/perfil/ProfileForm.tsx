@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Save, User as UserIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function ProfileForm() {
     const [loading, setLoading] = useState(true);
@@ -69,6 +70,8 @@ export function ProfileForm() {
         }
     };
 
+    const isPrivileged = user?.rol === 'ADMIN' || user?.rol === 'SUPER_ADMIN';
+
     if (loading) {
         return (
             <div className="flex justify-center p-8">
@@ -81,25 +84,64 @@ export function ProfileForm() {
         <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="nombre">Nombre</Label>
-                    <Input id="nombre" name="nombre" defaultValue={user?.nombre} required placeholder="Tu nombre" />
+                    <Label htmlFor="nombre" className="flex items-center justify-between">
+                        Nombre
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                    </Label>
+                    <Input
+                        id="nombre"
+                        name="nombre"
+                        defaultValue={user?.nombre}
+                        required
+                        placeholder="Tu nombre"
+                        disabled={!isPrivileged}
+                        className={cn(!isPrivileged && "bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-80")}
+                    />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="apellidos">Apellidos</Label>
-                    <Input id="apellidos" name="apellidos" defaultValue={user?.apellidos} required placeholder="Tus apellidos" />
+                    <Label htmlFor="apellidos" className="flex items-center justify-between">
+                        Apellidos
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                    </Label>
+                    <Input
+                        id="apellidos"
+                        name="apellidos"
+                        defaultValue={user?.apellidos}
+                        required
+                        placeholder="Tus apellidos"
+                        disabled={!isPrivileged}
+                        className={cn(!isPrivileged && "bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-80")}
+                    />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email (No editable)</Label>
-                    <Input id="email" value={user?.email} disabled className="bg-slate-50 dark:bg-slate-800" />
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" value={user?.email} disabled className="bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-80" />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="puesto">Puesto / Cargo</Label>
-                    <Input id="puesto" name="puesto" defaultValue={user?.puesto} placeholder="Ej: Técnico de Mantenimiento" />
+                    <Label htmlFor="puesto" className="flex items-center justify-between">
+                        Puesto / Cargo
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                    </Label>
+                    <Input
+                        id="puesto"
+                        name="puesto"
+                        defaultValue={user?.puesto}
+                        placeholder="Ej: Técnico de Mantenimiento"
+                        disabled={!isPrivileged}
+                        className={cn(!isPrivileged && "bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-80")}
+                    />
                 </div>
             </div>
 
-            <div className="flex justify-end">
-                <Button type="submit" disabled={saving} className="bg-teal-600 hover:bg-teal-700">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                {!isPrivileged && (
+                    <p className="text-xs text-slate-500 max-w-md">
+                        <span className="font-bold text-teal-600 mr-1">Nota:</span>
+                        Como usuario de la plataforma, tus datos de identidad están gestionados por la administración. Si necesitas actualizarlos, contacta con soporte.
+                    </p>
+                )}
+                <div className="flex-1" />
+                <Button type="submit" disabled={saving} className="bg-teal-600 hover:bg-teal-700 transition-all font-bold">
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Guardar Cambios
                 </Button>

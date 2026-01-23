@@ -1,5 +1,12 @@
 import { DefaultSession } from "next-auth";
 
+export interface TenantAccess {
+    tenantId: string;
+    name: string;
+    role: string;
+    industry: string;
+}
+
 declare module "next-auth" {
     interface User {
         id: string;
@@ -7,6 +14,7 @@ declare module "next-auth" {
         tenantId: string;
         industry: string;
         activeModules: string[];
+        tenantAccess?: TenantAccess[];
     }
 
     interface Session {
@@ -16,6 +24,7 @@ declare module "next-auth" {
             tenantId: string;
             industry: string;
             activeModules: string[];
+            tenantAccess?: TenantAccess[];
         } & DefaultSession["user"];
     }
 }
@@ -27,5 +36,6 @@ declare module "next-auth/jwt" {
         tenantId: string;
         industry: string;
         activeModules: string[];
+        tenantAccess?: TenantAccess[];
     }
 }

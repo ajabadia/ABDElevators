@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ShieldCheck, Cpu, Database, ChevronRight, Globe, Lock, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, Cpu, Database, ChevronRight, Globe, Lock, Zap, GitBranch, Users, CreditCard, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -81,8 +81,8 @@ export default function Home() {
 
             <div className="mt-12 flex items-center gap-8 border-t border-white/5 pt-8 animate-in fade-in duration-1000 delay-500">
               <div>
-                <p className="text-2xl font-bold text-white">99.9%</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{statsT('accuracy')}</p>
+                <p className="text-2xl font-bold text-white">Multi-Tenant</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Aislamiento Total</p>
               </div>
               <div className="w-px h-8 bg-white/10" />
               <div>
@@ -91,8 +91,8 @@ export default function Home() {
               </div>
               <div className="w-px h-8 bg-white/10" />
               <div>
-                <p className="text-2xl font-bold text-white">SOC2</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{statsT('compliant')}</p>
+                <p className="text-2xl font-bold text-white">Hardened</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Enterprise Security</p>
               </div>
             </div>
           </div>
@@ -177,6 +177,43 @@ export default function Home() {
               title={solT('s3_title')}
               description={solT('s3_desc')}
               image="/solutions-it.png"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Enterprise Management Section - NEW */}
+      <section className="py-32 bg-slate-950 relative">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20">
+            <Badge className="bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-6 font-bold uppercase tracking-widest px-4 py-1.5">
+              <ShieldCheck size={12} className="mr-2" />
+              Enterprise-Grade
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold font-outfit text-white mb-4">Gestión Empresarial Avanzada</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">Herramientas de gobernanza y control diseñadas para organizaciones que exigen lo mejor.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <EnterpriseFeature
+              icon={<GitBranch className="text-teal-400" size={24} />}
+              title="Workflows Personalizables"
+              description="Estados y transiciones adaptados a tu proceso de negocio específico."
+            />
+            <EnterpriseFeature
+              icon={<Users className="text-blue-400" size={24} />}
+              title="Invitaciones Seguras"
+              description="Onboarding de usuarios con tokens de un solo uso y expiración automática."
+            />
+            <EnterpriseFeature
+              icon={<CreditCard className="text-amber-400" size={24} />}
+              title="Dashboard de Consumo"
+              description="Métricas en tiempo real de uso de IA, almacenamiento y búsquedas vectoriales."
+            />
+            <EnterpriseFeature
+              icon={<Shield className="text-emerald-400" size={24} />}
+              title="RBAC Granular"
+              description="Control de permisos por rol con activación/desactivación de módulos por usuario."
             />
           </div>
         </div>
@@ -369,6 +406,18 @@ function SecurityFeature({ title, description }: { title: string; description: s
         <h4 className="text-lg font-bold text-white mb-2">{title}</h4>
         <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
       </div>
+    </div>
+  );
+}
+
+function EnterpriseFeature({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-teal-500/30 transition-all group hover:-translate-y-1 duration-300">
+      <div className="mb-4 p-3 rounded-xl bg-slate-900 w-fit group-hover:scale-110 transition-transform duration-500">
+        {icon}
+      </div>
+      <h4 className="text-lg font-bold text-white mb-2">{title}</h4>
+      <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
     </div>
   );
 }
