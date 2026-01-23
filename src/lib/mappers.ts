@@ -17,6 +17,7 @@ export function mapPedidoToCase(pedido: any, tenantId: string): GenericCase {
                 modelos_detectados: pedido.modelos_detectados,
                 texto_original: pedido.texto_original,
             },
+            taxonomies: {},
             tags: ['elevator', 'maintenance'],
         },
         creado: pedido.creado || new Date(),
