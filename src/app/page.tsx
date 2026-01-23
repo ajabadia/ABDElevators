@@ -159,17 +159,17 @@ export default function Home() {
             <SolutionCard
               title={solT('s1_title')}
               description={solT('s1_desc')}
-              image="/assets/images/solutions-industrial.png"
+              image="/solutions-industrial.png"
             />
             <SolutionCard
               title={solT('s2_title')}
               description={solT('s2_desc')}
-              image="/assets/images/solutions-legal.png"
+              image="/solutions-legal.png"
             />
             <SolutionCard
               title={solT('s3_title')}
               description={solT('s3_desc')}
-              image="/assets/images/solutions-it.png"
+              image="/solutions-it.png"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function Home() {
                 <div className="absolute -inset-4 bg-emerald-500/10 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="relative rounded-[2.5rem] border border-white/10 bg-slate-950 p-4 shadow-2xl overflow-hidden">
                   <Image
-                    src="/assets/images/security-dashboard.png"
+                    src="/security-dashboard.png"
                     alt="Security Dashboard"
                     width={600}
                     height={400}
@@ -271,26 +271,26 @@ export default function Home() {
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">Producto</h4>
             <ul className="text-slate-500 text-sm space-y-2">
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Características</li>
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Seguridad</li>
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Precios</li>
+              <li><a href="#tecnologia" className="hover:text-teal-400 cursor-pointer transition-colors">Características</a></li>
+              <li><a href="#seguridad" className="hover:text-teal-400 cursor-pointer transition-colors">Seguridad</a></li>
+              <li className="text-slate-600 cursor-not-allowed">Precios (Próximamente)</li>
             </ul>
           </div>
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">Empresa</h4>
             <ul className="text-slate-500 text-sm space-y-2">
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Sobre Nosotros</li>
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Contacto</li>
-              <li className="hover:text-teal-400 cursor-pointer transition-colors">Legal</li>
+              <li className="text-slate-600 cursor-not-allowed">Sobre Nosotros (Próximamente)</li>
+              <li className="text-slate-600 cursor-not-allowed">Contacto (Próximamente)</li>
+              <li><a href="/terms" className="hover:text-teal-400 cursor-pointer transition-colors">Legal</a></li>
             </ul>
           </div>
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest text-xs">Social</h4>
             <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all opacity-50 cursor-not-allowed" title="Próximamente">
                 <Globe size={18} className="text-slate-400" />
               </div>
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all opacity-50 cursor-not-allowed" title="Próximamente">
                 <Lock size={18} className="text-slate-400" />
               </div>
             </div>
