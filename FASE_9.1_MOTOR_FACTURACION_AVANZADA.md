@@ -192,6 +192,40 @@ El SuperAdmin tendrá un panel avanzado para cada tenant donde podrá:
 
 ---
 
+## 🛡️ ESTABILIDAD Y LARGO PLAZO (VISION 2.1)
+
+### 1. Grandfathering (Protección al Cliente Fiel)
+Para evitar que una subida de precios global afecte a clientes con contratos antiguos:
+- Al contratar, se crea un `PriceSnapshot` en el `TenantBillingConfig`.
+- El `BillingService.getEffectivePricing` siempre buscará este snapshot antes que el plan global actual.
+
+### 2. Indexación y Ajustes Masivos
+Herramienta de utilidad para el SuperAdmin:
+- Función `applyMassUpdate(percentage: number, filter: TenantFilter)`: Incrementa las tarifas de los snapshots seleccionados.
+- Útil para ajustes por inflación (IPC) o cambio de divisa.
+
+### 3. Upgrades/Downgrades con Prorrateo
+Lógica para gestionar cambios de plan:
+- `totalCost = (PlanViejo * DiasConsumidos / 30) + (PlanNuevo * DiasRestantes / 30)`.
+
+## 🎁 ESTRATEGIA DE FIDELIZACIÓN Y CAMPAÑAS (VISION 2.2)
+
+### 1. Precios Promocionales (Introductory / Step-up)
+Para ofertas tipo "Black Friday" o "Primeros 3 meses con descuento":
+- Se utiliza `PriceSchedule`.
+- Ejemplo: Mes 1-3 a 19€/mes (Plan Promo). A partir del mes 4, el sistema detecta que el `endsAt` ha pasado y aplica el `nextPricingId` (Plan Pro Estándar).
+
+### 2. Bonificaciones por Fidelización (Loyalty Rules)
+Recompensas automáticas basadas en la permanencia:
+- **Aniversario:** Al cumplir 1 año, inyectar automáticamente un pack de `TenantCredits` (ej: 50 informes gratis).
+- **Cashback en Consumo:** Si el gasto acumulado anual > 5,000€, aplicar un `DISCOUNT_PERCENTAGE` permanente del 5% vía una regla de lealtad activa.
+
+### 3. Campañas de Cortesía Professional
+- Posibilidad de habilitar modulos Premium (ej: "Informe IA Avanzado") por tiempo limitado para incentivar el upgrade.
+- Tracking de conversión: "De los que probaron el modulo de cortesía, ¿cuántos hicieron upgrade?"
+
+---
+
 **Diseñado por:** Antigravity AI  
 **Fecha:** 23 de Enero de 2026  
 **Fase:** 9.1 - Billing Strategy & Pricing Engine

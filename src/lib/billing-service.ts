@@ -17,18 +17,32 @@ export class BillingService {
 
     /**
      * Obtiene la configuración de precio efectiva para una métrica y un tenant.
-     * Implementa la jerarquía: Tenant Override -> Global Default
+     * Implementa la jerarquía: Price Schedule (Promo) -> Tenant Override -> Global Default
      */
     static async getEffectivePricing(tenantId: string, metric: string): Promise<MetricPricing | null> {
         const db = await connectDB();
+        const now = new Date();
 
-        // 1. Buscar si hay override específico para el tenant
-        const tenantConfig = await db.collection('tenant_billing').findOne({ tenantId });
-        if (tenantConfig?.overrides?.[metric]) {
-            return tenantConfig.overrides[metric];
+        // 1. Buscar si hay una promoción/cambio programado activo
+        const tenantBilling = await db.collection('tenant_billing').findOne({ tenantId });
+        if (tenantBilling?.schedules) {
+            const activeSchedule = tenantBilling.schedules.find((s: any) =>
+                s.metric === metric &&
+                s.startsAt <= now &&
+                (s.endsAt === null || s.endsAt >= now)
+            );
+
+            if (activeSchedule) {
+                return activeSchedule.pricing;
+            }
         }
 
-        // 2. Si no hay override, buscar el Plan Global por defecto
+        // 2. Buscar si hay override específico para el tenant (Acordado en contrato)
+        if (tenantBilling?.overrides?.[metric]) {
+            return tenantBilling.overrides[metric];
+        }
+
+        // 3. Si no hay nada específico, usar el Plan Global por defecto
         const globalPlan = await db.collection('pricing_plans').findOne({ isDefault: true });
         if (globalPlan?.metrics?.[metric]) {
             return globalPlan.metrics[metric];

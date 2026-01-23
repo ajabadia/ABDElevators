@@ -629,9 +629,33 @@ export const GlobalPricingPlanSchema = z.object({
     metrics: z.record(z.string(), MetricPricingSchema),
 });
 
+export const PriceScheduleSchema = z.object({
+    metric: z.string(),
+    pricing: MetricPricingSchema,
+    startsAt: z.date(),
+    endsAt: z.date().nullable(),
+    nextPricingId: z.string().nullable(), // ID del plan al que revertir o saltar
+});
+
+export const LoyaltyRuleSchema = z.object({
+    name: z.string(),
+    condition: z.object({
+        minTenureMonths: z.number().optional(),
+        minTotalSpend: z.number().optional(),
+    }),
+    reward: z.object({
+        type: z.enum(['DISCOUNT_PERCENTAGE', 'FREE_CREDITS', 'PRICE_OVERRIDE']),
+        value: z.number(),
+        metric: z.string().optional(),
+    }),
+    active: z.boolean().default(true),
+});
+
 export const TenantBillingConfigSchema = z.object({
     tenantId: z.string(),
     overrides: z.record(z.string(), MetricPricingSchema).default({}),
+    schedules: z.array(PriceScheduleSchema).default([]),
+    appliedLoyaltyRules: z.array(z.string()).default([]),
     billingDay: z.number().default(1),
     paymentMethod: z.enum(['STRIPE', 'BANK_TRANSFER', 'MANUAL']).default('STRIPE'),
 });
@@ -650,4 +674,6 @@ export type MetricPricing = z.infer<typeof MetricPricingSchema>;
 export type GlobalPricingPlan = z.infer<typeof GlobalPricingPlanSchema>;
 export type TenantBillingConfig = z.infer<typeof TenantBillingConfigSchema>;
 export type TenantCredit = z.infer<typeof TenantCreditSchema>;
+export type PriceSchedule = z.infer<typeof PriceScheduleSchema>;
+export type LoyaltyRule = z.infer<typeof LoyaltyRuleSchema>;
 

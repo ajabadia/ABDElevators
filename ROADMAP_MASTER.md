@@ -199,6 +199,11 @@ This document consolidates **all** roadmap information, implementation plans, an
     - [ ] **Estructura de Planes:** Configurar planes Standard, Pro, Premium, Ultra con sus tiers visibles.
     - [ ] **Sincronización:** Botón "Publicar Cambios de Tarifas" en SuperAdmin para actualizar la landing.
     - [ ] **Automatización (Cron):** Tarea programada (Vercel Cron) para recálculo de consumos y actualización de dashboard de facturación el día 1 de cada mes.
+- **🔄 FASE 9.2: GESTIÓN DE CICLO DE VIDA Y ESTABILIDAD (PLANNED)**
+  - **Grandfathering:** Lógica para proteger las tarifas de clientes antiguos ante cambios globales.
+  - **Upgrades/Downgrades:** Sistema de prorrateo para cambios de plan a mitad de mes.
+  - **Ajustes Masivos:** Herramienta para SuperAdmin de actualización de precios (IPC/Inflación).
+  - **Trial to Paid:** Workflow de conversión automática y alertas de fin de cortesía.
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.
