@@ -116,7 +116,7 @@ export async function POST(
             stack: error.stack
         });
 
-        return handleApiError(error, req);
+        return handleApiError(error, 'API_VALIDACION', correlacion_id);
     }
 }
 
@@ -173,6 +173,6 @@ export async function GET(
             stack: error.stack
         });
 
-        return handleApiError(error, req);
+        return handleApiError(error, 'API_VALIDACION', correlacion_id);
     }
 }
