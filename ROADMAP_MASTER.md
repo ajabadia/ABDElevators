@@ -315,22 +315,27 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [ ] Playwright: flujo de upgrade de plan.
   - [ ] Playwright: verificación de límites.
 
-#### 🚀 FASE 11: ADVANCED MULTI-TENANCY & RBAC (NUEVO HITOS)
-- **Objetivo:** Permitir el gobierno de múltiples organizaciones por un mismo usuario bajo estándares profesionales.
-- **Hitos:**
-  - [ ] **Context Switching (Tenant Selector):** Implementar selector global en la UI para cambiar entre tenants permitidos.
-  - [ ] **RBAC Cross-Tenant:** Actualizar el esquema de usuario para soportar una lista de `tenantAccess` con roles específicos por organización.
-  - [ ] **Data Isolation Enforcement:** Reforzar el middleware para asegurar que la sesión activa filtre estrictamente por el `activeTenantId`.
-  - [ ] **SuperAdmin Masquerading (Impersonation):** Capacidad para que el SuperAdmin "asuma" la identidad de un tenant para soporte y depuración.
-  - [ ] **Tenant Management UI v2:** Dashboard unificado para que admins gestionen todas sus empresas asignadas desde una sola vista.
-  - [ ] **Audit Trail Agregado:** Logs de auditoría que registren desde qué contexto de tenant se realizó cada acción.
+#### 🚀 FASE 11: ADVANCED MULTI-TENANCY & GLOBAL GOVERNANCE
+- **Objetivo:** Convertir la plataforma en un centro de control total donde la gestión multi-empresa sea transversal a todos los módulos.
+- **Hitos de Infraestructura y Seguridad:**
+  - [ ] **Context Switching (Tenant Selector):** Selector global persistente para alternar entre contextos de empresa sin re-login.
+  - [ ] **RBAC Cross-Tenant:** Soporte para usuarios vinculados a múltiples organizaciones con roles independientes.
+  - [ ] **Data Isolation (Hardened):** Middleware de filtrado dinámico basado en `activeTenantContext`.
+  - [ ] **SuperAdmin Masquerading:** Capacidad de "emular" sesiones para soporte técnico avanzado.
+- **Hitos de Gestión Transversal (El "Control Plane"):**
+  - [ ] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins.
+  - [ ] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
+  - [ ] **Unified Support Hub:** Integración del sistema de tickets con el selector de tenant para ver logs y contexto del usuario de forma inmediata.
+  - [ ] **Global Workflow & Prompt templates:** Capacidad de despliegue masivo de configuraciones maestras a múltiples tenants.
+  - [ ] **Consolidated Analytics:** Reportes de facturación, uso de AI y almacenamiento agregados por cliente y globalmente.
 
 ### Métricas de Éxito
 - ✅ **Trackeo preciso**: 100% de operaciones LLM/Storage/Search registradas.
 - ✅ **Dashboard funcional**: Gráficos en tiempo real con datos reales.
 - ✅ **Stripe integrado**: Pagos recurrentes funcionando en producción.
 - ✅ **Límites enforced**: Bloqueo automático al exceder plan.
-- [ ] **Multi-tenancy Profesional**: Un usuario puede cambiar de tenant en <1s sin re-login.
+- [ ] **Gobernanza Total**: Un SuperAdmin puede auditar cualquier documento, pedido o log de cualquier tenant en <3 clics desde una visión centralizada.
+- [ ] **Multi-tenancy Profesional**: Cambio de contexto instantáneo con actualización reactiva de toda la aplicación.
 
 ### Estimación
 - **Duración**: 1 semana (40 horas)
