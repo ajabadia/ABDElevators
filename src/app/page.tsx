@@ -159,17 +159,17 @@ export default function Home() {
             <SolutionCard
               title={solT('s1_title')}
               description={solT('s1_desc')}
-              image="https://images.unsplash.com/photo-1516937941344-00b4e0337589?q=80&w=2670&auto=format&fit=crop"
+              image="/assets/images/solutions-industrial.png"
             />
             <SolutionCard
               title={solT('s2_title')}
               description={solT('s2_desc')}
-              image="https://images.unsplash.com/photo-1589391886645-d51941baf7fb?q=80&w=2670&auto=format&fit=crop"
+              image="/assets/images/solutions-legal.png"
             />
             <SolutionCard
               title={solT('s3_title')}
               description={solT('s3_desc')}
-              image="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2670&auto=format&fit=crop"
+              image="/assets/images/solutions-it.png"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function Home() {
                 <div className="absolute -inset-4 bg-emerald-500/10 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="relative rounded-[2.5rem] border border-white/10 bg-slate-950 p-4 shadow-2xl overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2670&auto=format&fit=crop"
+                    src="/assets/images/security-dashboard.png"
                     alt="Security Dashboard"
                     width={600}
                     height={400}
@@ -296,11 +296,11 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="container mx-auto px-8 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-slate-600 text-[10px] uppercase tracking-widest font-bold">
-          <p>&copy; 2026 ABD RAG Plataform. Todos los derechos reservados.</p>
-          <div className="flex gap-8 mt-4 md:mt-0">
-            <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
+        <div className="container mx-auto px-8 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-slate-500 text-[10px] uppercase tracking-widest font-bold">
+          <p>&copy; 2026 ABD RAG Platform. Todos los derechos reservados.</p>
+          <div className="flex gap-12 mt-4 md:mt-0">
+            <a href="/privacy" className="hover:text-white cursor-pointer transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-white cursor-pointer transition-colors">Terms of Service</a>
           </div>
         </div>
       </footer>
