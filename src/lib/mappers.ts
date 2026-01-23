@@ -22,6 +22,7 @@ export function mapPedidoToCase(pedido: any, tenantId: string): GenericCase {
         },
         creado: pedido.creado || new Date(),
         actualizado: new Date(),
+        transitions_history: pedido.transitions_history || [],
     };
 }
 
