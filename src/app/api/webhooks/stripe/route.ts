@@ -6,6 +6,8 @@ import { TenantService } from '@/lib/tenant-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { PlanTier } from '@/lib/plans';
+import { sendPaymentFailedEmail } from '@/lib/email-service';
+import { connectDB } from '@/lib/db';
 
 /**
  * POST /api/webhooks/stripe
@@ -206,8 +208,72 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: stri
         },
     });
 
-    // TODO: Enviar email de notificación al tenant
-    // TODO: Suspender cuenta si es el 3er intento fallido
+    // Enviar email de notificación al tenant
+    try {
+        const db = await connectDB();
+
+        // Buscar tenant por stripe_customer_id
+        const tenant = await db.collection('tenants').findOne({
+            'subscription.stripe_customer_id': customerId
+        });
+
+        if (tenant) {
+            // Buscar admin del tenant
+            const admin = await db.collection('users').findOne({
+                tenantId: tenant.tenantId,
+                role: 'ADMIN'
+            });
+
+            if (admin?.email) {
+                // Contar intentos fallidos
+                const failedPayments = await db.collection('logs').countDocuments({
+                    origen: 'STRIPE_WEBHOOK',
+                    accion: 'PAYMENT_FAILED',
+                    'detalles.customerId': customerId,
+                    timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Últimos 30 días
+                });
+
+                await sendPaymentFailedEmail({
+                    to: admin.email,
+                    tenantName: tenant.name || 'Tu Organización',
+                    amount: invoice.amount_due / 100,
+                    currency: invoice.currency,
+                    attemptCount: failedPayments + 1,
+                });
+
+                // Suspender cuenta si es el 3er intento fallido
+                if (failedPayments >= 2) {
+                    await db.collection('tenants').updateOne(
+                        { tenantId: tenant.tenantId },
+                        {
+                            $set: {
+                                'subscription.status': 'SUSPENDED',
+                                'active': false
+                            }
+                        }
+                    );
+
+                    await logEvento({
+                        nivel: 'ERROR',
+                        origen: 'STRIPE_WEBHOOK',
+                        accion: 'ACCOUNT_SUSPENDED',
+                        mensaje: `Cuenta suspendida por 3 pagos fallidos: ${tenant.tenantId}`,
+                        correlacion_id,
+                        detalles: { tenantId: tenant.tenantId, failedPayments: failedPayments + 1 },
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'STRIPE_WEBHOOK',
+            accion: 'EMAIL_FAILED',
+            mensaje: `Error enviando email de pago fallido: ${(error as Error).message}`,
+            correlacion_id,
+            stack: (error as Error).stack,
+        });
+    }
 }
 
 /**

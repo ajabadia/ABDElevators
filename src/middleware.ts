@@ -64,9 +64,24 @@ export async function middleware(request: NextRequest) {
         });
     }
 
-    // Rutas públicas
-    const publicPaths = ['/login', '/api/auth'];
-    const isPublicPath = pathname === '/' || publicPaths.some(path => pathname.startsWith(path));
+    // Rutas públicas (landing page y páginas de marketing)
+    const publicPaths = [
+        '/',
+        '/login',
+        '/api/auth',
+        '/privacy',
+        '/terms',
+        '/arquitectura',
+        '/features',
+        '/upgrade',
+    ];
+
+    const isPublicPath = publicPaths.some(path => {
+        if (path === '/') {
+            return pathname === '/';
+        }
+        return pathname.startsWith(path);
+    });
 
     // Si no está autenticado y intenta acceder a ruta protegida
     if (!session && !isPublicPath) {
