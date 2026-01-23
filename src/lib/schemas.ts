@@ -618,8 +618,14 @@ export const MetricPricingSchema = z.object({
 
 export const GlobalPricingPlanSchema = z.object({
     _id: z.any().optional(),
-    name: z.string(),
+    name: z.string(), // "Standard", "Pro", "Premium", "Ultra"
+    slug: z.string(), // "standard-plan", "pro-plan"
+    description: z.string().optional(),
+    features: z.array(z.string()).default([]), // ["10 informes/mes", "API Access", "Soporte 24/7"]
     isDefault: z.boolean().default(false),
+    isPublic: z.boolean().default(true), // Para mostrar en la landing
+    popular: z.boolean().default(false), // Etiqueta "Más popular"
+    priceMonthly: z.number().optional(), // Fee base mensual si aplica
     metrics: z.record(z.string(), MetricPricingSchema),
 });
 

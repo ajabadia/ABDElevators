@@ -194,8 +194,11 @@ This document consolidates **all** roadmap information, implementation plans, an
     - [ ] **Rappel Directo:** Descuento aplicado a TODAS las unidades al superar un umbral.
     - [ ] **Rappel Inverso:** Recargo por volumen excesivo (discouragement pricing / infra stress).
     - [ ] **Tarifa Plana + Overage:** X unidades incluidas en el fee mensual, resto por unidad.
-  - **Parametrización por Tenant:** Interfaz SuperAdmin para definir el "Pricing Strategy" de cada módulo para cada cliente.
-  - **Cálculo en Tiempo Real:** Motor que evalúa el acumulado mensual y aplica la fórmula de precio correspondiente.
+  - **Marketing & Landing Page:**
+    - [ ] **Páginas de Precios:** Integrar `PricingTable` dinámica en la landing.
+    - [ ] **Estructura de Planes:** Configurar planes Standard, Pro, Premium, Ultra con sus tiers visibles.
+    - [ ] **Sincronización:** Botón "Publicar Cambios de Tarifas" en SuperAdmin para actualizar la landing.
+    - [ ] **Automatización (Cron):** Tarea programada (Vercel Cron) para recálculo de consumos y actualización de dashboard de facturación el día 1 de cada mes.
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.

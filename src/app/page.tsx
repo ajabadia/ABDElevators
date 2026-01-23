@@ -32,6 +32,7 @@ export default function Home() {
         <div className="hidden md:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
           <a href="#soluciones" className="hover:text-teal-400 transition-colors">{navT('solutions')}</a>
           <a href="#tecnologia" className="hover:text-teal-400 transition-colors">{navT('technology')}</a>
+          <a href="/pricing" className="hover:text-teal-400 transition-colors">Precios</a>
           <a href="#seguridad" className="hover:text-teal-400 transition-colors">{navT('security')}</a>
         </div>
         <div className="flex items-center gap-4">
@@ -317,7 +318,7 @@ export default function Home() {
             <ul className="text-slate-500 text-sm space-y-2">
               <li><a href="#tecnologia" className="hover:text-teal-400 cursor-pointer transition-colors">Características</a></li>
               <li><a href="#seguridad" className="hover:text-teal-400 cursor-pointer transition-colors">Seguridad</a></li>
-              <li className="text-slate-600 cursor-not-allowed">Precios (Próximamente)</li>
+              <li><Link href="/pricing" className="hover:text-teal-400 cursor-pointer transition-colors">Precios</Link></li>
             </ul>
           </div>
           <div className="space-y-4">
