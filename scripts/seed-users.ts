@@ -1,4 +1,4 @@
-import { connectDB } from 'd:/desarrollos/ABDElevators/src/lib/db';
+import { connectDB } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
