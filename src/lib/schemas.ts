@@ -268,7 +268,7 @@ export const DocumentoUsuarioSchema = z.object({
 });
 
 /**
- * Esquema para Configuración de Tenant (Fase 7.4)
+ * Esquema para Configuración de Tenant (Fase 7.4 + Fase 9)
  */
 export const TenantConfigSchema = z.object({
     _id: z.any().optional(),
@@ -284,9 +284,18 @@ export const TenantConfigSchema = z.object({
         }),
         quota_bytes: z.number().default(1024 * 1024 * 1024), // 1GB default
     }),
+    subscription: z.object({
+        tier: z.enum(['FREE', 'PRO', 'ENTERPRISE']).default('FREE'),
+        status: z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED']).default('ACTIVE'),
+        stripe_customer_id: z.string().optional(),
+        stripe_subscription_id: z.string().optional(),
+        current_period_start: z.date().optional(),
+        current_period_end: z.date().optional(),
+    }).optional(),
     active: z.boolean().default(true),
     creado: z.date().default(() => new Date()),
 });
+
 
 /**
  * Esquema para Logs de Uso y Consumo (Visión 2.0 - Fase 7.4)

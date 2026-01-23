@@ -191,6 +191,122 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] Security Headers (HSTS, No-Sniff, Frame-Deny).
   - [x] Fix: TypeScript compatibility for Next.js 15/16 (async params).
 
+#### 🎨 FASE 8.5: LANDING PAGE & MARKETING (COMPLETADA - 2026-01-23)
+- [x] **8.5.1 Landing Page Premium**
+  - [x] Hero section con CTAs funcionales (Comenzar ahora → /login, Ver arquitectura → /arquitectura).
+  - [x] Sección de Tecnología con 3 features (Dual-Engine, Vector Search, Audit-Trail).
+  - [x] Sección de Soluciones multi-industria (Elevadores, Legal, IT).
+  - [x] Sección de Seguridad Enterprise (Multi-tenant, Cifrado, Soberanía).
+  - [x] Footer completo con links funcionales y páginas legales.
+- [x] **8.5.2 Páginas de Detalle**
+  - [x] `/arquitectura` - Arquitectura técnica completa (Frontend, Backend, Security, Data Flow).
+  - [x] `/features/dual-engine` - Extracción Dual-Engine (OCR + Gemini AI).
+  - [x] `/features/vector-search` - Hybrid Vector Search (Embeddings semánticos).
+  - [x] `/features/audit-trail` - Audit-Trail Pro (Trazabilidad total).
+- [x] **8.5.3 Páginas Legales**
+  - [x] `/privacy` - Privacy Policy (GDPR compliant).
+  - [x] `/terms` - Terms of Service (cumplimiento legal).
+- [x] **8.5.4 Assets & Optimización**
+  - [x] Imágenes generadas con IA para todas las secciones (8 imágenes custom).
+  - [x] Optimización de rutas (public folder para Next.js static serving).
+  - [x] Internacionalización (ES/EN) con next-intl.
+  - [x] Diseño responsive y accesible (WCAG 2.1).
+
+---
+
+## 🎯 SIGUIENTE PASO: FASE 9 - BILLING & USAGE TRACKING (SaaS Ready)
+
+### Objetivo
+Implementar el sistema completo de facturación y trackeo de uso para convertir la plataforma en un SaaS comercializable.
+
+### Tareas Prioritarias
+
+#### 9.1 Usage Tracking Service (COMPLETADO ✅)
+- [x] **Completar `src/lib/usage-service.ts`**
+  - [x] Implementar `trackLLMUsage(tokens, model, operation)`.
+  - [x] Implementar `trackStorageUsage(bytes, operation)`.
+  - [x] Implementar `trackSearchUsage(queries, type)`.
+  - [x] Integrar con MongoDB (collection `usage_logs`).
+- [x] **Integrar en servicios existentes**
+  - [x] Modificar `llm.ts` para registrar consumo de Gemini.
+  - [x] Modificar `cloudinary.ts` para registrar tamaño de uploads.
+  - [x] Modificar `rag-service.ts` para registrar búsquedas vectoriales.
+- [x] **API de Estadísticas**
+  - [x] `GET /api/admin/usage/stats` con tier y límites dinámicos.
+  - [x] Agregación por tenant, tipo de recurso, y periodo.
+
+#### 9.2 Billing Dashboard (COMPLETADO ✅)
+- [x] **Componente `ConsumptionDashboard.tsx`**
+  - [x] Gráficos de consumo (tokens LLM, storage GB, searches).
+  - [x] Tabla de desglose por servicio.
+  - [x] Alertas de límites (80% amarillo, 100% rojo).
+  - [x] Barras de progreso dinámicas basadas en consumo real.
+- [x] **Página `/admin/billing`**
+  - [x] Vista de consumo actual del mes.
+  - [x] Historial de actividad (últimos 20 eventos).
+  - [x] Badge de plan actual (FREE/PRO/ENTERPRISE).
+  - [x] Botones de gestión (Upgrade/Manage Subscription).
+- [x] **Límites por Plan**
+  - [x] Definir tiers: Free (100k tokens/mes), Pro (1M tokens/mes), Enterprise (ilimitado).
+  - [x] Middleware `usage-limiter.ts` para bloquear requests si se excede el límite.
+  - [x] Sistema de planes en `src/lib/plans.ts`.
+
+#### 9.3 Integración Stripe (COMPLETADO ✅ - 2026-01-23)
+- [x] **Servicio de Stripe**
+  - [x] `src/lib/stripe.ts` con lazy initialization.
+  - [x] Funciones: getOrCreateStripeCustomer, createCheckoutSession, createBillingPortalSession.
+- [x] **Webhooks de Stripe**
+  - [x] `POST /api/webhooks/stripe` para eventos (subscription.created, updated, deleted, payment.succeeded, payment.failed).
+  - [x] Actualizar estado de suscripción en MongoDB (`tenants.subscription`).
+  - [x] Verificación de firma con `stripe.webhooks.constructEvent()`.
+- [x] **Checkout Flow**
+  - [x] Página `/upgrade` con selector de planes (diseño premium).
+  - [x] Integración con Stripe Checkout (`/api/billing/create-checkout`).
+  - [x] Redirección post-pago a dashboard.
+  - [x] Toggle mensual/anual con descuento.
+- [x] **Billing Portal**
+  - [x] Endpoint `/api/billing/portal` para gestionar suscripción.
+  - [x] Botón "Gestionar Suscripción" en dashboard.
+- [x] **Configuración**
+  - [x] `.env.example` con todas las variables de Stripe.
+  - [x] Documentación completa en `FASE_9.3_STRIPE.md`.
+
+#### 9.4 Notificaciones de Límites (PENDIENTE - SIGUIENTE)
+- [ ] **Email Alerts**
+  - [ ] Configurar servicio de email (Resend/SendGrid).
+  - [ ] Email template para alertas.
+  - [ ] Enviar email cuando se alcanza 80% del límite.
+  - [ ] Enviar email cuando se alcanza 100% (servicio suspendido).
+  - [ ] Email cuando pago falla (integrar en webhook).
+- [ ] **In-App Notifications**
+  - [ ] Componente `<LimitAlert />`.
+  - [ ] Banner en dashboard mostrando % de uso.
+  - [ ] Modal de upgrade cuando se excede el límite.
+
+
+#### 9.5 Testing & Deployment
+- [ ] **Unit Tests**
+  - [ ] Tests para `UsageTracker` (mock MongoDB).
+  - [ ] Tests para cálculo de costos por tier.
+- [ ] **Integration Tests**
+  - [ ] Test de flujo completo: upload → track storage → verify stats.
+  - [ ] Test de Stripe webhook (mock events).
+- [ ] **E2E Tests**
+  - [ ] Playwright: flujo de upgrade de plan.
+  - [ ] Playwright: verificación de límites.
+
+### Métricas de Éxito
+- ✅ **Trackeo preciso**: 100% de operaciones LLM/Storage/Search registradas.
+- ✅ **Dashboard funcional**: Gráficos en tiempo real con datos reales.
+- ✅ **Stripe integrado**: Pagos recurrentes funcionando en producción.
+- ✅ **Límites enforced**: Bloqueo automático al exceder plan.
+
+### Estimación
+- **Duración**: 1 semana (40 horas)
+- **Prioridad**: ALTA (crítico para monetización)
+- **Dependencias**: Ninguna (infraestructura ya existe)
+
+
 ---
 
 ## How to Use This Document

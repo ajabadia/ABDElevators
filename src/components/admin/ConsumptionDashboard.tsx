@@ -10,7 +10,15 @@ interface UsageStats {
     searches: number;
     api_requests: number;
     history: any[];
+    tier?: 'FREE' | 'PRO' | 'ENTERPRISE';
+    limits?: {
+        tokens: number;
+        storage: number;
+        searches: number;
+        api_requests: number;
+    };
 }
+
 
 export function ConsumptionDashboard() {
     const [stats, setStats] = useState<UsageStats | null>(null);
@@ -48,6 +56,18 @@ export function ConsumptionDashboard() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    const getUsagePercentage = (current: number, limit: number) => {
+        if (limit === Infinity || limit === 0) return 0;
+        return Math.min((current / limit) * 100, 100);
+    };
+
+    const getAlertColor = (percentage: number) => {
+        if (percentage >= 100) return 'red';
+        if (percentage >= 80) return 'amber';
+        return 'teal';
+    };
+
+
     if (loading && !stats) {
         return <div className="flex items-center justify-center p-20"><RefreshCcw className="animate-spin text-teal-600" /></div>;
     }
@@ -60,14 +80,52 @@ export function ConsumptionDashboard() {
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <Zap className="text-amber-500" /> Control de Consumo
                     </h2>
-                    <p className="text-slate-500 text-sm">Monitorización de recursos en tiempo real (SaaS Ready)</p>
+                    <p className="text-slate-500 text-sm">
+                        Monitorización de recursos en tiempo real (SaaS Ready)
+                        {stats?.tier && (
+                            <span className="ml-2 px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-md text-xs font-bold">
+                                Plan {stats.tier}
+                            </span>
+                        )}
+                    </p>
                 </div>
-                <button
-                    onClick={fetchStats}
-                    className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-all"
-                >
-                    <RefreshCcw size={18} className={loading ? "animate-spin" : ""} />
-                </button>
+                <div className="flex items-center gap-3">
+                    {stats?.tier === 'FREE' && (
+                        <a
+                            href="/upgrade"
+                            className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/50 transition-all flex items-center gap-2"
+                        >
+                            <Zap size={16} />
+                            Actualizar Plan
+                        </a>
+                    )}
+                    {stats?.tier !== 'FREE' && (
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch('/api/billing/portal', { method: 'POST' });
+                                    const data = await res.json();
+                                    if (data.portalUrl) window.location.href = data.portalUrl;
+                                } catch (err) {
+                                    toast({
+                                        title: 'Error',
+                                        description: 'No se pudo abrir el portal de facturación.',
+                                        variant: 'destructive',
+                                    });
+                                }
+                            }}
+                            className="px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition-all"
+                        >
+                            Gestionar Suscripción
+                        </button>
+                    )}
+                    <button
+                        onClick={fetchStats}
+                        className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-all"
+                    >
+                        <RefreshCcw size={18} className={loading ? "animate-spin" : ""} />
+                    </button>
+                </div>
             </div>
 
             {/* Grid de Métricas */}
@@ -86,9 +144,20 @@ export function ConsumptionDashboard() {
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
                         {stats?.tokens.toLocaleString()}
                     </h3>
-                    <p className="text-sm text-slate-500">Tokens Gemini consumidos</p>
+                    <p className="text-sm text-slate-500">
+                        Tokens Gemini consumidos
+                        {stats?.limits && stats.limits.tokens !== Infinity && (
+                            <span className="ml-2 text-xs text-slate-400">/ {stats.limits.tokens.toLocaleString()}</span>
+                        )}
+                    </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: '45%' }}></div>
+                        <div
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)) === 'red' ? 'bg-red-500' :
+                                getAlertColor(getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)) === 'amber' ? 'bg-amber-500' :
+                                    'bg-blue-500'
+                                }`}
+                            style={{ width: `${getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)}%` }}
+                        ></div>
                     </div>
                 </div>
 
@@ -106,9 +175,20 @@ export function ConsumptionDashboard() {
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
                         {formatBytes(stats?.storage || 0)}
                     </h3>
-                    <p className="text-sm text-slate-500">Espacio en Cloudinary</p>
+                    <p className="text-sm text-slate-500">
+                        Espacio en Cloudinary
+                        {stats?.limits && stats.limits.storage !== Infinity && (
+                            <span className="ml-2 text-xs text-slate-400">/ {formatBytes(stats.limits.storage)}</span>
+                        )}
+                    </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-teal-500 transition-all duration-1000" style={{ width: '12%' }}></div>
+                        <div
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) === 'red' ? 'bg-red-500' :
+                                getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) === 'amber' ? 'bg-amber-500' :
+                                    'bg-teal-500'
+                                }`}
+                            style={{ width: `${getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)}%` }}
+                        ></div>
                     </div>
                 </div>
 
@@ -126,9 +206,20 @@ export function ConsumptionDashboard() {
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
                         {stats?.searches.toLocaleString()}
                     </h3>
-                    <p className="text-sm text-slate-500">Búsquedas vectoriales</p>
+                    <p className="text-sm text-slate-500">
+                        Búsquedas vectoriales
+                        {stats?.limits && stats.limits.searches !== Infinity && (
+                            <span className="ml-2 text-xs text-slate-400">/ {stats.limits.searches.toLocaleString()}</span>
+                        )}
+                    </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: '65%' }}></div>
+                        <div
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) === 'red' ? 'bg-red-500' :
+                                getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) === 'amber' ? 'bg-amber-500' :
+                                    'bg-amber-500'
+                                }`}
+                            style={{ width: `${getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)}%` }}
+                        ></div>
                     </div>
                 </div>
 
@@ -146,9 +237,20 @@ export function ConsumptionDashboard() {
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
                         {stats?.api_requests.toLocaleString()}
                     </h3>
-                    <p className="text-sm text-slate-500">Llamadas totales</p>
+                    <p className="text-sm text-slate-500">
+                        Llamadas totales
+                        {stats?.limits && stats.limits.api_requests !== Infinity && (
+                            <span className="ml-2 text-xs text-slate-400">/ {stats.limits.api_requests.toLocaleString()}</span>
+                        )}
+                    </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 transition-all duration-1000" style={{ width: '30%' }}></div>
+                        <div
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) === 'red' ? 'bg-red-500' :
+                                getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) === 'amber' ? 'bg-amber-500' :
+                                    'bg-purple-500'
+                                }`}
+                            style={{ width: `${getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)}%` }}
+                        ></div>
                     </div>
                 </div>
             </div>
@@ -179,8 +281,8 @@ export function ConsumptionDashboard() {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.tipo === 'LLM_TOKENS' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
-                                                log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
-                                                    'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
+                                            log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
+                                                'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
                                             }`}>
                                             {log.tipo}
                                         </span>

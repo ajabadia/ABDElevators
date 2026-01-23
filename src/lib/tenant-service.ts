@@ -20,16 +20,23 @@ export class TenantService {
                 return {
                     tenantId,
                     name: 'Default Organization',
-                    industry: 'GENERIC',
+                    industry: 'GENERIC' as const,
                     storage: {
-                        provider: 'cloudinary',
+                        provider: 'cloudinary' as const,
                         settings: {
                             folder_prefix: 'abd-rag-platform/default'
                         },
                         quota_bytes: 50 * 1024 * 1024 // 50MB trial
-                    }
+                    },
+                    subscription: {
+                        tier: 'FREE' as const,
+                        status: 'ACTIVE' as const,
+                    },
+                    active: true,
+                    creado: new Date(),
                 };
             }
+
 
             return TenantConfigSchema.parse(config);
         } catch (error) {

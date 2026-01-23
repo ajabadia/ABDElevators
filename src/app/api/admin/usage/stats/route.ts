@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { TenantService } from '@/lib/tenant-service';
+import { getPlanForTenant } from '@/lib/plans';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -16,6 +18,11 @@ export async function GET(req: NextRequest) {
 
         const tenantId = (session.user as any).tenantId || 'default_tenant';
         const { collection } = await getTenantCollection('usage_logs');
+
+        // Obtener configuración del tenant para saber su plan
+        const tenantConfig = await TenantService.getConfig(tenantId);
+        const tier = tenantConfig.subscription?.tier || 'FREE';
+        const plan = getPlanForTenant(tier);
 
         // Agregación de métricas principales
         const stats = await collection.aggregate([
@@ -35,6 +42,13 @@ export async function GET(req: NextRequest) {
             storage: stats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
             searches: stats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
             api_requests: stats.find(s => s._id === 'API_REQUEST')?.total || 0,
+            tier,
+            limits: {
+                tokens: plan.limits.llm_tokens_per_month,
+                storage: plan.limits.storage_bytes,
+                searches: plan.limits.vector_searches_per_month,
+                api_requests: plan.limits.api_requests_per_month,
+            },
             history: await collection.find({ tenantId })
                 .sort({ timestamp: -1 })
                 .limit(20)
