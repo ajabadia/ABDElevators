@@ -58,7 +58,12 @@ CLOUDINARY_API_SECRET=tu_api_secret
 npm run seed-users
 ```
 
-5. **Iniciar servidor de desarrollo**
+56. **Crear usuario raíz (SuperAdmin)**
+```bash
+npm run create-super-admin
+```
+
+7. **Iniciar servidor de desarrollo**
 ```bash
 npm run dev
 ```
@@ -67,57 +72,61 @@ npm run dev
 
 | Email | Password | Rol | Permisos |
 |-------|----------|-----|----------|
-| admin@abd.com | admin123 | ADMIN | Acceso completo |
-| tecnico@abd.com | tecnico123 | TECNICO | Portal técnico |
-| ingenieria@abd.com | ingenieria123 | INGENIERIA | Solo lectura |
+| superadmin@abd.com | super123 | SUPER_ADMIN | **Acceso Total:** Gobierno global y multinivel |
+| admin@abd.com | admin123 | ADMIN | **Tenant Admin:** Gestión de usuarios y documentos |
+| tecnico@abd.com | tecnico123 | TECNICO | **Técnico:** Portal de validación y workflow |
+| ingenieria@abd.com | ingenieria123 | INGENIERIA | **Consulta:** Solo lectura documentos técnicos |
 
 ## 📁 Estructura del Proyecto
 
 ```
 src/
 ├── app/
-│   ├── (admin)/          # Panel administrativo
-│   ├── (tecnico)/        # Portal técnico
-│   ├── api/              # API routes
-│   └── login/            # Autenticación
+│   ├── (authenticated)/         # Rutas protegidas por NextAuth
+│   │   ├── (admin)/             # Panel administrativo global
+│   │   └── pedidos/             # Portal técnico y validación
+│   ├── api/                     # API routes (Workflow, RAG, Soporte)
+│   └── login/                   # Autenticación
 ├── components/
-│   ├── admin/            # Componentes admin
-│   ├── tecnico/          # Componentes técnicos
-│   └── shared/           # Componentes compartidos
+│   ├── workflow/                # Motor de estados y transiciones
+│   ├── tecnico/                 # Validadores y checklists
+│   └── shared/                  # Header, Sidebar, Notificaciones
 └── lib/
-    ├── auth.ts           # NextAuth config
-    ├── db.ts             # MongoDB connection
-    ├── llm.ts            # Gemini integration
-    ├── rag-service.ts    # Vector search
-    └── pdf-export.ts     # PDF generation
+    ├── workflow-engine.ts       # Lógica de transiciones de estado
+    ├── notification-service.ts  # Alertas In-App y Email (Resend)
+    ├── contact-service.ts       # Sistema de soporte técnico
+    ├── auth.ts                  # NextAuth v5 config
+    └── db-tenant.ts             # Aislamiento sagrado de datos
 ```
 
 ## 🔧 Scripts Disponibles
 
 ```bash
-npm run dev          # Servidor desarrollo
-npm run build        # Build producción
-npm run start        # Servidor producción
-npm run seed-users   # Crear usuarios prueba
-npm run lint         # Linter
+npm run dev                  # Servidor desarrollo
+npm run build                # Build producción
+npm run create-super-admin   # Crear usuario raíz global (Fase 10)
+npm run seed-users           # Crear usuarios de prueba por defecto
+npm run seed-workflows       # Inicializar workflows estándar
+npm run seed-notifications   # Cargar notificaciones de ejemplo
+npm run test                 # Ejecutar tests unitarios (Jest)
 ```
 
 ## 🌐 Deployment en Vercel
 
 1. Conectar repositorio en Vercel
-2. Configurar variables de entorno
+2. Configurar variables de entorno (incluir `RESEND_API_KEY` para emails)
 3. Deploy automático en cada push a `main`
 
-## 📊 Características
+## 📊 Características (Visión 2.0)
 
-- ✅ Autenticación con NextAuth.js v5
-- ✅ Control de acceso basado en roles
-- ✅ Upload y procesamiento de PDFs
-- ✅ Análisis con Gemini 2.0 Flash
-- ✅ Búsqueda vectorial (MongoDB Atlas)
-- ✅ Exportación de informes a PDF
-- ✅ Dashboard de auditoría
-- ✅ Trazabilidad completa (correlacion_id)
+- ✅ **Motor de Workflows:** Estados y transiciones dinámicas configurables por el Admin.
+- ✅ **Notificaciones Hub:** Sistema push in-app con campana animada y correos transaccionales.
+- ✅ **Soporte Técnico:** Módulo de contacto directo de técnicos con administración.
+- ✅ **Ingeniería de Prompts:** Editor en vivo para ajustar el comportamiento de los modelos Gemini.
+- ✅ **Aislamiento Multi-tenant:** Los datos y flujos están segmentados por TenantId.
+- ✅ **Hardening de Seguridad:** Middleware avanzado con protección de APIs y rate limiting.
+- ✅ **Trazabilidad Total:** Audit trail completo con `correlacion_id` y firma digital.
+- ✅ **RAG Avanzado:** Búsqueda vectorial con MongoDB Atlas y Gemini 2.0 Flash.
 
 ## 📝 Licencia
 
