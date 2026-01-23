@@ -589,3 +589,59 @@ export type Validacion = z.infer<typeof ValidacionSchema>;
 export type Invite = z.infer<typeof InviteSchema>;
 export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
 
+/**
+ * Esquemas de Facturación (Fase 9.1)
+ */
+export const PricingTypeSchema = z.enum(['FIXED', 'TIERED', 'RAPPEL', 'FLAT_FEE_OVERAGE']);
+
+export const PriceTierSchema = z.object({
+    from: z.number(),
+    to: z.number().nullable(),
+    unitPrice: z.number(),
+});
+
+export const RappelThresholdSchema = z.object({
+    minUnits: z.number(),
+    price: z.number(),
+});
+
+export const MetricPricingSchema = z.object({
+    type: PricingTypeSchema,
+    currency: z.string().default('EUR'),
+    unitPrice: z.number().optional(), // Para FIXED
+    tiers: z.array(PriceTierSchema).optional(), // Para TIERED
+    thresholds: z.array(RappelThresholdSchema).optional(), // Para RAPPEL
+    baseFee: z.number().optional(), // Para FLAT_FEE_OVERAGE
+    includedUnits: z.number().optional(), // Para FLAT_FEE_OVERAGE
+    overagePrice: z.number().optional(), // Para FLAT_FEE_OVERAGE
+});
+
+export const GlobalPricingPlanSchema = z.object({
+    _id: z.any().optional(),
+    name: z.string(),
+    isDefault: z.boolean().default(false),
+    metrics: z.record(z.string(), MetricPricingSchema),
+});
+
+export const TenantBillingConfigSchema = z.object({
+    tenantId: z.string(),
+    overrides: z.record(z.string(), MetricPricingSchema).default({}),
+    billingDay: z.number().default(1),
+    paymentMethod: z.enum(['STRIPE', 'BANK_TRANSFER', 'MANUAL']).default('STRIPE'),
+});
+
+export const TenantCreditSchema = z.object({
+    tenantId: z.string(),
+    metric: z.string(),
+    balance: z.number(),
+    source: z.enum(['GIFT_CODE', 'MANUAL_ADJUSTMENT', 'PROMO']),
+    reason: z.string().optional(),
+    expiryDate: z.date().nullable(),
+});
+
+export type PricingType = z.infer<typeof PricingTypeSchema>;
+export type MetricPricing = z.infer<typeof MetricPricingSchema>;
+export type GlobalPricingPlan = z.infer<typeof GlobalPricingPlanSchema>;
+export type TenantBillingConfig = z.infer<typeof TenantBillingConfigSchema>;
+export type TenantCredit = z.infer<typeof TenantCreditSchema>;
+

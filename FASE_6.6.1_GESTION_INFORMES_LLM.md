@@ -19,13 +19,75 @@ Implementar un sistema profesional de gestión de informes LLM con control de co
 features: {
   llmReports: {
     enabled: boolean,                    // Feature flag principal
-    monthlyLimit: number,                // Límite de informes/mes (10 en Basic, ∞ en Enterprise)
+    monthlyLimit: number,                // DEFAULT: 10 (configurable por SUPER_ADMIN)
+                                         // Ejemplos: 5 (Free Trial), 10 (Basic), 50 (Pro), -1 (Unlimited Enterprise)
     requireApproval: boolean,            // Si true, ADMIN debe aprobar antes de generar
     maxTokensPerReport: number,          // Límite de tokens por informe (ej: 2000)
     costAlertThreshold: number,          // Alertar si costo mensual > X USD
-    allowedRoles: ['ADMIN', 'TECNICO']   // Roles que pueden generar informes
+    allowedRoles: ['ADMIN', 'TECNICO'],  // Roles que pueden generar informes
+    customNotes?: string                 // Notas del SUPER_ADMIN sobre negociación especial
   }
 }
+
+// Valores por defecto al crear tenant
+const DEFAULT_LLM_REPORT_CONFIG = {
+  enabled: true,
+  monthlyLimit: 10,              // ⭐ Estándar configurable
+  requireApproval: false,
+  maxTokensPerReport: 2000,
+  costAlertThreshold: 50,        // USD
+  allowedRoles: ['ADMIN', 'TECNICO']
+};
+```
+
+**UI de Configuración (Solo SUPER_ADMIN):**
+
+Página: `/admin/tenants/[id]/features`
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Límites de Informes LLM</CardTitle>
+    <CardDescription>
+      Configura los límites de generación de informes para este tenant
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <FormField label="Límite Mensual de Informes">
+      <Input 
+        type="number" 
+        value={monthlyLimit}
+        onChange={setMonthlyLimit}
+        placeholder="10 (por defecto)"
+      />
+      <FormDescription>
+        Número máximo de informes que puede generar este tenant por mes.
+        Usa -1 para ilimitado (Enterprise).
+      </FormDescription>
+    </FormField>
+    
+    <FormField label="Requiere Aprobación">
+      <Switch 
+        checked={requireApproval}
+        onCheckedChange={setRequireApproval}
+      />
+      <FormDescription>
+        Si está activado, los informes requieren aprobación del ADMIN antes de generarse.
+      </FormDescription>
+    </FormField>
+    
+    <FormField label="Notas de Negociación">
+      <Textarea
+        value={customNotes}
+        onChange={setCustomNotes}
+        placeholder="Ej: Cliente Premium - límite aumentado a 50 por acuerdo comercial"
+      />
+    </FormField>
+  </CardContent>
+  <CardFooter>
+    <Button onClick={handleSave}>Guardar Configuración</Button>
+  </CardFooter>
+</Card>
 ```
 
 **Flujo de Validación:**

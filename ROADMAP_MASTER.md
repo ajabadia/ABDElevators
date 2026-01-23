@@ -186,6 +186,16 @@ This document consolidates **all** roadmap information, implementation plans, an
   - Completar **trackeo de uso** (LLM, storage, search) – conectar a `UsageTracker`.
   - Dashboard de consumo por organización (gráficos de tokens, documentos, almacenamiento).
   - Integrar Stripe webhooks para suscripciones (pendiente).
+- **💳 FASE 9.1: MOTOR DE FACTURACIÓN AVANZADA (DYNAMIC PRICING ENGINE) (PLANNED)** ⭐ **ESTRATEGIA**
+  - **Herencia de Tarifas:** Configuración global con overrides específicos por tenant (negociaciones ad-hoc).
+  - **Modelos de Cobro Dinámicos:**
+    - [ ] **Modelo Estándar:** Precio fijo por unidad (Reporte, API call, GB).
+    - [ ] **Escalado por Volumen (Tiered):** Bloques de precio (0-100 a 1€, 101-500 a 0.90€).
+    - [ ] **Rappel Directo:** Descuento aplicado a TODAS las unidades al superar un umbral.
+    - [ ] **Rappel Inverso:** Recargo por volumen excesivo (discouragement pricing / infra stress).
+    - [ ] **Tarifa Plana + Overage:** X unidades incluidas en el fee mensual, resto por unidad.
+  - **Parametrización por Tenant:** Interfaz SuperAdmin para definir el "Pricing Strategy" de cada módulo para cada cliente.
+  - **Cálculo en Tiempo Real:** Motor que evalúa el acumulado mensual y aplica la fórmula de precio correspondiente.
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.

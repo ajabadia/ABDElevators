@@ -184,15 +184,15 @@ export function InformeLLMGenerator({ pedidoId, isValidated }: InformeLLMGenerat
                         <div className="prose prose-slate dark:prose-invert max-w-none">
                             <ReactMarkdown
                                 components={{
-                                    h1: ({ children }) => <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4">{children}</h1>,
-                                    h2: ({ children }) => <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-8 mb-4">{children}</h2>,
-                                    h3: ({ children }) => <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-6 mb-3">{children}</h3>,
-                                    p: ({ children }) => <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">{children}</p>,
-                                    ul: ({ children }) => <ul className="list-disc list-inside space-y-2 mb-4">{children}</ul>,
-                                    ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 mb-4">{children}</ol>,
-                                    li: ({ children }) => <li className="text-slate-600 dark:text-slate-300">{children}</li>,
-                                    strong: ({ children }) => <strong className="font-bold text-slate-900 dark:text-white">{children}</strong>,
-                                    code: ({ children }) => <code className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-sm font-mono">{children}</code>,
+                                    h1: ({ children, ...props }: any) => <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4" {...props}>{children}</h1>,
+                                    h2: ({ children, ...props }: any) => <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-8 mb-4" {...props}>{children}</h2>,
+                                    h3: ({ children, ...props }: any) => <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-6 mb-3" {...props}>{children}</h3>,
+                                    p: ({ children, ...props }: any) => <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4" {...props}>{children}</p>,
+                                    ul: ({ children, ...props }: any) => <ul className="list-disc list-inside space-y-2 mb-4" {...props}>{children}</ul>,
+                                    ol: ({ children, ...props }: any) => <ol className="list-decimal list-inside space-y-2 mb-4" {...props}>{children}</ol>,
+                                    li: ({ children, ...props }: any) => <li className="text-slate-600 dark:text-slate-300" {...props}>{children}</li>,
+                                    strong: ({ children, ...props }: any) => <strong className="font-bold text-slate-900 dark:text-white" {...props}>{children}</strong>,
+                                    code: ({ children, ...props }: any) => <code className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-sm font-mono" {...props}>{children}</code>,
                                 }}
                             >
                                 {informe.contenido}
