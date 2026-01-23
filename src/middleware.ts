@@ -3,6 +3,7 @@ export const runtime = 'nodejs';
 import { NextResponse, NextRequest } from 'next/server';
 import { auth } from './lib/auth';
 import { logEvento } from './lib/logger';
+import { rateLimit } from './lib/rate-limit';
 
 /**
  * Middleware de Seguridad y Performance
@@ -11,6 +12,44 @@ import { logEvento } from './lib/logger';
 export async function middleware(request: NextRequest) {
     const session = await auth();
     const { pathname } = request.nextUrl;
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        request.headers.get('x-real-ip') ||
+        '127.0.0.1';
+
+    // 🛡️ Rate Limiting (Regla #9 Hardening)
+    // Límite: 100 req / hora (3,600,000 ms)
+    const rateKey = session?.user?.id || ip;
+    const isApiOrAdmin = pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/pedidos');
+
+    if (isApiOrAdmin) {
+        const rate = await rateLimit(`rate_${rateKey}`, {
+            limit: 100,
+            windowMs: 60 * 60 * 1000
+        });
+
+        if (!rate.success) {
+            await logEvento({
+                nivel: 'WARN',
+                origen: 'SECURITY_MIDDLEWARE',
+                accion: 'RATE_LIMIT_EXCEEDED',
+                mensaje: `Rate limit excedido para: ${rateKey}`,
+                correlacion_id: crypto.randomUUID(),
+                detalles: { rateKey, pathname }
+            });
+
+            return NextResponse.json(
+                { error: 'Demasiadas peticiones. Por favor, intente más tarde.' },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': rate.limit.toString(),
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': rate.reset.toString()
+                    }
+                }
+            );
+        }
+    }
 
     // Log para debug de sesión (Regla #4)
     if (pathname.startsWith('/admin') || pathname.startsWith('/pedidos')) {
@@ -66,13 +105,19 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // Security & Correlation Headers (Regla #9)
     const response = NextResponse.next();
+    const correlacion_id = crypto.randomUUID();
 
-    // Security Headers (Regla #9)
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-Correlacion-ID', correlacion_id);
+
+    if (process.env.NODE_ENV === 'production') {
+        response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
 
     return response;
 }

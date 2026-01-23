@@ -10,8 +10,9 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
@@ -20,7 +21,7 @@ export async function GET(
         }
 
         const tenantId = (session.user as any).tenantId || 'default_tenant';
-        const versions = await PromptService.getVersionHistory(params.id, tenantId);
+        const versions = await PromptService.getVersionHistory(id, tenantId);
 
         return NextResponse.json({ success: true, versions });
     } catch (error: any) {
@@ -40,8 +41,9 @@ export async function GET(
  */
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await context.params;
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
@@ -57,7 +59,7 @@ export async function POST(
         }
 
         await PromptService.rollbackToVersion(
-            params.id,
+            id,
             targetVersion,
             session.user.email!,
             tenantId

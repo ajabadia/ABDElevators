@@ -114,11 +114,11 @@ This document consolidates **all** roadmap information, implementation plans, an
    - Planned: Block saving if `enforceLimit` is set (future metadata).
 
 #### Phase 6 – RAG Pro & Dynamic Checklists (Weeks 5‑6)
-- **6.1 Vector Search Sin LLM**
-  - Create `documentos_oficiales` collection.
-  - Configure Atlas Vector Search index.
-  - Implement `GET /api/pedidos/[id]/vector-search` (top‑15 docs, < 200 ms).
-  - Unit tests & performance benchmark.
+- [x] **6.1 Vector Search Sin LLM**
+  - [x] Create `documentos_oficiales` collection.
+  - [x] Configure Atlas Vector Search index (Guía creada en `docs/`).
+  - [x] Implement `GET /api/pedidos/[id]/vector-search` (SLA < 200 ms).
+  - [ ] Unit tests & performance benchmark.
 - **6.2 Checklists Dinámicos Configurables**
   - Collection `configs_checklist` + Zod `ChecklistConfigSchema`.
   - CRUD API (`/api/admin/configs-checklist`).
@@ -131,9 +131,9 @@ This document consolidates **all** roadmap information, implementation plans, an
   - Collection `validaciones_empleados` (audit trail).
   - Endpoint `POST /api/pedidos/[id]/validate`.
   - Components `ValidationWorkflow.tsx`, `VectorResultsTable.tsx`, `DynamicChecklist.tsx`.
-- **6.5 Audit Trail Robusto**
-  - `AuditTrailViewer.tsx` with PDF export.
-  - Metrics: tiempo empleado, duración.
+- [x] **6.5 Audit Trail Robusto**
+  - [x] `AuditTrailViewer.tsx` / `audit-pdf-export.ts` (PDF export utility created).
+  - [ ] Metrics: tiempo empleado, duración.
 - **6.6 Informe LLM Opcional**
   - Button “Generar Informe Profesional”.
   - Endpoint `POST /api/pedidos/[id]/generar-informe-llm` (LLM‑generated PDF).
@@ -143,10 +143,10 @@ This document consolidates **all** roadmap information, implementation plans, an
   - E2E Playwright suite (`validation-workflow.spec.ts`, `configurator.spec.ts`).
   - Coverage ≥ 80 % and performance benchmarks (Vector < 200 ms, Checklist < 500 ms).
   - Staging → producción deployment, monitoring dashboards.
-- **6.8 Gestión Avanzada de Documentos**
-  - Implementar borrado físico (DB + Cloudinary API).
-  - Sistema de deprecación/archivado de manuales (soft-delete/obsoleto).
-  - Historial de cambios en documentos del corpus.
+- [x] **6.8 Gestión Avanzada de Documentos**
+  - [x] Implementar borrado físico (DB + Cloudinary API).
+  - [x] Sistema de deprecación/archivado de manuales (soft-delete/obsoleto).
+  - [ ] Historial de cambios en documentos del corpus.
 
 #### Phase 7 – Multi‑Industry & SaaS (Visión 2.0)
 - **7.2 Motor de Workflows Multinivel**
@@ -161,32 +161,35 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.
-- **7.7 Infraestructura de Almacenamiento Multi-tenant**
-  - Configuración de buckets/carpetas por cliente.
-  - Soporte inicial: Cloudinary (aislamiento por carpetas).
-  - Roadmap de integración: Google Drive, AWS S3, Azure Blob.
-- **Industry Abstraction Layer**
-  - Crear plantillas de entidad por industria (elevators, HVAC, manufacturing, healthcare, IT assets).
-  - UI para seleccionar plantilla al crear nuevo tenant.
-- **Internationalization (i18n)**
-  - Multi‑language support, currency localisation, date/time formats, regional compliance.
-- **Final Deployment**
-  - Vercel production rollout, CI/CD pipelines, automated smoke tests.
+- [x] **7.7 Infraestructura de Almacenamiento Multi-tenant**
+  - [x] Configuración de buckets/carpetas por cliente.
+  - [x] Soporte inicial: Cloudinary (aislamiento por carpetas).
+  - [ ] Roadmap de integración: Google Drive, AWS S3, Azure Blob.
+- [x] **Industry Abstraction Layer**
+  - [x] Crear plantillas de entidad por industria (elevators, HVAC, manufacturing, healthcare, IT assets).
+  - [x] UI para seleccionar plantilla al crear nuevo tenant.
+- [x] **Internationalization (i18n)**
+  - [x] Multi‑language support (ES/EN), cookie-based locale detection.
+- [ ] **Final Deployment**
+  - [x] Vercel production rollout, CI/CD pipelines.
+  - [ ] Automated smoke tests.
 
 #### Phase 8 – Enterprise Hardening & Global Expansion
-- **8.1 Accesibilidad (a11y)**
-  - Cumplimiento de normas WCAG 2.1 (Aria labels, contraste, navegación por teclado).
-  - Auditoría técnica de accesibilidad.
-- **8.2 Internacionalización (i18n)**
-  - Implementación de `next-intl` o similar.
-  - Traducción inicial: Español / Inglés.
-- **8.3 Optimización SEO & Core Web Vitals**
-  - Dynamic Metadata, Sitemap, JSON-LD.
-  - Optimización de imágenes y carga diferida.
-- **8.4 Auditoría de Seguridad & Compliance**
-  - Pentesting inicial.
-  - Verificación OWASP Top 10.
-  - Hardening de API Endpoints.
+- [x] **8.1 Accesibilidad (a11y)**
+  - [x] Cumplimiento inicial WCAG 2.1 (Aria labels, contraste).
+  - [ ] Auditoría técnica de accesibilidad completa.
+- [x] **8.2 Internacionalización (i18n)**
+  - [x] Implementación de `next-intl`.
+  - [x] Traducción inicial: Español / Inglés.
+- [x] **8.3 Optimización SEO & Core Web Vitals**
+  - [x] Dynamic Metadata, OpenGraph, Twitter Cards.
+  - [x] Optimización de imágenes (next/image).
+- [ ] **8.4 Auditoría de Seguridad & Compliance**
+  - [x] Registro estructurado de eventos (logEvento) en Auth.
+  - [ ] Pentesting inicial.
+  - [x] Hardening de API Endpoints (Rate-limiting 100 req/h).
+  - [x] Security Headers (HSTS, No-Sniff, Frame-Deny).
+  - [x] Fix: TypeScript compatibility for Next.js 15/16 (async params).
 
 ---
 

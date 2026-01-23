@@ -1,112 +1,114 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { logEvento } from "@/lib/logger";
-import { AppError, ValidationError } from "@/lib/errors";
-import { pureVectorSearch } from "@/lib/rag-service";
-import { VectorSearchQuerySchema } from "@/lib/schemas";
-import { v4 as uuidv4 } from "uuid";
-import { ZodError } from "zod";
+import { NextRequest, NextResponse } from 'next/server';
+import { connectDB } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { pureVectorSearch } from '@/lib/rag-service';
+import { logEvento } from '@/lib/logger';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import { ObjectId } from 'mongodb';
 
 /**
  * GET /api/pedidos/[id]/vector-search
- * Búsqueda vectorial pura sin procesamiento LLM.
- * SLA: < 200ms
+ * Búsqueda semántica de alta velocidad para documentos técnicos relacionados con el pedido.
+ * SLA: P95 < 200ms
+ * Regla de Oro #3: AppError para todo error.
  */
 export async function GET(
-    req: NextRequest,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlacion_id = uuidv4();
     const inicio = Date.now();
-    const { id: pedidoId } = await params;
+    const correlacion_id = crypto.randomUUID();
+    const { id } = await params;
 
-    const session = await auth();
     try {
-        if (!session?.user) {
-            throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+        const session = await auth();
+        if (!session) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const tenantId = session.user.tenantId;
+        const tenantId = session.user?.tenantId || 'default_tenant';
 
-        // Validar query params
-        const { searchParams } = new URL(req.url);
-        const query = searchParams.get("query");
-        const limitParam = searchParams.get("limit");
-        const minScoreParam = searchParams.get("min_score");
-
-        const validatedParams = VectorSearchQuerySchema.parse({
-            query,
-            limit: limitParam,
-            min_score: minScoreParam
+        // 1. Obtener el pedido para extraer contexto
+        const db = await connectDB();
+        const pedido = await db.collection('pedidos').findOne({
+            _id: new ObjectId(id)
         });
 
-        await logEvento({
-            nivel: 'INFO',
-            origen: 'API_VECTOR_SEARCH',
-            accion: 'SEARCH_INIT',
-            mensaje: `Iniciando búsqueda vectorial para pedido ${pedidoId}`,
-            correlacion_id,
-            tenantId,
-            materiaId: 'ELEVATORS',
-            detalles: { pedidoId, query: validatedParams.query }
-        });
+        if (!pedido) {
+            throw new NotFoundError(`Pedido con ID ${id} no encontrado`);
+        }
 
-        const results = await pureVectorSearch(
-            validatedParams.query,
-            tenantId,
-            correlacion_id,
-            {
-                limit: validatedParams.limit,
-                min_score: validatedParams.min_score
-            }
-        );
+        // 2. Construir query optimizada basada en modelos detectados
+        // Si no hay modelos, usamos el texto original (truncado para evitar latencia)
+        let query = '';
+        if (pedido.modelos_detectados && pedido.modelos_detectados.length > 0) {
+            query = pedido.modelos_detectados
+                .map((m: any) => `${m.tipo} ${m.modelo}`)
+                .join(' ');
+        } else {
+            query = pedido.pdf_texto?.substring(0, 500) || '';
+        }
+
+        if (!query) {
+            return NextResponse.json({ results: [] });
+        }
+
+        // 3. Ejecutar búsqueda vectorial pura (Optimizada < 200ms)
+        const results = await pureVectorSearch(query, tenantId, correlacion_id, {
+            limit: 15,
+            min_score: 0.5 // Umbral ligeramente más bajo para mayor cobertura en manuales técnicos
+        });
 
         const duracion = Date.now() - inicio;
 
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'API_PEDIDOS_VECTOR',
+            accion: 'VECTOR_SEARCH_SUCCESS',
+            mensaje: `Búsqueda para pedido ${pedido.numero_pedido} completada en ${duracion}ms`,
+            correlacion_id,
+            detalles: {
+                pedido_id: id,
+                query,
+                results_count: results.length,
+                duracion_ms: duracion
+            }
+        });
+
+        // 4. Retornar resultados con headers de performance
         return NextResponse.json({
             success: true,
-            pedidoId,
-            duracion_ms: duracion,
-            correlacion_id,
-            resultados: results
+            results,
+            metadata: {
+                duracion_ms: duracion,
+                correlacion_id
+            }
+        }, {
+            headers: {
+                'X-Response-Time': duracion.toString(),
+                'X-Correlacion-ID': correlacion_id
+            }
         });
 
     } catch (error) {
-        if (error instanceof ZodError) {
-            return NextResponse.json(
-                { success: false, error: "Parámetros inválidos", details: error.issues },
-                { status: 400 }
-            );
-        }
-
-        if (error instanceof ValidationError) {
-            return NextResponse.json(
-                { success: false, error: "Parámetros inválidos", details: error.message },
-                { status: 400 }
-            );
-        }
-
         if (error instanceof AppError) {
             return NextResponse.json(
-                { success: false, error: error.message, code: error.code },
+                { code: error.code, message: error.message },
                 { status: error.status }
             );
         }
 
-        const unknownError = error as Error;
         await logEvento({
             nivel: 'ERROR',
-            origen: 'API_VECTOR_SEARCH',
-            accion: 'SEARCH_ERROR',
-            mensaje: unknownError.message,
+            origen: 'API_PEDIDOS_VECTOR',
+            accion: 'SEARCH_EXCEPTION',
+            mensaje: (error as Error).message,
             correlacion_id,
-            tenantId: session?.user?.tenantId,
-            materiaId: 'ELEVATORS',
-            stack: unknownError.stack
+            stack: (error as Error).stack
         });
 
         return NextResponse.json(
-            { success: false, error: "Error interno del servidor" },
+            { code: 'INTERNAL_ERROR', message: 'Error interno en búsqueda vectorial' },
             { status: 500 }
         );
     }
