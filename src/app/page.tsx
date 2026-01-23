@@ -65,14 +65,18 @@ export default function Home() {
               {heroT('subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              <Button className="h-14 px-8 bg-teal-600 hover:bg-teal-500 text-white text-lg font-bold rounded-2xl gap-3 group transition-all">
-                {heroT('cta_main')}
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button variant="outline" className="h-14 px-8 border-white/10 hover:bg-white/5 text-white text-lg font-bold rounded-2xl gap-3">
-                <Zap className="text-teal-400" />
-                {heroT('cta_sec')}
-              </Button>
+              <Link href="/login">
+                <Button className="h-14 px-8 bg-teal-600 hover:bg-teal-500 text-white text-lg font-bold rounded-2xl gap-3 group transition-all">
+                  {heroT('cta_main')}
+                  <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/arquitectura">
+                <Button variant="outline" className="h-14 px-8 border-white/10 hover:bg-white/5 text-white text-lg font-bold rounded-2xl gap-3">
+                  <Zap className="text-teal-400" />
+                  {heroT('cta_sec')}
+                </Button>
+              </Link>
             </div>
 
             <div className="mt-12 flex items-center gap-8 border-t border-white/5 pt-8 animate-in fade-in duration-1000 delay-500">
@@ -132,16 +136,19 @@ export default function Home() {
               icon={<Cpu className="text-teal-400" size={32} />}
               title={featT('f1_title')}
               description={featT('f1_desc')}
+              link="/features/dual-engine"
             />
             <FeatureCard
               icon={<Database className="text-blue-400" size={32} />}
               title={featT('f2_title')}
               description={featT('f2_desc')}
+              link="/features/vector-search"
             />
             <FeatureCard
               icon={<ShieldCheck className="text-emerald-400" size={32} />}
               title={featT('f3_title')}
               description={featT('f3_desc')}
+              link="/features/audit-trail"
             />
           </div>
         </div>
@@ -308,7 +315,7 @@ export default function Home() {
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeatureCard({ icon, title, description, link }: { icon: React.ReactNode; title: string; description: string; link?: string }) {
   return (
     <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-teal-500/30 transition-all group hover:-translate-y-2 duration-300">
       <div className="mb-6 p-4 rounded-2xl bg-slate-900 w-fit group-hover:scale-110 transition-transform duration-500 shadow-xl border border-white/5">
@@ -316,9 +323,17 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
       </div>
       <h3 className="text-2xl font-bold text-white mb-4 font-outfit">{title}</h3>
       <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
-      <div className="mt-8 flex items-center gap-2 text-teal-400 font-bold text-xs uppercase tracking-widest cursor-pointer hover:gap-3 transition-all">
-        Saber más <ChevronRight size={14} />
-      </div>
+      {link ? (
+        <Link href={link}>
+          <div className="mt-8 flex items-center gap-2 text-teal-400 font-bold text-xs uppercase tracking-widest cursor-pointer hover:gap-3 transition-all">
+            Saber más <ChevronRight size={14} />
+          </div>
+        </Link>
+      ) : (
+        <div className="mt-8 flex items-center gap-2 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed">
+          Próximamente <ChevronRight size={14} />
+        </div>
+      )}
     </div>
   );
 }
