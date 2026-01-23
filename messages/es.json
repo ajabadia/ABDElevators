@@ -31,11 +31,31 @@
     "features": {
         "title": "Ingeniería de Conocimiento de Élite",
         "subtitle": "Diseñado para sectores donde un error de interpretación no es una opción.",
-        "f1_title": "Dual-Engine Extraction",
-        "f1_desc": "Combina OCR avanzado con Gemini 2.0 Flash para extraer tablas, diagramas y especificaciones técnicas con precisión milimétrica.",
+        "f1_title": "Extracción Dual-Engine",
+        "f1_desc": "Combina OCR avanzado con Gemini 2.0 para extraer tablas, diagramas y especificaciones técnicas con precisión milimétrica.",
         "f2_title": "Hybrid Vector Search",
-        "f2_desc": "Búsqueda semántica contextual que entiende la intención del ingeniero, no solo las palabras clave.",
+        "f2_desc": "Búsqueda semántica contextual que entiende la intención del experto, no solo las palabras clave.",
         "f3_title": "Audit-Trail Pro",
         "f3_desc": "Trazabilidad total: cada párrafo generado incluye una cita directa al documento fuente original."
+    },
+    "solutions": {
+        "title": "Soluciones Sectoriales",
+        "subtitle": "Especialización técnica integrada por defecto.",
+        "s1_title": "Ascensores & Industrial",
+        "s1_desc": "Análisis de pedidos técnicos y comparación automática con normativas de seguridad (EN 81-20/50).",
+        "s2_title": "Legal & Compliance",
+        "s2_desc": "Detección proactiva de riesgos en contratos complejos y verificación de cláusulas contra jurisprudencia.",
+        "s3_title": "IT & Soporte Técnico",
+        "s3_desc": "Resolución de incidencias complejas consultando manuals de servicio y bases de conocimiento histórico."
+    },
+    "security": {
+        "title": "Seguridad Nivel Enterprise",
+        "subtitle": "Tus datos están blindados en cada capa del proceso.",
+        "f1_title": "Aislamiento Multi-Tenant",
+        "f1_desc": "Arquitectura de base de datos aislada físicamente por tenant, garantizando la privacidad absoluta.",
+        "f2_title": "Cifrado Militar",
+        "f2_desc": "Datos cifrados en reposo (AES-256) y en tránsito (TLS 1.3) bajo estándares de alta seguridad.",
+        "f3_title": "Soberanía de Datos",
+        "f3_desc": "Tú mantienes el control total sobre dónde se almacenan y cómo se procesan tus documentos."
     }
 }

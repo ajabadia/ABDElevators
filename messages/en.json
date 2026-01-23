@@ -32,10 +32,30 @@
         "title": "Elite Knowledge Engineering",
         "subtitle": "Designed for sectors where misinterpretation is not an option.",
         "f1_title": "Dual-Engine Extraction",
-        "f1_desc": "Combines advanced OCR with Gemini 2.0 Flash to extract tables, diagrams, and technical specs with pinpoint accuracy.",
+        "f1_desc": "Combines advanced OCR with Gemini 2.0 to extract tables, diagrams, and technical specs with pinpoint accuracy.",
         "f2_title": "Hybrid Vector Search",
-        "f2_desc": "Contextual semantic search that understands engineer intent, not just keywords.",
+        "f2_desc": "Contextual semantic search that understands expert intent, not just keywords.",
         "f3_title": "Audit-Trail Pro",
         "f3_desc": "Full traceability: every generated paragraph includes a direct citation to the original source document."
+    },
+    "solutions": {
+        "title": "Industry Solutions",
+        "subtitle": "Technical specialization built-in by default.",
+        "s1_title": "Elevators & Industrial",
+        "s1_desc": "Technical order analysis and automatic comparison with safety regulations (EN 81-20/50).",
+        "s2_title": "Legal & Compliance",
+        "s2_desc": "Proactive risk detection in complex contracts and clause verification against case law.",
+        "s3_title": "IT & Technical Support",
+        "s3_desc": "Complex issue resolution by consulting service manuals and historical knowledge bases."
+    },
+    "security": {
+        "title": "Enterprise-Grade Security",
+        "subtitle": "Your data is shielded at every layer of the process.",
+        "f1_title": "Multi-Tenant Isolation",
+        "f1_desc": "Database architecture physically isolated by tenant, ensuring absolute data privacy.",
+        "f2_title": "Military-Grade Encryption",
+        "f2_desc": "Data encrypted at rest (AES-256) and in transit (TLS 1.3) under high-security standards.",
+        "f3_title": "Data Sovereignty",
+        "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
     }
 }

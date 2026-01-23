@@ -16,7 +16,7 @@ export class PromptService {
         const prompt = await collection.findOne({ key, tenantId, active: true });
 
         if (!prompt) {
-            throw new AppError('PROMPT_NOT_FOUND', 404, `Prompt con key "${key}" no encontrado para este tenant`);
+            throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado para este tenant`);
         }
 
         return PromptSchema.parse(prompt);
@@ -71,7 +71,7 @@ export class PromptService {
 
         const prompt = await collection.findOne({ _id: new ObjectId(promptId), tenantId });
         if (!prompt) {
-            throw new AppError('PROMPT_NOT_FOUND', 404, 'Prompt no encontrado');
+            throw new AppError('NOT_FOUND', 404, 'Prompt no encontrado');
         }
 
         // Crear snapshot de la versión anterior
@@ -132,12 +132,12 @@ export class PromptService {
         });
 
         if (!versionSnapshot) {
-            throw new AppError('VERSION_NOT_FOUND', 404, `Versión ${targetVersion} no encontrada`);
+            throw new AppError('NOT_FOUND', 404, `Versión ${targetVersion} no encontrada`);
         }
 
         const prompt = await collection.findOne({ _id: new ObjectId(promptId), tenantId });
         if (!prompt) {
-            throw new AppError('PROMPT_NOT_FOUND', 404, 'Prompt no encontrado');
+            throw new AppError('NOT_FOUND', 404, 'Prompt no encontrado');
         }
 
         // Crear snapshot de la versión actual antes del rollback

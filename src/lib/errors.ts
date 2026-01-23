@@ -6,7 +6,8 @@ export type ErrorCode =
   | 'INTERNAL_ERROR'
   | 'UNAUTHORIZED'
   | 'TENANT_CONFIG_ERROR'
-  | 'STORAGE_QUOTA_EXCEEDED';
+  | 'STORAGE_QUOTA_EXCEEDED'
+  | 'MISSING_VARIABLES';
 
 export class AppError extends Error {
   constructor(
