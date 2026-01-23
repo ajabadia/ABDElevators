@@ -15,7 +15,12 @@ import {
     Zap,
     UserCircle,
     CreditCard,
-    Building
+    Building,
+    GitBranch,
+    LifeBuoy,
+    Bell,
+    Terminal,
+    CheckSquare
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -62,34 +67,58 @@ export function AppSidebar() {
             icon: Shield
         },
         {
-            name: 'Tipos Doc.',
-            href: '/admin/tipos-documento',
-            icon: Settings,
-            roles: ['ADMIN']
+            name: 'Workflows',
+            href: '/admin/workflows',
+            icon: GitBranch,
+            roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Facturación',
-            href: '/admin/billing',
-            icon: CreditCard,
-            roles: ['ADMIN']
+            name: 'Checklists',
+            href: '/admin/configs-checklist',
+            icon: CheckSquare,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Prompts',
+            href: '/admin/prompts',
+            icon: Terminal,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Soporte',
+            href: '/admin/contacts',
+            icon: LifeBuoy,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Ponerse en contacto',
+            href: '/contacto',
+            icon: LifeBuoy,
+            roles: ['TECNICO', 'INGENIERIA']
         },
         {
             name: 'Usuarios',
             href: '/admin/usuarios',
             icon: Users,
-            roles: ['ADMIN']
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Facturación',
+            href: '/admin/billing',
+            icon: CreditCard,
+            roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
             name: 'Organización',
             href: '/admin/tenants',
             icon: Building,
-            roles: ['ADMIN']
+            roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
             name: 'Auditoría',
             href: '/admin/auditoria',
             icon: History,
-            roles: ['ADMIN']
+            roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
             name: 'Perfil',

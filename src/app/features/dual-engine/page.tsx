@@ -34,7 +34,7 @@ export default function DualEnginePage() {
                         <h1 className="text-5xl md:text-7xl font-black text-white font-outfit">Extracción Dual-Engine</h1>
                     </div>
                     <p className="text-slate-400 text-xl mb-8 max-w-3xl">
-                        Combina OCR tradicional con inteligencia contextual de Gemini 2.0 para extraer datos técnicos con precisión milimétrica.
+                        Combina OCR tradicional con inteligencia contextual para extraer datos técnicos con precisión milimétrica.
                     </p>
                 </div>
             </section>
@@ -89,7 +89,7 @@ export default function DualEnginePage() {
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="text-teal-400 mt-1 flex-shrink-0" size={20} />
-                                    <span><strong>Motor Gemini:</strong> Comprensión contextual de tablas y diagramas</span>
+                                    <span><strong>Motor IA:</strong> Comprensión contextual de tablas y diagramas</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="text-teal-400 mt-1 flex-shrink-0" size={20} />
@@ -121,14 +121,14 @@ export default function DualEnginePage() {
                             />
                             <Step
                                 number="3"
-                                title="Análisis Contextual con Gemini"
-                                description="Gemini 2.0 Flash analiza las imágenes originales para entender relaciones entre elementos, interpretar tablas complejas y extraer datos de diagramas."
+                                title="Análisis Contextual con IA"
+                                description="La IA analiza las imágenes originales para entender relaciones entre elementos, interpretar tablas complejas y extraer datos de diagramas."
                                 icon={<Cpu size={20} />}
                             />
                             <Step
                                 number="4"
                                 title="Fusión Inteligente"
-                                description="Los resultados de ambos motores se combinan. Gemini corrige errores de OCR y añade contexto semántico."
+                                description="Los resultados de ambos motores se combinan. La IA corrige errores de OCR y añade contexto semántico."
                                 icon={<Zap size={20} />}
                             />
                             <Step

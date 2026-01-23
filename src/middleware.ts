@@ -69,6 +69,7 @@ export async function middleware(request: NextRequest) {
         '/',
         '/login',
         '/api/auth',
+        '/api/webhooks',
         '/privacy',
         '/terms',
         '/arquitectura',
@@ -83,8 +84,17 @@ export async function middleware(request: NextRequest) {
         return pathname.startsWith(path);
     });
 
+    // 🔄 Redirección si ya está logueado e intenta ir a login
+    if (session && pathname === '/login') {
+        const target = session.user.role === 'INGENIERIA' ? '/admin/documentos' : '/pedidos';
+        return NextResponse.redirect(new URL(target, request.url));
+    }
+
     // Si no está autenticado y intenta acceder a ruta protegida
     if (!session && !isPublicPath) {
+        if (pathname.startsWith('/api')) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        }
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
@@ -92,43 +102,44 @@ export async function middleware(request: NextRequest) {
     if (session) {
         const userRole = session.user?.role;
 
-        // Rutas compartidas por todos los autenticados: /perfil, /mis-documentos
+        // 🛡️ Restricción SUPER_ADMIN: Acceso total (bypass checks)
+        if (userRole === 'SUPER_ADMIN') {
+            // Continúa
+        } else {
+            // ADMIN normal: Acceso a todo /admin y /pedidos
+            // TECNICO: Solo /pedidos, /perfil y comunes
+            // INGENIERIA: Solo /admin/documentos (read-only) y comunes
 
-        // ADMIN: Acceso total a /admin
-        if (pathname.startsWith('/admin') && userRole !== 'ADMIN' && userRole !== 'INGENIERIA') {
-            // Si es INGENIERIA puede entrar a /admin/documentos (read-only)
-            if (!(pathname.startsWith('/admin/documentos') && userRole === 'INGENIERIA')) {
-                return NextResponse.redirect(new URL('/pedidos', request.url));
+            if (pathname.startsWith('/admin')) {
+                const isEngineeringDocs = pathname.startsWith('/admin/documentos') && userRole === 'INGENIERIA';
+                const isAdmin = userRole === 'ADMIN';
+
+                if (!isAdmin && !isEngineeringDocs) {
+                    return NextResponse.redirect(new URL('/pedidos', request.url));
+                }
+
+                // Restricción específica para INGENIERIA en Documentos (read-only)
+                if (isEngineeringDocs && request.method !== 'GET') {
+                    return NextResponse.json({ error: 'Acceso de solo lectura para Ingeniería' }, { status: 403 });
+                }
             }
-        }
 
-        // TECNICO: Solo puede entrar a /pedidos y las comunes
-        if (pathname.startsWith('/admin') && userRole === 'TECNICO') {
-            return NextResponse.redirect(new URL('/pedidos', request.url));
-        }
-
-        // Solo ADMIN y TECNICO pueden acceder a /pedidos
-        if (pathname.startsWith('/pedidos') && userRole === 'INGENIERIA') {
-            return NextResponse.redirect(new URL('/admin/documentos', request.url));
-        }
-
-        // Restricción específica para INGENIERIA en Documentos (read-only)
-        if (pathname.startsWith('/admin/documentos') && userRole === 'INGENIERIA') {
-            if (request.method !== 'GET') {
-                return NextResponse.json({ error: 'Acceso de solo lectura para Ingeniería' }, { status: 403 });
+            // Restricción de /pedidos para Ingeniería
+            if (pathname.startsWith('/pedidos') && userRole === 'INGENIERIA') {
+                return NextResponse.redirect(new URL('/admin/documentos', request.url));
             }
         }
     }
 
     // Security & Correlation Headers (Regla #9)
     const response = NextResponse.next();
-    const correlacion_id = crypto.randomUUID();
+    const correlacion_id_resp = crypto.randomUUID();
 
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('X-Correlacion-ID', correlacion_id);
+    response.headers.set('X-Correlacion-ID', correlacion_id_resp);
 
     if (process.env.NODE_ENV === 'production') {
         response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -139,6 +150,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!api|_next/static|_next/image|favicon.ico|[\\w-]+\\.\\w+).*)',
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder files (images, etc)
+         */
+        '/((?!_next/static|_next/image|favicon.ico|[\\w-]+\\.\\w+).*)',
     ],
 };

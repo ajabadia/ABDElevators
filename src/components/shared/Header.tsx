@@ -4,6 +4,7 @@ import { Bell, User, Search, Menu } from 'lucide-react';
 import Image from 'next/image';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useSidebar } from '@/context/SidebarContext';
+import { NotificationBell } from './NotificationBell';
 
 import { useSession } from 'next-auth/react';
 
@@ -39,10 +40,7 @@ export function Header() {
 
             <div className="flex items-center gap-4">
                 <ThemeToggle />
-                <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-                    <Bell size={20} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                </button>
+                <NotificationBell />
                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <div className="flex items-center gap-3 pl-2">
                     <div className="text-right hidden sm:block">

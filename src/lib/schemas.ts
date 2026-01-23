@@ -47,6 +47,19 @@ export const TaxonomySchema = z.object({
 /**
  * Esquemas para Detección de Riesgos (Visión 2.0 - Fase 7.5)
  */
+/**
+ * Esquema para historial de transiciones de workflow (Fase 7.2)
+ */
+export const WorkflowLogSchema = z.object({
+    from: z.string(),
+    to: z.string(),
+    role: z.string(),
+    comment: z.string().optional(),
+    signature: z.string().optional(),
+    correlacion_id: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
 export const RiskFindingSchema = z.object({
     id: z.string(),
     tipo: z.enum(['SEGURIDAD', 'COMPATIBILIDAD', 'LEGAL', 'NORMATIVA', 'GENERAL']),
@@ -68,7 +81,9 @@ export const GenericCaseSchema = z.object({
         taxonomies: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
         tags: z.array(z.string()),
         risks: z.array(RiskFindingSchema).optional(), // Hallazgos de inteligencia
+        checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
     }),
+    transitions_history: z.array(WorkflowLogSchema).default([]),
     creado: z.date().default(() => new Date()),
     actualizado: z.date().default(() => new Date()),
 });
@@ -77,35 +92,50 @@ export const GenericCaseSchema = z.object({
  * Esquemas para el Motor de Workflows (Visión 2.0 - Fase 7.2)
  */
 export const WorkflowStateSchema = z.object({
-    id: z.string(),
+    id: z.string(),                    // ej: 'draft', 'in_analysis', 'completed'
     label: z.string(),
-    color: z.string().default('slate'), // slate, teal, amber, red, etc.
+    color: z.string().default('#64748b'),
     icon: z.string().optional(),       // nombre de icono de lucide
     is_initial: z.boolean().default(false),
     is_final: z.boolean().default(false),
-    permissions: z.array(z.string()).optional(), // Roles que pueden estar en este estado
+    can_edit: z.boolean().default(true), // ¿Se pueden editar datos en este estado?
+    requires_validation: z.boolean().default(false), // ¿Bloquea el flujo hasta validación humana?
+    roles_allowed: z.array(z.string()).default(['ADMIN', 'TECNICO']),
 });
 
 export const WorkflowTransitionSchema = z.object({
     from: z.string(),
     to: z.string(),
     label: z.string(),
-    action: z.string(),               // 'APPROVE', 'REJECT', 'SEND_TO_REVIEW'
-    roles: z.array(z.string()),       // Roles que pueden ejecutar esta transición
-    require_signature: z.boolean().default(false),
-    require_comment: z.boolean().default(false),
+    action: z.string().optional(),      // ej: 'APPROVE', 'REJECT'
+    required_role: z.array(z.string()).optional(),
+    conditions: z.object({
+        checklist_complete: z.boolean().default(false),
+        min_documents: z.number().default(0),
+        require_signature: z.boolean().default(false),
+        require_comment: z.boolean().default(false),
+    }).optional(),
+    actions: z.array(z.string()).optional(), // ej: ['notify_admin', 'generate_pdf', 'webhook_call']
 });
 
-export const WorkflowConfigSchema = z.object({
+export const WorkflowDefinitionSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
     industry: IndustryTypeSchema,
-    caseType: z.string(),             // 'MAINTENANCE', 'LEGAL_REVIEW', etc.
+    name: z.string(),
+    entity_type: z.enum(['PEDIDO', 'EQUIPO', 'USUARIO']).default('PEDIDO'),
     states: z.array(WorkflowStateSchema),
     transitions: z.array(WorkflowTransitionSchema),
+    initial_state: z.string(),
+    is_default: z.boolean().default(false),
     active: z.boolean().default(true),
     creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
 });
+
+export type WorkflowState = z.infer<typeof WorkflowStateSchema>;
+export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
+export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 
 /**
  * Esquema para Pedidos de Ascensores (Legacy compatibility wrapper)
@@ -120,9 +150,13 @@ export const PedidoSchema = z.object({
         modelo: z.string(),
     })),
     fecha_analisis: z.date().default(() => new Date()),
-    estado: z.enum(['procesando', 'analizado', 'error']).default('procesando'),
+    estado: z.string().default('ingresado'),
     error_mensaje: z.string().nullable().optional(),
     tenantId: z.string().optional(), // Inyectado por el middleware/helper
+    metadata: z.object({
+        checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
+    }).optional(),
+    transitions_history: z.array(WorkflowLogSchema).default([]),
     creado: z.date().default(() => new Date()),
 });
 
@@ -199,7 +233,7 @@ export const UsuarioSchema = z.object({
     puesto: z.string().optional(),
     foto_url: z.string().url().optional(),
     foto_cloudinary_id: z.string().optional(),
-    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
     tenantId: z.string(),
     industry: IndustryTypeSchema.default('ELEVATORS'),
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
@@ -238,7 +272,7 @@ export const CreateUserSchema = z.object({
     nombre: z.string().min(2, 'Nombre requerido'),
     apellidos: z.string().min(2, 'Apellidos requeridos'),
     puesto: z.string().optional(),
-    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 });
 
@@ -246,7 +280,7 @@ export const CreateUserSchema = z.object({
  * Esquema para Actualización de Usuario (Admin)
  */
 export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
-    rol: z.enum(['ADMIN', 'TECNICO', 'INGENIERIA']).optional(),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']).optional(),
     activeModules: z.array(z.string()).optional(),
     activo: z.boolean().optional(),
 });
@@ -420,6 +454,26 @@ export const AuditoriaValidacionSchema = z.object({
     timestamp: z.date().default(() => new Date()),
 });
 
+/**
+ * Esquema para Solicitudes de Contacto y Soporte (Fase 10)
+ */
+export const ContactRequestSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string().optional(),
+    usuarioId: z.string().optional(),     // Si está logueado
+    nombre: z.string().min(2),
+    email: z.string().email(),
+    asunto: z.string().min(5),
+    mensaje: z.string().min(10),
+    prioridad: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('LOW'),
+    estado: z.enum(['pendiente', 'en_proceso', 'resuelto']).default('pendiente'),
+    respuesta: z.string().optional(),
+    respondidoPor: z.string().optional(),
+    creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
+});
+
+export type ContactRequest = z.infer<typeof ContactRequestSchema>;
 export type ItemValidacion = z.infer<typeof ItemValidacionSchema>;
 export type AuditoriaValidacion = z.infer<typeof AuditoriaValidacionSchema>;
 
@@ -443,4 +497,21 @@ export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
 export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
 
+/**
+ * Esquema para Notificaciones (Fase 10)
+ */
+export const NotificationSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    usuarioId: z.string(),
+    tipo: z.enum(['SISTEMA', 'WORKFLOW', 'SOPORTE', 'COMENTARIO', 'ALERTA']),
+    prioridad: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('LOW'),
+    titulo: z.string(),
+    mensaje: z.string(),
+    link: z.string().optional(),
+    leido: z.boolean().default(false),
+    metadata: z.record(z.string(), z.any()).optional(),
+    creado: z.date().default(() => new Date()),
+});
 
+export type Notification = z.infer<typeof NotificationSchema>;

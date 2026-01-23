@@ -149,10 +149,22 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [ ] Historial de cambios en documentos del corpus.
 
 #### Phase 7 – Multi‑Industry & SaaS (Visión 2.0)
-- **7.2 Motor de Workflows Multinivel**
-  - Definir estados y transiciones por industria.
-  - API para crear/actualizar flujos de aprobación.
-  - UI admin panel (drag‑&‑drop workflow builder).
+#### 7.2 Motor de Workflows Multinivel (EN PROCESO 🛠️)
+- [x] Definición de esquemas Zod (`WorkflowDefinitionSchema`).
+- [x] Implementación de `WorkflowEngine` (Motor de transiciones).
+- [x] Implementación de `WorkflowService` (Gestión y Seeding).
+- [ ] Endpoint `POST /api/pedidos/[id]/transition`.
+- [ ] UI visualizador de estados en el dashboard.
+
+...
+
+#### 🏰 FASE 10: PLATFORM GOVERNANCE & SUPPORT (PRÓXIMAMENTE)
+- **Objetivo:** Control total de la plataforma y soporte al usuario final.
+- **Planes:**
+  - **SuperAdmin Role:** Usuario raíz con visibilidad total.
+  - **Notificaciones Unificadas:** Sistema in-app y push para avisos de plataforma y transacciones.
+  - **Centro de Soporte:** Formulario de contacto y zona de respuesta para administradores (basado en referencia ABDInst).
+  - **Métricas Globales:** Salud financiera y técnica de todos los tenants.
 - **7.3 Taxonomías y Metadatos Multi‑tenant** (already done) – mantener y expandir.
 - **7.4 Automatización SaaS**
   - Completar **trackeo de uso** (LLM, storage, search) – conectar a `UsageTracker`.
