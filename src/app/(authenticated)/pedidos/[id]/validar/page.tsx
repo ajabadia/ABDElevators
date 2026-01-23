@@ -10,11 +10,8 @@ import {
 } from 'lucide-react';
 import { ValidationWorkflow } from '@/components/pedidos/ValidationWorkflow';
 import { Pedido } from '@/lib/schemas';
-import { WorkflowStatusBar } from '@/components/workflow/WorkflowStatusBar';
-import { WorkflowTimeline } from '@/components/workflow/WorkflowTimeline';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 export default function ValidarPedidoPage() {
     const params = useParams();
@@ -27,12 +24,8 @@ export default function ValidarPedidoPage() {
     const [ragResults, setRagResults] = useState<any>(null);
     const [validationComplete, setValidationComplete] = useState(false);
 
-    // Workflow State
-    const [workflowDef, setWorkflowDef] = useState<any>(null);
-
     // UX State
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'validation' | 'timeline'>('validation');
 
     useEffect(() => {
         if (!id) return;
@@ -46,20 +39,11 @@ export default function ValidarPedidoPage() {
                     setPedido(pedidoData.pedido);
 
                     // Simular resultados RAG (en producción vendrían del análisis)
-                    // Aquí deberías cargar los resultados reales del RAG
                     setRagResults({
                         modelo: pedidoData.pedido.modelo || "No detectado",
                         numero_pedido: pedidoData.pedido.numero_pedido,
                         cliente: pedidoData.pedido.cliente || "No especificado",
-                        // Añade más campos según tu análisis RAG
                     });
-                }
-
-                // 2. Cargar Definición de Workflow
-                const workflowRes = await fetch(`/api/admin/workflow-definitions/active?entity_type=PEDIDO`);
-                if (workflowRes.ok) {
-                    const workflowData = await workflowRes.json();
-                    setWorkflowDef(workflowData.definition);
                 }
 
             } catch (error) {
@@ -74,10 +58,8 @@ export default function ValidarPedidoPage() {
     const handleValidationComplete = (validacion: any) => {
         setValidationComplete(true);
 
-        // Mostrar mensaje de éxito
         alert(`Validación guardada exitosamente. Estado: ${validacion.estadoGeneral}`);
 
-        // Opcional: Redirigir o actualizar el pedido
         if (validacion.estadoGeneral === 'APROBADO') {
             router.push(`/pedidos/${id}`);
         }
@@ -115,84 +97,43 @@ export default function ValidarPedidoPage() {
                             </p>
                         </div>
                     </div>
-
-                    {/* Tab Switcher */}
-                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                        <button
-                            onClick={() => setActiveTab('validation')}
-                            className={cn(
-                                "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                                activeTab === 'validation' ? "bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm" : "text-slate-500"
-                            )}
-                        >
-                            Validación
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('timeline')}
-                            className={cn(
-                                "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                                activeTab === 'timeline' ? "bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm" : "text-slate-500"
-                            )}
-                        >
-                            Timeline
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            {/* Workflow Status Bar */}
-            {workflowDef && pedido && (
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <WorkflowStatusBar
-                        currentState={pedido.estado || 'ingresado'}
-                        workflowDefinition={workflowDef}
-                    />
-                </div>
-            )}
-
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {activeTab === 'validation' ? (
-                    <>
-                        {validationComplete ? (
-                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-8 text-center">
-                                <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                                    Validación Completada
-                                </h2>
-                                <p className="text-emerald-700 dark:text-emerald-300 mb-6">
-                                    La validación ha sido guardada exitosamente en el sistema.
-                                </p>
-                                <Link
-                                    href={`/pedidos/${id}`}
-                                    className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors"
-                                >
-                                    Ver Pedido
-                                </Link>
-                            </div>
-                        ) : ragResults ? (
-                            <ValidationWorkflow
-                                pedidoId={id}
-                                ragResults={ragResults}
-                                onValidationComplete={handleValidationComplete}
-                            />
-                        ) : (
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-8 text-center">
-                                <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                                <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                                    Sin Resultados RAG
-                                </h2>
-                                <p className="text-amber-700 dark:text-amber-300">
-                                    No se encontraron resultados del análisis RAG para este pedido.
-                                </p>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <WorkflowTimeline
-                        entityId={id}
-                        entityType="PEDIDO"
+                {validationComplete ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-8 text-center">
+                        <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                            Validación Completada
+                        </h2>
+                        <p className="text-emerald-700 dark:text-emerald-300 mb-6">
+                            La validación ha sido guardada exitosamente en el sistema.
+                        </p>
+                        <Link
+                            href={`/pedidos/${id}`}
+                            className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors"
+                        >
+                            Ver Pedido
+                        </Link>
+                    </div>
+                ) : ragResults ? (
+                    <ValidationWorkflow
+                        pedidoId={id}
+                        ragResults={ragResults}
+                        onValidationComplete={handleValidationComplete}
                     />
+                ) : (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-8 text-center">
+                        <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
+                            Sin Resultados RAG
+                        </h2>
+                        <p className="text-amber-700 dark:text-amber-300">
+                            No se encontraron resultados del análisis RAG para este pedido.
+                        </p>
+                    </div>
                 )}
             </div>
         </div>

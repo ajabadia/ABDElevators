@@ -534,6 +534,75 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Automated Tests:** Playwright tests que cambien idioma y verifiquen traducciones.
     - [ ] **Coverage Report:** Generar reporte de % de cobertura i18n por página.
 
+- **🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL (PLANNED)**
+  - **Objetivo:** Reemplazar el sistema de contacto simple por un sistema de ticketing profesional con escalamiento jerárquico y SLA tracking, siguiendo mejores prácticas de entornos SaaS bancarios.
+  - **Arquitectura de Escalamiento:**
+    - [ ] **Jerarquía de Soporte:**
+      ```
+      Usuario (TECNICO/INGENIERIA) 
+        → Ticket L1 (Auto-asignado a ADMIN del tenant)
+        → Escalamiento L2 (ADMIN puede elevar a SUPER_ADMIN)
+        → Escalamiento L3 (SUPER_ADMIN puede derivar a equipo técnico ABD)
+      ```
+    - [ ] **Routing Inteligente:** 
+      - Tickets técnicos (RAG, análisis) → Equipo de ingeniería
+      - Tickets de facturación → Equipo comercial
+      - Tickets de seguridad → Equipo de compliance
+  - **Schema de Tickets:**
+    - [ ] **Collection: `tickets`**
+      ```typescript
+      {
+        _id, ticketNumber: "TKT-2024-00123",
+        tenantId, createdBy, assignedTo,
+        subject, description, priority: "LOW|MEDIUM|HIGH|CRITICAL",
+        category: "TECHNICAL|BILLING|SECURITY|FEATURE_REQUEST",
+        status: "OPEN|IN_PROGRESS|WAITING_USER|ESCALATED|RESOLVED|CLOSED",
+        sla: { responseTime: Date, resolutionTime: Date, breached: boolean },
+        escalationHistory: [{ from, to, reason, timestamp }],
+        attachments: [{ url, cloudinaryId, filename }],
+        internalNotes: [{ author, content, timestamp, visibility: "INTERNAL_ONLY" }],
+        publicComments: [{ author, content, timestamp }],
+        tags: ["rag", "performance", "bug"],
+        createdAt, updatedAt, resolvedAt, closedAt
+      }
+      ```
+  - **SLA Management:**
+    - [ ] **Definición de SLAs por Prioridad:**
+      - CRITICAL: Respuesta < 1h, Resolución < 4h
+      - HIGH: Respuesta < 4h, Resolución < 24h
+      - MEDIUM: Respuesta < 24h, Resolución < 72h
+      - LOW: Respuesta < 48h, Resolución < 7 días
+    - [ ] **Alertas Automáticas:** Notificar a supervisores si SLA está en riesgo (80% del tiempo consumido).
+    - [ ] **Breach Tracking:** Dashboard de tickets con SLA incumplido.
+  - **UI de Gestión:**
+    - [ ] **Página: `/soporte/tickets`**
+      - Vista de lista con filtros (estado, prioridad, categoría)
+      - Indicadores visuales de SLA (verde/amarillo/rojo)
+      - Búsqueda full-text en subject/description
+    - [ ] **Página: `/soporte/tickets/[id]`**
+      - Timeline de actividad (comentarios, escalamientos, cambios de estado)
+      - Editor de comentarios con markdown
+      - Upload de attachments (screenshots, logs)
+      - Botón "Escalar" con selector de destinatario
+  - **Notificaciones:**
+    - [ ] **Email:** Nuevo ticket, respuesta, escalamiento, resolución
+    - [ ] **In-App:** Badge de tickets sin leer en header
+    - [ ] **Webhook (opcional):** Integración con Slack/Teams para equipos
+  - **Mejores Prácticas Bancarias:**
+    - [ ] **Audit Trail Completo:** Registro inmutable de todas las acciones en el ticket
+    - [ ] **Confidencialidad:** Notas internas no visibles para usuarios
+    - [ ] **Encriptación:** Attachments sensibles encriptados en Cloudinary
+    - [ ] **Compliance:** Retención de tickets por 7 años (regulación financiera)
+    - [ ] **GDPR:** Anonimización de tickets al eliminar usuario
+  - **Analytics:**
+    - [ ] **Dashboard de Métricas:**
+      - Tiempo promedio de primera respuesta
+      - Tiempo promedio de resolución
+      - % de tickets resueltos en SLA
+      - Tickets por categoría/prioridad
+      - Satisfacción del cliente (CSAT post-resolución)
+    - [ ] **Reportes:** Exportar métricas en CSV/PDF para auditorías
+
 - **🎯 FASE 15: LANDING PAGE AUDIT & COMPLIANCE CERTIFICATION (PLANNED)**
   - **Objetivo:** Asegurar que la landing page refleja con precisión las capacidades reales de la plataforma y obtener certificaciones formales.
   - **Tareas de Revisión:**
