@@ -13,7 +13,8 @@
         "contact": "Contact",
         "login": "Customer Access",
         "demo": "Free Demo",
-        "security": "Security"
+        "security": "Security",
+        "pricing": "Pricing"
     },
     "hero": {
         "badge": "Enterprise Knowledge Intelligence",

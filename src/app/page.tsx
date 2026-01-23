@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
-import { LocaleSwitcher } from "@/components/shared/LocaleSwitcher";
+import { PublicNavbar } from "@/components/shared/PublicNavbar";
+import { PublicFooter } from "@/components/shared/PublicFooter";
 
 /**
  * Landing Page Redesign - Vision 2.0
@@ -21,32 +22,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
-      {/* Navbar Premium con Glassmorphism */}
-      <nav className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-        <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
-          <div className="text-xl font-black tracking-tighter text-white font-outfit">
-            ABD<span className="text-teal-500"> RAG</span>
-          </div>
-        </Link>
-        <div className="hidden md:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
-          <a href="#soluciones" className="hover:text-teal-400 transition-colors">{navT('solutions')}</a>
-          <a href="#tecnologia" className="hover:text-teal-400 transition-colors">{navT('technology')}</a>
-          <a href="/pricing" className="hover:text-teal-400 transition-colors">Precios</a>
-          <a href="#seguridad" className="hover:text-teal-400 transition-colors">{navT('security')}</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <LocaleSwitcher />
-          <Link href="/login">
-            <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5 font-bold text-sm">
-              {navT('login')}
-            </Button>
-          </Link>
-          <Button className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 shadow-lg shadow-teal-600/20">
-            {navT('demo')}
-          </Button>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* Hero Section - Estética High-Tech */}
       <section aria-labelledby="hero-heading" className="relative pt-32 pb-20 overflow-hidden min-h-screen flex flex-col justify-center">
@@ -302,53 +278,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="py-20 border-t border-white/5 bg-slate-950">
-        <div className="container mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
-              <div className="text-xl font-black tracking-tighter text-white font-outfit">ABD RAG</div>
-            </div>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Plataforma líder en inteligencia documental industrial y multi-tenant.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-white font-bold uppercase tracking-widest text-xs">Producto</h4>
-            <ul className="text-slate-500 text-sm space-y-2">
-              <li><a href="#tecnologia" className="hover:text-teal-400 cursor-pointer transition-colors">Características</a></li>
-              <li><a href="#seguridad" className="hover:text-teal-400 cursor-pointer transition-colors">Seguridad</a></li>
-              <li><Link href="/pricing" className="hover:text-teal-400 cursor-pointer transition-colors">Precios</Link></li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-white font-bold uppercase tracking-widest text-xs">Empresa</h4>
-            <ul className="text-slate-500 text-sm space-y-2">
-              <li className="text-slate-600 cursor-not-allowed">Sobre Nosotros (Próximamente)</li>
-              <li className="text-slate-600 cursor-not-allowed">Contacto (Próximamente)</li>
-              <li><a href="/terms" className="hover:text-teal-400 cursor-pointer transition-colors">Legal</a></li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-white font-bold uppercase tracking-widest text-xs">Social</h4>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all opacity-50 cursor-not-allowed" title="Próximamente">
-                <Globe size={18} className="text-slate-400" />
-              </div>
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all opacity-50 cursor-not-allowed" title="Próximamente">
-                <Lock size={18} className="text-slate-400" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="container mx-auto px-8 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-          <p>&copy; 2026 ABD RAG Platform. Todos los derechos reservados.</p>
-          <div className="flex gap-12 mt-4 md:mt-0">
-            <a href="/privacy" className="hover:text-white cursor-pointer transition-colors">Privacy Policy</a>
-            <a href="/terms" className="hover:text-white cursor-pointer transition-colors">Terms of Service</a>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

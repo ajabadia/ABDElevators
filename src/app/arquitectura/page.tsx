@@ -1,28 +1,13 @@
 "use client";
 
-import { ArrowLeft, Cpu, Database, Zap, GitBranch, Shield, Cloud } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { Cpu, Database, Zap, Shield } from "lucide-react";
+import { PublicNavbar } from "@/components/shared/PublicNavbar";
+import { PublicFooter } from "@/components/shared/PublicFooter";
 
 export default function Arquitectura() {
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200">
-            {/* Header */}
-            <nav className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-                <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
-                    <div className="text-xl font-black tracking-tighter text-white font-outfit">
-                        ABD<span className="text-teal-500">RAG</span>
-                    </div>
-                </Link>
-                <Link href="/">
-                    <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5 gap-2">
-                        <ArrowLeft size={16} />
-                        Volver al inicio
-                    </Button>
-                </Link>
-            </nav>
+        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
+            <PublicNavbar />
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-6">
@@ -124,21 +109,10 @@ export default function Arquitectura() {
                         <TechBadge name="Cloudinary" category="Storage" />
                         <TechBadge name="NextAuth" category="Auth" />
                     </div>
-
-                    {/* CTA */}
-                    <div className="mt-20 p-8 bg-gradient-to-br from-teal-600/20 to-blue-600/20 border border-teal-500/30 rounded-3xl text-center">
-                        <h3 className="text-3xl font-bold text-white mb-4">¿Listo para implementar?</h3>
-                        <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-                            Nuestra arquitectura está diseñada para escalar desde startups hasta enterprise. Comienza hoy mismo.
-                        </p>
-                        <Link href="/login">
-                            <Button className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-lg px-8 py-6">
-                                Comenzar Ahora
-                            </Button>
-                        </Link>
-                    </div>
                 </div>
             </section>
+
+            <PublicFooter />
         </div>
     );
 }

@@ -1,28 +1,16 @@
 "use client";
 
-import { ArrowLeft, ShieldCheck, FileText, Link2, CheckCircle, AlertTriangle, Lock } from "lucide-react";
+import { ShieldCheck, FileText, Link2, CheckCircle, AlertTriangle, Lock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { PublicNavbar } from "@/components/shared/PublicNavbar";
+import { PublicFooter } from "@/components/shared/PublicFooter";
 
 export default function AuditTrailPage() {
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200">
-            {/* Header */}
-            <nav className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-                <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
-                    <div className="text-xl font-black tracking-tighter text-white font-outfit">
-                        ABD<span className="text-teal-500">RAG</span>
-                    </div>
-                </Link>
-                <Link href="/">
-                    <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5 gap-2">
-                        <ArrowLeft size={16} />
-                        Volver
-                    </Button>
-                </Link>
-            </nav>
+        <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
+            <PublicNavbar />
 
             {/* Hero */}
             <section className="pt-32 pb-20 px-6">
@@ -206,6 +194,8 @@ export default function AuditTrailPage() {
                     </div>
                 </div>
             </section>
+
+            <PublicFooter />
         </div>
     );
 }
