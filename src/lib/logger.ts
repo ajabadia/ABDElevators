@@ -11,7 +11,7 @@ export interface LogEntry {
     tenantId?: string;       // Contexto Multi-tenant
     materiaId?: string;      // Visión 2.0
     departamentoId?: string; // Visión 2.0
-    detalles?: Record<string, unknown>;
+    detalles?: any;
     stack?: string;
     timestamp?: Date;
 }

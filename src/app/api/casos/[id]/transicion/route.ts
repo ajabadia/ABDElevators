@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { WorkflowEngine } from '@/lib/workflow-engine';
-import { AppError, ValidationError } from '@/lib/errors';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
 /**
@@ -40,7 +40,6 @@ export async function POST(
         return NextResponse.json({ ...result });
 
     } catch (error: any) {
-        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+        return handleApiError(error, 'API_CASOS_TRANSITION', correlacion_id);
     }
 }
