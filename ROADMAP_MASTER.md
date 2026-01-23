@@ -315,11 +315,22 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [ ] Playwright: flujo de upgrade de plan.
   - [ ] Playwright: verificación de límites.
 
+#### 🚀 FASE 11: ADVANCED MULTI-TENANCY & RBAC (NUEVO HITOS)
+- **Objetivo:** Permitir el gobierno de múltiples organizaciones por un mismo usuario bajo estándares profesionales.
+- **Hitos:**
+  - [ ] **Context Switching (Tenant Selector):** Implementar selector global en la UI para cambiar entre tenants permitidos.
+  - [ ] **RBAC Cross-Tenant:** Actualizar el esquema de usuario para soportar una lista de `tenantAccess` con roles específicos por organización.
+  - [ ] **Data Isolation Enforcement:** Reforzar el middleware para asegurar que la sesión activa filtre estrictamente por el `activeTenantId`.
+  - [ ] **SuperAdmin Masquerading (Impersonation):** Capacidad para que el SuperAdmin "asuma" la identidad de un tenant para soporte y depuración.
+  - [ ] **Tenant Management UI v2:** Dashboard unificado para que admins gestionen todas sus empresas asignadas desde una sola vista.
+  - [ ] **Audit Trail Agregado:** Logs de auditoría que registren desde qué contexto de tenant se realizó cada acción.
+
 ### Métricas de Éxito
 - ✅ **Trackeo preciso**: 100% de operaciones LLM/Storage/Search registradas.
 - ✅ **Dashboard funcional**: Gráficos en tiempo real con datos reales.
 - ✅ **Stripe integrado**: Pagos recurrentes funcionando en producción.
 - ✅ **Límites enforced**: Bloqueo automático al exceder plan.
+- [ ] **Multi-tenancy Profesional**: Un usuario puede cambiar de tenant en <1s sin re-login.
 
 ### Estimación
 - **Duración**: 1 semana (40 horas)
