@@ -41,6 +41,10 @@ Implementar el **Núcleo Agéntico (Phase 21)** y el **Motor de Comunicaciones E
    - `NotificationSchema` enriquecido con campos analíticos (`triggerValue`, `category`) para detectar oportunidades de upsell (ej: "Cliente X rompe límite 5 veces al mes").
    - Auditoría completa de cambios en plantillas para cumplimiento normativo.
 
+4. **Interfaz de Gestión (Phase 23.3)**:
+   - **Dashboard `/admin/notifications`:** Vista de tiempo real de envíos, errores y alertas de facturación.
+   - **Editor de Plantillas Visual:** Interfaz con pestañas para editar mensajes en múltiples idiomas (ES/EN), validación de variables y registro obligatorio de motivos de cambio (Audit Trail).
+
 ### Integraciones Realizadas
 - **UsageService:** Alertas automáticas de consumo excesivo conectadas al Hub.
 - **Invite System:** Sistema de invitaciones migrado al nuevo Hub.

@@ -17,6 +17,8 @@ Se ha implementado el **sistema completo de notificaciones** para alertar a los 
 - ✅ Componentes in-app (banner y modal)
 - ✅ **FIX CRÍTICO:** Rutas públicas en middleware
 
+> **ACTUALIZACIÓN 2026-01-25:** Esta fase ha evolucionado hacia la **Fase 23: Notification & Communication Engine**, donde se ha centralizado toda la lógica de envíos en `NotificationService` (Hub Unificado) con soporte multi-idioma y auditoría. Ver `docs/CLOSURE_PHASE_21_23.md`.
+
 ---
 
 ## 📁 ARCHIVOS CREADOS/MODIFICADOS
