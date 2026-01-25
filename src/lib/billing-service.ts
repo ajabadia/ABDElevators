@@ -42,10 +42,13 @@ export class BillingService {
             return tenantBilling.overrides[metric];
         }
 
-        // 3. Si no hay nada específico, usar el Plan Global por defecto
-        const globalPlan = await db.collection('pricing_plans').findOne({ isDefault: true });
-        if (globalPlan?.metrics?.[metric]) {
-            return globalPlan.metrics[metric];
+        // 3. Buscar el plan asignado al tenant o el plan por defecto
+        const planToUse = tenantBilling?.planSlug
+            ? await db.collection('pricing_plans').findOne({ slug: tenantBilling.planSlug })
+            : await db.collection('pricing_plans').findOne({ isDefault: true });
+
+        if (planToUse?.metrics?.[metric]) {
+            return planToUse.metrics[metric];
         }
 
         return null;
@@ -192,6 +195,56 @@ export class BillingService {
         // Limpiar y reinsertar (Idempotencia)
         await db.collection('pricing_plans').deleteMany({ isPublic: true });
         return await db.collection('pricing_plans').insertMany(plans);
+    }
+
+    /**
+     * Cambia el plan de un tenant y gestiona el prorrateo básico (Créditos).
+     */
+    static async changePlan(tenantId: string, newPlanSlug: string): Promise<{ success: boolean; creditApplied?: number }> {
+        const db = await connectDB();
+
+        // 1. Validar nuevo plan
+        const newPlan = await db.collection('pricing_plans').findOne({ slug: newPlanSlug });
+        if (!newPlan) throw new Error("PLAN_NOT_FOUND");
+
+        // 2. Obtener config actual
+        const currentConfig = await db.collection('tenant_billing').findOne({ tenantId });
+        const currentPlanSlug = currentConfig?.planSlug || 'standard';
+
+        if (currentPlanSlug === newPlanSlug) return { success: true };
+
+        const currentPlan = await db.collection('pricing_plans').findOne({ slug: currentPlanSlug });
+
+        // 3. Calcular prorrateo (Simplificado: Días restantes del mes)
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const daysRemaining = daysInMonth - now.getDate();
+
+        let creditApplied = 0;
+        if (currentPlan && currentPlan.priceMonthly > 0) {
+            // Devolvemos lo no consumido como crédito
+            const dailyRate = currentPlan.priceMonthly / daysInMonth;
+            creditApplied = Math.floor(dailyRate * daysRemaining);
+
+            if (creditApplied > 0) {
+                await this.addCourtesyCredits({
+                    tenantId,
+                    metric: 'SUBSCRIPTION_CREDIT',
+                    amount: creditApplied,
+                    reason: `Prorrateo cambio de plan: ${currentPlanSlug} -> ${newPlanSlug}`,
+                    source: 'MANUAL_ADJUSTMENT'
+                });
+            }
+        }
+
+        // 4. Actualizar el plan
+        await db.collection('tenant_billing').updateOne(
+            { tenantId },
+            { $set: { planSlug: newPlanSlug } },
+            { upsert: true }
+        );
+
+        return { success: true, creditApplied };
     }
 
     /**

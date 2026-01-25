@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PlanSelector } from './PlanSelector';
 
 interface UsageStats {
     tokens: number;
@@ -10,7 +11,8 @@ interface UsageStats {
     searches: number;
     api_requests: number;
     history: any[];
-    tier?: 'FREE' | 'PRO' | 'ENTERPRISE';
+    tier?: string;
+    planSlug?: string;
     limits?: {
         tokens: number;
         storage: number;
@@ -295,13 +297,33 @@ export function ConsumptionDashboard() {
                                     </td>
                                 </tr>
                             ))}
-                            {stats?.history.length === 0 && (
+                            {stats?.history && stats.history.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-10 text-center text-slate-500 italic">No hay actividad registrada</td>
+                                    <td colSpan={4} className="p-10 text-center text-slate-500 italic">
+                                        No hay actividad registrada
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Gestión del Plan */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <h3 className="font-bold flex items-center gap-2">
+                        <CreditCard size={18} className="text-teal-500" /> Gestión de Suscripción
+                    </h3>
+                    <span className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 px-2 py-1 rounded-full font-medium">Escalabilidad Industrial</span>
+                </div>
+                <div className="p-8">
+                    <PlanSelector
+                        currentPlanSlug={stats?.planSlug}
+                        onPlanChanged={() => {
+                            fetchStats(); // Recargar límites y stats
+                        }}
+                    />
                 </div>
             </div>
         </div>

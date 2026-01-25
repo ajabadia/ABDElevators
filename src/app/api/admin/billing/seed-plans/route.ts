@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { BillingService } from '@/lib/billing-service';
 import { logEvento } from '@/lib/logger';
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const session = await auth();
 
         // Verificación estricta de SuperAdmin
-        if (!session?.user || (session.user as any).rol !== 'SUPER_ADMIN') {
+        if (!session?.user || session.user.role !== 'SUPER_ADMIN') {
             throw new AppError('FORBIDDEN', 403, 'Solo el SuperAdmin puede inicializar planes comerciales');
         }
 

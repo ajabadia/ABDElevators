@@ -653,6 +653,7 @@ export const LoyaltyRuleSchema = z.object({
 
 export const TenantBillingConfigSchema = z.object({
     tenantId: z.string(),
+    planSlug: z.string().optional(), // El plan base actual (standard, pro, premium, ultra)
     overrides: z.record(z.string(), MetricPricingSchema).default({}),
     schedules: z.array(PriceScheduleSchema).default([]),
     appliedLoyaltyRules: z.array(z.string()).default([]),

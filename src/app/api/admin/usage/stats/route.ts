@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { TenantService } from '@/lib/tenant-service';
 import { getPlanForTenant } from '@/lib/plans';
@@ -17,14 +18,17 @@ export async function GET(req: NextRequest) {
         }
 
         const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const db = await connectDB();
         const { collection } = await getTenantCollection('usage_logs');
 
-        // Obtener configuración del tenant para saber su plan
-        const tenantConfig = await TenantService.getConfig(tenantId);
-        const tier = tenantConfig.subscription?.tier || 'FREE';
-        const plan = getPlanForTenant(tier);
+        // 1. Obtener configuración de facturación (Fase 9.2)
+        const billingConfig = await db.collection('tenant_billing').findOne({ tenantId });
+        const planSlug = billingConfig?.planSlug || 'standard';
 
-        // Agregación de métricas principales
+        // 2. Obtener detalles del plan desde pricing_plans
+        const plan = await db.collection('pricing_plans').findOne({ slug: planSlug });
+
+        // 3. Agregación de métricas principales
         const stats = await collection.aggregate([
             { $match: { tenantId } },
             {
@@ -36,18 +40,19 @@ export async function GET(req: NextRequest) {
             }
         ]).toArray();
 
-        // Formatear respuesta amigable
+        // 4. Formatear respuesta amigable con los nuevos límites
         const formattedStats = {
             tokens: stats.find(s => s._id === 'LLM_TOKENS')?.total || 0,
             storage: stats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
             searches: stats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
-            api_requests: stats.find(s => s._id === 'API_REQUEST')?.total || 0,
-            tier,
+            api_requests: stats.find(s => s._id === 'API_CALL')?.total || 0,
+            tier: plan?.name?.toUpperCase() || 'STANDARD',
+            planSlug: planSlug,
             limits: {
-                tokens: plan.limits.llm_tokens_per_month,
-                storage: plan.limits.storage_bytes,
-                searches: plan.limits.vector_searches_per_month,
-                api_requests: plan.limits.api_requests_per_month,
+                tokens: plan?.metrics?.REPORTS?.includedUnits ?? 100000,
+                storage: plan?.metrics?.STORAGE?.includedUnits ?? (1024 * 1024 * 1024), // 1GB default
+                searches: plan?.metrics?.VECTOR_SEARCH?.includedUnits ?? 500,
+                api_requests: plan?.metrics?.API_CALLS?.includedUnits ?? 1000,
             },
             history: await collection.find({ tenantId })
                 .sort({ timestamp: -1 })
