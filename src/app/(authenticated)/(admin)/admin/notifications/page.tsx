@@ -46,10 +46,12 @@ export default async function NotificationsDashboardPage() {
                             Gestionar Plantillas
                         </Button>
                     </Link>
-                    <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
-                        <Settings className="h-4 w-4" />
-                        Configuración Global
-                    </Button>
+                    <Link href="/admin/notifications/settings">
+                        <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
+                            <Settings className="h-4 w-4" />
+                            Configuración de Canales
+                        </Button>
+                    </Link>
                 </div>
             </div>
 

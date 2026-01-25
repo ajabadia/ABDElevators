@@ -1,50 +1,90 @@
 import { MongoClient, Db, MongoClientOptions } from 'mongodb';
 import { DatabaseError } from './errors';
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient> | null = null;
+/**
+ * Gestión de conexiones MongoDB para múltiples bases de datos/clústeres.
+ * Permite separar Negocio (Main) de Seguridad (Auth).
+ */
+
+// Singleton pattern variables for multiple connections
+let mainClient: MongoClient;
+let mainPromise: Promise<MongoClient> | null = null;
+
+let authClient: MongoClient;
+let authPromise: Promise<MongoClient> | null = null;
+
+const options: MongoClientOptions = {};
 
 /**
- * Retorna la base de datos conectada.
- * Sigue el patrón singleton para evitar múltiples conexiones en serverless.
- * Valida el entorno solo al momento de conectar.
+ * Conexión a la Base de Datos de NEGOCIO (Principal)
  */
 export async function connectDB(): Promise<Db> {
     if (!process.env.MONGODB_URI) {
-        throw new DatabaseError('Please add your Mongo URI to .env.local');
+        throw new DatabaseError('Please add your MONGODB_URI to .env.local');
     }
 
-    if (!clientPromise) {
-        const uri = process.env.MONGODB_URI;
-        const options: MongoClientOptions = {};
-
+    if (!mainPromise) {
         if (process.env.NODE_ENV === 'development') {
             let globalWithMongo = global as typeof globalThis & {
-                _mongoClientPromise?: Promise<MongoClient>;
+                _mainMongoPromise?: Promise<MongoClient>;
             };
-            if (!globalWithMongo._mongoClientPromise) {
-                client = new MongoClient(uri, options);
-                globalWithMongo._mongoClientPromise = client.connect();
+            if (!globalWithMongo._mainMongoPromise) {
+                mainClient = new MongoClient(process.env.MONGODB_URI, options);
+                globalWithMongo._mainMongoPromise = mainClient.connect();
             }
-            clientPromise = globalWithMongo._mongoClientPromise;
+            mainPromise = globalWithMongo._mainMongoPromise;
         } else {
-            client = new MongoClient(uri, options);
-            clientPromise = client.connect();
+            mainClient = new MongoClient(process.env.MONGODB_URI, options);
+            mainPromise = mainClient.connect();
         }
     }
 
-    const connectedClient = await clientPromise;
+    const connectedClient = await mainPromise;
+    // Usamos el nombre de la DB principal
     return connectedClient.db('ABDElevators');
 }
 
 /**
- * Retorna el cliente de MongoDB para transacciones
+ * Conexión a la Base de Datos de SEGURIDAD (Auth)
+ * Puede estar en un clúster de Atlas completamente diferente para mayor seguridad y ahorro de cuotas.
  */
-export async function getMongoClient(): Promise<MongoClient> {
-    if (!clientPromise) {
-        await connectDB();
+export async function connectAuthDB(): Promise<Db> {
+    // Fallback a la URI principal si no se define una específica de AUTH
+    const authUri = process.env.MONGODB_AUTH_URI || process.env.MONGODB_URI;
+
+    if (!authUri) {
+        throw new DatabaseError('Please add your MONGODB_AUTH_URI or MONGODB_URI to .env.local');
     }
-    return await clientPromise!;
+
+    if (!authPromise) {
+        if (process.env.NODE_ENV === 'development') {
+            let globalWithMongo = global as typeof globalThis & {
+                _authMongoPromise?: Promise<MongoClient>;
+            };
+            if (!globalWithMongo._authMongoPromise) {
+                authClient = new MongoClient(authUri, options);
+                globalWithMongo._authMongoPromise = authClient.connect();
+            }
+            authPromise = globalWithMongo._authMongoPromise;
+        } else {
+            authClient = new MongoClient(authUri, options);
+            authPromise = authClient.connect();
+        }
+    }
+
+    const connectedClient = await authPromise;
+    // Usamos un nombre específico para la DB de seguridad
+    return connectedClient.db('ABDElevators-Auth');
 }
 
-export default clientPromise;
+/**
+ * Retorna el cliente principal para transacciones
+ */
+export async function getMongoClient(): Promise<MongoClient> {
+    if (!mainPromise) {
+        await connectDB();
+    }
+    return await mainPromise!;
+}
+
+export default mainPromise;

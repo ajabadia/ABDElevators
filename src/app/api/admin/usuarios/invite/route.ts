@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { InviteSchema } from '@/lib/schemas';
@@ -35,10 +35,11 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const validated = InviteRequestSchema.parse(body);
 
-        const db = await connectDB();
+        const authDb = await connectAuthDB();
+        const bizDb = await connectDB();
 
         // 1. Verificar si el usuario ya existe
-        const existingUser = await db.collection('usuarios').findOne({
+        const existingUser = await authDb.collection('users').findOne({
             email: validated.email.toLowerCase().trim()
         });
 
@@ -55,8 +56,8 @@ export async function POST(req: NextRequest) {
             throw new ValidationError('Tenant ID es requerido');
         }
 
-        // Obtener nombre del tenant para el email
-        const tenant = await db.collection('tenants').findOne({ tenantId });
+        // Obtener nombre del tenant para el email (Sigue en BIZ DB)
+        const tenant = await bizDb.collection('tenants').findOne({ tenantId });
         const tenantName = tenant?.name || tenantId;
 
         // 3. Generar Token y Expira (7 días)
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         };
 
         const validatedInvite = InviteSchema.parse(nuevaInvitacion);
-        await db.collection('invitaciones').insertOne(validatedInvite);
+        await authDb.collection('invitaciones').insertOne(validatedInvite);
 
         // 5. Enviar Email usando Notification Hub (Fase 23)
         const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/signup-invite/${token}`;
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         if (error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Datos de invitación inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de invitación inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

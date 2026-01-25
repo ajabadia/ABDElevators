@@ -5,6 +5,7 @@ import {
     SystemEmailTemplateSchema,
     NotificationSchema
 } from "@/lib/schemas";
+import { connectAuthDB } from "@/lib/db";
 import { Resend } from 'resend';
 import Handlebars from 'handlebars';
 import { ObjectId } from 'mongodb';
@@ -46,45 +47,64 @@ export class NotificationService {
         try {
             // 1. Obtener configuración del Tenant
             const config = await this.getTenantConfig(tenantId);
-            const eventConfig = config.events?.[type];
+            let eventConfig = config.events?.[type];
 
-            // Si no existe config específica, usar defaults seguros
-            if (!eventConfig || eventConfig.enabled === false) {
-                console.log(`[Notification] ${type} disabled for tenant ${tenantId}`);
-                return; // Salir si está deshabilitado
+            // Si no existe config específica, usar defaults seguros para asegurar la entrega
+            if (!eventConfig) {
+                eventConfig = {
+                    enabled: true,
+                    channels: ['EMAIL', 'IN_APP'],
+                    recipients: []
+                };
             }
 
-            // 2. Determinar destinatarios
-            let recipients: Set<string> = new Set();
+            // Si está explícitamente deshabilitado, salimos
+            if (eventConfig.enabled === false) {
+                console.log(`[Notification] ${type} explicitly disabled for tenant ${tenantId}`);
+                return;
+            }
 
-            // A. Destinatarios de configuración de Tenant
+            // 2. Determinar destinatarios y validar preferencias del usuario principal
+            let recipients: Set<string> = new Set();
+            let userPrefs = userId ? await this.getUserPreferences(userId, type) : { email: true, inApp: true };
+
+            // A. Destinatarios de configuración de Tenant (Globales - Siempre reciben si están en la lista)
             if (eventConfig.recipients && eventConfig.recipients.length > 0) {
                 eventConfig.recipients.forEach((r: string) => recipients.add(r));
             }
-            // B. Usuario específico (si aplica)
-            if (userId) {
+
+            // B. Usuario específico (si aplica y si no ha hecho opt-out de EMAIL)
+            if (userId && userPrefs.email) {
                 const userEmail = await this.getUserEmail(userId);
                 if (userEmail) recipients.add(userEmail);
             }
+
             // C. Fallback del Tenant
             if (recipients.size === 0 && !userId && config.fallbackEmail) {
                 recipients.add(config.fallbackEmail);
             }
+
             // D. Destinatarios extra (Invitaciones, CCs explicitos)
             extraRecipients.forEach(r => recipients.add(r));
 
             const finalRecipients = Array.from(recipients);
 
-            // 3. Persistir notificación (Siempre se guarda para historial, aunque no se envíe email)
-            // Esto alimenta la "campanita" en el frontend
-            const notifId = await this.persistNotification(payload, finalRecipients[0]); // Se asocia al primer receptor principal o al tenant
+            // 3. Persistir notificación (Si el usuario no ha hecho opt-out de IN_APP)
+            let notifId: string | null = null;
+            if (userPrefs.inApp || !userId) {
+                notifId = await this.persistNotification(payload, finalRecipients[0]);
+            }
 
             // 4. Procesar Canales
             if (eventConfig.channels.includes('EMAIL') && finalRecipients.length > 0) {
+                // Si es un correo directo al usuario y ha hecho opt-out, el Set ya lo filtró arriba.
+                // Pero si es un broadcast, los destinatarios globales siguen recibiendo.
                 await this.sendEmail(payload, finalRecipients, eventConfig.customNote, language);
 
-                // Actualizar estado de envío
-                await this.markAsSent(notifId, finalRecipients[0]);
+                // Actualizar estado de envío (si persistimos)
+                if (notifId) {
+                    await this.markAsSent(notifId, finalRecipients[0]);
+                }
             }
 
             if (eventConfig.channels.includes('IN_APP')) {
@@ -156,8 +176,23 @@ export class NotificationService {
         return config;
     }
 
+    private static async getUserPreferences(userId: string, type: string): Promise<{ email: boolean, inApp: boolean }> {
+        const db = await connectAuthDB();
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+        if (!user || !user.notificationPreferences) {
+            return { email: true, inApp: true }; // Default: Optado por defecto
+        }
+
+        const pref = user.notificationPreferences.find((p: any) => p.type === type);
+        return {
+            email: pref ? pref.email !== false : true,
+            inApp: pref ? pref.inApp !== false : true
+        };
+    }
+
     private static async getUserEmail(userId: string): Promise<string | null> {
-        const db = await connectDB();
+        const db = await connectAuthDB();
         const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         return user?.email || null;
     }

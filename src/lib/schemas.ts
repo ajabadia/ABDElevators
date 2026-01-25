@@ -235,6 +235,15 @@ export const TenantAccessSchema = z.object({
 });
 
 /**
+ * Esquema para Preferencias de Notificación por Usuario (Fase 23.5)
+ */
+export const UserNotificationPreferenceSchema = z.object({
+    type: z.enum(['SYSTEM', 'ANALYSIS_COMPLETE', 'RISK_ALERT', 'BILLING_EVENT', 'SECURITY_ALERT']),
+    email: z.boolean().default(true),
+    inApp: z.boolean().default(true),
+});
+
+/**
  * Esquema para Usuarios (extendido con perfil completo)
  */
 export const UsuarioSchema = z.object({
@@ -253,6 +262,9 @@ export const UsuarioSchema = z.object({
 
     // Multi-tenancy (Fase 11)
     tenantAccess: z.array(TenantAccessSchema).optional(),
+
+    // Notificaciones (Fase 23.5)
+    notificationPreferences: z.array(UserNotificationPreferenceSchema).optional(),
 
     activo: z.boolean().default(true),
     creado: z.date(),
@@ -898,3 +910,46 @@ export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
 export type NotificationTenantConfigHistory = z.infer<typeof NotificationTenantConfigHistorySchema>;
 export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
+
+/**
+ * 🔐 FASE 11: Security Pro Schemas
+ */
+
+export const UserSessionSchema = z.object({
+    _id: z.any().optional(),
+    userId: z.string(),
+    email: z.string().email(),
+    tenantId: z.string(),
+
+    // Device Context
+    ip: z.string(),
+    userAgent: z.string(),
+    device: z.object({
+        browser: z.string().optional(),
+        os: z.string().optional(),
+        type: z.enum(['DESKTOP', 'MOBILE', 'TABLET', 'UNKNOWN']).default('UNKNOWN'),
+    }),
+    location: z.object({
+        city: z.string().optional(),
+        country: z.string().optional(),
+    }).optional(),
+
+    // Flags
+    isCurrent: z.boolean().optional().default(false), // Auxiliar para la UI
+    lastActive: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
+    expiresAt: z.date(),
+});
+
+export const MfaConfigSchema = z.object({
+    _id: z.any().optional(),
+    userId: z.string(),
+    enabled: z.boolean().default(false),
+    secret: z.string(), // TOTP Secret (Base32)
+    recoveryCodes: z.array(z.string()), // Hashed recovery codes
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+export type UserSession = z.infer<typeof UserSessionSchema>;
+export type MfaConfig = z.infer<typeof MfaConfigSchema>;

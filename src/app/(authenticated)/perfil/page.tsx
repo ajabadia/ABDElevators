@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation';
 import { ProfileForm } from '@/components/perfil/ProfileForm';
 import { PasswordForm } from '@/components/perfil/PasswordForm';
 import { ProfilePhotoUpload } from '@/components/perfil/ProfilePhotoUpload';
-import { connectDB } from '@/lib/db';
-import { User as UserIcon, Shield, Key } from 'lucide-react';
+import { connectAuthDB } from '@/lib/db';
+import { User as UserIcon, Shield, Key, Bell } from 'lucide-react';
+import { UserNotificationPreferencesForm } from '@/components/perfil/UserNotificationPreferencesForm';
+import { ActiveSessionsForm } from '@/components/perfil/ActiveSessionsForm';
+import { MfaSettingsForm } from '@/components/perfil/MfaSettingsForm';
 
 /**
  * Página de Perfil de Usuario
@@ -16,15 +19,15 @@ export default async function PerfilPage() {
         redirect('/login');
     }
 
-    const db = await connectDB();
-    const user = await db.collection('usuarios').findOne({ email: session.user.email });
+    const db = await connectAuthDB();
+    const user = await db.collection('users').findOne({ email: session.user.email });
 
     if (!user) {
         redirect('/login');
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-500">
             <header>
                 <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 dark:text-white font-outfit">
                     Mi <span className="text-teal-600">Perfil</span>
@@ -38,7 +41,6 @@ export default async function PerfilPage() {
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col items-center">
                         <ProfilePhotoUpload
                             currentPhotoUrl={user.foto_url}
-                        // Note: ProfilePhotoUpload internally updates the DB via API
                         />
 
                         <div className="mt-6 w-full pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -52,28 +54,42 @@ export default async function PerfilPage() {
                             <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
                                 <UserIcon size={16} className="text-teal-600" />
                                 <span className="font-medium">Miembro desde:</span>
-                                <span>{new Date(user.creado).toLocaleDateString()}</span>
+                                <span>{new Date(user.creado || Date.now()).toLocaleDateString()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Columna Derecha: Formularios */}
-                <div className="md:col-span-2 space-y-8">
+                <div className="md:col-span-2 space-y-12">
                     <section>
                         <div className="flex items-center gap-2 mb-4 text-slate-700 dark:text-slate-300">
                             <UserIcon size={20} className="text-teal-600" />
-                            <h2 className="text-xl font-bold">Información Personal</h2>
+                            <h2 className="text-xl font-bold font-outfit">Información Personal</h2>
                         </div>
                         <ProfileForm />
                     </section>
 
                     <section>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                <Bell size={20} className="text-teal-600" />
+                                <h2 className="text-xl font-bold font-outfit">Preferencias de Notificación</h2>
+                            </div>
+                        </div>
+                        <UserNotificationPreferencesForm />
+                    </section>
+
+                    <section>
                         <div className="flex items-center gap-2 mb-4 text-slate-700 dark:text-slate-300">
                             <Key size={20} className="text-teal-600" />
-                            <h2 className="text-xl font-bold">Seguridad</h2>
+                            <h2 className="text-xl font-bold font-outfit">Seguridad</h2>
                         </div>
-                        <PasswordForm />
+                        <div className="space-y-6">
+                            <PasswordForm />
+                            <MfaSettingsForm />
+                            <ActiveSessionsForm />
+                        </div>
                     </section>
                 </div>
             </div>

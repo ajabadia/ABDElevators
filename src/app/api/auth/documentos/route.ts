@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { uploadUserDocument } from '@/lib/cloudinary';
 import { DocumentoUsuarioSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
@@ -22,10 +22,11 @@ export async function GET() {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
         if (!user) throw new NotFoundError('Usuario no encontrado');
 
+        const db = await connectDB();
         const documentos = await db.collection('documentos_usuarios')
             .find({ usuario_id: user._id.toString() })
             .sort({ creado: -1 })
@@ -86,10 +87,11 @@ export async function POST(req: NextRequest) {
             throw new ValidationError('No se subió ningún archivo');
         }
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
         if (!user) throw new NotFoundError('Usuario no encontrado');
 
+        const db = await connectDB();
         const buffer = Buffer.from(await file.arrayBuffer());
         const tenantId = user.tenantId || 'default_tenant';
         const uploadResult = await uploadUserDocument(buffer, file.name, tenantId, user._id.toString());
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         if (error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Metadatos de documento inválidos', error.errors).toJSON(),
+                new ValidationError('Metadatos de documento inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

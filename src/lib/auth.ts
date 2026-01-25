@@ -1,14 +1,18 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { connectDB } from "./db";
+import { connectDB, connectAuthDB } from "./db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { logEvento } from "./logger";
+import { SessionService } from "./session-service";
+import { MfaService } from "./mfa-service";
+import { headers } from "next/headers";
 
 // Esquema de validación para login
 const LoginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
+    mfaCode: z.string().optional(), // Código de 6 dígitos
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -27,12 +31,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     }
 
                     // Validar credenciales con Zod (Regla de Oro #2)
-                    const { email, password } = LoginSchema.parse(credentials);
+                    const validated = LoginSchema.parse(credentials);
+                    const { email, password } = validated;
 
-                    // Conectar a MongoDB
-                    const db = await connectDB();
+                    // Conectar a MongoDB de Seguridad (Identity Suite)
+                    const db = await connectAuthDB();
 
-                    const user = await db.collection("usuarios").findOne({
+                    const user = await db.collection("users").findOne({
                         email: email.toLowerCase().trim()
                     });
 
@@ -61,6 +66,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         return null;
                     }
 
+                    // 🔐 Verificar MFA (Fase 11)
+                    if (user.mfaEnabled) {
+                        const { mfaCode } = validated;
+
+                        if (!mfaCode) {
+                            await logEvento({
+                                nivel: 'INFO',
+                                origen: 'AUTH',
+                                accion: 'MFA_REQUIRED',
+                                mensaje: `Login paso 1: Usuario ${email} requiere MFA`,
+                                correlacion_id: `auth-mfa-${Date.now()}`
+                            });
+                            // Lanzamos un error específico que el frontend pueda capturar
+                            throw new Error("MFA_REQUIRED");
+                        }
+
+                        const isMfaValid = await MfaService.verify(user._id.toString(), mfaCode);
+                        if (!isMfaValid) {
+                            await logEvento({
+                                nivel: 'WARN',
+                                origen: 'AUTH',
+                                accion: 'MFA_FAIL',
+                                mensaje: `Intento de login fallido: Código MFA incorrecto para ${email}`,
+                                correlacion_id: `auth-mfa-err-${Date.now()}`
+                            });
+                            throw new Error("INVALID_MFA_CODE");
+                        }
+                    }
+
                     await logEvento({
                         nivel: 'INFO',
                         origen: 'AUTH',
@@ -83,6 +117,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         tenantAccess: user.tenantAccess || []
                     };
                 } catch (error: any) {
+                    // Si es una señal de MFA, re-lanzamos para que llegue al cliente
+                    if (error.message === 'MFA_REQUIRED' || error.message === 'INVALID_MFA_CODE') {
+                        throw error;
+                    }
+
                     console.error("[Auth ERROR] Exception during authorize:", error);
                     try {
                         await logEvento({
@@ -112,6 +151,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.activeModules = (user.activeModules as string[]) || [];
                 token.image = user.image as string | null | undefined;
                 token.tenantAccess = user.tenantAccess;
+
+                // 🔐 Crear sesión persistente en DB de Seguridad (Fase 11)
+                try {
+                    const reqHeaders = await headers();
+                    const ip = reqHeaders.get('x-forwarded-for') || '127.0.0.1';
+                    const ua = reqHeaders.get('user-agent') || 'Unknown';
+
+                    const sessionId = await SessionService.createSession({
+                        userId: user.id as string,
+                        email: user.email as string,
+                        tenantId: user.tenantId as string,
+                        ip,
+                        userAgent: ua
+                    });
+                    token.sessionId = sessionId;
+                    token.lastValidated = Date.now();
+                } catch (e) {
+                    console.error("[Auth] Error creating session record:", e);
+                }
+            }
+
+            // 🔐 Validación de sesión remota (cada 5 minutos)
+            if (token.sessionId && Date.now() - (token.lastValidated as number || 0) > 5 * 60 * 1000) {
+                const isValid = await SessionService.validateSession(token.sessionId as string);
+                if (!isValid) return null; // Fuerza logout si la sesión fue revocada
+                token.lastValidated = Date.now();
             }
 
             // Manejar actualización de sesión (Visión 2.0)

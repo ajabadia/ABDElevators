@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
@@ -34,11 +34,11 @@ export async function PATCH(
         // REGLA #2: Zod Validation BEFORE Processing
         const validated = AdminUpdateUserSchema.parse(body);
 
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // Aislamiento: Si es Admin, verificar que el usuario a editar pertenezca a su tenant
         if (isAdmin) {
-            const userToEdit = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+            const userToEdit = await db.collection('users').findOne({ _id: new ObjectId(id) });
             if (!userToEdit) {
                 throw new NotFoundError('Usuario no encontrado');
             }
@@ -60,7 +60,7 @@ export async function PATCH(
             modificado: new Date()
         };
 
-        const result = await db.collection('usuarios').updateOne(
+        const result = await db.collection('users').updateOne(
             { _id: new ObjectId(id) },
             { $set: updateData }
         );
@@ -82,7 +82,7 @@ export async function PATCH(
     } catch (error: any) {
         if (error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Datos de actualización inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de actualización inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }
@@ -140,8 +140,8 @@ export async function GET(
         }
 
         const { id } = await params;
-        const db = await connectDB();
-        const usuario = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+        const db = await connectAuthDB();
+        const usuario = await db.collection('users').findOne({ _id: new ObjectId(id) });
 
         if (!usuario) {
             throw new NotFoundError('Usuario no encontrado');

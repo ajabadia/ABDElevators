@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // Filtro dinámico: SuperAdmin ve todo, Admin solo su tenant
         const filter = isSuperAdmin ? {} : { tenantId: session?.user?.tenantId };
 
-        const usuarios = await db.collection('usuarios')
+        const usuarios = await db.collection('users')
             .find(filter, { projection: { password: 0 } })
             .sort({ creado: -1 })
             .toArray();
@@ -90,10 +90,10 @@ export async function POST(req: NextRequest) {
         // REGLA #2: Zod Validation BEFORE Processing
         const validated = CreateUserSchema.parse(body);
 
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // Verificar que el email no exista
-        const existingUser = await db.collection('usuarios').findOne({
+        const existingUser = await db.collection('users').findOne({
             email: validated.email.toLowerCase().trim()
         });
 
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
 
         // Validar contra el esquema maestro de base de datos
         const validatedUser = UsuarioSchema.parse(nuevoUsuario);
-        const result = await db.collection('usuarios').insertOne(validatedUser);
+        const result = await db.collection('users').insertOne(validatedUser);
 
         if (!result.insertedId) {
             throw new DatabaseError('No se pudo insertar el usuario');
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         if (error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Datos de usuario inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de usuario inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

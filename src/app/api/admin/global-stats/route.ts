@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -16,10 +16,11 @@ export async function GET(req: NextRequest) {
         }
 
         const db = await connectDB();
+        const authDb = await connectAuthDB();
 
         // 1. Totales básicos
         const totalTenants = await db.collection('tenants').countDocuments();
-        const totalUsers = await db.collection('usuarios').countDocuments();
+        const totalUsers = await authDb.collection('users').countDocuments();
         const totalFiles = await db.collection('documentos_tecnicos').countDocuments();
         const totalCases = await db.collection('pedidos').countDocuments();
 

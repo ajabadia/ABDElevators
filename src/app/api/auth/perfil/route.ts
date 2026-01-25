@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
@@ -21,8 +21,8 @@ export async function GET() {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+        const db = await connectAuthDB();
+        const user = await db.collection('users').findOne({ email: session.user.email });
 
         if (!user) {
             throw new NotFoundError('Usuario no encontrado');
@@ -79,12 +79,12 @@ export async function PATCH(req: NextRequest) {
         const body = await req.json();
 
         const validated = UpdateProfileSchema.parse(body);
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // Obtener datos actuales del usuario para verificar permisos (Regla de Oro #4 - Audit Trail)
-        const currentUser = await db.collection('usuarios').findOne({ email: session.user.email });
+        const currentUser = await db.collection('users').findOne({ email: session.user.email });
         if (!currentUser) {
-            throw new NotFoundError('Usuario no encontrado');
+            throw new AppError('NOT_FOUND', 404, 'Usuario no encontrado');
         }
 
         const isPrivileged = ['ADMIN', 'SUPER_ADMIN'].includes(currentUser.rol);
@@ -115,7 +115,7 @@ export async function PATCH(req: NextRequest) {
             modificado: new Date()
         };
 
-        const result = await db.collection('usuarios').updateOne(
+        const result = await db.collection('users').updateOne(
             { email: session.user.email },
             { $set: updateData }
         );

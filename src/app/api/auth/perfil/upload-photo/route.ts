@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -28,20 +28,20 @@ export async function POST(req: NextRequest) {
             throw new ValidationError('No se subió ningún archivo');
         }
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+        const db = await connectAuthDB();
+        const usuario = await db.collection('users').findOne({ email: session.user.email });
 
-        if (!user) {
+        if (!usuario) {
             throw new NotFoundError('Usuario no encontrado');
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = user.tenantId || (session.user as any).tenantId || 'default_tenant';
+        const tenantId = usuario.tenantId || (session.user as any).tenantId || 'default_tenant';
 
-        const result = await uploadProfilePhoto(buffer, file.name, tenantId, user._id.toString());
+        const result = await uploadProfilePhoto(buffer, file.name, tenantId, usuario._id.toString());
 
         // Actualizar el documento del usuario en la base de datos
-        await db.collection('usuarios').updateOne(
+        await db.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {

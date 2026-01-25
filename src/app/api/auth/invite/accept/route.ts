@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, getMongoClient } from '@/lib/db';
+import { connectAuthDB, getMongoClient } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError, DatabaseError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         const validated = AcceptInviteSchema.parse(body);
 
         const client = await getMongoClient();
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // 1. Verificar la invitación
         const invite = await db.collection('invitaciones').findOne({ token: validated.token });
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Verificar si el usuario se registró mientras tanto por otra vía
-        const existingUser = await db.collection('usuarios').findOne({ email: invite.email });
+        const existingUser = await db.collection('users').findOne({ email: invite.email });
         if (existingUser) {
             throw new ValidationError('El email asignado a esta invitación ya está registrado');
         }
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         try {
             await session.withTransaction(async () => {
                 // A. Crear usuario
-                await db.collection('usuarios').insertOne(validatedUser, { session });
+                await db.collection('users').insertOne(validatedUser, { session });
 
                 // B. Marcar invitación como usada
                 await db.collection('invitaciones').updateOne(
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         if (error.name === 'ZodError') {
             return NextResponse.json(
-                new ValidationError('Datos de registro inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de registro inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

@@ -82,13 +82,14 @@ Para no desviarnos del plan "Enterprise-Ready", cada tarea debe cumplir con:
 - [x] **21.1 Motor Agéntico con Autocorrección**: LangGraph Loop, BGE-M3 Multilingual, Confidence critiques.
 - [x] **21.2 UI Agéntica en Vivo**: Trazabilidad paso a paso, medidor de confianza, revisión side-by-side.
 
-### 📧 FASE 23: NOTIFICATION HUB & BI (COMPLETADO)
+### 📧 FASE 23: NOTIFICATION HUB & BI (EN CURSO 🛠️)
 - [x] **23.1 Hub Unificado**: Servicio central de notificaciones (Email/In-App/Log).
 - [x] **23.2 Business Intelligence**: Estadísticas agregadas, detección de riesgos y oportunidades de upsell.
 - [x] **23.3 UI de Gestión**: Dashboard Admin, Editor de Plantillas Multi-idioma, Auditoría de cambios.
+- [ ] **23.4 Tenant Preferences**: Configuración de canales por organización.
 
-### 📈 MÉTRICAS DE AVANCE
+### 📊 MÉTRICAS DE AVANCE
 - **Fase 1-6:** 100%
 - **Fase 21 (Agentic):** 100%
-- **Fase 23 (Notifications):** 100%
-- **GLOBAL:** 98% (Preparando cierre de proyecto y hardening final)
+- **Fase 23 (Notifications):** 85%
+- **GLOBAL:** 97% (Ajustado por nuevas tareas de Hardening & Preferences)

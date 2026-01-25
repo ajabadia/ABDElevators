@@ -23,11 +23,18 @@ export async function middleware(request: NextRequest) {
 
     if (isApiOrAdmin) {
         const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
-        const limit = isAdmin ? 5000 : 500; // Aumentamos el límite para admins y técnicos (anteriormente 100 era muy bajo)
+        let limit = isAdmin ? 5000 : 500; // Aumentamos el límite para admins y técnicos (anteriormente 100 era muy bajo)
+        let windowMs = 60 * 60 * 1000; // 1 hora
 
-        const rate = await rateLimit(`rate_${rateKey}`, {
+        // 🛡️ Hardening MFA: Límite muy estricto para intentos de MFA
+        if (pathname.includes('/api/auth/mfa')) {
+            limit = 10;
+            windowMs = 60 * 1000; // 10 intentos por minuto
+        }
+
+        const rate = await rateLimit(`rate_${rateKey}_${pathname.includes('/api/auth/mfa') ? 'mfa' : 'api'}`, {
             limit: limit,
-            windowMs: 60 * 60 * 1000
+            windowMs: windowMs
         });
 
         if (!rate.success) {

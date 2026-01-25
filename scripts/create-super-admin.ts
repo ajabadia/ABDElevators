@@ -1,33 +1,24 @@
-import { MongoClient } from 'mongodb';
+import { connectAuthDB } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
 /**
  * Script para crear o ascender un usuario a SUPER_ADMIN.
- * La Fase 10 requiere este rol para el gobierno global de la plataforma.
+ * Actualizado para la Identity Suite (Fase 11).
  */
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-const uri = process.env.MONGODB_URI;
 const SUPER_ADMIN_EMAIL = 'superadmin@abd.com';
 const SUPER_ADMIN_PASS = 'super123';
 
 async function createSuperAdmin() {
-    if (!uri) {
-        console.error('❌ MONGODB_URI no encontrado en .env.local');
-        process.exit(1);
-    }
-
-    console.log(`🚀 Iniciando creación de SUPER_ADMIN: ${SUPER_ADMIN_EMAIL}`);
-
-    const client = new MongoClient(uri);
+    console.log(`🚀 Iniciando creación de SUPER_ADMIN en BD de Identidad: ${SUPER_ADMIN_EMAIL}`);
 
     try {
-        await client.connect();
-        const db = client.db('ABDElevators');
-        const usuarios = db.collection('usuarios');
+        const db = await connectAuthDB();
+        const users = db.collection('users');
 
         const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASS, 10);
 
@@ -46,7 +37,7 @@ async function createSuperAdmin() {
             modificado: new Date()
         };
 
-        const result = await usuarios.updateOne(
+        const result = await users.updateOne(
             { email: SUPER_ADMIN_EMAIL },
             { $set: superAdminData },
             { upsert: true }
@@ -70,7 +61,6 @@ Nota: Este usuario tiene visibilidad sobre TODOS los tenants.
     } catch (error: any) {
         console.error('❌ Error creando SUPER_ADMIN:', error.message);
     } finally {
-        await client.close();
         process.exit(0);
     }
 }

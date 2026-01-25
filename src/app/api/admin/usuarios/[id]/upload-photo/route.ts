@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
@@ -21,7 +21,7 @@ export async function POST(
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -33,8 +33,8 @@ export async function POST(
             throw new ValidationError('No se subió ningún archivo');
         }
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ _id: new ObjectId(id) });
+        const db = await connectAuthDB();
+        const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
 
         if (!user) {
             throw new NotFoundError('Usuario no encontrado');
@@ -44,8 +44,8 @@ export async function POST(
         const tenantId = user.tenantId || 'default_tenant';
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
 
-        // Actualizar el documento del usuario en la base de datos
-        await db.collection('usuarios').updateOne(
+        // Actualizar el documento del usuario en la base de datos de identidad
+        await db.collection('users').updateOne(
             { _id: new ObjectId(id) },
             {
                 $set: {

@@ -70,7 +70,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Fase 7:** 100 % (Motor de Workflows y SaaS listo)
 - **Fase 10:** 95 % (Governance & Support operativo)
 - **Fase 21:** 0 % (NUEVA: Agentic Evolution)
-- **GLOBAL:** 88 % (Evolución hacia RAG Agéntico e Inteligencia de Negocio)
+- **GLOBAL:** 92 % (Identity Suite & MFA implementation completed)
 
 ---
 
@@ -91,6 +91,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 - Full SaaS Billing (Stripe integration, automated usage tracking, plan management).
 - Advanced Multi-Tenancy (Tenant switching, cross-tenant admin).
 - Governance Dashboard (SuperAdmin global metrics and system health).
+- **Identity Suite Migration:** Dedicated auth database (ABDElevators-Auth) for user security.
+- **Multi-Factor Authentication (MFA):** TOTP implementation with QR codes and recovery codes.
+- **Session Control:** Remote session monitoring and revocation for users and admins.
 
 ---
 
@@ -658,23 +661,35 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ...
 
-## 📧 FASE 23: CUSTOMER COMMUNICATIONS ENGINE & PERSONALIZATION ✅ COMPLETADO
-**Objetivo:** Permitir que cada organización (Tenant) controle total y granularmente cómo, qué y a quién se comunica la plataforma, elevando la profesionalidad de las notificaciones salientes.
+### 📧 FASE 23: NOTIFICATION HUB & BI (EN CURSO 🛠️)
+- [x] **23.1 Hub Unificado**: Servicio central de notificaciones (Email/In-App/Log).
+- [x] **23.2 Business Intelligence**: Estadísticas agregadas, detección de riesgos y oportunidades de upsell.
+- [x] **23.3 UI de Gestión Admin**: Dashboard SuperAdmin, Editor de Plantillas Multi-idioma, Auditoría de cambios.
+- [ ] **23.4 Tenant Preferences UI**: Interfaz para que cada organización elija sus canales por evento (ej: Alertas de Facturación -> Solo Email).
+- [ ] **23.5 User Opt-out Control**: Panel para que el usuario final gestione sus propias suscripciones (Compliance GDPR).
 
-### 23.1 Notification Hub & Service
-- [x] **Unified Notification Service**: Servicio centralizado `NotificationService` que orquesta emails, alertas In-App y logs.
-- [x] **Intelligent Routing**: Decisión automática de canal (Email/In-App) basada en preferencias del Tenant.
-- [x] **Template Engine (i18n)**:
-  - Sistema de plantillas globales multilenguaje (Handlebars + Zod).
-  - Inyección de variables dinámicas y notas personalizadas del cliente.
-- [x] **Audit Trail (Compliance)**:
-  - Registro inmutable de cambios en plantillas (SuperAdmin) y configuraciones (Tenant).
-  - Historial completo de envíos en DB.
+---
 
-### 23.2 Business Intelligence Integration
-- [x] **BI Analytics Fields**: Extensión del schema para categorización (BILLING, RISK, MARKETING).
-- [x] **Materialized Views**: Diseño de colección `notification_stats_monthly` para dashboards de alto rendimiento.
-- [x] **Integration**: Conexión con `UsageService` para alertas de facturación automáticas.
+### 🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL (PLANNED)
+**Objetivo:** Soporte jerárquico L1/L2/L3.
+**Estrategia Técnica:** Evitar imbricar el sistema dentro del core para no complicar el proyecto. Se evaluará:
+1.  **Integración con 3rd Party** (Zendesk, Crisp, Freshdesk) vía API.
+2.  **Microservicio Independiente** que se comunique con la plataforma solo para intercambio de contexto (logs/datos de pedido).
+- [ ] **Análisis de factibilidad y selección de herramientas.**
+- [ ] **Workflow de Escalamiento**: Técnico -> Admin Empresa -> Soporte ABD.
+
+---
+
+### 🔐 FASE 11: SECURITY HARDENING (SAAS PRO - EN CURSO 🛠️)
+**Estrategia MFA:** Al no disponer de proveedor de SMS, utilizaremos:
+1.  **TOTP (Time-based One-Time Password)**: Compatible con Google/Microsoft Authenticator (Nivel PRO, coste 0).
+2.  **Email OTP (Fallback)**: Código de 6 dígitos vía Resend (Fácil implementación).
+3.  **App Wrappers (Futuro)**: Notificaciones Push requieren empaquetado móvil (Phase 25+).
+
+- [x] **Implementación de TOTP**: Generación de QR y validación de secretos (otplib + qrcode).
+- [x] **Gestión de Sesiones**: DB-backed sessions con capacidad de revocación remota.
+- [x] **Identity Suite Migration**: Aislamiento de base de datos de identidad (ABDElevators-Auth).
+- [ ] **Audit Trail de Seguridad**: Registro de IPs, geolocalización básica y dispositivos en cada login.
 
 ---
 
@@ -690,24 +705,13 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 ## 📊 FASE 24: OBSERVABILITY & ADVANCED ANALYTICS (SAAS PRO)
 **Objetivo:** Proporcionar visibilidad total y granular sobre el uso, rendimiento y seguridad de la plataforma a todos los niveles (Platform, Tenant, User).
 
-### 24.1 Centralized Log Explorer (Bank-Grade Audit)
-- [ ] **Log Viewer UI Avanzado:**
-  - Interfaz estilo "Elastic/Splunk" dentro del panel de SuperAdmin.
-  - Filtros facetados: por `tenantId`, `userId`, `severity`, `errorCode`, `source` (API, RAG, AUTH).
-  - Búsqueda full-text en payloads de logs.
-- [ ] **Data Export Compliance:**
-  - Botón de "Exportar Traza Legal" que genera un PDF/CSV firmado de todas las acciones de un usuario en un rango de fechas (para litigios o auditorías ISO).
+### 24.1 Centralized Log Explorer & Analytics (Integration Focus)
+**Decisión Estratégica:** Investigar herramientas de terceros (Axiom, Mixpanel, PostHog, BetterStack) para integración vía SDK o Webhooks antes de desarrollar una solución interna. El objetivo es evitar "reinventar la rueda" y aprovechar motores de analítica ya probados.
 
 ### 24.2 Multi-Level Analytics Dashboard
-- [ ] **SuperAdmin View (Platform Health):**
-  - Métricas globales: MAU (Active Users), MRR estimado, Tasa de Errores Global, Latencia promedio de LLM.
-  - Mapa de calor de uso por región/país.
-- [ ] **Tenant Admin View (Organization ROI):**
-  - *Productivity Score:* Tiempo ahorrado estimado vs proceso manual.
-  - *Consumption Breakdown:* Quien gasta más tokens, qué departamentos usan más la herramienta.
-- [ ] **User View (Personal Insights):**
-  - Historial personal de eficiencia.
-  - "Mis Top Prompts" o casos más frecuentes analizados.
+- [ ] **SuperAdmin View (Platform Health):** MAU, MRR, Latencia LLM.
+- [ ] **Tenant Admin View (Organization ROI):** Ahorro de tiempo estimado.
+- [ ] **User View (Personal Insights):** Eficiencia personal.
 
 ### 24.3 Proactive Anomaly Detection
 - [ ] **Security Alerts:** Notificación inmediata si se detecta un patrón de acceso inusual (geo-imposible, fuerza bruta).

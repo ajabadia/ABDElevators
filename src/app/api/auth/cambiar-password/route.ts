@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { logEvento } from '@/lib/logger';
 import { ChangePasswordSchema } from '@/lib/schemas';
@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
         // REGLA #2: Zod Validation BEFORE Processing
         const validated = ChangePasswordSchema.parse(body);
 
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+        const db = await connectAuthDB();
+        const user = await db.collection('users').findOne({ email: session.user.email });
 
         if (!user) {
             throw new NotFoundError('Usuario no encontrado');
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         // Hashear nueva contraseña
         const hashedPassword = await bcrypt.hash(validated.newPassword, 10);
 
-        await db.collection('usuarios').updateOne(
+        await db.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {

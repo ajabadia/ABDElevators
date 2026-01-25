@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { v2 as cloudinary } from 'cloudinary';
@@ -33,10 +33,12 @@ export async function DELETE(
         }
 
         const { id } = await params;
-        const db = await connectDB();
-        const user = await db.collection('usuarios').findOne({ email: session.user.email });
+
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
         if (!user) throw new NotFoundError('Usuario no encontrado');
 
+        const db = await connectDB();
         const doc = await db.collection('documentos_usuarios').findOne({
             _id: new ObjectId(id),
             usuario_id: user._id.toString() // Seguridad: solo el dueño puede borrar

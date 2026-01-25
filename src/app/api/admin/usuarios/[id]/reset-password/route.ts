@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
@@ -21,14 +21,14 @@ export async function POST(
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
         const { id } = await params;
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
-        const usuario = await db.collection('usuarios').findOne({
+        const usuario = await db.collection('users').findOne({
             _id: new ObjectId(id)
         });
 
@@ -40,7 +40,7 @@ export async function POST(
         const tempPassword = `temp${Math.random().toString(36).slice(-8)}`;
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        await db.collection('usuarios').updateOne(
+        await db.collection('users').updateOne(
             { _id: new ObjectId(id) },
             {
                 $set: {

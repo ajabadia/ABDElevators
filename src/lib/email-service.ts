@@ -355,3 +355,87 @@ export async function sendInvitationEmail(params: {
         html,
     });
 }
+
+/**
+ * Envía un email de confirmación cuando se activa el MFA
+ */
+export async function sendMfaEnabledEmail(params: {
+    to: string;
+    userName: string;
+}): Promise<void> {
+    const { to, userName } = params;
+
+    const resend = getResend();
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none; }
+        .success-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .footer { text-align: center; color: #64748b; font-size: 12px; margin-top: 30px; }
+        .security-badge { display: inline-block; background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 9999px; font-weight: 600; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">ABD RAG Platform</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Seguridad de Cuenta</p>
+        </div>
+        
+        <div class="content">
+            <div class="success-box">
+                <h2 style="margin-top: 0; color: #166534;">✅ MFA Activado</h2>
+                <p style="margin: 0; font-size: 16px;">
+                    La autenticación de dos factores ha sido activada correctamente en tu cuenta.
+                </p>
+            </div>
+
+            <p>Hola ${userName},</p>
+            
+            <p>
+                Tu cuenta ahora cuenta con una capa adicional de seguridad. A partir de ahora, se te solicitará un código generado por tu aplicación de autenticación cada vez que inicies sesión.
+            </p>
+
+            <p>
+                <strong>¿Qué significa esto para ti?</strong>
+            </p>
+            <ul>
+                <li>Mayor protección contra accesos no autorizados.</li>
+                <li>Cumplimiento con estándares de seguridad enterprise.</li>
+                <li>Tranquilidad al saber que tus datos están mejor protegidos.</li>
+            </ul>
+
+            <div style="background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px; color: #475569;">
+                    Recuerda guardar tus <strong>códigos de recuperación</strong> en un lugar seguro. Si pierdes el acceso a tu dispositivo, estos códigos serán la única forma de recuperar tu cuenta.
+                </p>
+            </div>
+
+            <p style="font-size: 14px; color: #64748b;">
+                Si NO has activado esto tú mismo, por favor <strong>contacta a nuestro equipo de seguridad de inmediato</strong> respondiendo a este correo o a través del centro de soporte.
+            </p>
+
+            <div class="footer">
+                <p>© 2026 ABD RAG Platform. Todos los derechos reservados.</p>
+                <div class="security-badge">Cifrado de Extremo a Extremo</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'ABD RAG Platform <noreply@abdrag.com>',
+        to,
+        subject: '🛡️ MFA Activado - ABD RAG Platform',
+        html,
+    });
+}
