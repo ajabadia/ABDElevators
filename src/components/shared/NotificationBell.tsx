@@ -69,11 +69,12 @@ export function NotificationBell() {
         }
     };
 
-    const getIcon = (tipo: string) => {
-        switch (tipo) {
-            case 'ALERTA': return 'text-rose-500';
-            case 'WORKFLOW': return 'text-blue-500';
-            case 'SOPORTE': return 'text-amber-500';
+    const getIcon = (type: string) => {
+        switch (type) {
+            case 'RISK_ALERT': return 'text-rose-500';
+            case 'ANALYSIS_COMPLETE': return 'text-blue-500';
+            case 'SECURITY_ALERT': return 'text-amber-500';
+            case 'BILLING_EVENT': return 'text-purple-500';
             default: return 'text-slate-500';
         }
     };
@@ -141,18 +142,18 @@ export function NotificationBell() {
                                                 className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative"
                                             >
                                                 <div className="flex gap-3">
-                                                    <div className={cn("mt-1 shrink-0 w-2 h-2 rounded-full", getIcon(n.tipo))} />
+                                                    <div className={cn("mt-1 shrink-0 w-2 h-2 rounded-full", getIcon(n.type))} />
                                                     <div className="flex-1 space-y-1">
                                                         <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                                                            {n.titulo}
+                                                            {n.title}
                                                         </p>
                                                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                                                            {n.mensaje}
+                                                            {n.message}
                                                         </p>
                                                         <div className="flex items-center justify-between pt-1">
                                                             <span className="text-[10px] text-slate-400 flex items-center gap-1">
                                                                 <Clock size={10} />
-                                                                {formatDistanceToNow(new Date(n.creado), { addSuffix: true, locale: es })}
+                                                                {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: es })}
                                                             </span>
                                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 {n.link && (
