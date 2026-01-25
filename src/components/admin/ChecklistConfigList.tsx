@@ -19,10 +19,19 @@ export const ChecklistConfigList: React.FC = () => {
         setLoading(true);
         try {
             const res = await fetch('/api/admin/configs-checklist');
+
             if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.message || 'Error al obtener configuraciones');
+                let errMessage = 'Error al obtener configuraciones';
+                try {
+                    const errData = await res.json();
+                    if (errData.message) errMessage = errData.message;
+                } catch (e) {
+                    // Si falla el parseo JSON (ej: error 500 HTML), usamos el status text
+                    errMessage = `Error ${res.status}: ${res.statusText}`;
+                }
+                throw new Error(errMessage);
             }
+
             const data = await res.json();
             setConfigs(data.configs);
             setError(null);

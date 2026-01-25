@@ -97,6 +97,14 @@ export class NotificationService {
         }
     }
 
+    /**
+     * Helper for migration scripts to seed in-app notifications directly.
+     */
+    static async notifyInApp(payload: NotificationPayload, correlacionId?: string): Promise<string> {
+        // En este contexto, solo persistimos como 'read: false'
+        return await this.persistNotification(payload);
+    }
+
     // --- Private Helpers ---
 
     private static async getTenantConfig(tenantId: string): Promise<any> {
