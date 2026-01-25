@@ -74,7 +74,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         id: user._id.toString(),
                         email: user.email,
                         name: user.nombre,
-                        role: user.rol, // ADMIN | TECNICO | INGENIERIA
+                        role: user.rol, // Acting role
+                        baseRole: user.rol, // Permanent role from DB
                         tenantId: user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant',
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
@@ -105,6 +106,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (user) {
                 token.id = user.id as string;
                 token.role = user.role as string;
+                token.baseRole = user.baseRole as string;
                 token.tenantId = user.tenantId as string;
                 token.industry = user.industry as string;
                 token.activeModules = (user.activeModules as string[]) || [];
@@ -127,6 +129,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
+                session.user.baseRole = token.baseRole as string;
                 session.user.tenantId = token.tenantId as string;
                 session.user.industry = token.industry as string;
                 session.user.activeModules = token.activeModules as string[];

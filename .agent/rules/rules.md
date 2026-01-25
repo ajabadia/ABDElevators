@@ -6,7 +6,6 @@ trigger: always_on
 
 Este documento es tu **prompt de sistema** para pasar a Cursor, Antigrávity, o Claude cuando generes código para el proyecto RAG Ascensores.
 
-Cópialo completo en el chat o crea un `.cursor/rules` file.
 
 ---
 

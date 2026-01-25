@@ -47,8 +47,31 @@ export async function POST(req: NextRequest) {
         const textBuffer = Buffer.from(await file.arrayBuffer());
         const pedidoText = await extractTextFromPDF(textBuffer);
         const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const industry = (session.user as any).industry || 'ELEVATORS';
+        const ingestOnly = formData.get('ingestOnly') === 'true';
 
-        // 2. IA: Extraer modelos detectados
+        if (ingestOnly) {
+            // Guardado Rápido sin Análisis (para el agente SSE posterior)
+            const { collection } = await getTenantCollection('pedidos');
+            const insertResult = await collection.insertOne({
+                numero_pedido: file.name.split('.')[0],
+                nombre_archivo: file.name,
+                pdf_texto: pedidoText, // Importante para el agente SSE
+                fecha_analisis: new Date(),
+                estado: 'ingresado',
+                tenantId,
+                creado: new Date(),
+                correlacion_id
+            });
+
+            return NextResponse.json({
+                success: true,
+                pedido_id: insertResult.insertedId,
+                correlacion_id
+            });
+        }
+
+        // 2. IA: Extraer modelos detectados (Flujo Síncrono Tradicional)
         const modelosDetectados = await extractModelsWithGemini(pedidoText, tenantId, correlacion_id);
 
         // 3. RAG: Para cada modelo, buscar contexto relevante
@@ -68,7 +91,6 @@ export async function POST(req: NextRequest) {
             .map(r => `Componente ${r.modelo}: ${r.contexto_rag.map((c: any) => c.texto).join(' ')}`)
             .join('\n');
 
-        const industry = (session.user as any).industry || 'ELEVATORS';
         const riesgosDetectados = await RiskService.analyzeRisks(
             pedidoText,
             consolidatedContext,

@@ -40,7 +40,8 @@ export async function performTechnicalSearch(
     query: string,
     tenantId: string,
     correlacion_id: string,
-    limit = 5
+    limit = 5,
+    industry: string = 'ELEVATORS'
 ): Promise<RagResult[]> {
     PerformTechnicalSearchSchema.parse({ query, correlacion_id, limit });
     const inicio = Date.now();
@@ -55,18 +56,30 @@ export async function performTechnicalSearch(
         });
 
         const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
-            collection: collection as any, // LangChain internals require this cast unfortunately but we keep it minimal
+            collection: collection as any,
             indexName: "vector_index",
             textKey: "texto_chunk",
             embeddingKey: "embedding",
         });
 
-        // REGLA: Usar MMR para evitar fragmentos redundantes (Estudio de Optimización F5)
-        // MMR balancea relevancia con diversidad.
+        // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
+        const filter = {
+            $and: [
+                { estado: { $ne: "obsoleto" } },
+                { industry: industry },
+                {
+                    $or: [
+                        { tenantId: "global" },
+                        { tenantId: tenantId }
+                    ]
+                }
+            ]
+        };
+
         const results = await vectorStore.maxMarginalRelevanceSearch(query, {
             k: limit,
-            fetchK: 20, // Recuperar 20 candidatos para re-rankear por diversidad
-            filter: { "estado": { "$ne": "obsoleto" } }
+            fetchK: 20,
+            filter: filter as any
         });
 
         // Tracking de uso (Búsqueda Vectorial)
@@ -125,6 +138,81 @@ export async function performTechnicalSearch(
 }
 
 /**
+ * Búsqueda Multilingüe Avanzada (Phase 21.1).
+ * Utiliza BGE-M3 para buscar en el espacio semántico unificado EN/ES/DE/IT/FR.
+ * Requiere que los documentos hayan sido indexados con Dual-Indexing.
+ */
+export async function performMultilingualSearch(
+    query: string,
+    tenantId: string,
+    correlacion_id: string,
+    limit = 5
+): Promise<RagResult[]> {
+    const inicio = Date.now();
+    try {
+        const { multilingualService } = await import('@/lib/multilingual-service');
+        const db = await connectDB();
+        const collection = db.collection('document_chunks');
+
+        // Generar vector con BGE-M3
+        const queryVector = await multilingualService.generateEmbedding(query);
+
+        // Búsqueda vectorial explícita en Atlas usando el índice secundario 'vector_index_multilingual'
+        // (Nota: Debes crear este índice en Atlas apuntando a 'embedding_multilingual')
+        const results = await collection.aggregate([
+            {
+                "$vectorSearch": {
+                    "index": "vector_index_multilingual",
+                    "path": "embedding_multilingual",
+                    "queryVector": queryVector,
+                    "numCandidates": limit * 10,
+                    "limit": limit,
+                    "filter": {
+                        "tenantId": { "$in": ["global", tenantId] }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "texto_chunk": 1,
+                    "origen_doc": 1,
+                    "tipo_componente": 1,
+                    "modelo": 1,
+                    "score": { "$meta": "vectorSearchScore" }
+                }
+            }
+        ]).toArray();
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'RAG_SERVICE',
+            accion: 'MULTILINGUAL_SEARCH_SUCCESS',
+            mensaje: `Búsqueda BGE-M3 para "${query}"`,
+            correlacion_id,
+            tenantId,
+            detalles: { hits: results.length }
+        });
+
+        return results.map((doc: any) => ({
+            texto: doc.texto_chunk,
+            source: doc.origen_doc,
+            score: doc.score,
+            tipo: doc.tipo_componente,
+            modelo: doc.modelo
+        }));
+
+    } catch (error) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'RAG_SERVICE',
+            accion: 'MULTILINGUAL_SEARCH_ERROR',
+            mensaje: error instanceof Error ? error.message : 'Unknown error',
+            correlacion_id
+        });
+        return []; // Fallback a vacío si falla el modelo pesado
+    }
+}
+/**
  * Búsqueda vectorial PURA optimizada para velocidad.
  * NO usa MMR para garantizar SLA < 200ms.
  * Ideal para navegación técnica rápida por el usuario.
@@ -133,7 +221,7 @@ export async function pureVectorSearch(
     query: string,
     tenantId: string,
     correlacion_id: string,
-    options: { limit?: number; min_score?: number } = {}
+    options: { limit?: number; min_score?: number; industry?: string } = {}
 ): Promise<RagResult[]> {
     PureVectorSearchSchema.parse({ query, correlacion_id, ...options });
     const { limit = 5, min_score = 0.6 } = options;
@@ -155,11 +243,25 @@ export async function pureVectorSearch(
             embeddingKey: "embedding",
         });
 
+        // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
+        const filter = {
+            $and: [
+                { estado: { $ne: "obsoleto" } },
+                { industry: options.industry || 'ELEVATORS' },
+                {
+                    $or: [
+                        { tenantId: "global" },
+                        { tenantId: tenantId }
+                    ]
+                }
+            ]
+        };
+
         // Búsqueda directa por similitud (más rápida que MMR)
         const resultsWithScore = await vectorStore.similaritySearchWithScore(
             query,
             limit,
-            { "estado": { "$ne": "obsoleto" } }
+            filter as any
         );
 
         // Tracking de uso (Búsqueda Vectorial)

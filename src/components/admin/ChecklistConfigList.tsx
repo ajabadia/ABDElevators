@@ -27,12 +27,13 @@ export const ChecklistConfigList: React.FC = () => {
             setConfigs(data.configs);
             setError(null);
         } catch (err: any) {
-            setError(err.message);
+            const errorMessage = err.message || 'Error desconocido';
+            setError(errorMessage);
             await logEventoCliente({
                 nivel: 'ERROR',
                 origen: 'CHECKLIST_CONFIG_UI',
                 accion: 'FETCH_LIST_ERROR',
-                mensaje: err.message,
+                mensaje: errorMessage,
                 correlacion_id: crypto.randomUUID()
             });
         } finally {

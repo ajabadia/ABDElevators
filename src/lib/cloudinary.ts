@@ -139,6 +139,45 @@ export async function uploadPDFToCloudinary(
 }
 
 /**
+ * Sube un asset de branding (logo, favicon)
+ */
+export async function uploadBrandingAsset(
+    buffer: Buffer,
+    filename: string,
+    tenantId: string,
+    assetType: 'logo' | 'favicon'
+): Promise<{ url: string; publicId: string; secureUrl: string }> {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: 'image',
+                folder: `abd-elevators/tenants/${tenantId}/branding`,
+                public_id: `${assetType}_${Date.now()}`,
+                transformation: assetType === 'logo'
+                    ? [{ width: 800, height: 400, crop: 'limit' }, { quality: 'auto', fetch_format: 'auto' }]
+                    : [{ width: 64, height: 64, crop: 'fill' }, { quality: 'auto', fetch_format: 'auto' }]
+            },
+            async (error, result) => {
+                if (error) {
+                    reject(error);
+                } else if (result) {
+                    await UsageService.trackStorage(tenantId, buffer.length, `cloudinary-branding-${assetType}`);
+                    resolve({
+                        url: result.url,
+                        publicId: result.public_id,
+                        secureUrl: result.secure_url,
+                    });
+                } else {
+                    reject(new Error('Upload failed without error'));
+                }
+            }
+        );
+
+        uploadStream.end(buffer);
+    });
+}
+
+/**
  * Elimina un archivo de Cloudinary
  */
 export async function deleteFromCloudinary(publicId: string, resourceType: 'raw' | 'image' = 'raw'): Promise<void> {

@@ -147,23 +147,43 @@ export function UserNav() {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-56 p-2 ml-1">
                             <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Cambiar Nivel de Permisos</DropdownMenuLabel>
-                            {['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA'].map((role) => (
-                                <DropdownMenuItem
-                                    key={role}
-                                    disabled={!isSuperAdmin && user.role !== role}
-                                    onClick={() => handleSwitchContext(user.tenantId, role, user.industry)}
-                                    className={cn(
-                                        "flex justify-between items-center rounded-md px-2 py-2 cursor-pointer mb-1 last:mb-0",
-                                        user.role === role && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                                    )}
-                                >
-                                    <span className="text-sm">{role}</span>
-                                    {user.role === role && <Check className="h-4 w-4" />}
-                                </DropdownMenuItem>
-                            ))}
-                            {!isSuperAdmin && (
+                            {['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA'].map((role) => {
+                                // Determinamos si puede cambiar basándonos en su rol REAL (baseRole)
+                                const isRealSuperAdmin = user.baseRole === 'SUPER_ADMIN';
+                                const isRealAdmin = user.baseRole === 'ADMIN';
+
+                                const canSwitch = isRealSuperAdmin ||
+                                    (isRealAdmin && role !== 'SUPER_ADMIN') ||
+                                    (user.role === role);
+
+                                return (
+                                    <DropdownMenuItem
+                                        key={role}
+                                        disabled={!canSwitch}
+                                        onClick={() => handleSwitchContext(user.tenantId, role, user.industry)}
+                                        className={cn(
+                                            "flex justify-between items-center rounded-md px-2 py-2 cursor-pointer mb-1 last:mb-0",
+                                            user.role === role && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm">{role}</span>
+                                            {user.baseRole === role && (
+                                                <span className="text-[8px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded uppercase font-bold">Base</span>
+                                            )}
+                                        </div>
+                                        {user.role === role && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                );
+                            })}
+                            {user.baseRole !== user.role && (
+                                <p className="text-[9px] text-teal-600 dark:text-teal-400 px-2 mt-2 leading-tight font-medium">
+                                    Estás en modo simulación. Puedes volver a tu rol original en cualquier momento.
+                                </p>
+                            )}
+                            {user.baseRole !== 'SUPER_ADMIN' && user.baseRole !== 'ADMIN' && (
                                 <p className="text-[9px] text-slate-400 px-2 mt-2 leading-tight">
-                                    Sólo administradores globales pueden alternar perfiles libremente.
+                                    Sólo los administradores pueden alternar perfiles.
                                 </p>
                             )}
                         </DropdownMenuSubContent>

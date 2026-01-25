@@ -8,12 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RagReportView } from "@/components/tecnico/RagReportView";
 import { useLabels } from "@/hooks/use-labels";
+import { AgentTraceViewer } from "@/components/agente/AgentTraceViewer";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PedidosPage() {
     const labels = useLabels();
+    const { toast } = useToast();
     const [isUploading, setIsUploading] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
     const [file, setFile] = useState<File | null>(null);
+    const [currentPedidoId, setCurrentPedidoId] = useState<string | null>(null);
+    const [showTrace, setShowTrace] = useState(false);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -21,12 +26,13 @@ export default function PedidosPage() {
         }
     };
 
-    const runAnalysis = async () => {
+    const ingestAndStartAnalysis = async () => {
         if (!file) return;
 
         setIsUploading(true);
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("ingestOnly", "true"); // New flag for fast ingest
 
         try {
             const resp = await fetch("/api/tecnico/pedidos/analyze", {
@@ -34,16 +40,43 @@ export default function PedidosPage() {
                 body: formData,
             });
             const data = await resp.json();
-            if (data.success) {
-                setAnalysisResult(data);
+
+            if (data.success && data.pedido_id) {
+                setCurrentPedidoId(data.pedido_id);
+                setShowTrace(true);
+                toast({ title: "Documento procesado", description: "Iniciando cerebro agéntico para análisis técnico..." });
             } else {
-                alert(`Error en el análisis de ${labels.singular}: ` + data.message);
+                toast({
+                    title: "Error",
+                    description: data.message || "No se pudo procesar el documento",
+                    variant: "destructive"
+                });
             }
         } catch (err) {
             console.error(err);
-            alert("Error fatal conectando con el servidor técnico");
+            toast({ title: "Error fatal", description: "Fallo de conexión", variant: "destructive" });
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleAnalysisComplete = async () => {
+        if (!currentPedidoId) return;
+
+        // Al terminar el agente, refrescamos los datos finales para mostrar el informe
+        try {
+            const res = await fetch(`/api/pedidos/${currentPedidoId}`);
+            const data = await res.json();
+            if (data.pedido) {
+                setAnalysisResult({
+                    pedido_id: data.pedido.numero_pedido,
+                    modelos: data.pedido.modelos_detectados || [],
+                    riesgos: data.pedido.metadata?.risks || []
+                });
+                setShowTrace(false);
+            }
+        } catch (err) {
+            toast({ title: "Error", description: "No se pudieron recuperar los resultados finales", variant: "destructive" });
         }
     };
 
@@ -108,19 +141,28 @@ export default function PedidosPage() {
                                     <p className="text-xs text-slate-500 mt-1 uppercase font-bold">PDF de {labels.singular.toLowerCase()} (Max 10MB)</p>
                                 </div>
                                 <Button
-                                    onClick={runAnalysis}
-                                    disabled={!file || isUploading}
+                                    onClick={ingestAndStartAnalysis}
+                                    disabled={!file || isUploading || showTrace}
                                     className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white border-none py-6 text-lg font-bold"
                                 >
                                     {isUploading ? (
                                         <>
                                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                            Analizando con Gemini 2.0...
+                                            Procesando documento...
                                         </>
                                     ) : `Iniciar ${labels.action}`}
                                 </Button>
                             </CardContent>
                         </Card>
+
+                        {showTrace && currentPedidoId && (
+                            <div className="animate-in fade-in zoom-in duration-500">
+                                <AgentTraceViewer
+                                    pedidoId={currentPedidoId}
+                                    onComplete={handleAnalysisComplete}
+                                />
+                            </div>
+                        )}
 
                         <Card className="border-none shadow-lg bg-teal-50/50">
                             <CardContent className="pt-6 space-y-4">

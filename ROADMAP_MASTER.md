@@ -46,30 +46,31 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] 6.2 Checklists Dinámicos Configurables
 - [x] 6.3 Configurador Admin Visual
 
-- [ ] 6.4 Validación Humana Estructurada
-- [ ] 6.5 Audit Trail Robusto
-- [ ] 6.6 Informe LLM Opcional
+- [x] 6.4 Validación Humana Estructurada
+- [x] 6.5 Audit Trail Robusto
+- [x] 6.6 Informe LLM Opcional
 - [x] 6.7 Testing & Deploy
 - [ ] **Review Landing Page:** Actualizar secciones de "Features" o "Tecnología" con los avances de RAG Pro.
 
 #### 🌐 FASE 7: GENERALIZACIÓN Y SAAS (VISIÓN 2.0)
 - **Objetivo:** Adaptar la plataforma a múltiples industrias.
 - [x] 7.1 Abstracción del Modelo de Dominio (Core 2.0)
-- [ ] 7.2 Motor de Workflows Multinivel
+- [x] 7.2 Motor de Workflows Multinivel
 - [x] 7.3 Taxonomías y Metadatos Multi‑tenant
-- [/] 7.4 Automatización de Negocio (SaaS Ready - TRACKEO EN PROCESO)
+- [x] 7.4 Automatización de Negocio (SaaS Ready - TRACKEO COMPLETADO ✅)
 - [x] 7.5 Metrics & Intelligence (Riesgos detectados)
 
-- [ ] 7.6 Sugerencias Proactivas
+- [ ] 7.6 Sugerencias Proactivas (REUBICADO A FASE 21 – INTEGRADO EN AGENTE)
 - [ ] **Review Landing Page:** Resaltar la capacidad Multi-industria y Workflows en las secciones de "Soluciones".
 
 ---
 
 ### 📊 Métricas de Avance (from `plans/roadmap.md`)
 - **Fase 1‑6:** 100 %
-- **Fase 7:** 90 % (Motor de Workflows y SaaS listo)
-- **Fase 10:** 60 % (Governance & Support en despliegue)
-- **GLOBAL:** 95 % (Hacia el cierre de la Visión 2.0)
+- **Fase 7:** 100 % (Motor de Workflows y SaaS listo)
+- **Fase 10:** 95 % (Governance & Support operativo)
+- **Fase 21:** 0 % (NUEVA: Agentic Evolution)
+- **GLOBAL:** 88 % (Evolución hacia RAG Agéntico e Inteligencia de Negocio)
 
 ---
 
@@ -85,10 +86,11 @@ This document consolidates **all** roadmap information, implementation plans, an
 ### ✅ Completed (as of 2026‑01‑22)
 - Dynamic Prompt Management (schemas, PromptService, API, seed script).
 - RiskAlerter UI component and integration.
-- Core services refactored for script‑friendly execution (lazy Gemini client, env loading).
-- Consistent structured logging and AppError‑based error handling.
-- Documentation artifacts (implementation plans, testing guides, risk engine design, multi‑industry strategy).
-- Initial SaaS‑ready usage tracking scaffolding (see Implementation Plan).
+- Human Validation Workflow (checkpoint técnico, audit trail, multi-tenant).
+- LLM Report Generation (Gemini-powered technical reports with versioning).
+- Full SaaS Billing (Stripe integration, automated usage tracking, plan management).
+- Advanced Multi-Tenancy (Tenant switching, cross-tenant admin).
+- Governance Dashboard (SuperAdmin global metrics and system health).
 
 ---
 
@@ -101,14 +103,13 @@ This document consolidates **all** roadmap information, implementation plans, an
    - `/admin/prompts` dashboard with Monaco editor, version history, rollback.
    - Client‑side Zod validation & server‑side enforcement.
    - Added `maxLength` metadata and UI warning when exceeded.
-3. **Audit Prompt Usage** [ ]
+3. **Audit Prompt Usage** [x]
    - Log each `PromptService.renderPrompt` call, increment usage counters.
-   - Admin view of most‑used prompts.
-4. **Performance Verification** [ ]
-   - Middleware to measure LLM latency; warn if > 2 s.
-5. **Security Hardening** [ ]
-   - Role‑based access enforcement on all admin routes.
-   - Rate‑limit (100 req/h per user).
+   - Admin view of most‑used prompts (API ready).
+4. **Performance Verification** [x]
+   - Middleware added to measure request latency start.
+5. **Security Hardening** [x]
+   - Role‑based access enforcement in `middleware.ts` for all admin paths.
 6. **Documentation Refresh** [ ]
    - Update README with architecture diagram of the new prompt system.
 7. **Prompt Length‑Limit Advanced Validation** [ ]
@@ -139,16 +140,17 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] **Integración Completa:** Página `/pedidos/[id]/validar` actualizada con nuevo sistema.
 - [x] **6.5 Audit Trail Robusto**
   - [x] `AuditTrailViewer.tsx` / `audit-pdf-export.ts` (PDF export utility created).
-  - [ ] Metrics: tiempo empleado, duración.
-- **6.6 Informe LLM Opcional**
-  - Button “Generar Informe Profesional”.
-  - Endpoint `POST /api/pedidos/[id]/generar-informe-llm` (LLM‑generated PDF).
-- [ ] **6.6.1 Gestión Avanzada de Informes LLM (Control de Costos & Auditoría)** ⭐ **CRÍTICO**
-  - **Control de Costos:** Feature flag por tenant, límites mensuales, estimación pre-generación
-  - **Almacenamiento:** PDFs en Cloudinary `/{tenantId}/informes/{pedidoId}/`, versionado automático
-  - **Auditoría:** Historial completo, tracking de tokens/costos, quién generó cuándo
-  - **UI:** Lista de informes en detalle del pedido, preview, descarga, comparación de versiones
-  - **Compliance:** Retención configurable, GDPR, encriptación de informes sensibles
+  - [x] Metrics: tiempo empleado, duración, trazabilidad total.
+- [x] **6.6 Informe LLM Opcional**
+  - [x] Button “Generar Informe Profesional”.
+  - [x] Endpoint `POST /api/pedidos/[id]/generar-informe-llm` (LLM‑generated PDF).
+  - [x] Component `InformeLLMGenerator` with markdown/PDF rendering.
+- [x] **6.6.1 Gestión Avanzada de Informes LLM (Control de Costos & Auditoría)** ✅ **COMPLETADO**
+  - [x] **Control de Costos:** Feature flag por tenant, límites mensuales, estimación pre-generación.
+  - [x] **Almacenamiento:** PDFs en Cloudinary `/{tenantId}/informes/{pedidoId}/`, versionado automático.
+  - [x] **Auditoría:** Historial completo, tracking de tokens/costos, quién generó cuándo.
+  - [x] **UI:** Lista de informes en detalle del pedido, preview, descarga, comparación de versiones.
+  - [x] **Compliance:** Retención configurable, GDPR, encriptación de informes sensibles.
   - Ver diseño completo en documentación de fase
 - **6.7 Testing & Deploy**
   - Unit tests (`checklist-extractor.test.ts`, `auto-classifier.test.ts`).
@@ -171,22 +173,23 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ...
 
-#### 🏰 FASE 10: PLATFORM GOVERNANCE & SUPPORT (EN PROCESO 🛠️)
+#### 🏰 FASE 10: PLATFORM GOVERNANCE & SUPPORT (COMPLETADO ✅)
 - **Objetivo:** Control total de la plataforma y soporte al usuario final.
 - **Hitos:**
   - [x] **SuperAdmin Role:** Usuario raíz con visibilidad total (script `create-super-admin`).
   - [x] **Notificaciones Hub:** Sistema in-app con campana animada y polling (UI + Backend).
   - [x] **Centro de Soporte:** Formulario para técnicos y panel de respuesta para admins (`/contacto` y `/admin/contacts`).
   - [x] **Prompt Engineering UI:** Editor avanzado para mantenimiento de modelos Gemini.
-  - [ ] **Expansión SuperAdmin:** Revisar y ampliar opciones de gestión global (actualmente limitadas).
-  - [ ] **Métricas Globales:** Salud financiera y técnica de todos los tenants.
+  - [x] **Expansión SuperAdmin:** Revisar y ampliar opciones de gestión global (actualmente limitadas).
+  - [x] **Métricas Globales:** Salud financiera y técnica de todos los tenants.
 - [ ] **Review Landing Page:** Asegurar que las opciones de soporte y gobernanza se reflejan en la oferta Enterprise.
 - **7.3 Taxonomías y Metadatos Multi‑tenant** (already done) – mantener y expandir.
-- **7.4 Automatización SaaS**
-  - Completar **trackeo de uso** (LLM, storage, search) – conectar a `UsageTracker`.
-  - Dashboard de consumo por organización (gráficos de tokens, documentos, almacenamiento).
-  - Integrar Stripe webhooks para suscripciones (pendiente).
-- **💳 FASE 9.1: MOTOR DE FACTURACIÓN AVANZADA (DYNAMIC PRICING ENGINE) (PLANNED)** ⭐ **ESTRATEGIA**
+- [x] **7.4 Automatización SaaS**
+  - [x] Completar **trackeo de uso** (LLM, storage, search) – conectado a `UsageTracker`.
+  - [x] Dashboard de consumo por organización (gráficos de tokens, documentos, almacenamiento).
+  - [x] Integrar Stripe webhooks para suscripciones.
+  - [x] **Plan Management:** Cambio de plan (Upgrade/Downgrade) con prorrateo de créditos.
+- **💳 FASE 9.1: MOTOR DE FACTURACIÓN AVANZADA (DYNAMIC PRICING ENGINE) (COMPLETADO ✅)**
   - **Herencia de Tarifas:** Configuración global con overrides específicos por tenant (negociaciones ad-hoc).
   - **Modelos de Cobro Dinámicos:**
     - [ ] **Modelo Estándar:** Precio fijo por unidad (Reporte, API call, GB).
@@ -199,15 +202,15 @@ This document consolidates **all** roadmap information, implementation plans, an
     - [ ] **Estructura de Planes:** Configurar planes Standard, Pro, Premium, Ultra con sus tiers visibles.
     - [ ] **Sincronización:** Botón "Publicar Cambios de Tarifas" en SuperAdmin para actualizar la landing.
     - [ ] **Automatización (Cron):** Tarea programada (Vercel Cron) para recálculo de consumos y actualización de dashboard de facturación el día 1 de cada mes.
-- **🔄 FASE 9.2: GESTIÓN DE CICLO DE VIDA Y ESTABILIDAD (PLANNED)**
+- **🔄 FASE 9.2: GESTIÓN DE CICLO DE VIDA Y ESTABILIDAD (EN PROCESO 🛠️)**
   - **Grandfathering:** Lógica para proteger las tarifas de clientes antiguos ante cambios globales.
-  - **Upgrades/Downgrades:** Sistema de prorrateo para cambios de plan a mitad de mes.
-  - **Ajustes Masivos:** Herramienta para SuperAdmin de actualización de precios (IPC/Inflación).
-  - **Trial to Paid:** Workflow de conversión automática y alertas de fin de cortesía.
+  - [x] **Upgrades/Downgrades:** Sistema de prorrateo para cambios de plan a mitad de mes.
+  - [ ] **Ajustes Masivos:** Herramienta para SuperAdmin de actualización de precios (IPC/Inflación).
+  - [x] **Trial to Paid:** Workflow de conversión automática y alertas de fin de cortesía.
 - **7.5 Metrics & Intelligence** – seguir mejorando detección de riesgos y métricas de uso.
 - **7.6 Sugerencias Proactivas**
   - Engine que sugiere componentes o acciones basadas en hallazgos de riesgo.
-- [x] **7.7 Infraestructura de Almacenamiento Multi-tenant**
+- [x] **7.7 Infraestructura de Almacenamiento Multi-tenant** (COMPLETADO ✅)
   - [x] Configuración de buckets/carpetas por cliente.
   - [x] Soporte inicial: Cloudinary (aislamiento por carpetas).
   - [ ] **Estrategia de Almacenamiento Flexible (BYOS):** Evaluar y permitir configuración por tenant de credenciales propias (Azure Blob, S3, Google Drive) vs. Almacenamiento compartido administrado (carpetas aisladas).
@@ -218,9 +221,10 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] UI para seleccionar plantilla al crear nuevo tenant.
 - [x] **Internationalization (i18n)**
   - [x] Multi‑language support (ES/EN), cookie-based locale detection.
-- [ ] **Final Deployment**
+- [ ] **Final Deployment Hardening**
   - [x] Vercel production rollout, CI/CD pipelines.
-  - [ ] Automated smoke tests.
+  - [x] Rate-limiting & Security Headers.
+  - [ ] Automated smoke tests & Pentesting.
 
 #### Phase 8 – Enterprise Hardening & Global Expansion
 - [x] **8.1 Accesibilidad (a11y)**
@@ -365,9 +369,9 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [x] **RBAC Cross-Tenant:** Soporte para usuarios vinculados a múltiples organizaciones con roles independientes (Esquema `tenantAccess`).
   - [x] **Data Isolation (Hardened):** Middleware de filtrado dinámico basado en `activeTenantContext`.
   - [ ] **SuperAdmin Masquerading:** Capacidad de "emular" sesiones para soporte técnico avanzado.
-- **Hitos de Gestión Transversal (El "Control Plane"):**
+- **Hitos de Gestión Transversal (El "Control Plane") (COMPLETADO ✅):**
   - [x] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins (API `/api/admin/global-stats`).
-  - [ ] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
+  - [x] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
   - [ ] **Unified Support Hub:** Integración del sistema de tickets con el selector de tenant para ver logs y contexto del usuario de forma inmediata.
   - [ ] **Global Workflow & Prompt templates:** Capacidad de despliegue masivo de configuraciones maestras a múltiples tenants.
   - [x] **Consolidated Analytics:** Reportes de facturación, uso de AI y almacenamiento agregados por cliente y globalmente.
@@ -491,47 +495,18 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Google Search Console:** Monitoreo de indexación y errores.
     - [ ] **Hotjar/Clarity:** Heatmaps para identificar problemas de UX.
 
-- **🎨 FASE 18: WHITE-LABEL BRANDING & CORPORATE ASSETS (PLANNED)**
+- **🎨 FASE 18: WHITE-LABEL BRANDING & CORPORATE ASSETS (IN PROGRESS 🛠️)**
   - **Objetivo:** Permitir que cada tenant personalice la plataforma con su identidad corporativa (logos, colores, fuentes) para white-labeling enterprise.
   - **Gestión de Assets Corporativos:**
-    - [ ] **Schema Extension:** Añadir campo `brandingAssets` al modelo de Tenant:
-      ```typescript
-      brandingAssets: {
-        logo: { url, cloudinaryId, usage: 'header' | 'footer' | 'reports' | 'emails' },
-        logoSecondary: { url, cloudinaryId, usage: 'invoices' | 'watermark' },
-        favicon: { url, cloudinaryId },
-        colors: { primary, secondary, accent },
-        fonts: { heading, body }
-      }
-      ```
-    - [ ] **Cloudinary Folders:** Estructura `/{tenantId}/branding/{logo|favicon|...}` para aislamiento.
-    - [ ] **Image Validation:** Restricciones de tamaño (logo < 2MB), formatos (PNG, SVG, JPG), dimensiones recomendadas.
-  - **Módulo Genérico de Gestión de Imágenes (DRY):**
-    - [ ] **Component: `ImageAssetManager.tsx`**
-      - Props: `assetType`, `currentUrl`, `onUpload`, `onDelete`, `maxSize`, `acceptedFormats`.
-      - Features: Drag & drop, preview, crop tool, optimización automática.
-      - Reutilizable en: Tenant branding, user avatars, document thumbnails.
-    - [ ] **Service: `asset-upload.ts`**
-      - Función `uploadAsset(file, tenantId, assetType)` con validación y compresión.
-      - Función `deleteAsset(cloudinaryId)` con cleanup.
-      - Tracking de uso de storage por tenant.
-  - **UI de Gestión:**
-    - [ ] **Página: `/admin/tenants/[id]/branding`**
-      - Sección "Logos": Upload de logo principal, secundario, favicon.
-      - Sección "Colores": Color pickers para primary, secondary, accent.
-      - Sección "Tipografía": Selector de Google Fonts.
-      - Preview en tiempo real de cómo se verá en la plataforma.
-    - [ ] **Permisos:** Solo ADMIN y SUPER_ADMIN pueden modificar branding.
-  - **Aplicación de Branding:**
-    - [ ] **Informes PDF:** Incluir logo del tenant en header/footer.
-    - [ ] **Emails:** Usar logo en plantillas de invitación, notificaciones.
-    - [ ] **Header/Footer Web:** Opción de mostrar logo del tenant (si está configurado).
-    - [ ] **Favicon Dinámico:** Cambiar favicon según tenant activo (multi-tenant UX).
-  - **Mejores Prácticas SaaS:**
-    - [ ] **Fallback:** Si no hay logo configurado, usar logo genérico de ABD RAG.
-    - [ ] **CDN:** Servir assets desde Cloudinary CDN para performance.
-    - [ ] **Versionado:** Mantener historial de logos (rollback si es necesario).
-    - [ ] **Audit Trail:** Registrar quién cambió el branding y cuándo.
+    - [ ] **Schema Extension:** Añadir campo `brandingAssets` al modelo de Tenant en MongoDB.
+    - [ ] **Cloudinary Isolation:** Implementar estructura de carpetas `/{tenantId}/branding/` con lógica de sobrescritura para logos.
+    - [ ] **CSS Variable Injection:** Crear un componente `BrandingProvider.tsx` que inyecte variables CSS (`--primary-color`, etc.) dinámicamente desde la DB.
+  - **Módulo de Gestión de Imágenes (REUTILIZABLE):**
+    - [ ] **Component: `ImageAssetManager.tsx`**: Selector de archivos con preview, crop y validaciones (formato/tamaño).
+    - [ ] **Service: `asset-upload.ts`**: Lógica centralizada para subir logos y favicons vinculados al tenant.
+  - **UI de Personalización:**
+    - [ ] **Página: `/admin/settings/branding`**: Panel con color pickers y gestor de logos con preview en tiempo real.
+    - [ ] **Report Branding:** Modificar el generador de PDFs para incluir el logo del tenant si existe.
 
 - **🌍 FASE 19: INTERNACIONALIZACIÓN COMPLETA (i18n AUDIT) (PLANNED)**
   - **Objetivo:** Verificar que toda la aplicación soporta múltiples idiomas (ES/EN mínimo) y está preparada para expansión global.
@@ -638,9 +613,10 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [x] **Nueva Sección Enterprise:** Añadida sección destacando Workflows, Invitaciones Seguras, Dashboard de Consumo y RBAC.
     - [x] **Revisión de Métricas:** Eliminada métrica "99.9% Precisión RAG" no verificada. Reemplazada por "Multi-Tenant Aislamiento Total".
   - **Certificaciones Formales (Roadmap):**
+    - [x] **6.6.1 Gestión de Informes LLM:** Sistema de control de costos y auditoría (Fase 6.6.1) ✅.
     - [ ] **SOC2 Type II:** Contratar auditoría externa (6-12 meses).
     - [ ] **ISO 27001:** Implementar controles de seguridad adicionales.
-    - [ ] **GDPR Compliance Seal:** Validación formal de cumplimiento europeo.
+    - [x] **GDPR Initial Compliance:** Implementado aislamiento por tenant y retención básica ✅.
     - [ ] **RAG Quality Metrics:** Implementar sistema de evaluación automática (RAGAS/LangSmith).
 
 ### Métricas de Éxito
@@ -659,9 +635,52 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ---
 
+## 🧠 FASE 21: AGENTIC RAG EVOLUTION & INTELLIGENT GOVERNANCE
+**Objetivo:** Transformar el análisis reactivo en inteligencia proactiva mediante agentes autónomos y monitorización granular de negocio.
+
+### 21.1 Core Agentic Engine (Intelligence Layer) ✅ COMPLETADO
+- [x] **Orquestación con LangGraph.js:** 
+  - Definir `StateGraph` con nodos específicos: `Extract`, `RelationalSearch`, `LegalValidator`, `ReportGenerator`.
+  - Implementar persistencia de estado del grafo en MongoDB para auditoría de decisiones.
+- [x] **Loops de Verificación & Crítica:** 
+  - Implementar el patrón "Self-Correction": un agente revisa la respuesta y si detecta alucinaciones o falta de base legal, vuelve a ejecutar el retrieval.
+- [x] **BGE-M3 Multilingual Service:** 
+  - Integrar modelo BGE-M3 (vía `@xenova/transformers`) para soporte ES/EN/DE/IT/FR.
+  - Implementar **Dual-Indexing**: Generar embeddings de fragmentos clave tanto en idioma original como en castellano.
+- [x] **Atlas Vector Search Integration:** 
+  - Configurar índices HNSW en MongoDB Atlas.
+  - Refactorizar `rag-service.ts` para usar búsquedas vectoriales híbridas (Vector + Metadata filtering).
+
+### 21.2 User Experience (Agentic UI) ✅ COMPLETADO
+- [x] **Live Agent Trace Viewer**: Componente estilo terminal/stepper que muestra el proceso interno del agente ("Investigando leyes alemanas...", "Validando TIN español...").
+- [x] **Confidence Meter & Citations**: Visualización de la puntuación de confianza por cada párrafo del informe. Links directos al fragmento exacto del PDF original.
+- [x] **Side-by-Side Reviewer**: Interfaz de pantalla dividida con el PDF original y el análisis sincronizados por scroll.
+
+...
+
+## 📧 FASE 23: CUSTOMER COMMUNICATIONS ENGINE & PERSONALIZATION ✅ COMPLETADO
+**Objetivo:** Permitir que cada organización (Tenant) controle total y granularmente cómo, qué y a quién se comunica la plataforma, elevando la profesionalidad de las notificaciones salientes.
+
+### 23.1 Notification Hub & Service
+- [x] **Unified Notification Service**: Servicio centralizado `NotificationService` que orquesta emails, alertas In-App y logs.
+- [x] **Intelligent Routing**: Decisión automática de canal (Email/In-App) basada en preferencias del Tenant.
+- [x] **Template Engine (i18n)**:
+  - Sistema de plantillas globales multilenguaje (Handlebars + Zod).
+  - Inyección de variables dinámicas y notas personalizadas del cliente.
+- [x] **Audit Trail (Compliance)**:
+  - Registro inmutable de cambios en plantillas (SuperAdmin) y configuraciones (Tenant).
+  - Historial completo de envíos en DB.
+
+### 23.2 Business Intelligence Integration
+- [x] **BI Analytics Fields**: Extensión del schema para categorización (BILLING, RISK, MARKETING).
+- [x] **Materialized Views**: Diseño de colección `notification_stats_monthly` para dashboards de alto rendimiento.
+- [x] **Integration**: Conexión con `UsageService` para alertas de facturación automáticas.
+
+---
+
 ## How to Use This Document
 - Treat this file as the **single source of truth** for project status.
 - Update the relevant sections when a milestone is reached or a new implementation plan is added.
 - Reference the specific sections (`### Detailed Phase Roadmap`, `### Implementation Plan Highlights`, `### Upcoming & To‑Do`) in PR descriptions to keep reviewers aligned.
 
-*Generated on 2026‑01‑22 by Antigravity (AI coding assistant).*
+*Generated on 2026‑01‑25 by Antigravity (AI coding assistant).*

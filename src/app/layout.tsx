@@ -41,6 +41,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
+import BrandingProvider from "@/components/BrandingProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 
@@ -66,9 +67,11 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <SessionProvider session={session}>
-              <SidebarProvider>
-                {children}
-              </SidebarProvider>
+              <BrandingProvider>
+                <SidebarProvider>
+                  {children}
+                </SidebarProvider>
+              </BrandingProvider>
             </SessionProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

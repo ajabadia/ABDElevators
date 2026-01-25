@@ -93,18 +93,29 @@ export async function POST(req: NextRequest) {
         const validatedDocumentoMetadata = DocumentoTecnicoSchema.parse(documentoMetadata);
         await documentosTecnicosCollection.insertOne(validatedDocumentoMetadata);
 
-        // 5.2. Procesar chunks
+        // 5.2. Procesar chunks con Dual-Indexing
+
+        // Cargar Multilingual Service (Lazy load)
+        const { multilingualService } = await import('@/lib/multilingual-service');
+
         for (const chunkText of chunks) {
-            const embedding = await generateEmbedding(chunkText, tenantId, correlacion_id);
+            // Paralelizar generación de embeddings para mejorar SLA
+            const [embeddingGemini, embeddingBGE] = await Promise.all([
+                generateEmbedding(chunkText, tenantId, correlacion_id),
+                multilingualService.generateEmbedding(chunkText)
+            ]);
 
             const documentChunk = {
+                tenantId, // Aislamiento garantizado
+                industry: "ELEVATORS", // Default por ahora
                 tipo_componente: metadata.tipo,
                 modelo: modeloPrincipal,
                 origen_doc: file.name,
                 version_doc: metadata.version,
                 fecha_revision: new Date(),
                 texto_chunk: chunkText,
-                embedding: embedding,
+                embedding: embeddingGemini,
+                embedding_multilingual: embeddingBGE,
                 cloudinary_url: cloudinaryResult.secureUrl,
                 cloudinary_public_id: cloudinaryResult.publicId,
                 creado: new Date(),

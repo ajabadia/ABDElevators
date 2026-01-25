@@ -22,8 +22,11 @@ export async function middleware(request: NextRequest) {
     const isApiOrAdmin = pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/pedidos');
 
     if (isApiOrAdmin) {
+        const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
+        const limit = isAdmin ? 5000 : 500; // Aumentamos el límite para admins y técnicos (anteriormente 100 era muy bajo)
+
         const rate = await rateLimit(`rate_${rateKey}`, {
-            limit: 100,
+            limit: limit,
             windowMs: 60 * 60 * 1000
         });
 
@@ -36,6 +39,12 @@ export async function middleware(request: NextRequest) {
                 correlacion_id: crypto.randomUUID(),
                 detalles: { rateKey, pathname }
             });
+
+            // Si es una navegación (browser), redirigir a página de error bonita
+            const accept = request.headers.get('accept');
+            if (accept && accept.includes('text/html') && !pathname.startsWith('/api')) {
+                return NextResponse.redirect(new URL('/error/rate-limit', request.url));
+            }
 
             return NextResponse.json(
                 { error: 'Demasiadas peticiones. Por favor, intente más tarde.' },
@@ -51,20 +60,7 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // Log para debug de sesión (Regla #4)
-    if (pathname.startsWith('/admin') || pathname.startsWith('/pedidos')) {
-        const correlacion_id = crypto.randomUUID();
-        await logEvento({
-            nivel: 'DEBUG',
-            origen: 'MIDDLEWARE',
-            accion: 'SESSION_CHECK',
-            mensaje: `Pattern: ${pathname} | Session: ${session ? 'YES' : 'NO'} | Role: ${session?.user?.role || 'NONE'}`,
-            correlacion_id,
-            detalles: { pathname, has_session: !!session, role: session?.user?.role }
-        });
-    }
-
-    // Rutas públicas (landing page y páginas de marketing)
+    // 🛡️ Rutas públicas (landing page y páginas de marketing)
     const publicPaths = [
         '/',
         '/login',
@@ -136,11 +132,21 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
     const correlacion_id_resp = crypto.randomUUID();
 
+    // ⏱️ Medir latencia (Regla #8 Performance)
+    const start = Date.now();
+
+    // We can't use 'finally' here because NextResponse.next() returns a promise 
+    // that resolves when the response headers are ready, not when the body is streamed.
+    // However, for standard API responses, we can track the overhead.
+    // For real route-level timing, Rule #8 is better implemented in the route itself.
+    // But as a global safety, we add headers.
+
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('X-Correlacion-ID', correlacion_id_resp);
+    response.headers.set('X-Request-Start', start.toString());
 
     if (process.env.NODE_ENV === 'production') {
         response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');

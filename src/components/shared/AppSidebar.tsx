@@ -178,7 +178,7 @@ export function AppSidebar() {
                     const isActive = pathname === item.href;
                     return (
                         <Link
-                            key={item.href}
+                            key={item.name}
                             href={item.href}
                             title={isCollapsed ? item.name : ""}
                             className={cn(

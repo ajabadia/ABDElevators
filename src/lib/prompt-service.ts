@@ -52,6 +52,20 @@ export class PromptService {
             rendered = rendered.replace(new RegExp(placeholder, 'g'), String(varValue));
         }
 
+        // Auditar uso (Fase Group A: Audit Prompt Usage)
+        try {
+            const { collection } = await getTenantCollection('prompts');
+            await collection.updateOne(
+                { _id: (prompt as any)._id },
+                {
+                    $inc: { usageCount: 1 },
+                    $set: { lastUsedAt: new Date() }
+                }
+            );
+        } catch (err: any) {
+            console.error("Error auditing prompt usage:", err);
+        }
+
         return rendered;
     }
 

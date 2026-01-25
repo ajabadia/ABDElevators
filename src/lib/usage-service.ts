@@ -58,15 +58,30 @@ export class UsageService {
 
             await collection.insertOne(validated);
 
-            // Log de sistema para trazabilidad extra
+            // Detector de anomalías: Si el consumo es muy alto en una sola operación
             if (validated.tipo === 'LLM_TOKENS' && validated.valor > 10000) {
+                // Import dinámico para evitar ciclos si NotificationService usa UsageService en el futuro
+                const { NotificationService } = await import('@/lib/notification-service');
+
+                await NotificationService.notify({
+                    tenantId: validated.tenantId,
+                    type: 'BILLING_EVENT',
+                    level: 'WARNING',
+                    title: 'Pico de Consumo Detectado',
+                    message: `Se ha detectado una operación con un consumo inusual de ${validated.valor.toLocaleString()} tokens en el modelo ${validated.recurso}. Revisa si es un comportamiento esperado.`,
+                    link: '/admin/billing',
+                    metadata: {
+                        resource: validated.recurso,
+                        value: validated.valor
+                    }
+                });
+
                 await logEvento({
                     nivel: 'WARN',
                     origen: 'USAGE_SERVICE',
                     accion: 'HIGH_CONSUMPTION',
                     mensaje: `Alto consumo de tokens detectado para tenant ${validated.tenantId}: ${validated.valor}`,
-                    correlacion_id: validated.correlacion_id || 'SYSTEM',
-                    detalles: { valor: validated.valor, recurso: validated.recurso }
+                    correlacion_id: validated.correlacion_id || 'SYSTEM'
                 });
             }
 

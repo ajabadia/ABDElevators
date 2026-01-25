@@ -12,6 +12,9 @@ import { ValidationWorkflow } from '@/components/pedidos/ValidationWorkflow';
 import { Pedido } from '@/lib/schemas';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { AgentTraceViewer } from '@/components/agente/AgentTraceViewer';
+import { Button } from '@/components/ui/button';
+import { BrainCircuit } from 'lucide-react';
 
 export default function ValidarPedidoPage() {
     const params = useParams();
@@ -23,6 +26,7 @@ export default function ValidarPedidoPage() {
     const [pedido, setPedido] = useState<Pedido | null>(null);
     const [ragResults, setRagResults] = useState<any>(null);
     const [validationComplete, setValidationComplete] = useState(false);
+    const [showAgentTrace, setShowAgentTrace] = useState(false);
 
     // UX State
     const [isLoading, setIsLoading] = useState(true);
@@ -57,11 +61,28 @@ export default function ValidarPedidoPage() {
 
     const handleValidationComplete = (validacion: any) => {
         setValidationComplete(true);
-
         alert(`Validación guardada exitosamente. Estado: ${validacion.estadoGeneral}`);
-
         if (validacion.estadoGeneral === 'APROBADO') {
             router.push(`/pedidos/${id}`);
+        }
+    };
+
+    const handleAgentComplete = async () => {
+        // Recargar datos tras el análisis agéntico
+        try {
+            const pedidoRes = await fetch(`/api/pedidos/${id}`);
+            const pedidoData = await pedidoRes.json();
+            if (pedidoData.pedido) {
+                setPedido(pedidoData.pedido);
+                setRagResults({
+                    modelo: pedidoData.pedido.modelo || "Detectado por Agente",
+                    numero_pedido: pedidoData.pedido.numero_pedido,
+                    cliente: pedidoData.pedido.cliente || "No especificado",
+                });
+                setShowAgentTrace(false);
+            }
+        } catch (error) {
+            console.error("Error reloading after agentic analysis:", error);
         }
     };
 
@@ -125,14 +146,31 @@ export default function ValidarPedidoPage() {
                         onValidationComplete={handleValidationComplete}
                     />
                 ) : (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-8 text-center">
-                        <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                            Sin Resultados RAG
-                        </h2>
-                        <p className="text-amber-700 dark:text-amber-300">
-                            No se encontraron resultados del análisis RAG para este pedido.
-                        </p>
+                    <div className="max-w-2xl mx-auto space-y-8">
+                        {!showAgentTrace ? (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-8 text-center space-y-6">
+                                <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto" />
+                                <div>
+                                    <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">
+                                        Sin Resultados RAG
+                                    </h2>
+                                    <p className="text-amber-700 dark:text-amber-300">
+                                        No se encontraron resultados del análisis previo. ¿Deseas iniciar el cerebro agéntico para analizar este pedido ahora?
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={() => setShowAgentTrace(true)}
+                                    className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-6 rounded-xl shadow-lg gap-2"
+                                >
+                                    <BrainCircuit size={20} /> Iniciar Razonamiento Agéntico
+                                </Button>
+                            </div>
+                        ) : (
+                            <AgentTraceViewer
+                                pedidoId={id}
+                                onComplete={handleAgentComplete}
+                            />
+                        )}
                     </div>
                 )}
             </div>

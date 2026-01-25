@@ -1,11 +1,18 @@
 import { z } from 'zod';
 
 /**
+ * Esquemas para la Visión 2.0 (Generalización)
+ */
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
+
+/**
  * Esquema para fragmentos de documentos (RAG Corpus)
  * Regla de Oro #2: Validación Zod ANTES del procesamiento.
  */
 export const DocumentChunkSchema = z.object({
     _id: z.any().optional(),
+    tenantId: z.string().optional(), // 'global' if shared
+    industry: IndustryTypeSchema.default('ELEVATORS'),
     tipo_componente: z.string(),
     modelo: z.string(),
     origen_doc: z.string(),
@@ -15,14 +22,10 @@ export const DocumentChunkSchema = z.object({
     texto_chunk: z.string(),
     texto_antes: z.string().optional(),
     texto_despues: z.string().optional(),
-    embedding: z.array(z.number()),
+    embedding: z.array(z.number()), // Gemini 004
+    embedding_multilingual: z.array(z.number()).optional(), // BGE-M3 (Phase 21.1)
     creado: z.date().default(() => new Date()),
 });
-
-/**
- * Esquemas para la Visión 2.0 (Generalización)
- */
-export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
 
 export const TaxonomyValueSchema = z.object({
     id: z.string(),
@@ -340,6 +343,26 @@ export const TenantConfigSchema = z.object({
         current_period_start: z.date().optional(),
         current_period_end: z.date().optional(),
     }).optional(),
+    branding: z.object({
+        logo: z.object({
+            url: z.string().url().optional(),
+            publicId: z.string().optional(),
+        }).optional(),
+        favicon: z.object({
+            url: z.string().url().optional(),
+            publicId: z.string().optional(),
+        }).optional(),
+        colors: z.object({
+            primary: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+            secondary: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+            accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+            // Dark mode overrides
+            primaryDark: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+            accentDark: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+        }).optional(),
+        autoDarkMode: z.boolean().default(true),
+        companyName: z.string().optional(),
+    }).optional(),
     active: z.boolean().default(true),
     creado: z.date().default(() => new Date()),
 });
@@ -511,24 +534,6 @@ export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
 export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
 
-/**
- * Esquema para Notificaciones (Fase 10)
- */
-export const NotificationSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    usuarioId: z.string(),
-    tipo: z.enum(['SISTEMA', 'WORKFLOW', 'SOPORTE', 'COMENTARIO', 'ALERTA']),
-    prioridad: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('LOW'),
-    titulo: z.string(),
-    mensaje: z.string(),
-    link: z.string().optional(),
-    leido: z.boolean().default(false),
-    metadata: z.record(z.string(), z.any()).optional(),
-    creado: z.date().default(() => new Date()),
-});
-
-export type Notification = z.infer<typeof NotificationSchema>;
 
 /**
  * Esquema para Invitaciones a la Plataforma (Fase 11.1)
@@ -678,3 +683,218 @@ export type TenantCredit = z.infer<typeof TenantCreditSchema>;
 export type PriceSchedule = z.infer<typeof PriceScheduleSchema>;
 export type LoyaltyRule = z.infer<typeof LoyaltyRuleSchema>;
 
+/**
+ * 🎫 FASE 20: Enterprise Ticketing System Schemas
+ */
+
+export const TicketPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
+export const TicketCategorySchema = z.enum(['TECHNICAL', 'BILLING', 'SECURITY', 'FEATURE_REQUEST', 'OTHER']);
+export const TicketStatusSchema = z.enum(['OPEN', 'IN_PROGRESS', 'WAITING_USER', 'ESCALATED', 'RESOLVED', 'CLOSED']);
+
+export const TicketSchema = z.object({
+    _id: z.any().optional(),
+    ticketNumber: z.string(), // TKT-2026-XXXXX
+    tenantId: z.string(),
+    createdBy: z.string(), // User ID
+    assignedTo: z.string().optional(), // Admin ID
+    subject: z.string().min(5),
+    description: z.string().min(20),
+    priority: TicketPrioritySchema.default('MEDIUM'),
+    category: TicketCategorySchema.default('TECHNICAL'),
+    status: TicketStatusSchema.default('OPEN'),
+
+    // SLA Management
+    sla: z.object({
+        responseTimeTarget: z.date().optional(),
+        resolutionTimeTarget: z.date().optional(),
+        breached: z.boolean().default(false),
+    }).optional(),
+
+    escalationHistory: z.array(z.object({
+        from: z.string(),
+        to: z.string(),
+        reason: z.string(),
+        timestamp: z.date(),
+    })).default([]),
+
+    attachments: z.array(z.object({
+        url: z.string(),
+        cloudinaryId: z.string(),
+        filename: z.string(),
+    })).default([]),
+
+    tags: z.array(z.string()).default([]),
+
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+    resolvedAt: z.date().optional(),
+    closedAt: z.date().optional(),
+});
+
+export type Ticket = z.infer<typeof TicketSchema>;
+
+/**
+ * 🔔 FASE 23: Notification & Communication Engine Schemas
+ */
+
+export const NotificationTypeSchema = z.enum([
+    'SYSTEM',
+    'ANALYSIS_COMPLETE',
+    'RISK_ALERT',
+    'BILLING_EVENT',
+    'SECURITY_ALERT'
+]);
+
+export const NotificationChannelSchema = z.enum(['EMAIL', 'IN_APP', 'PUSH']);
+
+// Configuración de destinatarios y canales por Tenant
+export const NotificationTenantConfigSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+
+    // Matriz de configuración por tipo de evento
+    events: z.record(NotificationTypeSchema, z.object({
+        enabled: z.boolean().default(true),
+        channels: z.array(NotificationChannelSchema).default(['IN_APP', 'EMAIL']),
+        recipients: z.array(z.string().email()).default([]),
+
+        // Personalización Simple (Tenant Level)
+        customNote: z.string().optional(), // Texto extra que se inyecta en {{tenant_custom_note}}
+        includeCustomNote: z.boolean().default(true)
+    })),
+
+    // Email de fallback si no hay destinatarios definidos
+    fallbackEmail: z.string().email().optional(),
+
+    updatedAt: z.date(),
+    updatedBy: z.string()
+});
+
+// Entidad de Notificación individual (Historial)
+export const NotificationSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    userId: z.string().optional(), // Puede ser null si es para todo el tenant
+    type: NotificationTypeSchema,
+    level: z.enum(['INFO', 'SUCCESS', 'WARNING', 'ERROR']),
+    title: z.string(),
+    message: z.string(),
+    link: z.string().optional(),
+
+    // Estado de lectura (In-App)
+    read: z.boolean().default(false),
+    readAt: z.date().optional(),
+
+    // Estado de envío (Email)
+    emailSent: z.boolean().default(false),
+    emailSentAt: z.date().optional(),
+    emailRecipient: z.string().email().optional(), // A quién se envió realmente
+
+    archived: z.boolean().default(false),
+    createdAt: z.date().default(() => new Date()),
+    metadata: z.record(z.string(), z.any()).optional(),
+
+    // Campos de Business Intelligence (BI) para explotación
+    category: z.enum(['BILLING', 'TECHNICAL', 'SUPPORT', 'MARKETING', 'SYSTEM']).default('SYSTEM'),
+    triggerValue: z.number().optional(), // Ej: 95 (porcentaje de uso), 3 (intentos fallidos)
+    campaignId: z.string().optional() // Para identificar ofertas manuales o campañas
+});
+
+/**
+ * Estadísticas Agregadas de Notificaciones (Materialized View)
+ * Permite detectar candidatos a Upsell o Riesgo de Churn sin scanear toda la tabla de logs.
+ */
+export const NotificationStatsSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    month: z.string(), // "2026-01"
+
+    // Contadores por categoría
+    counts: z.object({
+        BILLING_ALERTS: z.number().default(0),    // Candidato a Upsell
+        TECHNICAL_ERRORS: z.number().default(0),  // Necesita formación
+        SUPPORT_TICKETS: z.number().default(0),   // Riesgo de Churn
+        MARKETING_SENT: z.number().default(0)
+    }),
+
+    // Flags derivados
+    flags: z.object({
+        isUpsellCandidate: z.boolean().default(false),
+        needsTraining: z.boolean().default(false),
+        churnRisk: z.boolean().default(false)
+    }),
+
+    updatedAt: z.date()
+});
+
+/**
+ * Plantillas Globales del Sistema (Solo SuperAdmin)
+ * Define el HTML base y la lógica Handlebars maestra.
+ */
+export const SystemEmailTemplateSchema = z.object({
+    _id: z.any().optional(),
+    type: NotificationTypeSchema, // Unique index
+    name: z.string(), // "System Default - Billing Alert"
+
+    // Soporte i18n: clave = 'es' | 'en' | 'fr' ...
+    subjectTemplates: z.record(z.string(), z.string()),
+    bodyHtmlTemplates: z.record(z.string(), z.string()), // Debe incluir {{tenant_custom_note}}
+
+    availableVariables: z.array(z.string()), // Documentación: ["usage", "date", "tenantName"]
+    description: z.string().optional(),
+    version: z.number().default(1),
+    active: z.boolean().default(true),
+    updatedAt: z.date(),
+    updatedBy: z.string() // ID del SuperAdmin
+});
+
+/**
+ * Historial de Auditoría: Plantillas del Sistema
+ * Guarda una copia de CADA versión que ha existido.
+ */
+export const SystemEmailTemplateHistorySchema = z.object({
+    _id: z.any().optional(),
+    originalTemplateId: z.any(), // Link al documento padre en 'system_email_templates'
+    type: NotificationTypeSchema,
+    version: z.number(),
+
+    // Snapshot del contenido
+    subjectTemplates: z.record(z.string(), z.string()),
+    bodyHtmlTemplates: z.record(z.string(), z.string()),
+
+    // Auditoría
+    action: z.enum(['CREATE', 'UPDATE', 'DEACTIVATE']),
+    performedBy: z.string(), // ID del SuperAdmin
+    reason: z.string().optional(), // Obligatorio si action=DEACTIVATE
+    timestamp: z.date().default(() => new Date()),
+
+    validFrom: z.date(),
+    validTo: z.date().optional() // Null si es la versión actual
+});
+
+/**
+ * Historial de Auditoría: Configuración de Tenant
+ * Guarda quién cambió qué en la configuración de notificaciones de un cliente.
+ */
+export const NotificationTenantConfigHistorySchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    configId: z.any(), // Link al documento padre
+
+    // Snapshot de lo que cambió (guardamos el objeto 'events' completo o diff)
+    eventsSnapshot: z.record(NotificationTypeSchema, z.any()),
+
+    // Auditoría
+    action: z.enum(['UPDATE_SETTINGS', 'UPDATE_CUSTOM_NOTE']),
+    performedBy: z.string(), // ID del Admin del Tenant
+    reason: z.string().optional(),
+    timestamp: z.date().default(() => new Date())
+});
+
+export type NotificationType = z.infer<typeof NotificationTypeSchema>;
+export type NotificationTenantConfig = z.infer<typeof NotificationTenantConfigSchema>;
+export type Notification = z.infer<typeof NotificationSchema>;
+export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
+export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
+export type NotificationTenantConfigHistory = z.infer<typeof NotificationTenantConfigHistorySchema>;
+export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
