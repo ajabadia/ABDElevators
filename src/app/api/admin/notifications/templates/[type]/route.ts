@@ -18,18 +18,19 @@ const UpdateTemplateBodySchema = z.object({
  * GET /api/admin/notifications/templates/[type]
  * Obtiene el detalle de una plantilla.
  */
-export async function GET(req: NextRequest, { params }: { params: { type: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
     try {
+        const { type } = await params;
         const session = await auth();
         if (session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('FORBIDDEN', 403, 'Acceso denegado');
         }
 
         const db = await connectDB();
-        const template = await db.collection('system_email_templates').findOne({ type: params.type });
+        const template = await db.collection('system_email_templates').findOne({ type });
 
         if (!template) {
-            return NextResponse.json({ found: false, type: params.type });
+            return NextResponse.json({ found: false, type });
         }
 
         return NextResponse.json(template);
@@ -43,9 +44,10 @@ export async function GET(req: NextRequest, { params }: { params: { type: string
  * PUT /api/admin/notifications/templates/[type]
  * Actualiza una plantilla y genera registro de auditoría.
  */
-export async function PUT(req: NextRequest, { params }: { params: { type: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
     const correlacion_id = crypto.randomUUID();
     try {
+        const { type } = await params;
         const session = await auth();
         const userId = session?.user?.id;
 
@@ -61,7 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: { type: string
         const historyCollection = db.collection('system_email_templates_history');
 
         // 1. Buscar estado actual
-        const currentTemplate = await collection.findOne({ type: params.type });
+        const currentTemplate = await collection.findOne({ type });
 
         if (currentTemplate) {
             // 2. Guardar HISTÓRICO (Audit Trail)
@@ -86,7 +88,7 @@ export async function PUT(req: NextRequest, { params }: { params: { type: string
 
             // 3. ACTUALIZAR (Incrementar versión)
             await collection.updateOne(
-                { type: params.type },
+                { type },
                 {
                     $set: {
                         subjectTemplates: validated.subjectTemplates,
@@ -104,8 +106,8 @@ export async function PUT(req: NextRequest, { params }: { params: { type: string
             // 4. CREAR (Si no existe)
             // Esto sucede la primera vez que configuramos un tipo
             const newTemplate = {
-                type: params.type,
-                name: `Plantilla ${params.type}`,
+                type,
+                name: `Plantilla ${type}`,
                 subjectTemplates: validated.subjectTemplates,
                 bodyHtmlTemplates: validated.bodyHtmlTemplates,
                 availableVariables: ['tenantName', 'date', 'tenant_custom_note'], // Defaults
@@ -122,7 +124,7 @@ export async function PUT(req: NextRequest, { params }: { params: { type: string
 
             // Log de creación en historial
             await historyCollection.insertOne({
-                type: params.type,
+                type,
                 version: 1,
                 action: 'CREATE',
                 performedBy: userId,
@@ -138,12 +140,12 @@ export async function PUT(req: NextRequest, { params }: { params: { type: string
             nivel: 'WARN', // WARN porque es un cambio de config global sensible
             origen: 'ADMIN_NOTIFICATIONS',
             accion: 'UPDATE_TEMPLATE',
-            mensaje: `Plantilla ${params.type} actualizada por SuperAdmin`,
+            mensaje: `Plantilla ${type} actualizada por SuperAdmin`,
             correlacion_id,
-            detalles: { type: params.type, userId }
+            detalles: { type, userId }
         });
 
-        return NextResponse.json({ success: true, type: params.type });
+        return NextResponse.json({ success: true, type });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });

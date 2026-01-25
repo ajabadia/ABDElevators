@@ -7,11 +7,12 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TemplateEditPage({ params }: { params: { type: string } }) {
+export default async function TemplateEditPage({ params }: { params: Promise<{ type: string }> }) {
+    const { type } = await params;
     const db = await connectDB();
 
     // Buscar template actual
-    const template = await db.collection('system_email_templates').findOne({ type: params.type });
+    const template = await db.collection('system_email_templates').findOne({ type });
 
     // Si no existe, pasamos null al editor para que sepa que es una creación inicial (seeding)
     // Opcionalmente podríamos tener una lógica de "defaults" aquí.
@@ -26,7 +27,7 @@ export default async function TemplateEditPage({ params }: { params: { type: str
                 </Link>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        {template ? template.name : `Configurar ${params.type}`}
+                        {template ? template.name : `Configurar ${type}`}
                     </h1>
                     <p className="text-slate-500 mt-2">
                         {template ? `Editando versión v${template.version}` : 'Configuración inicial de la plantilla'}
@@ -34,7 +35,7 @@ export default async function TemplateEditPage({ params }: { params: { type: str
                 </div>
             </div>
 
-            <TemplateEditor type={params.type} initialData={JSON.parse(JSON.stringify(template))} />
+            <TemplateEditor type={type} initialData={JSON.parse(JSON.stringify(template))} />
         </div>
     );
 }
