@@ -28,28 +28,28 @@ async function seedNotifications() {
     const mockNotifications = [
         {
             tenantId,
-            usuarioId,
-            tipo: 'WORKFLOW' as const,
-            prioridad: 'HIGH' as const,
-            titulo: 'Nuevo Pedido Asignado',
-            mensaje: 'El pedido #ABC-999 se ha movido al estado "analizado" y requiere tu validación.',
-            link: `/pedidos/${usuarioId}/validar` // Placeholder id
+            userId: usuarioId, // Rename
+            type: 'ANALYSIS_COMPLETE' as const, // Fix Enum
+            level: 'INFO' as const, // Fix Enum
+            title: 'Nuevo Pedido Asignado',
+            message: 'El pedido #ABC-999 se ha movido al estado "analizado" y requiere tu validación.',
+            link: `/pedidos/${usuarioId}/validar`
         },
         {
             tenantId,
-            usuarioId,
-            tipo: 'SISTEMA' as const,
-            prioridad: 'LOW' as const,
-            titulo: 'Actualización de Plataforma',
-            mensaje: 'Se ha habilitado el nuevo motor de transiciones 7.2. Ya puedes gestionar transiciones dinámicas.',
+            userId: usuarioId,
+            type: 'SYSTEM' as const,
+            level: 'INFO' as const,
+            title: 'Actualización de Plataforma',
+            message: 'Se ha habilitado el nuevo motor de transiciones 7.2. Ya puedes gestionar transiciones dinámicas.',
         },
         {
             tenantId,
-            usuarioId,
-            tipo: 'SOPORTE' as const,
-            prioridad: 'MEDIUM' as const,
-            titulo: 'Respuesta a tu consulta',
-            mensaje: 'El administrador ha respondido a tu consulta sobre el pedido #4456.',
+            userId: usuarioId,
+            type: 'SECURITY_ALERT' as const,
+            level: 'WARNING' as const,
+            title: 'Respuesta a tu consulta',
+            message: 'El administrador ha respondido a tu consulta sobre el pedido #4456.',
             link: '/perfil'
         }
     ];
@@ -57,6 +57,7 @@ async function seedNotifications() {
     console.log(`Inserting ${mockNotifications.length} notifications for user ${user.email}...`);
 
     for (const n of mockNotifications) {
+        // @ts-ignore - Ignore exact type mismatch for specific metadata in seed script
         await NotificationService.notifyInApp(n, correlacion_id);
     }
 
