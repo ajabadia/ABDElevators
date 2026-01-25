@@ -73,6 +73,7 @@ export async function middleware(request: NextRequest) {
         '/login',
         '/api/auth',
         '/api/webhooks',
+        '/api/debug-auth',
         '/privacy',
         '/terms',
         '/arquitectura',
