@@ -105,6 +105,21 @@ export class NotificationService {
         return await this.persistNotification(payload);
     }
 
+    // --- Public Queries ---
+
+    static async listUnread(userId: string, limit = 20): Promise<any[]> {
+        const db = await connectDB();
+        return await db.collection('notifications')
+            .find({
+                userId,
+                read: false,
+                archived: false
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .toArray();
+    }
+
     // --- Private Helpers ---
 
     private static async getTenantConfig(tenantId: string): Promise<any> {

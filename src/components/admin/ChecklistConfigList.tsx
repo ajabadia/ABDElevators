@@ -36,13 +36,15 @@ export const ChecklistConfigList: React.FC = () => {
             setConfigs(data.configs);
             setError(null);
         } catch (err: any) {
-            const errorMessage = err.message || 'Error desconocido';
+            console.error('[ChecklistConfigList] Fetch error details:', err);
+            const errorMessage = (err && err.message) ? err.message : 'Error desconocido al cargar configuraciones';
             setError(errorMessage);
             await logEventoCliente({
                 nivel: 'ERROR',
                 origen: 'CHECKLIST_CONFIG_UI',
                 accion: 'FETCH_LIST_ERROR',
                 mensaje: errorMessage,
+                detalles: { error: JSON.stringify(err, Object.getOwnPropertyNames(err)) },
                 correlacion_id: crypto.randomUUID()
             });
         } finally {
