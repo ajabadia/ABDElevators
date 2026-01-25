@@ -120,6 +120,16 @@ export class NotificationService {
             .toArray();
     }
 
+    static async markAsRead(notificationIds: string[]): Promise<void> {
+        if (!notificationIds.length) return;
+
+        const db = await connectDB();
+        await db.collection('notifications').updateMany(
+            { _id: { $in: notificationIds.map(id => new ObjectId(id)) } },
+            { $set: { read: true, readAt: new Date() } }
+        );
+    }
+
     // --- Private Helpers ---
 
     private static async getTenantConfig(tenantId: string): Promise<any> {

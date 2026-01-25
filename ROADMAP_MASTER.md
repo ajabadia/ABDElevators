@@ -684,3 +684,31 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 - Reference the specific sections (`### Detailed Phase Roadmap`, `### Implementation Plan Highlights`, `### Upcoming & To‑Do`) in PR descriptions to keep reviewers aligned.
 
 *Generated on 2026‑01‑25 by Antigravity (AI coding assistant).*
+
+---
+
+## 📊 FASE 24: OBSERVABILITY & ADVANCED ANALYTICS (SAAS PRO)
+**Objetivo:** Proporcionar visibilidad total y granular sobre el uso, rendimiento y seguridad de la plataforma a todos los niveles (Platform, Tenant, User).
+
+### 24.1 Centralized Log Explorer (Bank-Grade Audit)
+- [ ] **Log Viewer UI Avanzado:**
+  - Interfaz estilo "Elastic/Splunk" dentro del panel de SuperAdmin.
+  - Filtros facetados: por `tenantId`, `userId`, `severity`, `errorCode`, `source` (API, RAG, AUTH).
+  - Búsqueda full-text en payloads de logs.
+- [ ] **Data Export Compliance:**
+  - Botón de "Exportar Traza Legal" que genera un PDF/CSV firmado de todas las acciones de un usuario en un rango de fechas (para litigios o auditorías ISO).
+
+### 24.2 Multi-Level Analytics Dashboard
+- [ ] **SuperAdmin View (Platform Health):**
+  - Métricas globales: MAU (Active Users), MRR estimado, Tasa de Errores Global, Latencia promedio de LLM.
+  - Mapa de calor de uso por región/país.
+- [ ] **Tenant Admin View (Organization ROI):**
+  - *Productivity Score:* Tiempo ahorrado estimado vs proceso manual.
+  - *Consumption Breakdown:* Quien gasta más tokens, qué departamentos usan más la herramienta.
+- [ ] **User View (Personal Insights):**
+  - Historial personal de eficiencia.
+  - "Mis Top Prompts" o casos más frecuentes analizados.
+
+### 24.3 Proactive Anomaly Detection
+- [ ] **Security Alerts:** Notificación inmediata si se detecta un patrón de acceso inusual (geo-imposible, fuerza bruta).
+- [ ] **Business Alerts:** Aviso si un Tenant deja de usar la herramienta repentinamente (riesgo de Churn).
