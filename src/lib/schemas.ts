@@ -398,7 +398,7 @@ export const TenantConfigSchema = z.object({
 export const UsageLogSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST']),
+    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS']),
     valor: z.number(),                  // Cantidad (tokens, bytes, etc)
     recurso: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
     descripcion: z.string().optional(),

@@ -49,6 +49,34 @@ export class UsageService {
     }
 
     /**
+     * Registra el ahorro por deduplicación (Ahorro tokens LLM).
+     */
+    static async trackDeduplicationSaving(tenantId: string, estimatedTokens: number, correlacion_id?: string) {
+        return this.logUsage({
+            tenantId,
+            tipo: 'SAVINGS_TOKENS',
+            valor: estimatedTokens,
+            recurso: 'deduplication-md5',
+            descripcion: `Ahorro estimado de ${estimatedTokens} tokens por deduplicación`,
+            correlacion_id
+        });
+    }
+
+    /**
+     * Registra el uso de embeddings.
+     */
+    static async trackEmbedding(tenantId: string, chunks: number, model: string, correlacion_id?: string) {
+        return this.logUsage({
+            tenantId,
+            tipo: 'EMBEDDING_OPS',
+            valor: chunks,
+            recurso: model,
+            descripcion: `Generación de embeddings para ${chunks} fragmentos con ${model}`,
+            correlacion_id
+        });
+    }
+
+    /**
      * Método interno para persistir el log de uso.
      */
     private static async logUsage(data: any) {

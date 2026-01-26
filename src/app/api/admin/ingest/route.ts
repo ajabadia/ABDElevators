@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { PromptService } from '@/lib/prompt-service';
 import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
+import { UsageService } from '@/lib/usage-service';
 
 // Schema para los metadatos del upload
 const IngestMetadataSchema = z.object({
@@ -127,12 +128,17 @@ export async function POST(req: NextRequest) {
                 await documentChunksCollection.insertMany(newChunks);
             }
 
+            // --- TRACKING DE AHORRO (Visión 2.0) ---
+            const estimatedSavedTokens = (originalChunks.length * 150) + 1000;
+            await UsageService.trackDeduplicationSaving(tenantId, estimatedSavedTokens, correlacion_id);
+
             return NextResponse.json({
                 success: true,
                 correlacion_id,
-                message: `Documento reutilizado por coincidencia de contenido (${originalChunks.length} fragmentos).`,
+                message: `Documento reutilizado por coincidencia de contenido (${originalChunks.length} fragmentos). Ahorro estimado: ${estimatedSavedTokens} tokens.`,
                 chunks: originalChunks.length,
-                isCloned: true
+                isCloned: true,
+                savings: estimatedSavedTokens
             });
         }
 
@@ -231,6 +237,15 @@ export async function POST(req: NextRequest) {
 
                 if (durationEmbed > 5000) {
                     console.log(`⚠️  [INGEST] Chunk embed took ${durationEmbed}ms`);
+                }
+
+                // Tracking de uso (Embeddings)
+                await UsageService.trackEmbedding(tenantId, 1, 'text-embedding-004', correlacion_id); // Original
+                if (translatedText) {
+                    await UsageService.trackEmbedding(tenantId, 1, 'text-embedding-004-shadow', correlacion_id); // Shadow
+                }
+                if (embeddingBGE.length > 0) {
+                    await UsageService.trackEmbedding(tenantId, 1, 'bge-m3-local', correlacion_id);
                 }
 
                 // --- Insertar Chunk Original ---

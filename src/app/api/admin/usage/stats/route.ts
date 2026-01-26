@@ -46,6 +46,8 @@ export async function GET(req: NextRequest) {
             storage: stats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
             searches: stats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
             api_requests: stats.find(s => s._id === 'API_CALL')?.total || 0,
+            savings: stats.find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
+            embeddings: stats.find(s => s._id === 'EMBEDDING_OPS')?.total || 0,
             tier: plan?.name?.toUpperCase() || 'STANDARD',
             planSlug: planSlug,
             limits: {

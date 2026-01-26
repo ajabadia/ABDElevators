@@ -10,6 +10,8 @@ interface UsageStats {
     storage: number;
     searches: number;
     api_requests: number;
+    savings?: number;
+    embeddings?: number;
     history: any[];
     tier?: string;
     planSlug?: string;
@@ -64,9 +66,9 @@ export function ConsumptionDashboard() {
     };
 
     const getAlertColor = (percentage: number) => {
-        if (percentage >= 100) return 'red';
-        if (percentage >= 80) return 'amber';
-        return 'teal';
+        if (percentage >= 100) return 'bg-red-500';
+        if (percentage >= 80) return 'bg-amber-500';
+        return '';
     };
 
 
@@ -154,10 +156,7 @@ export function ConsumptionDashboard() {
                     </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)) === 'red' ? 'bg-red-500' :
-                                getAlertColor(getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)) === 'amber' ? 'bg-amber-500' :
-                                    'bg-blue-500'
-                                }`}
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)) || 'bg-blue-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.tokens || 0, stats?.limits?.tokens || Infinity)}%` }}
                         ></div>
                     </div>
@@ -185,10 +184,7 @@ export function ConsumptionDashboard() {
                     </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) === 'red' ? 'bg-red-500' :
-                                getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) === 'amber' ? 'bg-amber-500' :
-                                    'bg-teal-500'
-                                }`}
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) || 'bg-teal-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)}%` }}
                         ></div>
                     </div>
@@ -216,10 +212,7 @@ export function ConsumptionDashboard() {
                     </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) === 'red' ? 'bg-red-500' :
-                                getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) === 'amber' ? 'bg-amber-500' :
-                                    'bg-amber-500'
-                                }`}
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) || 'bg-amber-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)}%` }}
                         ></div>
                     </div>
@@ -247,12 +240,58 @@ export function ConsumptionDashboard() {
                     </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) === 'red' ? 'bg-red-500' :
-                                getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) === 'amber' ? 'bg-amber-500' :
-                                    'bg-purple-500'
-                                }`}
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) || 'bg-purple-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)}%` }}
                         ></div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Smart Savings & Efficiency (Fase 25.1 Monitoring) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-teal-600 p-8 rounded-2xl text-white shadow-xl shadow-teal-500/20 relative overflow-hidden">
+                    <div className="absolute right-0 top-0 opacity-10">
+                        <Zap size={240} />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                            <Zap className="text-amber-300" /> Ahorro Inteligente por Deduplicación
+                        </h3>
+                        <p className="text-indigo-100 text-sm max-w-md mb-6">
+                            Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos, ahorrando tokens de análisis y generación de embeddings.
+                        </p>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <p className="text-indigo-200 text-xs uppercase font-bold tracking-wider mb-1">Tokens Ahorrados</p>
+                                <p className="text-4xl font-black">{((stats as any)?.savings || 0).toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p className="text-indigo-200 text-xs uppercase font-bold tracking-wider mb-1">Eficiencia de Ingesta</p>
+                                <p className="text-4xl font-black">
+                                    {stats?.tokens && stats.savings
+                                        ? Math.round((stats.savings / (stats.savings + stats.tokens)) * 100)
+                                        : 0}%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Search size={16} /> Búsquedas Multilingües
+                    </h3>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <span className="text-slate-600 dark:text-slate-400 text-sm">Vectores Latentes (Shadow)</span>
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white">{(stats as any)?.embeddings || 0}</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-teal-500" style={{ width: '100%' }}></div>
+                        </div>
+                        <p className="text-xs text-slate-500 italic">
+                            Los vectores "Shadow" permiten que buscadores en español encuentren documentos alemanes e italianos.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -283,8 +322,9 @@ export function ConsumptionDashboard() {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.tipo === 'LLM_TOKENS' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
-                                            log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
-                                                'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
+                                                log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
+                                                    log.tipo === 'SAVINGS_TOKENS' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' :
+                                                        'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
                                             }`}>
                                             {log.tipo}
                                         </span>

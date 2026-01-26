@@ -51,11 +51,13 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 - [x] **Backend Build Fixed**: Resolución de errores de tipado estricto (PromptList, Configs) para build exitoso.
 - [x] **Dual-Indexing Foundation**: API & Schema listos.
 - [x] **Knowledge Base Explorer**: UI de administración implementada con soporte para inspección de Shadow Chunks y filtrado multilingüe.
+- [x] **Search Debugger**: Integrado en Knowledge Explorer para probar queries y ver scores vectoriales en tiempo real.
+- [x] **Smart Monitoring**: Dashboard de consumo actualizado con ahorro por deduplicación y métricas de eficiencia.
 
-### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (ACORDADO)**
-1. **Search Debugger**: Herramienta para probar queries y ver scores vectoriales en tiempo real (Integrar en Knowledge Explorer).
-2. **Monitoring**: Verificar ahorro real de tokens en logs (`API_INGEST`).
-3. **LangGraph Self-Correction**: Lógica agéntica de re-intento ante baja confianza.
+### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (Fase Agéntica)**
+1. **LangGraph Self-Correction**: Migración de RAG simple a grafo de estados con autocorrección.
+2. **Evaluación Comparativa (RAGAs)**: Implementar framework de testing automático para calidad de respuestas.
+3. **Agent Trace Viewer**: Terminal visual de auditoría para ver el "pensamiento" de la IA.
 
 ---
 
