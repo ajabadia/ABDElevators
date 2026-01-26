@@ -100,15 +100,22 @@ export async function callGeminiMini(
 
         return responseText;
     } catch (error) {
+        const errorDetails = {
+            message: (error as Error).message,
+            stack: (error as Error).stack,
+            cause: (error as any).cause
+        };
+
         await logEvento({
             nivel: 'ERROR',
             origen: 'GEMINI_MINI',
             accion: 'CALL_ERROR',
             mensaje: `Error en Gemini Mini: ${(error as Error).message}`,
             correlacion_id,
-            stack: (error as Error).stack
+            stack: (error as Error).stack,
+            detalles: errorDetails
         });
-        throw new AppError('EXTERNAL_SERVICE_ERROR', 500, 'Error in Gemini Mini call');
+        throw new AppError('EXTERNAL_SERVICE_ERROR', 500, 'Error in Gemini Mini call', errorDetails);
     }
 }
 
