@@ -23,7 +23,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
+                // FORCE CONSOLE LOG - DEBUG VERCEL
+                console.log("🔥 [AUTH START] Authorize called. Email:", credentials?.email);
+
                 try {
+                    console.log("🕵️ [Auth Step] Parsing credentials...");
                     console.log("[Auth DEBUG] Received credentials for email:", credentials?.email);
                     if (!credentials) {
                         console.error("[Auth ERROR] No credentials object received");
