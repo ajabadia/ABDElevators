@@ -454,7 +454,8 @@ export const ChecklistItemSchema = z.object({
     id: z.string().uuid(),
     description: z.string().min(1),
     categoryId: z.string().uuid().nullable().optional(),
-    notes: z.string().optional()
+    notes: z.string().optional(),
+    icono: z.string().optional()
 });
 
 export const ChecklistConfigSchema = z.object({
@@ -462,6 +463,7 @@ export const ChecklistConfigSchema = z.object({
     tenantId: z.string(),
     nombre: z.string().min(1),
     categorias: z.array(ChecklistCategorySchema),
+    items: z.array(ChecklistItemSchema).default([]),
     workflow_orden: z.array(z.string().uuid()),
     activo: z.boolean().default(true),
     creado: z.date().default(() => new Date()),

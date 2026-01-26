@@ -11,67 +11,88 @@ import {
     Code,
     Search,
     ChevronRight,
-    Maximize2
+    Plus,
+    Sparkles,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { PromptEditor } from '@/components/admin/PromptEditor';
+import { PromptGlobalHistory } from '@/components/admin/PromptGlobalHistory';
 
 /**
  * AdminPromptsPage: Gestión de Prompts de IA.
  * Fase 7.6: Gestión Dinámica de Prompts.
+ * Actualizado con Editor Pro y Visual UI.
  */
 export default function AdminPromptsPage() {
-    const [prompts, setPrompts] = useState<Prompt[]>([]);
+    const [prompts, setPrompts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
-    const [template, setTemplate] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
+    const [selectedPrompt, setSelectedPrompt] = useState<any | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [tenantFilter, setTenantFilter] = useState('all');
+    const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
+    const [showGlobalHistory, setShowGlobalHistory] = useState(false);
 
-    useEffect(() => {
-        async function fetchPrompts() {
-            try {
-                const res = await fetch('/api/admin/prompts');
-                if (res.ok) {
-                    const data = await res.json();
-                    setPrompts(data.prompts || []);
-                }
-            } catch (error) {
-                console.error('Error fetching prompts:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchPrompts();
-    }, []);
-
-    const handleSave = async () => {
-        if (!selectedPrompt || !template.trim()) return;
-        setIsSaving(true);
+    const fetchPrompts = async () => {
+        setLoading(true);
         try {
-            const res = await fetch(`/api/admin/prompts/${(selectedPrompt as any)._id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    template,
-                    changeReason: "Actualización de parámetros desde el Admin Panel"
-                })
-            });
+            const res = await fetch('/api/admin/prompts');
             if (res.ok) {
-                toast({ title: "Prompt actualizado", description: "Los cambios se aplicarán en el próximo análisis." });
+                const data = await res.json();
+                setPrompts(data.prompts || []);
+
+                // Extraer tenants únicos para el filtro
+                if (data.prompts) {
+                    const tenantsList = data.prompts.map((p: any) => ({
+                        id: p.tenantId,
+                        name: p.tenantInfo?.name || p.tenantId
+                    }));
+                    const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as any[];
+                    setUniqueTenants(unique);
+                }
             }
         } catch (error) {
-            toast({ title: "Error", description: "No se pudo guardar el prompt.", variant: "destructive" });
+            console.error('Error fetching prompts:', error);
+            toast({ title: "Error", description: "No se pudieron cargar los prompts.", variant: "destructive" });
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchPrompts();
+    }, []);
+
+    const filteredPrompts = prompts.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.key.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesTenant = tenantFilter === 'all' || p.tenantId === tenantFilter;
+        return matchesSearch && matchesTenant;
+    });
+
+    const handleCreateNew = () => {
+        setSelectedPrompt(null);
+        setIsEditing(true);
+    };
+
+    const handleEdit = (prompt: Prompt) => {
+        setSelectedPrompt(prompt);
+        setIsEditing(true);
+    };
+
+    const handleSaved = () => {
+        setIsEditing(false);
+        fetchPrompts();
+        toast({ title: "Guardado", description: "El prompt se ha actualizado correctamente." });
+    };
+
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 font-sans h-full pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -79,139 +100,201 @@ export default function AdminPromptsPage() {
                         <div className="p-2 bg-slate-900 border border-slate-800 rounded-xl">
                             <Terminal className="w-6 h-6 text-teal-400" />
                         </div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                            Ingeniería de Prompts
+                        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                            AI Prompt Engine
                         </h1>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1 ml-12">
-                        Controla el comportamiento de los modelos de IA Gemini.
+                    <p className="text-xs text-slate-500 mt-1 ml-12 font-medium uppercase tracking-widest">
+                        Gestión avanzada de directivas para Gemini 2.0
                     </p>
                 </div>
 
-                <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-xl">
-                        <History className="w-4 h-4 mr-2" /> Historial
+                <div className="flex gap-3">
+                    <Button
+                        onClick={() => setShowGlobalHistory(true)}
+                        variant="outline"
+                        className="rounded-xl border-slate-200 dark:border-slate-800"
+                    >
+                        <History className="w-4 h-4 mr-2" /> Historial Global
+                    </Button>
+                    <Button onClick={handleCreateNew} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
+                        <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
                     </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Prompt List */}
-                <div className="lg:col-span-12 xl:col-span-4 space-y-4">
-                    <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 relative">
-                            <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input
-                                placeholder="Filtrar prompts..."
-                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs py-2 pl-10 h-10 focus:ring-teal-500/20"
-                            />
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[600px] overflow-y-auto custom-scrollbar">
-                            {loading ? (
-                                <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-500" /></div>
-                            ) : prompts.map(p => (
-                                <div
-                                    key={(p as any)._id}
-                                    onClick={() => {
-                                        setSelectedPrompt(p);
-                                        setTemplate(p.template);
-                                    }}
-                                    className={cn(
-                                        "p-5 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-900/50 group flex items-start justify-between",
-                                        selectedPrompt === p && "bg-teal-50/50 dark:bg-teal-900/10 border-r-2 border-r-teal-500"
-                                    )}
+            <AnimatePresence>
+                {showGlobalHistory && (
+                    <PromptGlobalHistory onClose={() => setShowGlobalHistory(false)} />
+                )}
+            </AnimatePresence>
+
+            {/* Layout Principal con Editor Pro */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-[700px]">
+                {/* List Sidebar */}
+                <div className="lg:col-span-12 xl:col-span-4 flex flex-col gap-6">
+                    <div className="bg-white dark:bg-slate-950 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full flex-grow">
+                        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    placeholder="Filtrar ingenierías..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
+                                />
+                            </div>
+
+                            {uniqueTenants.length > 1 && (
+                                <select
+                                    value={tenantFilter}
+                                    onChange={e => setTenantFilter(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
                                 >
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">V{p.version}</span>
-                                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">{p.name}</h3>
-                                        </div>
-                                        <p className="text-[11px] text-slate-500 font-mono uppercase tracking-tighter">{p.key}</p>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-teal-400 transition-all self-center" />
+                                    <option value="all">Todas las Organizaciones</option>
+                                    {uniqueTenants.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                            {loading ? (
+                                <div className="p-12 text-center">
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-teal-500 opacity-20" />
                                 </div>
-                            ))}
+                            ) : filteredPrompts.length > 0 ? (
+                                <div className="space-y-1">
+                                    {filteredPrompts.map(p => (
+                                        <div
+                                            key={(p as any)._id}
+                                            onClick={() => handleEdit(p)}
+                                            className={cn(
+                                                "p-4 rounded-2xl cursor-pointer transition-all group relative flex items-center justify-between",
+                                                selectedPrompt === p && isEditing
+                                                    ? "bg-teal-600 shadow-xl shadow-teal-500/20"
+                                                    : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden border",
+                                                    selectedPrompt === p && isEditing ? "bg-white/20 border-white/20" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                                )}>
+                                                    {p.tenantInfo?.branding?.logo?.url ? (
+                                                        <img src={p.tenantInfo.branding.logo.url} alt="" className="w-full h-full object-contain p-1" />
+                                                    ) : (
+                                                        <div className={cn(
+                                                            "w-full h-full flex items-center justify-center text-[10px] font-black uppercase",
+                                                            selectedPrompt === p && isEditing ? "text-white" : "text-slate-400"
+                                                        )}>
+                                                            {(p.tenantInfo?.name || p.tenantId).substring(0, 2)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className={cn("text-xs font-black tracking-tight", selectedPrompt === p && isEditing ? "text-white" : "text-slate-900 dark:text-white")}>
+                                                            {p.name}
+                                                        </h3>
+                                                        <span className={cn(
+                                                            "text-[9px] font-bold px-1.5 py-0.5 rounded",
+                                                            selectedPrompt === p && isEditing ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                                                        )}>
+                                                            V{p.version}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", selectedPrompt === p && isEditing ? "text-white" : "text-slate-400 font-mono")}>
+                                                            {p.key}
+                                                        </p>
+                                                        <span className="text-[10px] opacity-20">|</span>
+                                                        <p className={cn("text-[9px] font-bold tracking-tight italic", selectedPrompt === p && isEditing ? "text-white/70" : "text-teal-500/70")}>
+                                                            {p.tenantInfo?.name || p.tenantId}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className={cn("w-4 h-4 transition-all", selectedPrompt === p && isEditing ? "text-white" : "text-slate-300 group-hover:text-teal-400")} />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-20 text-center opacity-40">
+                                    <Search size={40} className="mx-auto mb-4" />
+                                    <p className="text-sm font-bold tracking-tight">No se encontraron prompts</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="p-6 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-3xl">
-                        <div className="flex gap-3">
-                            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                            <p className="text-xs text-rose-800 dark:text-rose-400 leading-relaxed font-medium">
-                                <strong>Cuidado:</strong> Modificar los prompts puede alterar seriamente la extracción de datos técnicos. Siempre valida con el botón Probar.
-                            </p>
+                    <div className="p-6 bg-slate-950 rounded-[2rem] border border-slate-800 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
+                            <Sparkles size={64} className="text-teal-500" />
                         </div>
+                        <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Sugerencia Pro</h4>
+                        <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                            Los prompts con la categoría <strong>EXTRACTION</strong> afectarán directamente a los modelos detectados en el pipeline inicial. Valida siempre que mantengas los placeholders <code className="text-teal-500">{"{{text}}"}</code>.
+                        </p>
                     </div>
                 </div>
 
-                {/* Editor Section */}
-                <div className="lg:col-span-12 xl:col-span-8">
+                {/* Editor Container Section */}
+                <div className="lg:col-span-12 xl:col-span-8 flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/20 rounded-[2.5rem] p-1 border border-slate-200 dark:border-slate-800">
                     <AnimatePresence mode="wait">
-                        {selectedPrompt ? (
-                            <motion.div
-                                key={(selectedPrompt as any)._id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col min-h-[600px]"
-                            >
-                                <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <Code className="w-5 h-5 text-teal-400" />
-                                        <div>
-                                            <h2 className="text-sm font-bold text-white tracking-tight">{selectedPrompt.name}</h2>
-                                            <p className="text-[10px] text-slate-500">{selectedPrompt.description}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white rounded-lg">
-                                            <Maximize2 size={16} />
-                                        </Button>
-                                        <Button
-                                            onClick={handleSave}
-                                            disabled={isSaving || template === selectedPrompt.template}
-                                            className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl h-9 px-4 font-bold text-xs"
-                                        >
-                                            {isSaving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Save className="w-3 h-3 mr-2" />}
-                                            Guardar
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1 relative">
-                                    <Textarea
-                                        value={template}
-                                        onChange={e => setTemplate(e.target.value)}
-                                        className="absolute inset-0 w-full h-full bg-transparent border-none text-teal-100 font-mono text-xs leading-relaxed p-6 focus:ring-0 resize-none"
-                                        spellCheck={false}
-                                    />
-                                </div>
-
-                                <div className="p-4 bg-slate-950/50 border-t border-slate-800 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase">Variables:</p>
-                                        <div className="flex gap-1.5">
-                                            {selectedPrompt.variables.map(v => (
-                                                <span key={v.name} className="px-2 py-0.5 bg-slate-800 text-teal-400 text-[9px] rounded-md font-mono">
-                                                    {'{'}{v.name}{'}'}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <Button size="sm" variant="outline" className="h-8 rounded-lg border-teal-500/30 text-teal-400 hover:bg-teal-500/10 font-bold text-[10px] uppercase tracking-wider">
-                                        <Play className="w-3 h-3 mr-1.5" /> Probar Prompt
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <div className="bg-slate-50 dark:bg-slate-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 h-full flex flex-col items-center justify-center text-center p-12">
-                                <Terminal size={48} className="text-slate-200 dark:text-slate-800 mb-4" />
-                                <h3 className="text-slate-400 dark:text-slate-600 font-bold">Selecciona un Prompt</h3>
-                                <p className="text-slate-400 dark:text-slate-600 text-xs mt-2 max-w-xs">Elige una plantilla de la lista para editar su estructura y comportamiento.</p>
+                        {isEditing ? (
+                            <div className="h-full">
+                                <PromptEditor
+                                    key={selectedPrompt ? (selectedPrompt as any)._id || selectedPrompt.key : 'new-prompt'}
+                                    initialPrompt={selectedPrompt || undefined}
+                                    onSaved={handleSaved}
+                                    onCancel={() => setIsEditing(false)}
+                                />
                             </div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="h-full flex flex-col items-center justify-center p-20 text-center space-y-4"
+                            >
+                                <div className="w-20 h-20 bg-white dark:bg-slate-950 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-center mb-4">
+                                    <Sparkles size={32} className="text-slate-300 animate-pulse" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Control Maestro de Gemini</h3>
+                                    <p className="text-xs text-slate-500 max-w-xs mt-2 mx-auto font-medium">
+                                        Selecciona una ingeniería de prompt del listado lateral para desbloquear las capacidades de edición avanzada y visualización de versiones.
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={handleCreateNew}
+                                    variant="outline"
+                                    className="mt-6 rounded-2xl border-dashed border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
+                                >
+                                    <Plus size={16} className="mr-2" /> Crear Primer Prompt Dinámico
+                                </Button>
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #e2e8f0;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #cbd5e1;
+                }
+            `}</style>
         </div>
     );
 }

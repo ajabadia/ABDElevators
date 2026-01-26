@@ -7,6 +7,7 @@ import { logEvento } from '@/lib/logger';
 import { callGemini } from '@/lib/llm';
 import { generateServerPDF } from '@/lib/server-pdf-utils';
 import { uploadLLMReport } from '@/lib/cloudinary';
+import { PromptService } from '@/lib/prompt-service';
 import { UsageService } from '@/lib/usage-service';
 
 /**
@@ -63,11 +64,31 @@ export async function POST(
             .limit(10)
             .toArray();
 
-        // 4. Construir prompt para el LLM
-        const prompt = construirPromptInforme(pedido, validacion, vectorResults);
+        // 4. Construir variables para el prompt
+        const itemsValidados = validacion.items
+            .map((item: any) => `- ${item.campo}: ${item.valorCorregido || item.valorOriginal} (${item.estado})`)
+            .join('\n');
+
+        const fuentes = vectorResults
+            .map((r: any, idx: number) => `[${idx + 1}] ${r.source} - Score: ${r.score?.toFixed(2)}`)
+            .join('\n');
+
+        // Renderizar el prompt dinámico (Fase 7.6)
+        const renderedPrompt = await PromptService.renderPrompt(
+            'REPORT_GENERATOR',
+            {
+                numeroPedido: pedido.numero_pedido,
+                cliente: pedido.cliente || 'No especificado',
+                fechaIngreso: pedido.fecha_ingreso || 'No especificada',
+                itemsValidados,
+                observaciones: validacion.observaciones || 'Sin observaciones adicionales',
+                fuentes
+            },
+            tenantId
+        );
 
         // 5. Generar informe con Gemini
-        const informeTexto = await callGemini(prompt, tenantId, correlacion_id, {
+        const informeTexto = await callGemini(renderedPrompt, tenantId, correlacion_id, {
             temperature: 0.3, // Bajo para mantener precisión
             maxTokens: 2000
         });
@@ -164,50 +185,6 @@ export async function POST(
     }
 }
 
-/**
- * Construye el prompt para generar el informe profesional
- */
-function construirPromptInforme(pedido: any, validacion: any, vectorResults: any[]): string {
-    const itemsValidados = validacion.items
-        .map((item: any) => `- ${item.campo}: ${item.valorCorregido || item.valorOriginal} (${item.estado})`)
-        .join('\n');
-
-    const fuentes = vectorResults
-        .map((r: any, idx: number) => `[${idx + 1}] ${r.source} - Score: ${r.score?.toFixed(2)}`)
-        .join('\n');
-
-    return `Eres un ingeniero técnico especializado en ascensores. Genera un informe profesional basado en la siguiente información validada:
-
-## DATOS DEL PEDIDO
-- Número de Pedido: ${pedido.numero_pedido}
-- Cliente: ${pedido.cliente || 'No especificado'}
-- Fecha de Ingreso: ${pedido.fecha_ingreso || 'No especificada'}
-
-## CAMPOS VALIDADOS POR EL TÉCNICO
-${itemsValidados}
-
-## OBSERVACIONES DEL TÉCNICO
-${validacion.observaciones || 'Sin observaciones adicionales'}
-
-## FUENTES CONSULTADAS (RAG)
-${fuentes}
-
----
-
-**INSTRUCCIONES:**
-1. Genera un informe técnico profesional en formato markdown.
-2. Incluye las siguientes secciones:
-   - **Resumen Ejecutivo**: Breve descripción del pedido y hallazgos principales.
-   - **Análisis Técnico**: Detalles de los componentes validados.
-   - **Cumplimiento Normativo**: Verificación contra normativas aplicables (EN 81-20/50).
-   - **Recomendaciones**: Sugerencias técnicas si aplica.
-   - **Conclusión**: Dictamen final del técnico.
-3. Usa un tono profesional y técnico.
-4. Cita las fuentes consultadas al final con el formato [1], [2], etc.
-5. Máximo 1500 palabras.
-
-Genera el informe ahora:`;
-}
 
 /**
  * GET /api/pedidos/[id]/generar-informe

@@ -4,6 +4,8 @@ import { ExternalServiceError, AppError } from './errors';
 import { logEvento } from './logger';
 import { UsageService } from './usage-service';
 
+import { PromptService } from './prompt-service';
+
 let genAIInstance: GoogleGenerativeAI | null = null;
 
 function getGenAI() {
@@ -129,14 +131,15 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
     try {
         const genAI = getGenAI();
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-        const prompt = `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
-    Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
-    Solo devuelve el JSON, sin explicaciones.
-    
-    TEXTO:
-    ${text}`;
 
-        const result = await model.generateContent(prompt);
+        // Renderizar el prompt dinámico
+        const renderedPrompt = await PromptService.renderPrompt(
+            'MODEL_EXTRACTOR',
+            { text },
+            tenantId
+        );
+
+        const result = await model.generateContent(renderedPrompt);
         const responseText = result.response.text();
         const duration = Date.now() - start;
 

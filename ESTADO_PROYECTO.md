@@ -21,7 +21,9 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 - Vector search con embeddings
 - Dashboard administrativo
 - Sistema de workflows
+- Sistema de workflows
 - Audit trail completo
+- **Prompt Engine 2.0 (Gobernanza IA)** ✅
 - Landing page premium
 
 ### **Fase 9: Billing & Usage Tracking** ✅ **COMPLETADO (87.5%)**

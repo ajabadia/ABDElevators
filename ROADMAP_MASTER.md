@@ -44,7 +44,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Objetivo:** Evolucionar a un motor de alta performance.
 - [ ] 6.1 Vector Search Sin LLM (Motor Principal)
 - [x] 6.2 Checklists Dinámicos Configurables
-- [ ] 6.3 Configurador Admin Visual (En desarrollo - Checklist List operativo)
+- [x] 6.3 Configurador Admin Visual (Full-Screen Configurator Pro con Drag&Drop activo)
 
 - [x] 6.4 Validación Humana Estructurada
 - [x] 6.5 Audit Trail Robusto
@@ -113,9 +113,13 @@ This document consolidates **all** roadmap information, implementation plans, an
    - Middleware added to measure request latency start.
 5. **Security Hardening** [x]
    - Role‑based access enforcement in `middleware.ts` for all admin paths.
-6. **Documentation Refresh** [ ]
+6. **Usability Deep Dive: Prompt Management (`/admin/prompts`)** [x]
+   - [x] Review editor CX (Monaco Engine, variable form) and versioning robustness.
+   - [x] Full migration of all hardcoded prompts (Checklist, RAG, Alerts, Report).
+   - [x] Evaluate variable consistency (automatic `{{tenantId}}` injection).
+7. **Documentation Refresh** [ ]
    - Update README with architecture diagram of the new prompt system.
-7. **Prompt Length‑Limit Advanced Validation** [ ]
+8. **Prompt Length‑Limit Advanced Validation** [ ]
    - Currently, a visual warning is shown in `PromptEditor`.
    - Planned: Block saving if `enforceLimit` is set (future metadata).
 
@@ -182,7 +186,11 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] **SuperAdmin Role:** Usuario raíz con visibilidad total (script `create-super-admin`).
   - [x] **Notificaciones Hub:** Sistema in-app con campana animada y polling (UI + Backend).
   - [x] **Centro de Soporte:** Formulario para técnicos y panel de respuesta para admins (`/contacto` y `/admin/contacts`).
-  - [x] **Prompt Engineering UI:** Editor avanzado para mantenimiento de modelos Gemini.
+  - [x] **Prompt Engineering UI 2.0 (Advanced):**
+    - [x] Editor Monaco con validación de integridad de variables.
+    - [x] "IntelliSense" de variables de sistema y guía de uso in-situ.
+    - [x] Biblioteca de Plantillas (Load Example) por categoría.
+    - [x] Control de Versiones completo con Rollback instantáneo.
   - [x] **Expansión SuperAdmin:** Revisar y ampliar opciones de gestión global (actualmente limitadas).
   - [x] **Métricas Globales:** Salud financiera y técnica de todos los tenants.
 - [ ] **Review Landing Page:** Asegurar que las opciones de soporte y gobernanza se reflejan en la oferta Enterprise.
@@ -376,6 +384,9 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [x] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins (API `/api/admin/global-stats`).
   - [x] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
   - [ ] **Unified Support Hub:** Integración del sistema de tickets con el selector de tenant para ver logs y contexto del usuario de forma inmediata.
+  - [x] **AI Governance Layer:** 
+    - [x] **Global Prompt History:** Audit log centralizado de cambios en prompts de toda la plataforma.
+    - [x] **Tenant Context Branding:** Identificación visual del propietario del prompt en listados globales.
   - [ ] **Global Workflow & Prompt templates:** Capacidad de despliegue masivo de configuraciones maestras a múltiples tenants.
   - [x] **Consolidated Analytics:** Reportes de facturación, uso de AI y almacenamiento agregados por cliente y globalmente.
 - **Hitos de Gestión de Usuarios Enterprise (Seguridad Grado Bancario):**
@@ -615,6 +626,12 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
       - [x] Actualizar "Soberanía de Datos" para reflejar que BYODB/BYOS está en roadmap.
     - [x] **Nueva Sección Enterprise:** Añadida sección destacando Workflows, Invitaciones Seguras, Dashboard de Consumo y RBAC.
     - [x] **Revisión de Métricas:** Eliminada métrica "99.9% Precisión RAG" no verificada. Reemplazada por "Multi-Tenant Aislamiento Total".
+    - [ ] **Auditoría Estratégica de Contenidos (Q2 2026):**
+      - [ ] **Revisión de Realidad:** Verificar que todas las features descritas en la landing están activas y coinciden con la versión actual (evitar over-promising).
+      - [ ] **Profundidad Funcional:** Ampliar la descripción de capacidades (ej: "Motor de Análisis Heurístico" en lugar de "IA Genérica") para mostrar robustez sin revelar el stack exacto.
+      - [ ] **Protección de IP:** Reescribir secciones técnicas para enfocar en el "Qué" (beneficio/función) y ocultar el "Cómo" (librerías/arquitectura específica) para evitar copias.
+      - [ ] **Catálogo de Funciones:** Crear una página `/capabilities` o sección detallada que liste todos los super-poderes de la app (Extracción, Validación, Auditoría, etc.) de forma exhaustiva.
+      - [ ] **Sincronización Roadmap-Landing:** Revisar exhaustivamente las Fases 10, 11 y 21 del Roadmap (Gobernanza, Multi-Tenant, Agentes) para asegurar que todos los hitos marcados como `[x]` (completados) en ese momento tienen su reflejo comercial en la web pública.
   - **Certificaciones Formales (Roadmap):**
     - [x] **6.6.1 Gestión de Informes LLM:** Sistema de control de costos y auditoría (Fase 6.6.1) ✅.
     - [ ] **SOC2 Type II:** Contratar auditoría externa (6-12 meses).

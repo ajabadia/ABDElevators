@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 /**
  * PATCH /api/admin/prompts/[id]
@@ -12,7 +12,7 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlacion_id = uuidv4();
+    const correlacion_id = crypto.randomUUID();
     const { id } = await params;
 
     try {
@@ -21,6 +21,7 @@ export async function PATCH(
             throw new AppError('UNAUTHORIZED', 403, 'No autorizado para gestionar prompts');
         }
 
+        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
         const tenantId = (session.user as any).tenantId || 'default_tenant';
         const body = await request.json();
         const { template, variables, changeReason } = body;
@@ -35,7 +36,7 @@ export async function PATCH(
             variables || [],
             session.user.email!,
             changeReason,
-            tenantId
+            isSuperAdmin ? undefined : tenantId
         );
 
         return NextResponse.json({ success: true });

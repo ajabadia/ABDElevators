@@ -9,6 +9,8 @@ import { callGeminiMini } from "@/lib/llm"; // assumed utility for Gemini mini�
 import { ChecklistItem } from "./types";
 
 
+import { PromptService } from "./prompt-service";
+
 /**
  * Zod schema for the function input. All inputs are validated before any processing.
  */
@@ -19,7 +21,8 @@ const ExtractChecklistInputSchema = z.object({
             content: z.string()
         })
     ),
-    correlacion_id: z.string().uuid()
+    correlacion_id: z.string().uuid(),
+    tenantId: z.string()
 });
 
 /**
@@ -39,26 +42,25 @@ export async function extractChecklist(
     // -------------------
     // 1️⃣ Input validation (Zod First)
     // -------------------
-    const parsed = ExtractChecklistInputSchema.safeParse({ docs, correlacion_id });
+    const parsed = ExtractChecklistInputSchema.safeParse({ docs, correlacion_id, tenantId });
     if (!parsed.success) {
         throw new ValidationError("Invalid input for checklist extraction", parsed.error);
     }
 
     const start = Date.now();
     try {
-        // -------------------
-        // 2️⃣ Prepare mini‑prompt for Gemini (LLM optional, low‑cost)
-        // -------------------
-        const prompt = `You are a specialist extracting actionable checklist items from technical documents.
-    Return a JSON array where each element has the shape { "id": "<uuid>", "description": "<text>" }.
-    Include only items that a technician must verify for the given order.
-    Use the following documents (concatenated, each separated by "---DOC---"):
-    ${docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n")}`;
+        // 2️⃣ Prepare dynamic prompt (Fase 7.6)
+        const documentsText = docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n");
+        const renderedPrompt = await PromptService.renderPrompt(
+            'CHECKLIST_EXTRACTOR',
+            { documents: documentsText },
+            tenantId
+        );
 
         // -------------------
         // 3️⃣ Call the LLM (lightweight mini‑prompt)
         // -------------------
-        const rawResponse = await callGeminiMini(prompt, tenantId, { correlacion_id });
+        const rawResponse = await callGeminiMini(renderedPrompt, tenantId, { correlacion_id });
 
         // Assume the response is a JSON string representing ChecklistItem[]
         let items: unknown;

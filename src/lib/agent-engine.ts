@@ -114,6 +114,8 @@ async function retrievalNode(state: AgentStateType) {
     };
 }
 
+import { PromptService } from "./prompt-service";
+
 /**
  * NODO: Validación de Riesgos
  * Analiza el cruce entre el pedido y el RAG para detectar incompatibilidades.
@@ -124,16 +126,14 @@ async function riskAnalysisNode(state: AgentStateType) {
     const context = context_chunks.map(c => c.texto).join('\n---\n');
     const models = findings.filter(f => f.source === 'extraction').map(f => f.modelo).join(', ');
 
-    const prompt = `Actúa como un experto en ingeniería de ascensores. 
-    Basándote en el siguiente contexto técnico:
-    ${context}
-    
-    Analiza si hay riesgos de seguridad o incompatibilidad para los modelos: ${models}.
-    Si encuentras riesgos, detállalos. Si no, indica que parece correcto.
-    
-    Responde en formato JSON: { "riesgos": [{ "tipo": "SEGURIDAD" | "COMPATIBILIDAD", "mensaje": "...", "severidad": "LOW" | "MEDIUM" | "HIGH" }], "confidence": 0-1 }`;
+    // Renderizar prompt dinámico de riesgo para agente
+    const renderedPrompt = await PromptService.renderPrompt(
+        'AGENT_RISK_ANALYSIS',
+        { context, models },
+        tenantId!
+    );
 
-    const result = await callGeminiMini(prompt, tenantId!, { correlacion_id: correlacion_id! });
+    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlacion_id: correlacion_id! });
 
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');

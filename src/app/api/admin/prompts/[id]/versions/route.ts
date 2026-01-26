@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
 import { AppError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 /**
  * GET /api/admin/prompts/[id]/versions
@@ -13,15 +13,16 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const correlacion_id = uuidv4();
+    const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
+        const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
         const tenantId = (session.user as any).tenantId || 'default_tenant';
-        const versions = await PromptService.getVersionHistory(id, tenantId);
+        const versions = await PromptService.getVersionHistory(id, isSuperAdmin ? undefined : tenantId);
 
         return NextResponse.json({ success: true, versions });
     } catch (error: any) {
@@ -44,13 +45,14 @@ export async function POST(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const correlacion_id = uuidv4();
+    const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
+        const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
         const tenantId = (session.user as any).tenantId || 'default_tenant';
         const { targetVersion } = await req.json();
 
@@ -62,7 +64,7 @@ export async function POST(
             id,
             targetVersion,
             session.user.email!,
-            tenantId
+            isSuperAdmin ? undefined : tenantId
         );
 
         return NextResponse.json({ success: true });
