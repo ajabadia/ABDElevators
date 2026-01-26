@@ -43,6 +43,7 @@ export async function GET() {
             .toArray();
 
         // Verificar Secrets
+        const trustHost = process.env.AUTH_TRUST_HOST ? "✅ Defined" : "❌ MISSING AUTH_TRUST_HOST (Needed for Vercel)";
         isValidEnv = process.env.AUTH_SECRET ? "✅ Defined" : "❌ MISSING AUTH_SECRET";
 
         return NextResponse.json({
@@ -55,6 +56,7 @@ export async function GET() {
                 adminMfaEnabled: specificAdmin?.mfaEnabled,
                 passwordVerification: passwordCheck,
                 authSecret: isValidEnv,
+                authTrustHost: trustHost,
                 nodeEnv: process.env.NODE_ENV,
                 nextAuthUrl: process.env.NEXTAUTH_URL
             },
