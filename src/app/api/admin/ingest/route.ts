@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         const text = await extractTextFromPDF(buffer);
 
         // 2.1. Detectar Idioma (Phase 21.1)
-        const languagePrompt = `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código ISO de idioma (es, en, fr, de, it). \n\nTexto: ${text.substring(0, 2000)}`;
+        const languagePrompt = `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código ISO de idioma (es, en, fr, de, it, pt). \n\nTexto: ${text.substring(0, 2000)}`;
         const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlacion_id })).trim().toLowerCase().substring(0, 2);
 
         await logEvento({

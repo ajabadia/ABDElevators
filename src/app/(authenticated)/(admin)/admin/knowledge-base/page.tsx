@@ -176,6 +176,7 @@ export default function KnowledgeBasePage() {
                                     <SelectItem value="en">Inglés</SelectItem>
                                     <SelectItem value="de">Alemán</SelectItem>
                                     <SelectItem value="fr">Francés</SelectItem>
+                                    <SelectItem value="pt">Portugués</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
