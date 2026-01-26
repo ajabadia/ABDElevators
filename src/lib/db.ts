@@ -77,6 +77,43 @@ export async function connectAuthDB(): Promise<Db> {
     return connectedClient.db('ABDElevators-Auth');
 }
 
+let logsClient: MongoClient;
+let logsPromise: Promise<MongoClient> | null = null;
+
+/**
+ * Conexión a la Base de Datos de AUDITORÍA Y LOGS
+ * Preparado para separar almacenamiento masivo (Phase 24)
+ */
+export async function connectLogsDB(): Promise<Db> {
+    // Fallback a la URI principal si no se define una específica de LOGS
+    const logsUri = process.env.MONGODB_LOGS_URI || process.env.MONGODB_URI;
+
+    if (!logsUri) {
+        throw new DatabaseError('Please add your MONGODB_LOGS_URI or MONGODB_URI to .env.local');
+    }
+
+    if (!logsPromise) {
+        if (process.env.NODE_ENV === 'development') {
+            let globalWithMongo = global as typeof globalThis & {
+                _logsMongoPromise?: Promise<MongoClient>;
+            };
+            if (!globalWithMongo._logsMongoPromise) {
+                logsClient = new MongoClient(logsUri, options);
+                globalWithMongo._logsMongoPromise = logsClient.connect();
+            }
+            logsPromise = globalWithMongo._logsMongoPromise;
+        } else {
+            logsClient = new MongoClient(logsUri, options);
+            logsPromise = logsClient.connect();
+        }
+    }
+
+    const connectedClient = await logsPromise;
+    // Si tenemos URI específica, usamos 'ABDElevators-Logs', sino la principal
+    const dbName = process.env.MONGODB_LOGS_URI ? 'ABDElevators-Logs' : 'ABDElevators';
+    return connectedClient.db(dbName);
+}
+
 /**
  * Retorna el cliente principal para transacciones
  */
