@@ -14,6 +14,10 @@ export interface RagResult {
     tipo: string;
     modelo: string;
     cloudinary_url?: string;
+    // Dual-Indexing Metadata (Phase 21.1)
+    language?: string;
+    original_lang?: string;
+    is_shadow?: boolean;
 }
 
 const PerformTechnicalSearchSchema = z.object({
@@ -201,7 +205,11 @@ export async function performMultilingualSearch(
             score: doc.score,
             tipo: doc.tipo_componente,
             modelo: doc.modelo,
-            cloudinary_url: doc.cloudinary_url
+            cloudinary_url: doc.cloudinary_url,
+            // Mapping Dual-Indexing Metadata
+            language: doc.language,
+            original_lang: doc.original_lang,
+            is_shadow: doc.is_shadow
         }));
 
     } catch (error) {
