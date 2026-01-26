@@ -135,9 +135,11 @@ export default function ClientSupportPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 shrink-0">
-                                    Ver conversación <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
+                                <Link href={`/soporte/${ticket._id}`}>
+                                    <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 shrink-0">
+                                        Ver conversación <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </Link>
                             </div>
                         ))
                     )}

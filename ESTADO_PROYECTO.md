@@ -41,9 +41,12 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 - **Multi-Tenant Diagnostics**: Seguridad y filtrado por tenant/user.
 - **Audit Export**: Descarga masiva de logs para cumplimiento.
 
-### **Fase 20: Sistema de Tickets** 🚧 **EN PROGRESO**
+### **Fase 20: Sistema de Tickets** ✅ **COMPLETADO**
 - [x] **Backend Core**: Schema Zod, Servicio y API segura.
-- [ ] **Frontend**: UI de gestión para usuarios y administradores.
+- [x] **Escalamiento Hierárquico**: Lógica de L1/L2/L3 y reasignación entre equipos.
+- [x] **Notas Internas**: Sistema de comunicación privada para administradores (ámbar UI).
+- [x] **Frontend**: UI de gestión para usuarios y administradores (Dashboard + Historial + Respuestas).
+- [x] **Technical Hardening**: Migración a Next.js 15 compatible (`await params`) y optimización de Rate Limits.
 
 
 ### **Fase 9: Billing & Usage Tracking** ✅ **COMPLETADO (87.5%)**

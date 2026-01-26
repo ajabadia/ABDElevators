@@ -102,14 +102,8 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Soporte',
-            href: '/admin/contacts',
-            icon: LifeBuoy,
-            roles: ['ADMIN', 'SUPER_ADMIN']
-        },
-        {
-            name: 'Ponerse en contacto',
-            href: '/contacto',
+            name: 'Hacer una consulta',
+            href: '/soporte',
             icon: LifeBuoy,
             roles: ['TECNICO', 'INGENIERIA']
         },
@@ -132,8 +126,8 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Soporte & Tickets',
-            href: '/admin/tickets',
+            name: 'Soporte',
+            href: '/admin/soporte',
             icon: LifeBuoy,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },

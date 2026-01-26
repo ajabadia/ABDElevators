@@ -9,13 +9,23 @@ import {
     Mail,
     Paperclip,
     Send,
-    Loader2
+    Loader2,
+    Shield,
+    GitBranch,
+    ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TicketStatusBadge, TicketPriorityBadge } from './TicketBadges';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface Ticket {
     _id: string;
@@ -29,11 +39,28 @@ interface Ticket {
     tenantId: string;
     createdAt: string;
     updatedAt: string;
+    messages?: Array<{
+        id: string;
+        author: 'User' | 'Support' | 'System';
+        authorName?: string;
+        content: string;
+        timestamp: string;
+        isInternal?: boolean;
+    }>;
+    internalNotes?: Array<{
+        id: string;
+        author: string;
+        content: string;
+        timestamp: string;
+    }>;
 }
 
 export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
     const [reply, setReply] = useState('');
     const [sending, setSending] = useState(false);
+    // Para UX instántanea, podríamos usar estado local optimista, pero por ahora reload simple o revalidación
+    // Como esto es cliente, idealmente 'onReplySuccess' callback para recargar la data en el padre.
+    // Vamos a asumir que el padre pasará una función de refresh o implementaremos un mutate simple.
 
     if (!ticket) {
         return (
@@ -50,11 +77,62 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
     const handleSendReply = async () => {
         if (!reply.trim()) return;
         setSending(true);
-        // TODO: Implementar llamada a API para responder
-        await new Promise(r => setTimeout(r, 1000)); // Mock
-        setReply('');
-        setSending(false);
-        // toast or refresh
+        try {
+            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: reply })
+            });
+
+            if (res.ok) {
+                setReply('');
+                window.location.reload();
+            } else {
+                alert("Error al enviar respuesta");
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleEscalate = async (target: string) => {
+        const note = prompt("Motivo del escalamiento (opcional):");
+        if (note === null) return; // Cancelado
+        try {
+            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reassign`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignedTo: target, note })
+            });
+            if (res.ok) window.location.reload();
+        } catch (e) {
+            alert("Error al escalar");
+        }
+    };
+
+    const handleInternalNote = async () => {
+        const content = prompt("Escribe una nota interna (solo visible para administradores):");
+        if (!content) return;
+
+        setSending(true);
+        try {
+            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, isInternal: true })
+            });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert("Error al guardar nota");
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -91,6 +169,41 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                         {ticket.category}
                     </span>
                 </div>
+
+                {/* Support Actions Bar */}
+                <div className="flex gap-2 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200" onClick={handleInternalNote}>
+                        <Shield size={14} className="mr-2 text-amber-500" /> Nota Interna
+                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200">
+                                <GitBranch size={14} className="mr-2 text-blue-500" /> Escalar / Reasignar <ChevronDown size={14} className="ml-2 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuItem onClick={() => handleEscalate('SOPORTE_L2')}>
+                                <div className="flex flex-col">
+                                    <span className="font-bold">Soporte Nivel 2</span>
+                                    <span className="text-[10px] text-slate-400">Técnicos Senior</span>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEscalate('SOPORTE_L3')}>
+                                <div className="flex flex-col">
+                                    <span className="font-bold">Equipo Ingeniería (L3)</span>
+                                    <span className="text-[10px] text-slate-400">Desarrollo ABD</span>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEscalate('ADMIN_MASTER')}>
+                                <div className="flex flex-col">
+                                    <span className="font-bold">Administrador General</span>
+                                    <span className="text-[10px] text-slate-400">Supervisión Master</span>
+                                </div>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
             {/* Content & History */}
@@ -111,10 +224,45 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                     </div>
                 </div>
 
-                {/* Placeholder para respuestas (Timeline) */}
+                {/* Timeline Messages */}
+                {ticket.messages && ticket.messages.map((msg) => (
+                    <div key={msg.id} className={cn("flex gap-4", msg.author === 'Support' ? "flex-row-reverse" : "")}>
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-xs",
+                            msg.author === 'Support'
+                                ? (msg.isInternal ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30" : "bg-purple-100 text-purple-600 dark:bg-purple-900/30")
+                                : "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
+                        )}>
+                            {msg.author === 'Support' ? (msg.isInternal ? <Shield size={12} /> : 'S') : 'U'}
+                        </div>
+                        <div className={cn("space-y-2 max-w-3xl", msg.author === 'Support' ? "items-end flex flex-col" : "")}>
+                            <div className="flex items-baseline gap-2">
+                                <span className="font-bold text-sm text-slate-900 dark:text-white">
+                                    {msg.authorName || msg.author}
+                                    {msg.isInternal && <span className="ml-2 text-[9px] uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">Interna</span>}
+                                </span>
+                                <span className="text-xs text-slate-400">
+                                    {format(new Date(msg.timestamp), "d MMM HH:mm", { locale: es })}
+                                </span>
+                            </div>
+                            <div className={cn(
+                                "p-4 shadow-sm border text-sm leading-relaxed whitespace-pre-wrap",
+                                msg.author === 'Support'
+                                    ? (msg.isInternal
+                                        ? "bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30 text-amber-900 dark:text-amber-100 rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl italic"
+                                        : "bg-purple-50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-800/30 text-purple-900 dark:text-purple-100 rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl")
+                                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl"
+                            )}>
+                                {msg.content}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Placeholder para fin */}
                 <div className="flex justify-center">
                     <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                        Ticket creado el {format(new Date(ticket.createdAt), "d MMM yyyy")}
+                        Inicio del ticket {format(new Date(ticket.createdAt), "d MMM yyyy")}
                     </span>
                 </div>
             </div>

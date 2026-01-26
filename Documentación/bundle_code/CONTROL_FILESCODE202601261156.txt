@@ -1,0 +1,281 @@
+﻿.\src\middleware.ts : OK
+.\src\app\globals.css : OK
+.\src\app\layout.tsx : OK
+.\src\app\page.tsx : OK
+.\src\app\(authenticated)\layout.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\auditoria\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\billing\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\configs-checklist\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\configs-checklist\new\page.tsx : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\(authenticated)\(admin)\admin\contacts\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\documentos\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\logs\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\mis-documentos\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\notifications\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\notifications\settings\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\notifications\templates\page.tsx : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\(authenticated)\(admin)\admin\perfil\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\prompts\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\tenants\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\tickets\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\tipos-documento\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\usuarios\page.tsx : OK
+.\src\app\(authenticated)\(admin)\admin\workflows\page.tsx : OK
+.\src\app\(authenticated)\(tecnico)\pedidos\page.tsx : OK
+.\src\app\(authenticated)\contacto\page.tsx : OK
+.\src\app\(authenticated)\mis-documentos\page.tsx : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\(authenticated)\perfil\page.tsx : OK
+.\src\app\(authenticated)\soporte\page.tsx : OK
+.\src\app\(authenticated)\soporte\nuevo\page.tsx : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\billing\seed-plans\route.ts : OK
+.\src\app\api\admin\configs-checklist\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\contacts\route.ts : OK
+.\src\app\api\admin\documentos\route.ts : OK
+.\src\app\api\admin\documentos\status\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\global-stats\route.ts : OK
+.\src\app\api\admin\ingest\route.ts : OK
+.\src\app\api\admin\logs\route.ts : OK
+.\src\app\api\admin\logs\export\route.ts : OK
+.\src\app\api\admin\notifications\config\route.ts : OK
+.\src\app\api\admin\notifications\templates\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\prompts\route.ts : OK
+.\src\app\api\admin\prompts\history\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\taxonomias\route.ts : OK
+.\src\app\api\admin\tenants\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\tipos-documento\route.ts : OK
+.\src\app\api\admin\usage\stats\route.ts : OK
+.\src\app\api\admin\usuarios\route.ts : OK
+.\src\app\api\admin\usuarios\invite\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\admin\workflow-definitions\route.ts : OK
+.\src\app\api\admin\workflow-definitions\active\route.ts : OK
+.\src\app\api\auth\cambiar-password\route.ts : OK
+.\src\app\api\auth\documentos\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\auth\invite\accept\route.ts : OK
+.\src\app\api\auth\invite\verify\route.ts : OK
+.\src\app\api\auth\mfa\config\route.ts : OK
+.\src\app\api\auth\perfil\route.ts : OK
+.\src\app\api\auth\perfil\notificaciones\route.ts : OK
+.\src\app\api\auth\perfil\sesiones\route.ts : OK
+.\src\app\api\auth\perfil\upload-photo\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\billing\change-plan\route.ts : OK
+.\src\app\api\billing\create-checkout\route.ts : OK
+.\src\app\api\billing\portal\route.ts : OK
+.\src\app\api\casos\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\contact\route.ts : OK
+.\src\app\api\logs\route.ts : OK
+.\src\app\api\notifications\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\pricing\plans\route.ts : OK
+.\src\app\api\soporte\tickets\route.ts : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\api\tecnico\pedidos\analyze\route.ts : OK
+.\src\app\api\webhooks\stripe\route.ts : OK
+.\src\app\arquitectura\page.tsx : OK
+ : ERROR: No se encuentra ningún parámetro que coincida con el nombre del parámetro 'Raw'.
+.\src\app\error\page.tsx : OK
+.\src\app\error\rate-limit\page.tsx : OK
+.\src\app\features\audit-trail\page.tsx : OK
+.\src\app\features\dual-engine\page.tsx : OK
+.\src\app\features\vector-search\page.tsx : OK
+.\src\app\login\page.tsx : OK
+.\src\app\pricing\page.tsx : OK
+.\src\app\privacy\page.tsx : OK
+.\src\app\terms\page.tsx : OK
+.\src\app\upgrade\page.tsx : OK
+.\src\components\BrandingProvider.tsx : OK
+.\src\components\theme-provider.tsx : OK
+.\src\components\theme-toggle.tsx : OK
+.\src\components\admin\ChecklistConfigList.tsx : OK
+.\src\components\admin\ConsumptionDashboard.tsx : OK
+.\src\components\admin\CreateUserModal.tsx : OK
+.\src\components\admin\DocumentUploadModal.tsx : OK
+.\src\components\admin\EditUserModal.tsx : OK
+.\src\components\admin\InviteUserModal.tsx : OK
+.\src\components\admin\LimitAlert.tsx : OK
+.\src\components\admin\LogExplorer.tsx : OK
+.\src\components\admin\PlanSelector.tsx : OK
+.\src\components\admin\PromptEditor.tsx : OK
+.\src\components\admin\PromptGlobalHistory.tsx : OK
+.\src\components\admin\PromptList.tsx : OK
+.\src\components\admin\PromptVersionList.tsx : OK
+.\src\components\admin\checklist-editor\CategoryForm.tsx : OK
+.\src\components\admin\checklist-editor\ChecklistEditor.tsx : OK
+.\src\components\admin\checklist-editor\SortableCategoryItem.tsx : OK
+.\src\components\admin\configurator\ConfiguratorFull.tsx : OK
+.\src\components\admin\configurator\PreviewModal.tsx : OK
+.\src\components\admin\configurator\SortableCategory.tsx : OK
+.\src\components\admin\configurator\SortableItem.tsx : OK
+.\src\components\admin\logs\LogExplorer.tsx : OK
+.\src\components\admin\notifications\NotificationSettingsForm.tsx : OK
+.\src\components\admin\notifications\TemplateEditor.tsx : OK
+.\src\components\agente\AgentTraceViewer.tsx : OK
+.\src\components\landing\PricingTable.tsx : OK
+.\src\components\pedidos\InformeLLMGenerator.tsx : OK
+.\src\components\pedidos\ValidationWorkflow.tsx : OK
+.\src\components\perfil\ActiveSessionsForm.tsx : OK
+.\src\components\perfil\MfaSettingsForm.tsx : OK
+.\src\components\perfil\PasswordForm.tsx : OK
+.\src\components\perfil\ProfileForm.tsx : OK
+.\src\components\perfil\ProfilePhotoUpload.tsx : OK
+.\src\components\perfil\UserNotificationPreferencesForm.tsx : OK
+.\src\components\shared\AppSidebar.tsx : OK
+.\src\components\shared\Header.tsx : OK
+.\src\components\shared\LoadingSkeleton.tsx : OK
+.\src\components\shared\LocaleSwitcher.tsx : OK
+.\src\components\shared\NotificationBell.tsx : OK
+.\src\components\shared\PublicFooter.tsx : OK
+.\src\components\shared\PublicNavbar.tsx : OK
+.\src\components\shared\RiskAlerter.tsx : OK
+.\src\components\shared\UserNav.tsx : OK
+.\src\components\tecnico\DynamicChecklist.tsx : OK
+.\src\components\tecnico\ExportButton.tsx : OK
+.\src\components\tecnico\RagReportView.tsx : OK
+.\src\components\tecnico\VectorResultsTable.tsx : OK
+.\src\components\tickets\TicketBadges.tsx : OK
+.\src\components\tickets\TicketDetail.tsx : OK
+.\src\components\tickets\TicketList.tsx : OK
+.\src\components\ui\avatar.tsx : OK
+.\src\components\ui\badge.tsx : OK
+.\src\components\ui\button.tsx : OK
+.\src\components\ui\card.tsx : OK
+.\src\components\ui\checkbox.tsx : OK
+.\src\components\ui\dialog.tsx : OK
+.\src\components\ui\dropdown-menu.tsx : OK
+.\src\components\ui\input.tsx : OK
+.\src\components\ui\label.tsx : OK
+.\src\components\ui\progress.tsx : OK
+.\src\components\ui\scroll-area.tsx : OK
+.\src\components\ui\select.tsx : OK
+.\src\components\ui\skeleton.tsx : OK
+.\src\components\ui\switch.tsx : OK
+.\src\components\ui\table.tsx : OK
+.\src\components\ui\tabs.tsx : OK
+.\src\components\ui\textarea.tsx : OK
+.\src\components\ui\toast.tsx : OK
+.\src\components\workflow\WorkflowActions.tsx : OK
+.\src\components\workflow\WorkflowStatusBar.tsx : OK
+.\src\components\workflow\WorkflowTimeline.tsx : OK
+.\src\context\SidebarContext.tsx : OK
+.\src\hooks\use-labels.ts : OK
+.\src\hooks\use-toast.ts : OK
+.\src\i18n\request.ts : OK
+.\src\lib\agent-engine.ts : OK
+.\src\lib\agent-persistence.ts : OK
+.\src\lib\audit-pdf-export.ts : OK
+.\src\lib\auth.ts : OK
+.\src\lib\billing-engine.ts : OK
+.\src\lib\billing-service.ts : OK
+.\src\lib\checklist-auto-classifier.ts : OK
+.\src\lib\checklist-extractor.ts : OK
+.\src\lib\chunk-utils.ts : OK
+.\src\lib\cloudinary.ts : OK
+.\src\lib\configs.ts : OK
+.\src\lib\contact-service.ts : OK
+.\src\lib\db-tenant.ts : OK
+.\src\lib\db.ts : OK
+.\src\lib\default-checklist-config.ts : OK
+.\src\lib\email-service.ts : OK
+.\src\lib\errors.ts : OK
+.\src\lib\labels.ts : OK
+.\src\lib\llm.ts : OK
+.\src\lib\logger-client.ts : OK
+.\src\lib\logger.ts : OK
+.\src\lib\mappers.ts : OK
+.\src\lib\mfa-service.ts : OK
+.\src\lib\multilingual-service.ts : OK
+.\src\lib\notification-service.ts : OK
+.\src\lib\pdf-export.ts : OK
+.\src\lib\pdf-utils.ts : OK
+.\src\lib\plans.ts : OK
+.\src\lib\prompt-service.ts : OK
+.\src\lib\prompts.ts : OK
+.\src\lib\rag-service.ts : OK
+.\src\lib\rate-limit.ts : OK
+.\src\lib\risk-service.ts : OK
+.\src\lib\schemas.ts : OK
+.\src\lib\server-pdf-utils.ts : OK
+.\src\lib\session-service.ts : OK
+.\src\lib\stripe.ts : OK
+.\src\lib\taxonomy-service.ts : OK
+.\src\lib\tenant-service.ts : OK
+.\src\lib\ticket-schema.ts : OK
+.\src\lib\ticket-service.ts : OK
+.\src\lib\types.ts : OK
+.\src\lib\usage-limiter.ts : OK
+.\src\lib\usage-service.ts : OK
+.\src\lib\utils.ts : OK
+.\src\lib\workflow-engine.ts : OK
+.\src\lib\workflow-service.ts : OK
+.\src\types\next-auth.d.ts : OK
+.\scripts\check-admin.ts : OK
+.\scripts\check-auth-diag.ts : OK
+.\scripts\create-super-admin.ts : OK
+.\scripts\debug-auth-logic.ts : OK
+.\scripts\debug-db-v2.ts : OK
+.\scripts\debug-db.ts : OK
+.\scripts\demo-legal-risk.ts : OK
+.\scripts\fix-admin.ts : OK
+.\scripts\make-fake-history.ts : OK
+.\scripts\migrate-to-auth-db.ts : OK
+.\scripts\minimal-db-test.ts : OK
+.\scripts\reset-users.ts : OK
+.\scripts\seed-notifications.ts : OK
+.\scripts\seed-prompts.ts : OK
+.\scripts\seed-taxonomies.ts : OK
+.\scripts\seed-users-standalone.ts : OK
+.\scripts\seed-users.ts : OK
+.\scripts\seed-workflows.ts : OK
+.\scripts\test-mfa-logic.ts : OK
+.\scripts\test-path.ts : OK
+.\messages\en.json : OK
+.\messages\es.json : OK
+.env.example : OK
+.\bundle_code.ps1 : OK
+.\components.json : OK
+.\ESTADO_PROYECTO.md : OK
+.\FASE_6.4_VALIDACION_HUMANA.md : OK
+.\FASE_6.6.1_GESTION_INFORMES_LLM.md : OK
+.\FASE_9.1_MOTOR_FACTURACION_AVANZADA.md : OK
+.\FASE_9.3_STRIPE.md : OK
+.\FASE_9.4_NOTIFICATIONS.md : OK
+.\FASE_9_IMPLEMENTACION.md : OK
+.\FASE_9_RESUMEN_FINAL.md : OK
+.\GUIA_CONFIGURACION_STRIPE_RESEND.md : OK
+.\jest.setup.js : OK
+.\next-env.d.ts : OK
+.\next.config.ts : OK
+.\package-lock.json : OK
+.\package.json : OK
+.\README.md : OK
+.\RESUMEN_SESION_2026-01-23.md : OK
+.\roadmap.md : OK
+.\ROADMAP_MASTER.md : OK
+.\SESION_2026-01-23.md : OK
+.\SESION_FINAL_2026-01-23.md : OK
+.\test-db.ts : OK
+.\tsconfig.json : OK

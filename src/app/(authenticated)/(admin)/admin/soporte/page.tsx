@@ -22,7 +22,7 @@ interface TicketUI {
     updatedAt: string;
 }
 
-export default function AdminTicketsPage() {
+export default function AdminSoportePage() {
     const [selectedTicket, setSelectedTicket] = useState<TicketUI | null>(null);
 
     return (

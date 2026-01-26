@@ -89,7 +89,12 @@ export class TicketService {
      */
     static async addMessage(
         ticketId: string,
-        message: { content: string, author: 'User' | 'Support' | 'System', authorName?: string }
+        message: {
+            content: string,
+            author: 'User' | 'Support' | 'System',
+            authorName?: string,
+            isInternal?: boolean
+        }
     ) {
         const db = await connectDB();
 
@@ -97,7 +102,7 @@ export class TicketService {
             id: crypto.randomUUID(),
             ...message,
             timestamp: new Date(),
-            isInternal: false
+            isInternal: message.isInternal || false
         };
 
         // Si contesta el usuario, reabrimos si estaba esperando usuario
@@ -128,6 +133,47 @@ export class TicketService {
         });
 
         return newMessage;
+    }
+
+    /**
+     * Reasigna un ticket y añade nota de escalamiento
+     */
+    static async reassignTicket(ticketId: string, data: { assignedTo: string, note?: string, authorId: string }) {
+        const db = await connectDB();
+        const timestamp = new Date();
+
+        const updateOp: any = {
+            $set: {
+                assignedTo: data.assignedTo,
+                updatedAt: timestamp,
+                status: 'IN_PROGRESS'
+            }
+        };
+
+        if (data.note) {
+            updateOp.$push = {
+                internalNotes: {
+                    id: crypto.randomUUID(),
+                    author: data.authorId,
+                    content: data.note,
+                    timestamp: timestamp
+                }
+            };
+        }
+
+        await db.collection("tickets").updateOne(
+            { _id: new ObjectId(ticketId) },
+            updateOp
+        );
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'TICKET_SERVICE',
+            accion: 'REASSIGN_TICKET',
+            mensaje: `Ticket ${ticketId} reasignado a ${data.assignedTo}`,
+            correlacion_id: ticketId,
+            detalles: { assignedTo: data.assignedTo, note: !!data.note }
+        });
     }
 
     /**

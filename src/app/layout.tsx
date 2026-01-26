@@ -33,8 +33,12 @@ export const metadata: Metadata = {
     title: "ABD RAG Plataform - Sistema IA",
     description: "Plataforma inteligente de análisis de documentos y normativa técnica mediante RAG.",
   },
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
+};
+
+export const viewport = {
+  width: "width=device-width",
+  initialScale: 1,
 };
 
 import { ThemeProvider } from "@/components/theme-provider";

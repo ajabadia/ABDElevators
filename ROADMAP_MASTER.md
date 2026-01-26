@@ -549,17 +549,17 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Automated Tests:** Playwright tests que cambien idioma y verifiquen traducciones.
     - [ ] **Coverage Report:** Generar reporte de % de cobertura i18n por página.
 
-- **🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL (PLANNED)**
+- **🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL (COMPLETADO ✅)**
   - **Objetivo:** Reemplazar el sistema de contacto simple por un sistema de ticketing profesional con escalamiento jerárquico y SLA tracking, siguiendo mejores prácticas de entornos SaaS bancarios.
   - **Arquitectura de Escalamiento:**
-    - [ ] **Jerarquía de Soporte:**
+    - [x] **Jerarquía de Soporte:**
       ```
       Usuario (TECNICO/INGENIERIA) 
         → Ticket L1 (Auto-asignado a ADMIN del tenant)
         → Escalamiento L2 (ADMIN puede elevar a SUPER_ADMIN)
         → Escalamiento L3 (SUPER_ADMIN puede derivar a equipo técnico ABD)
       ```
-    - [ ] **Routing Inteligente:** 
+    - [x] **Routing Inteligente:** 
       - Tickets técnicos (RAG, análisis) → Equipo de ingeniería
       - Tickets de facturación → Equipo comercial
       - Tickets de seguridad → Equipo de compliance
@@ -582,7 +582,7 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
       }
       ```
   - **SLA Management:**
-    - [ ] **Definición de SLAs por Prioridad:**
+    - [ ] **Definición de SLAs por Prioridad (Pendiente Configuración):**
       - CRITICAL: Respuesta < 1h, Resolución < 4h
       - HIGH: Respuesta < 4h, Resolución < 24h
       - MEDIUM: Respuesta < 24h, Resolución < 72h
@@ -590,11 +590,11 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Alertas Automáticas:** Notificar a supervisores si SLA está en riesgo (80% del tiempo consumido).
     - [ ] **Breach Tracking:** Dashboard de tickets con SLA incumplido.
   - **UI de Gestión:**
-    - [x] **Página: `/soporte/tickets`**
+    - [x] **Página: `/soporte`**
       - Vista de lista con filtros (estado, prioridad, categoría)
       - Indicadores visuales de SLA (verde/amarillo/rojo)
       - Búsqueda full-text en subject/description
-    - [x] **Página: `/soporte/tickets/[id]`**
+    - [x] **Página: `/soporte/[id]`**
       - Timeline de actividad (comentarios, escalamientos, cambios de estado)
       - Editor de comentarios con markdown
       - Upload de attachments (screenshots, logs)

@@ -16,14 +16,36 @@ export async function middleware(request: NextRequest) {
         request.headers.get('x-real-ip') ||
         '127.0.0.1';
 
+    // 🛡️ Rutas públicas (landing page y páginas de marketing)
+    const publicPaths = [
+        '/',
+        '/login',
+        '/api/auth',
+        '/api/webhooks',
+        '/privacy',
+        '/terms',
+        '/arquitectura',
+        '/features',
+        '/upgrade',
+        '/auth/signup-invite',
+        '/error',
+    ];
+
+    const isPublicPath = publicPaths.some(path => {
+        if (path === '/') {
+            return pathname === '/';
+        }
+        return pathname.startsWith(path);
+    });
+
     // 🛡️ Rate Limiting (Regla #9 Hardening)
-    // Límite: 100 req / hora (3,600,000 ms)
-    const rateKey = session?.user?.id || ip;
+    // Evitamos rate limit en prefetches de Next.js para mejorar performance
+    const isPrefetch = request.headers.get('Purpose') === 'prefetch' || request.headers.get('Next-Purpose') === 'prefetch';
     const isApiOrAdmin = pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/pedidos');
 
-    if (isApiOrAdmin) {
+    if (isApiOrAdmin && !isPublicPath && !isPrefetch) {
         const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
-        let limit = isAdmin ? 5000 : 500; // Aumentamos el límite para admins y técnicos (anteriormente 100 era muy bajo)
+        let limit = isAdmin ? 10000 : 2000; // Límites más realistas para un entorno empresarial
         let windowMs = 60 * 60 * 1000; // 1 hora
 
         // 🛡️ Hardening MFA: Límite muy estricto para intentos de MFA
@@ -32,6 +54,7 @@ export async function middleware(request: NextRequest) {
             windowMs = 60 * 1000; // 10 intentos por minuto
         }
 
+        const rateKey = session?.user?.id || ip;
         const rate = await rateLimit(`rate_${rateKey}_${pathname.includes('/api/auth/mfa') ? 'mfa' : 'api'}`, {
             limit: limit,
             windowMs: windowMs
@@ -66,27 +89,6 @@ export async function middleware(request: NextRequest) {
             );
         }
     }
-
-    // 🛡️ Rutas públicas (landing page y páginas de marketing)
-    const publicPaths = [
-        '/',
-        '/login',
-        '/api/auth',
-        '/api/webhooks',
-        '/privacy',
-        '/terms',
-        '/arquitectura',
-        '/features',
-        '/upgrade',
-        '/auth/signup-invite',
-    ];
-
-    const isPublicPath = publicPaths.some(path => {
-        if (path === '/') {
-            return pathname === '/';
-        }
-        return pathname.startsWith(path);
-    });
 
     // 🔄 Redirección si ya está logueado e intenta ir a login
     if (session && pathname === '/login') {
