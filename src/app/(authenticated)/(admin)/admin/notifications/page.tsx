@@ -125,7 +125,15 @@ export default async function NotificationsDashboardPage() {
                                         {log.emailRecipient || log.userId || 'Broadcast'}
                                     </TableCell>
                                     <TableCell className="text-slate-500 text-sm">
-                                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: es })}
+                                        {log.createdAt ? (
+                                            (() => {
+                                                try {
+                                                    return formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: es });
+                                                } catch (e) {
+                                                    return 'Fecha inválida';
+                                                }
+                                            })()
+                                        ) : 'N/A'}
                                     </TableCell>
                                 </TableRow>
                             ))}
