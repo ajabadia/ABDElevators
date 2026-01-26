@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentUploadModalProps {
     isOpen: boolean;
@@ -28,6 +29,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [tiposDocs, setTiposDocs] = useState<{ nombre: string }[]>([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (isOpen) {
@@ -74,6 +76,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('SERVER ERROR DATA:', errorData); // Visibilidad para el usuario
                 throw new Error(errorData.message || 'Error al subir el archivo');
             }
 
@@ -85,9 +88,13 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                 setVersion("1.0");
                 setUploadSuccess(false);
             }, 1500);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload error:', error);
-            alert(error instanceof Error ? error.message : 'Error desconocido al subir el archivo');
+            toast({
+                title: 'Error de Subida',
+                description: error.message || 'Error desconocido al subir el archivo',
+                variant: 'destructive',
+            });
         } finally {
             setIsUploading(false);
         }
@@ -97,9 +104,13 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] border-none shadow-2xl">
                 <DialogHeader>
-                    <DialogTitle id="upload-dialog-title" className="text-2xl font-bold font-outfit text-slate-900">Subir Documentación Técnica</DialogTitle>
-                    <DialogDescription id="upload-dialog-desc" className="text-slate-500">
-                        Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.
+                    <DialogTitle className="text-2xl font-bold font-outfit text-slate-900">
+                        {uploadSuccess ? "¡Documento Recibido!" : "Subir Documentación Técnica"}
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-500">
+                        {uploadSuccess
+                            ? "Procesando e indexando fragmentos con IA..."
+                            : "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente."}
                     </DialogDescription>
                 </DialogHeader>
 

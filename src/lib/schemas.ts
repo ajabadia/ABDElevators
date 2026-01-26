@@ -214,7 +214,7 @@ export const DocumentoTecnicoSchema = z.object({
     cloudinary_url: z.string().optional(),
     cloudinary_public_id: z.string().optional(),
     total_chunks: z.number(),
-    creado: z.date(),
+    creado: z.date().default(() => new Date()),
 });
 
 /**
@@ -225,7 +225,7 @@ export const TipoDocumentoSchema = z.object({
     nombre: z.string(),
     descripcion: z.string().optional(),
     activo: z.boolean().default(true),
-    creado: z.date(),
+    creado: z.date().default(() => new Date()),
 });
 
 /**

@@ -1,0 +1,22 @@
+﻿[dotenv@17.2.3] injecting env (11) from .env.local -- tip: ­ƒöæ add access controls to secrets: https://dotenvx.com/ops
+LAST 20 GLOBAL LOGS (RAW):
+[Mon Jan 26 2026 15:07:44 GMT+0100 (hora est├índar de Europa central)] [INFO] [TEST_SCRIPT] [TEST_LOG] Testing if logs are reaching the DB
+[Mon Jan 26 2026 15:00:37 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_ADMIN_CONFIGS_CHECKLIST] [PERFORMANCE_SLA_VIOLATION] GET /api/admin/configs-checklist tom├│ 594ms
+[Mon Jan 26 2026 15:00:30 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_GET_ACTIVE_WORKFLOW] [API_ERROR] No hay un workflow activo para PEDIDO
+[Mon Jan 26 2026 15:00:29 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_GET_ACTIVE_WORKFLOW] [API_ERROR] No hay un workflow activo para PEDIDO
+[Mon Jan 26 2026 14:59:32 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 327ms
+[Mon Jan 26 2026 14:59:31 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] POST /api/auth/documentos tom├│ 3809ms
+[Mon Jan 26 2026 14:59:31 GMT+0100 (hora est├índar de Europa central)] [INFO] [API_DOCS_USUARIO] [UPLOAD_DOC] Documento subido por superadmin@abd.com: BOE-A-2008-16387-consolidado.pdf
+[Mon Jan 26 2026 14:59:08 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 401ms
+[Mon Jan 26 2026 14:59:08 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] POST /api/auth/documentos tom├│ 4622ms
+[Mon Jan 26 2026 14:59:08 GMT+0100 (hora est├índar de Europa central)] [INFO] [API_DOCS_USUARIO] [UPLOAD_DOC] Documento subido por superadmin@abd.com: BOE-A-2024-7258.pdf
+[Mon Jan 26 2026 14:58:20 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 368ms
+[Mon Jan 26 2026 14:58:19 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] POST /api/auth/documentos tom├│ 3061ms
+[Mon Jan 26 2026 14:58:19 GMT+0100 (hora est├índar de Europa central)] [INFO] [API_DOCS_USUARIO] [UPLOAD_DOC] Documento subido por superadmin@abd.com: BOE-A-2016-4953-consolidado.pdf
+[Mon Jan 26 2026 14:57:37 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 420ms
+[Mon Jan 26 2026 14:57:36 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 401ms
+[Mon Jan 26 2026 14:57:30 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_LIST] [SLA_VIOLATION] Listado de documentos lento: 577ms
+[Mon Jan 26 2026 14:57:23 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_DOCS_USUARIO] [PERFORMANCE_SLA_VIOLATION] GET /api/auth/documentos tom├│ 264ms
+[Mon Jan 26 2026 14:56:30 GMT+0100 (hora est├índar de Europa central)] [INFO] [API_INGEST] [START] Iniciando ingesta de pedido - portugues.pdf
+[Mon Jan 26 2026 14:56:08 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_TIPOS_DOC] [PERFORMANCE_SLA_VIOLATION] GET /api/admin/tipos-documento tom├│ 202ms
+[Mon Jan 26 2026 14:55:55 GMT+0100 (hora est├índar de Europa central)] [WARN] [API_TIPOS_DOC] [PERFORMANCE_SLA_VIOLATION] GET /api/admin/tipos-documento tom├│ 282ms

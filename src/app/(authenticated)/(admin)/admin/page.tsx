@@ -50,12 +50,36 @@ export default function AdminDashboardPage() {
 
                 const res = await fetch(endpoint);
                 const data = await res.json();
+
                 if (data.success) {
-                    setStats(isSuperAdmin ? data.global : data.stats);
+                    if (isSuperAdmin) {
+                        setStats(data.global);
+                    } else {
+                        // Normalizar datos de Tenant para que coincidan con la estructura esperada (usage nested)
+                        const tenantStats = data.stats;
+                        const normalizedStats: any = {
+                            totalTenants: 0,
+                            totalUsers: 0, // Se podría obtener de otro lado si hace falta
+                            totalFiles: 0,
+                            totalCases: 0,
+                            usage: {
+                                tokens: tenantStats.tokens || 0,
+                                storage: tenantStats.storage || 0,
+                                searches: tenantStats.searches || 0,
+                            },
+                            industries: [],
+                            activities: tenantStats.history || [],
+                            limits: tenantStats.limits,
+                            tier: tenantStats.tier,
+                            planSlug: tenantStats.planSlug
+                        };
+                        setStats(normalizedStats);
+                    }
                 } else {
                     setError(data.message || "Error al cargar estadísticas");
                 }
             } catch (err) {
+                console.error(err);
                 setError("Error de conexión");
             } finally {
                 setLoading(false);

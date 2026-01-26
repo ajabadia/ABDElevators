@@ -46,16 +46,20 @@ export default function TiposDocumentoPage() {
         }
     };
 
+    const [isCreating, setIsCreating] = useState(false);
+
     const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const data = {
-            nombre: formData.get('nombre'),
-            descripcion: formData.get('descripcion'),
-            activo: true
-        };
+        setIsCreating(true);
 
         try {
+            const formData = new FormData(e.currentTarget);
+            const data = {
+                nombre: formData.get('nombre') as string,
+                descripcion: formData.get('descripcion') as string,
+                activo: true
+            };
+
             const res = await fetch('/api/admin/tipos-documento', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -70,14 +74,18 @@ export default function TiposDocumentoPage() {
                 setIsModalOpen(false);
                 fetchTipos();
             } else {
-                throw new Error('Error al crear');
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Error al crear');
             }
-        } catch (error) {
+        } catch (error: any) {
+            console.error('Error creating type:', error);
             toast({
                 title: 'Error',
-                description: 'No se pudo crear el tipo de documento.',
+                description: error.message || 'No se pudo crear el tipo de documento.',
                 variant: 'destructive'
             });
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -120,8 +128,15 @@ export default function TiposDocumentoPage() {
                                 <Input id="descripcion" name="descripcion" placeholder="Opcional" />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-                                <Button type="submit" className="bg-teal-600 hover:bg-teal-700">Crear</Button>
+                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isCreating}>Cancelar</Button>
+                                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isCreating}>
+                                    {isCreating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Creando...
+                                        </>
+                                    ) : 'Crear'}
+                                </Button>
                             </div>
                         </form>
                     </DialogContent>

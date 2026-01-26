@@ -1,0 +1,12 @@
+﻿[dotenv@17.2.3] injecting env (11) from .env.local -- tip: ­ƒöæ add access controls to secrets: https://dotenvx.com/ops
+TIME | LEVEL | ORIGIN | ACTION | MESSAGE
+15:07:44 | INFO | TEST_SCRIPT | TEST_LOG | Testing if logs are reaching the DB
+15:00:37 | WARN | API_ADMIN_CONFIGS_CHECKLIST | PERFORMANCE_SLA_VIOLATION | GET /api/admin/configs-checklist tom├│ 594ms
+15:00:30 | WARN | API_GET_ACTIVE_WORKFLOW | API_ERROR | No hay un workflow activo para PEDIDO
+15:00:29 | WARN | API_GET_ACTIVE_WORKFLOW | API_ERROR | No hay un workflow activo para PEDIDO
+14:59:32 | WARN | API_DOCS_USUARIO | PERFORMANCE_SLA_VIOLATION | GET /api/auth/documentos tom├│ 327ms
+14:59:31 | WARN | API_DOCS_USUARIO | PERFORMANCE_SLA_VIOLATION | POST /api/auth/documentos tom├│ 3809ms
+14:59:31 | INFO | API_DOCS_USUARIO | UPLOAD_DOC | Documento subido por superadmin@abd.com: BOE-A-200
+14:59:08 | WARN | API_DOCS_USUARIO | PERFORMANCE_SLA_VIOLATION | GET /api/auth/documentos tom├│ 401ms
+14:59:08 | WARN | API_DOCS_USUARIO | PERFORMANCE_SLA_VIOLATION | POST /api/auth/documentos tom├│ 4622ms
+14:59:08 | INFO | API_DOCS_USUARIO | UPLOAD_DOC | Documento subido por superadmin@abd.com: BOE-A-202

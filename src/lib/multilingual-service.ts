@@ -24,7 +24,9 @@ class MultilingualService {
      */
     private async init() {
         if (!this.model) {
+            console.log("📥 [MULTILINGUAL] Cargando modelo BGE-M3 (puede tardar la primera vez)...");
             this.model = await pipeline('feature-extraction', 'Xenova/bge-m3');
+            console.log("✅ [MULTILINGUAL] Modelo cargado.");
         }
     }
 

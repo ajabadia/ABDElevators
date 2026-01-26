@@ -58,15 +58,20 @@ export async function POST(req: NextRequest) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const tenantId = (session.user as any).tenantId || 'default_tenant';
 
+        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: 'Buffer cargado', correlacion_id });
+
         // 1. Subir PDF a Cloudinary (Aislamiento por tenant)
         const cloudinaryResult = await uploadRAGDocument(buffer, file.name, tenantId);
+        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: 'Subido a Cloudinary', correlacion_id });
 
         // 2. Extraer texto
         const text = await extractTextFromPDF(buffer);
+        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: `Texto extraído: ${text.length} chars`, correlacion_id });
 
         // 2.1. Detectar Idioma (Phase 21.1)
         const languagePrompt = `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código ISO de idioma (es, en, fr, de, it, pt). \n\nTexto: ${text.substring(0, 2000)}`;
         const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlacion_id })).trim().toLowerCase().substring(0, 2);
+        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: `Idioma detectado: ${detectedLang}`, correlacion_id });
 
         await logEvento({
             nivel: 'INFO',
@@ -109,50 +114,63 @@ export async function POST(req: NextRequest) {
 
         // 5.2. Procesar chunks con Dual-Indexing
 
-        // Cargar Multilingual Service (Lazy load)
+        // 5.2. Procesar chunks con Dual-Indexing en batches para mejorar performance
         const { multilingualService } = await import('@/lib/multilingual-service');
+        const BATCH_SIZE = 5;
 
-        for (const chunkText of chunks) {
-            // Si el idioma no es español, generamos traducción técnica para el "Dual-Index"
-            let translatedText = undefined;
-            if (detectedLang !== 'es') {
-                const translationPrompt = `Traduce el siguiente fragmento técnico de un manual de ascensores al Castellano de forma profesional. Mantén términos técnicos y códigos de error exactos. \n\nTexto original: ${chunkText}`;
-                translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id });
-            }
+        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+            const batch = chunks.slice(i, i + BATCH_SIZE);
 
-            // Paralelizar generación de embeddings para mejorar SLA
-            // Indexamos el texto original con el modelo multilingüe BGE-M3
-            const [embeddingGemini, embeddingBGE] = await Promise.all([
-                generateEmbedding(chunkText, tenantId, correlacion_id),
-                multilingualService.generateEmbedding(chunkText)
-            ]);
+            await Promise.all(batch.map(async (chunkText) => {
+                // Si el idioma no es español, generamos traducción técnica para el "Dual-Index"
+                let translatedText = undefined;
+                if (detectedLang !== 'es') {
+                    const translationPrompt = `Traduce el siguiente fragmento técnico de un manual de ascensores o normativa al Castellano de forma profesional. Mantén términos técnicos y códigos de error exactos. \n\nTexto original: ${chunkText}`;
+                    translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id });
+                }
 
-            const documentChunk = {
-                tenantId, // Aislamiento garantizado
-                industry: "ELEVATORS", // Default por ahora
-                tipo_componente: metadata.tipo,
-                modelo: modeloPrincipal,
-                origen_doc: file.name,
-                version_doc: metadata.version,
-                fecha_revision: new Date(),
-                language: detectedLang,
-                texto_chunk: chunkText,
-                texto_traducido: translatedText,
-                embedding: embeddingGemini,
-                embedding_multilingual: embeddingBGE,
-                cloudinary_url: cloudinaryResult.secureUrl,
-                cloudinary_public_id: cloudinaryResult.publicId,
-                creado: new Date(),
-            };
+                // Generar embeddings (Gemini + BGE-M3)
+                const [embeddingGemini, embeddingBGE] = await Promise.all([
+                    generateEmbedding(chunkText, tenantId, correlacion_id),
+                    multilingualService.generateEmbedding(chunkText)
+                ]);
 
-            const validatedChunk = DocumentChunkSchema.parse(documentChunk);
-            await documentChunksCollection.insertOne(validatedChunk);
+                const documentChunk = {
+                    tenantId,
+                    industry: "ELEVATORS",
+                    tipo_componente: metadata.tipo,
+                    modelo: modeloPrincipal,
+                    origen_doc: file.name,
+                    version_doc: metadata.version,
+                    fecha_revision: new Date(),
+                    language: detectedLang,
+                    texto_chunk: chunkText,
+                    texto_traducido: translatedText,
+                    embedding: embeddingGemini,
+                    embedding_multilingual: embeddingBGE,
+                    cloudinary_url: cloudinaryResult.secureUrl,
+                    cloudinary_public_id: cloudinaryResult.publicId,
+                    creado: new Date(),
+                };
+
+                const validatedChunk = DocumentChunkSchema.parse(documentChunk);
+                await documentChunksCollection.insertOne(validatedChunk);
+            }));
+
+            await logEvento({
+                nivel: 'INFO',
+                origen: 'API_INGEST',
+                accion: 'BATCH_PROCESSED',
+                mensaje: `Procesado batch ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(chunks.length / BATCH_SIZE)}`,
+                correlacion_id,
+                detalles: { batchIndex: i / BATCH_SIZE, totalChunks: chunks.length }
+            });
         }
 
         return NextResponse.json({
             success: true,
             correlacion_id,
-            message: 'Documento procesado correctamente con Dual-Indexing',
+            message: `Documento procesado correctamente con Dual-Indexing (${chunks.length} fragmentos)`,
             chunks: chunks.length,
             idioma: detectedLang
         });
@@ -178,7 +196,7 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error crítico en ingesta').toJSON(),
+            { success: false, code: 'INTERNAL_ERROR', message: 'Error crítico en ingesta', details: error.message },
             { status: 500 }
         );
     } finally {

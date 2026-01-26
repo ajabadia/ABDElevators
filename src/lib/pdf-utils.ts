@@ -6,9 +6,8 @@ import { ExternalServiceError } from './errors';
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     try {
-        // Importación dinámica usando require para compatibilidad con CommonJS
-        // pdf-parse es un módulo CommonJS que no tiene export default en ESM
-        const pdfParse = (await eval('import("pdf-parse")')).default || require('pdf-parse');
+        // Usamos require interno para evitar problemas de ESM en Node con pdf-parse
+        const pdfParse = require('pdf-parse');
         const data = await pdfParse(buffer);
         return data.text;
     } catch (error) {
