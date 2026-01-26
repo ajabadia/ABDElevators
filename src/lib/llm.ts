@@ -83,7 +83,8 @@ export async function callGeminiMini(
 
     try {
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        // Fallback a 1.5-flash si 2.0 falla por cuota o disponibilidad
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: { temperature }
@@ -137,7 +138,7 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
     const start = Date.now();
     try {
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         // Renderizar el prompt dinámico
         const renderedPrompt = await PromptService.renderPrompt(
