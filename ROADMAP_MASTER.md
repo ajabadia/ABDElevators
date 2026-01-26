@@ -688,6 +688,11 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 - [x] **Smart Ingestion (MD5)**: Deduplicación automática de archivos para evitar re-procesamiento (Ahorro tokens).
 - [x] **Frontend UX**: Feedback instantáneo ("Ya existía") para subidas duplicadas.
 - [x] **Database Tuning**: Índices optimizados en collections críticas.
+- [x] **Dual-Indexing Engine (Backend)**: Soporte para 'Shadow Chunks' (traducciones latentes) para búsqueda multilingüe transparente.
+
+### 🧠 FASE 25.2: VISIBILIDAD & EXPLORACIÓN (PENDIENTE)
+- [ ] **Knowledge Base Explorer**: UI Admin para inspeccionar chunks, embeddings y traducciones shadow.
+- [ ] **Search debugger**: Herramienta para probar queries y ver scores vectoriales en tiempo real.
 
 ---
 
