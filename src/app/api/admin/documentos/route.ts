@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'INGENIERIA') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'INGENIERIA' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 

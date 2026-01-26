@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
     try {
         // Regla #9: Security Check
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado para ingestion');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
         const formData = await req.formData();

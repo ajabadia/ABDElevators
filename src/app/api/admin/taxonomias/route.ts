@@ -11,7 +11,7 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const industry = (session.user as any).industry || 'ELEVATORS';
         const tenantId = (session.user as any).tenantId || 'default_tenant';
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const body = await req.json();
         const tenantId = (session.user as any).tenantId || 'default_tenant';

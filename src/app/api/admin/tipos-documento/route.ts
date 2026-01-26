@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 

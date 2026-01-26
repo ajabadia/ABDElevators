@@ -16,8 +16,8 @@ export async function GET(
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Solo administradores pueden ver versiones');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
         const tenantId = (session.user as any).tenantId || 'default_tenant';
@@ -47,8 +47,8 @@ export async function POST(
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Solo administradores pueden hacer rollback');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
         const tenantId = (session.user as any).tenantId || 'default_tenant';

@@ -11,7 +11,7 @@ import crypto from 'crypto';
 export async function GET() {
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 

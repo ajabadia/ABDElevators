@@ -22,8 +22,8 @@ export async function DELETE(
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'Solo administradores pueden eliminar documentos');
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
         const { id } = await params;
