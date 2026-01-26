@@ -77,7 +77,16 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('SERVER ERROR DATA:', errorData); // Visibilidad para el usuario
-                throw new Error(errorData.message || 'Error al subir el archivo');
+
+                // Soporte para estructura AppError (error.message) y estructura plana (message)
+                const errorMessage = errorData.error?.message || errorData.message || 'Error al subir el archivo';
+                const errorDetails = errorData.error?.details || errorData.details;
+
+                if (errorDetails) {
+                    console.error('Error Details:', errorDetails);
+                }
+
+                throw new Error(errorMessage);
             }
 
             setUploadSuccess(true);
