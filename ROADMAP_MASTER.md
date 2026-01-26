@@ -680,16 +680,29 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ---
 
-### 🔐 FASE 11: SECURITY HARDENING (SAAS PRO - EN CURSO 🛠️)
-**Estrategia MFA:** Al no disponer de proveedor de SMS, utilizaremos:
+### 🔐 FASE 11: SECURITY HARDENING (SAAS PRO - COMPLETADO ✅)
+**Estrategia MFA:** Al no disponer de proveedor de SMS, utilizamos:
 1.  **TOTP (Time-based One-Time Password)**: Compatible con Google/Microsoft Authenticator (Nivel PRO, coste 0).
 2.  **Email OTP (Fallback)**: Código de 6 dígitos vía Resend (Fácil implementación).
-3.  **App Wrappers (Futuro)**: Notificaciones Push requieren empaquetado móvil (Phase 25+).
 
 - [x] **Implementación de TOTP**: Generación de QR y validación de secretos (otplib + qrcode).
 - [x] **Gestión de Sesiones**: DB-backed sessions con capacidad de revocación remota.
 - [x] **Identity Suite Migration**: Aislamiento de base de datos de identidad (ABDElevators-Auth).
-- [ ] **Audit Trail de Seguridad**: Registro de IPs, geolocalización básica y dispositivos en cada login.
+- [x] **Audit Trail de Seguridad**: Registro de IPs, geolocalización básica y dispositivos en cada login.
+- [x] **Environment Hardening**: `AUTH_TRUST_HOST` y whitelisting de IPs para Vercel.
+
+---
+
+### 🔭 FASE 24: OBSERVABILIDAD & LOGS (EN PROCESO 🛠️)
+**Objetivo**: Proporcionar visibilidad total sobre errores y uso, preparando el sistema para escala masiva.
+
+- [x] **24.1 Arquitectura de Logs Aislados (Dual-Write Ready)**
+  - [x] Implementar `connectLogsDB()` en `lib/db.ts` con fallback inteligente.
+  - [x] Refactorizar `logger.ts` para usar la conexión dedicada.
+  - [x] Preparar lógica para `MONGODB_LOGS_URI` (Scaling futuro).
+- [ ] **24.2 Log Explorer UI (SuperAdmin)**
+  - [ ] API endpoint `/api/admin/logs` con filtros de eficiencia.
+  - [ ] Dashboard visual (`/admin/logs`) con búsqueda en tiempo real.
 
 ---
 
