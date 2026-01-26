@@ -168,7 +168,7 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
         // Tracking de uso (Tokens reales)
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-2.0-flash', correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-1.5-flash', correlacion_id);
         }
 
         return modelos;
