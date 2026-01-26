@@ -28,11 +28,13 @@ export async function DELETE(
 
         const { id } = await params;
         const db = await connectDB();
+        const userRole = session?.user?.role;
+        const tenantId = (session?.user as any).tenantId || 'default_tenant';
 
-        // 1. Encontrar el documento para obtener el public_id de Cloudinary
-        const documento = await db.collection('documentos_tecnicos').findOne({
-            _id: new ObjectId(id)
-        });
+        // 1. Encontrar el documento y verificar pertenencia (excepto para SuperAdmin)
+        const filter = userRole === 'SUPER_ADMIN' ? { _id: new ObjectId(id) } : { _id: new ObjectId(id), tenantId };
+
+        const documento = await db.collection('documentos_tecnicos').findOne(filter);
 
         if (!documento) {
             throw new NotFoundError('Documento no encontrado');
@@ -61,9 +63,9 @@ export async function DELETE(
 
         // 2.2 Eliminar chunks asociados
         // Usamos el publicId como clave de union si existe, sino el nombre de archivo (legacy fallback)
-        const chunkFilter = publicId
-            ? { cloudinary_public_id: publicId }
-            : { origen_doc: documento.nombre_archivo };
+        const chunkFilter: any = publicId
+            ? { cloudinary_public_id: publicId, tenantId: documento.tenantId }
+            : { origen_doc: documento.nombre_archivo, tenantId: documento.tenantId };
 
         const chunkDeleteResult = await db.collection('document_chunks').deleteMany(chunkFilter);
 

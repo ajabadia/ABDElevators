@@ -201,6 +201,7 @@ export const LogAplicacionSchema = z.object({
  */
 export const DocumentoTecnicoSchema = z.object({
     _id: z.any().optional(),
+    tenantId: z.string(),
     nombre_archivo: z.string(),
     tipo_componente: z.string(),
     modelo: z.string(),

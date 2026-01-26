@@ -13,6 +13,7 @@ export interface RagResult {
     score?: number;
     tipo: string;
     modelo: string;
+    cloudinary_url?: string;
 }
 
 const PerformTechnicalSearchSchema = z.object({
@@ -101,7 +102,8 @@ export async function performTechnicalSearch(
             source: doc.metadata.origen_doc,
             score: 0, // MMR de LangChain no devuelve score directo fácilmente en esta firma
             tipo: doc.metadata.tipo_componente,
-            modelo: doc.metadata.modelo
+            modelo: doc.metadata.modelo,
+            cloudinary_url: doc.metadata.cloudinary_url
         }));
 
     } catch (error) {
@@ -198,7 +200,8 @@ export async function performMultilingualSearch(
             source: doc.origen_doc,
             score: doc.score,
             tipo: doc.tipo_componente,
-            modelo: doc.modelo
+            modelo: doc.modelo,
+            cloudinary_url: doc.cloudinary_url
         }));
 
     } catch (error) {
@@ -285,7 +288,8 @@ export async function pureVectorSearch(
                 source: doc.metadata.origen_doc,
                 score,
                 tipo: doc.metadata.tipo_componente,
-                modelo: doc.metadata.modelo
+                modelo: doc.metadata.modelo,
+                cloudinary_url: doc.metadata.cloudinary_url
             }));
 
     } catch (error) {

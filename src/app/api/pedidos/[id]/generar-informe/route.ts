@@ -5,6 +5,9 @@ import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { callGemini } from '@/lib/llm';
+import { generateServerPDF } from '@/lib/server-pdf-utils';
+import { uploadLLMReport } from '@/lib/cloudinary';
+import { UsageService } from '@/lib/usage-service';
 
 /**
  * POST /api/pedidos/[id]/generar-informe
@@ -69,7 +72,24 @@ export async function POST(
             maxTokens: 2000
         });
 
-        // 6. Guardar informe en la base de datos
+        // 6. Generar PDF en servidor (Visión 2.0 - Fase 6.6.1)
+        const pdfBuffer = await generateServerPDF({
+            numeroPedido: pedido.numero_pedido || 'N/A',
+            cliente: pedido.cliente || 'S/N',
+            contenido: informeTexto,
+            tenantId,
+            fecha: new Date(),
+            tecnico: session.user.name || 'Sistema'
+        });
+
+        // 7. Subir a Cloudinary
+        const { secureUrl: pdfUrl, publicId } = await uploadLLMReport(
+            pdfBuffer,
+            `informe_${pedido.numero_pedido}_${Date.now()}.pdf`,
+            tenantId
+        );
+
+        // 8. Guardar informe en la base de datos
         const informeDoc = {
             pedidoId,
             tenantId,
@@ -77,6 +97,8 @@ export async function POST(
             generadoPor: session.user.id,
             nombreTecnico: session.user.name,
             contenido: informeTexto,
+            pdfUrl,
+            cloudinaryPublicId: publicId,
             metadata: {
                 modelo: 'gemini-2.0-flash',
                 tokensUsados: informeTexto.length / 4, // Aproximado
@@ -86,6 +108,9 @@ export async function POST(
         };
 
         const result = await db.collection('informes_llm').insertOne(informeDoc);
+
+        // Trackear generación de reporte como uso de métrica (Fase 9.1)
+        await UsageService.trackLLM(tenantId, 1, 'REPORT_GENERATION', correlacion_id);
 
         const duracion = Date.now() - inicio;
 
@@ -119,6 +144,7 @@ export async function POST(
             success: true,
             informeId: result.insertedId.toString(),
             contenido: informeTexto,
+            pdfUrl,
             metadata: informeDoc.metadata
         });
 
@@ -234,6 +260,7 @@ export async function GET(
             informe: {
                 id: informe._id.toString(),
                 contenido: informe.contenido,
+                pdfUrl: informe.pdfUrl,
                 generadoPor: informe.nombreTecnico,
                 timestamp: informe.timestamp,
                 metadata: informe.metadata

@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import { connectDB, connectAuthDB } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
@@ -20,8 +21,9 @@ async function seed() {
     try {
         await client.connect();
         console.log('✅ Conectado a MongoDB');
-        const db = client.db('ABDElevators');
-        const usuarios = db.collection('usuarios');
+        // Usar la base de datos de Auth e Identidad
+        const db = client.db('ABDElevators-Auth');
+        const usuarios = db.collection('users');
 
         const adminHash = await bcrypt.hash('admin123', 10);
         const tecnicoHash = await bcrypt.hash('tecnico123', 10);

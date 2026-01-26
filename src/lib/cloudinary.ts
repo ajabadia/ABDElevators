@@ -68,6 +68,22 @@ export async function uploadRAGDocument(
 }
 
 /**
+ * Sube un informe generado por LLM (PDF)
+ */
+export async function uploadLLMReport(
+    buffer: Buffer,
+    filename: string,
+    tenantId: string
+): Promise<{ url: string; publicId: string; secureUrl: string }> {
+    const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
+
+    const result = await uploadToFolder(buffer, filename, `${folderPrefix}/informes`);
+    // Trackeamos el uso de almacenamiento para informes específicamente
+    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-llm-reports');
+    return result;
+}
+
+/**
  * Sube un documento de usuario a su carpeta personal
  */
 export async function uploadUserDocument(

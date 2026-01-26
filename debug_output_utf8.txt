@@ -1,0 +1,9 @@
+﻿[dotenv@17.2.3] injecting env (10) from .env.local -- tip: Ô£à audit secrets and track compliance: https://dotenvx.com/ops
+­ƒöì Debugging Auth Database...
+Ô£à Connected to Auth DB: ABDElevators-Auth
+­ƒæñ Found 4 users in 'users' collection:
+ - Email: admin@abd.com, MFA Enabled: false, ID: 697699775c017f08c83cbd6b
+ - Email: tecnico@abd.com, MFA Enabled: false, ID: 697699775c017f08c83cbd6c
+ - Email: ingenieria@abd.com, MFA Enabled: false, ID: 697699775c017f08c83cbd6d
+ - Email: superadmin@abd.com, MFA Enabled: false, ID: 697699775c017f08c83cbd6e
+­ƒøí´©Å Found 0 MFA configs:

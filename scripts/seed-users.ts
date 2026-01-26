@@ -1,4 +1,5 @@
-import { connectDB } from '../src/lib/db';
+import { connectAuthDB } from '../src/lib/db';
+import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import path from 'path';
@@ -10,8 +11,16 @@ async function seed() {
     console.log('🌱 Seed: Iniciando carga de usuarios...');
 
     try {
-        const db = await connectDB();
-        const usuarios = db.collection('usuarios');
+        const AUTH_URI = process.env.MONGODB_AUTH_URI || process.env.MONGODB_URI;
+        if (!AUTH_URI) {
+            throw new Error('Please define MONGODB_AUTH_URI or MONGODB_URI inside .env.local');
+        }
+        const client = new MongoClient(AUTH_URI);
+        await client.connect();
+        console.log('✅ Conectado a MongoDB (AUTH)');
+        // Usar la base de datos de Auth e Identidad
+        const db = client.db('ABDElevators-Auth');
+        const usuarios = db.collection('users');
 
         // Limpiar usuarios existentes (opcional en desarrollo)
         // await usuarios.deleteMany({});

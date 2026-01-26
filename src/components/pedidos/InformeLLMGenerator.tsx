@@ -31,6 +31,7 @@ export function InformeLLMGenerator({ pedidoId, isValidated }: InformeLLMGenerat
                 setInforme({
                     id: data.informeId,
                     contenido: data.contenido,
+                    pdfUrl: data.pdfUrl,
                     metadata: data.metadata,
                     timestamp: new Date()
                 });
@@ -46,8 +47,11 @@ export function InformeLLMGenerator({ pedidoId, isValidated }: InformeLLMGenerat
     };
 
     const handleDownloadPDF = () => {
-        // TODO: Implementar generación de PDF con jsPDF
-        alert('Funcionalidad de descarga PDF próximamente');
+        if (informe?.pdfUrl) {
+            window.open(informe.pdfUrl, '_blank');
+        } else {
+            alert('El PDF se está procesando o no está disponible.');
+        }
     };
 
     if (!isValidated) {

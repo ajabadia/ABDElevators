@@ -78,13 +78,19 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
                                 </div>
                             </td>
                             <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                                <button
-                                    onClick={() => {/* TODO: Ver PDF completo */ }}
-                                    className="inline-flex items-center text-blue-600 hover:text-blue-900"
-                                >
-                                    <ExternalLink className="mr-1 h-4 w-4" />
-                                    Ver PDF
-                                </button>
+                                {result.cloudinary_url ? (
+                                    <a
+                                        href={result.cloudinary_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-teal-600 hover:text-teal-900 transition-colors"
+                                    >
+                                        <ExternalLink className="mr-1 h-4 w-4" />
+                                        Ver PDF
+                                    </a>
+                                ) : (
+                                    <span className="text-slate-400 text-xs italic">Sin archivo</span>
+                                )}
                             </td>
                         </tr>
                     ))}

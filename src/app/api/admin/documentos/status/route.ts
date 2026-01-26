@@ -31,14 +31,16 @@ export async function PATCH(req: NextRequest) {
         const { documentId, nuevoEstado } = StatusUpdateSchema.parse(body);
 
         const db = await connectDB();
+        const userRole = session?.user?.role;
+        const tenantId = (session?.user as any).tenantId || 'default_tenant';
 
-        // 1. Verificar existencia del documento
-        const documento = await db.collection('documentos_tecnicos').findOne({
-            _id: new ObjectId(documentId)
-        });
+        // 1. Verificar existencia del documento y pertenencia
+        const filter = userRole === 'SUPER_ADMIN' ? { _id: new ObjectId(documentId) } : { _id: new ObjectId(documentId), tenantId };
+
+        const documento = await db.collection('documentos_tecnicos').findOne(filter);
 
         if (!documento) {
-            throw new NotFoundError('Documento no encontrado');
+            throw new NotFoundError('Documento no encontrado o sin acceso');
         }
 
         const publicId = documento.cloudinary_public_id;
@@ -51,9 +53,9 @@ export async function PATCH(req: NextRequest) {
         );
 
         // Actualizar chunks asociados
-        const chunkFilter = publicId
-            ? { cloudinary_public_id: publicId }
-            : { origen_doc: documento.nombre_archivo };
+        const chunkFilter: any = publicId
+            ? { cloudinary_public_id: publicId, tenantId: documento.tenantId }
+            : { origen_doc: documento.nombre_archivo, tenantId: documento.tenantId };
 
         const resultChunks = await db.collection('document_chunks').updateMany(
             chunkFilter,

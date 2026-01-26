@@ -3,6 +3,7 @@ import { AppError, ValidationError, NotFoundError } from './errors';
 import { WorkflowDefinition, GenericCase, IndustryType } from './schemas';
 import { ObjectId } from 'mongodb';
 import { logEvento } from './logger';
+import { NotificationService } from './notification-service';
 
 export interface TransitionRequest {
     caseId: string;
@@ -134,11 +135,10 @@ export class WorkflowEngine {
     }
 
     /**
-     * Orquestador de acciones secundarias
+     * Orquestador de acciones secundarias (Visión 2.0 - Fase 7.2)
      */
     private static async handleActions(actions: string[], caso: any, correlacion_id: string) {
         for (const action of actions) {
-            // Ejemplo: Enviar notificación, generar PDF, llamar a webhook externo.
             await logEvento({
                 nivel: 'DEBUG',
                 origen: 'WORKFLOW_ENGINE',
@@ -148,8 +148,40 @@ export class WorkflowEngine {
                 detalles: { caseId: caso._id, action }
             });
 
-            // Aquí se conectarían los servicios correspondientes
-            // if (action === 'notify_admin') await NotificationService.send(...)
+            try {
+                if (action === 'notify_admin') {
+                    await NotificationService.notify({
+                        tenantId: caso.tenantId,
+                        type: 'SYSTEM',
+                        level: 'INFO',
+                        title: 'Actualización de Pedido',
+                        message: `El pedido ${caso.numero_pedido || caso._id} ha cambiado de estado a: ${caso.status}`,
+                        link: `/pedidos/${caso._id}`,
+                        metadata: { caseId: caso._id, status: caso.status }
+                    });
+                }
+
+                if (action === 'notify_user' && caso.userId) {
+                    await NotificationService.notify({
+                        tenantId: caso.tenantId,
+                        userId: caso.userId,
+                        type: 'SYSTEM',
+                        level: 'SUCCESS',
+                        title: 'Tu pedido ha avanzado',
+                        message: `Tu pedido ${caso.numero_pedido || caso._id} ahora está en: ${caso.status}`,
+                        link: `/pedidos/${caso._id}`,
+                        metadata: { caseId: caso._id, status: caso.status }
+                    });
+                }
+
+                if (action === 'log_audit') {
+                    // Acción redundante si ya logueamos en executeTransition, 
+                    // pero útil para auditorías externas en Phase 24.
+                }
+            } catch (error) {
+                console.error(`[WorkflowEngine] Error executing action ${action}:`, error);
+                // No lanzamos error para no bloquear la transición principal
+            }
         }
     }
 }

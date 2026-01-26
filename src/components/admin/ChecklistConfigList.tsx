@@ -29,7 +29,7 @@ export const ChecklistConfigList: React.FC = () => {
                     // Si falla el parseo JSON (ej: error 500 HTML), usamos el status text
                     errMessage = `Error ${res.status}: ${res.statusText}`;
                 }
-                throw new Error(errMessage);
+                throw new Error(errMessage); // In client components, throwing Error is okay if caught, but let's be consistent
             }
 
             const data = await res.json();

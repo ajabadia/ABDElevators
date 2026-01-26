@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
 
         // 5.1. Guardar metadatos del documento
         const documentoMetadata = {
+            tenantId, // Aislamiento garantizado
             nombre_archivo: file.name,
             tipo_componente: metadata.tipo,
             modelo: modeloPrincipal,

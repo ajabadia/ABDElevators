@@ -44,7 +44,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Objetivo:** Evolucionar a un motor de alta performance.
 - [ ] 6.1 Vector Search Sin LLM (Motor Principal)
 - [x] 6.2 Checklists Dinámicos Configurables
-- [x] 6.3 Configurador Admin Visual
+- [ ] 6.3 Configurador Admin Visual (En desarrollo - Checklist List operativo)
 
 - [x] 6.4 Validación Humana Estructurada
 - [x] 6.5 Audit Trail Robusto
@@ -146,14 +146,14 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] Metrics: tiempo empleado, duración, trazabilidad total.
 - [x] **6.6 Informe LLM Opcional**
   - [x] Button “Generar Informe Profesional”.
-  - [x] Endpoint `POST /api/pedidos/[id]/generar-informe-llm` (LLM‑generated PDF).
-  - [x] Component `InformeLLMGenerator` with markdown/PDF rendering.
+  - [x] Endpoint `POST /api/pedidos/[id]/generar-informe` (Server-side PDF generation).
+  - [x] Component `InformeLLMGenerator` with persistent PDF download.
 - [x] **6.6.1 Gestión Avanzada de Informes LLM (Control de Costos & Auditoría)** ✅ **COMPLETADO**
   - [x] **Control de Costos:** Feature flag por tenant, límites mensuales, estimación pre-generación.
   - [x] **Almacenamiento:** PDFs en Cloudinary `/{tenantId}/informes/{pedidoId}/`, versionado automático.
   - [x] **Auditoría:** Historial completo, tracking de tokens/costos, quién generó cuándo.
-  - [x] **UI:** Lista de informes en detalle del pedido, preview, descarga, comparación de versiones.
-  - [x] **Compliance:** Retención configurable, GDPR, encriptación de informes sensibles.
+  - [x] **UI:** Lista de informes en detalle del pedido, preview, descarga de PDF persistente.
+  - [x] **Compliance:** Aislamiento total de informes por tenantId.
   - Ver diseño completo en documentación de fase
 - **6.7 Testing & Deploy**
   - Unit tests (`checklist-extractor.test.ts`, `auto-classifier.test.ts`).
@@ -167,7 +167,7 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [ ] Historial de cambios en documentos del corpus.
 
 #### Phase 7 – Multi‑Industry & SaaS (Visión 2.0)
-#### 7.2 Motor de Workflows Multinivel (EN PROCESO 🛠️)
+#### 7.2 Motor de Workflows Multinivel (COMPLETADO ✅)
 - [x] Definición de esquemas Zod (`WorkflowDefinitionSchema`).
 - [x] Implementación de `WorkflowEngine` (Motor de transiciones).
 - [x] Implementación de `WorkflowService` (Gestión y Seeding).
