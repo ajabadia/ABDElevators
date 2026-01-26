@@ -66,6 +66,12 @@ export function AppSidebar() {
             module: 'RAG'
         },
         {
+            name: 'Tipos de Documento',
+            href: '/admin/tipos-documento',
+            icon: Settings,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
             name: 'Mis Archivos',
             href: '/mis-documentos',
             icon: Shield
@@ -86,6 +92,12 @@ export function AppSidebar() {
             name: 'Prompts',
             href: '/admin/prompts',
             icon: Terminal,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Notificaciones',
+            href: '/admin/notifications',
+            icon: Bell,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
