@@ -37,6 +37,7 @@ export async function getChecklistConfigById(id: string, correlacion_id_opt?: st
         const config: ChecklistConfig = {
             nombre: parsed.nombre,
             categorias: parsed.categorias,
+            items: parsed.items,
             workflow_orden: parsed.workflow_orden,
             activo: parsed.activo,
             tenantId: parsed.tenantId,

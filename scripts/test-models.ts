@@ -19,6 +19,7 @@ async function listModels() {
         console.log('FLASH ERROR:', e.message);
 
         try {
+            const genAI = new GoogleGenerativeAI(apiKey);
             const model2 = genAI.getGenerativeModel({ model: 'gemini-pro' });
             await model2.generateContent('hi');
             console.log('GEMINI-PRO OK');

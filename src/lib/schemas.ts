@@ -26,6 +26,12 @@ export const DocumentChunkSchema = z.object({
     language: z.string().default('es'), // Idioma detectado del documento
     embedding: z.array(z.number()), // Gemini 004
     embedding_multilingual: z.array(z.number()).optional(), // BGE-M3 (Phase 21.1)
+
+    // Metadata para Dual-Indexing (Shadow Chunks)
+    is_shadow: z.boolean().default(false).optional(),
+    original_lang: z.string().optional(),
+    ref_chunk_id: z.any().optional(),
+
     creado: z.date().default(() => new Date()),
 });
 

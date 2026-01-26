@@ -11,6 +11,7 @@ import { uploadRAGDocument } from '@/lib/cloudinary';
 import { z } from 'zod';
 import { PromptService } from '@/lib/prompt-service';
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
 
 // Schema para los metadatos del upload
 const IngestMetadataSchema = z.object({
@@ -191,29 +192,51 @@ export async function POST(req: NextRequest) {
 
             await Promise.all(batch.map(async (chunkText) => {
                 // Si el idioma no es español, generamos traducción técnica para el "Dual-Index"
-                let translatedText = undefined;
+                let translatedText: string | undefined = undefined;
+
+                // Estrategia Dual-Indexing (Shadow Chunks):
+                // Si el documento es extranjero (ej: DE), generamos un chunk "sombra" en ES.
+                // Ambos chunks (Original DE + Sombra ES) se indexan vectorialmente.
+                // Esto permite encontrar el documento buscando tanto en Alemán como en Español.
+
                 if (detectedLang !== 'es') {
-                    const { text: translationPrompt, model: transModel } = await PromptService.getRenderedPrompt(
-                        'TECHNICAL_TRANSLATOR',
-                        { text: chunkText, targetLanguage: 'Spanish' },
-                        tenantId
-                    );
-                    translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id, model: transModel });
+                    try {
+                        const { text: translationPrompt, model: transModel } = await PromptService.getRenderedPrompt(
+                            'TECHNICAL_TRANSLATOR',
+                            { text: chunkText, targetLanguage: 'Spanish' },
+                            tenantId
+                        );
+                        translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id, model: transModel });
+                    } catch (e) {
+                        console.warn(`[INGEST] Fallo traducción de chunk: ${e}`);
+                    }
                 }
 
                 // Generar embeddings (Gemini + BGE-M3)
                 const startEmbed = Date.now();
+
+                // 1. Embedding del Original
                 const [embeddingGemini, embeddingBGE] = await Promise.all([
                     generateEmbedding(chunkText, tenantId, correlacion_id),
                     multilingualService.generateEmbedding(chunkText)
                 ]);
+
+                // 2. Embedding del Shadow (si existe traducción)
+                let embeddingShadow: number[] | undefined;
+                if (translatedText) {
+                    embeddingShadow = await generateEmbedding(translatedText, tenantId, correlacion_id);
+                }
+
                 const durationEmbed = Date.now() - startEmbed;
 
                 if (durationEmbed > 5000) {
                     console.log(`⚠️  [INGEST] Chunk embed took ${durationEmbed}ms`);
                 }
 
+                // --- Insertar Chunk Original ---
+                const originalChunkId = new ObjectId();
                 const documentChunk = {
+                    _id: originalChunkId,
                     tenantId,
                     industry: "ELEVATORS",
                     tipo_componente: metadata.tipo,
@@ -223,9 +246,10 @@ export async function POST(req: NextRequest) {
                     fecha_revision: new Date(),
                     language: detectedLang,
                     texto_chunk: chunkText,
-                    texto_traducido: translatedText,
+                    texto_traducido: translatedText, // Guardamos texto por referencia
                     embedding: embeddingGemini,
                     embedding_multilingual: embeddingBGE,
+                    is_shadow: false,
                     cloudinary_url: cloudinaryResult.secureUrl,
                     cloudinary_public_id: cloudinaryResult.publicId,
                     creado: new Date(),
@@ -233,6 +257,34 @@ export async function POST(req: NextRequest) {
 
                 const validatedChunk = DocumentChunkSchema.parse(documentChunk);
                 await documentChunksCollection.insertOne(validatedChunk);
+
+                // --- Insertar Shadow Chunk (si aplica) ---
+                if (translatedText && embeddingShadow) {
+                    const shadowChunk = {
+                        tenantId,
+                        industry: "ELEVATORS",
+                        tipo_componente: metadata.tipo,
+                        modelo: modeloPrincipal,
+                        origen_doc: file.name,
+                        version_doc: metadata.version,
+                        fecha_revision: new Date(),
+                        language: 'es', // El shadow simula ser español
+                        original_lang: detectedLang, // Referencia al idioma real
+                        texto_chunk: translatedText, // El contenido principal ES EL TRADUCIDO para búsqueda
+                        ref_chunk_id: originalChunkId, // Link al padre
+                        embedding: embeddingShadow, // Vector del texto traducido
+                        is_shadow: true,
+                        cloudinary_url: cloudinaryResult.secureUrl, // Apunta al mismo PDF visual
+                        cloudinary_public_id: cloudinaryResult.publicId,
+                        creado: new Date(),
+                    };
+
+                    // Nota: No validamos con Zod estricto aquí para permitir flexibilidad en ref_chunk_id, 
+                    // o usamos el mismo schema si ref_chunk_id es soportado.
+                    // Como acabamos de añadir ref_chunk_id a Zod, podemos validar.
+                    const validatedShadow = DocumentChunkSchema.parse(shadowChunk);
+                    await documentChunksCollection.insertOne(validatedShadow);
+                }
             }));
 
             await logEvento({

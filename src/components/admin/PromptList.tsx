@@ -22,7 +22,13 @@ export const PromptList: React.FC = () => {
         _id: string;
         key: string;
         template: string;
-        variables: Record<string, unknown>;
+        variables: Array<{
+            name: string;
+            type: "string" | "number" | "boolean" | "array";
+            description: string;
+            required: boolean;
+            defaultValue?: any;
+        }>;
         version: number;
         tenantId: string;
         createdBy: string;
@@ -121,7 +127,7 @@ export const PromptList: React.FC = () => {
 
             {showEditor && (
                 <PromptEditor
-                    initialPrompt={selectedPrompt ?? undefined}
+                    initialPrompt={selectedPrompt as any}
                     onSaved={handleSaved}
                     onCancel={() => setShowEditor(false)}
                 />
