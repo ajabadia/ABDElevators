@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, History, Settings, Shield, Users, ChevronLeft, ChevronRight, LogOut, CheckSquare, Bell } from 'lucide-react';
+import { LayoutDashboard, FileText, History, Settings, Shield, Users, ChevronLeft, ChevronRight, LogOut, CheckSquare, Bell, Terminal } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const menuItems = [
     { name: 'Mis Archivos', href: '/mis-documentos', icon: Shield },
     { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
     { name: 'Notificaciones', href: '/admin/notifications', icon: Bell },
-    { name: 'Logs', href: '/admin/logs', icon: History },
+    { name: 'Logs', href: '/admin/logs', icon: Terminal },
     { name: 'Auditoría', href: '/admin/auditoria', icon: History },
 ];
 

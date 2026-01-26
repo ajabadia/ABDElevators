@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
@@ -121,7 +121,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN') {
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 

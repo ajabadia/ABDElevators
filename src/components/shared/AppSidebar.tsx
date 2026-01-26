@@ -125,6 +125,12 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
+            name: 'Logs',
+            href: '/admin/logs',
+            icon: Terminal,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
             name: 'Perfil',
             href: '/perfil',
             icon: UserCircle
