@@ -49,13 +49,11 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 
 - [x] **Frontend UX Integration**: Indicadores visuales para "Procesado Instantáneo" (Deduplicación).
 - [x] **Backend Build Fixed**: Resolución de errores de tipado estricto (PromptList, Configs) para build exitoso.
-- [x] **Dual-Indexing Foundation**: 
-    - Schema Zod con soporte para `shadow_chunks` (traducciones automáticas).
-    - API de Ingesta actualizada para generar Shadow Chunks de documentos NO-ES.
-    - Servicio RAG actualizado para devolver metadatos de idioma original.
+- [x] **Dual-Indexing Foundation**: API & Schema listos.
+- [x] **Knowledge Base Explorer**: UI de administración implementada con soporte para inspección de Shadow Chunks y filtrado multilingüe.
 
 ### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (ACORDADO)**
-1. **Knowledge Base Explorer**: UI de administración para navegar vectores y fragmentos (Verificar Dual-Indexing visualmente).
+1. **Search Debugger**: Herramienta para probar queries y ver scores vectoriales en tiempo real (Integrar en Knowledge Explorer).
 2. **Monitoring**: Verificar ahorro real de tokens en logs (`API_INGEST`).
 3. **LangGraph Self-Correction**: Lógica agéntica de re-intento ante baja confianza.
 

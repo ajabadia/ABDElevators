@@ -39,6 +39,13 @@ export async function GET(req: NextRequest) {
             filter.language = language;
         }
 
+        const type = searchParams.get('type');
+        if (type === 'shadow') {
+            filter.is_shadow = true;
+        } else if (type === 'original') {
+            filter.is_shadow = { $ne: true };
+        }
+
         const chunks = await collection
             .find(filter)
             .sort({ creado: -1 })
