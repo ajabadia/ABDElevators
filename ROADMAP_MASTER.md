@@ -692,7 +692,7 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ### 🧠 FASE 25.2: VISIBILIDAD & EXPLORACIÓN (PENDIENTE)
 - [x] **Knowledge Base Explorer**: UI Admin para inspeccionar chunks, embeddings y traducciones shadow.
-- [ ] **Search debugger**: Herramienta para probar queries y ver scores vectoriales en tiempo real.
+- [x] **Search debugger**: Herramienta para probar queries y ver scores vectoriales en tiempo real (Integrada en KB Explorer).
 
 ---
 
