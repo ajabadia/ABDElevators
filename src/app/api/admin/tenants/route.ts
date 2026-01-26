@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 /**
  * GET /api/admin/tenants
- * Lista todos los tenants (Solo ADMIN)
+ * Lista todos los tenants a los que el usuario tiene acceso
  */
 export async function GET() {
     try {
@@ -15,7 +15,20 @@ export async function GET() {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenants = await TenantService.getAllTenants();
+        let tenants = [];
+        if (session.user.role === 'SUPER_ADMIN') {
+            tenants = await TenantService.getAllTenants();
+        } else {
+            // ADMIN normal: solo su tenant y los delegados
+            const allowedIds = [
+                (session.user as any).tenantId,
+                ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+            ].filter(Boolean);
+
+            const all = await TenantService.getAllTenants();
+            tenants = all.filter(t => allowedIds.includes(t.tenantId));
+        }
+
         return NextResponse.json({ success: true, tenants });
     } catch (error: any) {
         if (error instanceof AppError) {

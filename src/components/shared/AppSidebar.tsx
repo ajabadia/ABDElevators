@@ -20,7 +20,8 @@ import {
     LifeBuoy,
     Bell,
     Terminal,
-    CheckSquare
+    CheckSquare,
+    ShieldAlert
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -137,9 +138,9 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Logs',
+            name: 'Observabilidad',
             href: '/admin/logs',
-            icon: Terminal,
+            icon: ShieldAlert,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {

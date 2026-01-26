@@ -9,6 +9,8 @@ export interface LogEntry {
     mensaje: string;
     correlacion_id: string;
     tenantId?: string;       // Contexto Multi-tenant
+    userId?: string;         // Identificador de Usuario (Audit)
+    userEmail?: string;      // Email para facilitar búsqueda humana
     materiaId?: string;      // Visión 2.0
     departamentoId?: string; // Visión 2.0
     detalles?: any;

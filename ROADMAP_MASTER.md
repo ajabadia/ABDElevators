@@ -383,6 +383,7 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 - **Hitos de Gestión Transversal (El "Control Plane") (COMPLETADO ✅):**
   - [x] **Global Dashboard:** Vista agregada de métricas (pedidos activos, riesgos detectados, consumo) de todos los tenants para SuperAdmins (API `/api/admin/global-stats`).
   - [x] **Cross-Tenant User Management:** Panel para gestionar usuarios que pertenecen a varios grupos empresariales desde una sola vista.
+  - [ ] **Auditoría Profunda de Gestión de Usuarios:** Revisar `/admin/usuarios` para asegurar que permite asignar y visualizar correctamente los permisos multi-tenant (`tenantAccess`), ya que la UI actual podría no reflejar todas las capacidades del backend.
   - [ ] **Unified Support Hub:** Integración del sistema de tickets con el selector de tenant para ver logs y contexto del usuario de forma inmediata.
   - [x] **AI Governance Layer:** 
     - [x] **Global Prompt History:** Audit log centralizado de cambios en prompts de toda la plataforma.
@@ -632,6 +633,7 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
       - [ ] **Protección de IP:** Reescribir secciones técnicas para enfocar en el "Qué" (beneficio/función) y ocultar el "Cómo" (librerías/arquitectura específica) para evitar copias.
       - [ ] **Catálogo de Funciones:** Crear una página `/capabilities` o sección detallada que liste todos los super-poderes de la app (Extracción, Validación, Auditoría, etc.) de forma exhaustiva.
       - [ ] **Sincronización Roadmap-Landing:** Revisar exhaustivamente las Fases 10, 11 y 21 del Roadmap (Gobernanza, Multi-Tenant, Agentes) para asegurar que todos los hitos marcados como `[x]` (completados) en ese momento tienen su reflejo comercial en la web pública.
+      - [ ] **Auditoría de Alineamiento de Permisos:** Revisión cruzada de todas las opciones de UI vs el sistema de permisos (RBAC/Multi-tenant). Verificar que no existen botones visibles para acciones prohibidas y que los administradores con acceso a múltiples tenants ven correctamente diferenciados los contextos.
   - **Certificaciones Formales (Roadmap):**
     - [x] **6.6.1 Gestión de Informes LLM:** Sistema de control de costos y auditoría (Fase 6.6.1) ✅.
     - [ ] **SOC2 Type II:** Contratar auditoría externa (6-12 meses).

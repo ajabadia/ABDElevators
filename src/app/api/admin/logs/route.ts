@@ -1,90 +1,94 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { connectLogsDB } from "@/lib/db";
-import { AppError, ValidationError } from "@/lib/errors";
-import { logEvento } from "@/lib/logger";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { connectLogsDB } from '@/lib/db';
+import { AppError, handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 
 /**
- * API para consultar logs de la aplicación.
- * Solo accesible por SUPER_ADMIN o ADMIN.
- * Regla de Oro #4 y #8.
+ * GET /api/admin/logs
+ * Recupera logs de aplicación con filtrado avanzado.
  */
-export async function GET(request: NextRequest) {
-    const inicio = Date.now();
+export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
-
     try {
         const session = await auth();
-
-        // 🛡️ Verificación de roles (Seguridad Grado Bancario)
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-            throw new AppError("UNAUTHORIZED", 401, "No tiene permisos para ver los logs");
+        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+            throw new AppError('UNAUTHORIZED', 403, 'No autorizado para ver logs');
         }
 
-        const { searchParams } = new URL(request.url);
-
-        // Parámetros de filtrado y paginación
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "50");
-        const nivel = searchParams.get("nivel");
-        const origen = searchParams.get("origen");
-        const search = searchParams.get("search");
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get('limit') || '100');
+        const nivel = searchParams.get('nivel'); // ERROR, WARN, INFO, DEBUG
+        const origen = searchParams.get('origen');
+        const search = searchParams.get('search');
+        const tenantId = searchParams.get('tenantId'); // SuperAdmin can filter, Admin sees only theirs
+        const userId = searchParams.get('userId');
+        const userEmail = searchParams.get('userEmail');
 
         const db = await connectLogsDB();
+        const collection = db.collection('logs_aplicacion');
+
         const query: any = {};
 
-        if (nivel) query.nivel = nivel;
-        if (origen) query.origen = origen;
+        // Security Filter
+        if (session.user.role === 'ADMIN') {
+            // Admin can govern multiple tenants if specified in tenantAccess
+            const allowedTenants = [
+                (session.user as any).tenantId,
+                ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+            ].filter(Boolean);
+
+            if (allowedTenants.length > 1) {
+                // If the user manages multiple tenants
+                if (tenantId) {
+                    // Check if they are trying to access a tenant they own
+                    if (!allowedTenants.includes(tenantId)) {
+                        throw new AppError('UNAUTHORIZED', 403, 'No tienes acceso a este tenant');
+                    }
+                    query.tenantId = tenantId;
+                } else {
+                    // Otherwise, show logs from ALL their tenants
+                    query.tenantId = { $in: allowedTenants };
+                }
+            } else {
+                // Single tenant admin
+                query.tenantId = allowedTenants[0];
+            }
+        } else if (tenantId) {
+            // SuperAdmin filtering specifically
+            query.tenantId = tenantId;
+        }
+
+        if (nivel && nivel !== 'ALL') query.nivel = nivel;
+        if (origen) query.origen = { $regex: origen, $options: 'i' };
+        if (userEmail) query.userEmail = { $regex: userEmail, $options: 'i' };
+
         if (search) {
             query.$or = [
-                { mensaje: { $regex: search, $options: "i" } },
-                { accion: { $regex: search, $options: "i" } },
-                { correlacion_id: search }
+                { mensaje: { $regex: search, $options: 'i' } },
+                { accion: { $regex: search, $options: 'i' } },
+                { correlacion_id: { $regex: search, $options: 'i' } },
+                { userEmail: { $regex: search, $options: 'i' } } // Search includes user email now
             ];
         }
 
-        const skip = (page - 1) * limit;
+        const logs = await collection
+            .find(query)
+            .sort({ timestamp: -1 })
+            .limit(limit)
+            .toArray();
 
-        const [logs, total] = await Promise.all([
-            db.collection("logs_aplicacion")
-                .find(query)
-                .sort({ timestamp: -1 })
-                .skip(skip)
-                .limit(limit)
-                .toArray(),
-            db.collection("logs_aplicacion").countDocuments(query)
-        ]);
-
-        const duracion = Date.now() - inicio;
-
-        // SLA: P95 < 200ms, sugerido en las reglas.
-        if (duracion > 500) {
-            await logEvento({
-                nivel: 'WARN',
-                origen: 'API_ADMIN_LOGS',
-                accion: 'PERFORMANCE_ALERT',
-                mensaje: `Consulta de logs lenta: ${duracion}ms`,
-                correlacion_id,
-                detalles: { duracion, total, query }
-            });
-        }
+        // Stats rápidos para el header
+        const errorCount = await collection.countDocuments({ ...query, nivel: 'ERROR' });
+        const warnCount = await collection.countDocuments({ ...query, nivel: 'WARN' });
 
         return NextResponse.json({
             success: true,
-            data: logs,
-            pagination: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit)
-            }
+            logs,
+            meta: { errorCount, warnCount }
         });
 
-    } catch (error: any) {
-        console.error("Error fetching logs:", error);
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ error: "Error interno al recuperar logs" }, { status: 500 });
+    } catch (error) {
+        return handleApiError(error, 'API_ADMIN_LOGS', correlacion_id);
     }
 }

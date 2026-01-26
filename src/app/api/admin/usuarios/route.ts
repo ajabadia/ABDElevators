@@ -27,8 +27,18 @@ export async function GET(req: NextRequest) {
 
         const db = await connectAuthDB();
 
-        // Filtro dinámico: SuperAdmin ve todo, Admin solo su tenant
-        const filter = isSuperAdmin ? {} : { tenantId: session?.user?.tenantId };
+        // Filtro dinámico: SuperAdmin ve todo, Admin ve sus tenants permitidos
+        let filter = {};
+        if (isSuperAdmin) {
+            filter = {};
+        } else {
+            const allowedIds = [
+                (session?.user as any).tenantId,
+                ...((session?.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+            ].filter(Boolean);
+
+            filter = { tenantId: { $in: allowedIds } };
+        }
 
         const usuarios = await db.collection('users')
             .find(filter, { projection: { password: 0 } })
