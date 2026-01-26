@@ -21,7 +21,8 @@ import {
     Bell,
     Terminal,
     CheckSquare,
-    ShieldAlert
+    ShieldAlert,
+    Search
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -64,6 +65,13 @@ export function AppSidebar() {
             href: '/admin/documentos',
             icon: FileText,
             roles: ['ADMIN', 'INGENIERIA'],
+            module: 'RAG'
+        },
+        {
+            name: 'Explorador RAG',
+            href: '/admin/knowledge-base',
+            icon: Search,
+            roles: ['ADMIN', 'SUPER_ADMIN'],
             module: 'RAG'
         },
         {

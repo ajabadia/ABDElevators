@@ -62,6 +62,14 @@ export const AgentState = Annotation.Root({
     }),
 
     /**
+     * Consultas de búsqueda adicionales generadas por el crítico
+     */
+    search_queries: Annotation<string[]>({
+        reducer: (x, y) => x.concat(y),
+        default: () => [],
+    }),
+
+    /**
      * ID de correlación para logs
      */
     correlacion_id: Annotation<string>({
@@ -93,24 +101,28 @@ async function extractionNode(state: AgentStateType) {
  * Recupera contexto relevante del corpus técnico basado en los modelos detectados.
  */
 async function retrievalNode(state: AgentStateType) {
-    const { findings, tenantId, correlacion_id } = state;
-    const models = findings.filter(f => f.source === 'extraction');
+    const { findings, tenantId, correlacion_id, search_queries } = state;
+
+    // Si tenemos queries específicas del crítico, las usamos. Si no, usamos las basadas en modelos.
+    const queries = search_queries.length > 0
+        ? [search_queries[search_queries.length - 1]]
+        : findings.filter(f => f.source === 'extraction').map(m => `Especificaciones técnicas y normativa para ${m.tipo} modelo ${m.modelo}`);
 
     let allChunks: RagResult[] = [];
 
-    for (const model of models) {
+    for (const query of queries) {
         const chunks = await performTechnicalSearch(
-            `Especificaciones técnicas y normativa para ${model.tipo} modelo ${model.modelo}`,
+            query,
             tenantId!,
             correlacion_id!,
-            3
+            search_queries.length > 0 ? 5 : 3 // Más profundidad si es una búsqueda de corrección
         );
         allChunks = [...allChunks, ...chunks];
     }
 
     return {
         context_chunks: allChunks,
-        messages: [{ role: 'assistant', content: `He recuperado ${allChunks.length} fragmentos técnicos relevantes.` }]
+        messages: [{ role: 'assistant', content: `Retriever: He recuperado ${allChunks.length} fragmentos técnicos relevantes para: ${queries.join(', ')}` }]
     };
 }
 
@@ -156,34 +168,34 @@ async function riskAnalysisNode(state: AgentStateType) {
 import { MongoDBSaver } from "./agent-persistence";
 
 async function critiqueNode(state: AgentStateType) {
-    const { confidence_score, findings, messages } = state;
+    const { confidence_score, findings, messages, tenantId, correlacion_id } = state;
 
     // Si la confianza es alta, aprobamos
     if (confidence_score > 0.7) {
         return {
-            messages: [{ role: 'assistant', content: `Confianza sólida (${confidence_score}). Finalizando análisis.` }]
+            messages: [{ role: 'assistant', content: `Crítico: Análisis validado con confianza ${confidence_score}.` }]
         };
     }
 
-    // Si ya hemos reintentado demasiadas veces (evitar bucle infinito)
-    const retryCount = messages.filter(m => m.content.includes("baja confianza")).length;
+    // Si ya hemos reintentado demasiado
+    const retryCount = messages.filter(m => m.content.includes("Refinando búsqueda")).length;
     if (retryCount >= 2) {
         return {
-            messages: [{ role: 'assistant', content: `Límite de reintentos alcanzado. Finalizando con confianza parcial.` }]
+            messages: [{ role: 'assistant', content: `Crítico: Límite de reintentos alcanzado. Se entrega con las dudas detectadas.` }]
         };
     }
 
-    // Generar nueva estrategia de búsqueda (Query Expansion)
-    const lastValidation = findings.filter(f => f.source === 'risk_analysis').pop();
-    const newQuery = `Normativa específica para ascensores con ${lastValidation?.mensaje || 'problemas detectados'}`;
+    // Generar nueva estrategia de búsqueda usando LLM para "Query Expansion"
+    const lastRisks = findings.filter(f => f.source === 'risk_analysis').slice(-3);
+    const expansionPrompt = `Como experto técnico de ascensores, analiza por qué la confianza del análisis es baja (${confidence_score}) basándote en estos riesgos detectados: ${JSON.stringify(lastRisks)}. 
+    Genera una ÚNICA frase de búsqueda técnica para recuperar la normativa exacta que resolvería la duda.
+    Responde solo con la frase de búsqueda.`;
 
-    // Inyectamos un "hallazgo" artificial para guiar la nueva búsqueda
-    // En una impl más compleja, esto iría a state.search_queries
+    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { correlacion_id: correlacion_id! });
+
     return {
-        messages: [{ role: 'assistant', content: `Detectada baja confianza (${confidence_score}). Refinando búsqueda: "${newQuery}"` }],
-        // Forzamos volver a buscar con la nueva query (simplificado aquí añadiendo al contexto o query state)
-        // En este diseño simple, asumiremos que el retrievalNode podría leer de 'findings' para expandir, 
-        // pero por ahora solo logueamos el loop.
+        search_queries: [expandedQuery.trim()],
+        messages: [{ role: 'assistant', content: `Crítico: Baja confianza detectada. Refinando búsqueda con: "${expandedQuery.trim()}"` }],
     };
 }
 
@@ -192,10 +204,10 @@ async function critiqueNode(state: AgentStateType) {
  */
 function shouldContinue(state: AgentStateType) {
     const { confidence_score, messages } = state;
-    const retryCount = messages.filter(m => m.role === 'assistant' && m.content.includes("baja confianza")).length;
+    const retryCount = messages.filter(m => m.role === 'assistant' && m.content.includes("Refinando búsqueda")).length;
 
     if (confidence_score <= 0.7 && retryCount < 2) {
-        return "retrieve"; // Vuelve a buscar (Loop)
+        return "retrieve"; // Vuelve a buscar
     }
     return END;
 }

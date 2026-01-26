@@ -20,8 +20,10 @@ export const DocumentChunkSchema = z.object({
     fecha_revision: z.date(),
     pagina_aproximada: z.number().optional(),
     texto_chunk: z.string(),
+    texto_traducido: z.string().optional(), // Traducción técnica al Castellano (Phase 21.1)
     texto_antes: z.string().optional(),
     texto_despues: z.string().optional(),
+    language: z.string().default('es'), // Idioma detectado del documento
     embedding: z.array(z.number()), // Gemini 004
     embedding_multilingual: z.array(z.number()).optional(), // BGE-M3 (Phase 21.1)
     creado: z.date().default(() => new Date()),
@@ -207,6 +209,7 @@ export const DocumentoTecnicoSchema = z.object({
     modelo: z.string(),
     version: z.string(),
     fecha_revision: z.date(),
+    language: z.string().default('es'), // Idioma principal detectado
     estado: z.enum(['vigente', 'obsoleto', 'borrador']),
     cloudinary_url: z.string().optional(),
     cloudinary_public_id: z.string().optional(),

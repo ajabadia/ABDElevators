@@ -4,7 +4,7 @@ import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, DocumentoTecnicoSchema } from '@/lib/schemas';
 import { ValidationError, AppError, DatabaseError } from '@/lib/errors';
-import { generateEmbedding, extractModelsWithGemini } from '@/lib/llm';
+import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/lib/llm';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
 import { uploadRAGDocument } from '@/lib/cloudinary';
@@ -64,6 +64,18 @@ export async function POST(req: NextRequest) {
         // 2. Extraer texto
         const text = await extractTextFromPDF(buffer);
 
+        // 2.1. Detectar Idioma (Phase 21.1)
+        const languagePrompt = `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código ISO de idioma (es, en, fr, de, it). \n\nTexto: ${text.substring(0, 2000)}`;
+        const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlacion_id })).trim().toLowerCase().substring(0, 2);
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'API_INGEST',
+            accion: 'LANGUAGE_DETECTED',
+            mensaje: `Idioma detectado: ${detectedLang}`,
+            correlacion_id
+        });
+
         // 3. IA: Extraer modelos
         const modelosDetectados = await extractModelsWithGemini(text, tenantId, correlacion_id);
         const modeloPrincipal = modelosDetectados.length > 0 ? modelosDetectados[0].modelo : 'DESCONOCIDO';
@@ -84,6 +96,7 @@ export async function POST(req: NextRequest) {
             modelo: modeloPrincipal,
             version: metadata.version,
             fecha_revision: new Date(),
+            language: detectedLang,
             estado: 'vigente' as const,
             cloudinary_url: cloudinaryResult.secureUrl,
             cloudinary_public_id: cloudinaryResult.publicId,
@@ -100,7 +113,15 @@ export async function POST(req: NextRequest) {
         const { multilingualService } = await import('@/lib/multilingual-service');
 
         for (const chunkText of chunks) {
+            // Si el idioma no es español, generamos traducción técnica para el "Dual-Index"
+            let translatedText = undefined;
+            if (detectedLang !== 'es') {
+                const translationPrompt = `Traduce el siguiente fragmento técnico de un manual de ascensores al Castellano de forma profesional. Mantén términos técnicos y códigos de error exactos. \n\nTexto original: ${chunkText}`;
+                translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id });
+            }
+
             // Paralelizar generación de embeddings para mejorar SLA
+            // Indexamos el texto original con el modelo multilingüe BGE-M3
             const [embeddingGemini, embeddingBGE] = await Promise.all([
                 generateEmbedding(chunkText, tenantId, correlacion_id),
                 multilingualService.generateEmbedding(chunkText)
@@ -114,7 +135,9 @@ export async function POST(req: NextRequest) {
                 origen_doc: file.name,
                 version_doc: metadata.version,
                 fecha_revision: new Date(),
+                language: detectedLang,
                 texto_chunk: chunkText,
+                texto_traducido: translatedText,
                 embedding: embeddingGemini,
                 embedding_multilingual: embeddingBGE,
                 cloudinary_url: cloudinaryResult.secureUrl,
@@ -129,8 +152,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             correlacion_id,
-            message: 'Documento procesado correctamente',
-            chunks: chunks.length
+            message: 'Documento procesado correctamente con Dual-Indexing',
+            chunks: chunks.length,
+            idioma: detectedLang
         });
 
     } catch (error: any) {

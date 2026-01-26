@@ -659,28 +659,35 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ---
 
-## 🧠 FASE 21: AGENTIC RAG EVOLUTION & INTELLIGENT GOVERNANCE
-**Objetivo:** Transformar el análisis reactivo en inteligencia proactiva mediante agentes autónomos y monitorización granular de negocio.
+## 🧠 FASE 21: EVOLUCIÓN AGÉNTICA 2.0 (LANGGRAPH + MULTILINGUAL) ✅ COMPLETADO
+**Objetivo:** Superar el RAG básico (retrieve-then-generate) mediante orquestación agéntica multi-paso y soporte multi-idioma nativo para el mercado europeo.
 
-### 21.1 Core Agentic Engine (Intelligence Layer) ✅ COMPLETADO
-- [x] **Orquestación con LangGraph.js:** 
-  - Definir `StateGraph` con nodos específicos: `Extract`, `RelationalSearch`, `LegalValidator`, `ReportGenerator`.
-  - Implementar persistencia de estado del grafo en MongoDB para auditoría de decisiones.
-- [x] **Loops de Verificación & Crítica:** 
-  - Implementar el patrón "Self-Correction": un agente revisa la respuesta y si detecta alucinaciones o falta de base legal, vuelve a ejecutar el retrieval.
+### 21.1 Core Agentic Engine (Intelligence Layer)
+- [x] **Skeleton Experimental (Legacy):** Estructura básica de agentes.
+- [x] **Orquestación con LangGraph 2.0:** 
+  - [x] Implementar `StateGraph` avanzado: **Parser** (detección de intención) → **Retriever** (búsqueda) → **Validator** (vía crítica) → **Generator**.
+  - [x] Lógica de **Auto-Corrección (Self-RAG)**: El agente valida la respuesta contra el contexto y si la confianza es < 0.7, re-ejecuta el retrieval con una query expandida por Gemini.
 - [x] **BGE-M3 Multilingual Service:** 
-  - Integrar modelo BGE-M3 (vía `@xenova/transformers`) para soporte ES/EN/DE/IT/FR.
-  - Implementar **Dual-Indexing**: Generar embeddings de fragmentos clave tanto en idioma original como en castellano.
-- [x] **Atlas Vector Search Integration:** 
-  - Configurar índices HNSW en MongoDB Atlas.
-  - Refactorizar `rag-service.ts` para usar búsquedas vectoriales híbridas (Vector + Metadata filtering).
+  - [x] Integrar modelo BGE-M3 (vía `@xenova/transformers`) para soporte nativo ES/EN/DE/IT/FR.
+  - [x] Implementar **Dual-Indexing**: Indexar normativas críticas (FATCA, CRS, EN-81) tanto en su versión original como en traducción técnica ES de alta fidelidad.
+- [x] **Atlas Vector Search Integration:** Configuración de índices HNSW y búsqueda híbrida.
 
-### 21.2 User Experience (Agentic UI) ✅ COMPLETADO
-- [x] **Live Agent Trace Viewer**: Componente estilo terminal/stepper que muestra el proceso interno del agente ("Investigando leyes alemanas...", "Validando TIN español...").
-- [x] **Confidence Meter & Citations**: Visualización de la puntuación de confianza por cada párrafo del informe. Links directos al fragmento exacto del PDF original.
-- [x] **Side-by-Side Reviewer**: Interfaz de pantalla dividida con el PDF original y el análisis sincronizados por scroll.
+### 21.2 Advanced Admin UI (Lupa del Administrador)
+- [x] **Live Agent Trace Viewer (MVP):** Visualización básica de pasos.
+- [x] **Knowledge Base Explorer**: Panel para que el Administrador navegue por los fragmentos indexados, vea su peso semántico y active/desactive documentos del RAG.
+- [x] **Confidence Inspector**: Herramienta integrada en el explorador para auditar la salud del conocimiento.
 
-...
+### 21.3 Technical Hardening (Next.js 15/16)
+- [x] **Async Dynamic APIs**: Migración de `params` y `searchParams` a promesas cumplida ✅.
+- [x] **Rate Limit Optimization**: Umbrales Enterprise para evitar bloqueos por prefetching.
+
+---
+
+### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (ACORDADO)**
+- **PROXIMO PASO**: Configuración de SLAs por Prioridad (Fase 20. SLA Management).
+
+---
+
 
 ### 📧 FASE 23: NOTIFICATION HUB & BI (EN CURSO 🛠️)
 - [x] **23.1 Hub Unificado**: Servicio central de notificaciones (Email/In-App/Log).
@@ -691,13 +698,12 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 
 ---
 
-### 🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL (PLANNED)
-**Objetivo:** Soporte jerárquico L1/L2/L3.
-**Estrategia Técnica:** Evitar imbricar el sistema dentro del core para no complicar el proyecto. Se evaluará:
-1.  **Integración con 3rd Party** (Zendesk, Crisp, Freshdesk) vía API.
-2.  **Microservicio Independiente** que se comunique con la plataforma solo para intercambio de contexto (logs/datos de pedido).
-- [ ] **Análisis de factibilidad y selección de herramientas.**
-- [ ] **Workflow de Escalamiento**: Técnico -> Admin Empresa -> Soporte ABD.
+### 🎫 FASE 20: SISTEMA DE TICKETING EMPRESARIAL ✅ COMPLETADO
+**Objetivo:** Soporte jerárquico L1/L2/L3 integrado.
+- [x] **Dashboard de Gestión**: Panel master-detail para administración de incidencias.
+- [x] **Escalamiento L1/L2/L3**: Capacidad de derivar tickets entre niveles de soporte.
+- [x] **Notas Internas**: Comunicación privada entre técnicos (Audit Ready).
+- [x] **UX Cliente**: Interfaz de chat/hilo para el usuario final.
 
 ---
 

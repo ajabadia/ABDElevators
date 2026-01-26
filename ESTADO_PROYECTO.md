@@ -41,6 +41,18 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 - **Multi-Tenant Diagnostics**: Seguridad y filtrado por tenant/user.
 - **Audit Export**: Descarga masiva de logs para cumplimiento.
 
+### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (ACORDADO)**
+1. **Dual-Indexing Engine**: Soporte multilingüe real (BGE-M3) + Traducción técnica.
+2. **Knowledge Base Explorer**: UI de administración para navegar vectores y fragmentos.
+3. **LangGraph Self-Correction**: Lógica agéntica de re-intento ante baja confianza.
+
+---
+
+### **Fase 21: Evolución Agéntica 2.0** 🚧 **EN PROGRESO (Prioridad #1)**
+- [ ] **Dual-Indexing**: Indexación de originales + traducciones con BGE-M3.
+- [ ] **LangGraph Orchestrator**: Migración de RAG simple a grafo de estados.
+- [ ] **Agent Trace Viewer**: Terminal visual de auditoría.
+
 ### **Fase 20: Sistema de Tickets** ✅ **COMPLETADO**
 - [x] **Backend Core**: Schema Zod, Servicio y API segura.
 - [x] **Escalamiento Hierárquico**: Lógica de L1/L2/L3 y reasignación entre equipos.
