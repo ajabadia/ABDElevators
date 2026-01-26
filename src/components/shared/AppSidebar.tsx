@@ -132,6 +132,12 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
+            name: 'Soporte & Tickets',
+            href: '/admin/tickets',
+            icon: LifeBuoy,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
             name: 'Auditoría',
             href: '/admin/auditoria',
             icon: History,

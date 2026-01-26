@@ -564,7 +564,7 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
       - Tickets de facturación → Equipo comercial
       - Tickets de seguridad → Equipo de compliance
   - **Schema de Tickets:**
-    - [ ] **Collection: `tickets`**
+    - [x] **Collection: `tickets`**
       ```typescript
       {
         _id, ticketNumber: "TKT-2024-00123",
@@ -590,11 +590,11 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
     - [ ] **Alertas Automáticas:** Notificar a supervisores si SLA está en riesgo (80% del tiempo consumido).
     - [ ] **Breach Tracking:** Dashboard de tickets con SLA incumplido.
   - **UI de Gestión:**
-    - [ ] **Página: `/soporte/tickets`**
+    - [x] **Página: `/soporte/tickets`**
       - Vista de lista con filtros (estado, prioridad, categoría)
       - Indicadores visuales de SLA (verde/amarillo/rojo)
       - Búsqueda full-text en subject/description
-    - [ ] **Página: `/soporte/tickets/[id]`**
+    - [x] **Página: `/soporte/tickets/[id]`**
       - Timeline de actividad (comentarios, escalamientos, cambios de estado)
       - Editor de comentarios con markdown
       - Upload de attachments (screenshots, logs)

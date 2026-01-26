@@ -21,7 +21,17 @@ export const TicketSchema = z.object({
     updatedAt: z.date(),
     resolvedAt: z.date().optional(),
 
-    // Internal
+    // Public Conversation (Visible to User)
+    messages: z.array(z.object({
+        id: z.string(),
+        author: z.string(), // "System" | "User" | "Support"
+        authorName: z.string().optional(),
+        content: z.string(),
+        timestamp: z.date(),
+        isInternal: z.boolean().default(false)
+    })).default([]),
+
+    // Internal Notes (Admins only)
     internalNotes: z.array(z.object({
         author: z.string(),
         content: z.string(),

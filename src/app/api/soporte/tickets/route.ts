@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status') || undefined;
         const priority = searchParams.get('priority') || undefined;
+        const userEmail = searchParams.get('userEmail') || undefined;
 
         // Lógica de Permisos Multi-Tenant (Igual que en Logs)
         let allowedTenants: string[] = [];
@@ -80,6 +81,7 @@ export async function GET(req: NextRequest) {
         const tickets = await TicketService.getTickets({
             tenantIds: allowedTenants,
             userId: filterUserId,
+            userEmail,
             status,
             priority
         });
