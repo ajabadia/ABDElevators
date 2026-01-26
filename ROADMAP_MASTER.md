@@ -700,9 +700,9 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
   - [x] Implementar `connectLogsDB()` en `lib/db.ts` con fallback inteligente.
   - [x] Refactorizar `logger.ts` para usar la conexión dedicada.
   - [x] Preparar lógica para `MONGODB_LOGS_URI` (Scaling futuro).
-- [ ] **24.2 Log Explorer UI (SuperAdmin)**
-  - [ ] API endpoint `/api/admin/logs` con filtros de eficiencia.
-  - [ ] Dashboard visual (`/admin/logs`) con búsqueda en tiempo real.
+- [x] **24.2 Log Explorer UI (SuperAdmin)**
+  - [x] API endpoint `/api/admin/logs` con filtros de eficiencia.
+  - [x] Dashboard visual (`/admin/logs`) con búsqueda en tiempo real.
 
 ---
 
