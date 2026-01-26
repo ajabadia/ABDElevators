@@ -28,6 +28,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [version, setVersion] = useState("1.0");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [deduplicated, setDeduplicated] = useState(false); // Nueva bandera
     const [tiposDocs, setTiposDocs] = useState<{ nombre: string }[]>([]);
     const { toast } = useToast();
 
@@ -63,6 +64,8 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         if (!file || !tipo) return;
 
         setIsUploading(true);
+        setDeduplicated(false); // Reset por precaución
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('tipo', tipo);
@@ -89,14 +92,30 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                 throw new Error(errorMessage);
             }
 
+            const data = await response.json();
+            const isDedup = data.isCloned || data.isDuplicate;
+
+            setDeduplicated(!!isDedup);
             setUploadSuccess(true);
+
+            // Toast más informativo
+            toast({
+                title: isDedup ? '¡Procesado Instantáneamente!' : 'Documento Procesado',
+                description: isDedup
+                    ? 'Se detectó una copia exacta. Metadatos clonados sin consumo de tokens.'
+                    : 'El documento ha sido indexado correctamente en el corpus.',
+                variant: 'default',
+                className: isDedup ? "bg-indigo-50 border-indigo-200 text-indigo-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"
+            });
+
             setTimeout(() => {
                 onClose();
                 setFile(null);
                 setTipo("");
                 setVersion("1.0");
                 setUploadSuccess(false);
-            }, 1500);
+                setDeduplicated(false);
+            }, 2500); // Un poco más de tiempo para leer el éxito
         } catch (error: any) {
             console.error('Upload error:', error);
             toast({
@@ -114,11 +133,15 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
             <DialogContent className="sm:max-w-[500px] border-none shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold font-outfit text-slate-900">
-                        {uploadSuccess ? "¡Documento Recibido!" : "Subir Documentación Técnica"}
+                        {uploadSuccess
+                            ? (deduplicated ? "¡Procesado Instantáneamente!" : "¡Documento Recibido!")
+                            : "Subir Documentación Técnica"}
                     </DialogTitle>
                     <DialogDescription className="text-slate-500">
                         {uploadSuccess
-                            ? "Procesando e indexando fragmentos con IA..."
+                            ? (deduplicated
+                                ? "Documento duplicado detectado. Se ha reutilizado el contenido existente."
+                                : "Procesando e indexando fragmentos con IA...")
                             : "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente."}
                     </DialogDescription>
                 </DialogHeader>
@@ -202,12 +225,19 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                     </div>
                 ) : (
                     <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
-                            <CheckCircle2 size={32} />
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${deduplicated ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"
+                            }`}>
+                            {deduplicated ? <CheckCircle2 size={32} /> : <CheckCircle2 size={32} />}
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-bold text-slate-900">¡Documento Recibido!</p>
-                            <p className="text-sm text-slate-500">Procesando e indexando fragmentos...</p>
+                            <p className="text-lg font-bold text-slate-900">
+                                {deduplicated ? "¡Ya Existía!" : "¡Documento Recibido!"}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                                {deduplicated
+                                    ? "Procesado instantáneamente (Smart Ingest)."
+                                    : "Procesando e indexando fragmentos..."}
+                            </p>
                         </div>
                     </div>
                 )}

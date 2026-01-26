@@ -1,8 +1,8 @@
 # 📊 ESTADO DEL PROYECTO ABD RAG PLATFORM
 
-**Última Actualización:** 2026-01-23  
-**Versión:** 2.0  
-**Estado General:** ✅ **DESARROLLO COMPLETADO - PENDIENTE CONFIGURACIÓN**
+**Última Actualización:** 2026-01-26  
+**Versión:** 2.1  
+**Estado General:** ✅ **OPTIMIZACIÓN RAG COMPLETADA - LISTO PARA PRODUCCION**
 
 ---
 
@@ -40,6 +40,15 @@ El desarrollo de la plataforma ABD RAG está **100% completado** en su versión 
 - **Log Explorer**: Dashboard de trazas en tiempo real con filtrado avanzado.
 - **Multi-Tenant Diagnostics**: Seguridad y filtrado por tenant/user.
 - **Audit Export**: Descarga masiva de logs para cumplimiento.
+
+### **Fase 25: Optimización & Eficiencia (Gemini 3 + MD5)** ✅ **COMPLETADO**
+- [x] **Gemini 3.0 Migration**: Upgrade a los modelos `gemini-3-flash-preview` y `pro` para menor latencia.
+- [x] **Smart Ingestion (MD5)**: Deduplicación automática de archivos para evitar re-procesamiento (Ahorro tokens).
+- [x] **Database Tuning**: Índices optimizados en collections críticas (`documentos_tecnicos`, `pedidos`).
+- [x] **Cleanup**: Scripts de limpieza de data legacy sin hash MD5.
+
+- [x] **Frontend UX Integration**: Indicadores visuales para "Procesado Instantáneo" (Deduplicación).
+- [ ] **Monitoring**: Verificar ahorro real de tokens en logs (`API_INGEST`).
 
 ### **🎯 PRIORIDAD ESTRATÉGICA ACTUAL (ACORDADO)**
 1. **Dual-Indexing Engine**: Soporte multilingüe real (BGE-M3) + Traducción técnica.
@@ -223,10 +232,10 @@ RESEND_FROM_EMAIL=
 - **Lint errors:** 0
 
 ### **Commits**
-- **Total commits Fase 9:** 4
-- **Último commit:** c2cfa22 (docs: Guía de configuración)
+- **Total commits Fase 25:** +5
+- **Último commit:** feat(rag): implement MD5 deduplication and smart ingestion
 - **Branch:** main
-- **Último push:** 2026-01-23 08:13 UTC
+- **Último push:** 2026-01-26
 
 ### **Documentación**
 - **Archivos de documentación:** 5

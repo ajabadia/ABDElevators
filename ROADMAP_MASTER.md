@@ -94,6 +94,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Identity Suite Migration:** Dedicated auth database (ABDElevators-Auth) for user security.
 - **Multi-Factor Authentication (MFA):** TOTP implementation with QR codes and recovery codes.
 - **Session Control:** Remote session monitoring and revocation for users and admins.
+- **RAG Optimization:** Migration to **Gemini 3 Flash/Pro** and **MD5 Deduplication** engine.
 
 ---
 
@@ -168,6 +169,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **6.8 Gestión Avanzada de Documentos**
   - [x] Implementar borrado físico (DB + Cloudinary API).
   - [x] Sistema de deprecación/archivado de manuales (soft-delete/obsoleto).
+  - [x] **Ingesta Inteligente (Smart Ingestion):** Deduplicación por MD5 para ahorro de tokens y almacenamiento.
   - [ ] Historial de cambios en documentos del corpus.
 
 #### Phase 7 – Multi‑Industry & SaaS (Visión 2.0)
@@ -680,6 +682,12 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 ### 21.3 Technical Hardening (Next.js 15/16)
 - [x] **Async Dynamic APIs**: Migración de `params` y `searchParams` a promesas cumplida ✅.
 - [x] **Rate Limit Optimization**: Umbrales Enterprise para evitar bloqueos por prefetching.
+
+### 🧠 FASE 25: OPTIMIZACIÓN & EFICIENCIA (GEMINI 3 + MD5) ✅ COMPLETADO
+- [x] **Gemini 3.0 Migration**: Upgrade a los modelos `gemini-3-flash-preview` y `pro` para menor latencia.
+- [x] **Smart Ingestion (MD5)**: Deduplicación automática de archivos para evitar re-procesamiento (Ahorro tokens).
+- [x] **Frontend UX**: Feedback instantáneo ("Ya existía") para subidas duplicadas.
+- [x] **Database Tuning**: Índices optimizados en collections críticas.
 
 ---
 
