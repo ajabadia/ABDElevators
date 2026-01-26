@@ -15,6 +15,7 @@ const menuItems = [
     { name: 'Mis Archivos', href: '/mis-documentos', icon: Shield },
     { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
     { name: 'Notificaciones', href: '/admin/notifications', icon: Bell },
+    { name: 'Logs', href: '/admin/logs', icon: History },
     { name: 'Auditoría', href: '/admin/auditoria', icon: History },
 ];
 
