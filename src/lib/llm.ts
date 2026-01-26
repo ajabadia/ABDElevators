@@ -172,15 +172,20 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
 
         return modelos;
     } catch (error) {
+        const errorDetails = {
+            message: (error as Error).message,
+            stack: (error as Error).stack
+        };
         await logEvento({
             nivel: 'ERROR',
             origen: 'GEMINI_EXTRACTION',
             accion: 'EXTRACT_ERROR',
             mensaje: `Fallo en extracción Gemini: ${(error as Error).message}`,
             correlacion_id,
-            stack: (error as Error).stack
+            stack: (error as Error).stack,
+            detalles: errorDetails
         });
-        throw new ExternalServiceError('Error extracting models with Gemini', error as Error);
+        throw new ExternalServiceError('Error extracting models with Gemini', errorDetails);
     }
 }
 
