@@ -9,6 +9,7 @@ import { extractTextFromPDF } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
 import { uploadRAGDocument } from '@/lib/cloudinary';
 import { z } from 'zod';
+import { PromptService } from '@/lib/prompt-service';
 import crypto from 'crypto';
 
 // Schema para los metadatos del upload
@@ -58,7 +59,83 @@ export async function POST(req: NextRequest) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const tenantId = (session.user as any).tenantId || 'default_tenant';
 
-        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: 'Buffer cargado', correlacion_id });
+        // 0. De-duplicación por MD5 (Ahorro de Tokens)
+        const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
+        const db = await connectDB();
+        const documentChunksCollection = db.collection('document_chunks');
+        const documentosTecnicosCollection = db.collection('documentos_tecnicos');
+
+        const existingDoc = await documentosTecnicosCollection.findOne({ archivo_md5: fileHash });
+
+        if (existingDoc) {
+            await logEvento({
+                nivel: 'INFO',
+                origen: 'API_INGEST',
+                accion: 'DEDUPLICACION',
+                mensaje: `Documento idéntico detectado (MD5: ${fileHash}). Clonando metadatos para tenant ${tenantId}.`,
+                correlacion_id,
+                detalles: { originalDocId: existingDoc._id, filename: file.name }
+            });
+
+            // Si ya existe para este mismo tenant, podemos retornar éxito directamente o actualizar fecha
+            const currentTenantDoc = await documentosTecnicosCollection.findOne({
+                archivo_md5: fileHash,
+                tenantId
+            });
+
+            if (currentTenantDoc) {
+                return NextResponse.json({
+                    success: true,
+                    correlacion_id,
+                    message: "El documento ya estaba indexado para este tenant.",
+                    chunks: currentTenantDoc.total_chunks,
+                    isDuplicate: true
+                });
+            }
+
+            // Si existe en otro tenant, clonamos la entrada de metadatos (pero con el nuevo tenantId)
+            const newDocMetadata = {
+                ...existingDoc,
+                _id: undefined, // MongoDB generará uno nuevo
+                tenantId,
+                nombre_archivo: file.name,
+                creado: new Date(),
+                fecha_revision: new Date(),
+                estado: 'vigente'
+            };
+            delete (newDocMetadata as any)._id; // Asegurar que sea nuevo
+
+            await documentosTecnicosCollection.insertOne(newDocMetadata);
+
+            // Clonamos los chunks (Aislamiento sagrado pero ahorro de tokens AI)
+            const originalChunks = await documentChunksCollection.find({
+                cloudinary_public_id: existingDoc.cloudinary_public_id
+            }).toArray();
+
+            if (originalChunks.length > 0) {
+                const newChunks = originalChunks.map(chunk => ({
+                    ...chunk,
+                    _id: undefined,
+                    tenantId,
+                    origen_doc: file.name,
+                    creado: new Date()
+                }));
+                // Eliminar _id de cada chunk para inserción masiva
+                newChunks.forEach(c => delete (c as any)._id);
+
+                await documentChunksCollection.insertMany(newChunks);
+            }
+
+            return NextResponse.json({
+                success: true,
+                correlacion_id,
+                message: `Documento reutilizado por coincidencia de contenido (${originalChunks.length} fragmentos).`,
+                chunks: originalChunks.length,
+                isCloned: true
+            });
+        }
+
+        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: `Archivo nuevo (MD5: ${fileHash}). Iniciando procesamiento completo.`, correlacion_id });
 
         // 1. Subir PDF a Cloudinary (Aislamiento por tenant)
         const cloudinaryResult = await uploadRAGDocument(buffer, file.name, tenantId);
@@ -69,17 +146,12 @@ export async function POST(req: NextRequest) {
         await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: `Texto extraído: ${text.length} chars`, correlacion_id });
 
         // 2.1. Detectar Idioma (Phase 21.1)
-        const languagePrompt = `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código ISO de idioma (es, en, fr, de, it, pt). \n\nTexto: ${text.substring(0, 2000)}`;
-        const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlacion_id })).trim().toLowerCase().substring(0, 2);
-        await logEvento({ nivel: 'DEBUG', origen: 'API_INGEST', accion: 'PROCESO', mensaje: `Idioma detectado: ${detectedLang}`, correlacion_id });
-
-        await logEvento({
-            nivel: 'INFO',
-            origen: 'API_INGEST',
-            accion: 'LANGUAGE_DETECTED',
-            mensaje: `Idioma detectado: ${detectedLang}`,
-            correlacion_id
-        });
+        const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
+            'LANGUAGE_DETECTOR',
+            { text: text.substring(0, 2000) },
+            tenantId
+        );
+        const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlacion_id, model: langModel })).trim().toLowerCase().substring(0, 2);
 
         // 3. IA: Extraer modelos
         const modelosDetectados = await extractModelsWithGemini(text, tenantId, correlacion_id);
@@ -88,14 +160,9 @@ export async function POST(req: NextRequest) {
         // 4. Chunking
         const chunks = await chunkText(text);
 
-        // 5. Generar Embeddings e Indexar (Regla #7: Atómico/Database Consistency)
-        const db = await connectDB();
-        const documentChunksCollection = db.collection('document_chunks');
-        const documentosTecnicosCollection = db.collection('documentos_tecnicos');
-
         // 5.1. Guardar metadatos del documento
         const documentoMetadata = {
-            tenantId, // Aislamiento garantizado
+            tenantId,
             nombre_archivo: file.name,
             tipo_componente: metadata.tipo,
             modelo: modeloPrincipal,
@@ -105,6 +172,7 @@ export async function POST(req: NextRequest) {
             estado: 'vigente' as const,
             cloudinary_url: cloudinaryResult.secureUrl,
             cloudinary_public_id: cloudinaryResult.publicId,
+            archivo_md5: fileHash,
             total_chunks: chunks.length,
             creado: new Date(),
         };
@@ -116,7 +184,7 @@ export async function POST(req: NextRequest) {
 
         // 5.2. Procesar chunks con Dual-Indexing en batches para mejorar performance
         const { multilingualService } = await import('@/lib/multilingual-service');
-        const BATCH_SIZE = 5;
+        const BATCH_SIZE = 10;
 
         for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
             const batch = chunks.slice(i, i + BATCH_SIZE);
@@ -125,15 +193,25 @@ export async function POST(req: NextRequest) {
                 // Si el idioma no es español, generamos traducción técnica para el "Dual-Index"
                 let translatedText = undefined;
                 if (detectedLang !== 'es') {
-                    const translationPrompt = `Traduce el siguiente fragmento técnico de un manual de ascensores o normativa al Castellano de forma profesional. Mantén términos técnicos y códigos de error exactos. \n\nTexto original: ${chunkText}`;
-                    translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id });
+                    const { text: translationPrompt, model: transModel } = await PromptService.getRenderedPrompt(
+                        'TECHNICAL_TRANSLATOR',
+                        { text: chunkText, targetLanguage: 'Spanish' },
+                        tenantId
+                    );
+                    translatedText = await callGeminiMini(translationPrompt, tenantId, { correlacion_id, model: transModel });
                 }
 
                 // Generar embeddings (Gemini + BGE-M3)
+                const startEmbed = Date.now();
                 const [embeddingGemini, embeddingBGE] = await Promise.all([
                     generateEmbedding(chunkText, tenantId, correlacion_id),
                     multilingualService.generateEmbedding(chunkText)
                 ]);
+                const durationEmbed = Date.now() - startEmbed;
+
+                if (durationEmbed > 5000) {
+                    console.log(`⚠️  [INGEST] Chunk embed took ${durationEmbed}ms`);
+                }
 
                 const documentChunk = {
                     tenantId,
@@ -176,27 +254,40 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
+        // Log para depuración server-side
+        console.error(`[INGEST ERROR] Correlation: ${correlacion_id}`, error);
+
         if (error.name === 'ZodError') {
             return NextResponse.json(
                 new ValidationError('Metadatos de ingesta inválidos', error.errors).toJSON(),
                 { status: 400 }
             );
         }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
+
+        // Check robusto por si instanceof falla en compilación/bundling
+        if (error instanceof AppError || error?.name === 'AppError') {
+            const appError = error instanceof AppError ? error : new AppError(error.code, error.status, error.message, error.details);
+            return NextResponse.json(appError.toJSON(), { status: appError.status });
         }
 
         await logEvento({
             nivel: 'ERROR',
             origen: 'API_INGEST',
             accion: 'ERROR_FATAL',
-            mensaje: error.message,
+            mensaje: error.message || 'Error desconocido',
             correlacion_id,
             stack: error.stack
         });
 
         return NextResponse.json(
-            { success: false, code: 'INTERNAL_ERROR', message: 'Error crítico en ingesta', details: error.message },
+            {
+                success: false,
+                error: {
+                    code: 'INTERNAL_ERROR',
+                    message: 'Error crítico en ingesta',
+                    details: error.message
+                }
+            },
             { status: 500 }
         );
     } finally {

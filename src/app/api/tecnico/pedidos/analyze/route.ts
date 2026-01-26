@@ -45,17 +45,47 @@ export async function POST(req: NextRequest) {
 
         // 1. Extraer texto del pedido
         const textBuffer = Buffer.from(await file.arrayBuffer());
-        const pedidoText = await extractTextFromPDF(textBuffer);
         const tenantId = (session.user as any).tenantId || 'default_tenant';
+
+        // 0. De-duplicación por MD5 para pedidos (Ahorro de Tokens)
+        const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
+        const { collection: pedidosCollection } = await getTenantCollection('pedidos');
+
+        const existingPedido = await pedidosCollection.findOne({
+            archivo_md5: fileHash,
+            tenantId
+        });
+
+        if (existingPedido) {
+            await logEvento({
+                nivel: 'INFO',
+                origen: 'API_PEDIDOS_ANALYZE',
+                accion: 'DEDUPLICACION',
+                mensaje: `Pedido idéntico detectado para el tenant ${tenantId}. Retornando análisis previo.`,
+                correlacion_id,
+                detalles: { pedidoId: existingPedido._id, filename: file.name }
+            });
+
+            return NextResponse.json({
+                success: true,
+                pedido_id: existingPedido._id,
+                modelos: existingPedido.contexto_rag_full || existingPedido.modelos_detectados,
+                riesgos: (existingPedido.metadata as any)?.risks || [],
+                correlacion_id,
+                isDuplicate: true
+            });
+        }
+
+        const pedidoText = await extractTextFromPDF(textBuffer);
         const industry = (session.user as any).industry || 'ELEVATORS';
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
         if (ingestOnly) {
             // Guardado Rápido sin Análisis (para el agente SSE posterior)
-            const { collection } = await getTenantCollection('pedidos');
-            const insertResult = await collection.insertOne({
+            const insertResult = await pedidosCollection.insertOne({
                 numero_pedido: file.name.split('.')[0],
                 nombre_archivo: file.name,
+                archivo_md5: fileHash,
                 pdf_texto: pedidoText, // Importante para el agente SSE
                 fecha_analisis: new Date(),
                 estado: 'ingresado',
@@ -112,7 +142,8 @@ export async function POST(req: NextRequest) {
             })),
             fecha_analisis: new Date(),
             estado: 'analizado' as const,
-            tenantId, // Regla de Oro: Inyectar tenantId
+            tenantId,
+            archivo_md5: fileHash,
             creado: new Date()
         };
 

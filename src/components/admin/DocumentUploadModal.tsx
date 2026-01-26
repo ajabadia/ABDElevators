@@ -68,6 +68,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         formData.append('tipo', tipo);
         formData.append('version', version);
 
+        let errorDetails: any = null;
         try {
             const response = await fetch('/api/admin/ingest', {
                 method: 'POST',
@@ -76,11 +77,10 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('SERVER ERROR DATA:', errorData); // Visibilidad para el usuario
+                console.error('SERVER ERROR DATA:', errorData);
 
-                // Soporte para estructura AppError (error.message) y estructura plana (message)
                 const errorMessage = errorData.error?.message || errorData.message || 'Error al subir el archivo';
-                const errorDetails = errorData.error?.details || errorData.details;
+                errorDetails = errorData.error?.details || errorData.details;
 
                 if (errorDetails) {
                     console.error('Error Details:', errorDetails);
@@ -100,8 +100,8 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         } catch (error: any) {
             console.error('Upload error:', error);
             toast({
-                title: 'Error de Subida',
-                description: error.message || 'Error desconocido al subir el archivo',
+                title: 'Error de Ingesta',
+                description: `${error.message}${errorDetails ? ' - Revise la consola para más detalles.' : ''}`,
                 variant: 'destructive',
             });
         } finally {
@@ -222,10 +222,13 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                         onClick={handleUpload}
                     >
                         {isUploading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Procesando...
-                            </>
+                            <div className="flex flex-col items-center">
+                                <div className="flex items-center">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Asistente IA Procesando...</span>
+                                </div>
+                                <span className="text-[10px] font-normal opacity-70 mt-1">Este proceso puede tardar 1-2 min.</span>
+                            </div>
                         ) : "Subir e Indexar"}
                     </Button>
                 </DialogFooter>

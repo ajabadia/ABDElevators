@@ -1,0 +1,9 @@
+--- DB LOG CHECK ---
+DB: ABDElevators | COL: logs_aplicacion | COUNT: 1347
+   [Mon Jan 26 2026 08:43:33 GMT+0100 (hora estándar de Europa central)] [API_ADMIN_CONFIGS_CHECKLIST] GET /api/admin/configs-checklist tomó 1332ms
+   [Mon Jan 26 2026 06:58:10 GMT+0100 (hora estándar de Europa central)] [API_PERFIL] GET /api/auth/perfil tomó 2555ms
+   [Mon Jan 26 2026 06:57:11 GMT+0100 (hora estándar de Europa central)] [CHECKLIST_CONFIG_UI_CLIENT] Error al obtener configuraciones
+DB: ABDElevators-Logs | COL: logs_aplicacion | COUNT: 212
+   [Mon Jan 26 2026 21:57:33 GMT+0100 (hora estándar de Europa central)] [GEMINI_EMBEDDING] Embedding lento: 1180ms
+   [Mon Jan 26 2026 21:57:33 GMT+0100 (hora estándar de Europa central)] [GEMINI_EMBEDDING] Embedding lento: 1178ms
+   [Mon Jan 26 2026 21:57:33 GMT+0100 (hora estándar de Europa central)] [GEMINI_EMBEDDING] Embedding lento: 1176ms

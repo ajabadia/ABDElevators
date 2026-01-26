@@ -127,6 +127,7 @@ npm run test                 # Ejecutar tests unitarios (Jest)
 - ✅ **Hardening de Seguridad:** Middleware avanzado con protección de APIs y rate limiting.
 - ✅ **Trazabilidad Total:** Audit trail completo con `correlacion_id` y firma digital.
 - ✅ **RAG Avanzado:** Búsqueda vectorial con MongoDB Atlas y Gemini 2.0 Flash.
+- ✅ **Ingesta Inteligente:** Deduplicación automática de archivos (MD5) para ahorro de espacio y tokens.
 
 ## 📝 Licencia
 

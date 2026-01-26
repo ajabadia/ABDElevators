@@ -34,6 +34,9 @@ class MultilingualService {
      * Genera un embedding denso usando BGE-M3.
      */
     public async generateEmbedding(text: string): Promise<number[]> {
+        if (process.env.ENABLE_LOCAL_EMBEDDINGS !== 'true') {
+            return []; // Retorno rápido para desarrollo si no queremos esperar al modelo local
+        }
         await this.init();
         const output = await this.model(text, { pooling: 'cls', normalize: true });
         return Array.from(output.data);

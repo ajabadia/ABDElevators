@@ -5,13 +5,22 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
+const rawTenantId = process.env.SINGLE_TENANT_ID || 'default_tenant';
+const CORE_TENANTS = Array.from(new Set([
+    rawTenantId.replace(/^["']|["']$/g, ''),
+    'platform_master',
+    'default_tenant'
+]));
+
+console.log('🌱 Target Core Tenants:', CORE_TENANTS);
+
 const DEFAULT_PROMPTS = [
     {
-        tenantId: 'default_tenant',
         key: 'RISK_AUDITOR',
         name: 'Auditor de Riesgos',
         description: 'Analiza casos en busca de riesgos técnicos, legales o de seguridad',
         category: 'RISK',
+        model: 'gemini-3-flash-preview',
         template: `Actúa como un Auditor de Riesgos experto en la industria de {{industry}}.
 Tu tarea es analizar el CONTENIDO DEL CASO comparándolo con el CONTEXTO DE NORMATIVA/MANUALES extraído del RAG.
 
@@ -44,11 +53,11 @@ Responde ÚNICAMENTE con el array JSON.`,
         updatedBy: 'system'
     },
     {
-        tenantId: 'default_tenant',
         key: 'MODEL_EXTRACTOR',
         name: 'Extractor de Modelos',
         description: 'Extrae componentes y modelos de documentos técnicos',
         category: 'EXTRACTION',
+        model: 'gemini-3-flash-preview',
         template: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
 Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
 Solo devuelve el JSON, sin explicaciones.
@@ -64,11 +73,11 @@ TEXTO:
         updatedBy: 'system'
     },
     {
-        tenantId: 'default_tenant',
         key: 'CHECKLIST_GENERATOR',
         name: 'Generador de Checklist',
         description: 'Genera checklists de verificación basados en componentes detectados',
         category: 'CHECKLIST',
+        model: 'gemini-3-flash-preview',
         template: `Genera un checklist de verificación técnica para el siguiente componente:
 
 TIPO: {{componentType}}
@@ -90,11 +99,11 @@ Responde ÚNICAMENTE con el array JSON.`,
         updatedBy: 'system'
     },
     {
-        tenantId: 'default_tenant',
         key: 'REPORT_GENERATOR',
         name: 'Generador de Informe Técnico',
         description: 'Genera informes técnicos profesionales basados en validaciones y contexto RAG',
         category: 'ANALYSIS',
+        model: 'gemini-3-flash-preview',
         template: `Eres un ingeniero técnico especializado en ascensores. Genera un informe profesional basado en la siguiente información validada:
 
 ## DATOS DEL PEDIDO
@@ -140,11 +149,11 @@ Genera el informe ahora:`,
         updatedBy: 'system'
     },
     {
-        tenantId: 'default_tenant',
         key: 'CHECKLIST_EXTRACTOR',
         name: 'Extractor de Checklist de Documentos',
         description: 'Extrae items de checklist accionables de documentos técnicos',
         category: 'EXTRACTION',
+        model: 'gemini-3-flash-preview',
         template: `You are a specialist extracting actionable checklist items from technical documents.
 Return a JSON array where each element has the shape { "id": "<uuid>", "description": "<text>" }.
 Include only items that a technician must verify for the given order.
@@ -159,11 +168,11 @@ Use the following documents (concatenated, each separated by "---DOC---"):
         updatedBy: 'system'
     },
     {
-        tenantId: 'default_tenant',
         key: 'AGENT_RISK_ANALYSIS',
         name: 'Agente de Análisis de Riesgos',
         description: 'Utilizado por el motor de agentes para detectar riesgos e incompatibilidades',
         category: 'RISK',
+        model: 'gemini-3-flash-preview',
         template: `Actúa como un experto en ingeniería de ascensores. 
 Basándote en el siguiente contexto técnico:
 {{context}}
@@ -180,6 +189,46 @@ Responde en formato JSON: { "riesgos": [{ "tipo": "SEGURIDAD" | "COMPATIBILIDAD"
         active: true,
         createdBy: 'system',
         updatedBy: 'system'
+    },
+    {
+        key: 'LANGUAGE_DETECTOR',
+        name: 'Detector de Idioma Técnico',
+        description: 'Detecta el idioma predominante de un texto técnico',
+        category: 'GENERAL',
+        model: 'gemini-3-flash-preview',
+        template: `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código de idioma ISO (en, es, fr, de, it, pt).
+Si no estás seguro, responde "es".
+
+TEXTO:
+{{text}}`,
+        variables: [
+            { name: 'text', type: 'string', description: 'Texto a analizar', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'TECHNICAL_TRANSLATOR',
+        name: 'Traductor Técnico Pro',
+        description: 'Traduce texto técnico manteniendo la terminología precisa',
+        category: 'GENERAL',
+        model: 'gemini-3-pro-preview',
+        template: `Traduce el siguiente texto técnico al idioma: {{targetLanguage}}.
+Mantén la terminología técnica precisa de la industria de ascensores.
+No añadidas explicaciones, solo devuelve el texto traducido.
+
+TEXTO:
+{{text}}`,
+        variables: [
+            { name: 'text', type: 'string', description: 'Texto a traducir', required: true },
+            { name: 'targetLanguage', type: 'string', description: 'Idioma destino (ej: Spanish)', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
     }
 ];
 
@@ -189,21 +238,73 @@ async function seedPrompts() {
     try {
         const db = await connectDB();
         const collection = db.collection('prompts');
+        const versionsCollection = db.collection('prompt_versions');
 
-        for (const promptData of DEFAULT_PROMPTS) {
-            const existing = await collection.findOne({
-                key: promptData.key,
-                tenantId: promptData.tenantId
-            });
+        // LIMPIEZA: Eliminar prompts que tengan comillas literales en el tenantId
+        // ya que esto causaba errores de "No encontrado"
+        const badQuery = { tenantId: { $regex: /^"/ } };
+        const deletedBad = await collection.deleteMany(badQuery);
+        if (deletedBad.deletedCount > 0) {
+            console.log(`🧹 Limpiados ${deletedBad.deletedCount} prompts con tenantId corrupto (comillas literales).`);
+        }
 
-            if (existing) {
-                console.log(`⏭️  Prompt "${promptData.name}" ya existe, saltando...`);
-                continue;
+        for (const tenantId of CORE_TENANTS) {
+            console.log(`\n🏢 Procesando Tenant: ${tenantId}`);
+
+            for (const basePromptData of DEFAULT_PROMPTS) {
+                // Incorporamos el tenantId al objeto base para validación y búsqueda
+                const promptData = { ...basePromptData, tenantId } as any;
+
+                const existing = await collection.findOne({
+                    key: promptData.key,
+                    tenantId: promptData.tenantId
+                });
+
+                if (existing) {
+                    // Verificar si hay cambios reales para versionar
+                    const hasChanges =
+                        existing.template !== promptData.template ||
+                        existing.model !== promptData.model ||
+                        JSON.stringify(existing.variables) !== JSON.stringify(promptData.variables);
+
+                    if (hasChanges) {
+                        console.log(`🆙  Actualizando y VERSIONANDO prompt "${promptData.name}" para ${tenantId}...`);
+
+                        // 1. Guardar versión actual en el historial antes de actualizar
+                        const versionSnapshot = {
+                            promptId: existing._id,
+                            tenantId: existing.tenantId,
+                            version: existing.version,
+                            template: existing.template,
+                            variables: existing.variables,
+                            changedBy: 'system-seed',
+                            changeReason: 'Actualización automática vía Seed Script (Core Update)',
+                            createdAt: new Date()
+                        };
+                        await versionsCollection.insertOne(versionSnapshot);
+
+                        // 2. Actualizar el prompt incrementando versión
+                        const nextVersion = (existing.version || 1) + 1;
+                        const validated = PromptSchema.parse({
+                            ...promptData,
+                            version: nextVersion,
+                            updatedAt: new Date()
+                        });
+
+                        await collection.updateOne(
+                            { _id: existing._id },
+                            { $set: validated }
+                        );
+                        console.log(`✅ Prompt "${promptData.key}" actualizado a V${nextVersion}`);
+                    } else {
+                        // console.log(`⏭️  Prompt "${promptData.key}" ya está actualizado (V${existing.version})`);
+                    }
+                } else {
+                    const validated = PromptSchema.parse(promptData);
+                    await collection.insertOne(validated);
+                    console.log(`✅ Prompt "${promptData.key}" creado exitosamente (V1) para ${tenantId}`);
+                }
             }
-
-            const validated = PromptSchema.parse(promptData);
-            await collection.insertOne(validated);
-            console.log(`✅ Prompt "${promptData.name}" creado exitosamente`);
         }
 
         console.log('\n🎉 Seed de prompts completado');

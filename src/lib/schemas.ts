@@ -162,6 +162,7 @@ export const PedidoSchema = z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
     }).optional(),
     transitions_history: z.array(WorkflowLogSchema).default([]),
+    archivo_md5: z.string().optional(),
     creado: z.date().default(() => new Date()),
 });
 
@@ -213,6 +214,7 @@ export const DocumentoTecnicoSchema = z.object({
     estado: z.enum(['vigente', 'obsoleto', 'borrador']),
     cloudinary_url: z.string().optional(),
     cloudinary_public_id: z.string().optional(),
+    archivo_md5: z.string().optional(), // Para de-duplicación y ahorro de tokens
     total_chunks: z.number(),
     creado: z.date().default(() => new Date()),
 });
@@ -420,6 +422,7 @@ export const PromptSchema = z.object({
     template: z.string().min(10),
     // Optional maxLength metadata: undefined = no limit; if set, enforce length in UI.
     maxLength: z.number().int().positive().optional(),
+    model: z.string().default('gemini-1.5-flash'), // Permitir seleccionar modelo por prompt
     variables: z.array(PromptVariableSchema),
     version: z.number().int().positive().default(1),
     active: z.boolean().default(true),

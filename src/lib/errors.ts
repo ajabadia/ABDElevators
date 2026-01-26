@@ -32,7 +32,9 @@ export class AppError extends Error {
       error: {
         code: this.code,
         message: this.message,
-        details: this.details,
+        details: this.details instanceof Error
+          ? { message: this.details.message, name: this.details.name }
+          : (this.details || null),
       },
     };
   }

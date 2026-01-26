@@ -68,23 +68,23 @@ const CallGeminiMiniSchema = z.object({
     tenantId: z.string(),
     options: z.object({
         correlacion_id: z.string().uuid(),
-        temperature: z.number().min(0).max(1).optional()
+        temperature: z.number().min(0).max(1).optional(),
+        model: z.string().optional()
     })
 });
 
 export async function callGeminiMini(
     prompt: string,
     tenantId: string,
-    options: { correlacion_id: string; temperature?: number }
+    options: { correlacion_id: string; temperature?: number; model?: string }
 ): Promise<string> {
-    CallGeminiMiniSchema.parse({ prompt, tenantId, options });
-    const { correlacion_id, temperature = 0.7 } = options;
+    CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlacion_id: options.correlacion_id } });
+    const { correlacion_id, temperature = 0.7, model: modelName = 'gemini-3-flash-preview' } = options;
     const start = Date.now();
 
     try {
         const genAI = getGenAI();
-        // Fallback a 1.5-flash si 2.0 falla por cuota o disponibilidad
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: { temperature }
@@ -96,27 +96,39 @@ export async function callGeminiMini(
         // Tracking de uso (Tokens reales)
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-2.0-flash', correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
         }
 
         return responseText;
-    } catch (error) {
+    } catch (error: any) {
+        const rawMessage = error.message || 'Sin mensaje de error';
         const errorDetails = {
-            message: (error as Error).message,
-            stack: (error as Error).stack,
-            cause: (error as any).cause
+            geminiMessage: rawMessage,
+            geminiStack: error.stack,
+            geminiCause: error.cause,
+            modelRequested: modelName,
+            tenantId
         };
+
+        // Regla #4: Logging Estructurado (Hacia terminal para visibilidad inmediata en dev)
+        console.error(`[AI ERROR] Gemini Failure in ${modelName}:`, rawMessage);
 
         await logEvento({
             nivel: 'ERROR',
             origen: 'GEMINI_MINI',
             accion: 'CALL_ERROR',
-            mensaje: `Error en Gemini Mini: ${(error as Error).message}`,
+            mensaje: `Error en Gemini Mini (${modelName}): ${rawMessage}`,
             correlacion_id,
-            stack: (error as Error).stack,
+            stack: error.stack,
             detalles: errorDetails
         });
-        throw new AppError('EXTERNAL_SERVICE_ERROR', 500, 'Error in Gemini Mini call', errorDetails);
+
+        throw new AppError(
+            'EXTERNAL_SERVICE_ERROR',
+            500,
+            `Error en llamada a Gemini (${modelName}): ${rawMessage}`,
+            errorDetails
+        );
     }
 }
 
@@ -138,15 +150,15 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
     const start = Date.now();
     try {
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-        // Renderizar el prompt dinámico
-        const renderedPrompt = await PromptService.renderPrompt(
+        // Renderizar el prompt dinámico y obtener el modelo configurado
+        const { text: renderedPrompt, model: modelName } = await PromptService.getRenderedPrompt(
             'MODEL_EXTRACTOR',
             { text },
             tenantId
         );
 
+        const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(renderedPrompt);
         const responseText = result.response.text();
         const duration = Date.now() - start;
@@ -168,7 +180,7 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
         // Tracking de uso (Tokens reales)
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, 'gemini-1.5-flash', correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
         }
 
         return modelos;
@@ -207,7 +219,7 @@ export async function callGemini(
     const start = Date.now();
     try {
         const genAI = getGenAI();
-        const modelName = options?.model || 'gemini-2.0-flash-exp';
+        const modelName = options?.model || 'gemini-3-flash-preview';
         const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {

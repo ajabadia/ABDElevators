@@ -6,7 +6,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
  */
 export async function chunkText(text: string): Promise<string[]> {
     const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
+        chunkSize: 2000,
         chunkOverlap: 200,
     });
 

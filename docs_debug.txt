@@ -1,0 +1,5 @@
+--- DOCUMENTOS TÉCNICOS ---
+ID: 6977d3cd0b84cef96a7cdf46 | NOMBRE: Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf | TENANT: platform_master | CREADO: Mon Jan 26 2026 21:51:25 GMT+0100 (hora estándar de Europa central)
+
+--- ORIGEN DE CHUNKS EXISTENTES ---
+ORIGEN: Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf

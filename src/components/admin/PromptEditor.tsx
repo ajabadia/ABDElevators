@@ -397,13 +397,28 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                     <select
                                         value={formData.category}
                                         onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
-                                        className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none"
+                                        className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none transition-all"
                                     >
                                         <option value="EXTRACTION">Extracción</option>
                                         <option value="ANALYSIS">Análisis</option>
                                         <option value="RISK">Riesgos</option>
                                         <option value="CHECKLIST">Checklist</option>
                                         <option value="GENERAL">General</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-400 text-xs">Modelo Gemini</Label>
+                                    <select
+                                        value={(formData as any).model || 'gemini-1.5-flash'}
+                                        onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))}
+                                        className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none transition-all"
+                                    >
+                                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Rápido)</option>
+                                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Complejo)</option>
+                                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</option>
+                                        <option value="gemini-exp-1206">Gemini Exp 1206</option>
+                                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (User Req)</option>
+                                        <option value="gemini-3.0-flash">Gemini 3.0 Flash (User Req)</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
