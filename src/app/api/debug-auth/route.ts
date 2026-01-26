@@ -18,10 +18,11 @@ export async function GET() {
             .toArray();
 
         // Verificar logs recientes para ver si hay errores de login registrados
-        const logsCollection = db.collection("logs");
+        const dbMain = await db.client.db('ABDElevators'); // Ver logs en DB principal
+        const logsCollection = dbMain.collection("logs");
         const recentLogs = await logsCollection.find({ origen: 'AUTH' })
             .sort({ fecha: -1 })
-            .limit(5)
+            .limit(10)
             .toArray();
 
         return NextResponse.json({
@@ -32,7 +33,11 @@ export async function GET() {
                 totalUsers: count,
             },
             usersFound: users,
-            authLogs: recentLogs,
+            authLogs: recentLogs.map(l => ({
+                accion: l.accion,
+                mensaje: l.mensaje,
+                fecha: l.fecha
+            })),
             environment: {
                 hasAuthUri: !!process.env.MONGODB_AUTH_URI,
                 hasMainUri: !!process.env.MONGODB_URI,
