@@ -191,6 +191,31 @@ export const AuditoriaRagSchema = z.object({
 });
 
 /**
+ * Esquema para Evaluación de Calidad RAG (Fase 26.2 - RAGAs Inspired)
+ */
+export const RagEvaluationSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    correlacion_id: z.string().uuid(),
+    query: z.string(),
+    generation: z.string(),
+    context_chunks: z.array(z.string()),
+
+    // Métricas (0-1)
+    metrics: z.object({
+        faithfulness: z.number().min(0).max(1),       // ¿Está basado en los documentos?
+        answer_relevance: z.number().min(0).max(1),   // ¿Responde a la pregunta?
+        context_precision: z.number().min(0).max(1),  // ¿Los documentos recuperados son útiles?
+        context_recall: z.number().min(0).max(1).optional(), // Solo si hay ground truth
+    }),
+
+    judge_model: z.string(),
+    trace: z.array(z.string()).optional(),
+    feedback: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+/**
  * Esquema para Logs de Aplicación
  */
 export const LogAplicacionSchema = z.object({

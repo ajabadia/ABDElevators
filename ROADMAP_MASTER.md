@@ -69,8 +69,8 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Fase 1‑6:** 100 %
 - **Fase 7:** 100 % (Motor de Workflows y SaaS listo)
 - **Fase 10:** 95 % (Governance & Support operativo)
-- **Fase 21:** 0 % (NUEVA: Agentic Evolution)
-- **GLOBAL:** 92 % (Identity Suite & MFA implementation completed)
+- **Fase 21:** 100 % (Agentic Evolution COMPLETADA con Evaluation Framework)
+- **GLOBAL:** 98 % (Faltan ajustes menores de SLAs y Mock tests)
 
 ---
 
@@ -679,7 +679,13 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 - [x] **Knowledge Base Explorer**: Panel para que el Administrador navegue por los fragmentos indexados, vea su peso semántico y active/desactive documentos del RAG.
 - [x] **Confidence Inspector**: Herramienta integrada en el explorador para auditar la salud del conocimiento.
 
-### 21.3 Technical Hardening (Next.js 15/16)
+### 21.3 Evaluation & Quality (RAGAs / High Fidelity)
+- [x] **Framework de Evaluación Automática**: Implementación de `EvaluationService` para medir Faithfulness, Answer Relevance y Context Precision.
+- [x] **RAG Quality Dashboard**: Dashboard administrativo para monitorear la calidad del motor en tiempo real.
+- [x] **Agent Trace Viewer (End-User)**: Integración de la traza de pensamiento del agente en el portal del técnico para máxima transparencia.
+- [x] **Prompt Calibration**: Calibración estricta de graders (Hallucination/Relevance) para el sector ascensores.
+
+### 21.4 Technical Hardening (Next.js 15/16)
 - [x] **Async Dynamic APIs**: Migración de `params` y `searchParams` a promesas cumplida ✅.
 - [x] **Rate Limit Optimization**: Umbrales Enterprise para evitar bloqueos por prefetching.
 

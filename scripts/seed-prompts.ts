@@ -229,6 +229,143 @@ TEXTO:
         active: true,
         createdBy: 'system',
         updatedBy: 'system'
+    },
+    {
+        key: 'RAG_RELEVANCE_GRADER',
+        name: 'Grader de Relevancia RAG',
+        description: 'Evalúa si un documento es relevante para una consulta técnica',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Eres un calificador experto evaluando la relevancia de un documento recuperado para una pregunta técnica de la industria de ascensores.
+        
+Pregunta: {{question}}
+Documento: {{document}}
+
+CRITERIOS DE RELEVANCIA:
+1. El documento debe contener especificaciones técnicas, protocolos de seguridad o manuales de componentes mencionados.
+2. Si la consulta es sobre un modelo específico (ej: Quantum, Otis2000), el documento debe referirse a ese modelo o a un componente compatible.
+3. El "ruido" conversacional o generalidades sin valor técnico deben ser marcadas como irrelevantes.
+4. Si el documento ayuda a responder parcial o totalmente a la pregunta, marca "yes".
+
+Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+        variables: [
+            { name: 'question', type: 'string', description: 'Pregunta del usuario', required: true },
+            { name: 'document', type: 'string', description: 'Documento a evaluar', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'RAG_HALLUCINATION_GRADER',
+        name: 'Grader de Alucinaciones RAG',
+        description: 'Verifica si una respuesta está basada en los documentos proporcionados',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Eres un auditor de seguridad técnica analizando si una respuesta de IA alucina o inventa datos.
+        
+Documentos Técnicos de Referencia:
+{{documents}}
+
+Respuesta Generada:
+{{generation}}
+
+TU MISIÓN:
+Determina si CADA HECHO O DATO TÉCNICO en la respuesta está explícitamente contenido en los documentos. 
+- Si la respuesta menciona un valor numérico (presión, voltaje, medidas) que no está en el texto → "no" (alucinación).
+- Si la respuesta infiere seguridad sin base documental → "no".
+- Si la respuesta es 100% fiel a los documentos → "yes".
+
+Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+        variables: [
+            { name: 'documents', type: 'string', description: 'Documentos de referencia', required: true },
+            { name: 'generation', type: 'string', description: 'Respuesta generada', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'RAG_ANSWER_GRADER',
+        name: 'Grader de Utilidad de Respuesta RAG',
+        description: 'Evalúa si la respuesta resuelve la duda del usuario',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Eres un ingeniero senior de soporte evaluando si la respuesta proporcionada resuelve el problema del técnico de campo.
+
+Pregunta del Técnico: {{question}}
+Respuesta Proporcionada: {{generation}}
+
+EVALUACIÓN:
+1. ¿La respuesta es directa y accionable?
+2. ¿Evita ambigüedades?
+3. ¿Si no hay información suficiente en el contexto, le comunica al técnico qué falta o qué pasos seguir? (Decir "no sé" basándose en falta de contexto es una respuesta útil/profesional).
+4. Si la respuesta es útil, responde "yes". Si es evasiva o ignora partes críticas de la duda, responde "no".
+
+Responde ÚNICAMENTE con un JSON: {"score": "yes" | "no"}`,
+        variables: [
+            { name: 'question', type: 'string', description: 'Pregunta original', required: true },
+            { name: 'generation', type: 'string', description: 'Respuesta generada', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'RAG_QUERY_REWRITER',
+        name: 'Re-escritor de Consultas RAG',
+        description: 'Optimiza la consulta del usuario para mejorar la recuperación vectorial',
+        category: 'GENERAL',
+        model: 'gemini-1.5-flash',
+        template: `Eres un optimizador de consultas experto para sistemas RAG.
+Tu tarea es convertir la siguiente consulta de usuario en una versión más técnica y precisa para una base de datos vectorial de la industria de ascensores.
+
+Consulta Original: {{question}}
+
+Optimiza buscando términos técnicos y eliminando ruidos conversacionales.
+Si la consulta ya es técnica, devuélvela tal cual o ligeramente mejorada.
+
+Responde ÚNICAMENTE con el texto de la consulta optimizada.`,
+        variables: [
+            { name: 'question', type: 'string', description: 'Consulta original del usuario', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'RAG_GENERATOR',
+        name: 'Generador de Respuestas RAG',
+        description: 'Genera una respuesta técnica basada en el contexto recuperado',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Eres un ingeniero técnico experto en la industria de {{industry}}.
+Tu tarea es responder a la pregunta del usuario utilizando ÚNICAMENTE el contexto proporcionado.
+
+Pregunta: {{question}}
+
+Contexto Técnico:
+{{context}}
+
+Instrucciones:
+1. Si la respuesta no está en el contexto, indica honestamente que no dispones de esa información específica en los manuales actuales.
+2. Mantén un tono profesional, preciso y directo.
+3. Si hay medidas, códigos o normativas en el contexto, cítalos fielmente.
+
+Respuesta técnica:`,
+        variables: [
+            { name: 'industry', type: 'string', description: 'Industria del tenant', required: true },
+            { name: 'question', type: 'string', description: 'Pregunta del usuario', required: true },
+            { name: 'context', type: 'string', description: 'Contexto recuperado del RAG', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
     }
 ];
 

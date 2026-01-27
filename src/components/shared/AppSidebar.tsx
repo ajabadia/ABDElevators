@@ -22,7 +22,9 @@ import {
     Terminal,
     CheckSquare,
     ShieldAlert,
-    Search
+    Search,
+    ShieldCheck,
+    Activity
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -146,10 +148,17 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Observabilidad',
+            name: 'Calidad RAG',
+            href: '/admin/rag-quality',
+            icon: ShieldCheck,
+            roles: ['SUPER_ADMIN'],
+            module: 'RAG'
+        },
+        {
+            name: 'Logs del Sistema',
             href: '/admin/logs',
-            icon: ShieldAlert,
-            roles: ['ADMIN', 'SUPER_ADMIN']
+            icon: Activity,
+            roles: ['SUPER_ADMIN']
         },
         {
             name: 'Perfil',
