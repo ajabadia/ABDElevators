@@ -1,4 +1,5 @@
 import { getTenantCollection } from './db-tenant';
+import { connectDB } from './db';
 import { UsageLogSchema } from './schemas';
 import { logEvento } from './logger';
 
@@ -118,6 +119,98 @@ export class UsageService {
             // No bloqueamos la ejecución principal si el tracking falla, pero lo logueamos
             console.error('[UsageService ERROR] Failed to log usage:', error);
             return false;
+        }
+    }
+    /**
+     * Calcula el ROI estimado para el Tenant basado en su actividad.
+     * Fase 24.2b: Tenant ROI Dashboard
+     */
+    static async getTenantROI(tenantId: string) {
+        try {
+            const db = await connectDB();
+            const usageColl = db.collection('usage_logs');
+            const pedidosColl = db.collection('pedidos');
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            // 1. Análisis Realizados (Pedidos procesados)
+            const analysisCount = await pedidosColl.countDocuments({
+                tenantId: tenantId,
+                createdAt: { $gte: thirtyDaysAgo },
+                estado: 'completado'
+            });
+
+            // 2. Métricas de Usage Logs (Searches & Dedup)
+            const usageStats = await usageColl.aggregate([
+                {
+                    $match: {
+                        tenantId: tenantId,
+                        timestamp: { $gte: thirtyDaysAgo }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$tipo',
+                        count: { $sum: 1 },
+                        totalValue: { $sum: '$valor' }
+                    }
+                }
+            ]).toArray();
+
+            const vectorSearches = usageStats.find((s: any) => s._id === 'VECTOR_SEARCH')?.count || 0;
+            const dedupEvents = usageStats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.count || 0;
+            const savedTokens = usageStats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.totalValue || 0;
+
+            // 3. Coeficientes de Ahorro (Estimaciones de industria)
+            const TIME_PER_ANALYSIS_MIN = 20; // 20 min revisión manual vs IA
+            const TIME_PER_SEARCH_MIN = 15;   // 15 min búsqueda manual vs vector search
+            const TIME_PER_DEDUP_MIN = 5;     // 5 min gestión archivos duplicados
+            const HOURLY_RATE_USD = 50;       // Coste hora ingeniero/técnico promedio
+
+            // 4. Cálculo de Tiempo Ahorrado (Minutos)
+            const savedMinutesAnalysis = analysisCount * TIME_PER_ANALYSIS_MIN;
+            const savedMinutesSearch = vectorSearches * TIME_PER_SEARCH_MIN;
+            const savedMinutesDedup = dedupEvents * TIME_PER_DEDUP_MIN;
+
+            const totalSavedMinutes = savedMinutesAnalysis + savedMinutesSearch + savedMinutesDedup;
+            const totalSavedHours = Math.round(totalSavedMinutes / 60);
+
+            // 5. Cálculo Monetario
+            const estimatedCostSavings = Math.round(totalSavedHours * HOURLY_RATE_USD);
+
+            return {
+                period: '30d',
+                metrics: {
+                    analysisCount,
+                    vectorSearches,
+                    dedupEvents,
+                    savedTokens
+                },
+                roi: {
+                    totalSavedHours,
+                    estimatedCostSavings,
+                    currency: 'USD',
+                    breakdown: {
+                        analysisHours: Math.round(savedMinutesAnalysis / 60),
+                        searchHours: Math.round(savedMinutesSearch / 60),
+                        dedupHours: Math.round(savedMinutesDedup / 60)
+                    }
+                },
+                efficiencyScore: analysisCount > 0
+                    ? Math.min(100, Math.round(((savedMinutesAnalysis + savedMinutesSearch) / (analysisCount * 2)) * 10)) // Simple score calculation
+                    : 0
+            };
+
+        } catch (error) {
+            console.error('[UsageService] Error calculating ROI:', error);
+            // Return safe defaults
+            return {
+                period: '30d',
+                metrics: { analysisCount: 0, vectorSearches: 0, dedupEvents: 0, savedTokens: 0 },
+                roi: { totalSavedHours: 0, estimatedCostSavings: 0, currency: 'USD', breakdown: { analysisHours: 0, searchHours: 0, dedupHours: 0 } },
+                efficiencyScore: 0
+            };
         }
     }
 }

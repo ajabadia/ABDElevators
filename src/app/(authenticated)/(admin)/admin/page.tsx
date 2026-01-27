@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TenantROIStats } from "@/components/admin/TenantROIStats";
 
 interface GlobalStats {
     totalTenants: number;
@@ -114,6 +115,13 @@ export default function AdminDashboardPage() {
                     En tiempo real
                 </div>
             </div>
+
+            {/* Tenant ROI Dashboard (Fase 24.2b) */}
+            {!isSuperAdmin && (
+                <div className="mt-6">
+                    <TenantROIStats />
+                </div>
+            )}
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
