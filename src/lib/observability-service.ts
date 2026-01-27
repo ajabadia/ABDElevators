@@ -1,5 +1,5 @@
-import { connectDB } from './db';
-import { logEvento } from './logger';
+import { connectDB } from '@/lib/db';
+import { logEvento } from '@/lib/logger';
 import { NotificationService } from './notification-service';
 
 /**

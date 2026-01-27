@@ -1,4 +1,4 @@
-import { ExternalServiceError } from './errors';
+import { ExternalServiceError } from '@/lib/errors';
 import { PDFParse } from 'pdf-parse';
 
 /**

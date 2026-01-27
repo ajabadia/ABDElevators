@@ -20,12 +20,13 @@ import {
     DialogTitle,
     DialogTrigger
 } from '@/components/ui/dialog';
-import { Loader2, Plus, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Plus, FileText, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
 
 export default function TiposDocumentoPage() {
     const [tipos, setTipos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTipo, setEditingTipo] = useState<any>(null);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -48,7 +49,7 @@ export default function TiposDocumentoPage() {
 
     const [isCreating, setIsCreating] = useState(false);
 
-    const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleAction = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsCreating(true);
 
@@ -60,32 +61,64 @@ export default function TiposDocumentoPage() {
                 activo: true
             };
 
-            const res = await fetch('/api/admin/tipos-documento', {
-                method: 'POST',
+            const url = '/api/admin/tipos-documento';
+            const method = editingTipo ? 'PATCH' : 'POST';
+            const body = editingTipo ? { ...data, id: editingTipo._id } : data;
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(body)
             });
 
             if (res.ok) {
                 toast({
-                    title: 'Tipo creado',
-                    description: 'El tipo de documento se ha guardado correctamente.'
+                    title: editingTipo ? 'Tipo actualizado' : 'Tipo creado',
+                    description: `El tipo de documento se ha ${editingTipo ? 'actualizado' : 'guardado'} correctamente.`
                 });
                 setIsModalOpen(false);
+                setEditingTipo(null);
                 fetchTipos();
             } else {
                 const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Error al crear');
+                throw new Error(errorData.message || 'Error al procesar');
             }
         } catch (error: any) {
-            console.error('Error creating type:', error);
+            console.error('Error processing type:', error);
             toast({
                 title: 'Error',
-                description: error.message || 'No se pudo crear el tipo de documento.',
+                description: error.message || 'No se pudo procesar la solicitud.',
                 variant: 'destructive'
             });
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar este tipo de documento?')) return;
+
+        try {
+            const res = await fetch(`/api/admin/tipos-documento?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                toast({
+                    title: 'Tipo eliminado',
+                    description: 'El tipo de documento se ha eliminado correctamente.'
+                });
+                fetchTipos();
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Error al eliminar');
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error.message,
+                variant: 'destructive'
+            });
         }
     };
 
@@ -102,13 +135,16 @@ export default function TiposDocumentoPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <FileText className="text-teal-600" />
-                        Tipos de Documento
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Tipos de <span className="text-teal-600">Documento</span>
                     </h1>
-                    <p className="text-slate-500">Configura las categorías de documentos técnicos para el RAG.</p>
+                    <p className="text-slate-500 mt-1">Configura las categorías de documentos técnicos para el RAG.</p>
                 </div>
 
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <Dialog open={isModalOpen} onOpenChange={(open) => {
+                    setIsModalOpen(open);
+                    if (!open) setEditingTipo(null);
+                }}>
                     <DialogTrigger asChild>
                         <Button className="bg-teal-600 hover:bg-teal-700">
                             <Plus className="mr-2 h-4 w-4" /> Nuevo Tipo
@@ -116,16 +152,16 @@ export default function TiposDocumentoPage() {
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Crear Nuevo Tipo de Documento</DialogTitle>
+                            <DialogTitle>{editingTipo ? 'Editar Tipo de Documento' : 'Crear Nuevo Tipo de Documento'}</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={handleCreate} className="space-y-4 pt-4">
+                        <form onSubmit={handleAction} className="space-y-4 pt-4">
                             <div className="space-y-2">
                                 <Label htmlFor="nombre">Nombre</Label>
-                                <Input id="nombre" name="nombre" placeholder="Ej: Botonera, Motor, etc." required />
+                                <Input id="nombre" name="nombre" defaultValue={editingTipo?.nombre} placeholder="Ej: Botonera, Motor, etc." required />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="descripcion">Descripción</Label>
-                                <Input id="descripcion" name="descripcion" placeholder="Opcional" />
+                                <Input id="descripcion" name="descripcion" defaultValue={editingTipo?.descripcion} placeholder="Opcional" />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
                                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isCreating}>Cancelar</Button>
@@ -133,9 +169,9 @@ export default function TiposDocumentoPage() {
                                     {isCreating ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Creando...
+                                            {editingTipo ? 'Guardando...' : 'Creando...'}
                                         </>
-                                    ) : 'Crear'}
+                                    ) : (editingTipo ? 'Guardar Cambios' : 'Crear')}
                                 </Button>
                             </div>
                         </form>
@@ -151,6 +187,7 @@ export default function TiposDocumentoPage() {
                             <TableHead>Descripción</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>Creado</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -176,8 +213,31 @@ export default function TiposDocumentoPage() {
                                             </span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-slate-500 text-xs">
+                                    <TableCell className="text-slate-500 text-xs text-nowrap">
                                         {new Date(tipo.creado).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                                                onClick={() => {
+                                                    setEditingTipo(tipo);
+                                                    setIsModalOpen(true);
+                                                }}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                onClick={() => handleDelete(tipo._id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

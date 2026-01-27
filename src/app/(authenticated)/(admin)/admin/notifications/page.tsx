@@ -33,11 +33,14 @@ export default async function NotificationsDashboardPage() {
         .toArray();
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Centro de Notificaciones</h1>
-                    <p className="text-slate-500 mt-2">Gestiona las comunicaciones, plantillas y monitorea el estado del sistema.</p>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Centro de <span className="text-teal-600">Notificaciones</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">Gestiona las comunicaciones, plantillas y el estado del sistema.</p>
                 </div>
                 <div className="flex gap-4">
                     <Link href="/admin/notifications/templates">

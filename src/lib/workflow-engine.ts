@@ -1,8 +1,8 @@
 import { getTenantCollection } from './db-tenant';
-import { AppError, ValidationError, NotFoundError } from './errors';
-import { WorkflowDefinition, GenericCase, IndustryType } from './schemas';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import { WorkflowDefinition, GenericCase, IndustryType } from '@/lib/schemas';
 import { ObjectId } from 'mongodb';
-import { logEvento } from './logger';
+import { logEvento } from '@/lib/logger';
 import { NotificationService } from './notification-service';
 
 export interface TransitionRequest {

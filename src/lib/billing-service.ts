@@ -1,4 +1,4 @@
-import { connectDB } from './db';
+import { connectDB } from '@/lib/db';
 import {
     GlobalPricingPlan,
     TenantBillingConfig,
@@ -6,7 +6,7 @@ import {
     GlobalPricingPlanSchema,
     TenantBillingConfigSchema,
     TenantCredit
-} from './schemas';
+} from '@/lib/schemas';
 import { BillingEngine, BillingResult } from './billing-engine';
 
 /**

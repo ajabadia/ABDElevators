@@ -1,7 +1,7 @@
 import { getTenantCollection } from './db-tenant';
-import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from './schemas';
-import { AppError, DatabaseError } from './errors';
-import { logEvento } from './logger';
+import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from '@/lib/schemas';
+import { AppError, DatabaseError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 
 /**

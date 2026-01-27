@@ -1,8 +1,8 @@
 import { getTenantCollection } from './db-tenant';
-import { ContactRequestSchema, ContactRequest } from './schemas';
-import { logEvento } from './logger';
+import { ContactRequestSchema, ContactRequest } from '@/lib/schemas';
+import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
-import { AppError } from './errors';
+import { AppError } from '@/lib/errors';
 
 /**
  * Servicio de Contacto y Soporte (Visión 2.0 - Fase 10)

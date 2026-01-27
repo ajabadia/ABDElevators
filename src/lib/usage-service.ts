@@ -1,7 +1,7 @@
 import { getTenantCollection } from './db-tenant';
-import { connectDB } from './db';
-import { UsageLogSchema } from './schemas';
-import { logEvento } from './logger';
+import { connectDB } from '@/lib/db';
+import { UsageLogSchema } from '@/lib/schemas';
+import { logEvento } from '@/lib/logger';
 
 /**
  * Servicio de Tracking de Consumo (Visión 2.0 - Fase 7.4)

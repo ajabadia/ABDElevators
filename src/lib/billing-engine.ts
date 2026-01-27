@@ -2,7 +2,7 @@ import {
     MetricPricing,
     PricingType,
     TenantCredit
-} from './schemas';
+} from '@/lib/schemas';
 
 export interface BillingResult {
     totalCost: number;

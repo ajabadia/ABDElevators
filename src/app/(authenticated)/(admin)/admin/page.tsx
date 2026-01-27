@@ -97,17 +97,18 @@ export default function AdminDashboardPage() {
     if (!stats) return null;
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                        {isSuperAdmin ? "Global Control Center" : "Dashboard de Organización"}
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        {isSuperAdmin ? "Control" : "Dashboard de"} <span className="text-teal-600">{isSuperAdmin ? "Global" : "Organización"}</span>
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="text-slate-500 mt-1">
                         {isSuperAdmin
                             ? "Visión consolidada de toda la infraestructura ABD RAG."
-                            : "Métricas de rendimiento y consumo de tu tenant."}
+                            : "Métricas de rendimiento y consumo de tu organización."}
                     </p>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-widest border border-teal-500/20">

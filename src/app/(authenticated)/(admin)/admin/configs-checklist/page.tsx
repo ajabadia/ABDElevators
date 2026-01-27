@@ -11,20 +11,17 @@ import Link from 'next/link';
  */
 export default function ConfigsChecklistPage() {
     return (
-        <div className="container mx-auto py-8 px-4 max-w-6xl">
-            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2 text-teal-600 mb-2">
-                        <LayoutGrid size={20} />
-                        <span className="text-sm font-semibold uppercase tracking-wider">Configuraciones</span>
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-900">Checklists Dinámicos</h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl">
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Checklists <span className="text-teal-600">Dinámicos</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">
                         Define cómo se clasifican y priorizan los elementos detectados por la IA en los pedidos técnicos.
-                        Configura categorías, palabras clave y el orden de visualización.
                     </p>
                 </div>
-
                 <Link
                     href="/admin"
                     className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium"

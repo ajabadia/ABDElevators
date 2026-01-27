@@ -28,15 +28,18 @@ export default async function PerfilPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto p-4 lg:p-8">
-            <header className="mb-8">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Configuración de <span className="text-teal-600">Cuenta</span>
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm max-w-2xl">
-                    Gestiona tu identidad digital, preferencias de notificaciones y seguridad de acceso.
-                </p>
-            </header>
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Configuración <span className="text-teal-600">de Cuenta</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        Gestiona tu identidad digital, preferencias y seguridad de acceso.
+                    </p>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                 {/* Columna Izquierda: Identidad y Seguridad Rápida */}

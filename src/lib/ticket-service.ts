@@ -1,7 +1,7 @@
 
-import { connectDB } from "./db";
+import { connectDB } from "@/lib/db";
 import { ObjectId } from "mongodb";
-import { Ticket, TicketSchema } from "./ticket-schema";
+import { Ticket, TicketSchema } from "@/lib/ticket-schema";
 import { AppError } from "./errors";
 import { logEvento } from "./logger";
 import crypto from 'crypto';

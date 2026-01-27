@@ -4,6 +4,7 @@ import { z } from 'zod';
  * Esquemas para la Visión 2.0 (Generalización)
  */
 export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
+export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
 /**
  * Esquema para fragmentos de documentos (RAG Corpus)
@@ -16,6 +17,7 @@ export const DocumentChunkSchema = z.object({
     tipo_componente: z.string(),
     modelo: z.string(),
     origen_doc: z.string(),
+    tipo_documento_id: z.string().optional(), // Referencia al maestro de tipos
     version_doc: z.string(),
     fecha_revision: z.date(),
     pagina_aproximada: z.number().optional(),
@@ -99,6 +101,33 @@ export const GenericCaseSchema = z.object({
     actualizado: z.date().default(() => new Date()),
 });
 
+export const InviteSchema = z.object({
+    _id: z.any().optional(),
+    email: z.string().email(),
+    tenantId: z.string(),
+    industry: IndustryTypeSchema.default('ELEVATORS'),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    token: z.string(),
+    invitadoPor: z.string(),
+    estado: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'PENDIENTE']).default('PENDIENTE'), // 'PENDIENTE' legacy
+    expira: z.date(),
+    creado: z.date().default(() => new Date()),
+});
+
+export type GenericCase = z.infer<typeof GenericCaseSchema>;
+export type RiskFinding = z.infer<typeof RiskFindingSchema>;
+export type UserInvite = z.infer<typeof InviteSchema>; // Exported as UserInvite to avoid name clashes
+export type WorkflowLog = z.infer<typeof WorkflowLogSchema>;
+
+export const AcceptInviteSchema = z.object({
+    token: z.string(),
+    password: z.string().min(8),
+    nombre: z.string().min(2),
+    apellidos: z.string().min(2),
+});
+
+export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
+
 /**
  * Esquemas para el Motor de Workflows (Visión 2.0 - Fase 7.2)
  */
@@ -172,6 +201,8 @@ export const PedidoSchema = z.object({
     creado: z.date().default(() => new Date()),
 });
 
+export type Pedido = z.infer<typeof PedidoSchema>;
+
 /**
  * Esquema para Auditoría RAG (Trazabilidad)
  * Regla de Oro #4
@@ -214,6 +245,8 @@ export const RagEvaluationSchema = z.object({
     feedback: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
 });
+
+export type TipoDocumento = z.infer<typeof TipoDocumentoSchema>;
 
 /**
  * Esquema para Logs de Aplicación
@@ -415,6 +448,11 @@ export const TenantConfigSchema = z.object({
     active: z.boolean().default(true),
     creado: z.date().default(() => new Date()),
 });
+
+export type TenantConfig = z.infer<typeof TenantConfigSchema>;
+export type DocumentoTecnico = z.infer<typeof DocumentoTecnicoSchema>;
+export type Usuario = z.infer<typeof UsuarioSchema>;
+export type DocumentoUsuario = z.infer<typeof DocumentoUsuarioSchema>;
 
 
 /**
@@ -781,6 +819,135 @@ export const MfaConfigSchema = z.object({
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
+
+
+/**
+ * ✅ FASE 6.4: Checklist and Human Validation Schemas
+ */
+
+export const ChecklistCategorySchema = z.object({
+    id: z.string(),
+    nombre: z.string(),
+    color: z.string().optional(),
+    keywords: z.array(z.string()).default([]),
+    prioridad: z.number().default(1),
+    icono: z.string().optional(),
+});
+
+export const ChecklistItemSchema = z.object({
+    id: z.string(),
+    categoryId: z.string().nullable().optional(),
+    description: z.string().min(1),
+    notes: z.string().optional(),
+    icono: z.string().optional(),
+});
+
+export const ChecklistConfigSchema = z.object({
+    _id: z.any().optional(),
+    nombre: z.string(),
+    categorias: z.array(ChecklistCategorySchema).default([]),
+    items: z.array(ChecklistItemSchema).default([]),
+    workflow_orden: z.array(z.string()).default([]),
+    activo: z.boolean().default(true),
+    tenantId: z.string(),
+    creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
+});
+
+export const ValidacionItemSchema = z.object({
+    campo: z.string(),
+    valorOriginal: z.any(),
+    valorCorregido: z.any().optional(),
+    estado: z.enum(['APROBADO', 'CORREGIDO', 'RECHAZADO']).default('APROBADO'),
+    comentario: z.string().optional(),
+});
+
+export const ValidacionSchema = z.object({
+    _id: z.any().optional(),
+    pedidoId: z.string(),
+    tenantId: z.string(),
+    validadoPor: z.string(), // User ID
+    nombreTecnico: z.string().optional(),
+    items: z.array(ValidacionItemSchema),
+    estadoGeneral: z.enum(['APROBADO', 'RECHAZADO', 'PARCIAL']).default('APROBADO'),
+    tiempoValidacion: z.number(), // Segundos
+    observaciones: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
+export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
+export type ValidacionItem = z.infer<typeof ValidacionItemSchema>;
+export type Validacion = z.infer<typeof ValidacionSchema>;
+
+export const ItemValidacionSchema = z.object({
+    itemId: z.string(),
+    estado: z.enum(['OK', 'REVISAR', 'PENDIENTE']).default('PENDIENTE'),
+    notas: z.string().optional(),
+});
+export type ItemValidacion = z.infer<typeof ItemValidacionSchema>;
+
+export const ContactRequestSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string().optional(),
+    nombre: z.string().min(2),
+    email: z.string().email(),
+    asunto: z.string().min(5),
+    mensaje: z.string().min(10),
+    estado: z.enum(['pendiente', 'resuelto', 'proceso']).default('pendiente'),
+    respuesta: z.string().optional(),
+    respondidoPor: z.string().optional(),
+    creado: z.date().default(() => new Date()),
+    actualizado: z.date().default(() => new Date()),
+});
+
+export type ContactRequest = z.infer<typeof ContactRequestSchema>;
+
+/**
+ * 📝 FASE 7.6: Dynamic Prompt Management Schemas
+ */
+
+export const PromptVariableSchema = z.object({
+    name: z.string(),
+    type: z.enum(['string', 'number', 'boolean', 'json']).default('string'),
+    description: z.string().optional(),
+    required: z.boolean().default(true),
+});
+
+export const PromptVersionSchema = z.object({
+    promptId: z.any(),
+    tenantId: z.string(),
+    version: z.number(),
+    template: z.string(),
+    variables: z.array(PromptVariableSchema).default([]),
+    changedBy: z.string(),
+    changeReason: z.string().optional(),
+    createdAt: z.date().default(() => new Date()),
+});
+
+export const PromptSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    key: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET']).default('GENERAL'),
+    model: z.string().default('gemini-3-flash-preview'), // Permite elegir el modelo por cada prompt
+    template: z.string(),
+    variables: z.array(PromptVariableSchema).default([]),
+    version: z.number().default(1),
+    active: z.boolean().default(true),
+    maxLength: z.number().optional(),
+    updatedAt: z.date().default(() => new Date()),
+    updatedBy: z.string().optional(),
+    createdBy: z.string().optional(),
+    creado: z.date().default(() => new Date()),
+});
+
+export type PromptVariable = z.infer<typeof PromptVariableSchema>;
+export type Prompt = z.infer<typeof PromptSchema>;
+export type PromptVersion = z.infer<typeof PromptVersionSchema>;
 
 export type UserSession = z.infer<typeof UserSessionSchema>;
 export type MfaConfig = z.infer<typeof MfaConfigSchema>;

@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { UsageService } from './usage-service';
 import { TenantService } from './tenant-service';
-import { AppError } from './errors';
+import { AppError } from '@/lib/errors';
 
 // Configurar Cloudinary
 cloudinary.config({

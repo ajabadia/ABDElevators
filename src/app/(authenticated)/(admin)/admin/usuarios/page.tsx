@@ -101,9 +101,10 @@ export default function UsuariosPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-outfit">
-                        Gestión de Usuarios
-                    </h2>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Gestión de <span className="text-teal-600">Usuarios</span>
+                    </h1>
                     <p className="text-slate-500 mt-1">
                         Administra usuarios y permisos {isSuperAdmin ? 'globales' : 'de tu organización'}
                     </p>

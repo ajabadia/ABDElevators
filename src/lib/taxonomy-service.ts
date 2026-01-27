@@ -1,8 +1,8 @@
 import { getTenantCollection } from './db-tenant';
-import { TaxonomySchema, IndustryType } from './schemas';
+import { TaxonomySchema, IndustryType } from '@/lib/schemas';
 import { ObjectId } from 'mongodb';
-import { AppError, ValidationError, NotFoundError } from './errors';
-import { logEvento } from './logger';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 
 /**
  * Servicio de Taxonomías (Visión 2.0 - Fase 7.3)

@@ -95,6 +95,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         description: initialPrompt?.description ?? '',
         category: initialPrompt?.category ?? 'GENERAL',
         template: initialPrompt?.template ?? '',
+        model: initialPrompt?.model ?? 'gemini-3-flash-preview',
         maxLength: initialPrompt?.maxLength,
         variables: initialPrompt?.variables ?? []
     });
@@ -195,7 +196,8 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                 tenantId: initialPrompt?.tenantId || 'default_tenant',
                 createdBy: initialPrompt?.createdBy || 'system',
                 updatedBy: 'admin_user', // This should normally come from session
-                version: initialPrompt?.version || 1
+                version: initialPrompt?.version || 1,
+                model: formData.model
             };
 
             const validated = PromptSchema.parse(payload);
@@ -409,16 +411,12 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                 <div className="space-y-2">
                                     <Label className="text-slate-400 text-xs">Modelo Gemini</Label>
                                     <select
-                                        value={(formData as any).model || 'gemini-1.5-flash'}
+                                        value={formData.model || 'gemini-3-flash-preview'}
                                         onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))}
                                         className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none transition-all"
                                     >
-                                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Rápido)</option>
-                                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Complejo)</option>
-                                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Exp)</option>
-                                        <option value="gemini-exp-1206">Gemini Exp 1206</option>
-                                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (User Req)</option>
-                                        <option value="gemini-3.0-flash">Gemini 3.0 Flash (User Req)</option>
+                                        <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (Recomendado)</option>
+                                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">

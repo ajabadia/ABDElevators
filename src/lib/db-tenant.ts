@@ -1,7 +1,7 @@
-import { connectDB } from './db';
+import { connectDB } from '@/lib/db';
 import { auth } from './auth';
-import { AppError } from './errors';
-import { Pedido, GenericCase } from './schemas';
+import { AppError } from '@/lib/errors';
+import { Pedido, GenericCase } from '@/lib/schemas';
 
 /**
  * Helper para obtener la colección de MongoDB con aislamiento por tenant.

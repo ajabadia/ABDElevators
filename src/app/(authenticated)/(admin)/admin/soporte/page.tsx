@@ -26,12 +26,15 @@ export default function AdminSoportePage() {
     const [selectedTicket, setSelectedTicket] = useState<TicketUI | null>(null);
 
     return (
-        <div className="h-[calc(100vh-100px)] flex gap-6 p-6 animate-in fade-in duration-500">
+        <div className="flex gap-6 animate-in fade-in duration-500 max-w-7xl mx-auto h-[calc(100vh-140px)]">
             {/* Sidebar List */}
             <div className="w-1/3 min-w-[350px] flex flex-col">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Support Center</h1>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Gestión de Incidencias</p>
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Centro de <span className="text-teal-600">Soporte</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">Gestión de incidencias y ayuda técnica.</p>
                 </div>
                 <TicketList onSelectTicket={(t) => setSelectedTicket(t as any)} />
             </div>

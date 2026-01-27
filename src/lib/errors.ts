@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { logEvento } from './logger';
+import { logEvento } from '@/lib/logger';
 
 export type ErrorCode =
   | 'VALIDATION_ERROR'
@@ -13,7 +13,8 @@ export type ErrorCode =
   | 'STORAGE_QUOTA_EXCEEDED'
   | 'MISSING_VARIABLES'
   | 'INVITE_ALREADY_USED'
-  | 'INVITE_EXPIRED';
+  | 'INVITE_EXPIRED'
+  | 'CONFLICT';
 
 export class AppError extends Error {
   constructor(

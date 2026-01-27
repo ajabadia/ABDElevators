@@ -1,4 +1,4 @@
-import { Pedido, GenericCase, IndustryType } from './schemas';
+import { Pedido, GenericCase, IndustryType } from '@/lib/schemas';
 
 /**
  * Mapea un Pedido de Ascensor (Legacy) a un Caso Genérico (Vision 2.0).

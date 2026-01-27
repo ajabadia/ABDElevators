@@ -22,19 +22,22 @@ export default function AuditoriaPage() {
     });
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">
-                    Auditoría y Trazabilidad RAG
-                </h2>
-                <p className="text-slate-500 mt-1">
-                    Monitoreo completo de decisiones asistidas por IA
-                </p>
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Auditoría y <span className="text-teal-600">Trazabilidad</span> RAG
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        Monitoreo completo de decisiones asistidas por IA.
+                    </p>
+                </div>
             </div>
 
             {/* Métricas principales */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="border-none shadow-md">
+                <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium flex items-center gap-2">
                             <FileText size={16} />
@@ -46,7 +49,7 @@ export default function AuditoriaPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="border-none shadow-md">
+                <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium flex items-center gap-2">
                             <Clock size={16} />
@@ -58,7 +61,7 @@ export default function AuditoriaPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="border-none shadow-md">
+                <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium flex items-center gap-2">
                             <Zap size={16} />
@@ -84,7 +87,7 @@ export default function AuditoriaPage() {
             </div>
 
             {/* Tabla de logs recientes */}
-            <Card className="border-none shadow-lg">
+            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
                 <CardHeader className="border-b border-slate-100">
                     <CardTitle>Eventos Recientes</CardTitle>
                     <CardDescription>Últimas 50 operaciones del sistema RAG</CardDescription>

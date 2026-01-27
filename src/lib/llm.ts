@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from "zod";
-import { ExternalServiceError, AppError } from './errors';
-import { logEvento } from './logger';
+import { ExternalServiceError, AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 import { UsageService } from './usage-service';
 
 import { PromptService } from './prompt-service';

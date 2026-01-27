@@ -1,4 +1,4 @@
-import { connectDB, connectLogsDB } from './db';
+import { connectDB, connectLogsDB } from '@/lib/db';
 
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 

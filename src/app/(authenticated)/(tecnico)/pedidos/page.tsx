@@ -82,19 +82,19 @@ export default function PedidosPage() {
 
     return (
         <div className="space-y-8">
-            {/* Header Sección */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 font-outfit">
-                        Análisis de <span className="text-teal-600">{labels.plural} Técnico</span>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Análisis <span className="text-teal-600">de {labels.plural}</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 text-lg">
-                        {labels.description}
+                    <p className="text-slate-500 mt-1">
+                        Procesamiento agéntico y validación técnica de especificaciones.
                     </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest">
-                    <Zap size={16} className="text-amber-500" />
-                    Powered by Gemini 2.0 Flash
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
+                    <Zap size={14} className="text-amber-500" />
+                    Powered by Gemini 3 Flash
                 </div>
             </div>
 

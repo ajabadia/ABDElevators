@@ -78,15 +78,11 @@ export default function AdminWorkflowPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                            <GitBranch className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                            Configurador de Workflows
-                        </h1>
-                    </div>
-                    <p className="text-sm text-slate-500 mt-1 ml-12">
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Gestión de <span className="text-teal-600">Workflows</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">
                         Define los estados, transiciones y reglas de negocio para tus procesos.
                     </p>
                 </div>
@@ -94,7 +90,7 @@ export default function AdminWorkflowPage() {
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="inline-flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+                    className="inline-flex items-center px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50"
                 >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                     Guardar Cambios

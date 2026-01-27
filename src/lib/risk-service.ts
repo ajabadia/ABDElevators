@@ -1,6 +1,6 @@
 import { callGeminiMini } from './llm';
-import { RiskFindingSchema, IndustryType } from './schemas';
-import { logEvento } from './logger';
+import { RiskFindingSchema, IndustryType } from '@/lib/schemas';
+import { logEvento } from '@/lib/logger';
 import { PromptService } from './prompt-service';
 import { z } from 'zod';
 

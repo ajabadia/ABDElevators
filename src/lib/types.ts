@@ -9,7 +9,7 @@ import {
     ChecklistItem as SchemaChecklistItem,
     ChecklistCategory as SchemaChecklistCategory,
     ChecklistConfig as SchemaChecklistConfig
-} from './schemas';
+} from '@/lib/schemas';
 
 export type IndustryType = SchemaIndustryType;
 export type GenericCase = SchemaGenericCase;

@@ -126,6 +126,21 @@ This document consolidates **all** roadmap information, implementation plans, an
    - Currently, a visual warning is shown in `PromptEditor`.
    - Planned: Block saving if `enforceLimit` is set (future metadata).
 
+#### 🚀 Future UX Refinement & Feature Expansion
+1. **Document Types Management (`/admin/tipos-documento`)**
+   - [ ] Allow renaming denominations.
+   - [ ] Implement conditional deletion (only if the type is not currently in use by any document).
+   - [ ] Integration with Industry Templates for bulk updates.
+2. **Advanced Prompt Configuration (`/admin/prompts`)**
+   - [ ] **Granular Model Selection**: Allow choosing a specific AI model (e.g., Gemini 1.5 Pro vs Flash) per individual prompt.
+   - [ ] **Plan-Aware Model Loader**: Add a button/script to load allowed models based on the active subscription plan.
+   - [ ] *Self-Correction:* Use existing logic from prior projects to facilitate model synchronization.
+3. **Global UI/UX Unification & Theme Mastery**
+   - [x] **Billing Dashboard (`/admin/billing`)**: Standardize margins, typography, and title colors to match the platform's premium design system.
+   - [x] **Management Pages (`/admin/tenants`, `/admin/auditoria`, `/perfil`)**: Synchronize styles (fonts, color palettes, spacing) to ensure a consistent look and feel.
+   - [ ] **Tenant Theme Engine**: Prepare the architecture for tenant-specific customization (White-labeling support) by centralizing all design tokens.
+   - [x] General review of all non-landing pages to eliminate aesthetic debt.
+
 #### Phase 6 – RAG Pro & Dynamic Checklists (Weeks 5‑6)
 - [x] **6.1 Vector Search Sin LLM**
   - [x] Create `documentos_oficiales` collection.

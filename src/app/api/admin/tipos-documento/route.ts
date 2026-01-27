@@ -121,3 +121,89 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+/**
+ * PATCH /api/admin/tipos-documento
+ * Actualiza un tipo de documento.
+ */
+export async function PATCH(req: NextRequest) {
+    const correlacion_id = crypto.randomUUID();
+    try {
+        const session = await auth();
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
+        const body = await req.json();
+        const { id, ...data } = body;
+
+        if (!id) throw new ValidationError('ID es requerido');
+
+        const db = await connectDB();
+        await db.collection('tipos_documento').updateOne(
+            { _id: typeof id === 'string' ? new (await import('mongodb')).ObjectId(id) : id },
+            { $set: { ...data, actualizado: new Date() } }
+        );
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return handleApiError(error, 'API_TIPOS_DOC_PATCH', correlacion_id);
+    }
+}
+
+/**
+ * DELETE /api/admin/tipos-documento
+ * Elimina un tipo de documento si no está en uso.
+ */
+export async function DELETE(req: NextRequest) {
+    const correlacion_id = crypto.randomUUID();
+    try {
+        const session = await auth();
+        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        }
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) throw new ValidationError('ID es requerido');
+
+        const db = await connectDB();
+        const objectId = new (await import('mongodb')).ObjectId(id);
+
+        // Verificación de uso antes de borrar
+        const enUso = await db.collection('documentos_tecnicos').findOne({
+            $or: [
+                { tipo_documento_id: id },
+                { tipo_documento_id: objectId }
+            ]
+        });
+
+        if (enUso) {
+            throw new AppError('CONFLICT', 409, 'No se puede eliminar: El tipo de documento está siendo utilizado por uno o más archivos.');
+        }
+
+        await db.collection('tipos_documento').deleteOne({ _id: objectId });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return handleApiError(error, 'API_TIPOS_DOC_DELETE', correlacion_id);
+    }
+}
+
+function handleApiError(error: any, origin: string, correlacion_id: string) {
+    if (error.name === 'ZodError') {
+        return NextResponse.json(
+            new ValidationError('Datos inválidos', error.errors).toJSON(),
+            { status: 400 }
+        );
+    }
+    if (error instanceof AppError) {
+        return NextResponse.json(error.toJSON(), { status: error.status });
+    }
+
+    console.error(`[${origin}] Error:`, error);
+    return NextResponse.json(
+        new AppError('INTERNAL_ERROR', 500, 'Error interno del servidor').toJSON(),
+        { status: 500 }
+    );
+}

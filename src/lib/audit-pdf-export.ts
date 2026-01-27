@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { ItemValidacion, ChecklistConfig, Pedido } from './schemas';
+import { ItemValidacion, ChecklistConfig, Pedido } from '@/lib/schemas';
 
 interface AuditReportData {
     pedido: Pedido;

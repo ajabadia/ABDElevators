@@ -1,5 +1,5 @@
 import { MongoClient, Db, MongoClientOptions } from 'mongodb';
-import { DatabaseError } from './errors';
+import { DatabaseError } from '@/lib/errors';
 
 /**
  * Gestión de conexiones MongoDB para múltiples bases de datos/clústeres.

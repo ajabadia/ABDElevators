@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { logEvento } from './logger';
+import { logEvento } from '@/lib/logger';
 
 interface LLMReportPDFData {
     numeroPedido: string;

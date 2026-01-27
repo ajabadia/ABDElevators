@@ -92,21 +92,15 @@ export default function AdminPromptsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 font-sans h-full pb-10">
+        <div className="space-y-8 animate-in fade-in duration-500 font-sans h-full pb-10 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-900 border border-slate-800 rounded-xl">
-                            <Terminal className="w-6 h-6 text-teal-400" />
-                        </div>
-                        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                            AI Prompt Engine
-                        </h1>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1 ml-12 font-medium uppercase tracking-widest">
-                        Gestión avanzada de directivas para Gemini 2.0
-                    </p>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Motor de <span className="text-teal-600">Prompts</span> IA
+                    </h1>
+                    <p className="text-slate-500 mt-1">Configura el razonamiento vectorial y la extracción de datos.</p>
                 </div>
 
                 <div className="flex gap-3">

@@ -1,7 +1,7 @@
 import { getTenantCollection } from './db-tenant';
-import { WorkflowDefinitionSchema, WorkflowDefinition } from './schemas';
-import { AppError, ValidationError } from './errors';
-import { logEvento } from './logger';
+import { WorkflowDefinitionSchema, WorkflowDefinition } from '@/lib/schemas';
+import { AppError, ValidationError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 
 /**

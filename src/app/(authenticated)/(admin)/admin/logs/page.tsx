@@ -6,25 +6,18 @@ import { ShieldAlert } from 'lucide-react';
 
 export default function AdminLogsPage() {
     return (
-        <div className="space-y-6 h-full p-6 lg:p-10 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col gap-2 mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-rose-500/10 rounded-xl border border-rose-500/20">
-                        <ShieldAlert className="w-6 h-6 text-rose-500" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                            Platform Observability
-                        </h1>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
-                            Centro de Diagnostico & Logs
-                        </p>
-                    </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Registros del <span className="text-teal-600">Sistema</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        Supervisa la salud del sistema y auditoría de cumplimiento.
+                    </p>
                 </div>
-                <p className="text-slate-500 text-sm max-w-2xl ml-12">
-                    Supervisa la salud del sistema en tiempo real. Filtra trazas de error, monitorea excepciones y exporta datos para auditoría de cumplimiento.
-                </p>
             </div>
 
             {/* Main Log Explorer Component */}

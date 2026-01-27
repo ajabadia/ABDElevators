@@ -143,10 +143,13 @@ export default function MisDocumentosPage() {
         <div className="space-y-8 animate-in fade-in duration-700">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 dark:text-white font-outfit">
-                        Mis <span className="text-teal-600">Documentos</span>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Mis <span className="text-teal-600">Archivos</span>
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Tu repositorio personal de manuales y archivos técnicos.</p>
+                    <p className="text-slate-500 mt-1">
+                        Tu repositorio personal de manuales y archivos técnicos.
+                    </p>
                 </div>
                 <Button
                     onClick={() => setIsUploadOpen(true)}

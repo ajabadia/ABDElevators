@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from 'react';
 import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -147,7 +149,7 @@ export function ConsumptionDashboard() {
                     </h3>
                     <p className="text-sm text-slate-500">
                         Informes generados
-                        {stats?.limits && stats.limits.reports !== Infinity && (
+                        {stats?.limits && stats.limits.reports !== Infinity && stats.limits.reports != null && (
                             <span className="ml-2 text-xs text-slate-400">/ {stats.limits.reports.toLocaleString()}</span>
                         )}
                     </p>
@@ -171,11 +173,11 @@ export function ConsumptionDashboard() {
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">IA Generativa</span>
                     </div>
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {stats?.tokens.toLocaleString()}
+                        {stats?.tokens?.toLocaleString() || '0'}
                     </h3>
                     <p className="text-sm text-slate-500">
                         Tokens Gemini consumidos
-                        {stats?.limits && stats.limits.tokens !== Infinity && (
+                        {stats?.limits && stats.limits.tokens !== Infinity && stats.limits.tokens != null && (
                             <span className="ml-2 text-xs text-slate-400">/ {stats.limits.tokens.toLocaleString()}</span>
                         )}
                     </p>

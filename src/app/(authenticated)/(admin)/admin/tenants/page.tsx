@@ -161,18 +161,16 @@ export default function TenantsPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="flex justify-between items-start px-2">
+        <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Configuración de Organización</h2>
-                        {config?.tenantId && (
-                            <Badge variant="outline" className="mt-1 font-mono text-[10px] bg-slate-100 text-slate-500 border-slate-200">
-                                {config.tenantId}
-                            </Badge>
-                        )}
-                    </div>
-                    <p className="text-slate-500 mt-1">Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento.</p>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
+                        Configuración de <span className="text-teal-600">Organización</span>
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento.
+                    </p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" onClick={fetchConfig} disabled={isSaving}>Descartar</Button>
@@ -187,7 +185,7 @@ export default function TenantsPage() {
                 </div>
             </div>
 
-            <Card className="border-none shadow-lg overflow-hidden">
+            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <Tabs defaultValue="general" className="w-full">
                     <TabsList className="w-full justify-start rounded-none border-b bg-white dark:bg-slate-900 h-14 px-6 gap-8">
                         <TabsTrigger
