@@ -97,9 +97,8 @@ export default function AdminDashboardPage() {
     if (!stats) return null;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 animate-in fade-in duration-700 max-w-7xl mx-auto">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
@@ -115,14 +114,16 @@ export default function AdminDashboardPage() {
                     <Activity size={14} className="animate-pulse" />
                     En tiempo real
                 </div>
-            </div>
+            </header>
 
             {/* Tenant ROI Dashboard (Fase 24.2b) */}
-            {!isSuperAdmin && (
-                <div className="mt-6">
-                    <TenantROIStats />
-                </div>
-            )}
+            {
+                !isSuperAdmin && (
+                    <div className="mt-6">
+                        <TenantROIStats />
+                    </div>
+                )
+            }
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -239,7 +240,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="divide-y divide-slate-100 dark:divide-slate-900">
-                        {stats.activities.length > 0 ? (
+                        {stats.activities && stats.activities.length > 0 ? (
                             stats.activities.map((act: any, idx: number) => (
                                 <ActivityRow key={act._id || idx} activity={act} />
                             ))
@@ -249,7 +250,7 @@ export default function AdminDashboardPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }
 

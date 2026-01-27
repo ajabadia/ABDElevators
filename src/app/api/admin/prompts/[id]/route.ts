@@ -30,13 +30,17 @@ export async function PATCH(
             throw new AppError('VALIDATION_ERROR', 400, 'template y changeReason son requeridos');
         }
 
+        const ip = request.headers.get('x-forwarded-for') || 'unknown';
+        const userAgent = request.headers.get('user-agent') || 'unknown';
+
         await PromptService.updatePrompt(
             id,
             template,
             variables || [],
             session.user.email!,
             changeReason,
-            isSuperAdmin ? undefined : tenantId
+            isSuperAdmin ? undefined : tenantId,
+            { correlacion_id, ip, userAgent }
         );
 
         return NextResponse.json({ success: true });

@@ -11,8 +11,8 @@ import Link from 'next/link';
  */
 export default function ConfigsChecklistPage() {
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />

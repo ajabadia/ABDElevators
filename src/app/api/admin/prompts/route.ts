@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
         const tenantId = (session.user as any).tenantId || 'default_tenant';
 
         // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
-        const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId);
+        // False = incluir inactivos (para que los admins puedan verlos y reactivarlos)
+        const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId, false);
 
         // Enriquecer con info del tenant (solo si es SuperAdmin para que sepa de quién es cada uno)
         if (isSuperAdmin) {

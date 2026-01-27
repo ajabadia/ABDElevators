@@ -184,6 +184,11 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                 }
             }
 
+            // 0. Validar Max Longitud (Hard Limit)
+            if (isLengthExceeded) {
+                throw new Error(`Error de Requisitos: El contenido del prompt (${formData.template.length} caracteres) excede el máximo permitido (${formData.maxLength}).`);
+            }
+
             // --- FIN VALIDACIÓN ---
 
             // Validation basics

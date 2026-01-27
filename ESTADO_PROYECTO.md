@@ -1,14 +1,17 @@
+# ⚠️ DEPRECATED - MERGED INTO ROADMAP_MASTER.md
+> **DO NOT UPDATE THIS FILE.** All content has been consolidated into `ROADMAP_MASTER.md` as of v2.7. Use that file as the Single Source of Truth.
+
 # 📊 ESTADO DEL PROYECTO ABD RAG PLATFORM
 
 **Última Actualización:** 2026-01-27  
-**Versión:** 2.5  
-**Estado General:** ✅ **REFINE UX & UNIFICATION (UI 2.0)**
+**Versión:** 2.6  
+**Estado General:** ✅ **HYBRID RAG & CALIBRATION (PHASE 21.1)**
 
 ---
 
 ## 🎯 RESUMEN EJECUTIVO
 
-La plataforma ha alcanzado su madurez técnica y comercial. Se han resuelto todos los errores de compilación críticos y se ha restaurado la integridad de los esquemas (Zod) y tipos (TypeScript). Actualmente, el sistema cuenta con un motor de búsqueda vectorial híbrido, gestión avanzada de prompts, monetización operativa y un flujo de validación humana robusto. El enfoque actual se desplaza hacia el **Refinamiento de UX, Unificación Estética y Capacidades Avanzadas de IA por Prompt**.
+La plataforma ha alcanzado su madurez técnica y comercial. Se han resuelto todos los errores de compilación críticos y se ha restaurado la integridad de los esquemas (Zod) y tipos (TypeScript). Actualmente, el sistema cuenta con un **motor de búsqueda vectorial híbrido calibrado** (Gemini + BGE-M3), que soporta oficialmente ES, EN, DE, IT, FR y ahora **Portugués (PT)**. El enfoque actual se desplaza hacia el **Testing Unitario** y el desarrollo del nuevo **Gestor de Facturación Propio**.
 
 ---
 
@@ -71,8 +74,9 @@ La plataforma ha alcanzado su madurez técnica y comercial. Se han resuelto todo
 - [x] **LangGraph Self-Correction**: Migración de RAG simple a grafo de estados con patrones CRAG y Self-RAG.
 - [x] **Framework de Evaluación Automática (RAGAs)**: Implementación de metrics de fidelidad, relevancia y precisión.
 - [x] **Agent Trace Viewer (Admin & User)**: Terminal visual de auditoría integrada para administradores y técnicos.
-- [ ] **Dual-Indexing Calibration**: Refinar pesos vectoriales para BGE-M3.
-- [ ] **Unit Testing Coverage**: Aumentar cobertura de tests unitarios al 80%.
+- [x] **Dual-Indexing Calibration**: Refinado peso vectorial para BGE-M3 con lógica de Hybrid Search (RRF).
+- [ ] **Unit Testing Coverage**: Aumentar cobertura de tests unitarios al 80% (Iniciado).
+- [ ] **Gestor de Facturación Enterprise**: Generación, vista y envío de facturas por email (Nuevo).
 
 ---
 
@@ -81,6 +85,7 @@ La plataforma ha alcanzado su madurez técnica y comercial. Se han resuelto todo
 - [x] **LangGraph Orchestrator**: Motor de estados agéntico con auto-corrección.
 - [x] **Framework de Calidad**: Evaluación automática (RAGAs) y Dashboard de Calidad.
 - [x] **Agent Trace Viewer**: Integración en portal técnico y dashboard admin.
+- [x] **Hybrid Search Engine**: Fusión de Gemini + BGE-M3 con soporte multilingüe (ES/EN/DE/IT/FR/PT).
 
 ### **Fase 20: Sistema de Tickets** ✅ **COMPLETADO**
 - [x] **Backend Core**: Schema Zod, Servicio y API segura.
@@ -88,6 +93,7 @@ La plataforma ha alcanzado su madurez técnica y comercial. Se han resuelto todo
 - [x] **Notas Internas**: Sistema de comunicación privada para administradores (ámbar UI).
 - [x] **Frontend**: UI de gestión para usuarios y administradores (Dashboard + Historial + Respuestas).
 - [x] **Technical Hardening**: Migración a Next.js 15 compatible (`await params`) y optimización de Rate Limits.
+- [ ] **SLA Priority Management**: Configuración de acuerdos de nivel de servicio por prioridad (Fase 20.2).
 
 
 ### **Fase 9: Billing & Usage Tracking** ✅ **COMPLETADO (100%)**
@@ -444,6 +450,11 @@ Basado en la última revisión del roadmap y las necesidades de refinamiento:
 
 1. **Validación Avanzada (Prompts)**: Bloquear guardado de prompts si exceden la longitud máxima permitida (Hard Limit).
 2. **Estabilidad y Testeo**: Aumentar cobertura de tests unitarios para servicios críticos (`PromptService`, `UsageService`).
+3. **Gestión de Facturación (Nueva Fase)**: Implementar sistema de generación y visualización de facturas para clientes.
+4. **Perfil Administrativo**: Crear rol y vistas específicas para administración de facturas y datos fiscales.
+5. **Auditoría de Trazabilidad**: Revisar toda la aplicación para asegurar trazabilidad de grado bancario en acciones críticas (Ingesta, Borrado, Prompts).
+5. **Configuración de Facturación (Tenants)**: Implementar UI en `/admin/tenants` para captura de datos fiscales.
+6. **Auditoría de Ingesta (I+D)**: Investigar `PyMuPDF`/`PDFPlumber` y técnicas de chunking inteligente para mejorar la precisión del RAG.
 
 ---
 

@@ -53,8 +53,11 @@ export const KnowledgeExplorer: React.FC = () => {
             // TODO: Enhance API to distinguish between 'regex search' and 'semantic similarity search'
 
             const query = isSimulation ? simulatorSearch : debouncedBrowserSearch;
+            const searchType = isSimulation ? 'semantic' : 'regex';
 
             if (query) params.set("query", query);
+            params.set("searchType", searchType);
+
             if (languageFilter !== "all" && !isSimulation) params.set("language", languageFilter);
             if (typeFilter !== "all" && !isSimulation) params.set("type", typeFilter);
 
@@ -112,7 +115,7 @@ export const KnowledgeExplorer: React.FC = () => {
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-500 font-medium">Idiomas Indexados</CardDescription>
                         <div className="flex gap-1 mt-1">
-                            {['es', 'en', 'de', 'it', 'fr'].map(lang => (
+                            {['es', 'en', 'de', 'it', 'fr', 'pt'].map(lang => (
                                 <Badge key={lang} variant="outline" className="text-[10px] uppercase font-bold bg-slate-50">
                                     {lang}
                                 </Badge>
@@ -192,6 +195,7 @@ export const KnowledgeExplorer: React.FC = () => {
                                 <SelectItem value="de">Alemán (DE)</SelectItem>
                                 <SelectItem value="it">Italiano (IT)</SelectItem>
                                 <SelectItem value="fr">Francés (FR)</SelectItem>
+                                <SelectItem value="pt">Portugués (PT)</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={typeFilter} onValueChange={setTypeFilter}>

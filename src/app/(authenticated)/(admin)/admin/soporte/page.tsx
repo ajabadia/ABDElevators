@@ -26,9 +26,9 @@ export default function AdminSoportePage() {
     const [selectedTicket, setSelectedTicket] = useState<TicketUI | null>(null);
 
     return (
-        <div className="flex gap-6 animate-in fade-in duration-500 max-w-7xl mx-auto h-[calc(100vh-140px)]">
-            {/* Sidebar List */}
-            <div className="w-1/3 min-w-[350px] flex flex-col">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
@@ -40,7 +40,7 @@ export default function AdminSoportePage() {
             </div>
 
             {/* Main Detail Area */}
-            <div className="flex-1 flex flex-col pt-16">
+            <div className="flex-1 flex flex-col pt-8">
                 <TicketDetail ticket={selectedTicket} />
             </div>
         </div>

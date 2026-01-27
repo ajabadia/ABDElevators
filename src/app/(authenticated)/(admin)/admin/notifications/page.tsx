@@ -33,7 +33,7 @@ export default async function NotificationsDashboardPage() {
         .toArray();
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">

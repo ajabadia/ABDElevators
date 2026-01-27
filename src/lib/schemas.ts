@@ -106,7 +106,7 @@ export const InviteSchema = z.object({
     email: z.string().email(),
     tenantId: z.string(),
     industry: IndustryTypeSchema.default('ELEVATORS'),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
     token: z.string(),
     invitadoPor: z.string(),
     estado: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'PENDIENTE']).default('PENDIENTE'), // 'PENDIENTE' legacy
@@ -224,6 +224,36 @@ export const AuditoriaRagSchema = z.object({
 /**
  * Esquema para Evaluación de Calidad RAG (Fase 26.2 - RAGAs Inspired)
  */
+/**
+ * Esquema para Auditoría de Ingesta (Fase "Audit Trail Robusto" - Ingesta)
+ * Registra quién subió qué, desde dónde y cuándo.
+ */
+export const AuditIngestSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    performedBy: z.string(), // Email o ID del usuario
+    ip: z.string().optional(),
+    userAgent: z.string().optional(),
+
+    // Detalles del archivo
+    filename: z.string(),
+    fileSize: z.number(),
+    md5: z.string(),
+    docId: z.any().optional(), // ID en documentos_tecnicos
+
+    // Metadata
+    correlacion_id: z.string(),
+    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE']),
+    details: z.object({
+        chunks: z.number().default(0),
+        duration_ms: z.number(),
+        savings_tokens: z.number().optional(),
+        error: z.string().optional()
+    }).optional(),
+
+    timestamp: z.date().default(() => new Date()),
+});
+
 export const RagEvaluationSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
@@ -300,7 +330,7 @@ export const TipoDocumentoSchema = z.object({
 export const TenantAccessSchema = z.object({
     tenantId: z.string(),
     name: z.string(),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
     industry: IndustryTypeSchema.default('ELEVATORS'),
 });
 
@@ -325,7 +355,7 @@ export const UsuarioSchema = z.object({
     puesto: z.string().optional(),
     foto_url: z.string().url().optional(),
     foto_cloudinary_id: z.string().optional(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']), // Rol principal/default
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']), // Rol principal/default
     tenantId: z.string(), // Tenant actual/default
     industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
@@ -371,7 +401,7 @@ export const CreateUserSchema = z.object({
     nombre: z.string().min(2, 'Nombre requerido'),
     apellidos: z.string().min(2, 'Apellidos requeridos'),
     puesto: z.string().optional(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 });
 
@@ -379,7 +409,7 @@ export const CreateUserSchema = z.object({
  * Esquema para Actualización de Usuario (Admin)
  */
 export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']).optional(),
+    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']).optional(),
     activeModules: z.array(z.string()).optional(),
     activo: z.boolean().optional(),
 });
@@ -446,6 +476,28 @@ export const TenantConfigSchema = z.object({
         companyName: z.string().optional(),
     }).optional(),
     active: z.boolean().default(true),
+    billing: z.object({
+        fiscalName: z.string().optional(),
+        taxId: z.string().optional(), // CIF, NIF, VAT
+        shippingAddress: z.object({
+            line1: z.string().optional(),
+            city: z.string().optional(),
+            postalCode: z.string().optional(),
+            country: z.string().optional(),
+        }).optional(),
+        billingAddress: z.object({
+            differentFromShipping: z.boolean().default(false),
+            line1: z.string().optional(),
+            city: z.string().optional(),
+            postalCode: z.string().optional(),
+            country: z.string().optional(),
+        }).optional(),
+        recepcion: z.object({
+            canal: z.enum(['EMAIL', 'POSTAL', 'IN_APP', 'XML_EDI']).default('EMAIL'),
+            modo: z.enum(['PDF', 'XML', 'EDI', 'CSV', 'PAPER']).default('PDF'),
+            email: z.string().optional(), // Validado como email si canal es EMAIL
+        }).optional(),
+    }).optional(),
     creado: z.date().default(() => new Date()),
 });
 
@@ -772,12 +824,35 @@ export const NotificationTenantConfigHistorySchema = z.object({
     timestamp: z.date().default(() => new Date())
 });
 
+/**
+ * Historial de Auditoría de Configuración de Tenant (Grado Bancario)
+ * Registra CADA cambio en la configuración, especialmente datos fiscales y cuotas.
+ */
+export const TenantConfigHistorySchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    action: z.enum(['CREATE', 'UPDATE_GENERAL', 'UPDATE_BILLING', 'UPDATE_STORAGE', 'UPDATE_BRANDING']),
+
+    // Snapshot del objeto TenantConfig (o la parte relevante)
+    previousState: z.any().optional(),
+    newState: z.any(),
+
+    // Metadatos de Auditoría
+    performedBy: z.string(), // ID del Usuario/Admin
+    ip: z.string().optional(),
+    userAgent: z.string().optional(),
+    correlacion_id: z.string(),
+
+    timestamp: z.date().default(() => new Date()),
+});
+
 export type NotificationType = z.infer<typeof NotificationTypeSchema>;
 export type NotificationTenantConfig = z.infer<typeof NotificationTenantConfigSchema>;
 export type Notification = z.infer<typeof NotificationSchema>;
 export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
 export type NotificationTenantConfigHistory = z.infer<typeof NotificationTenantConfigHistorySchema>;
+export type TenantConfigHistory = z.infer<typeof TenantConfigHistorySchema>;
 export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
 
 /**
@@ -923,6 +998,9 @@ export const PromptVersionSchema = z.object({
     variables: z.array(PromptVariableSchema).default([]),
     changedBy: z.string(),
     changeReason: z.string().optional(),
+    correlacion_id: z.string().optional(), // Trazabilidad bancaria
+    ip: z.string().optional(),
+    userAgent: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
 });
 
@@ -943,6 +1021,12 @@ export const PromptSchema = z.object({
     updatedBy: z.string().optional(),
     createdBy: z.string().optional(),
     creado: z.date().default(() => new Date()),
+}).refine(data => {
+    if (data.maxLength && data.template.length > data.maxLength) return false;
+    return true;
+}, {
+    message: "La longitud del template excede el máximo permitido (maxLength)",
+    path: ["template"]
 });
 
 export type PromptVariable = z.infer<typeof PromptVariableSchema>;

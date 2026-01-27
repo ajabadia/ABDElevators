@@ -145,8 +145,7 @@ export async function performTechnicalSearch(
 
 /**
  * Búsqueda Multilingüe Avanzada (Phase 21.1).
- * Utiliza BGE-M3 para buscar en el espacio semántico unificado EN/ES/DE/IT/FR.
- * Requiere que los documentos hayan sido indexados con Dual-Indexing.
+ * Utiliza BGE-M3 para buscar en el espacio semántico unificado EN/ES/DE/IT/FR/PT.
  */
 export async function performMultilingualSearch(
     query: string,
@@ -160,18 +159,16 @@ export async function performMultilingualSearch(
         const db = await connectDB();
         const collection = db.collection('document_chunks');
 
-        // Generar vector con BGE-M3
         const queryVector = await multilingualService.generateEmbedding(query);
 
-        // Búsqueda vectorial explícita en Atlas usando el índice secundario 'vector_index_multilingual'
-        // (Nota: Debes crear este índice en Atlas apuntando a 'embedding_multilingual')
+        // Búsqueda vectorial explícita en Atlas (SLA calibrado)
         const results = await collection.aggregate([
             {
                 "$vectorSearch": {
                     "index": "vector_index_multilingual",
                     "path": "embedding_multilingual",
                     "queryVector": queryVector,
-                    "numCandidates": limit * 10,
+                    "numCandidates": limit * 20,
                     "limit": limit,
                     "filter": {
                         "tenantId": { "$in": ["global", tenantId] }
@@ -190,13 +187,13 @@ export async function performMultilingualSearch(
         ]).toArray();
 
         await logEvento({
-            nivel: 'INFO',
+            nivel: 'DEBUG',
             origen: 'RAG_SERVICE',
             accion: 'MULTILINGUAL_SEARCH_SUCCESS',
             mensaje: `Búsqueda BGE-M3 para "${query}"`,
             correlacion_id,
             tenantId,
-            detalles: { hits: results.length }
+            detalles: { hits: results.length, duracion_ms: Date.now() - inicio }
         });
 
         return results.map((doc: any) => ({
@@ -205,11 +202,7 @@ export async function performMultilingualSearch(
             score: doc.score,
             tipo: doc.tipo_componente,
             modelo: doc.modelo,
-            cloudinary_url: doc.cloudinary_url,
-            // Mapping Dual-Indexing Metadata
-            language: doc.language,
-            original_lang: doc.original_lang,
-            is_shadow: doc.is_shadow
+            cloudinary_url: doc.cloudinary_url
         }));
 
     } catch (error) {
@@ -220,7 +213,74 @@ export async function performMultilingualSearch(
             mensaje: error instanceof Error ? error.message : 'Unknown error',
             correlacion_id
         });
-        return []; // Fallback a vacío si falla el modelo pesado
+        return [];
+    }
+}
+
+/**
+ * Búsqueda Híbrida Calibrada (Fase 21.1 Tuning).
+ * Combina lo mejor de Gemini (Precisión semántica) y BGE-M3 (Multilingüe Robusto).
+ * Aplica RRF (Reciprocal Rank Fusion) para unificar rankings.
+ */
+export async function hybridSearch(
+    query: string,
+    tenantId: string,
+    correlacion_id: string,
+    limit = 5
+): Promise<RagResult[]> {
+    const inicio = Date.now();
+    try {
+        const [geminiResults, bgeResults] = await Promise.all([
+            performTechnicalSearch(query, tenantId, correlacion_id, limit * 2),
+            performMultilingualSearch(query, tenantId, correlacion_id, limit * 2)
+        ]);
+
+        const map = new Map<string, RagResult & { rankScore: number }>();
+
+        const addToMap = (results: RagResult[], weight: number) => {
+            results.forEach((res, index) => {
+                const key = res.texto.substring(0, 100);
+                const existing = map.get(key);
+                const score = weight * (1 / (index + 10)); // RRF simple: 1 / (rank + k)
+
+                if (existing) {
+                    existing.rankScore += score;
+                    if (res.score && (!existing.score || res.score > existing.score)) {
+                        existing.score = res.score;
+                    }
+                } else {
+                    map.set(key, { ...res, rankScore: score });
+                }
+            });
+        };
+
+        addToMap(geminiResults, 1.0);
+        addToMap(bgeResults, 1.2);
+
+        const merged = Array.from(map.values())
+            .sort((a, b) => b.rankScore - a.rankScore)
+            .slice(0, limit);
+
+        await logEvento({
+            nivel: 'INFO',
+            origen: 'RAG_SERVICE',
+            accion: 'HYBRID_SEARCH_SUCCESS',
+            mensaje: `Búsqueda híbrida para "${query}"`,
+            correlacion_id,
+            tenantId,
+            detalles: {
+                gemini_hits: geminiResults.length,
+                bge_hits: bgeResults.length,
+                merged_hits: merged.length,
+                duracion_ms: Date.now() - inicio
+            }
+        });
+
+        return merged;
+
+    } catch (error) {
+        console.error("[HYBRID SEARCH ERROR]", error);
+        return performTechnicalSearch(query, tenantId, correlacion_id, limit);
     }
 }
 /**

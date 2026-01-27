@@ -439,3 +439,83 @@ export async function sendMfaEnabledEmail(params: {
         html,
     });
 }
+
+/**
+ * Envía notificación de Nueva Factura Disponible
+ */
+export async function sendNewInvoiceNotification(params: {
+    to: string;
+    tenantName: string;
+    invoiceNumber: string;
+    amount: number;
+    currency: string;
+    month: string;
+}): Promise<void> {
+    const { to, tenantName, invoiceNumber, amount, currency, month } = params;
+
+    const resend = getResend();
+    const invoiceUrl = `${process.env.NEXT_PUBLIC_APP_URL}/admin/billing`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px; }
+        .invoice-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; margin: 25px 0; border-radius: 8px; }
+        .amount { font-size: 32px; font-weight: 800; color: #0f172a; margin: 10px 0; }
+        .cta-button { display: inline-block; background: #0d9488; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 30px 0; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .footer { text-align: center; color: #64748b; font-size: 12px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">ABD RAG Platform</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Nueva Factura Disponible</p>
+        </div>
+        
+        <div class="content">
+            <p>Hola ${tenantName},</p>
+            
+            <p>
+                Tu factura correspondiente al mes de <strong>${month}</strong> ya está disponible para su descarga.
+            </p>
+
+            <div class="invoice-box">
+                <p style="margin: 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Importe Total</p>
+                <div class="amount">${amount.toFixed(2)} ${currency}</div>
+                <p style="margin: 0; color: #475569; font-size: 14px;">Nº Factura: <strong>${invoiceNumber}</strong></p>
+            </div>
+
+            <p style="color: #475569;">
+                El cobro se procesará automáticamente en los próximos días a través de tu método de pago habitual.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="${invoiceUrl}" class="cta-button">
+                    Ver y Descargar Factura
+                </a>
+            </div>
+
+            <div class="footer">
+                <p>© 2026 ABD RAG Platform. Todos los derechos reservados.</p>
+                <p>Al hacer clic en el botón serás redirigido a tu panel de facturación seguro.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'ABD RAG Platform <noreply@abdrag.com>',
+        to,
+        subject: `Factura ${invoiceNumber} - ABD RAG Platform`,
+        html,
+    });
+}

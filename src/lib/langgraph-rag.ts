@@ -1,6 +1,6 @@
 import { StateGraph, END } from "@langchain/langgraph";
 import { Annotation } from "@langchain/langgraph";
-import { RagResult, performTechnicalSearch } from "./rag-service";
+import { RagResult, performTechnicalSearch, hybridSearch } from "./rag-service";
 import { callGeminiMini } from "./llm";
 import { PromptService } from "./prompt-service";
 import { logEvento } from "./logger";
@@ -44,7 +44,7 @@ export class AgenticRAGService {
             correlacion_id
         });
 
-        const docs = await performTechnicalSearch(question, tenantId, correlacion_id, 3);
+        const docs = await hybridSearch(question, tenantId, correlacion_id, 3);
 
         return {
             documents: docs,

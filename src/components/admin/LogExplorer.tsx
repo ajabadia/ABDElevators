@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search, AlertTriangle, AlertCircle, Info, CheckCircle,
-    Download, RefreshCw, Filter, Calendar, Server, Activity, Bug
+    Download, RefreshCw, Filter, Calendar, Server, Activity, Bug, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,21 +11,57 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Definición de tipos para los logs
+// Definición de tipos para los logs
 interface LogEntry {
     _id: string;
     nivel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
     origen: string;
     accion: string;
     mensaje: string;
-    correlacion_id: string;
+    correlacion_id?: string;
     tenantId?: string;
     timestamp: string;
     detalles?: any;
     stack?: string;
 }
 
+interface AuditEntry {
+    _id: string;
+    tenantId: string;
+    action?: string;
+    previousState?: any;
+    newState: any;
+    performedBy: string;
+    correlacion_id?: string;
+    timestamp: string;
+    ip?: string;
+    userAgent?: string;
+    promptName?: string; // Para prompts
+}
+
 interface User { _id: string; email: string; nombre: string; }
 interface Tenant { tenantId: string; name: string; }
+
+/**
+ * Función de utilidad para encontrar diferencias entre dos objetos
+ */
+function getObjectDiff(prev: any, next: any): Record<string, { prev: any, next: any }> {
+    const diff: Record<string, { prev: any, next: any }> = {};
+    if (!prev || !next) return diff;
+
+    const allKeys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+    for (const key of allKeys) {
+        if (key === '_id' || key === 'updatedAt' || key === 'timestamp') continue;
+
+        const p = prev[key];
+        const n = next[key];
+
+        if (JSON.stringify(p) !== JSON.stringify(n)) {
+            diff[key] = { prev: p, next: n };
+        }
+    }
+    return diff;
+}
 
 export default function LogExplorer() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -46,6 +82,12 @@ export default function LogExplorer() {
 
     // Selección para detalle
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+
+    // Auditoría
+    const [viewMode, setViewMode] = useState<'LOGS' | 'AUDIT'>('LOGS');
+    const [auditData, setAuditData] = useState<AuditEntry[]>([]);
+    const [auditLoading, setAuditLoading] = useState(false);
+    const [selectedAudit, setSelectedAudit] = useState<AuditEntry | null>(null);
 
     // Cargar listas de filtrado al montar
     useEffect(() => {
@@ -95,14 +137,54 @@ export default function LogExplorer() {
         }
     };
 
+    const fetchAudit = async () => {
+        setAuditLoading(true);
+        try {
+            // Combinar Prompts y Config (o fetch separado)
+            const [promptsRes, configRes, ingestRes] = await Promise.all([
+                fetch('/api/admin/prompts/history'),
+                fetch('/api/admin/audit/config'),
+                fetch('/api/admin/audit/ingest')
+            ]);
+
+            let allAudit: any[] = [];
+            if (promptsRes.ok) {
+                const data = await promptsRes.json();
+                allAudit = [...allAudit, ...(data.history || [])];
+            }
+            if (configRes.ok) {
+                const data = await configRes.json();
+                allAudit = [...allAudit, ...(data.history || [])];
+            }
+            if (ingestRes.ok) {
+                const data = await ingestRes.json();
+                const ingestLogs = (data.data || []).map((log: any) => ({
+                    ...log,
+                    action: log.status === 'DUPLICATE' ? 'INGEST_DUPLICATE' : 'INGEST_FILE',
+                    promptName: log.filename,
+                    newState: log.details // Show details as the state
+                }));
+                allAudit = [...allAudit, ...ingestLogs];
+            }
+
+            setAuditData(allAudit.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+        } catch (error) {
+            console.error("Failed to fetch audit", error);
+        } finally {
+            setAuditLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetchLogs();
+        if (viewMode === 'LOGS') fetchLogs();
+        else fetchAudit();
+
         let interval: NodeJS.Timeout;
         if (autoRefresh) {
-            interval = setInterval(fetchLogs, 5000);
+            interval = setInterval(viewMode === 'LOGS' ? fetchLogs : fetchAudit, 5000);
         }
         return () => clearInterval(interval);
-    }, [levelFilter, search, originFilter, userFilter, tenantFilter, autoRefresh]);
+    }, [levelFilter, search, originFilter, userFilter, tenantFilter, autoRefresh, viewMode]);
 
     const handleExport = async (format: 'json' | 'csv') => {
         // En entornos enterprise, la exportación suele ser una descarga
@@ -125,6 +207,15 @@ export default function LogExplorer() {
         }
     };
 
+    const getAuditActionDetails = (action?: string) => {
+        if (!action) return { color: 'bg-slate-500', icon: <Activity size={10} />, label: 'Desconocido' };
+        if (action.includes('PROMPT')) return { color: 'bg-indigo-500', icon: <Bug size={10} />, label: 'Prompt Engine' };
+        if (action.includes('BILLING')) return { color: 'bg-emerald-500', icon: <CheckCircle size={10} />, label: 'Facturación' };
+        if (action.includes('STORAGE')) return { color: 'bg-sky-500', icon: <Server size={10} />, label: 'Almacenamiento' };
+        if (action.includes('INGEST')) return { color: 'bg-cyan-500', icon: <FileText size={10} />, label: 'Ingesta AI' };
+        return { color: 'bg-slate-500', icon: <Activity size={10} />, label: 'Configuración' };
+    };
+
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] space-y-4">
             {/* Header / Stats Bar */}
@@ -135,7 +226,7 @@ export default function LogExplorer() {
                     </div>
                     <div>
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Eventos</p>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white">{logs.length}<span className="text-xs font-normal text-slate-400 ml-1">recientes</span></h3>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white">{viewMode === 'LOGS' ? logs.length : auditData.length}<span className="text-xs font-normal text-slate-400 ml-1">recientes</span></h3>
                     </div>
                 </div>
                 <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl flex items-center gap-4 shadow-sm">
@@ -149,6 +240,20 @@ export default function LogExplorer() {
                 </div>
                 {/* ... más stats ... */}
                 <div className="col-span-1 md:col-span-2 flex items-center justify-end gap-2">
+                    <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex mr-4 shadow-inner">
+                        <button
+                            onClick={() => setViewMode('LOGS')}
+                            className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", viewMode === 'LOGS' ? "bg-white dark:bg-slate-800 text-teal-600 shadow-sm" : "text-slate-500 opacity-60 hover:opacity-100")}
+                        >
+                            Logs de Sistema
+                        </button>
+                        <button
+                            onClick={() => setViewMode('AUDIT')}
+                            className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", viewMode === 'AUDIT' ? "bg-white dark:bg-slate-800 text-teal-600 shadow-sm" : "text-slate-500 opacity-60 hover:opacity-100")}
+                        >
+                            Auditoría (History)
+                        </button>
+                    </div>
                     <Button
                         variant="outline"
                         onClick={() => handleExport('csv')}
@@ -159,7 +264,7 @@ export default function LogExplorer() {
                     <Button
                         variant={autoRefresh ? "secondary" : "outline"}
                         onClick={() => setAutoRefresh(!autoRefresh)}
-                        className={cn("border-slate-200 dark:border-slate-800", autoRefresh && "bg-teal-500/10 text-teal-600 border-teal-500/20")}
+                        className={cn("border-slate-200 dark:border-slate-800", autoRefresh && "bg-teal-500/10 text-teal-600 border-teal-500/20 shadow-inner")}
                     >
                         <RefreshCw className={cn("w-4 h-4 mr-2", autoRefresh && "animate-spin")} /> {autoRefresh ? 'Live' : 'Refrescar'}
                     </Button>
@@ -171,14 +276,14 @@ export default function LogExplorer() {
                 <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
-                        placeholder="Buscar en logs..."
+                        placeholder={viewMode === 'LOGS' ? "Buscar en logs..." : "Buscar en historial..."}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full bg-white dark:bg-slate-950 border-none rounded-lg text-xs py-2.5 pl-9 focus:ring-1 focus:ring-teal-500 outline-none"
                     />
                 </div>
                 {/* User Filter Dropdown */}
-                <div className="relative w-48">
+                <div className="relative w-48 font-sans">
                     <select
                         value={userFilter}
                         onChange={(e) => setUserFilter(e.target.value)}
@@ -194,7 +299,7 @@ export default function LogExplorer() {
                 </div>
 
                 {/* Tenant Filter Dropdown */}
-                <div className="relative w-48">
+                <div className="relative w-48 font-sans">
                     <select
                         value={tenantFilter}
                         onChange={(e) => setTenantFilter(e.target.value)}
@@ -214,11 +319,13 @@ export default function LogExplorer() {
                         <button
                             key={l}
                             onClick={() => setLevelFilter(l as any)}
+                            disabled={viewMode === 'AUDIT'}
                             className={cn(
                                 "text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
                                 levelFilter === l
                                     ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-slate-700"
-                                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+                                viewMode === 'AUDIT' && "opacity-30 cursor-not-allowed"
                             )}
                         >
                             {l}
@@ -232,96 +339,260 @@ export default function LogExplorer() {
                 {/* Visual Header */}
                 <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-[10px] font-black uppercase tracking-widest text-slate-400">
                     <div className="col-span-2">Timestamp</div>
-                    <div className="col-span-1">Nivel</div>
-                    <div className="col-span-2">Origen / Acción</div>
-                    <div className="col-span-5">Mensaje</div>
+                    {viewMode === 'LOGS' ? (
+                        <>
+                            <div className="col-span-1">Nivel</div>
+                            <div className="col-span-2">Origen / Acción</div>
+                            <div className="col-span-5">Mensaje</div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="col-span-2">Acción / Módulo</div>
+                            <div className="col-span-3">Entidad / Autor</div>
+                            <div className="col-span-3">Trazabilidad</div>
+                        </>
+                    )}
                     <div className="col-span-2 text-right">Contexto</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    {loading && logs.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-xs">Cargando trazas...</div>
-                    ) : logs.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 opacity-50">
-                            <Filter size={32} />
-                            <p className="text-xs font-medium">No se encontraron logs con estos filtros</p>
-                        </div>
-                    ) : (
-                        logs.map((log) => (
-                            <div
-                                key={log._id}
-                                onClick={() => setSelectedLog(log)}
-                                className={cn(
-                                    "grid grid-cols-12 gap-4 p-3 border-b border-slate-50 dark:border-slate-900 items-start cursor-pointer transition-colors text-xs font-mono",
-                                    selectedLog?._id === log._id ? "bg-teal-50 dark:bg-teal-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/50",
-                                    log.nivel === 'ERROR' && "bg-rose-50/50 dark:bg-rose-950/10"
-                                )}
-                            >
-                                <div className="col-span-2 text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {new Date(log.timestamp).toLocaleTimeString()}
-                                    <span className="text-[10px] opacity-50 ml-1">{new Date(log.timestamp).toLocaleDateString()}</span>
-                                </div>
-                                <div className="col-span-1">{getLevelBadge(log.nivel)}</div>
-                                <div className="col-span-2 flex flex-col">
-                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate" title={log.origen}>{log.origen}</span>
-                                    <span className="text-[10px] text-slate-400 truncate">{log.accion}</span>
-                                </div>
-                                <div className="col-span-5 text-slate-600 dark:text-slate-400 break-words leading-relaxed font-sans">
-                                    {log.mensaje}
-                                </div>
-                                <div className="col-span-2 text-right">
-                                    <Badge variant="outline" className="text-[9px] h-5 border-slate-200 dark:border-slate-800 text-slate-400 font-mono">
-                                        {(log.tenantId || 'SYSTEM').substring(0, 12)}
-                                    </Badge>
-                                </div>
+                    {viewMode === 'LOGS' ? (
+                        loading && logs.length === 0 ? (
+                            <div className="p-8 text-center text-slate-400 text-xs">Cargando trazas...</div>
+                        ) : logs.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 opacity-50">
+                                <Filter size={32} />
+                                <p className="text-xs font-medium">No se encontraron logs con estos filtros</p>
                             </div>
-                        ))
+                        ) : (
+                            logs.map((log) => (
+                                <div
+                                    key={log._id}
+                                    onClick={() => setSelectedLog(log)}
+                                    className={cn(
+                                        "grid grid-cols-12 gap-4 p-3 border-b border-slate-50 dark:border-slate-900 items-start cursor-pointer transition-colors text-xs font-mono",
+                                        selectedLog?._id === log._id ? "bg-teal-50 dark:bg-teal-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/50",
+                                        log.nivel === 'ERROR' && "bg-rose-50/50 dark:bg-rose-950/10"
+                                    )}
+                                >
+                                    <div className="col-span-2 text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">
+                                        {new Date(log.timestamp).toLocaleTimeString()}
+                                        <span className="text-[10px] opacity-50 ml-1">{new Date(log.timestamp).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="col-span-1">{getLevelBadge(log.nivel)}</div>
+                                    <div className="col-span-2 flex flex-col">
+                                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate" title={log.origen}>{log.origen}</span>
+                                        <span className="text-[10px] text-slate-400 truncate">{log.accion}</span>
+                                    </div>
+                                    <div className="col-span-5 text-slate-600 dark:text-slate-400 break-words leading-relaxed font-sans">
+                                        {log.mensaje}
+                                    </div>
+                                    <div className="col-span-2 text-right">
+                                        <Badge variant="outline" className="text-[9px] h-5 border-slate-200 dark:border-slate-800 text-slate-400 font-mono">
+                                            {(log.tenantId || 'SYSTEM').substring(0, 12)}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))
+                        )
+                    ) : (
+                        auditLoading && auditData.length === 0 ? (
+                            <div className="p-8 text-center text-slate-400 text-xs">Cargando auditoría histórica...</div>
+                        ) : auditData.map((audit) => {
+                            const details = getAuditActionDetails(audit.action);
+                            return (
+                                <div
+                                    key={audit._id}
+                                    onClick={() => setSelectedAudit(audit)}
+                                    className={cn(
+                                        "grid grid-cols-12 gap-4 p-4 border-b border-slate-50 dark:border-slate-900 items-start cursor-pointer transition-all text-xs group",
+                                        selectedAudit?._id === audit._id ? "bg-teal-50/50 dark:bg-teal-900/10 border-l-2 border-l-teal-500" : "hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                                    )}
+                                >
+                                    <div className="col-span-2 font-mono text-slate-500 flex flex-col">
+                                        <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date(audit.timestamp).toLocaleTimeString()}</span>
+                                        <span className="text-[10px] opacity-50">{new Date(audit.timestamp).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Badge className={cn("h-5 text-[9px] gap-1 px-2 border-transparent", details.color)}>
+                                            {details.icon} {details.label}
+                                        </Badge>
+                                        <div className="mt-1 text-[9px] font-black text-slate-400 uppercase tracking-tighter truncate">{audit.action}</div>
+                                    </div>
+                                    <div className="col-span-3 flex flex-col">
+                                        <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{audit.promptName || `ID: ${audit.tenantId}`}</span>
+                                        <span className="text-[10px] text-teal-600 font-medium truncate italic">{audit.performedBy || 'Sistema'}</span>
+                                    </div>
+                                    <div className="col-span-3 text-slate-400 text-[10px] flex flex-col gap-0.5">
+                                        <div className="flex items-center gap-1"><Server size={8} /> IP: <span className="font-mono">{audit.ip || '0.0.0.0'}</span></div>
+                                        <div className="flex items-center gap-1 text-[8px]"><Activity size={8} /> CORR: <span className="font-mono text-slate-300">{audit.correlacion_id?.substring(0, 13) || 'N/A'}</span></div>
+                                    </div>
+                                    <div className="col-span-2 text-right self-center">
+                                        <Button variant="ghost" size="sm" className="h-7 text-[9px] uppercase font-black tracking-widest text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Analizar Diff
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
 
-                {/* Log Detail Overlay Pane */}
+                {/* Standard Log Detail Overlay */}
                 <AnimatePresence>
                     {selectedLog && (
                         <motion.div
                             initial={{ y: 300, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: 300, opacity: 0 }}
-                            className="absolute bottom-0 left-0 right-0 h-[45%] bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col z-20"
+                            className="absolute bottom-0 left-0 right-0 h-[45%] bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col z-20"
                         >
-                            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6">
+                            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 px-6">
                                 <div className="flex items-center gap-3">
                                     {getLevelBadge(selectedLog.nivel)}
-                                    <span className="text-xs font-mono text-slate-400">{selectedLog.correlacion_id}</span>
+                                    <span className="text-xs font-mono text-slate-400">{selectedLog.correlacion_id || 'no-trace-id'}</span>
                                 </div>
-                                <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors group">
                                     <span className="sr-only">Cerrar</span>
-                                    <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
                             <div className="flex-1 overflow-auto p-6 space-y-4 font-mono text-xs">
                                 <section>
-                                    <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-1">Mensaje Completo</h4>
-                                    <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{selectedLog.mensaje}</p>
+                                    <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-1 border-b pb-1 flex items-center gap-2"><Activity size={10} /> Mensaje del Evento</h4>
+                                    <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed py-2 font-sans text-sm">{selectedLog.mensaje}</p>
                                 </section>
 
                                 {selectedLog.stack && (
                                     <section className="bg-rose-50 dark:bg-rose-950/20 p-4 rounded-xl border border-rose-100 dark:border-rose-900/30">
                                         <h4 className="text-[10px] uppercase font-bold text-rose-400 mb-2 flex items-center gap-2">
-                                            <Bug size={12} /> Stack Trace
+                                            <Bug size={12} /> Traza de Error (Stack)
                                         </h4>
-                                        <pre className="text-rose-700 dark:text-rose-300 overflow-x-auto whitespace-pre">{selectedLog.stack}</pre>
+                                        <pre className="text-rose-700 dark:text-rose-300 overflow-x-auto whitespace-pre leading-tight">{selectedLog.stack}</pre>
                                     </section>
                                 )}
 
                                 {selectedLog.detalles && (
                                     <section>
-                                        <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-2">Detalles Técnicos (JSON)</h4>
-                                        <div className="bg-slate-100 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                                            <pre className="text-slate-600 dark:text-slate-400 overflow-x-auto">
+                                        <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-2 border-b pb-1">Contexto Estructurado (JSON)</h4>
+                                        <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                                            <pre className="text-slate-600 dark:text-slate-400 overflow-x-auto scrollbar-thin">
                                                 {JSON.stringify(selectedLog.detalles, null, 2)}
                                             </pre>
                                         </div>
                                     </section>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Pro Audit Detail Overlay / Diff Viewer */}
+                <AnimatePresence>
+                    {selectedAudit && (
+                        <motion.div
+                            initial={{ x: 600, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 600, opacity: 0 }}
+                            className="absolute top-0 right-0 bottom-0 w-2/3 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-[0_0_50px_rgba(0,0,0,0.3)] z-30 flex flex-col"
+                        >
+                            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge className={cn("text-[9px]", getAuditActionDetails(selectedAudit.action).color)}>AUDIT LOG</Badge>
+                                        <h3 className="font-black text-sm uppercase tracking-tight text-slate-900 dark:text-white">Análisis de Integridad de Datos</h3>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedAudit._id}</p>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => setSelectedAudit(null)} className="rounded-full h-8 w-8 p-0">
+                                    <span className="text-lg">×</span>
+                                </Button>
+                            </div>
+
+                            <div className="flex-1 overflow-auto p-8 space-y-8">
+                                {/* Extended Metadata Grid */}
+                                <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Calendar size={10} /> Timestamp</p>
+                                        <p className="text-xs font-bold leading-none">{new Date(selectedAudit.timestamp).toLocaleTimeString()}</p>
+                                        <p className="text-[10px] text-slate-400">{new Date(selectedAudit.timestamp).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
+                                        <p className="text-[9px] uppercase font-black text-teal-600 flex items-center gap-1"><Info size={10} /> Responsable</p>
+                                        <p className="text-xs font-bold truncate" title={selectedAudit.performedBy}>{selectedAudit.performedBy || 'Sistema'}</p>
+                                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Admin Auth</p>
+                                    </div>
+                                    <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
+                                        <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Server size={10} /> IP Origen</p>
+                                        <p className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">{selectedAudit.ip || '0.0.0.0'}</p>
+                                        <p className="text-[9px] text-teal-500 font-bold">SECURE_AGENT</p>
+                                    </div>
+                                    <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
+                                        <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Activity size={10} /> Correlación</p>
+                                        <p className="text-xs font-mono truncate text-slate-500" title={selectedAudit.correlacion_id}>{selectedAudit.correlacion_id?.substring(0, 16) || 'N/A'}</p>
+                                        <button className="text-[9px] text-blue-500 font-bold hover:underline">Ver Trace</button>
+                                    </div>
+                                </div>
+
+                                {/* Comparison / Diff Section */}
+                                <section className="space-y-4">
+                                    <h4 className="text-[11px] uppercase font-black text-slate-900 dark:text-white border-l-4 border-teal-500 pl-3">Diferencial de Cambios (BEFORE vs AFTER)</h4>
+
+                                    {selectedAudit.previousState ? (
+                                        <div className="space-y-2">
+                                            {Object.entries(getObjectDiff(selectedAudit.previousState, selectedAudit.newState)).map(([key, value]) => (
+                                                <div key={key} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                                                    <div className="bg-slate-100 dark:bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-slate-500 flex justify-between border-b">
+                                                        <span>Propiedad: <span className="text-teal-600">{key}</span></span>
+                                                        <Badge variant="outline" className="text-[8px] h-4">MODIFIED</Badge>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-800">
+                                                        <div className="p-3 bg-rose-50/20 dark:bg-rose-950/5">
+                                                            <p className="text-[8px] uppercase font-bold text-rose-400 mb-1">Anterior</p>
+                                                            <pre className="text-[10px] text-rose-700 dark:text-rose-400 whitespace-pre-wrap font-mono">
+                                                                {typeof value.prev === 'object' ? JSON.stringify(value.prev, null, 1) : String(value.prev)}
+                                                            </pre>
+                                                        </div>
+                                                        <div className="p-3 bg-emerald-50/20 dark:bg-emerald-950/5">
+                                                            <p className="text-[8px] uppercase font-bold text-emerald-600 mb-1">Nuevo</p>
+                                                            <pre className="text-[10px] text-emerald-700 dark:text-emerald-400 whitespace-pre-wrap font-mono">
+                                                                {typeof value.next === 'object' ? JSON.stringify(value.next, null, 1) : String(value.next)}
+                                                            </pre>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center">
+                                            <div className="p-3 bg-emerald-500/10 w-fit mx-auto rounded-full mb-3 italic">
+                                                <CheckCircle className="text-emerald-500" size={24} />
+                                            </div>
+                                            <h5 className="font-bold text-slate-900 dark:text-white">Operación de Creación Inicial</h5>
+                                            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">No existe estado previo para esta entidad. Se han registrado todas las propiedades como inserciones iniciales seguras.</p>
+                                        </div>
+                                    )}
+                                </section>
+
+                                {/* Raw Full Snapshot */}
+                                <section>
+                                    <h4 className="text-[11px] uppercase font-black text-slate-400 mb-4 border-b pb-2">Full Audit Snapshot (Inmutable)</h4>
+                                    <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-2xl relative">
+                                        <div className="absolute top-4 right-4 text-[10px] text-slate-600 font-mono tracking-tighter">BSON_BLOB_STORAGE</div>
+                                        <pre className="text-[10px] font-mono leading-relaxed text-blue-400 max-h-[300px] overflow-auto scrollbar-thin scrollbar-thumb-blue-900/50">
+                                            {JSON.stringify(selectedAudit.newState, null, 2)}
+                                        </pre>
+                                    </div>
+                                </section>
+
+                                {selectedAudit.userAgent && (
+                                    <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-start gap-3">
+                                        <Info className="text-amber-500 mt-0.5" size={14} />
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase text-amber-600/70">User Agent Context</p>
+                                            <p className="text-[9px] text-slate-500 leading-tight italic font-sans">{selectedAudit.userAgent}</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </motion.div>

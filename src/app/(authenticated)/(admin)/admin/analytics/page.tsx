@@ -11,7 +11,7 @@ export default async function AnalyticsPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">

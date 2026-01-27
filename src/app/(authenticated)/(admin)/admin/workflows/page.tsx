@@ -65,18 +65,12 @@ export default function AdminWorkflowPage() {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-            </div>
-        );
-    }
+    if (isLoading) return <div>Cargando...</div>;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />

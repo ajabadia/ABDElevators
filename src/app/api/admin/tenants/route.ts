@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const updated = await TenantService.updateConfig(tenantId, config);
+        const updated = await TenantService.updateConfig(tenantId, config, {
+            performedBy: session.user.id || 'system',
+            correlacion_id
+        });
         return NextResponse.json({ success: true, config: updated });
 
     } catch (error: any) {

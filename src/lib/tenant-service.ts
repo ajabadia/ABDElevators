@@ -71,25 +71,51 @@ export class TenantService {
     }
 
     /**
-     * Actualiza o crea la configuración de un tenant
+     * Actualiza o crea la configuración de un tenant e inserta registro en auditoría.
      */
-    static async updateConfig(tenantId: string, data: any) {
+    static async updateConfig(tenantId: string, data: any, metadata?: { performedBy: string, correlacion_id?: string }) {
         try {
             const db = await connectDB();
+
+            // 1. Obtener estado previo para auditoría
+            const previousState = await db.collection('tenants').findOne({ tenantId });
+
+            // 2. Validar nuevo estado
             const validated = TenantConfigSchema.parse({ ...data, tenantId });
 
+            // 3. Persistir cambio
             await db.collection('tenants').updateOne(
                 { tenantId },
                 { $set: { ...validated, actualizado: new Date() } },
                 { upsert: true }
             );
 
+            // 4. Registrar en Historial (Grado Bancario)
+            if (metadata) {
+                // Detectar acción predominante si es posible, sino UPDATE_GENERAL
+                let action: 'CREATE' | 'UPDATE_GENERAL' | 'UPDATE_BILLING' | 'UPDATE_STORAGE' = 'UPDATE_GENERAL';
+                if (!previousState) action = 'CREATE';
+                else if (JSON.stringify(previousState.billing) !== JSON.stringify(validated.billing)) action = 'UPDATE_BILLING';
+                else if (JSON.stringify(previousState.storage) !== JSON.stringify(validated.storage)) action = 'UPDATE_STORAGE';
+
+                await db.collection('tenant_configs_history').insertOne({
+                    tenantId,
+                    action,
+                    previousState,
+                    newState: validated,
+                    performedBy: metadata.performedBy,
+                    correlacion_id: metadata.correlacion_id || `sys-${Date.now()}`,
+                    timestamp: new Date()
+                });
+            }
+
+            // 5. Log de evento estándar
             await logEvento({
                 nivel: 'INFO',
                 origen: 'TENANT_SERVICE',
                 accion: 'UPDATE_CONFIG',
                 mensaje: `Configuración actualizada para tenant: ${tenantId}`,
-                correlacion_id: `system-${tenantId}`,
+                correlacion_id: metadata?.correlacion_id || `system-${tenantId}`,
                 detalles: { tenantId }
             });
 

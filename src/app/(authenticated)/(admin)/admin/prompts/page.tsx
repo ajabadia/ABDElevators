@@ -92,7 +92,7 @@ export default function AdminPromptsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 font-sans h-full pb-10 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500 font-sans h-full pb-10 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -189,8 +189,11 @@ export default function AdminPromptsPage() {
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className={cn("text-xs font-black tracking-tight", selectedPrompt === p && isEditing ? "text-white" : "text-slate-900 dark:text-white")}>
+                                                        <h3 className={cn("text-xs font-black tracking-tight flex items-center gap-1", selectedPrompt === p && isEditing ? "text-white" : "text-slate-900 dark:text-white")}>
                                                             {p.name}
+                                                            {(p as any)._validationError && (
+                                                                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                                                            )}
                                                         </h3>
                                                         <span className={cn(
                                                             "text-[9px] font-bold px-1.5 py-0.5 rounded",
@@ -198,6 +201,11 @@ export default function AdminPromptsPage() {
                                                         )}>
                                                             V{p.version}
                                                         </span>
+                                                        {!p.active && (
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                                                                INACTIVO
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", selectedPrompt === p && isEditing ? "text-white" : "text-slate-400 font-mono")}>

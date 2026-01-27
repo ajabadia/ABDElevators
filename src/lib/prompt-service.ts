@@ -90,7 +90,7 @@ export class PromptService {
     }
 
     /**
-     * Actualiza un prompt (crea nueva versión)
+     * Actualiza un prompt (crea nueva versión) con trazabilidad extendida
      */
     static async updatePrompt(
         promptId: string,
@@ -98,7 +98,8 @@ export class PromptService {
         variables: any[],
         changedBy: string,
         changeReason: string,
-        tenantId?: string
+        tenantId?: string,
+        auditMetadata?: { correlacion_id?: string, ip?: string, userAgent?: string }
     ): Promise<void> {
         const { collection } = await getTenantCollection('prompts');
         const { collection: versionsCollection } = await getTenantCollection('prompt_versions');
@@ -111,6 +112,11 @@ export class PromptService {
             throw new AppError('NOT_FOUND', 404, 'Prompt no encontrado');
         }
 
+        // Validar Max Longitud (Hard Limit)
+        if (prompt.maxLength && newTemplate.length > prompt.maxLength) {
+            throw new AppError('VALIDATION_ERROR', 400, `La longitud del template (${newTemplate.length}) excede el máximo permitido (${prompt.maxLength})`);
+        }
+
         // Crear snapshot de la versión anterior
         const versionSnapshot: PromptVersion = {
             promptId: new ObjectId(promptId),
@@ -120,6 +126,9 @@ export class PromptService {
             variables: prompt.variables,
             changedBy,
             changeReason,
+            correlacion_id: auditMetadata?.correlacion_id,
+            ip: auditMetadata?.ip,
+            userAgent: auditMetadata?.userAgent,
             createdAt: new Date()
         };
 
@@ -145,7 +154,7 @@ export class PromptService {
             origen: 'PROMPT_SERVICE',
             accion: 'UPDATE_PROMPT',
             mensaje: `Prompt ${prompt.key} actualizado a versión ${prompt.version + 1}`,
-            correlacion_id: promptId,
+            correlacion_id: auditMetadata?.correlacion_id || promptId,
             detalles: { promptKey: prompt.key, newVersion: prompt.version + 1, changedBy, changeReason }
         });
     }
@@ -224,11 +233,23 @@ export class PromptService {
      */
     static async listPrompts(tenantId?: string | null, activeOnly: boolean = true): Promise<Prompt[]> {
         const { collection } = await getTenantCollection('prompts');
-        let filter: any = activeOnly ? { active: true } : {};
+        let filter: any = {};
+        if (activeOnly) {
+            filter.$or = [{ active: true }, { active: { $exists: false } }];
+        }
         if (tenantId) filter.tenantId = tenantId;
 
         const prompts = await collection.find(filter).sort({ tenantId: 1, category: 1, name: 1 }).toArray();
-        return prompts.map(p => PromptSchema.parse(p));
+
+        return prompts.map(p => {
+            const result = PromptSchema.safeParse(p);
+            if (!result.success) {
+                console.error(`[PROMPT VALIDATION ERROR] ID: ${p._id}, Key: ${p.key}:`, result.error.format());
+                // Retornamos un objeto parcial o permitimos que pase si es Admin para depurar
+                return { ...p, _validationError: true } as any;
+            }
+            return result.data;
+        });
     }
 
     /**

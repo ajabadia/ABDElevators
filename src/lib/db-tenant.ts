@@ -18,7 +18,12 @@ export async function getTenantCollection(collectionName: string) {
 
     // 🚀 BYODB Vision: Aquí es donde resolveremos la connection string dinámica
     // si el tenant tiene configurado un cluster propio en TenantService.
-    const tenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID;
+    let tenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID;
+
+    // EXCEPCIÓN: Si es SUPER_ADMIN y no hay tenantId, permitimos acceso global (platform_master)
+    if (!tenantId && session?.user?.role === 'SUPER_ADMIN') {
+        tenantId = 'platform_master';
+    }
 
     if (!tenantId) {
         throw new AppError('UNAUTHORIZED', 401, 'No se pudo determinar el contexto del Tenant');

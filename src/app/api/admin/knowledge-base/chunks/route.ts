@@ -26,34 +26,45 @@ export async function GET(req: NextRequest) {
         const db = await connectDB();
         const collection = db.collection('document_chunks');
 
-        // Construir filtro
-        const filter: any = {};
-        if (query) {
-            filter.$or = [
-                { texto_chunk: { $regex: query, $options: 'i' } },
-                { modelo: { $regex: query, $options: 'i' } },
-                { origen_doc: { $regex: query, $options: 'i' } }
-            ];
-        }
-        if (language) {
-            filter.language = language;
-        }
-
         const type = searchParams.get('type');
-        if (type === 'shadow') {
-            filter.is_shadow = true;
-        } else if (type === 'original') {
-            filter.is_shadow = { $ne: true };
+        const searchType = searchParams.get('searchType'); // 'regex' | 'semantic'
+
+        let chunks = [];
+        let total = 0;
+
+        if (searchType === 'semantic' && query) {
+            const { hybridSearch } = await import('@/lib/rag-service');
+            chunks = await hybridSearch(query, session.user.tenantId || 'global', correlacion_id, limit);
+            total = chunks.length; // En búsqueda semántica el total es el del bloque devuelto
+        } else {
+            // Construir filtro para búsqueda tradicional (Regex)
+            const filter: any = {};
+            if (query) {
+                filter.$or = [
+                    { texto_chunk: { $regex: query, $options: 'i' } },
+                    { modelo: { $regex: query, $options: 'i' } },
+                    { origen_doc: { $regex: query, $options: 'i' } }
+                ];
+            }
+            if (language) {
+                filter.language = language;
+            }
+
+            if (type === 'shadow') {
+                filter.is_shadow = true;
+            } else if (type === 'original') {
+                filter.is_shadow = { $ne: true };
+            }
+
+            chunks = await collection
+                .find(filter)
+                .sort({ creado: -1 })
+                .skip(skip)
+                .limit(limit)
+                .toArray();
+
+            total = await collection.countDocuments(filter);
         }
-
-        const chunks = await collection
-            .find(filter)
-            .sort({ creado: -1 })
-            .skip(skip)
-            .limit(limit)
-            .toArray();
-
-        const total = await collection.countDocuments(filter);
 
         return NextResponse.json({
             success: true,
