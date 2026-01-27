@@ -767,13 +767,14 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 ### 24.1 Centralized Log Explorer & Analytics (Integration Focus)
 **Decisión Estratégica:** Investigar herramientas de terceros (Axiom, Mixpanel, PostHog, BetterStack) para integración vía SDK o Webhooks antes de desarrollar una solución interna. El objetivo es evitar "reinventar la rueda" y aprovechar motores de analítica ya probados.
 
-### 24.2 Multi-Level Analytics Dashboard ✅ COMPLETADO
+### 24.2 Multi-Level Analytics Dashboard ✅ COMPLETADO (90%)
 - [x] **SuperAdmin View (Platform Health):** Dashboard global con KPIs de negocio (MRR, MAU) e IA (RAG Quality).
 - [x] **Advanced Analytics API**: Endpoint enriquecido con métricas agregadas cross-tenant y violaciones de SLA.
-- [ ] **Tenant Admin View (Organization ROI):** Ahorro de tiempo estimado por tenant (Fase 24.2b).
+- [ ] **Tenant Admin View (Organization ROI):** Ahorro de tiempo estimado por tenant (Fase 24.2b) - **EN PROGRESO 🔄**
 - [ ] **User View (Personal Insights):** Eficiencia personal del técnico.
 
 ### 24.3 Proactive Anomaly Detection ✅ COMPLETADO
 - [x] **SLA Monitoring**: Detección proactiva de degradación de latencia en endpoints críticos.
 - [x] **Churn Risk Detector**: Identificación de anomalías por cese de actividad en tenants.
 - [x] **Security Alerts:** Registro estructurado de errores críticos para respuesta rápida.
+- [x] **Notification Integration**: Notificaciones de sistema para eventos de riesgo.
