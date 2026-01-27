@@ -27,72 +27,122 @@ export default async function PerfilPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <header>
-                <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 dark:text-white font-outfit">
-                    Mi <span className="text-teal-600">Perfil</span>
+        <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto p-4 lg:p-8">
+            <header className="mb-8">
+                <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                    Configuración de <span className="text-teal-600">Cuenta</span>
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Gestiona tu información personal y configuración de seguridad.</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm max-w-2xl">
+                    Gestiona tu identidad digital, preferencias de notificaciones y seguridad de acceso.
+                </p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Columna Izquierda: Foto y Resumen */}
-                <div className="md:col-span-1 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col items-center">
-                        <ProfilePhotoUpload
-                            currentPhotoUrl={user.foto_url}
-                        />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                {/* Columna Izquierda: Identidad y Seguridad Rápida */}
+                <div className="md:col-span-4 space-y-6">
+                    {/* Tarjeta de Perfil */}
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-teal-500/10 to-blue-500/10 z-0"></div>
+                        <div className="relative z-10">
+                            <ProfilePhotoUpload
+                                currentPhotoUrl={user.foto_url}
+                            />
+                        </div>
 
-                        <div className="mt-6 w-full pt-6 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                <Shield size={16} className="text-teal-600" />
-                                <span className="font-medium">Rol:</span>
-                                <span className="bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                        <div className="mt-4 relative z-10">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{user.nombre || 'Usuario'}</h2>
+                            <p className="text-sm text-slate-500">{user.email}</p>
+                        </div>
+
+                        <div className="mt-8 w-full space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                                <div className="flex items-center gap-2">
+                                    <Shield size={16} className="text-teal-600" />
+                                    <span className="text-xs font-bold uppercase text-slate-500">Rol</span>
+                                </div>
+                                <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm">
                                     {user.rol}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                                <UserIcon size={16} className="text-teal-600" />
-                                <span className="font-medium">Miembro desde:</span>
-                                <span>{new Date(user.creado || Date.now()).toLocaleDateString()}</span>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                                <div className="flex items-center gap-2">
+                                    <UserIcon size={16} className="text-teal-600" />
+                                    <span className="text-xs font-bold uppercase text-slate-500">Miembro desde</span>
+                                </div>
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
+                                    {new Date(user.creado || Date.now()).toLocaleDateString()}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Columna Derecha: Formularios */}
-                <div className="md:col-span-2 space-y-12">
-                    <section>
-                        <div className="flex items-center gap-2 mb-4 text-slate-700 dark:text-slate-300">
-                            <UserIcon size={20} className="text-teal-600" />
-                            <h2 className="text-xl font-bold font-outfit">Información Personal</h2>
-                        </div>
-                        <ProfileForm />
-                    </section>
-
-                    <section>
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                                <Bell size={20} className="text-teal-600" />
-                                <h2 className="text-xl font-bold font-outfit">Preferencias de Notificación</h2>
+                {/* Columna Derecha: Formularios Detallados */}
+                <div className="md:col-span-8 space-y-8">
+                    {/* Datos Personales */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <UserIcon size={20} className="text-slate-600 dark:text-slate-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Información Personal</h2>
+                                <p className="text-xs text-slate-500">Actualiza tus datos de contacto básicos</p>
                             </div>
                         </div>
-                        <UserNotificationPreferencesForm />
+                        <div className="p-6">
+                            <ProfileForm />
+                        </div>
                     </section>
 
-                    <section>
-                        <div className="flex items-center gap-2 mb-4 text-slate-700 dark:text-slate-300">
-                            <Key size={20} className="text-teal-600" />
-                            <h2 className="text-xl font-bold font-outfit">Seguridad</h2>
+                    {/* Notificaciones */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <Bell size={20} className="text-slate-600 dark:text-slate-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Preferencias de Notificación</h2>
+                                <p className="text-xs text-slate-500">Define qué alertas quieres recibir y por qué canal</p>
+                            </div>
                         </div>
-                        <div className="space-y-6">
-                            <PasswordForm />
-                            <MfaSettingsForm />
-                            <ActiveSessionsForm />
+                        <div className="p-6">
+                            <UserNotificationPreferencesForm />
+                        </div>
+                    </section>
+
+                    {/* Seguridad */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <Key size={20} className="text-slate-600 dark:text-slate-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Centro de Seguridad</h2>
+                                <p className="text-xs text-slate-500">Contraseña, MFA y Sesiones Activas</p>
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">Contraseña</h3>
+                                    <PasswordForm />
+                                </div>
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">Autenticación Multifactor</h3>
+                                    <MfaSettingsForm />
+                                </div>
+                            </div>
+
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-6">Sesiones Activas</h3>
+                                <ActiveSessionsForm />
+                            </div>
                         </div>
                     </section>
                 </div>
             </div>
         </div>
     );
+
 }
