@@ -79,6 +79,11 @@ export default async function PerfilPage() {
 
                     {/* Estadísticas de Eficiencia (Fase 24.2 - User View) */}
                     <UserEfficiencyStats />
+
+                    {/* Sesiones Activas (Movido aquí por petición de UX) */}
+                    <div className="mt-6">
+                        <ActiveSessionsForm />
+                    </div>
                 </div>
 
                 {/* Columna Derecha: Formularios Detallados */}
@@ -138,10 +143,7 @@ export default async function PerfilPage() {
                                 </div>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                                <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-6">Sesiones Activas</h3>
-                                <ActiveSessionsForm />
-                            </div>
+
                         </div>
                     </section>
                 </div>

@@ -423,7 +423,7 @@ export const TenantConfigSchema = z.object({
 export const UsageLogSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS']),
+    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED']),
     valor: z.number(),                  // Cantidad (tokens, bytes, etc)
     recurso: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
     descripcion: z.string().optional(),
@@ -431,220 +431,6 @@ export const UsageLogSchema = z.object({
     metadata: z.record(z.string(), z.any()).optional(),
     timestamp: z.date().default(() => new Date()),
 });
-
-/**
- * Esquemas para Gestión Dinámica de Prompts (Fase 7.6)
- */
-export const PromptVariableSchema = z.object({
-    name: z.string().min(1),
-    type: z.enum(['string', 'number', 'array', 'boolean']),
-    description: z.string(),
-    required: z.boolean().default(true),
-    defaultValue: z.any().optional()
-});
-
-export const PromptSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    key: z.string().min(1).regex(/^[A-Z_]+$/),
-    name: z.string().min(1),
-    description: z.string(),
-    category: z.enum(['EXTRACTION', 'ANALYSIS', 'RISK', 'GENERAL', 'CHECKLIST']),
-    template: z.string().min(10),
-    // Optional maxLength metadata: undefined = no limit; if set, enforce length in UI.
-    maxLength: z.number().int().positive().optional(),
-    model: z.string().default('gemini-1.5-flash'), // Permitir seleccionar modelo por prompt
-    variables: z.array(PromptVariableSchema),
-    version: z.number().int().positive().default(1),
-    active: z.boolean().default(true),
-    createdBy: z.string(),
-    createdAt: z.date().default(() => new Date()),
-    updatedBy: z.string(),
-    updatedAt: z.date().default(() => new Date())
-});
-
-export const PromptVersionSchema = z.object({
-    _id: z.any().optional(),
-    promptId: z.any(),
-    tenantId: z.string(),
-    version: z.number().int().positive(),
-    template: z.string(),
-    variables: z.array(PromptVariableSchema),
-    changedBy: z.string(),
-    changeReason: z.string().min(10).max(500),
-    createdAt: z.date().default(() => new Date())
-});
-
-/**
- * Esquemas para Configuración de Checklists Dinámicos (Fase 6.2)
- */
-export const ChecklistCategorySchema = z.object({
-    id: z.string().uuid(),
-    nombre: z.string().min(1),
-    color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-    keywords: z.array(z.string().min(1)),
-    prioridad: z.number().int().positive(),
-    icono: z.string().optional()
-});
-
-export const ChecklistItemSchema = z.object({
-    id: z.string().uuid(),
-    description: z.string().min(1),
-    categoryId: z.string().uuid().nullable().optional(),
-    notes: z.string().optional(),
-    icono: z.string().optional()
-});
-
-export const ChecklistConfigSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    nombre: z.string().min(1),
-    categorias: z.array(ChecklistCategorySchema),
-    items: z.array(ChecklistItemSchema).default([]),
-    workflow_orden: z.array(z.string().uuid()),
-    activo: z.boolean().default(true),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
-});
-
-// Vector Search
-export const VectorSearchQuerySchema = z.object({
-    query: z.string().min(1),
-    limit: z.preprocess((val) => val ? Number(val) : undefined, z.number().int().positive().default(5)),
-    min_score: z.preprocess((val) => val ? Number(val) : undefined, z.number().min(0).max(1).optional().default(0.6))
-});
-
-export type VectorSearchQuery = z.infer<typeof VectorSearchQuerySchema>;
-
-// Validación Humana y Audit Trail (Fase 6.4)
-export const ItemValidacionSchema = z.object({
-    itemId: z.string().uuid(),
-    estado: z.enum(['OK', 'REVISAR', 'PENDIENTE']),
-    notas: z.string().optional(),
-});
-
-export const AuditoriaValidacionSchema = z.object({
-    _id: z.any().optional(),
-    pedidoId: z.string(),
-    usuarioId: z.string(),
-    tenantId: z.string(),
-    materiaId: z.string().default('ELEVATORS'), // Visión 2.0 placeholder
-    departamentoId: z.string().optional(),
-
-    // Snapshots para trazabilidad total
-    resultados_rag_ids: z.array(z.string()),
-    checklist_items: z.array(ItemValidacionSchema),
-
-    // Conclusiones finales
-    completa: z.boolean(),
-    notas_generales: z.string().optional(),
-    duracion_ms: z.number(),
-    firma_digital: z.string().optional(), // Hash o firma simple
-    timestamp: z.date().default(() => new Date()),
-});
-
-/**
- * Esquema para Solicitudes de Contacto y Soporte (Fase 10)
- */
-export const ContactRequestSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string().optional(),
-    usuarioId: z.string().optional(),     // Si está logueado
-    nombre: z.string().min(2),
-    email: z.string().email(),
-    asunto: z.string().min(5),
-    mensaje: z.string().min(10),
-    prioridad: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('LOW'),
-    estado: z.enum(['pendiente', 'en_proceso', 'resuelto']).default('pendiente'),
-    respuesta: z.string().optional(),
-    respondidoPor: z.string().optional(),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
-});
-
-export type ContactRequest = z.infer<typeof ContactRequestSchema>;
-export type ItemValidacion = z.infer<typeof ItemValidacionSchema>;
-export type AuditoriaValidacion = z.infer<typeof AuditoriaValidacionSchema>;
-
-
-
-export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
-export type GenericCase = z.infer<typeof GenericCaseSchema>;
-export type IndustryType = z.infer<typeof IndustryTypeSchema>;
-export type Pedido = z.infer<typeof PedidoSchema>;
-export type AuditoriaRag = z.infer<typeof AuditoriaRagSchema>;
-export type LogAplicacion = z.infer<typeof LogAplicacionSchema>;
-export type DocumentoTecnico = z.infer<typeof DocumentoTecnicoSchema>;
-export type TipoDocumento = z.infer<typeof TipoDocumentoSchema>;
-export type Usuario = z.infer<typeof UsuarioSchema>;
-export type DocumentoUsuario = z.infer<typeof DocumentoUsuarioSchema>;
-export type UsageLog = z.infer<typeof UsageLogSchema>;
-export type Prompt = z.infer<typeof PromptSchema>;
-export type PromptVariable = z.infer<typeof PromptVariableSchema>;
-export type PromptVersion = z.infer<typeof PromptVersionSchema>;
-export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
-export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
-export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
-
-
-/**
- * Esquema para Invitaciones a la Plataforma (Fase 11.1)
- */
-export const InviteSchema = z.object({
-    _id: z.any().optional(),
-    email: z.string().email('Email inválido'),
-    tenantId: z.string(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA']),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
-    nombre: z.string().min(2, 'Nombre requerido').optional(),
-    apellidos: z.string().min(2, 'Apellidos requeridos').optional(),
-    token: z.string(),
-    invitadoPor: z.string(), // ID del usuario que invita
-    estado: z.enum(['PENDIENTE', 'ACEPTADA', 'EXPIRADA', 'CANCELADA']).default('PENDIENTE'),
-    expira: z.date(),
-    creado: z.date().default(() => new Date()),
-    usadoAt: z.date().optional(),
-});
-
-export const AcceptInviteSchema = z.object({
-    token: z.string(),
-    password: z.string()
-        .min(8, 'La contraseña debe tener al menos 8 caracteres')
-        .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-        .regex(/[0-9]/, 'Debe contener al menos un número'),
-    nombre: z.string().min(2, 'Nombre requerido'),
-    apellidos: z.string().min(2, 'Apellidos requeridos'),
-});
-
-/**
- * Esquema para Validación Humana Estructurada (Fase 6.4)
- */
-export const ValidacionItemSchema = z.object({
-    campo: z.string(), // Nombre del campo validado (ej: "modelo", "componente_X")
-    valorOriginal: z.any(), // Valor sugerido por el RAG
-    valorCorregido: z.any().optional(), // Valor corregido por el técnico (si aplica)
-    estado: z.enum(['APROBADO', 'CORREGIDO', 'RECHAZADO']),
-    comentario: z.string().optional(), // Razón de la corrección/rechazo
-});
-
-export const ValidacionSchema = z.object({
-    _id: z.any().optional(),
-    pedidoId: z.string(),
-    tenantId: z.string(),
-    validadoPor: z.string(), // ID del técnico que valida
-    nombreTecnico: z.string(),
-    items: z.array(ValidacionItemSchema),
-    estadoGeneral: z.enum(['APROBADO', 'PARCIAL', 'RECHAZADO']),
-    tiempoValidacion: z.number().optional(), // Segundos empleados
-    observaciones: z.string().optional(),
-    timestamp: z.date().default(() => new Date()),
-});
-
-export type ValidacionItem = z.infer<typeof ValidacionItemSchema>;
-export type Validacion = z.infer<typeof ValidacionSchema>;
-
-export type Invite = z.infer<typeof InviteSchema>;
-export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
 
 /**
  * Esquemas de Facturación (Fase 9.1)
@@ -671,6 +457,11 @@ export const MetricPricingSchema = z.object({
     baseFee: z.number().optional(), // Para FLAT_FEE_OVERAGE
     includedUnits: z.number().optional(), // Para FLAT_FEE_OVERAGE
     overagePrice: z.number().optional(), // Para FLAT_FEE_OVERAGE
+    overageRules: z.array(z.object({
+        thresholdPercent: z.number(), // e.g. 10 (110% usage of includedUnits)
+        action: z.enum(['SURCHARGE_PERCENT', 'SURCHARGE_FIXED', 'BLOCK']),
+        value: z.number().optional()  // percentage or fixed amount
+    })).optional(),
 });
 
 export const GlobalPricingPlanSchema = z.object({

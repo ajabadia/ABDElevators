@@ -1,7 +1,5 @@
-"use client";
-
 import React, { useEffect, useState } from 'react';
-import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard } from 'lucide-react';
+import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlanSelector } from './PlanSelector';
 
@@ -9,6 +7,7 @@ interface UsageStats {
     tokens: number;
     storage: number;
     searches: number;
+    reports_generated: number; // New metric
     api_requests: number;
     savings?: number;
     embeddings?: number;
@@ -20,9 +19,14 @@ interface UsageStats {
         storage: number;
         searches: number;
         api_requests: number;
+        reports: number; // New limit
     };
+    status?: {
+        metric: string;
+        state: 'ALLOWED' | 'SURCHARGE' | 'BLOCKED';
+        details?: string;
+    }[];
 }
-
 
 export function ConsumptionDashboard() {
     const [stats, setStats] = useState<UsageStats | null>(null);
@@ -76,53 +80,45 @@ export function ConsumptionDashboard() {
         return <div className="flex items-center justify-center p-20"><RefreshCcw className="animate-spin text-teal-600" /></div>;
     }
 
+    const blockedStatus = stats?.status?.find(s => s.state === 'BLOCKED');
+    const surchargeStatus = stats?.status?.find(s => s.state === 'SURCHARGE');
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header y Acción */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <Zap className="text-amber-500" /> Control de Consumo
                     </h2>
-                    <p className="text-slate-500 text-sm">
-                        Monitorización de recursos en tiempo real (SaaS Ready)
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-slate-500 text-sm">
+                            Monitorización de recursos en tiempo real
+                        </p>
                         {stats?.tier && (
-                            <span className="ml-2 px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-md text-xs font-bold">
+                            <span className="px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-md text-xs font-bold">
                                 Plan {stats.tier}
                             </span>
                         )}
-                    </p>
+                    </div>
                 </div>
+
+                {/* Status Alerts */}
+                {blockedStatus && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg border border-red-200 animate-pulse">
+                        <AlertTriangle size={18} />
+                        <span className="text-sm font-bold">Bloqueo Activo: {blockedStatus.details}</span>
+                    </div>
+                )}
+                {surchargeStatus && !blockedStatus && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg border border-amber-200">
+                        <CreditCard size={18} />
+                        <span className="text-sm font-bold">Recargo Activo: {surchargeStatus.details}</span>
+                    </div>
+                )}
+
                 <div className="flex items-center gap-3">
-                    {stats?.tier === 'FREE' && (
-                        <a
-                            href="/upgrade"
-                            className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/50 transition-all flex items-center gap-2"
-                        >
-                            <Zap size={16} />
-                            Actualizar Plan
-                        </a>
-                    )}
-                    {stats?.tier !== 'FREE' && (
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const res = await fetch('/api/billing/portal', { method: 'POST' });
-                                    const data = await res.json();
-                                    if (data.portalUrl) window.location.href = data.portalUrl;
-                                } catch (err) {
-                                    toast({
-                                        title: 'Error',
-                                        description: 'No se pudo abrir el portal de facturación.',
-                                        variant: 'destructive',
-                                    });
-                                }
-                            }}
-                            className="px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 transition-all"
-                        >
-                            Gestionar Suscripción
-                        </button>
-                    )}
+                    {/* Buttons... */}
                     <button
                         onClick={fetchStats}
                         className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-all"
@@ -134,6 +130,35 @@ export function ConsumptionDashboard() {
 
             {/* Grid de Métricas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                {/* Informes Generados (Principal) */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group overflow-hidden relative border-l-4 border-l-teal-500">
+                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
+                        <FileText size={120} />
+                    </div>
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-xl">
+                            <FileText size={24} />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Informes / Pedidos</span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+                        {stats?.reports_generated.toLocaleString()}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                        Informes generados
+                        {stats?.limits && stats.limits.reports !== Infinity && (
+                            <span className="ml-2 text-xs text-slate-400">/ {stats.limits.reports.toLocaleString()}</span>
+                        )}
+                    </p>
+                    <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.reports_generated || 0, stats?.limits?.reports || Infinity)) || 'bg-teal-500'}`}
+                            style={{ width: `${getUsagePercentage(stats?.reports_generated || 0, stats?.limits?.reports || Infinity)}%` }}
+                        ></div>
+                    </div>
+                </div>
+
                 {/* AI Tokens */}
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
                     <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
@@ -168,7 +193,7 @@ export function ConsumptionDashboard() {
                         <HardDrive size={120} />
                     </div>
                     <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-xl">
+                        <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-xl">
                             <Database size={24} />
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Almacenamiento</span>
@@ -184,7 +209,7 @@ export function ConsumptionDashboard() {
                     </p>
                     <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) || 'bg-teal-500'}`}
+                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)) || 'bg-indigo-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.storage || 0, stats?.limits?.storage || Infinity)}%` }}
                         ></div>
                     </div>
@@ -214,34 +239,6 @@ export function ConsumptionDashboard() {
                         <div
                             className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)) || 'bg-amber-500'}`}
                             style={{ width: `${getUsagePercentage(stats?.searches || 0, stats?.limits?.searches || Infinity)}%` }}
-                        ></div>
-                    </div>
-                </div>
-
-                {/* API Requests */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
-                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
-                        <Activity size={120} />
-                    </div>
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-xl">
-                            <Activity size={24} />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tráfico API</span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {stats?.api_requests.toLocaleString()}
-                    </h3>
-                    <p className="text-sm text-slate-500">
-                        Llamadas totales
-                        {stats?.limits && stats.limits.api_requests !== Infinity && (
-                            <span className="ml-2 text-xs text-slate-400">/ {stats.limits.api_requests.toLocaleString()}</span>
-                        )}
-                    </p>
-                    <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-1000 ${getAlertColor(getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)) || 'bg-purple-500'}`}
-                            style={{ width: `${getUsagePercentage(stats?.api_requests || 0, stats?.limits?.api_requests || Infinity)}%` }}
                         ></div>
                     </div>
                 </div>
@@ -322,9 +319,9 @@ export function ConsumptionDashboard() {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.tipo === 'LLM_TOKENS' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' :
-                                                log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
-                                                    log.tipo === 'SAVINGS_TOKENS' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' :
-                                                        'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
+                                            log.tipo === 'STORAGE_BYTES' ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600' :
+                                                log.tipo === 'SAVINGS_TOKENS' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' :
+                                                    'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
                                             }`}>
                                             {log.tipo}
                                         </span>

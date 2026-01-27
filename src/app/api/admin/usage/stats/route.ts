@@ -40,8 +40,30 @@ export async function GET(req: NextRequest) {
             }
         ]).toArray();
 
+        // Helper para calcular estado (Bloqueo/Recargo)
+        const calculateStatus = (usage: number, metricConfig: any) => {
+            if (!metricConfig?.overageRules || !metricConfig.includedUnits) return null;
+            const percent = (usage / metricConfig.includedUnits) * 100;
+            const rule = [...metricConfig.overageRules]
+                .sort((a: any, b: any) => b.thresholdPercent - a.thresholdPercent)
+                .find((r: any) => percent > r.thresholdPercent);
+
+            if (rule) {
+                return {
+                    state: rule.action === 'BLOCK' ? 'BLOCKED' : 'SURCHARGE',
+                    details: `Superado ${rule.thresholdPercent}%: ${rule.action === 'BLOCK' ? 'Servicio Bloqueado' : 'Recargo aplicado'}`
+                };
+            }
+            return null;
+        };
+
+        const reportsUsage = stats.find(s => s._id === 'REPORTS_GENERATED')?.total || 0;
+        const reportsConfig = plan?.metrics?.REPORTS;
+        const reportsStatus = calculateStatus(reportsUsage, reportsConfig);
+
         // 4. Formatear respuesta amigable con los nuevos límites
         const formattedStats = {
+            reports_generated: reportsUsage,
             tokens: stats.find(s => s._id === 'LLM_TOKENS')?.total || 0,
             storage: stats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
             searches: stats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
@@ -51,14 +73,18 @@ export async function GET(req: NextRequest) {
             tier: plan?.name?.toUpperCase() || 'STANDARD',
             planSlug: planSlug,
             limits: {
-                tokens: plan?.metrics?.REPORTS?.includedUnits ?? 100000,
+                reports: reportsConfig?.includedUnits ?? 10,
+                tokens: plan?.metrics?.REPORTS?.includedUnits ? Infinity : 100000, // Legacy fallback
                 storage: plan?.metrics?.STORAGE?.includedUnits ?? (1024 * 1024 * 1024), // 1GB default
                 searches: plan?.metrics?.VECTOR_SEARCH?.includedUnits ?? 500,
                 api_requests: plan?.metrics?.API_CALLS?.includedUnits ?? 1000,
             },
+            status: [
+                reportsStatus ? { metric: 'REPORTS', ...reportsStatus } : null
+            ].filter(Boolean),
             history: await collection.find({ tenantId })
                 .sort({ timestamp: -1 })
-                .limit(20)
+                .limit(50)
                 .toArray()
         };
 

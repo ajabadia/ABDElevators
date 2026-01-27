@@ -6,19 +6,24 @@ import {
 
 export interface BillingResult {
     totalCost: number;
+    status: 'ALLOWED' | 'SURCHARGE' | 'BLOCKED';
+    actionApplied?: string;
     details: {
         totalUsage: number;
         coveredByCredits: number;
         billableUsage: number;
         unitPriceUsed?: number;
         breakdown?: any[];
+        overageUnits?: number;
+        baseFeeApplied?: number;
+        surchargeApplied?: number;
     };
     currency: string;
 }
 
 /**
- * Motor de Facturación Avanzada (Fase 9.1)
- * Implementa lógica de Tiers, Rappels y Créditos de cortesía.
+ * Motor de Facturación Avanzada (Fase 9.1 + Monetización Híbrida)
+ * Implementa lógica de Tiers, Rappels, Créditos y Smart Overage.
  */
 export class BillingEngine {
 
@@ -36,14 +41,17 @@ export class BillingEngine {
         const coveredByCredits = usage - billableUsage;
 
         let totalCost = 0;
+        let status: 'ALLOWED' | 'SURCHARGE' | 'BLOCKED' = 'ALLOWED';
+        let actionApplied: string | undefined;
+
         let details: any = {
             totalUsage: usage,
             coveredByCredits,
             billableUsage
         };
 
-        if (billableUsage <= 0) {
-            return { totalCost: 0, details, currency: pricing.currency };
+        if (billableUsage <= 0 && pricing.type !== 'FLAT_FEE_OVERAGE') {
+            return { totalCost: 0, status: 'ALLOWED', details, currency: pricing.currency };
         }
 
         // 2. Aplicar lógica según el tipo de tarificación
@@ -66,15 +74,54 @@ export class BillingEngine {
                 break;
 
             case 'FLAT_FEE_OVERAGE':
-                const overageUnits = Math.max(0, billableUsage - (pricing.includedUnits || 0));
-                totalCost = (pricing.baseFee || 0) + (overageUnits * (pricing.overagePrice || 0));
+                const included = pricing.includedUnits || 0;
+                const overageUnits = Math.max(0, billableUsage - included);
+                const baseCost = (pricing.baseFee || 0) + (overageUnits * (pricing.overagePrice || 0));
+
+                totalCost = baseCost;
                 details.overageUnits = overageUnits;
                 details.baseFeeApplied = pricing.baseFee;
+
+                // Smart Overage Logic
+                if (pricing.overageRules && pricing.overageRules.length > 0 && included > 0) {
+                    const usagePercent = (billableUsage / included) * 100;
+
+                    // Encontrar la regla aplicable más estricta (mayor threshold superado)
+                    const applicableRule = [...pricing.overageRules]
+                        .sort((a, b) => b.thresholdPercent - a.thresholdPercent)
+                        .find(rule => usagePercent > rule.thresholdPercent);
+
+                    if (applicableRule) {
+                        if (applicableRule.action === 'BLOCK') {
+                            status = 'BLOCKED';
+                            actionApplied = `Bloqueo por exceder ${applicableRule.thresholdPercent}%`;
+                        } else if (applicableRule.action.startsWith('SURCHARGE')) {
+                            status = 'SURCHARGE';
+                            let surcharge = 0;
+
+                            if (applicableRule.action === 'SURCHARGE_PERCENT') {
+                                // Recargo porcentual sobre el total (o sobre el overage? usualmente total si es penalización)
+                                // Asumimos sobre el coste del overage para no ser draconianos, o sobre base?
+                                // Regla: Recargo sobre la factura acumulada de este concepto.
+                                surcharge = totalCost * ((applicableRule.value || 0) / 100);
+                                actionApplied = `Recargo ${applicableRule.value}% por uso > ${applicableRule.thresholdPercent}%`;
+                            } else {
+                                surcharge = applicableRule.value || 0;
+                                actionApplied = `Recargo fijo ${applicableRule.value} por uso > ${applicableRule.thresholdPercent}%`;
+                            }
+
+                            totalCost += surcharge;
+                            details.surchargeApplied = surcharge;
+                        }
+                    }
+                }
                 break;
         }
 
         return {
             totalCost: Math.round(totalCost * 100) / 100, // Round to 2 decimals
+            status,
+            actionApplied,
             details,
             currency: pricing.currency
         };

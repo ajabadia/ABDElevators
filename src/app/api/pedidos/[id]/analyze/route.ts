@@ -4,6 +4,8 @@ import { agentEngine } from '@/lib/agent-engine';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError } from '@/lib/errors';
+import { AccessControlService } from '@/lib/access-control';
+import { UsageService } from '@/lib/usage-service';
 import crypto from 'crypto';
 
 /**
@@ -36,6 +38,9 @@ export async function GET(
             };
 
             try {
+                // Validación de Cuota/Facturación antes de iniciar (Monetización)
+                await AccessControlService.checkUsageLimits(tenantId, 'REPORTS');
+
                 // 3. Obtener el pedido para tener el texto inicial
                 const db = await connectDB();
                 const pedido = await db.collection('pedidos').findOne({
@@ -101,6 +106,13 @@ export async function GET(
                             }
                         }
                     );
+
+                    // Registrar consumo de "REPORTS" (Facturación)
+                    try {
+                        await UsageService.trackReportGeneration(tenantId, id);
+                    } catch (usageErr) {
+                        console.error('Error logging report usage:', usageErr);
+                    }
                 }
 
                 sendEvent('complete', {
@@ -112,8 +124,13 @@ export async function GET(
                 controller.close();
 
             } catch (error: any) {
-                console.error('[AGENTIC_STREAM_ERROR]', error);
-                sendEvent('error', { message: error.message || 'Error interno en el agente' });
+                // Manejo especial para errores de facturación (AccessControl)
+                if (error instanceof AppError && error.code === 'FORBIDDEN') {
+                    sendEvent('error', { message: error.message, type: 'BILLING_BLOCK' });
+                } else {
+                    console.error('[AGENTIC_STREAM_ERROR]', error);
+                    sendEvent('error', { message: error.message || 'Error interno en el agente' });
+                }
                 controller.close();
             }
         }

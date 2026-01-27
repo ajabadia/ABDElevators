@@ -83,18 +83,20 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### ✅ Completed (as of 2026‑01‑22)
+### ✅ Completed (as of 2026‑01‑27)
 - Dynamic Prompt Management (schemas, PromptService, API, seed script).
 - RiskAlerter UI component and integration.
 - Human Validation Workflow (checkpoint técnico, audit trail, multi-tenant).
 - LLM Report Generation (Gemini-powered technical reports with versioning).
-- Full SaaS Billing (Stripe integration, automated usage tracking, plan management).
-- Advanced Multi-Tenancy (Tenant switching, cross-tenant admin).
+- Full SaaS Billing (Hybrid logic: Reports + Tokens, automated usage tracking).
+- Smart Overage Implementation (Tiered surcharges: 100% threshold, Blocking: 120%).
+- Advanced Multi-Tenancy (Tenant switching, cross-tenant admin, context-aware billing).
 - Governance Dashboard (SuperAdmin global metrics and system health).
 - **Identity Suite Migration:** Dedicated auth database (ABDElevators-Auth) for user security.
 - **Multi-Factor Authentication (MFA):** TOTP implementation with QR codes and recovery codes.
 - **Session Control:** Remote session monitoring and revocation for users and admins.
 - **RAG Optimization:** Migration to **Gemini 3 Flash/Pro** and **MD5 Deduplication** engine.
+- **Profile UI Refactor:** Segmented layout with active sessions and security settings.
 
 ---
 
@@ -303,18 +305,21 @@ Implementar el sistema completo de facturación y trackeo de uso para convertir 
 #### 9.2 Billing Dashboard (COMPLETADO ✅)
 - [x] **Componente `ConsumptionDashboard.tsx`**
   - [x] Gráficos de consumo (tokens LLM, storage GB, searches).
+  - [x] **Métrica de Informes Generados** (Principal indicador de valor).
   - [x] Tabla de desglose por servicio.
   - [x] Alertas de límites (80% amarillo, 100% rojo).
+  - [x] **Indicadores de Estado Activo** (Bloqueo / Recargo).
   - [x] Barras de progreso dinámicas basadas en consumo real.
 - [x] **Página `/admin/billing`**
-  - [x] Vista de consumo actual del mes.
-  - [x] Historial de actividad (últimos 20 eventos).
-  - [x] Badge de plan actual (FREE/PRO/ENTERPRISE).
+  - [x] Vista de consumo actual del mes con Smart Overage logic.
+  - [x] Historial de actividad (últimos 50 eventos).
+  - [x] Badge de plan actual (FREE/STANDARD/PRO/ENTERPRISE).
   - [x] Botones de gestión (Upgrade/Manage Subscription).
-- [x] **Límites por Plan**
-  - [x] Definir tiers: Free (100k tokens/mes), Pro (1M tokens/mes), Enterprise (ilimitado).
-  - [x] Middleware `usage-limiter.ts` para bloquear requests si se excede el límite.
-  - [x] Sistema de planes en `src/lib/plans.ts`.
+- [x] **Límites por Plan (Smart Overage)**
+  - [x] Definir tiers: Free, Standard (10 informes), Pro (50 informes), Enterprise.
+  - [x] Middleware `access-control.ts` para bloquear requests si se excede el límite crítico (120%).
+  - [x] Sistema de recargos automáticos (20% en Standard, 5% en Pro) configurado en `BillingEngine`.
+  - [x] Sistema de planes en `src/lib/plans.ts` y seeding automatizado.
 
 #### 9.3 Integración Stripe (COMPLETADO ✅ - 2026-01-23)
 - [x] **Servicio de Stripe**

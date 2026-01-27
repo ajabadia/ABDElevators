@@ -78,6 +78,20 @@ export class UsageService {
     }
 
     /**
+     * Registra la generación de un nuevo informe/pedido.
+     */
+    static async trackReportGeneration(tenantId: string, pedidoId: string, correlacion_id?: string) {
+        return this.logUsage({
+            tenantId,
+            tipo: 'REPORTS_GENERATED',
+            valor: 1, // 1 Informe
+            recurso: pedidoId,
+            descripcion: `Generación de informe para pedido ${pedidoId}`,
+            correlacion_id
+        });
+    }
+
+    /**
      * Método interno para persistir el log de uso.
      */
     private static async logUsage(data: any) {

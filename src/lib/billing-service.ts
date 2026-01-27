@@ -103,7 +103,7 @@ export class BillingService {
     }
 
     /**
-     * Inyecta los planes comerciales por defecto (Fase 9.1)
+     * Inyecta los planes comerciales por defecto (Fase 9.1 + Monetización Híbrida)
      * Diseñado para ser llamado desde la UI de SuperAdmin.
      */
     static async seedDefaultPlans() {
@@ -125,7 +125,11 @@ export class BillingService {
                         currency: 'EUR',
                         baseFee: 0,
                         includedUnits: 10,
-                        overagePrice: 2.00
+                        overagePrice: 2.00,
+                        overageRules: [
+                            { thresholdPercent: 120, action: 'BLOCK' }, // >120% (12 informes) bloquea
+                            { thresholdPercent: 100, action: 'SURCHARGE_PERCENT', value: 20 } // >100% (10 informes) aplica recargo 20% sobre overage
+                        ]
                     },
                     API_CALLS: { type: 'FIXED', unitPrice: 0.10 }
                 }
@@ -147,6 +151,9 @@ export class BillingService {
                             { from: 0, to: 50, unitPrice: 0 }, // Incluidos en el fee
                             { from: 51, to: 200, unitPrice: 1.50 },
                             { from: 201, to: null, unitPrice: 1.20 }
+                        ],
+                        overageRules: [
+                            { thresholdPercent: 110, action: 'SURCHARGE_PERCENT', value: 5 } // >110% uso aplica recargo del 5%
                         ]
                     },
                     API_CALLS: { type: 'FIXED', unitPrice: 0.05 }
@@ -252,7 +259,7 @@ export class BillingService {
      */
     private static mapMetricToUsageType(metric: string): string {
         const maps: Record<string, string> = {
-            'REPORTS': 'LLM_TOKENS', // Podríamos cambiarlo a 'REPORTS_GENERATED' si cobramos por unidad
+            'REPORTS': 'REPORTS_GENERATED',
             'API_CALLS': 'API_CALL',
             'STORAGE': 'STORAGE_BYTES'
         };

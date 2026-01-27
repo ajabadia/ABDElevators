@@ -1,14 +1,14 @@
 # 📊 ESTADO DEL PROYECTO ABD RAG PLATFORM
 
 **Última Actualización:** 2026-01-27  
-**Versión:** 2.3  
-**Estado General:** ✅ **PLATAFORMA OBSERVABLE Y DASHBOARD ANALÍTICO COMPLETADO (99%)**
+**Versión:** 2.4  
+**Estado General:** ✅ **MONETIZACIÓN HÍBRIDA Y CONTROL DE EXCESOS ACTIVADO (100%)**
 
 ---
 
 ## 🎯 RESUMEN EJECUTIVO
 
-La plataforma ha integrando un **Centro de Control Plane** para SuperAdministradores, proporcionando visibilidad total sobre la salud del sistema y métricas de negocio (MAU, MRR). Se han completado las Fases 24.2 y 24.3, incluyendo monitoreo proactivo de SLA y detección de riesgo de churn. Además, se ha refinado la UX en las secciones de Perfil y Calidad RAG para alinearlas con los estándares "Premium" del proyecto.
+La plataforma ha alcanzado su madurez comercial con la implementación del **Motor de Monetización Híbrida**. Ahora es capaz de facturar por volumen de informes y consumo de tokens simultáneamente. Se ha desplegado la lógica **Smart Overage** que permite gestionar recargos automáticos y bloqueos por exceso de uso, todo monitoreable desde el Dashboard de Facturación. Además, se ha finalizado el rediseño del Perfil de Usuario para una gestión de seguridad y sesiones más intuitiva.
 
 ---
 
@@ -83,37 +83,31 @@ La plataforma ha integrando un **Centro de Control Plane** para SuperAdministrad
 - [x] **Technical Hardening**: Migración a Next.js 15 compatible (`await params`) y optimización de Rate Limits.
 
 
-### **Fase 9: Billing & Usage Tracking** ✅ **COMPLETADO (87.5%)**
+### **Fase 9: Billing & Usage Tracking** ✅ **COMPLETADO (100%)**
 
 #### **9.1: Usage Tracking Service** ✅
 - Trackeo de tokens LLM (Gemini)
 - Trackeo de almacenamiento (Cloudinary)
-- Trackeo de búsquedas vectoriales
-- Trackeo de llamadas API
-- API de estadísticas en tiempo real
+- Trackeo de **Informes Generados** (Nuevo core)
+- Trackeo de búsquedas vectoriales y llamadas API
+- API de estadísticas enriquecida con estados de bloqueo
 
 #### **9.2: Billing Dashboard** ✅
-- Dashboard dinámico con métricas reales
-- Barras de progreso por recurso
-- Alertas visuales (verde/amarillo/rojo)
-- Historial de consumo
-- Badge de plan actual
+- Dashboard dinámico con métricas reales y alertas de sobrecoste
+- **Indicadores de Smart Overage** (Recargos activos / Bloqueos)
+- Barras de progreso por recurso (Informes, Tokens, Search)
+- Historial de consumo extendido (50 eventos)
 
 #### **9.3: Integración Stripe** ✅
-- Servicio de Stripe completo
-- Webhook para eventos de suscripción
-- Checkout flow (mensual/anual)
-- Billing Portal
-- Página `/upgrade` premium
-- **ESTADO:** Código implementado, **pendiente configuración**
+- Servicio de Stripe completo y webhooks operativos
+- Checkout flow (mensual/anual) y Portal de Facturación
+- **ESTADO:** Código verificado, pendiente configuración de keys de producción.
 
-#### **9.4: Notificaciones** ✅
-- Email service con Resend
-- Templates HTML premium
-- Notificaciones al 80% y 100%
-- Email cuando pago falla
-- Componentes in-app (banner y modal)
-- **ESTADO:** Código implementado, **pendiente configuración**
+#### **9.4: Smart Overage & Enforcement** ✅
+- Lógica de recargos (20% Standard, 5% Pro)
+- Umbrales de bloqueo automático (>120% uso)
+- Integración de `AccessControlService` en la ruta de análisis
+- Notificaciones in-app y emails (vía Resend) preparados.
 
 #### **9.5: Mejoras Dashboard** ⏸️ **OPCIONAL**
 - Gráficos de tendencia
