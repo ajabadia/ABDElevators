@@ -8,6 +8,7 @@ import { User as UserIcon, Shield, Key, Bell } from 'lucide-react';
 import { UserNotificationPreferencesForm } from '@/components/perfil/UserNotificationPreferencesForm';
 import { ActiveSessionsForm } from '@/components/perfil/ActiveSessionsForm';
 import { MfaSettingsForm } from '@/components/perfil/MfaSettingsForm';
+import { UserEfficiencyStats } from '@/components/perfil/UserEfficiencyStats';
 
 /**
  * Página de Perfil de Usuario
@@ -75,6 +76,9 @@ export default async function PerfilPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Estadísticas de Eficiencia (Fase 24.2 - User View) */}
+                    <UserEfficiencyStats />
                 </div>
 
                 {/* Columna Derecha: Formularios Detallados */}

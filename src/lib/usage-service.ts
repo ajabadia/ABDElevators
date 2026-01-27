@@ -213,4 +213,47 @@ export class UsageService {
             };
         }
     }
+
+    /**
+     * Calcula métricas de eficiencia personal para un usuario (Fase 24.2)
+     * Basado en Validaciones realizadas y Tickets de soporte.
+     */
+    static async getUserMetrics(userId: string, tenantId: string) {
+        try {
+            const db = await connectDB();
+
+            // 1. Validaciones Realizadas (Calidad)
+            // Asumiendo que existe colección 'validaciones' basada en ValidacionSchema
+            const validacionesColl = db.collection('validaciones');
+            const validationsCount = await validacionesColl.countDocuments({
+                tenantId: tenantId,
+                validadoPor: userId
+            });
+
+            // 2. Tickets Creados (Soporte)
+            const ticketsColl = db.collection('tickets');
+            const ticketsCreated = await ticketsColl.countDocuments({
+                tenantId: tenantId,
+                createdBy: userId
+            });
+
+            // 3. Tickets Resueltos (Si es Admin/Técnico que resuelve)
+            const ticketsResolved = await ticketsColl.countDocuments({
+                tenantId: tenantId,
+                assignedTo: userId,
+                status: 'RESOLVED'
+            });
+
+            return {
+                validationsCount,
+                ticketsCreated,
+                ticketsResolved,
+                efficiencyScore: Math.min(100, (validationsCount * 5) + (ticketsResolved * 10)) // Score simple
+            };
+
+        } catch (error) {
+            console.error('[UsageService] Error calculating User Metrics:', error);
+            return { validationsCount: 0, ticketsCreated: 0, ticketsResolved: 0, efficiencyScore: 0 };
+        }
+    }
 }
