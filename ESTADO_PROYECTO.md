@@ -35,11 +35,11 @@ La plataforma ha integrando un **Centro de Control Plane** para SuperAdministrad
   - [x] **AI Governance Layer**: Global Audit Log, Tenant Branding.
   - [ ] Unified Support Hub (Planned)
 
-### **Fase 24: Observabilidad & Logs** ✅ **COMPLETADO (95%)**
+### **Fase 24: Observabilidad & Logs** ✅ **COMPLETADO (98%)**
 - **Log Explorer & Diagnostics**: Dashboard de trazas en tiempo real con filtrado avanzado.
 - **Platform Analytics Dashboard**: ✅ Vista unificada de métricas de negocio (MRR, MAU) y salud técnica para SuperAdmins.
 - **Observability Service**: ✅ Detección proactiva de violaciones de SLA y alertas de inactividad de tenants.
-- **Tenant ROI Dashboard**: 🔄 En progreso (Fase 24.2b).
+- **Tenant ROI Dashboard**: ✅ Calculadora de ahorro (tiempo/dinero) integrada para administradores de organización.
 
 ### **Mejoras UX & Refinamiento Visual (Q1 2026)** ✅
 - [x] **Profile Page Redesign**: Nueva distribución asimétrica y segmentada para mejor usabilidad.
