@@ -24,7 +24,8 @@ import {
     ShieldAlert,
     Search,
     ShieldCheck,
-    Activity
+    Activity,
+    TrendingUp
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -146,6 +147,12 @@ export function AppSidebar() {
             href: '/admin/auditoria',
             icon: History,
             roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'Analíticas Globales',
+            href: '/admin/analytics',
+            icon: TrendingUp,
+            roles: ['SUPER_ADMIN']
         },
         {
             name: 'Calidad RAG',
