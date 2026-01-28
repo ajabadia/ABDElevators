@@ -21,7 +21,10 @@ export async function GET(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const db = await connectDB();
         const configs = await db.collection('configs_checklist')
             .find({ tenantId })
@@ -74,7 +77,10 @@ export async function POST(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const body = await req.json();
 
         // Inyectar tenantId si no viene

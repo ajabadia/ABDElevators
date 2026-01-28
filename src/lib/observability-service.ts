@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { NotificationService } from './notification-service';
 
@@ -46,8 +46,9 @@ export class ObservabilityService {
         const fortyEightHoursAgo = new Date();
         fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
 
+        const authDb = await connectAuthDB();
         // Buscar tenants que tenían actividad pero llevan > 48h en silencio
-        const activeTenants = await db.collection('tenants').find({ status: 'active' }).toArray();
+        const activeTenants = await authDb.collection('tenants').find({ status: 'active' }).toArray();
 
         for (const tenant of activeTenants) {
             const lastActivity = await db.collection('usage_logs')

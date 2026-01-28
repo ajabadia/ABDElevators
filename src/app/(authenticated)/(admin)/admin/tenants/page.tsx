@@ -549,9 +549,9 @@ export default function TenantsPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div
                                         onClick={() => setConfig(prev => prev ? { ...prev, storage: { ...prev.storage, provider: 'cloudinary' } } : null)}
-                                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage.provider === 'cloudinary' ? 'border-teal-600 bg-teal-50' : 'border-slate-100 hover:border-slate-200'}`}
+                                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage?.provider === 'cloudinary' ? 'border-teal-600 bg-teal-50' : 'border-slate-100 hover:border-slate-200'}`}
                                     >
-                                        <Cloud className={config?.storage.provider === 'cloudinary' ? 'text-teal-600' : 'text-slate-400'} size={24} />
+                                        <Cloud className={config?.storage?.provider === 'cloudinary' ? 'text-teal-600' : 'text-slate-400'} size={24} />
                                         <h4 className="font-bold mt-2">Cloudinary</h4>
                                         <p className="text-[10px] text-slate-500 mt-1">Óptimo para PDFs e imágenes con CDN.</p>
                                     </div>
@@ -566,12 +566,12 @@ export default function TenantsPage() {
                                     <Label htmlFor="folder_prefix">Directorio Raíz (Storage Isolation)</Label>
                                     <Input
                                         id="folder_prefix"
-                                        value={config?.storage.settings.folder_prefix}
+                                        value={config?.storage?.settings?.folder_prefix || ''}
                                         onChange={(e) => setConfig(prev => prev ? {
                                             ...prev,
                                             storage: {
                                                 ...prev.storage,
-                                                settings: { ...prev.storage.settings, folder_prefix: e.target.value }
+                                                settings: { ...(prev.storage?.settings || {}), folder_prefix: e.target.value }
                                             }
                                         } : null)}
                                         className="font-mono text-xs bg-slate-50"
@@ -588,12 +588,12 @@ export default function TenantsPage() {
                                             <p className="text-xs text-slate-500">Límite de documentos procesados.</p>
                                         </div>
                                         <span className="text-3xl font-bold font-outfit text-teal-600">
-                                            {config ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
+                                            {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
                                         </span>
                                     </div>
                                     <Input
                                         type="number"
-                                        value={config ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0}
+                                        value={config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0}
                                         onChange={(e) => {
                                             const mb = parseInt(e.target.value) || 0;
                                             setConfig(prev => prev ? {

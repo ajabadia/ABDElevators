@@ -14,6 +14,7 @@ export function NotificationBell() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     const fetchNotifications = async () => {
         try {
@@ -30,6 +31,7 @@ export function NotificationBell() {
     };
 
     useEffect(() => {
+        setMounted(true);
         fetchNotifications();
         // Polling cada 60 segundos (opcional, para demo)
         const interval = setInterval(fetchNotifications, 60000);
@@ -153,7 +155,7 @@ export function NotificationBell() {
                                                         <div className="flex items-center justify-between pt-1">
                                                             <span className="text-[10px] text-slate-400 flex items-center gap-1">
                                                                 <Clock size={10} />
-                                                                {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: es })}
+                                                                {mounted ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: es }) : 'Cargando...'}
                                                             </span>
                                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 {n.link && (

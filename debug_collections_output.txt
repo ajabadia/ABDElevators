@@ -1,0 +1,1 @@
+Error: querySrv ENOTFOUND _mongodb._tcp.db-mongodb-fra1-40590-c246f667.mongo.ondigitalocean.com

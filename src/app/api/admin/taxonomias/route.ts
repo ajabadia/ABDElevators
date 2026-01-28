@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const industry = (session.user as any).industry || 'ELEVATORS';
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
 
         const taxonomies = await TaxonomyService.getTaxonomies(tenantId, industry);
         return NextResponse.json({ taxonomies });
@@ -36,7 +37,8 @@ export async function POST(req: NextRequest) {
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const body = await req.json();
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         const industry = (session.user as any).industry || 'ELEVATORS';
 
         const result = await TaxonomyService.createTaxonomy({

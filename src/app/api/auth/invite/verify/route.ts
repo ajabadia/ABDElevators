@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
             throw new ValidationError('Token no proporcionado');
         }
 
-        const db = await connectDB();
-        const invite = await db.collection('invitaciones').findOne({ token });
+        const authDb = await connectAuthDB();
+        const invite = await authDb.collection('invitaciones').findOne({ token });
 
         if (!invite) {
             throw new NotFoundError('Invitación no encontrada');
@@ -31,15 +31,15 @@ export async function GET(req: NextRequest) {
 
         if (new Date() > new Date(invite.expira)) {
             // Marcar como expirada si no lo estaba
-            await db.collection('invitaciones').updateOne(
+            await authDb.collection('invitaciones').updateOne(
                 { _id: invite._id },
                 { $set: { estado: 'EXPIRADA' } }
             );
             throw new AppError('INVITE_EXPIRED', 400, 'La invitación ha expirado');
         }
 
-        // Obtener info del tenant
-        const tenant = await db.collection('tenants').findOne({ tenantId: invite.tenantId });
+        // Obtener info del tenant (MIGRADOS A AUTH)
+        const tenant = await authDb.collection('tenants').findOne({ tenantId: invite.tenantId });
 
         return NextResponse.json({
             valid: true,

@@ -1,5 +1,5 @@
 import { UsageService } from './usage-service';
-import { getTenantCollection } from './db-tenant';
+import { TenantService } from './tenant-service';
 import { TenantConfig, GlobalPricingPlanSchema } from './schemas';
 import { ObjectId } from 'mongodb';
 
@@ -60,27 +60,8 @@ export class BillingService {
      * Calcula la factura del mes actual (o especificado)
      */
     static async generateInvoicePreview(tenantId: string, month: number, year: number): Promise<InvoiceData> {
-        // 1. Obtener Configuración del Tenant
-        const { collection: tenantsColl } = await getTenantCollection('tenants'); // Actually standard collection
-        // Nota: getTenantCollection devuelve la colección tenant-isolated, pero 'tenants' suele ser global o meta-collection.
-        // Asumimos que podemos obtener el tenant config. En multi-tenant real, esto sería via TenantService.
-        // Por simplicidad en este sprint, simulamos recuperación.
-
-        let tenantConfig: TenantConfig | any = await tenantsColl.findOne({ tenantId });
-
-        // Mock si no existe
-        if (!tenantConfig) {
-            tenantConfig = {
-                tenantId,
-                name: tenantId === 'default_tenant' ? 'Demo Corp' : 'Tenant ' + tenantId,
-                subscription: { tier: 'PRO' },
-                billing: {
-                    fiscalName: 'Demo Corp S.L.',
-                    taxId: 'B12345678',
-                    billingAddress: { line1: 'Calle Falsa 123', city: 'Madrid', country: 'ES' }
-                }
-            };
-        }
+        // 1. Obtener Configuración del Tenant Real (Migrado a Auth DB)
+        const tenantConfig = await TenantService.getConfig(tenantId);
 
         const tier = (tenantConfig.subscription?.tier as keyof typeof PRICING_PLANS) || 'FREE';
         const plan = PRICING_PLANS[tier];
@@ -154,15 +135,29 @@ export class BillingService {
      * Guarda la configuración fiscal del tenant
      */
     static async updateFiscalData(tenantId: string, billingData: any) {
-        // Validar con Zod (TenantConfigSchema.shape.billing)
-        // Por brevedad, asumimos validación pre-limitrophe
-        const { collection } = await getTenantCollection('config'); // Store in config collection or modifying tenant doc
+        // Delegar en TenantService para asegurar persistencia en Auth DB
+        return await TenantService.updateConfig(tenantId, {
+            billing: billingData
+        });
+    }
+    /**
+     * Seeds the billing plans into the database.
+     * Used by scripts/seed-plans-v2.ts
+     */
+    static async seedDefaultPlans() {
+        const { connectDB } = await import('./db');
+        const db = await connectDB();
+        const { PLANS } = await import('./plans');
 
-        // Update logic...
-        // Aquí deberíamos actualizar el documento del Tenant.
-        // Dado que no tengo acceso directo a la colección 'tenants' global desde aquí sin TenantService,
-        // lo simulo devolviendo true. En produccion, importar TenantService.
+        const plansToInsert = Object.values(PLANS).map(plan => ({
+            ...plan,
+            slug: plan.tier.toLowerCase(),
+            active: true,
+            updatedAt: new Date()
+        }));
 
-        return true;
+        // Upsert logical: delete current and insert new (simple seed)
+        await db.collection('pricing_plans').deleteMany({});
+        return await db.collection('pricing_plans').insertMany(plansToInsert);
     }
 }

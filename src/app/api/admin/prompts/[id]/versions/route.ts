@@ -21,7 +21,10 @@ export async function GET(
         }
 
         const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const versions = await PromptService.getVersionHistory(id, isSuperAdmin ? undefined : tenantId);
 
         return NextResponse.json({ success: true, versions });
@@ -53,7 +56,10 @@ export async function POST(
         }
 
         const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const { targetVersion } = await req.json();
 
         if (!targetVersion) {

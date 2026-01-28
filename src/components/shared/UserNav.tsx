@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import {
     LogOut,
     User,
@@ -31,8 +32,17 @@ import Link from "next/link";
 export function UserNav() {
     const { data: session, update } = useSession();
     const user = session?.user;
+    const [mounted, setMounted] = useState(false);
 
-    if (!user) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || !user) return (
+        <div className="flex items-center gap-3 pl-2 opacity-50">
+            <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
+        </div>
+    );
 
     const initials = user.name
         ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)

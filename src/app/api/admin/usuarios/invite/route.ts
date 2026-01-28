@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
             throw new ValidationError('Tenant ID es requerido');
         }
 
-        // Obtener nombre del tenant para el email (Sigue en BIZ DB)
-        const tenant = await bizDb.collection('tenants').findOne({ tenantId });
+        // Obtener nombre del tenant para el email (Migrado a AUTH DB)
+        const tenant = await authDb.collection('tenants').findOne({ tenantId });
         const tenantName = tenant?.name || tenantId;
 
         // 3. Generar Token y Expira (7 días)

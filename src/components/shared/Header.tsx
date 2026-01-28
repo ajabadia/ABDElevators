@@ -6,6 +6,7 @@ import { useSidebar } from '@/context/SidebarContext';
 import { NotificationBell } from './NotificationBell';
 import { UserNav } from './UserNav';
 import { useSession } from 'next-auth/react';
+import { useBranding } from '@/context/BrandingContext';
 
 export function Header() {
     const { toggleSidebar } = useSidebar();

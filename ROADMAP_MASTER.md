@@ -53,7 +53,7 @@ This document consolidates **all** roadmap information, implementation plans, an
    - Bloquear guardado si excede tokens máximos seguros.
 2. **Estabilidad y Testeo (Unit Testing)** [ ]
    - Aumentar cobertura de tests unitarios al 80% en servicios críticos.
-3. **Gestión de Facturación (Nueva Fase 27)** [ ]
+3. **Gestión de Facturación (Nueva Fase 27)** [x]
    - Implementar generación de facturas PDF y datos fiscales.
 4. **Landing Page Reality Check (Fase 15)** [ ]
    - Auditoría completa de claims vs features reales.
@@ -146,10 +146,10 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Smart Ingestion (MD5)**: Deduplicación y Ahorro.
 - [x] **Auditoría de Ingesta**: Trazabilidad User/IP.
 
-#### 🧾 FASE 27: ENTERPRISE INVOICE MANAGER (PENDIENTE)
-- [ ] **Invoice Engine**: Generación PDF + Datos Fiscales.
-- [ ] **Self-Service**: Portal de descargas para clientes.
-- [ ] **Delivery**: Envío automático por email.
+#### 🧾 FASE 27: ENTERPRISE INVOICE MANAGER (COMPLETADO ✅)
+- [x] **Invoice Engine**: Generación PDF + Datos Fiscales.
+- [x] **Self-Service**: Portal de descargas para clientes.
+- [x] **Delivery**: Envío automático por email.
 
 #### 🔬 FASE 28: RAG ADVANCED OPTIMIZATION (I+D)
 - [ ] **Intelligent Chunking**: Semantic splitters.

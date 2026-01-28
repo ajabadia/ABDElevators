@@ -7,7 +7,7 @@ import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { PlanTier } from '@/lib/plans';
 import { sendPaymentFailedEmail } from '@/lib/email-service';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 
 /**
  * POST /api/webhooks/stripe
@@ -210,23 +210,24 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: stri
 
     // Enviar email de notificación al tenant
     try {
-        const db = await connectDB();
+        const authDb = await connectAuthDB();
+        const mainDb = await connectDB(); // Para logs si fuera necesario, pero usemos auth para identidad
 
         // Buscar tenant por stripe_customer_id
-        const tenant = await db.collection('tenants').findOne({
+        const tenant = await authDb.collection('tenants').findOne({
             'subscription.stripe_customer_id': customerId
         });
 
         if (tenant) {
             // Buscar admin del tenant
-            const admin = await db.collection('users').findOne({
+            const admin = await authDb.collection('users').findOne({
                 tenantId: tenant.tenantId,
                 role: 'ADMIN'
             });
 
             if (admin?.email) {
                 // Contar intentos fallidos
-                const failedPayments = await db.collection('logs').countDocuments({
+                const failedPayments = await authDb.collection('logs').countDocuments({
                     origen: 'STRIPE_WEBHOOK',
                     accion: 'PAYMENT_FAILED',
                     'detalles.customerId': customerId,
@@ -243,7 +244,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: stri
 
                 // Suspender cuenta si es el 3er intento fallido
                 if (failedPayments >= 2) {
-                    await db.collection('tenants').updateOne(
+                    await authDb.collection('tenants').updateOne(
                         { tenantId: tenant.tenantId },
                         {
                             $set: {

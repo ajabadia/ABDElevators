@@ -114,7 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         name: user.nombre,
                         role: user.rol, // Acting role
                         baseRole: user.rol, // Permanent role from DB
-                        tenantId: user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant',
+                        tenantId: user.tenantId || process.env.SINGLE_TENANT_ID,
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
                         image: user.foto_url,

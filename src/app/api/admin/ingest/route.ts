@@ -64,7 +64,10 @@ export async function POST(req: NextRequest) {
         });
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // 0. De-duplicación por MD5 (Ahorro de Tokens)
         const fileHash = crypto.createHash('md5').update(buffer).digest('hex');

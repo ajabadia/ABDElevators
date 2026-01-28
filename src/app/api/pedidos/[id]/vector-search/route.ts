@@ -26,7 +26,10 @@ export async function GET(
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const tenantId = session.user?.tenantId || 'default_tenant';
+        const tenantId = session.user?.tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // 1. Obtener el pedido para extraer contexto
         const db = await connectDB();

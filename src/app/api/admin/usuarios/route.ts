@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
             puesto: validated.puesto || '',
             rol: validated.rol,
             activeModules: validated.activeModules || ['TECHNICAL', 'RAG'],
-            tenantId: tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant',
+            tenantId: tenantId || process.env.SINGLE_TENANT_ID,
             industry: body.industry || (session?.user as any).industry || 'ELEVATORS',
             activo: true,
             creado: new Date(),

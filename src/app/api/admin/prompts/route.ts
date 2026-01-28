@@ -19,7 +19,10 @@ export async function GET(req: NextRequest) {
         }
 
         const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
         // False = incluir inactivos (para que los admins puedan verlos y reactivarlos)
@@ -60,7 +63,10 @@ export async function POST(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden crear prompts');
         }
 
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const body = await req.json();
 
         const promptData = {

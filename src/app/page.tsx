@@ -184,8 +184,8 @@ export default function Home() {
             />
             <EnterpriseFeature
               icon={<CreditCard className="text-amber-400" size={24} />}
-              title="Dashboard de Consumo"
-              description="Métricas en tiempo real de uso de IA, almacenamiento y búsquedas vectoriales."
+              title="Facturación Inteligente"
+              description="Generación automática de facturas PDF, cálculo de impuestos y desglose de consumo por proyecto."
             />
             <EnterpriseFeature
               icon={<Shield className="text-emerald-400" size={24} />}

@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
 
         const db = await connectDB();
         const userRole = session?.user?.role;
-        const tenantId = (session?.user as any).tenantId || 'default_tenant';
+        const tenantId = (session?.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // SuperAdmin ve todo, Admin/Ingeniería solo su tenant
         const filter = userRole === 'SUPER_ADMIN' ? {} : { tenantId };

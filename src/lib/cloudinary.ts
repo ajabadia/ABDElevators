@@ -51,7 +51,7 @@ async function uploadToFolder(
 export async function uploadRAGDocument(
     buffer: Buffer,
     filename: string,
-    tenantId: string = 'default_tenant'
+    tenantId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
     // 1. Verificar quota del tenant
     const hasQuota = await TenantService.hasStorageQuota(tenantId, buffer.length);
@@ -145,7 +145,7 @@ export async function uploadProfilePhoto(
 export async function uploadPDFToCloudinary(
     buffer: Buffer,
     filename: string,
-    tenantId: string = 'default_tenant',
+    tenantId: string,
     folder: string = ''
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
     const targetFolder = folder || `abd-elevators/tenants/${tenantId}/documentos`;

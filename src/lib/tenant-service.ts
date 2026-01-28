@@ -1,4 +1,4 @@
-import { connectDB } from "./db";
+import { connectAuthDB } from "./db";
 import { TenantConfigSchema } from "./schemas";
 import { AppError, NotFoundError } from "./errors";
 import { logEvento } from "./logger";
@@ -12,29 +12,12 @@ export class TenantService {
      */
     static async getConfig(tenantId: string) {
         try {
-            const db = await connectDB();
+            const db = await connectAuthDB();
             const config = await db.collection('tenants').findOne({ tenantId });
+            // ... (rest of the file using connectAuthDB)
 
             if (!config) {
-                // Fallback a configuración default si no existe (bootstrap)
-                return {
-                    tenantId,
-                    name: 'Default Organization',
-                    industry: 'GENERIC' as const,
-                    storage: {
-                        provider: 'cloudinary' as const,
-                        settings: {
-                            folder_prefix: 'abd-rag-platform/default'
-                        },
-                        quota_bytes: 50 * 1024 * 1024 // 50MB trial
-                    },
-                    subscription: {
-                        tier: 'FREE' as const,
-                        status: 'ACTIVE' as const,
-                    },
-                    active: true,
-                    creado: new Date(),
-                };
+                throw new NotFoundError(`Tenant config not found for ID: ${tenantId}`);
             }
 
 
@@ -50,7 +33,7 @@ export class TenantService {
      */
     static async hasStorageQuota(tenantId: string, bytesToUpload: number): Promise<boolean> {
         const config = await this.getConfig(tenantId);
-        const db = await connectDB();
+        const db = await connectAuthDB();
 
         // Sumar todo el almacenamiento registrado en UsageLog
         const usage = await db.collection('usage_logs').aggregate([
@@ -66,7 +49,7 @@ export class TenantService {
      * Obtiene todos los tenants (solo para super-admin)
      */
     static async getAllTenants() {
-        const db = await connectDB();
+        const db = await connectAuthDB();
         return await db.collection('tenants').find({}).toArray();
     }
 
@@ -75,7 +58,7 @@ export class TenantService {
      */
     static async updateConfig(tenantId: string, data: any, metadata?: { performedBy: string, correlacion_id?: string }) {
         try {
-            const db = await connectDB();
+            const db = await connectAuthDB();
 
             // 1. Obtener estado previo para auditoría
             const previousState = await db.collection('tenants').findOne({ tenantId });

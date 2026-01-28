@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         const authDb = await connectAuthDB();
 
         // 1. Totales básicos
-        const totalTenants = await db.collection('tenants').countDocuments();
+        const totalTenants = await authDb.collection('tenants').countDocuments();
         const totalUsers = await authDb.collection('users').countDocuments();
         const totalFiles = await db.collection('documentos_tecnicos').countDocuments();
         const totalCases = await db.collection('pedidos').countDocuments();
@@ -33,11 +33,11 @@ export async function GET(req: NextRequest) {
         });
 
         // 3. Estimated MRR (Monthly Recurring Revenue)
-        const tenants = await db.collection('tenants').find({}).toArray();
+        const tenants = await authDb.collection('tenants').find({}).toArray();
         let estimatedMRR = 0;
         tenants.forEach((t: any) => {
-            if (t.subscription?.status === 'active' || t.subscription?.status === 'trialing') {
-                const plan = t.subscription.plan || 'FREE';
+            if (t.subscription?.status === 'ACTIVE' || t.subscription?.status === 'active' || t.subscription?.status === 'trialing') {
+                const plan = t.subscription.tier || t.subscription.plan || 'FREE';
                 if (plan === 'PRO') estimatedMRR += 99;
                 if (plan === 'ENTERPRISE') estimatedMRR += 499;
             }
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         });
 
         // 6. Distribución por industria
-        const industryStats = await db.collection('tenants').aggregate([
+        const industryStats = await authDb.collection('tenants').aggregate([
             {
                 $group: {
                     _id: "$industry",

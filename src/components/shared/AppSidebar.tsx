@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSession, signOut } from 'next-auth/react';
 import { useLabels } from '@/hooks/use-labels';
+import { useBranding } from '@/context/BrandingContext';
 
 // Tipos para los items del menú
 interface MenuItem {
@@ -44,6 +45,7 @@ interface MenuItem {
 
 export function AppSidebar() {
     const labels = useLabels();
+    const { branding } = useBranding();
     const { isCollapsed, toggleSidebar } = useSidebar();
     const pathname = usePathname();
     const { data: session } = useSession();
@@ -206,13 +208,32 @@ export function AppSidebar() {
                 )}
             >
                 {!isCollapsed && (
-                    <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-                        <h1 className="text-xl font-bold tracking-tight text-teal-400 group-hover:text-teal-300 transition-colors">ABD RAG Platform</h1>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Vision 2.0</p>
+                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
+                        {branding?.logo?.url ? (
+                            <img src={branding.logo.url} alt="Logo" className="h-8 w-auto object-contain" />
+                        ) : (
+                            <div className="h-8 w-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shrink-0">
+                                {branding?.companyName?.[0] || 'A'}
+                            </div>
+                        )}
+                        <div className="overflow-hidden">
+                            <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-teal-400 transition-colors truncate">
+                                {branding?.companyName || 'ABD RAG Platform'}
+                            </h1>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Workspace</p>
+                        </div>
                     </div>
                 )}
                 {isCollapsed && (
-                    <div className="mx-auto text-teal-400 font-bold text-xl group-hover:text-teal-300 transition-colors">RAG</div>
+                    <div className="mx-auto flex items-center justify-center">
+                        {branding?.logo?.url ? (
+                            <img src={branding.logo.url} alt="Logo" className="h-8 w-8 object-contain" />
+                        ) : (
+                            <div className="text-teal-400 font-bold text-xl group-hover:text-teal-300 transition-colors">
+                                {branding?.companyName?.[0] || 'R'}
+                            </div>
+                        )}
+                    </div>
                 )}
             </Link>
 

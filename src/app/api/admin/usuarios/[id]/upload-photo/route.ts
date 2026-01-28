@@ -41,7 +41,10 @@ export async function POST(
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = user.tenantId || 'default_tenant';
+        const tenantId = user.tenantId;
+        if (!tenantId) {
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'El usuario no tiene un tenantId asociado');
+        }
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
 
         // Actualizar el documento del usuario en la base de datos de identidad

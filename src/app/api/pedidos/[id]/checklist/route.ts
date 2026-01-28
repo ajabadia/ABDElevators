@@ -34,7 +34,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     try {
         const session = await auth();
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // Parse query parameters
         const url = new URL(request.url);

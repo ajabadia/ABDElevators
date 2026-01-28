@@ -32,7 +32,10 @@ export async function PATCH(req: NextRequest) {
 
         const db = await connectDB();
         const userRole = session?.user?.role;
-        const tenantId = (session?.user as any).tenantId || 'default_tenant';
+        const tenantId = (session?.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
 
         // 1. Verificar existencia del documento y pertenencia
         const filter = userRole === 'SUPER_ADMIN' ? { _id: new ObjectId(documentId) } : { _id: new ObjectId(documentId), tenantId };

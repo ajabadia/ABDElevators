@@ -36,7 +36,11 @@ export async function POST(req: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = usuario.tenantId || (session.user as any).tenantId || 'default_tenant';
+        const tenantId = usuario.tenantId || (session.user as any).tenantId;
+
+        if (!tenantId) {
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'El usuario no tiene un tenantId asociado');
+        }
 
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, usuario._id.toString());
 

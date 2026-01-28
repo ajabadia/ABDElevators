@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 403, 'Acceso denegado a facturación');
         }
 
-        const tenantId = (session.user as any).tenantId || 'default_tenant';
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
         const date = new Date();
 
         // Generar factura preview del mes actual

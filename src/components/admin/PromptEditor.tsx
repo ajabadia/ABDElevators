@@ -198,7 +198,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
 
             const payload = {
                 ...formData,
-                tenantId: initialPrompt?.tenantId || 'default_tenant',
+                tenantId: initialPrompt?.tenantId,
                 createdBy: initialPrompt?.createdBy || 'system',
                 updatedBy: 'admin_user', // This should normally come from session
                 version: initialPrompt?.version || 1,

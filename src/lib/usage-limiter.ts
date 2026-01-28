@@ -5,7 +5,7 @@ import { getPlanForTenant, hasExceededLimit, PlanTier } from '@/lib/plans';
 import { logEvento } from '@/lib/logger';
 import { sendLimitAlert } from '@/lib/email-service';
 import { TenantService } from '@/lib/tenant-service';
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 
 /**
  * Middleware de Límites de Consumo (Fase 9)
@@ -36,13 +36,13 @@ async function sendLimitNotificationIfNeeded(
 
     try {
         // Obtener email del admin del tenant
-        const db = await connectDB();
-        const tenant = await db.collection('tenants').findOne({ tenantId });
+        const authDb = await connectAuthDB();
+        const tenant = await authDb.collection('tenants').findOne({ tenantId });
 
         if (!tenant) return;
 
         // Buscar admin del tenant
-        const admin = await db.collection('users').findOne({
+        const admin = await authDb.collection('users').findOne({
             tenantId,
             role: 'ADMIN'
         });
@@ -50,7 +50,7 @@ async function sendLimitNotificationIfNeeded(
         if (!admin?.email) return;
 
         // Verificar si ya se envió notificación recientemente (evitar spam)
-        const lastNotification = await db.collection('email_notifications').findOne({
+        const lastNotification = await authDb.collection('email_notifications').findOne({
             tenantId,
             resourceType,
             percentage: percentage >= 100 ? 100 : 80,
@@ -71,7 +71,7 @@ async function sendLimitNotificationIfNeeded(
         });
 
         // Registrar que se envió la notificación
-        await db.collection('email_notifications').insertOne({
+        await authDb.collection('email_notifications').insertOne({
             tenantId,
             resourceType,
             percentage: percentage >= 100 ? 100 : 80,

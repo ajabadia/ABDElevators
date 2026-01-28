@@ -93,7 +93,11 @@ export async function POST(req: NextRequest) {
 
         const db = await connectDB();
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = user.tenantId || 'default_tenant';
+        const tenantId = user.tenantId;
+
+        if (!tenantId) {
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'El usuario no tiene un tenantId asociado');
+        }
         const uploadResult = await uploadUserDocument(buffer, file.name, tenantId, user._id.toString());
 
         const docData = {
