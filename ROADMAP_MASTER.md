@@ -38,10 +38,10 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 📊 Status & Metrics (v2.7)
-- **Global Progress:** 99% (Maintenance & Optimization Mode).
-- **Recent Ship:** Ingestion Audit (MD5), Phase 25 Optimization.
-- **Current Focus:** Unit Testing & Enterprise Billing (Phase 27).
+### 📊 Status & Metrics (v2.8)
+- **Global Progress:** 100% (Core SaaS Overhaul Complete).
+- **Recent Ship:** Marketing Redesign (Phase 16), Pricing & About Pages.
+- **Current Focus:** Quality Assurance, Security Hardening & UX Overhaul (Enterprise Upgrade 2026).
 
 ---
 
@@ -55,9 +55,9 @@ This document consolidates **all** roadmap information, implementation plans, an
    - Aumentar cobertura de tests unitarios al 80% en servicios críticos.
 3. **Gestión de Facturación (Nueva Fase 27)** [x]
    - Implementar generación de facturas PDF y datos fiscales.
-4. **Landing Page Reality Check (Fase 15)** [ ]
-   - Auditoría completa de claims vs features reales.
-   - Actualizar screenshots y copy para reflejar capacidades v2.7.
+4. **Landing Page & Marketing Redesign (Fase 16)** [x]
+   - Overhaul of Home, Pricing, and About pages.
+   - Standardized on *Outfit* typography and high-tech aesthetics.
 5. **Refinamiento de Trazabilidad** [x]
    - Auditoría de Ingesta (MD5) y Prompts Completada.
 
@@ -95,7 +95,14 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [ ] **Document Shredding:** Borrado físico inmediato en Cloudinary.
   - [ ] **Deletion Receipt:** Evidencia inmutable de borrado (log anónimo).
 
-#### 🔌 FASE 16: API PÚBLICA & INTEGRACIÓN DE SISTEMAS (PLANNED)
+#### 🎨 FASE 16: MARKETING OVERHAUL (COMPLETADO ✅)
+- **Objetivo:** Refinar la presencia pública y la conversión del sitio.
+- **Hitos:**
+  - [x] **Hero / Bento Redesign:** Estética premium 2.0.
+  - [x] **FAQ & Pricing:** Claridad en planes y dudas comunes.
+  - [x] **Vision & Team:** Nueva página `/about` con formulario de contacto.
+
+#### 🔌 FASE 30: API PÚBLICA & INTEGRACIÓN DE SISTEMAS (PLANNED)
 - **Objetivo:** Exponer funcionalidad RAG como API RESTful.
 - **Endpoints Propuestos:**
   - [ ] `POST /api/v1/documents/ingest`: Inyectar documentos.
@@ -151,9 +158,39 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Self-Service**: Portal de descargas para clientes.
 - [x] **Delivery**: Envío automático por email.
 
-#### 🔬 FASE 28: RAG ADVANCED OPTIMIZATION (I+D)
-- [ ] **Intelligent Chunking**: Semantic splitters.
 - [ ] **Advanced PDF**: PyMuPDF integration.
+
+---
+
+### 💎 STRATEGIC ENTERPRISE OVERHAUL (AUDITORÍA 2026)
+Esta sección consolida la visión de producto hacia una estabilidad absoluta y UX de alto nivel, basada en la auditoría exhaustiva de Enero 2026.
+
+#### 🚀 FASE 31: ESTABILIZACIÓN, SEGURIDAD & UX REDESIGN (PLANNED)
+- **Objetivo:** Transformar el prototipo en una plataforma SaaS de grado bancario con UX Enterprise.
+- **Documentación de Referencia:**
+  - `documentación/06/`: Auditoría UX, MongoDB y Mejoras Técnicas (30 Wireframes).
+  - `documentación/07/`: Roadmap detallado de ejecución (8 semanas).
+  - `documentación/08/`: Mapa de refactorización de código y deuda técnica.
+- **Hitos de Infraestructura & Seguridad:**
+  - [ ] **Multi-tenant Hardening:** Validación estricta de `tenantId` vía JWT/Middleware (Cero fugas).
+  - [ ] **MongoDB Pro:** Implementación de Índices críticos (-60% latencia), Transacciones ACID y Soft Deletes.
+  - [ ] **Async Jobs:** Migración de procesos largos a colas de trabajo (BullMQ).
+  - [ ] **Observabilidad Pro:** Tracing con OpenTelemetry y agregación de logs (ELK).
+- **Hitos de Frontend & UX:**
+  - [ ] **Standard Components:** Implementación de Biblioteca de 45+ componentes basada en Wireframes.
+  - [ ] **State & Cache Management:** Adopción total de Zustand + React Query (Eliminar `location.reload`).
+  - [ ] **Optimización Perceptual:** Skeleton loadings y optimización móvil real.
+- **Hitos de Calidad de Código (Refactor):**
+  - [ ] **Generic Hooks:** Implementación de `useApiList`, `useApiMutation`, `useFilters`.
+  - [ ] **Clean Core:** Reducción del 50% de código repetido en Ticketing, Usuarios y Documentos.
+
+## 🗑️ DEPRECATED & ARCHIVED
+Listado de funcionalidades o planes que han sido descartados o sustituidos por mejores alternativas.
+
+- ~~[Fase 15: Landing Page Reality Check]~~
+    - **Fecha:** 2026-01-28
+    - **Motivo:** Integrado y superado por el "Marketing Overhaul" de la Fase 16.
+    - **Estado:** Histórico conservado.
 
 ---
 
@@ -161,4 +198,4 @@ This document consolidates **all** roadmap information, implementation plans, an
 - Treat this file as the **single source of truth**.
 - Update relevant sections when milestone reached.
 
-*Unified on 2026-01-27 by Antigravity*
+*Unified on 2026-01-28 by Antigravity*

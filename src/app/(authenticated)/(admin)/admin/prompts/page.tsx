@@ -22,6 +22,9 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PromptEditor } from '@/components/admin/PromptEditor';
 import { PromptGlobalHistory } from '@/components/admin/PromptGlobalHistory';
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
 
 /**
  * AdminPromptsPage: Gestión de Prompts de IA.
@@ -92,30 +95,27 @@ export default function AdminPromptsPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 font-sans h-full pb-10 max-w-7xl mx-auto">
+        <PageContainer className="h-full pb-10">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Motor de <span className="text-teal-600">Prompts</span> IA
-                    </h1>
-                    <p className="text-slate-500 mt-1">Configura el razonamiento vectorial y la extracción de datos.</p>
-                </div>
-
-                <div className="flex gap-3">
-                    <Button
-                        onClick={() => setShowGlobalHistory(true)}
-                        variant="outline"
-                        className="rounded-xl border-slate-200 dark:border-slate-800"
-                    >
-                        <History className="w-4 h-4 mr-2" /> Historial Global
-                    </Button>
-                    <Button onClick={handleCreateNew} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
-                        <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Motor de Prompts IA"
+                highlight="Prompts"
+                subtitle="Configura el razonamiento vectorial y la extracción de datos."
+                actions={
+                    <>
+                        <Button
+                            onClick={() => setShowGlobalHistory(true)}
+                            variant="outline"
+                            className="rounded-xl border-slate-200 dark:border-slate-800"
+                        >
+                            <History className="w-4 h-4 mr-2" /> Historial Global
+                        </Button>
+                        <Button onClick={handleCreateNew} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
+                            <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
+                        </Button>
+                    </>
+                }
+            />
 
             <AnimatePresence>
                 {showGlobalHistory && (
@@ -127,7 +127,7 @@ export default function AdminPromptsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-[700px]">
                 {/* List Sidebar */}
                 <div className="lg:col-span-12 xl:col-span-4 flex flex-col gap-6">
-                    <div className="bg-white dark:bg-slate-950 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full flex-grow">
+                    <ContentCard noPadding={true} className="flex flex-col h-full flex-grow bg-white dark:bg-slate-950 rounded-2xl">
                         <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -167,7 +167,7 @@ export default function AdminPromptsPage() {
                                             className={cn(
                                                 "p-4 rounded-2xl cursor-pointer transition-all group relative flex items-center justify-between",
                                                 selectedPrompt === p && isEditing
-                                                    ? "bg-teal-600 shadow-xl shadow-teal-500/20"
+                                                    ? "bg-teal-600 shadow-md shadow-teal-500/20"
                                                     : "hover:bg-slate-50 dark:hover:bg-slate-900"
                                             )}
                                         >
@@ -229,9 +229,9 @@ export default function AdminPromptsPage() {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </ContentCard>
 
-                    <div className="p-6 bg-slate-950 rounded-[2rem] border border-slate-800 relative overflow-hidden group">
+                    <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
                             <Sparkles size={64} className="text-teal-500" />
                         </div>
@@ -243,7 +243,7 @@ export default function AdminPromptsPage() {
                 </div>
 
                 {/* Editor Container Section */}
-                <div className="lg:col-span-12 xl:col-span-8 flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/20 rounded-[2.5rem] p-1 border border-slate-200 dark:border-slate-800">
+                <ContentCard noPadding={true} className="lg:col-span-12 xl:col-span-8 flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/20 p-1 rounded-2xl">
                     <AnimatePresence mode="wait">
                         {isEditing ? (
                             <div className="h-full">
@@ -260,7 +260,7 @@ export default function AdminPromptsPage() {
                                 animate={{ opacity: 1 }}
                                 className="h-full flex flex-col items-center justify-center p-20 text-center space-y-4"
                             >
-                                <div className="w-20 h-20 bg-white dark:bg-slate-950 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-center mb-4">
+                                <div className="w-20 h-20 bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-center mb-4">
                                     <Sparkles size={32} className="text-slate-300 animate-pulse" />
                                 </div>
                                 <div>
@@ -279,7 +279,7 @@ export default function AdminPromptsPage() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-                </div>
+                </ContentCard>
             </div>
 
             <style jsx global>{`
@@ -297,6 +297,6 @@ export default function AdminPromptsPage() {
                     background: #cbd5e1;
                 }
             `}</style>
-        </div>
+        </PageContainer>
     );
 }

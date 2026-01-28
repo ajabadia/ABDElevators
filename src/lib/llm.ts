@@ -23,6 +23,27 @@ const GenerateEmbeddingSchema = z.object({
     correlacion_id: z.string()
 });
 
+const CallGeminiMiniSchema = z.object({
+    prompt: z.string().min(1),
+    tenantId: z.string(),
+    options: z.object({
+        correlacion_id: z.string().uuid(),
+        temperature: z.number().min(0).max(1).optional(),
+        model: z.string().optional()
+    })
+});
+
+/**
+ * Mapea nombres de modelos legacy/incorrectos a modelos oficiales de Google.
+ */
+function mapModelName(model: string): string {
+    if (model.startsWith('gemini-3')) {
+        // Redirigir gemini-3 a gemini-2.0-flash-exp (Experimental) o gemini-1.5-pro
+        return 'gemini-1.5-flash';
+    }
+    return model;
+}
+
 /**
  * Genera embeddings ...
  */
@@ -63,15 +84,6 @@ export async function generateEmbedding(text: string, tenantId: string, correlac
     }
 }
 
-const CallGeminiMiniSchema = z.object({
-    prompt: z.string().min(1),
-    tenantId: z.string(),
-    options: z.object({
-        correlacion_id: z.string().uuid(),
-        temperature: z.number().min(0).max(1).optional(),
-        model: z.string().optional()
-    })
-});
 
 export async function callGeminiMini(
     prompt: string,
@@ -79,7 +91,8 @@ export async function callGeminiMini(
     options: { correlacion_id: string; temperature?: number; model?: string }
 ): Promise<string> {
     CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlacion_id: options.correlacion_id } });
-    const { correlacion_id, temperature = 0.7, model: modelName = 'gemini-3-flash-preview' } = options;
+    const { correlacion_id, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    const modelName = mapModelName(rawModel);
     const start = Date.now();
 
     try {
@@ -219,7 +232,8 @@ export async function callGemini(
     const start = Date.now();
     try {
         const genAI = getGenAI();
-        const modelName = options?.model || 'gemini-3-flash-preview';
+        const rawModel = options?.model || 'gemini-2.5-flash';
+        const modelName = mapModelName(rawModel);
         const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {

@@ -1,0 +1,67 @@
+1. auditability-gaps-review.md ✅
+Análisis exhaustivo de 9 gaps críticos de "bank-grade auditability"
+
+Descripción de cada gap: estado actual, qué falta, impacto
+
+Matriz de trazabilidad con 50+ operaciones mapeadas (Auth, Users, Prompts, Documents, RAG, Risk, Billing, Access, System)
+
+Checklist de verificación post-implementación
+
+4 fases de implementación (8-12 semanas)
+
+2. quick-action-plan.md ✅
+Priorización visual de los 9 gaps
+
+Agrupación por esfuerzo semanal (Semana 1-5)
+
+Checklist detallado por gap con qué hacer exacto
+
+Roadmap visual de 5 semanas
+
+Validación post-implementación
+
+3. code-changes-map.md ✅
+Localización precisa en tu código dónde hacer cambios
+
+Archivos afectados por cada gap
+
+Ejemplos de código (pseudocódigo, no completo, como solicitaste)
+
+Qué funciones reemplazar/agregar
+
+Resumen de cambios por archivo
+
+4. Gráfico de Cobertura 📊
+Heatmap visual de audit trail coverage actual vs. necesario
+
+Muestra que solo tienes ~55% de cobertura en auditoría
+
+🎯 POR DÓNDE EMPEZAR
+Esta semana (Semana 1):
+
+Lee auditability-gaps-review.md sección "RESUMEN EJECUTIVO" (5 min)
+
+Mira el gráfico de cobertura para visualizar el problema (1 min)
+
+Revisa quick-action-plan.md sección "Semana 1: FOUNDATION" (10 min)
+
+Empieza con code-changes-map.md Gap 1 (Immutabilidad)
+
+Primer cambio concreto:
+
+src/lib/schemas.ts → Agregar LogAuditTrailSchema
+
+src/lib/logger.ts → Refactor logEvento para usar audittrail
+
+src/lib/db.ts → Crear índices append-only
+
+⚠️ NOTAS IMPORTANTES
+No son guidelines genéricos: Toda recomendación está mapeada a tu código exacto
+
+Sin código fuente completamente escrito: Solo pseudocódigo y estructura (como solicitaste)
+
+Matriz de trazabilidad: Muestra qué se loga hoy (🟡 parcial) vs. qué debería (completo)
+
+Priorización real: Basada en complejidad + impacto de compliance
+
+Timeframe realista: 6 semanas / 1-2 devs

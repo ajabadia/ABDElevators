@@ -18,6 +18,11 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
 
 /**
  * AdminWorkflowPage: Gestión administrativa de Workflows.
@@ -68,31 +73,26 @@ export default function AdminWorkflowPage() {
     if (isLoading) return <div>Cargando...</div>;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <PageContainer>
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Gestión de <span className="text-teal-600">Workflows</span>
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Define los estados, transiciones y reglas de negocio para tus procesos.
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="inline-flex items-center px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50"
-                >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                    Guardar Cambios
-                </button>
-            </div>
+            <PageHeader
+                title="Gestión de Workflows"
+                highlight="Workflows"
+                subtitle="Define los estados, transiciones y reglas de negocio para tus procesos."
+                actions={
+                    <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-teal-600 hover:bg-teal-700 shadow-sm shadow-teal-500/20"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        Guardar Cambios
+                    </Button>
+                }
+            />
 
             {/* Preview */}
-            <section className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <ContentCard className="relative overflow-hidden p-8">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                     <GitBranch className="w-32 h-32" />
                 </div>
@@ -104,7 +104,7 @@ export default function AdminWorkflowPage() {
                         transitions_history={[]}
                     />
                 )}
-            </section>
+            </ContentCard>
 
             {/* Editor Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -159,7 +159,7 @@ export default function AdminWorkflowPage() {
 
                 {/* Rules & Constraints */}
                 <div className="lg:col-span-12 xl:col-span-4 space-y-6">
-                    <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-3xl text-white shadow-xl shadow-blue-500/20">
+                    <section className="bg-gradient-to-br from-teal-600 to-emerald-700 p-6 rounded-3xl text-white shadow-md shadow-teal-500/20">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                             <CheckCircle2 className="w-5 h-5" />
                             Reglas Globales
@@ -186,6 +186,6 @@ export default function AdminWorkflowPage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 }

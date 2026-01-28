@@ -18,6 +18,10 @@ import {
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
+import { Badge } from "@/components/ui/badge";
 import { TenantROIStats } from "@/components/admin/TenantROIStats";
 
 interface GlobalStats {
@@ -97,24 +101,20 @@ export default function AdminDashboardPage() {
     if (!stats) return null;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-700 max-w-7xl mx-auto">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        {isSuperAdmin ? "Control" : "Dashboard de"} <span className="text-teal-600">{isSuperAdmin ? "Global" : "Organización"}</span>
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        {isSuperAdmin
-                            ? "Visión consolidada de toda la infraestructura ABD RAG."
-                            : "Métricas de rendimiento y consumo de tu organización."}
-                    </p>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-widest border border-teal-500/20">
-                    <Activity size={14} className="animate-pulse" />
-                    En tiempo real
-                </div>
-            </header>
+        <PageContainer>
+            <PageHeader
+                title={isSuperAdmin ? "Control" : "Dashboard de"}
+                highlight={isSuperAdmin ? "Global" : "Organización"}
+                subtitle={isSuperAdmin
+                    ? "Visión consolidada de toda la infraestructura ABD RAG."
+                    : "Métricas de rendimiento y consumo de tu organización."}
+                actions={
+                    <Badge variant="outline" className="gap-2 px-4 py-2 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-widest border border-teal-500/20">
+                        <Activity size={14} className="animate-pulse" />
+                        En tiempo real
+                    </Badge>
+                }
+            />
 
             {/* Tenant ROI Dashboard (Fase 24.2b) */}
             {
@@ -160,97 +160,84 @@ export default function AdminDashboardPage() {
             {/* Consumption and Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Usage Chart (Mock bars) */}
-                <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
-                    <CardHeader className="border-b border-slate-100 dark:border-slate-900">
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                            <Zap className="text-teal-500" size={18} />
-                            Consumo de IA y Almacenamiento
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                        <div className="space-y-8">
-                            <UsageBar
-                                label="Tokens Gemini (Input/Output)"
-                                value={stats.usage.tokens}
-                                max={isSuperAdmin ? 10_000_000 : (stats as any).limits?.tokens || 1_000_000}
-                                format="tokens"
-                                color="teal"
-                            />
-                            <UsageBar
-                                label="Espacio en Disco (Cloudinary/S3)"
-                                value={stats.usage.storage}
-                                max={isSuperAdmin ? 100 * 1024 * 1024 * 1024 : (stats as any).limits?.storage || 5 * 1024 * 1024 * 1024}
-                                format="bytes"
-                                color="blue"
-                            />
-                            <UsageBar
-                                label="Búsquedas Vectoriales"
-                                value={stats.usage.searches}
-                                max={isSuperAdmin ? 50_000 : (stats as any).limits?.searches || 5_000}
-                                format="count"
-                                color="purple"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                <ContentCard
+                    title="Consumo de IA y Almacenamiento"
+                    icon={<Zap className="text-teal-500" size={18} />}
+                    className="lg:col-span-2"
+                >
+                    <div className="space-y-8">
+                        <UsageBar
+                            label="Tokens Gemini (Input/Output)"
+                            value={stats.usage.tokens}
+                            max={isSuperAdmin ? 10_000_000 : (stats as any).limits?.tokens || 1_000_000}
+                            format="tokens"
+                            color="teal"
+                        />
+                        <UsageBar
+                            label="Espacio en Disco (Cloudinary/S3)"
+                            value={stats.usage.storage}
+                            max={isSuperAdmin ? 100 * 1024 * 1024 * 1024 : (stats as any).limits?.storage || 5 * 1024 * 1024 * 1024}
+                            format="bytes"
+                            color="blue"
+                        />
+                        <UsageBar
+                            label="Búsquedas Vectoriales"
+                            value={stats.usage.searches}
+                            max={isSuperAdmin ? 50_000 : (stats as any).limits?.searches || 5_000}
+                            format="count"
+                            color="purple"
+                        />
+                    </div>
+                </ContentCard>
 
                 {/* Industries or Plan Info */}
-                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                    <CardHeader className="border-b border-slate-100 dark:border-slate-900">
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                            <TrendingUp className="text-teal-500" size={18} />
-                            {isSuperAdmin ? "Distribución por Sector" : "Estado del Plan"}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        {isSuperAdmin ? (
-                            <div className="space-y-4">
-                                {stats.industries.map((ind: any) => (
-                                    <div key={ind._id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-teal-500" />
-                                            <span className="text-sm font-bold uppercase tracking-tight">{ind._id}</span>
-                                        </div>
-                                        <span className="font-mono font-bold text-teal-600">{ind.count}</span>
+                <ContentCard
+                    title={isSuperAdmin ? "Distribución por Sector" : "Estado del Plan"}
+                    icon={<TrendingUp className="text-teal-500" size={18} />}
+                >
+                    {isSuperAdmin ? (
+                        <div className="space-y-4">
+                            {stats.industries.map((ind: any) => (
+                                <div key={ind._id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-teal-500" />
+                                        <span className="text-sm font-bold uppercase tracking-tight">{ind._id}</span>
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-4 space-y-4">
-                                <div className="inline-block px-4 py-2 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl font-black text-xl shadow-lg">
-                                    {(stats as any).tier || 'FREE'}
+                                    <span className="font-mono font-bold text-teal-600">{ind.count}</span>
                                 </div>
-                                <p className="text-sm text-slate-500">Renovación automática en 12 días</p>
-                                <button className="w-full py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
-                                    Gestionar Suscripción
-                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-4 space-y-4">
+                            <div className="inline-block px-4 py-2 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl font-black text-xl shadow-lg">
+                                {(stats as any).tier || 'FREE'}
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
+                            <p className="text-sm text-slate-500">Renovación automática en 12 días</p>
+                            <button className="w-full py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
+                                Gestionar Suscripción
+                            </button>
+                        </div>
+                    )}
+                </ContentCard>
             </div>
 
             {/* Recent Activity */}
-            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-900">
-                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        <Activity className="text-teal-500" size={18} />
-                        Actividad Reciente del Sistema
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="divide-y divide-slate-100 dark:divide-slate-900">
-                        {stats.activities && stats.activities.length > 0 ? (
-                            stats.activities.map((act: any, idx: number) => (
-                                <ActivityRow key={act._id || idx} activity={act} />
-                            ))
-                        ) : (
-                            <div className="p-10 text-center text-slate-500 italic">No hay actividad reciente registrada.</div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div >
+            <ContentCard
+                title="Actividad Reciente del Sistema"
+                icon={<Activity className="text-teal-500" size={18} />}
+                noPadding
+            >
+                <div className="divide-y divide-slate-100 dark:divide-slate-900">
+                    {stats.activities && stats.activities.length > 0 ? (
+                        stats.activities.map((act: any, idx: number) => (
+                            <ActivityRow key={act._id || idx} activity={act} />
+                        ))
+                    ) : (
+                        <div className="p-10 text-center text-slate-500 italic">No hay actividad reciente registrada.</div>
+                    )}
+                </div>
+            </ContentCard>
+        </PageContainer>
     );
 }
 
@@ -347,21 +334,23 @@ function ActivityRow({ activity }: any) {
 
 function DashboardSkeleton() {
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                    <Skeleton className="h-10 w-64" />
-                    <Skeleton className="h-4 w-96" />
+        <PageContainer>
+            <div className="space-y-8">
+                <div className="flex justify-between items-center">
+                    <div className="space-y-2">
+                        <Skeleton className="h-10 w-64" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+                    <Skeleton className="h-8 w-32 rounded-full" />
                 </div>
-                <Skeleton className="h-8 w-32 rounded-full" />
+                <div className="grid grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-40 rounded-3xl" />)}
+                </div>
+                <div className="grid grid-cols-3 gap-8">
+                    <Skeleton className="col-span-2 h-96 rounded-3xl" />
+                    <Skeleton className="h-96 rounded-3xl" />
+                </div>
             </div>
-            <div className="grid grid-cols-4 gap-6">
-                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-40 rounded-3xl" />)}
-            </div>
-            <div className="grid grid-cols-3 gap-8">
-                <Skeleton className="col-span-2 h-96 rounded-3xl" />
-                <Skeleton className="h-96 rounded-3xl" />
-            </div>
-        </div>
+        </PageContainer>
     );
 }

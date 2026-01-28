@@ -80,15 +80,29 @@ export class MongoDBSaver extends BaseCheckpointSaver {
         return { configurable: { thread_id, checkpoint_id } };
     }
 
-    // Required by BaseCheckpointSaver but we can leave as no-op or simple impl
-    async putWrites(config: RunnableConfig, writes: any[], taskId: string): Promise<void> {
-        // En una implementación más avanzada, guardaríamos las escrituras pendientes.
-        return;
-    }
-
-    async deleteThread(threadId: string): Promise<void> {
+    async putWrites(config: RunnableConfig, writes: any[], task_id: string): Promise<void> {
         const db = await connectDB();
         const collection = db.collection(this.collectionName);
-        await collection.deleteMany({ thread_id: threadId });
+        const thread_id = config.configurable?.thread_id;
+        const checkpoint_id = config.configurable?.checkpoint_id;
+
+        if (!thread_id || !checkpoint_id) return;
+
+        await collection.updateOne(
+            { thread_id, checkpoint_id },
+            {
+                $push: {
+                    writes: {
+                        $each: writes.map(w => ({ ...w, task_id, createdAt: new Date() }))
+                    }
+                }
+            }
+        );
+    }
+
+    async deleteThread(thread_id: string): Promise<void> {
+        const db = await connectDB();
+        const collection = db.collection(this.collectionName);
+        await collection.deleteMany({ thread_id: thread_id });
     }
 }

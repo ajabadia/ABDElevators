@@ -20,7 +20,7 @@ const DEFAULT_PROMPTS = [
         name: 'Auditor de Riesgos',
         description: 'Analiza casos en busca de riesgos técnicos, legales o de seguridad',
         category: 'RISK',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Actúa como un Auditor de Riesgos experto en la industria de {{industry}}.
 Tu tarea es analizar el CONTENIDO DEL CASO comparándolo con el CONTEXTO DE NORMATIVA/MANUALES extraído del RAG.
 
@@ -57,7 +57,7 @@ Responde ÚNICAMENTE con el array JSON.`,
         name: 'Extractor de Modelos',
         description: 'Extrae componentes y modelos de documentos técnicos',
         category: 'EXTRACTION',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
 Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
 Solo devuelve el JSON, sin explicaciones.
@@ -77,7 +77,7 @@ TEXTO:
         name: 'Generador de Checklist',
         description: 'Genera checklists de verificación basados en componentes detectados',
         category: 'CHECKLIST',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Genera un checklist de verificación técnica para el siguiente componente:
 
 TIPO: {{componentType}}
@@ -103,7 +103,7 @@ Responde ÚNICAMENTE con el array JSON.`,
         name: 'Generador de Informe Técnico',
         description: 'Genera informes técnicos profesionales basados en validaciones y contexto RAG',
         category: 'ANALYSIS',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Eres un ingeniero técnico especializado en ascensores. Genera un informe profesional basado en la siguiente información validada:
 
 ## DATOS DEL PEDIDO
@@ -153,7 +153,7 @@ Genera el informe ahora:`,
         name: 'Extractor de Checklist de Documentos',
         description: 'Extrae items de checklist accionables de documentos técnicos',
         category: 'EXTRACTION',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `You are a specialist extracting actionable checklist items from technical documents.
 Return a JSON array where each element has the shape { "id": "<uuid>", "description": "<text>" }.
 Include only items that a technician must verify for the given order.
@@ -172,7 +172,7 @@ Use the following documents (concatenated, each separated by "---DOC---"):
         name: 'Agente de Análisis de Riesgos',
         description: 'Utilizado por el motor de agentes para detectar riesgos e incompatibilidades',
         category: 'RISK',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Actúa como un experto en ingeniería de ascensores. 
 Basándote en el siguiente contexto técnico:
 {{context}}
@@ -195,7 +195,7 @@ Responde en formato JSON: { "riesgos": [{ "tipo": "SEGURIDAD" | "COMPATIBILIDAD"
         name: 'Detector de Idioma Técnico',
         description: 'Detecta el idioma predominante de un texto técnico',
         category: 'GENERAL',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         template: `Analiza el siguiente texto técnico y responde ÚNICAMENTE con el código de idioma ISO (en, es, fr, de, it, pt).
 Si no estás seguro, responde "es".
 
@@ -214,7 +214,7 @@ TEXTO:
         name: 'Traductor Técnico Pro',
         description: 'Traduce texto técnico manteniendo la terminología precisa',
         category: 'GENERAL',
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-pro',
         template: `Traduce el siguiente texto técnico al idioma: {{targetLanguage}}.
 Mantén la terminología técnica precisa de la industria de ascensores.
 No añadidas explicaciones, solo devuelve el texto traducido.

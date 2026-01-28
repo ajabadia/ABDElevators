@@ -40,6 +40,15 @@ export function PublicNavbar() {
                 <Link href="/#seguridad" className="hover:text-teal-400 transition-colors">
                     {navT('security')}
                 </Link>
+                <Link
+                    href="/about"
+                    className={cn(
+                        "hover:text-teal-400 transition-colors",
+                        isActive('/about') && "text-teal-500 border-b-2 border-teal-500 pb-1"
+                    )}
+                >
+                    {navT('contact')}
+                </Link>
             </div>
             <div className="flex items-center gap-4">
                 <LocaleSwitcher />

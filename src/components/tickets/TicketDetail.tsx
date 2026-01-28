@@ -273,14 +273,14 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                     <div className="flex-1 relative">
                         <Textarea
                             placeholder="Escribe una respuesta pública..."
-                            className="min-h-[100px] resize-none pr-12 bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-blue-500"
+                            className="min-h-[100px] resize-none pr-12 bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-teal-500"
                             value={reply}
                             onChange={(e) => setReply(e.target.value)}
                         />
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="absolute bottom-2 right-2 text-slate-400 hover:text-blue-500"
+                            className="absolute bottom-2 right-2 text-slate-400 hover:text-teal-500"
                         >
                             <Paperclip size={18} />
                         </Button>
@@ -288,7 +288,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                     <Button
                         onClick={handleSendReply}
                         disabled={!reply.trim() || sending}
-                        className="h-auto self-end px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+                        className="h-auto self-end px-6 bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20"
                     >
                         {sending ? <Loader2 className="animate-spin" /> : <Send size={18} />}
                     </Button>

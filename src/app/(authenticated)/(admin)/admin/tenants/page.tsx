@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -186,31 +189,27 @@ export default function TenantsPage() {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Configuración de <span className="text-teal-600">Organización</span>
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento.
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button variant="outline" onClick={fetchConfig} disabled={isSaving}>Descartar</Button>
-                    <Button
-                        onClick={handleSave}
-                        className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20"
-                        disabled={isSaving}
-                    >
-                        {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : <Save size={18} />}
-                        Guardar Cambios
-                    </Button>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Configuración de Organización"
+                highlight="Organización"
+                subtitle="Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento."
+                actions={
+                    <>
+                        <Button variant="outline" onClick={fetchConfig} disabled={isSaving}>Descartar</Button>
+                        <Button
+                            onClick={handleSave}
+                            className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20"
+                            disabled={isSaving}
+                        >
+                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : <Save size={18} />}
+                            Guardar Cambios
+                        </Button>
+                    </>
+                }
+            />
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <ContentCard className="overflow-hidden" noPadding={true}>
                 <Tabs defaultValue="general" className="w-full">
                     <TabsList className="w-full justify-start rounded-none border-b bg-white dark:bg-slate-900 h-14 px-6 gap-8">
                         <TabsTrigger
@@ -954,9 +953,9 @@ export default function TenantsPage() {
                         </div>
                     </TabsContent>
                 </Tabs>
-            </Card>
+            </ContentCard>
 
-            <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl flex items-center justify-between">
+            <ContentCard className="bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between p-8" noPadding={true}>
                 <div className="flex items-center gap-6">
                     <div className="h-14 w-14 bg-teal-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-teal-600/20">
                         <Shield size={28} />
@@ -1021,7 +1020,7 @@ export default function TenantsPage() {
                         </DialogContent>
                     </Dialog>
                 </div>
-            </div>
-        </div>
+            </ContentCard>
+        </PageContainer>
     );
 }

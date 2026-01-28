@@ -58,5 +58,46 @@
         "f2_desc": "Data encrypted at rest (AES-256) and in transit (TLS 1.3) under high-security standards.",
         "f3_title": "Data Sovereignty",
         "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
+    },
+    "about": {
+        "title": "Our Vision",
+        "subtitle": "Powering the future of engineering with AI",
+        "mission_title": "Our Mission",
+        "mission_desc": "Providing companies with intelligent tools to manage their accumulated knowledge with the utmost precision, security, and efficiency.",
+        "vision_title": "Our Vision",
+        "vision_desc": "To be the go-to platform for knowledge management in high-complexity industrial sectors where reliability is paramount.",
+        "team_title": "About us",
+        "team_desc": "We are a multidisciplinary team passionate about technological avant-garde and real impact on industrial processes."
+    },
+    "contact": {
+        "title": "Contact Us",
+        "subtitle": "Have any questions? We are here to help.",
+        "form_title": "Send us a message",
+        "name_label": "Name",
+        "email_label": "Email",
+        "message_label": "Message",
+        "send_button": "Send Message",
+        "info_title": "Contact Information",
+        "address": " Calle de la Técnica, 42, 28001 Madrid, Spain",
+        "phone": "+34 912 345 678",
+        "email": "contact@abdelevators.com"
+    },
+    "terms": {
+        "title": "Terms of Service",
+        "subtitle": "Last updated: January 23, 2026",
+        "intro": "By accessing and using ABD RAG Platform (\"the Service\"), you agree to be legally bound by these Terms of Service. If you do not agree with any part of these terms, you may not access the Service.",
+        "applicability": "These terms apply to all users, including but not limited to: visitors, trial customers, paid subscribers, and account administrators.",
+        "s1_title": "1. Acceptance of Terms",
+        "s2_title": "2. Permitted Use of the Service",
+        "s3_title": "3. Prohibited Use",
+        "s4_title": "4. Intellectual Property",
+        "s5_title": "5. Billing and Cancellation",
+        "s6_title": "6. Limitation of Liability",
+        "s7_title": "7. Modifications to the Terms",
+        "s8_title": "8. Applicable Law and Jurisdiction",
+        "contact_title": "Legal Questions?",
+        "contact_desc": "Our legal team is available for clarification.",
+        "contact_button": "Contact Legal",
+        "privacy_button": "View Privacy Policy"
     }
 }

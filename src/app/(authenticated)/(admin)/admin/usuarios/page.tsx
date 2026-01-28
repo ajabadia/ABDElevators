@@ -18,6 +18,9 @@ import { EditUserModal } from "@/components/admin/EditUserModal";
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
 import { useToast } from "@/hooks/use-toast";
 import { useSession, signOut } from "next-auth/react";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
 
 interface Usuario {
     _id: string;
@@ -98,37 +101,33 @@ export default function UsuariosPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Gestión de <span className="text-teal-600">Usuarios</span>
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Administra usuarios y permisos {isSuperAdmin ? 'globales' : 'de tu organización'}
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={() => setShowInviteModal(true)}
-                        className="border-teal-200 text-teal-700 hover:bg-teal-50"
-                    >
-                        <Mail className="mr-2 h-4 w-4" />
-                        Invitar Usuario
-                    </Button>
-                    <Button
-                        onClick={() => setShowCreateModal(true)}
-                        className="bg-teal-600 hover:bg-teal-700"
-                    >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Crear Manualmente
-                    </Button>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Gestión de Usuarios"
+                highlight="Usuarios"
+                subtitle={`Administra usuarios y permisos ${isSuperAdmin ? 'globales' : 'de tu organización'}`}
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowInviteModal(true)}
+                            className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                        >
+                            <Mail className="mr-2 h-4 w-4" />
+                            Invitar Usuario
+                        </Button>
+                        <Button
+                            onClick={() => setShowCreateModal(true)}
+                            className="bg-teal-600 hover:bg-teal-700"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Crear Manualmente
+                        </Button>
+                    </>
+                }
+            />
 
-            <Card className="border-none shadow-lg dark:bg-slate-900">
+            <ContentCard noPadding={true}>
                 <CardHeader className="border-b border-slate-100 dark:border-slate-800">
                     <CardTitle>Usuarios Registrados</CardTitle>
                     <CardDescription>
@@ -202,7 +201,7 @@ export default function UsuariosPage() {
                         </Table>
                     )}
                 </CardContent>
-            </Card>
+            </ContentCard>
 
             <CreateUserModal
                 open={showCreateModal}
@@ -231,6 +230,6 @@ export default function UsuariosPage() {
                     setEditingUserId(null);
                 }}
             />
-        </div>
+        </PageContainer>
     );
 }

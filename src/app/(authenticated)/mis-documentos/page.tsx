@@ -140,8 +140,8 @@ export default function MisDocumentosPage() {
     );
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
@@ -158,7 +158,7 @@ export default function MisDocumentosPage() {
                     <Plus size={18} />
                     Subir Archivo
                 </Button>
-            </header>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="md:col-span-1 border-none shadow-md bg-slate-900 text-white">

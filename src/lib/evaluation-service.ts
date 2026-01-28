@@ -45,7 +45,7 @@ export class EvaluationService {
                     answer_relevance: answerRelevance,
                     context_precision: contextPrecision
                 },
-                judge_model: 'gemini-3-flash-preview',
+                judge_model: 'gemini-2.5-flash',
                 timestamp: new Date()
             };
 

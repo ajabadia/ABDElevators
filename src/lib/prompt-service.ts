@@ -71,9 +71,12 @@ export class PromptService {
             console.error("Error auditing prompt usage:", err);
         }
 
+        const model = (prompt as any).model || 'gemini-1.5-flash';
+        console.log(`[DEBUG PROMPT] Key: "${key}", Model: "${model}"`);
+
         return {
             text: rendered,
-            model: (prompt as any).model || 'gemini-1.5-flash'
+            model
         };
     }
 

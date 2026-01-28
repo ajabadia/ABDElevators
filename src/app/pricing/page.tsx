@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PricingTable } from "@/components/landing/PricingTable";
+import { FAQSection } from "@/components/landing/FAQSection";
 import { Loader2 } from "lucide-react";
 import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
@@ -42,6 +43,7 @@ export default function PricingPage() {
 
             <main className="pt-20">
                 <PricingTable plans={plans} />
+                <FAQSection />
             </main>
 
             <PublicFooter />

@@ -1010,8 +1010,8 @@ export const PromptSchema = z.object({
     key: z.string(),
     name: z.string(),
     description: z.string().optional(),
-    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET']).default('GENERAL'),
-    model: z.string().default('gemini-3-flash-preview'), // Permite elegir el modelo por cada prompt
+    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST']).default('GENERAL'),
+    model: z.string().default('gemini-1.5-flash'), // Permite elegir el modelo por cada prompt
     template: z.string(),
     variables: z.array(PromptVariableSchema).default([]),
     version: z.number().default(1),

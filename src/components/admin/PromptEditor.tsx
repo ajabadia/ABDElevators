@@ -95,7 +95,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         description: initialPrompt?.description ?? '',
         category: initialPrompt?.category ?? 'GENERAL',
         template: initialPrompt?.template ?? '',
-        model: initialPrompt?.model ?? 'gemini-3-flash-preview',
+        model: initialPrompt?.model ?? 'gemini-2.5-flash',
         maxLength: initialPrompt?.maxLength,
         variables: initialPrompt?.variables ?? []
     });
@@ -416,11 +416,12 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                 <div className="space-y-2">
                                     <Label className="text-slate-400 text-xs">Modelo Gemini</Label>
                                     <select
-                                        value={formData.model || 'gemini-3-flash-preview'}
+                                        value={formData.model || 'gemini-2.5-flash'}
                                         onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))}
                                         className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none transition-all"
                                     >
-                                        <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (Recomendado)</option>
+                                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado)</option>
+                                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                                         <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
                                     </select>
                                 </div>
