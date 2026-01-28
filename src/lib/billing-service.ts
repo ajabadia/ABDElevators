@@ -2,6 +2,7 @@ import { UsageService } from './usage-service';
 import { TenantService } from './tenant-service';
 import { TenantConfig, GlobalPricingPlanSchema } from './schemas';
 import { ObjectId } from 'mongodb';
+import { ValidationError } from './errors';
 
 export interface InvoiceLineItem {
     description: string;
@@ -55,6 +56,41 @@ const PRICING_PLANS = {
 };
 
 export class BillingService {
+
+    /**
+     * Cambia el plan de suscripción de un tenant.
+     * @param tenantId ID del tenant
+     * @param newPlanSlug Slug del nuevo plan (e.g., 'PRO', 'ENTERPRISE')
+     */
+    static async changePlan(tenantId: string, newPlanSlug: string) {
+        const tier = newPlanSlug.toUpperCase();
+
+        if (!(tier in PRICING_PLANS)) {
+            throw new ValidationError(`Plan inválido: ${newPlanSlug}. Planes válidos: ${Object.keys(PRICING_PLANS).join(', ')}`);
+        }
+
+        // 1. Obtener configuración actual completa (necesario para validación Zod en updateConfig)
+        const currentConfig = await TenantService.getConfig(tenantId);
+
+        // 2. Preparar nueva configuración manteniendo datos existentes
+        const updatedConfig = {
+            ...currentConfig,
+            subscription: {
+                ...(currentConfig.subscription || {}),
+                tier: tier as any,
+                status: 'ACTIVE' as const,
+                current_period_start: new Date()
+            }
+        };
+
+        // 3. Persistir cambios
+        await TenantService.updateConfig(tenantId, updatedConfig, {
+            performedBy: 'system-billing',
+            correlacion_id: `change-plan-${Date.now()}`
+        });
+
+        return { success: true, creditApplied: false };
+    }
 
     /**
      * Calcula la factura del mes actual (o especificado)
