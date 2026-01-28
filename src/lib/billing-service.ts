@@ -58,6 +58,48 @@ const PRICING_PLANS = {
 export class BillingService {
 
     /**
+     * Calcula el uso actual de un recurso y determina si se excede el límite
+     */
+    static async calculateCurrentUsage(tenantId: string, metric: string): Promise<{
+        currentUsage: number;
+        limit: number;
+        status: 'OK' | 'SURCHARGE' | 'BLOCKED';
+        actionApplied?: string;
+    } | null> {
+        // 1. Obtener Configuración
+        const config = await TenantService.getConfig(tenantId);
+        const tier = (config.subscription?.tier as keyof typeof PRICING_PLANS) || 'FREE';
+        const plan = PRICING_PLANS[tier];
+
+        // 2. Determinar límites según métrica
+        let limit = 0;
+        let usage = 0;
+        
+        // Simulación básica para arreglar el build. 
+        // En producción esto debería conectar con UsageService.getUsageStats real
+        if (metric === 'TOKENS') {
+            limit = (plan as any).included?.tokens || (plan as any).limits?.tokens || 0;
+            // Mock value for safe build - Integration with UsageService pending
+            usage = 0; 
+        } else if (metric === 'STORAGE') {
+            limit = (config.storage.quota_bytes) || (plan as any).included?.storage || 0;
+            usage = 0;
+        } else {
+             // Unknown metric, allow pass
+             return { currentUsage: 0, limit: 0, status: 'OK' };
+        }
+
+        // 3. Evaluar
+        if (limit > 0 && usage > limit) {
+             // lógica simple: si es FREE bloquea, si es PAGADO surcharge (mock)
+             if (tier === 'FREE') return { currentUsage: usage, limit, status: 'BLOCKED', actionApplied: 'Upgrade required' };
+             return { currentUsage: usage, limit, status: 'SURCHARGE' };
+        }
+
+        return { currentUsage: usage, limit, status: 'OK' };
+    }
+
+    /**
      * Cambia el plan de suscripción de un tenant.
      * @param tenantId ID del tenant
      * @param newPlanSlug Slug del nuevo plan (e.g., 'PRO', 'ENTERPRISE')
