@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
         if (searchType === 'semantic' && query) {
             const { hybridSearch } = await import('@/lib/rag-service');
-            chunks = await hybridSearch(query, session.user.tenantId || 'global', correlacion_id, limit);
+            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlacion_id, limit);
             total = chunks.length; // En búsqueda semántica el total es el del bloque devuelto
         } else {
             // Construir filtro para búsqueda tradicional (Regex)
