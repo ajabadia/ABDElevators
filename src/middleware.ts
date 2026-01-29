@@ -180,9 +180,11 @@ export async function middleware(request: NextRequest) {
             stack: error.stack
         }).catch(() => { });
 
-        // En caso de fallo total del middleware, permitimos pasar para no dejar la app offline
-        // pero el error ya está logueado en consola.
-        return NextResponse.next();
+        // En caso de fallo crítico del middleware, bloqueamos por seguridad.
+        return NextResponse.json(
+            { error: 'Internal Server Error (Security Middleware)', correlacion_id: 'mw-fail' },
+            { status: 500 }
+        );
     }
 }
 

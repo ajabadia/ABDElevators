@@ -35,109 +35,119 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+import { useApiList } from "@/hooks/useApiList";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiFileUpload } from "@/hooks/useApiFileUpload";
+import { useApiOptimistic } from "@/hooks/useApiOptimistic";
+import { useFormModal } from "@/hooks/useFormModal";
+
+interface MisDocumentos {
+    _id: string;
+    nombre_original: string;
+    descripcion?: string;
+    creado: string;
+    tamanio_bytes: number;
+    cloudinary_url: string;
+}
+
 export default function MisDocumentosPage() {
-    const [documentos, setDocumentos] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const [descripcion, setDescripcion] = useState("");
     const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [descripcion, setDescripcion] = useState("");
+    const [file, setFile] = useState<File | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        fetchDocumentos();
-    }, []);
+    // 1. Fetching con useApiList
+    const {
+        data: documentos,
+        isLoading,
+        refresh,
+        setData
+    } = useApiList<MisDocumentos>({
+        endpoint: '/api/auth/documentos',
+        filters: { search: searchTerm },
+    });
 
-    const fetchDocumentos = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/auth/documentos');
-            if (res.ok) {
-                const data = await res.json();
-                setDocumentos(data);
-            }
-        } catch (error) {
+    // 2. Optimismo UI
+    const { deleteOptimistic, addOptimistic } = useApiOptimistic(documentos, setData);
+
+    // 3. Modales y Carga
+    const uploadModal = useFormModal({
+        onClose: () => {
+            setFile(null);
+            setDescripcion("");
+        }
+    });
+
+    const { upload, isUploading, progress } = useApiFileUpload({
+        endpoint: '/api/auth/documentos',
+        onSuccess: () => {
+            toast({
+                title: "Documento subido",
+                description: "El archivo se ha guardado correctamente.",
+            });
+            uploadModal.close();
+            refresh();
+        },
+        onError: (err) => {
             toast({
                 title: "Error",
-                description: "No se pudieron cargar tus documentos",
+                description: err,
                 variant: "destructive",
             });
-        } finally {
-            // Simular carga para UI premium (mantenemos el delay breve para suavizar transición)
-            setTimeout(() => setLoading(false), 500);
         }
-    };
+    });
+
+    const deleteMutation = useApiMutation({
+        endpoint: (id) => `/api/auth/documentos/${id}`,
+        method: 'DELETE',
+        confirmMessage: '¿Deseas eliminar este archivo de tu repositorio personal?',
+        onSuccess: () => {
+            toast({
+                title: "Documento eliminado",
+                description: "El archivo ha sido borrado.",
+            });
+            refresh();
+        },
+        onError: (err) => {
+            toast({
+                title: "Error",
+                description: err,
+                variant: "destructive",
+            });
+        }
+    });
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file) return;
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('descripcion', descripcion);
-
-        try {
-            const res = await fetch('/api/auth/documentos', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (res.ok) {
-                toast({
-                    title: "Documento subido",
-                    description: "El archivo se ha guardado correctamente.",
-                });
-                setIsUploadOpen(false);
-                setFile(null);
-                setDescripcion("");
-                fetchDocumentos();
-            } else {
-                const data = await res.json();
-                throw new Error(data.error || "Error al subir");
-            }
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.message,
-                variant: "destructive",
-            });
-        } finally {
-            setUploading(false);
-        }
+        await upload(file, { descripcion });
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de que deseas eliminar este documento?")) return;
-
+        const original = [...documentos];
+        deleteOptimistic(id);
         try {
-            const res = await fetch(`/api/auth/documentos/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (res.ok) {
-                toast({
-                    title: "Documento eliminado",
-                    description: "El archivo ha sido borrado.",
-                });
-                fetchDocumentos();
-            } else {
-                throw new Error("No se pudo eliminar");
-            }
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.message,
-                variant: "destructive",
-            });
+            await deleteMutation.mutate(id);
+        } catch (error) {
+            setData(original);
         }
     };
 
-    const filteredDocs = documentos.filter(doc =>
-        doc.nombre_original.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDocs = documentos;
+
+    if (!isMounted || (isLoading && documentos.length === 0)) {
+        return (
+            <div className="flex flex-col items-center justify-center py-40 text-slate-400">
+                <Loader2 className="animate-spin mb-4 h-10 w-10 text-teal-600" />
+                <p className="animate-pulse">Cargando repositorio personal...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -152,7 +162,7 @@ export default function MisDocumentosPage() {
                     </p>
                 </div>
                 <Button
-                    onClick={() => setIsUploadOpen(true)}
+                    onClick={() => uploadModal.openCreate()}
                     className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
                 >
                     <Plus size={18} />
@@ -195,7 +205,7 @@ export default function MisDocumentosPage() {
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                        {loading ? (
+                        {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                                 <Loader2 className="animate-spin mb-4" size={40} />
                                 <p>Cargando tus archivos...</p>
@@ -272,7 +282,7 @@ export default function MisDocumentosPage() {
             </div>
 
             {/* Modal de Subida */}
-            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+            <Dialog open={uploadModal.isOpen} onOpenChange={uploadModal.setIsOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Subir Nuevo Documento</DialogTitle>
@@ -301,11 +311,11 @@ export default function MisDocumentosPage() {
                             />
                         </div>
                         <DialogFooter className="pt-4">
-                            <Button type="button" variant="outline" onClick={() => setIsUploadOpen(false)}>
+                            <Button type="button" variant="outline" onClick={() => uploadModal.close()}>
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={uploading || !file} className="bg-teal-600 hover:bg-teal-700">
-                                {uploading ? (
+                            <Button type="submit" disabled={isUploading || !file} className="bg-teal-600 hover:bg-teal-700">
+                                {isUploading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Subiendo...

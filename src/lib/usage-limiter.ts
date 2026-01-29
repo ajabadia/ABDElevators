@@ -109,14 +109,14 @@ export async function checkLLMLimit(
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
     const plan = getPlanForTenant(tier);
-    const { collection } = await getTenantCollection('usage_logs');
+    const collection = await getTenantCollection('usage_logs');
 
     // Obtener consumo del mes actual
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const usage = await collection.aggregate([
+    const usage = await collection.aggregate<any>([
         {
             $match: {
                 tenantId,
@@ -130,7 +130,7 @@ export async function checkLLMLimit(
                 total: { $sum: '$valor' },
             },
         },
-    ]).toArray();
+    ]);
 
     const currentUsage = usage[0]?.total || 0;
     const futureUsage = currentUsage + tokensToConsume;
@@ -177,13 +177,13 @@ export async function checkVectorSearchLimit(
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
     const plan = getPlanForTenant(tier);
-    const { collection } = await getTenantCollection('usage_logs');
+    const collection = await getTenantCollection('usage_logs');
 
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const usage = await collection.aggregate([
+    const usage = await collection.aggregate<any>([
         {
             $match: {
                 tenantId,
@@ -197,7 +197,7 @@ export async function checkVectorSearchLimit(
                 total: { $sum: '$valor' },
             },
         },
-    ]).toArray();
+    ]);
 
     const currentUsage = usage[0]?.total || 0;
     const futureUsage = currentUsage + 1;
@@ -220,13 +220,13 @@ export async function checkAPIRequestLimit(
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
     const plan = getPlanForTenant(tier);
-    const { collection } = await getTenantCollection('usage_logs');
+    const collection = await getTenantCollection('usage_logs');
 
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const usage = await collection.aggregate([
+    const usage = await collection.aggregate<any>([
         {
             $match: {
                 tenantId,
@@ -240,7 +240,7 @@ export async function checkAPIRequestLimit(
                 total: { $sum: '$valor' },
             },
         },
-    ]).toArray();
+    ]);
 
     const currentUsage = usage[0]?.total || 0;
     const futureUsage = currentUsage + 1;

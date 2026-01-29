@@ -1,6 +1,6 @@
 import { getTenantCollection } from './db-tenant';
 import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from '@/lib/schemas';
-import { AppError, DatabaseError } from '@/lib/errors';
+import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 
@@ -12,9 +12,7 @@ export class PromptService {
      * Obtiene un prompt activo por su key
      */
     static async getPrompt(key: string, tenantId: string): Promise<Prompt> {
-        const { collection, tenantId: resolvedTenantId } = await getTenantCollection('prompts');
-
-        console.log(`[DEBUG PROMPT] Resolving key: "${key}" for tenantId: "${tenantId}". Resolved via auth: "${resolvedTenantId}"`);
+        const collection = await getTenantCollection('prompts');
 
         const prompt = await collection.findOne({ key, tenantId, active: true });
 
@@ -59,7 +57,7 @@ export class PromptService {
 
         // Auditar uso (Fase Group A: Audit Prompt Usage)
         try {
-            const { collection } = await getTenantCollection('prompts');
+            const collection = await getTenantCollection('prompts');
             await collection.updateOne(
                 { _id: (prompt as any)._id },
                 {
@@ -104,8 +102,8 @@ export class PromptService {
         tenantId?: string,
         auditMetadata?: { correlacion_id?: string, ip?: string, userAgent?: string }
     ): Promise<void> {
-        const { collection } = await getTenantCollection('prompts');
-        const { collection: versionsCollection } = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompts');
+        const versionsCollection = await getTenantCollection('prompt_versions');
 
         const query: any = { _id: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
@@ -171,8 +169,8 @@ export class PromptService {
         changedBy: string,
         tenantId?: string
     ): Promise<void> {
-        const { collection } = await getTenantCollection('prompts');
-        const { collection: versionsCollection } = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompts');
+        const versionsCollection = await getTenantCollection('prompt_versions');
 
         const versionQuery: any = {
             promptId: new ObjectId(promptId),
@@ -235,20 +233,19 @@ export class PromptService {
      * Lista todos los prompts (por tenant o global para SuperAdmins)
      */
     static async listPrompts(tenantId?: string | null, activeOnly: boolean = true): Promise<Prompt[]> {
-        const { collection } = await getTenantCollection('prompts');
+        const collection = await getTenantCollection('prompts');
         let filter: any = {};
         if (activeOnly) {
             filter.$or = [{ active: true }, { active: { $exists: false } }];
         }
         if (tenantId) filter.tenantId = tenantId;
 
-        const prompts = await collection.find(filter).sort({ tenantId: 1, category: 1, name: 1 }).toArray();
+        const prompts = await collection.find(filter, { sort: { tenantId: 1, category: 1, name: 1 } });
 
         return prompts.map(p => {
             const result = PromptSchema.safeParse(p);
             if (!result.success) {
                 console.error(`[PROMPT VALIDATION ERROR] ID: ${p._id}, Key: ${p.key}:`, result.error.format());
-                // Retornamos un objeto parcial o permitimos que pase si es Admin para depurar
                 return { ...p, _validationError: true } as any;
             }
             return result.data;
@@ -259,14 +256,11 @@ export class PromptService {
      * Obtiene el historial de versiones de un prompt
      */
     static async getVersionHistory(promptId: string, tenantId?: string): Promise<PromptVersion[]> {
-        const { collection } = await getTenantCollection('prompt_versions');
+        const collection = await getTenantCollection('prompt_versions');
         const query: any = { promptId: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
 
-        const versions = await collection
-            .find(query)
-            .sort({ version: -1 })
-            .toArray();
+        const versions = await collection.find(query, { sort: { version: -1 } });
 
         return versions.map(v => PromptVersionSchema.parse(v));
     }
@@ -275,27 +269,25 @@ export class PromptService {
      * Obtiene el historial global (últimos cambios en todos los prompts)
      */
     static async getGlobalHistory(tenantId?: string | null): Promise<any[]> {
-        const { collection: versionsCollection } = await getTenantCollection('prompt_versions');
-        const { collection: promptsCollection } = await getTenantCollection('prompts');
+        const versionsCollection = await getTenantCollection('prompt_versions');
+        const promptsCollection = await getTenantCollection('prompts');
 
         const query: any = {};
         if (tenantId) query.tenantId = tenantId;
 
-        const versions = await versionsCollection
-            .find(query)
-            .sort({ createdAt: -1 })
-            .limit(50)
-            .toArray();
+        const versions = await versionsCollection.find(query, {
+            sort: { createdAt: -1 },
+            limit: 50
+        });
 
-        // Enriquecer con el nombre del prompt actual para contexto
         const promptIds = Array.from(new Set(versions.map(v => v.promptId)));
-        const prompts = await promptsCollection.find({ _id: { $in: promptIds } }).toArray();
-        const promptMap = new Map(prompts.map(p => [p._id.toString(), p]));
+        const prompts = await promptsCollection.find({ _id: { $in: promptIds } });
+        const promptMap = new Map(prompts.map(p => [(p as any)._id.toString(), p]));
 
         return versions.map(v => ({
             ...v,
-            promptName: promptMap.get(v.promptId.toString())?.name || 'Prompt Eliminado',
-            promptKey: promptMap.get(v.promptId.toString())?.key || 'UNKNOWN'
+            promptName: (promptMap.get(v.promptId.toString()) as any)?.name || 'Prompt Eliminado',
+            promptKey: (promptMap.get(v.promptId.toString()) as any)?.key || 'UNKNOWN'
         }));
     }
 }

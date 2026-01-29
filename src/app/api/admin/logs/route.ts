@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
@@ -21,42 +22,22 @@ export async function GET(req: NextRequest) {
         const nivel = searchParams.get('nivel'); // ERROR, WARN, INFO, DEBUG
         const origen = searchParams.get('origen');
         const search = searchParams.get('search');
-        const tenantId = searchParams.get('tenantId'); // SuperAdmin can filter, Admin sees only theirs
+        const tenantIdFilter = searchParams.get('tenantId'); // Optional filter within allowed scope
         const userId = searchParams.get('userId');
         const userEmail = searchParams.get('userEmail');
 
-        const db = await connectLogsDB();
-        const collection = db.collection('logs_aplicacion');
+        // Contexto de base de datos de LOGS blindado
+        const logColl = await getTenantCollection('logs_aplicacion', session, 'LOGS');
 
         const query: any = {};
 
-        // Security Filter
-        if (session.user.role === 'ADMIN') {
-            // Admin can govern multiple tenants if specified in tenantAccess
-            const allowedTenants = [
-                (session.user as any).tenantId,
-                ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
-            ].filter(Boolean);
-
-            if (allowedTenants.length > 1) {
-                // If the user manages multiple tenants
-                if (tenantId) {
-                    // Check if they are trying to access a tenant they own
-                    if (!allowedTenants.includes(tenantId)) {
-                        throw new AppError('UNAUTHORIZED', 403, 'No tienes acceso a este tenant');
-                    }
-                    query.tenantId = tenantId;
-                } else {
-                    // Otherwise, show logs from ALL their tenants
-                    query.tenantId = { $in: allowedTenants };
-                }
-            } else {
-                // Single tenant admin
-                query.tenantId = allowedTenants[0];
-            }
-        } else if (tenantId) {
-            // SuperAdmin filtering specifically
-            query.tenantId = tenantId;
+        // Si el usuario es SuperAdmin y quiere filtrar por un tenant específico
+        if (session.user.role === 'SUPER_ADMIN' && tenantIdFilter) {
+            query.tenantId = tenantIdFilter;
+        }
+        // Si el usuario es ADMIN y quiere filtrar dentro de sus propios tenants
+        else if (session.user.role === 'ADMIN' && tenantIdFilter) {
+            query.tenantId = tenantIdFilter;
         }
 
         if (nivel && nivel !== 'ALL') query.nivel = nivel;
@@ -72,15 +53,15 @@ export async function GET(req: NextRequest) {
             ];
         }
 
-        const logs = await collection
-            .find(query)
-            .sort({ timestamp: -1 })
-            .limit(limit)
-            .toArray();
+        const logs = await logColl
+            .find(query, {
+                sort: { timestamp: -1 } as any,
+                limit: limit
+            });
 
         // Stats rápidos para el header
-        const errorCount = await collection.countDocuments({ ...query, nivel: 'ERROR' });
-        const warnCount = await collection.countDocuments({ ...query, nivel: 'WARN' });
+        const errorCount = await logColl.countDocuments({ ...query, nivel: 'ERROR' });
+        const warnCount = await logColl.countDocuments({ ...query, nivel: 'WARN' });
 
         return NextResponse.json({
             success: true,

@@ -1,25 +1,27 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Plus,
     LifeBuoy,
     MessageSquare,
     Search,
     Clock,
-    User,
     ArrowRight,
-    Sparkles
+    Sparkles,
+    RefreshCw,
+    Inbox
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TicketStatusBadge, TicketPriorityBadge } from '@/components/tickets/TicketBadges';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDate, formatRelative } from '@/lib/date-utils';
 import { Input } from '@/components/ui/input';
 import { AgenticSupportSearch } from '@/components/tecnico/AgenticSupportSearch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useApiList } from '@/hooks/useApiList';
+import { TicketListSkeleton } from '@/components/shared/LoadingSkeleton';
 
 interface Ticket {
     _id: string;
@@ -32,28 +34,16 @@ interface Ticket {
 }
 
 export default function ClientSupportPage() {
-    const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
-    useEffect(() => {
-        const fetchTickets = async () => {
-            try {
-                const res = await fetch('/api/soporte/tickets');
-                if (res.ok) {
-                    const data = await res.json();
-                    setTickets(data.tickets || []);
-                }
-            } catch (error) {
-                console.error("Error fetching tickets", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTickets();
-    }, []);
+    // 1. Gestión de datos con hook genérico
+    const { data: tickets, isLoading, refresh } = useApiList<Ticket>({
+        endpoint: '/api/soporte/tickets',
+        dataKey: 'tickets',
+    });
 
-    const filteredTickets = tickets.filter(t =>
+    // 2. Filtrado local para búsqueda instantánea
+    const filteredTickets = (tickets || []).filter(t =>
         t.subject.toLowerCase().includes(search.toLowerCase()) ||
         t.ticketNumber.toLowerCase().includes(search.toLowerCase())
     );
@@ -61,99 +51,119 @@ export default function ClientSupportPage() {
     return (
         <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                        <LifeBuoy className="w-10 h-10 text-blue-600" />
-                        Centro de Soporte Técnico
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 overflow-hidden relative p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+                <div className="relative z-10">
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4">
+                        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/40">
+                            <LifeBuoy className="w-8 h-8 text-white" />
+                        </div>
+                        Centro de Soporte
                     </h1>
-                    <p className="text-slate-500 mt-2 text-lg">
+                    <p className="text-slate-500 mt-2 text-lg font-medium">
                         Consulta a nuestra IA agéntica o gestiona tus tickets de soporte.
                     </p>
                 </div>
-                <Link href="/soporte/nuevo">
-                    <Button className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95">
-                        <Plus className="w-5 h-5 mr-2" /> Nuevo Ticket
-                    </Button>
-                </Link>
+                <div className="relative z-10">
+                    <Link href="/soporte/nuevo">
+                        <Button className="h-14 px-8 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95 group">
+                            <Plus className="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform" /> Nuevo Ticket
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <Tabs defaultValue="ai-search" className="space-y-8">
-                <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 h-14 rounded-2xl grid grid-cols-2 max-w-md border border-slate-200 dark:border-slate-700">
-                    <TabsTrigger value="ai-search" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
-                        <Sparkles className="w-4 h-4 mr-2" /> Consulta IA
-                    </TabsTrigger>
-                    <TabsTrigger value="tickets" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
-                        <MessageSquare className="w-4 h-4 mr-2" /> Mis Tickets
-                    </TabsTrigger>
-                </TabsList>
+                <div className="flex justify-center">
+                    <TabsList className="bg-slate-100 dark:bg-slate-800 p-1.5 h-16 rounded-[1.5rem] grid grid-cols-2 w-full max-w-md border border-slate-200 dark:border-slate-700 shadow-inner">
+                        <TabsTrigger value="ai-search" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
+                            <Sparkles className="w-4 h-4 mr-2" /> Consulta IA
+                        </TabsTrigger>
+                        <TabsTrigger value="tickets" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
+                            <MessageSquare className="w-4 h-4 mr-2" /> MIS TICKETS
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
-                <TabsContent value="ai-search" className="animate-in fade-in slide-in-from-left-4 duration-500">
+                <TabsContent value="ai-search" className="animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
                     <AgenticSupportSearch />
                 </TabsContent>
 
-                <TabsContent value="tickets" className="animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[400px]">
+                <TabsContent value="tickets" className="animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/50 overflow-hidden min-h-[500px]">
                         {/* Toolbar */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                            <div className="relative w-full sm:w-96">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 flex flex-col sm:flex-row gap-6 justify-between items-center">
+                            <div className="relative w-full sm:w-[400px]">
+                                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
-                                    placeholder="Buscar tus tickets..."
+                                    placeholder="Buscar por asunto o ID (ej: #22901)..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="pl-10 h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
+                                    className="pl-12 h-14 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500/20"
                                 />
                             </div>
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                {tickets.length} Tickets Totales
+                            <div className="flex items-center gap-6">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
+                                    {(tickets || []).length} Registros
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => refresh()}
+                                    className="h-12 w-12 rounded-2xl hover:bg-white border border-transparent hover:border-slate-100 shadow-sm transition-all"
+                                >
+                                    <RefreshCw size={18} className={isLoading ? "animate-spin text-blue-600" : "text-slate-400"} />
+                                </Button>
                             </div>
                         </div>
 
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {loading ? (
-                                <div className="p-20 text-center text-slate-400">Cargando tus tickets...</div>
+                        <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {isLoading && (!tickets || tickets.length === 0) ? (
+                                <div className="p-8">
+                                    <TicketListSkeleton />
+                                </div>
                             ) : filteredTickets.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-                                        <MessageSquare className="w-8 h-8 text-slate-400" />
+                                <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
+                                    <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mb-8 shadow-inner">
+                                        <Inbox className="w-10 h-10 text-slate-300" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No tienes tickets abiertos</h3>
-                                    <p className="text-slate-500 max-w-sm mx-auto mb-8">
-                                        Si tienes algún problema con la plataforma o necesitas asistencia técnica, no dudes en contactarnos.
+                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3">No hay tickets activos</h3>
+                                    <p className="text-slate-500 max-w-sm mx-auto mb-10 font-medium">
+                                        Tu historial está limpio. Si tienes alguna duda técnica o incidencia, estamos aquí para ayudarte.
                                     </p>
                                     <Link href="/soporte/nuevo">
-                                        <Button variant="outline" className="rounded-xl border-slate-300 dark:border-slate-700">
+                                        <Button className="rounded-2xl h-14 px-10 border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white transition-all font-black text-xs uppercase tracking-widest">
                                             Crear mi primer ticket
                                         </Button>
                                     </Link>
                                 </div>
                             ) : (
                                 filteredTickets.map(ticket => (
-                                    <div key={ticket._id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                                    <div key={ticket._id} className="p-8 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group flex flex-col sm:flex-row gap-8 items-start sm:items-center cursor-default border-l-4 border-l-transparent hover:border-l-blue-600">
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-mono text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl uppercase tracking-wider">
                                                     {ticket.ticketNumber}
                                                 </span>
                                                 <TicketStatusBadge status={ticket.status} />
                                                 <TicketPriorityBadge priority={ticket.priority} />
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                                            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors tracking-tight">
                                                 {ticket.subject}
                                             </h3>
-                                            <div className="flex items-center gap-4 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <Clock size={12} /> Actualizado {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: es })}
+                                            <div className="flex items-center gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                                <span className="flex items-center gap-2">
+                                                    <Clock size={14} className="text-slate-300" /> {formatRelative(ticket.createdAt)}
                                                 </span>
-                                                <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-bold uppercase text-[10px]">
+                                                <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                                <span className="text-blue-600/60">
                                                     {ticket.category}
                                                 </span>
                                             </div>
                                         </div>
-                                        <Link href={`/soporte/${ticket._id}`}>
-                                            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 shrink-0">
-                                                Ver conversación <ArrowRight className="w-4 h-4 ml-2" />
+                                        <Link href={`/soporte/${ticket._id}`} className="shrink-0 w-full sm:w-auto">
+                                            <Button variant="ghost" className="h-14 px-8 rounded-2xl text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 border border-transparent hover:border-blue-100 font-black text-[10px] uppercase tracking-widest w-full">
+                                                Ver Conversación <ArrowRight className="w-4 h-4 ml-3 group-hover:translate-x-1 transition-transform" />
                                             </Button>
                                         </Link>
                                     </div>

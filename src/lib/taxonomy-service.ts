@@ -12,12 +12,12 @@ export class TaxonomyService {
      * Obtiene todas las taxonomías activas para un tenant e industria.
      */
     static async getTaxonomies(tenantId: string, industry: IndustryType) {
-        const { collection } = await getTenantCollection('taxonomias');
+        const collection = await getTenantCollection('taxonomias');
         return await collection.find({
             tenantId,
             industry,
             active: true
-        }).toArray();
+        });
     }
 
     /**
@@ -25,7 +25,7 @@ export class TaxonomyService {
      */
     static async createTaxonomy(data: any, correlacion_id: string) {
         const validated = TaxonomySchema.parse(data);
-        const { collection } = await getTenantCollection('taxonomias');
+        const collection = await getTenantCollection('taxonomias');
 
         // Verificar si la clave ya existe para este tenant/industria
         const existing = await collection.findOne({
@@ -56,7 +56,7 @@ export class TaxonomyService {
      * Actualiza una taxonomía existente.
      */
     static async updateTaxonomy(id: string, data: any, tenantId: string, correlacion_id: string) {
-        const { collection } = await getTenantCollection('taxonomias');
+        const collection = await getTenantCollection('taxonomias');
 
         const existing = await collection.findOne({
             _id: new ObjectId(id),

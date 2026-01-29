@@ -1,23 +1,22 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import {
     ArrowLeft,
     Send,
     Loader2,
-    Ticket as TicketIcon // Renombrado para evitar colisión si es necesario
+    Ticket as TicketIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { toast } from '@/hooks/use-toast';
+import { formatDateLong, formatDateTime } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { TicketStatusBadge, TicketPriorityBadge } from '@/components/tickets/TicketBadges';
+import { TicketDetailSkeleton } from '@/components/shared/LoadingSkeleton';
+import { useApiItem } from '@/hooks/useApiItem';
+import { useApiMutation } from '@/hooks/useApiMutation';
 
 interface Ticket {
     _id: string;
@@ -37,132 +36,110 @@ interface Ticket {
 }
 
 export default function ClientTicketDetailPage({ params }: { params: { id: string } }) {
-    const router = useRouter();
-    const [ticket, setTicket] = useState<Ticket | null>(null);
-    const [loading, setLoading] = useState(true);
     const [reply, setReply] = useState('');
-    const [sending, setSending] = useState(false);
 
-    // Fetch simple del ticket
-    // NOTA: Para MVP reutilizamos /api/soporte/tickets con filtro, aunque idealmente sería /api/soporte/tickets/[id]
-    // Como el endpoint de lista filtra por usuario, podemos hacer fetch de la lista y buscar este ID, 
-    // o mejorar el backend para GET /tickets/[id]. 
-    // Para no tocar backend ahora, asumiremos que una llamada a /api/soporte/tickets/[id] existe o la creamos
-    // Oh wait, no creamos GET /api/soporte/tickets/[id] todavía.
-    // ESTRATEGIA: Vamos a crear ese GET endpoint también, o filtrar en cliente.
-    // Filtrar en cliente es feo. 
-    // Vamos a asumir que EXISTE UN ENDPOINT que devuelve el ticket completo con mensajes.
-    // Vaya, reusaré el ticket list logic pero necesito los mensajes.
-    // Ticket List NO devuelve mensajes.
-    // NECESITO crear GET /api/soporte/tickets/[id]
+    // 1. Gestión de datos con hook genérico
+    const { data: ticket, isLoading, refresh } = useApiItem<Ticket>({
+        endpoint: `/api/soporte/tickets/${params.id}`,
+        dataKey: 'ticket'
+    });
 
-    // Como estoy en frontend, voy a escribir el frontend asumiendo que el backend responderá. 
-    // Luego arreglo el backend.
+    // 2. Mutaciones con hook genérico
+    const { mutate: sendReply, isLoading: isSending } = useApiMutation({
+        endpoint: `/api/soporte/tickets/${params.id}/reply`,
+        method: 'POST',
+        onSuccess: () => {
+            setReply('');
+            refresh(); // Refresco reactivo sin reload manual
+        },
+        successMessage: "Mensaje enviado correctamente"
+    });
 
-    const fetchTicket = async () => {
-        try {
-            const res = await fetch(`/api/soporte/tickets/${params.id}`);
-            if (res.ok) {
-                const data = await res.json();
-                setTicket(data.ticket);
-            } else {
-                toast({ title: "Error", description: "No se pudo cargar el ticket", variant: "destructive" });
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchTicket();
-    }, [params.id]);
-
-    const handleSendReply = async () => {
+    const handleSendReply = () => {
         if (!reply.trim()) return;
-        setSending(true);
-        try {
-            const res = await fetch(`/api/soporte/tickets/${params.id}/reply`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: reply })
-            });
-
-            if (res.ok) {
-                setReply('');
-                fetchTicket(); // Recargar para ver mensaje nuevo
-                toast({ title: "Mensaje envíado", description: "El equipo de soporte ha sido notificado." });
-            } else {
-                toast({ title: "Error", description: "No se pudo enviar el mensaje", variant: "destructive" });
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setSending(false);
-        }
+        sendReply({ content: reply });
     };
 
-    if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
-    if (!ticket) return <div className="p-20 text-center">Ticket no encontrado</div>;
+    if (isLoading && !ticket) return (
+        <div className="p-8 max-w-4xl mx-auto space-y-6 mt-10">
+            <TicketDetailSkeleton />
+        </div>
+    );
+
+    if (!ticket) return (
+        <div className="p-20 text-center">
+            <h2 className="text-xl font-black text-slate-900">Ticket no encontrado</h2>
+            <Link href="/soporte">
+                <Button variant="link" className="text-blue-600 font-bold">Volver al centro de soporte</Button>
+            </Link>
+        </div>
+    );
 
     return (
         <div className="p-8 max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-            <Link href="/soporte" className="inline-flex items-center text-slate-500 hover:text-blue-600 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Volver a mis tickets
+            <Link href="/soporte" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors group">
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Volver a mis tickets
             </Link>
 
             {/* Header Clean */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex justify-between items-start mb-4">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-sm">
+                        <span className="font-mono font-black text-slate-400 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl text-xs uppercase tracking-wider border border-slate-100 dark:border-slate-700">
                             {ticket.ticketNumber}
                         </span>
                         <TicketStatusBadge status={ticket.status} />
                     </div>
-                    <span className="text-sm text-slate-400">{format(new Date(ticket.createdAt), "PPP", { locale: es })}</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-full border border-slate-100 dark:border-slate-700">
+                        Apertura: {formatDateLong(ticket.createdAt)}
+                    </span>
                 </div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{ticket.subject}</h1>
+                <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4 leading-tight tracking-tight">{ticket.subject}</h1>
                 <div className="flex gap-2">
                     <TicketPriorityBadge priority={ticket.priority} />
-                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-bold uppercase text-[10px] text-slate-500">{ticket.category}</span>
+                    <span className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl font-black uppercase text-[10px] tracking-widest border border-blue-100/50">
+                        {ticket.category}
+                    </span>
                 </div>
             </div>
 
             {/* Conversation */}
-            <div className="space-y-6">
+            <div className="space-y-8 py-8 border-l-2 border-slate-100 dark:border-slate-800 ml-5 pl-10 pr-2">
                 {/* Original Description */}
-                <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 shrink-0">
-                        Yo
+                <div className="relative">
+                    <div className="absolute -left-[51px] top-0 w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center font-black text-white text-[10px] shadow-lg ring-4 ring-white dark:ring-slate-950">
+                        ME
                     </div>
-                    <div className="space-y-1 max-w-2xl">
-                        <div className="text-xs text-slate-400 font-bold ml-1">Descripción Inicial</div>
-                        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-sm whitespace-pre-wrap">
-                            {ticket.description}
+                    <div className="space-y-2">
+                        <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Descripción Inicial</div>
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl rounded-tl-none border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xl shadow-slate-200/40 relative">
+                            <p className="whitespace-pre-wrap leading-relaxed font-medium">{ticket.description}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Messages */}
                 {ticket.messages?.map((msg) => (
-                    <div key={msg.id} className={cn("flex gap-4", msg.author === 'User' ? "" : "flex-row-reverse")}>
+                    <div key={msg.id} className={cn("relative", msg.author === 'Support' ? "flex flex-col items-end" : "")}>
                         <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0",
-                            msg.author === 'User' ? "bg-slate-200 dark:bg-slate-800 text-slate-500" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600"
+                            "absolute top-0 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[10px] shadow-lg ring-4 ring-white dark:ring-slate-950",
+                            msg.author === 'User'
+                                ? "-left-[51px] bg-slate-800 text-white"
+                                : "-left-[51px] bg-blue-600 text-white"
                         )}>
-                            {msg.author === 'User' ? 'Yo' : <TicketIcon size={18} />}
+                            {msg.author === 'User' ? 'ME' : <TicketIcon size={16} />}
                         </div>
-                        <div className={cn("space-y-1 max-w-2xl", msg.author === 'User' ? "" : "items-end flex flex-col")}>
-                            <div className="text-xs text-slate-400 font-bold mx-1">
-                                {msg.author === 'User' ? 'Tú' : 'Soporte Técnico'} • {format(new Date(msg.timestamp), "HH:mm")}
+                        <div className={cn("space-y-2 max-w-[90%]", msg.author === 'User' ? "" : "items-end flex flex-col")}>
+                            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
+                                {msg.author === 'User' ? 'Tu Respuesta' : 'Soporte Técnico'}
+                                <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                <span className="font-mono">{formatDateTime(msg.timestamp).split(',')[1].trim()}</span>
                             </div>
                             <div className={cn(
-                                "p-4 rounded-2xl shadow-sm border whitespace-pre-wrap",
+                                "p-6 rounded-3xl shadow-xl border whitespace-pre-wrap leading-relaxed font-medium",
                                 msg.author === 'User'
-                                    ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-tl-none"
-                                    : "bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30 text-blue-900 dark:text-blue-200 rounded-tr-none"
+                                    ? "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-tl-none shadow-slate-200/40"
+                                    : "bg-blue-600 text-white border-blue-500 rounded-tr-none shadow-blue-500/20"
                             )}>
                                 {msg.content}
                             </div>
@@ -172,26 +149,34 @@ export default function ClientTicketDetailPage({ params }: { params: { id: strin
             </div>
 
             {/* Reply Input */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl sticky bottom-4">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-[0_-20px_50px_rgba(0,0,0,0.05)] sticky bottom-8">
                 <Textarea
-                    placeholder="Escribe una respuesta para el soporte..."
-                    className="min-h-[100px] resize-none mb-4 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+                    placeholder="Escribe una respuesta para el equipo técnico..."
+                    className="min-h-[120px] resize-none mb-6 bg-slate-50 dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl p-6 focus:ring-2 focus:ring-blue-500/20 shadow-inner"
                     value={reply}
                     onChange={e => setReply(e.target.value)}
                 />
-                <div className="flex justify-between items-center">
-                    <p className="text-xs text-slate-400">Tu respuesta notificará al equipo técnico inmediatamente.</p>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-center sm:text-left">
+                        Tu respuesta llegará directamente<br className="hidden sm:block" /> a nuestros ingenieros nivel 2.
+                    </p>
                     <Button
                         onClick={handleSendReply}
-                        disabled={!reply.trim() || sending}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-6 shadow-lg shadow-blue-500/20"
+                        disabled={!reply.trim() || isSending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl h-14 px-10 shadow-xl shadow-blue-500/30 group transition-all"
                     >
-                        {sending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                        Enviar Mensaje
+                        {isSending ? (
+                            <Loader2 className="animate-spin w-5 h-5" />
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                Enviar Mensaje
+                                <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                            </div>
+                        )}
                     </Button>
                 </div>
             </div>
-            <div className="h-12" />
+            <div className="h-20" />
         </div>
     );
 }

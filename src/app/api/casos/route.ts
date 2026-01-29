@@ -18,11 +18,8 @@ export async function GET(req: NextRequest) {
         const session = await auth();
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
-        const { collection, withTenant } = await getCaseCollection();
-        const casos = await collection
-            .find(withTenant())
-            .sort({ actualizado: -1 })
-            .toArray();
+        const collection = await getCaseCollection();
+        const casos = await collection.find({}, { sort: { actualizado: -1 } });
 
         return NextResponse.json({ success: true, casos });
     } catch (error: any) {
@@ -43,17 +40,11 @@ export async function POST(req: NextRequest) {
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const body = await req.json();
-        const { collection, tenantId } = await getCaseCollection();
+        const collection = await getCaseCollection();
 
-        // Inyectamos tenantId y fechas
-        const caseData = {
-            ...body,
-            tenantId,
-            creado: new Date(),
-            actualizado: new Date()
-        };
-
-        const validated = GenericCaseSchema.parse(caseData);
+        // No es necesario inyectar tenantId o fechas aquí,
+        // SecureCollection.insertOne lo hace automáticamente.
+        const validated = GenericCaseSchema.parse(body);
         const result = await collection.insertOne(validated);
 
         await logEvento({

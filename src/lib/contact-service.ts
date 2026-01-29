@@ -19,7 +19,7 @@ export class ContactService {
             estado: 'pendiente'
         });
 
-        const { collection } = await getTenantCollection('contact_requests');
+        const collection = await getTenantCollection('contact_requests');
         const result = await collection.insertOne(validated);
 
         await logEvento({
@@ -38,16 +38,16 @@ export class ContactService {
      * Lista todas las solicitudes (Solo para SUPER_ADMIN o ADMIN Global).
      */
     static async listAll(tenantId?: string) {
-        const { collection } = await getTenantCollection('contact_requests');
+        const collection = await getTenantCollection('contact_requests');
         const query = tenantId ? { tenantId } : {};
-        return await collection.find(query).sort({ creado: -1 }).toArray() as ContactRequest[];
+        return await collection.find(query, { sort: { creado: -1 } }) as ContactRequest[];
     }
 
     /**
      * Responde a una solicitud.
      */
     static async respondRequest(id: string, respuesta: string, adminId: string, correlacion_id: string) {
-        const { collection } = await getTenantCollection('contact_requests');
+        const collection = await getTenantCollection('contact_requests');
 
         const result = await collection.updateOne(
             { _id: new ObjectId(id) },

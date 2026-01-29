@@ -14,18 +14,18 @@ export class WorkflowService {
      */
     static async createOrUpdateDefinition(definition: Partial<WorkflowDefinition>, correlacion_id: string) {
         const validated = WorkflowDefinitionSchema.parse(definition);
-        const { collection, tenantId } = await getTenantCollection('workflow_definitions');
+        const collection = await getTenantCollection('workflow_definitions');
+        const tenantId = collection.tenantId;
 
         // Solo un workflow por tipo de entidad puede ser default
         if (validated.is_default) {
             await collection.updateMany(
-                { tenantId, entity_type: validated.entity_type },
+                { entity_type: validated.entity_type },
                 { $set: { is_default: false } }
             );
         }
 
         const query = {
-            tenantId,
             entity_type: validated.entity_type,
             name: validated.name
         };
@@ -52,16 +52,16 @@ export class WorkflowService {
      * Lista todas las definiciones para un tenant y tipo.
      */
     static async listDefinitions(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
-        const { collection } = await getTenantCollection('workflow_definitions');
-        return await collection.find({ tenantId, entity_type }).sort({ actualizado: -1 }).toArray() as WorkflowDefinition[];
+        const collection = await getTenantCollection('workflow_definitions');
+        return await collection.find({ entity_type }, { sort: { actualizado: -1 } }) as WorkflowDefinition[];
     }
 
     /**
      * Obtiene el workflow activo para una entidad.
      */
     static async getActiveWorkflow(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
-        const { collection } = await getTenantCollection('workflow_definitions');
-        return await collection.findOne({ tenantId, entity_type, active: true }) as WorkflowDefinition | null;
+        const collection = await getTenantCollection('workflow_definitions');
+        return await collection.findOne({ entity_type, active: true }) as WorkflowDefinition | null;
     }
 
     /**

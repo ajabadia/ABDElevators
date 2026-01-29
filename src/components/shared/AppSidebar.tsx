@@ -25,7 +25,8 @@ import {
     Search,
     ShieldCheck,
     Activity,
-    TrendingUp
+    TrendingUp,
+    Share2
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -62,6 +63,13 @@ export function AppSidebar() {
             name: `${labels.plural} Técnico`,
             href: '/pedidos',
             icon: Zap,
+            roles: ['ADMIN', 'TECNICO'],
+            module: 'TECHNICAL'
+        },
+        {
+            name: 'Mapa Semántico',
+            href: '/grafos',
+            icon: Share2,
             roles: ['ADMIN', 'TECNICO'],
             module: 'TECHNICAL'
         },

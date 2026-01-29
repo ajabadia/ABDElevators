@@ -1,0 +1,640 @@
+Si pudiera demolerlo todo y reconstruirlo con recursos ilimitados, no crearía "una plataforma de RAG para documentos técnicos". Crearía un "Cerebro Organizacional Universal" — un meta-sistema que adapte su forma, su lenguaje y su lógica a la industria sin que el usuario perciba la complejidad subyacente.
+Aquí está la arquitectura conceptual:
+1. Filosofía: "The Adaptive Entity Engine"
+En lugar de tener "Pedidos" (ascensores) o "Casos" (legal) como entidades rígidas, crearía un Ontology Builder visual donde cada cliente define sus propias entidades del mundo real:
+Un abogado: Cliente → Expediente → Actuación → Documento
+Un médico: Paciente → Episodio → Prueba → Informe
+Un banco: Cliente → Producto → Operación → Documentación
+Un ayuntamiento: Ciudadano → Trámite → Requisito → Resolución
+El cambio radical: La UI no es "una app con menús fijos". Es un generador de interfaces dinámico que lee la ontología del cliente y pinta workflows, dashboards y formularios automáticamente.
+2. Arquitectura de Datos: "The Knowledge Graph, not Documents"
+Abandonaría MongoDB como núcleo por una arquitectura híbrida:
+Graph Layer (Neo4j/ArangoDB): Para relaciones semánticas complejas ("Este párrafo del contrato contradice el artículo 5 de la ley X", "Este fármaco interacciona con el tratamiento del paciente Y")
+Vector Layer (Pinecone/Weaviate): Para similitud semántica pura
+Object Layer (S3): Para binarios con versionado inmutable (blockchain light para auditoría)
+La magia: Cada fragmento de texto (chunk) no es una isla. Es un nodo en un grafo con relaciones tipadas: CONTRADICE, COMPLEMENTA, VERSIÓN_DE, REQUIERE, CITA.
+3. UX/UI: "The Chameleon Interface"
+A. Eliminación del concepto "Aplicación Web"
+Sería un sistema de capas contextuales:
+Layer 0: El documento mismo (PDF, imagen, audio) es la interfaz. Marcas y anotaciones inline (como Figma para texto).
+Layer 1: Asistente conversacional omnipresente (ej: Copilot pero que entiende tu contexto organizacional completo, no solo el chat).
+Layer 2: Dashboards holográficos (AR/VR ready) donde flotan conexiones entre conceptos, no tablas de datos.
+B. Modos de Interacción por Persona
+Modo Forense (abogado/auditor): Vista de diferencias (diff) inteligente entre versiones, cadena de custodia visual, timeline de cambios con "huella dactilar digital" de quién tocó qué y cuándo.
+Modo Clínico (sanidad): Privacidad ultra-stricta (redacción automática de PII mientras navegas, solo el dato relevante se ilumina).
+Modo Transactional (banca): Velocidad extrema, checklist de compliance en tiempo real mientras se escribe, firma biométrica integrada.
+Modo Ciudadanía (ayuntamientos): Lenguaje natural extremo (NLP conversacional), accessible WCAG 3.0 nativo, integración con identidad digital del país.
+4. Motor de IA: "The Parliament of Agents"
+No un solo modelo (Gemini), sino un orquestador de especialistas:
+Agente Taxónomo: Clasifica automáticamente cualquier documento en la ontología del cliente.
+Agente Contradicto: Detecta inconsistencias lógicas/normativas entre documentos.
+Agente Sintetizador: Resume considerando el receptor (resumen para un jefe ≠ para un técnico).
+Agente Predictivo: No solo analiza lo que pasó, predice riesgos futuros basado en patrones de otros tenants anónimos (federated learning).
+Clave: Cada industria tiene su "Maestro Especialista", un LLM fine-tuned con corpus privados de esa vertical (ej: toda la jurisprudencia del TS para legal, histórico de interacciones para banca).
+5. Compliance por Diseño: "The Trust Layers"
+A. Capa Física (Geopolítica)
+Multi-cloud por diseño: datos de sanidad españoles nunca salen de España (Azure ES/GCP ES), datos de defensa en Soberanía Cloud.
+Edge computing: procesamiento sensible en el dispositivo del usuario, nunca viaja al servidor.
+B. Capa Lógica (Criptografía)
+Zero-Knowledge Architecture: El proveedor (tú) no puede leer el contenido de los documentos. Solo el cliente tiene la clave privada.
+Homomorphic Encryption: Permite buscar dentro de documentos cifrados sin desencriptarlos (búsqueda semántica privada).
+C. Capa Ética (Explainable AI)
+Cada decisión del IA debe mostrar su "cadena de razonamiento" visual (árbol de decisión) y las fuentes exactas con porcentaje de confianza.
+Bias Detection: Algoritmos que auditan al algoritmo (¿está favoreciendo ciertos tipos de respuestas?).
+6. Modelo de Negocio: "The Vertical Marketplace"
+En lugar de vender "la plataforma", vendería "Plantillas de Conocimiento":
+LegalPack: Jurisprudencia pre-indexada, modelos de contratos auto-adaptativos.
+MedicalPack: Guías clínicas actualizadas (integración con PubMed/Cochrane), detección de interacciones farmacológicas.
+GovPack: Normativa municipal/regional automáticamente actualizada vía scraping oficial.
+Ingresos recurrentes: No solo SaaS, sino "Knowledge-as-a-Service" (mantenimiento de la base de conocimiento actualizada por expertos humanos validando las salidas del IA).
+7. Integraciones: "The Central Nervous System"
+No sería una isla. Sería el hub central donde converge:
+ERP/CRM: Conectores bidireccionales nativos (no CSVs), sincronización en tiempo real.
+Comunicaciones: WhatsApp/Email/Telegram oficiales integrados (cada mensaje se convierte automáticamente en entrada del sistema).
+IoT: Para ascensores (sensores) o sanidad (wearables), los datos técnicos fluyen directo al contexto del documento.
+Blockchain (opcional): Para sectores que necesiten inmutabilidad total (notarías, propiedad intelectual).
+8. La Experiencia Onboarding: "5 Minutos al Valor"
+El proceso de inicio sería:
+Scan de identidad: Subes UN documento representativo (ej: un contrato tipo).
+Auto-configuración: El sistema detecta: "Esto es un contrato de obra, estás en construcción/legal".
+Clonación de inteligencia: En 2 minutos, has generado tu ontología básica y el sistema ya tiene 100 documentos similares indexados (transfer learning de otros tenants).
+Primer valor: Inmediatamente te muestra 3 errores/riesgos en ese documento que subiste.
+Resumen: De Software a Infraestructura de Pensamiento
+La versión actual es una herramienta (haces clic, subes, analizas).
+La versión ideal sería un miembro del equipo que:
+Habla tu lenguaje específico de industria.
+Recuerda todo lo que has hecho y por qué.
+Previene errores antes de que los cometas.
+Cumple la ley por ti sin que tengas que saber la ley.
+El cambio más profundo: Dejar de hablar de "usuarios" y empezar a hablar de "cómplices digitales" — el sistema no espera órdenes, anticipa necesidades.
+
+No estás lejos. En realidad, tienes una base casi ideal para pivotar hacia esa visión sin reescribir todo. Lo que describí es una evolución arquitectónica, no una revolución.
+Aquí tienes el mapa de supervivencia: qué se rescata, cómo migrar sin matar el momentum, y cómo contar la historia a tus primeros clientes.
+1. Matriz de Reutilización (Tu Código Actual es Oro)
+
+| Lo que tienes                    | Reutilizable para la Visión? | Cómo transformarlo                                                                                                                      |
+| -------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Multi-tenancy existente**      | ✅ 100%                       | Es la columna vertebral del "Chameleon Interface". Solo necesitas añadir `ontology_config` por tenant.                                  |
+| **Schemas Zod**                  | ✅ 90%                        | Son la semilla del Ontology Builder. En lugar de hardcodear `PedidoSchema`, hazlo dinámico: `generateSchemaFromOntology(tenantConfig)`. |
+| **Document chunks + embeddings** | ✅ 100%                       | Esa es la capa vectorial. Solo añade una tabla/arista de relaciones entre chunks (grafo).                                               |
+| **Hooks useApi/useMutation**     | ✅ 100%                       | Abstracciones perfectas. El cambio es interno: apuntan a endpoints dinámicos en vez de `/api/tecnico/pedidos`.                          |
+| **Sistema de Workflows**         | ✅ 80%                        | Tu `WorkflowDefinition` actual es proto-ontología. Generalízalo: de "estados de pedido" a "estados de cualquier entidad".               |
+| **Middleware de seguridad**      | ✅ 100%                       | Lo necesitas igual. Solo añade capa de "permisos por tipo de entidad".                                                                  |
+| **Componentes Shadcn/UI**        | ✅ 95%                        | Son la capa de presentación. El cambio es composición: `DataTable` genérico que lee columnas de la ontología.                           |
+| **Lógica de billing/planes**     | ✅ 70%                        | El mecanismo de "limits" se convierte en "límites por tipo de entidad" (X expedientes, Y pacientes).                                    |
+
+
+Lo único que se jubila: El naming "pedido", "documento técnico", "motor". Eso se vuelve config, no código.
+2. Hoja de Ruta de 3 Fases (Sin Big Bang)
+Fase 1: "El Meta-Modelo" (Semanas 1-4)
+Objetivo: Tu codebase actual sigue funcionando para ascensores, pero ahora es configurable.
+Tarea clave: Extrae la lógica específica de "pedidos" a un archivo de configuración JSON:
+JSON
+Copy
+{
+  "entity": "pedido",
+  "fields": ["numero", "modelo", "fecha"],
+  "workflows": ["ingresado", "analizado"]
+}
+Cambio técnico: Refactoriza admin/documentos/page.tsx para que reciba entityType por prop y lea columnas de la config, no hardcoded.
+Validación: Tu app sigue viéndose igual, pero internamente ya no dice "Pedido" en el código fuente, sino entity.name.
+Fase 2: "The Shape Shifter" (Meses 2-3)
+Objetivo: Un mismo deploy sirve para dos verticales distintas.
+Tarea clave: Crea el OntologyEditor (un CRUD simple en /admin/ontology) donde el Admin defina:
+"En mi despacho, una Causa tiene campos: número judicial, juzgado, demandado"
+"En mi clínica, una Consulta tiene: paciente_id, síntomas, diagnóstico"
+Magia: El sistema genera automáticamente:
+Tablas de MongoDB con nombres dinámicos (${tenantId}_entities_${entityType})
+Formularios en React (Zod schemas generados dinámicamente)
+Endpoints de API (/api/entity/${entityType}/...)
+Pivot clave: Muestra a un abogado: "Arrastra los campos que necesitas, en 5 minutos tienes tu CRM de causas".
+Fase 3: "The Knowledge Graph Lite" (Meses 4-6)
+Objetivo: Las entidades empiezan a relacionarse semánticamente.
+Añades: Una tabla relationships simple:
+from_entity: "causa_123", to_entity: "documento_456", type: "FUNDAMENTA"
+from_entity: "paciente_789", to_entity: "informe_012", type: "REFERENCIA"
+UX: Visualización tipo "mapa mental" (usa React Flow o Cytoscape) donde el usuario ve sus documentos como nodos conectados.
+IA upgrade: El RAG no solo busca chunks similares, busca en el grafo de relaciones ("Dame todo lo relacionado con este paciente anteriormente").
+3. Cómo Explicar la Ventaja (Narrativa de Autor)
+El error más común es vender "IA" o "RAG". Eso es commodity. Vende "Autoridad sin esfuerzo".
+Para el Abogado ( Ejemplo de Pitch)
+"Actualmente eres un operador de documentos: buscas, copias, pegas. Con [TuProducto], eres el arquitecto del conocimiento. No buscas precedentes, el sistema te muestra por qué este precedente aplica aquí y te avisa si hay jurisprudencia contradictoria que no viste. Tú tomas decisiones estratégicas, el robot hace el trabajo de paralegal."
+La demo mágica:
+Sube 20 PDFs de un caso.
+Pregunta: "¿Hay alguna contradicción entre la demanda inicial y la prueba documental?"
+El sistema dibuja líneas rojas entre párrafos específicos.
+Para el Médico (Ejemplo de Pitch)
+"No es un repositorio de historias clínicas. Es un segundo cerebro clínico que recuerda patrones de tus 10,000 pacientes anteriores y susurra: 'El 85% de casos similares a este respondieron al tratamiento X, pero atención: este paciente tiene alergia documentada a ese fármaco en la historia de 2019'."
+La demo mágica:
+Escribe "Dolor torácico, 45 años, fumador" en el buscador.
+El sistema no busca texto, busca casos similares y muestra outcomes (qué pasó al final).
+Para el Ayuntamiento
+"El ciudadano no tiene que saber qué formulario es. Simplemente describe su problema: 'Se me ha caído una teja'. El sistema enruta automáticamente al área de urbanismo, genera el parte de riesgo, y cita los artículos municipales relevantes para el técnico."
+La demo mágica:
+Input libre en lenguaje natural → Workflow automático con checkpoints legales.
+4. Quick Wins para Esta Semana (Sin cambiar la arquitectura)
+Antes de tocar código, cambia el lenguaje y la percepción:
+A. Renombra internamente (Refactor de nombres)
+Donde diga Pedido, pon Case o Entity.
+Donde diga Documento Técnico, pon KnowledgeAsset.
+Por qué: Te fuerza a pensar en abstracto. Un contrato legal es un KnowledgeAsset con tipo legal_contract. Un informe médico es KnowledgeAsset tipo clinical_report.
+B. Crea el "modo Demo" (Product-Led Growth)
+Un botón grande en la landing: "Prueba con datos de ejemplo".
+Carga automáticamente 3-4 datasets:
+Dataset Ascensores (tu caso actual)
+Dataset Legal (contratos de compraventa)
+Dataset Sanidad (historias clínicas anonimizadas)
+Permite switch entre "Perfiles" sin logout.
+Esto valida que tu arquitectura puede servir a múltiples verticales sin reinstalar.
+C. Implementa "La explicación" (Explainable AI básico)
+En el RagReportView, añade una sección:
+"¿Por qué esto es relevante?"
+"Este párrafo se ha seleccionado porque menciona 'modelo X' y tu documento habla de 'pieza Y', que históricamente son incompatibles según el manual Z."
+No es tecnicamente complejo (es metadata del chunk), pero vende la visión de "sistema experto" vs "base de datos".
+5. La Estrategia de "Falsa Especificidad"
+Aquí está el truco psicológico para no ahuyentar clientes mientras preparas la versión universal:
+Vende "Especialización Vertical", entrega "Flexibilidad Horizontal".
+Landing page específica por vertical:
+tudominio.com/sectores/legal → Mira cómo analizamos contratos.
+tudominio.com/sectores/sanidad → Gestión de historiales clínicos.
+Internamente, es la misma app con config={legal_mode}.
+Onboarding con "Templates":
+Cuando se registran, preguntan: "¿De qué sector eres?"
+Si dice "Legal", precarga la ontología "Causas/Expedientes".
+Si dice "Sanidad", precarga "Pacientes/Consultas".
+El usuario percibe: "Está hecho a medida para mí".
+Tú sabes: "Es configuración JSON".
+Resumen: No estás lejos, estás en la curva correcta
+Tu código actual es la Versión 1.0 del Cerebro Universal, simplemente con la ontología hardcodeada a "ascensores".
+El camino es:
+Des-hardcodificar nombres (semana 1)
+Configurar entidades dinámicamente (mes 2-3)
+Añadir relaciones semánticas (mes 4-6)
+Empieza por el Abogado como segundo nicho (es muy similar a "pedidos" - documentos de entrada, análisis de riesgo, formalización de salida).
+Y recuerda: Vende el resultado, no la tecnología. No digas "usamos RAG", di "nunca más se te escapará una cláusula peligrosa".
+dame todo esto para poderselo plantear al equipo técnico de desarollo, que vean claro qué pasos seguir, qué tienen que usar en cada caso, qué tienen que tirar, reaprovechar, cambiar. No quiero código fuente, quiero un roadmap para los desarrolladores. Evita usar herramientas de pago, si no es posible, que tengan un plan gratuito aunque sea limitado.
+
+
+ROADMAP TÉCNICO: DE PLATAFORMA VERTICAL A MOTOR UNIVERSAL
+Migración incremental sin parar desarrollo actual
+📋 RESUMEN EJECUTIVO PARA EL EQUIPO
+Misión: Convertir el código actual (específico para ascensores) en una arquitectura meta-modelo que sirva para cualquier vertical (legal, sanidad, gobierno) sin reescribir desde cero.
+Estrategia: Refactorización por capas. El código que hoy procesa "pedidos" mañana procesará "causas" o "pacientes" cambiando solo configuración, no lógica.
+Restricción: Stack 100% Open Source o Free Tier perpetuo.
+🗑️ INVENTARIO: QUÉ TIRAR, QUÉ MANTENER
+✅ SE MANTIENE (Core Inmutable)
+Next.js 14+ (App Router) - Base sólida
+MongoDB Atlas - Capa documental/principal (free tier 512MB-5GB)
+NextAuth.js v5 - Autenticación (adapter MongoDB gratuito)
+Zod - Validación runtime (ya lo usan)
+Tailwind + Shadcn/UI - Sistema de diseño
+Custom Hooks (useApi, useApiMutation) - Abstracción HTTP
+Middleware de seguridad - Rate limiting, tenant isolation
+Sistema de embeddings - Lógica de chunks y vectores
+🔧 SE REFACTORIZA (Cambia Implementación)
+Schemas Zod estáticos → Generadores dinámicos
+Páginas específicas (/pedidos, /documentos) → Rutas dinámicas /[entityType]
+Workflow hardcodeado → Motor de estados configurable
+MongoDB único → MongoDB + Graph DB (relaciones)
+🗑️ SE ELIMINA (Deuda técnica)
+Textos hardcodeados ("Pedido", "Motor", "Ascensor") en código fuente
+Enumerações estáticas de estados ('ingresado' | 'analizado')
+Formularios React estáticos (cambian por generadores dinámicos)
+Lógica de negocio específica de elevadores mezclada con genérica
+🛠️ STACK ADICIONAL REQUERIDO (Gratuito/Open Source)
+Table
+Copy
+Capa	Herramienta	Licencia	Reemplaza/Complementa
+Graph Database	Neo4j Community Edition	GPL	Relaciones semánticas entre documentos (instalable local o Docker)
+State Management	Zustand	MIT	Prop drilling en formularios dinámicos
+Formularios Dinámicos	React Hook Form + Resolver	MIT	Formularios hardcodeados actuales
+Visualización Grafo	React Flow	MIT	Vistas de relaciones entre entidades
+ORM/Type Safety	Prisma (con MongoDB)	Apache 2.0	Queries directas a Mongo (mejor typing)
+Feature Flags	Flagsmith (Self-hosted) o Unleash	MIT	Migración gradual sin romper nada
+Colas/Background	BullMQ (Redis)	MIT	Procesamiento async de documentos (actualmente sync)
+Búsqueda Avanzada	Meilisearch (self-hosted)	MIT	Búsqueda textual rápida (alternativa a Mongo text search)
+Nota: Neo4j Community permite producción sin coste. Alternativa: ArangoDB (Apache 2.0) si prefieren multi-modelo.
+🗺️ ROADMAP TÉCNICO POR FASES
+FASE 0: PREPARACIÓN (Semanas 1-2)
+Objetivo: Desacoplar sin romper. Crear "Feature Flags" para desarrollo paralelo.
+Tareas Técnicas:
+Instalar Flagsmith (self-hosted) o crear tabla feature_flags en Mongo
+Flag: DYNAMIC_ENTITIES_ENABLED (false por defecto)
+Flag: GRAPH_RELATIONS_ENABLED
+Reestructurar carpetas:
+Copy
+src/
+├── core/                 # NUEVO: Motor universal
+│   ├── entity-engine/    # Lógica genérica de entidades
+│   └── ontology/         # Configuración dinámica
+└── verticals/            # MUEVEN: Código específico
+    └── elevators/        # Todo lo de ascensores va aquí
+Refactor "pnemonic": Renombrar internamente Pedido → EntityInstance en tipos TypeScript (alias mantienen compatibilidad).
+Entregable: App sigue funcionando igual, pero código organizado para bifurcación.
+FASE 1: META-MODELO (Semanas 3-5)
+Objetivo: Las entidades ya no son código, son configuración JSON.
+Implementación Técnica:
+Crear OntologyService:
+Nueva colección Mongo: tenant_ontologies
+Schema: { tenantId, entityTypes: [{name, fields, validations, workflows}] }
+Refactor API Layer:
+Mantener: /api/tecnico/pedidos/* (legacy)
+Crear: /api/core/entities/[entityType]/* (nuevo)
+Dynamic routing en Next.js: app/api/core/entities/[type]/route.ts
+Generador Zod Runtime:
+Función buildZodSchema(entityConfig) que genera validadores dinámicos
+Reemplaza los archivos estáticos PedidoSchema.ts, CasoSchema.ts
+Database Strategy:
+Mantener Mongo para datos (universal)
+Crear colección entity_data con campos flexibles (usar MongoDB Schema Validation opcional)
+Qué tiran: Schemas estáticos hardcodeados, endpoints específicos duplicados.
+Qué mantienen: Lógica de negocio genérica (validaciones, permisos).
+FASE 2: UI DINÁMICA (Semanas 6-8)
+Objetivo: Un único componente <EntityManager /> sirve para casos, pedidos, pacientes, etc.
+Stack: React Hook Form + Zustand + Shadcn dynamic
+Implementación:
+Crear componentes genéricos:
+DynamicDataTable: Recibe columnsConfig desde API, no hardcodeado
+DynamicForm: Renderiza inputs basado en field.type (string, number, date, relation)
+EntityLayout: Wrapper que lee configuración de sidebar/menú según tenant
+Sistema de Rutas Dinámicas:
+Cambiar: app/(authenticated)/pedidos/page.tsx
+Por: app/(authenticated)/[vertical]/[entity]/page.tsx
+Ejemplo real: /legal/causas/123 o /medical/pacientes/456
+Adapter Pattern:
+Crear hooks: useEntity(entityType) que expone create(), update(), list()
+Reemplaza usePedidos(), useCasos() específicos
+Entregable: Pueden crear una nueva vertical (ej: "legal") solo subiendo JSON de configuración, sin tocar React.
+FASE 3: KNOWLEDGE GRAPH LITE (Semanas 9-11)
+Objetivo: Los documentos/de datos se relacionan semánticamente, no solo por búsqueda.
+Stack: Neo4j Community + React Flow
+Implementación:
+Integración Neo4j (Docker local o Atlas):
+Nodos: Document, Entity, Chunk
+Relaciones: REFERENCES, CONTRADICTS, VERSION_OF, BELONGS_TO
+Servicio de Relaciones:
+Cuando se sube documento, extraer entidades mencionadas (NER básico o keywords) y crear nodos relación
+API endpoint: /api/relations/[entityId] devuelve grafo conectado
+Visualización:
+Implementar React Flow en ruta /explore
+Vista nodos/aristas interactiva (arrastrar, hacer click para ver documento)
+RAG Mejorado:
+Modificar hybridSearch para consultar tanto Mongo (vectorial) como Neo4j (relacional)
+"Dame chunks similares + documentos relacionados con este caso"
+Qué mantienen: Sistema actual de chunks/embeddings (se enriquece, no se reemplaza).
+FASE 4: VERTICALIZACIÓN Y ONBOARDING (Semanas 12-14)
+Objetivo: Sistema funciona para cualquier industria sin código nuevo.
+Implementación:
+Template System:
+JSONs predefinidos: legal-template.json, medical-template.json, elevator-template.json
+Script de seeding: npm run seed:vertical legal
+Ontology Builder UI:
+CRUD simple en /admin/schema-builder (drag & drop básico de campos)
+Permite al admin del tenant añadir campos custom sin desarrollador
+Migración Legacy:
+Script ETL: Transformar colección pedidos actual a formato entity_data universal
+Mantener ambas colecciones en paralelo durante transición (eventual consistency)
+Demo Mode:
+Switch en landing: "Ver modo Legal" / "Ver modo Sanidad"
+Cambia tenantId de demo y carga ontología diferente
+Entregable: Pueden vender a un despacho de abogados usando el mismo deploy que el cliente de ascensores, solo cambiando configuración.
+⚠️ RIESGOS TÉCNICOS Y MITIGACIÓN
+Table
+Copy
+Riesgo	Probabilidad	Impacto	Mitigación
+Performance de queries dinámicas	Media	Alto	Índices MongoDB por tenantId + entityType + updatedAt. Paginación agresiva (cursor-based)
+TypeScript pierde tipado	Alta	Medio	Usar z.infer<> dinámico + comentarios JSDoc en componentes genéricos. Generadores de tipos opcional post-Fase 2
+MongoDB sin schema rígido	Media	Medio	Implementar validación Zod antes de insertar (ya lo hacen). Usar MongoDB Schema Validation como guarda adicional
+Complejidad Graph DB	Media	Medio	Empezar con relaciones simples (1-1, 1-N). No usar Cypher complejo inicialmente
+Team adoption	Alta	Alto	Fase 0 y 1 en paralelo a features actuales. No parar desarrollo de valor, solo refactorizar cuando toquen código legacy
+🎯 CHECKLIST PARA EMPEZAR (Próxima semana)
+Devs Backend:
+[ ] Instalar Neo4j Community local (Docker: docker run -p 7474:7474 -p 7687:7687 neo4j:latest)
+[ ] Crear colección tenant_ontologies con schema base
+[ ] Refactorizar PedidoSchema a función generadora createEntitySchema(config)
+[ ] Endpoint de prueba: POST /api/core/entities/test que valide JSON contra schema dinámico
+Devs Frontend:
+[ ] Instalar Zustand y React Hook Form
+[ ] Crear componente DynamicField que renderice Input/TextArea/Select según prop type
+[ ] Mover carpeta pedidos a verticals/elevators/pedidos (cambio de paths)
+[ ] Crear route handler dinámico [entity]/page.tsx que lea de API qué campos mostrar
+DevOps/Infra:
+[ ] Setear Flagsmith self-hosted o tabla de flags en Mongo existente
+[ ] Docker Compose local con: Next.js + Mongo + Neo4j + Redis (para BullMQ futuro)
+💡 NOTA FINAL PARA EL EQUIPO
+No están construyendo una app de gestión documental. Están construyendo un "constructor de apps de gestión documental".
+La diferencia es que cada línea de código nueva debe preguntarse: "¿Esto sirve para un abogado y para un médico, o solo para un técnico de ascensores?"
+Si la respuesta es "solo ascensores", esa línea va a /verticals/elevators/, no al core.
+El cliente de ascensores no notará diferencia durante la migración (gracias a los feature flags). El cliente legal nuevo verá una app hecha "a medida" sin haber escrito código específico para él.
+
+DOCUMENTO DE ARQUITECTURA DETALLADA: MIGRACIÓN A MOTOR UNIVERSAL
+Especificación técnica para desarrolladores - Nivel de implementación
+1. ARQUITECTURA META: EL PATRÓN "HEXAGONAL ADAPTATIVO"
+No usaremos arquitectura monolítica ni microservicios. Usaremos Arquitectura Hexagonal con Ports & Adapters, pero con una capa adicional de "Configuración Ontológica".
+Concepto Central: El "Entity Engine"
+En lugar de tener:
+Controller → Service → Repository → Model (MVC tradicional)
+Tendremos:
+Copy
+Route Handler → EntityEngine (Port) → Adapters (Mongo/Neo4j/FS)
+                    ↓
+            Ontology Registry (JSON Config)
+EntityEngine es una clase/factory que recibe:
+tenantId: "lawfirm_123"
+entityType: "causa"
+operation: "create" | "list" | "update" | "relate"
+Y devuelve el comportamiento específico leyendo del Registry.
+2. ESTRUCTURA DE CARPETAS DETALLADA (Fase 0-1)
+Copy
+src/
+├── app/                              # Next.js App Router
+│   ├── api/
+│   │   ├── legacy/                   # MANTENER: API actual funcionando
+│   │   └── v2/                       # NUEVO: API dinámica
+│   │       └── entities/
+│   │           └── [tenantId]/
+│   │               └── [entityType]/
+│   │                   └── route.ts  # Handler único genérico
+│   └── (authenticated)/
+│       ├── legacy/                   # Páginas actuales (fallback)
+│       └── workspace/
+│           └── [[...slug]]/          # Catch-all para rutas dinámicas
+│               └── page.tsx          # Componente orquestador
+├── core/                             # NUEVO: Motor universal (sin UI)
+│   ├── domain/
+│   │   ├── types/
+│   │   │   └── ontology.ts           # Contratos TypeScript base
+│   │   └── engine/
+│   │       ├── EntityEngine.ts       # Orquestador principal
+│   │       ├── validators/
+│   │       │   └── ZodGenerator.ts   # Factory de schemas
+│   │       └── adapters/
+│   │           ├── MongoAdapter.ts   # CRUD documental
+│   │           └── GraphAdapter.ts   # Relaciones (Neo4j)
+│   └── registry/                     # Configuraciones
+│       ├── legal-ontology.json
+│       ├── medical-ontology.json
+│       └── elevator-ontology.json
+├── verticals/                        # Código específico (a eliminar gradualmente)
+│   └── elevators/
+│       ├── components/               # UI específica ascensores
+│       └── hooks/
+├── lib/                              # Actual - se mantiene
+│   ├── auth.ts
+│   └── db.ts
+└── shared/                           # Componentes UI genéricos
+    ├── forms/
+    │   └── DynamicForm.tsx           # Generador de formularios
+    ├── tables/
+    │   └── DynamicTable.tsx          # Tabla con columnas config
+    └── graph/
+        └── RelationGraph.tsx         # Visualizador React Flow
+Clave: La carpeta core/ no importa nada de app/ ni verticals/. Es pura lógica de negocio testeable unitariamente.
+3. FASE 0: DUALIDAD SIN RUPTURA (Detalle)
+El Patrón "Strangler Fig"
+No cambiamos rutas antiguas. Creamos paralelo y redirigimos progresivamente.
+Implementación específica:
+Router Inteligente en middleware:
+Leer header X-Client-Version: v2 o cookie useNewUI=true
+Si activo: Rewrite /pedidos → /workspace/elevators/pedidos
+Si no: Flujo normal legacy
+Base de Datos Dual:
+Colección existente: pedidos (sigue funcionando)
+Nueva colección: unified_entities con estructura:
+TypeScript
+Copy
+{
+  _id: ObjectId,
+  tenantId: string,
+  entityType: "pedido" | "causa" | "paciente",
+  payload: object,  // Schema dinámico validado por Zod
+  relations: Array<{targetId, relationType}>,
+  meta: {
+    source: "legacy" | "v2",
+    version: 1
+  }
+}
+Sync Service:
+Worker que escucha Mongo Change Streams en pedidos
+Cuando detecta cambio: replica en unified_entities con transformación
+Esto permite tener ambas versiones sincronizadas durante migración
+4. FASE 1: MOTOR DE ENTIDADES (Especificación Técnica)
+4.1 El Registry: Ontología Declarativa
+Cada vertical es un archivo JSON que describe el mundo:
+JSON
+Copy
+{
+  "id": "legal-basic",
+  "version": "1.0.0",
+  "entities": [
+    {
+      "name": "causa",
+      "plural": "causas",
+      "fields": [
+        {
+          "key": "numero_judicial",
+          "type": "string",
+          "validation": { "required": true, "pattern": "^[0-9]{4}/[0-9]{4}$" },
+          "ui": { "label": "Número de autos", "component": "input", "order": 1 }
+        },
+        {
+          "key": "juzgado",
+          "type": "relation",
+          "targetEntity": "juzgado",
+          "relationType": "many-to-one",
+          "ui": { "component": "select-search" }
+        },
+        {
+          "key": "documentacion",
+          "type": "files",
+          "accept": ["pdf", "docx"],
+          "maxSize": 10485760
+        }
+      ],
+      "workflows": ["inicio", "admision", "prueba", "sentencia", "archivo"],
+      "permissions": {
+        "TECNICO": ["read", "create"],
+        "ADMIN": ["read", "create", "update", "delete"]
+      },
+      "ragContext": {
+        "chunkableFields": ["hechos", "pretensiones"],
+        "searchable": true
+      }
+    }
+  ]
+}
+Gestión: Estos JSON se almacenan en Mongo en colección ontologies, se cachean en Redis (si lo tienen) o en memoria del servidor Next.js con revalidación cada 5 minutos.
+4.2 EntityEngine: Ciclo de Vida
+Paso 1: Bootstrapping (Build Time)
+Script npm run build:ontologies lee JSONs y genera:
+Tipos TypeScript (.d.ts) para autocomplete básico
+Migraciones Mongo (índices necesarios por tipo de entidad)
+Paso 2: Runtime (Request)
+Validación: ZodGenerator.create(ontology) compila schema en caliente
+Adaptación: Según operación, elige adapter:
+Create/Update/List → MongoAdapter
+Relate/Graph queries → GraphAdapter
+Complex validation → CompositeAdapter (ambos)
+Paso 3: Ejecución
+MongoAdapter usa colección entities con campo discriminator entityType
+GraphAdapter usa Neo4j con nodos :Entity y propiedades tenantId, type
+4.3 Migración de Datos (Script One-Off)
+Para cada vertical nuevo:
+bash
+Copy
+# Ejemplo: migrar cliente legal existente con datos legacy
+npm run migrate:vertical \
+  --from=legacy \
+  --to=unified \
+  --tenant=lawfirm_123 \
+  --ontology=./registry/legal-ontology.json
+Estrategia de transformación:
+Mapeo de campos: numero_expediente (legacy) → numero_judicial (nuevo)
+Enriquecimiento: Al migrar, extraer keywords y crear nodos en Grafo
+Validación: Si un registro legacy falla validación nueva, se marca como legacy_dirty para revisión manual
+5. FASE 2: UI DINÁMICA (Arquitectura de Componentes)
+5.1 El Sistema de Formularios
+No usaremos React Hook Form tradicional. Usaremos "JSON Schema Forms" con controladores específicos.
+Flujo de renderizado:
+Componente EntityForm recibe prop entityType="causa"
+Fetch a API: GET /api/v2/schema/causa (devuelve definición campos)
+Resolver Dinámico:
+Itera campos y genera componentes Shadcn correspondientes:
+"string" → <Input />
+"relation" → <ComboboxSearchable /> (conecta a API de entidad relacionada)
+"files" → <UploadZone />
+"rich_text" → <TiptapEditor />
+Validación Client-Side: Schema Zod generado dinámicamente importado vía dynamic import para no pesar bundle inicial
+5.2 El Sistema de Tablas
+Problema: Lista de campos variable, ordenamiento, filtros.
+Solución: TanStack Table (React Table v8) con configuración dinámica:
+TypeScript
+Copy
+// ColumnHelper genérico
+function generateColumns(entityConfig): ColumnDef[] {
+  return entityConfig.fields.map(field => ({
+    accessorKey: field.key,
+    header: field.ui.label,
+    filterFn: getFilterFn(field.type), // 'text', 'select', 'dateRange'
+    cell: ({ getValue }) => <CellRenderer type={field.type} value={getValue()} />
+  }));
+}
+Optimización: Virtualización obligatoria si >100 filas (react-virtual).
+5.3 Navegación Adaptativa
+El menú sidebar ya no es estático. Es generado:
+TypeScript
+Copy
+// useNavigation hook
+const buildNavigation = (ontology) => ({
+  items: ontology.entities.map(e => ({
+    label: e.plural,
+    href: `/workspace/${tenantId}/${e.name}`,
+    icon: getIconForEntity(e.name), // Mapeo nombre → icono
+    badge: e.workflow?.states // Mostrar contadores por estado si existe workflow
+  }))
+});
+6. FASE 3: GRAFO DE RELACIONES (Implementación Neo4j)
+6.1 Modelo de Datos en Grafo
+Nodos:
+(:Entity {id, tenantId, type, createdAt}) - Representa la cabecera
+(:Document {id, name, embeddingId}) - Archivos físicos
+(:Concept {name, type}) - Entidades nombradas extraídas (NER)
+Relaciones:
+(e:Entity)-[:HAS_DOCUMENT]->(d:Document)
+(e1:Entity)-[:RELATES_TO {type: "parent", strength: 0.9}]->(e2:Entity)
+(d:Document)-[:MENTIONS]->(c:Concept)
+6.2 Sincronización Eventual Mongo ↔ Neo4j
+Patrón CQRS Liviano:
+Writes (crear/editar): Van a Mongo (source of truth)
+Evento disparado (Change Stream de Mongo)
+Worker actualiza Neo4j para consultas de relaciones
+Consultas cruzadas:
+Copy
+Usuario busca: "causas relacionadas con el juzgado 5"
+↓
+API consulta Neo4j: MATCH (e:Entity)-[:RELATES_TO]-(j:Concept {name:"Juzgado 5"})
+↓
+Obtiene IDs de entidades
+↓
+Fetch a Mongo para datos completos (payload)
+6.3 UI del Grafo
+React Flow configuración:
+Nodos personalizados según tipo (Causa = color azul, Documento = gris)
+Layout automático: dagre o elk.js (algoritmos de posicionamiento)
+Interacción: Click nodo → Panel lateral con detalles (sin salir de vista)
+7. FASE 4: VERTICALIZACIÓN Y TEMPLATES
+7.1 Template System
+Estructura de un Template:
+Copy
+templates/
+└── legal/
+    ├── ontology.json           # Definición estructura
+    ├── seed/
+    │   └── demo-data.json      # Casos de ejemplo para demo
+    ├── workflows/
+    │   └── default.json        # Estados y transiciones
+    └── prompts/                # Prompts específicos para IA
+        └── extraction.txt
+Proceso de Onboarding:
+Usuario selecciona: "Soy despacho de abogados"
+Sistema ejecuta: TemplateInstaller.install('legal', tenantId)
+Crea:
+Registro en colección ontologies
+Colección Mongo entities_lawfirm_123 (o usa discriminator en colección única)
+Índices específicos (ej: texto en campo "hechos")
+Datos demo opcionales
+7.2 Customización por Tenant
+Nivel 1: Campos Custom (Seguro, simple)
+Admin añade campo codigo_interno a entidad causa
+Se almacena en entity.payload como campo libre
+UI lo muestra automáticamente
+Nivel 2: Hooks/Validaciones Custom (Avanzado)
+Sistema de plugins: Permitir subir función serverless (Vercel Edge Function) que se ejecute pre-save
+Ejemplo: "Validar que número judicial no exista ya en BD externa"
+8. TESTING Y VALIDACIÓN POR FASE
+Fase 0
+[ ] Tests E2E existentes siguen pasando (regresión cero)
+[ ] Flags funcionan correctamente (activar/desactivar)
+Fase 1
+[ ] Script de migración idempotente (puedes correrlo varias veces sin duplicar)
+[ ] Benchmark: Tiempo de validación Zod dinámica < 50ms (caching)
+[ ] Test: Crear entidad tipo "test" via API y que se persista correctamente
+Fase 2
+[ ] Test visual: Formulario generado renderiza correctamente en móvil
+[ ] Test de usabilidad: Usuario sin conocimiento técnico puede crear registro nuevo
+Fase 3
+[ ] Test de integridad: Borrar entidad en Mongo borra nodo en Neo4j (consistencia)
+[ ] Performance: Grafo con 1000 nodos renderiza en < 2 segundos
+Fase 4
+[ ] Demos paralelas: Puedes mostrar "modo legal" y "modo médico" en tabs diferentes simultáneamente sin conflicto de sesión
+9. DECISIONES TÉCNICAS CRÍTICAS (Para discutir en equipo)
+A. Single Collection vs Multi-Collection
+Opción A (Recomendada): Una colección entities con índice compuesto {tenantId: 1, entityType: 1}
+Pros: Más simple,aprovecha índices de Mongo, fácil backup
+Cons: Schema menos estricto (pero Zod lo controla app-level)
+Opción B: Colección por tenant (entities_tenant_123) o por tipo (pedidos, causas)
+Pros: Aislamiento físico total, schemas opcionalmente rígidos
+Cons: Complejidad operativa (muchas colecciones), queries cross-entity imposibles
+B. Graph DB: Neo4j vs ArangoDB
+Neo4j Community:
+Pros: Cypher más maduro, mejor documentación, integraciones
+Cons: Limitado a un solo nodo en Community (no clustering)
+ArangoDB:
+Pros: Multi-modelo (grafo + documental), puedes eliminar Mongo y tener todo en uno
+Cons: Más complejo, menos optimizado para puras relaciones
+Decisión: Neo4j Community (simplicidad), con opción de pasar a AuraDB Free (cloud) si necesitan escalabilidad sin gestionar servidores.
+C. Validación: Zod vs JSON Schema
+Zod: Ya lo usan. Permite inferir tipos TypeScript. Mejor DX.
+JSON Schema: Estándar universal. Permite validar en múltiples lenguajes.
+Decisión: Zod para runtime, generar JSON Schema desde Zod si necesitan interoperabilidad externa.
+10. CHECKLIST DE "GO/NO-GO" POR FASE
+Antes de pasar de Fase 1 a 2:
+[ ] ¿El EntityEngine soporta transacciones (create entity + relations atómicas)?
+[ ] ¿El fallback a legacy funciona si el dynámico falla?
+[ ] ¿Podemos crear un nuevo tipo de entidad sin desplegar código (solo subiendo JSON)?
+Antes de pasar de Fase 2 a 3:
+[ ] ¿La latencia de crear un registro es < 300ms incluyendo validación?
+[ ] ¿Funciona offline-first o al menos offline-tolerant (form drafts)?
+Antes de Fase 4:
+[ ] ¿Un cliente puede personalizar su ontología sin llamar al equipo de desarrollo?
+Conclusión para el equipo: Esto no es una reescritura. Es una refactorización de arquitectura guiada por configuración. El código que escribáis en Fase 1 (EntityEngine) es el último código específico que escribiréis para CRUDs. Después, todo es configuración.

@@ -29,6 +29,8 @@ import { logEventoCliente } from "@/lib/logger-client";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useApiList } from "@/hooks/useApiList";
+import { useApiMutation } from "@/hooks/useApiMutation";
 
 interface TenantConfig {
     tenantId: string;
@@ -81,14 +83,42 @@ interface TenantConfig {
 }
 
 export default function TenantsPage() {
-    const [config, setConfig] = useState<TenantConfig | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isPreviewDark, setIsPreviewDark] = useState(false);
     const { toast } = useToast();
+    const [config, setConfig] = useState<TenantConfig | null>(null);
+    const [isPreviewDark, setIsPreviewDark] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // 1. Carga de datos con useApiList
+    const {
+        data: tenants,
+        isLoading,
+        refresh: refreshTenants
+    } = useApiList<TenantConfig>({
+        endpoint: '/api/admin/tenants',
+        dataKey: 'tenants',
+        onSuccess: (data) => {
+            if (data.length > 0 && !config) {
+                // Seleccionar el primero por defecto o buscar por sesión si fuera necesario
+                // Para mantener compatibilidad con el original, buscamos el de la sesión más tarde o usamos el primero
+                setConfig(data[0]);
+            }
+        }
+    });
+
+    // 2. Acción de guardado con useApiMutation
+    const { mutate: saveConfig, isLoading: isSaving } = useApiMutation({
+        endpoint: '/api/admin/tenants',
+        successMessage: 'Configuración de la organización actualizada correctamente.',
+        onSuccess: () => refreshTenants()
+    });
 
     // Utility to lighten/darken a color for preview optimization
     const adjustColor = (hex: string, percent: number) => {
+        if (!hex.startsWith('#')) return hex;
         const num = parseInt(hex.replace("#", ""), 16),
             amt = Math.round(2.55 * percent),
             R = (num >> 16) + amt,
@@ -97,90 +127,11 @@ export default function TenantsPage() {
         return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
     };
 
-    // En un MVP multi-tenant real, aquí listaríamos tenants. 
-    // Por ahora, gestionamos el tenant de la sesión actual (o 'default').
-    const fetchConfig = async () => {
-        setIsLoading(true);
-        try {
-            // Obtenemos la lista de tenants
-            const res = await fetch('/api/admin/tenants');
-            const data = await res.json();
-
-            if (data.success && data.tenants.length > 0) {
-                // Buscamos el tenant actual de la sesión, o el primero de la lista
-                const session = await fetch('/api/auth/session').then(r => r.json());
-                const currentTenantId = session?.user?.tenantId;
-
-                const selected = data.tenants.find((t: any) => t.tenantId === currentTenantId) || data.tenants[0];
-                setConfig(selected);
-            } else {
-                // Si no hay ninguno, mostramos uno vacío o default
-                setConfig({
-                    tenantId: 'abd-elevators-main',
-                    name: 'ABD Elevators Official',
-                    industry: 'ELEVATORS',
-                    storage: {
-                        provider: 'cloudinary',
-                        settings: {
-                            folder_prefix: 'abd-rag-platform/elevators'
-                        },
-                        quota_bytes: 100 * 1024 * 1024 // 100MB
-                    }
-                });
-            }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo cargar la configuración del tenant",
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
+    const handleSave = () => {
+        if (config) saveConfig(config);
     };
 
-    useEffect(() => {
-        fetchConfig();
-    }, []);
-
-    const handleSave = async () => {
-        if (!config) return;
-        setIsSaving(true);
-        try {
-            const res = await fetch('/api/admin/tenants', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                toast({
-                    title: "Configuración guardada",
-                    description: "Los cambios se han aplicado correctamente.",
-                });
-                logEventoCliente({
-                    nivel: 'INFO',
-                    origen: 'UI_TENANTS',
-                    accion: 'SAVE_CONFIG',
-                    mensaje: `Configuración guardada para ${config.tenantId}`,
-                    correlacion_id: config.tenantId
-                });
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error: any) {
-            toast({
-                title: "Error al guardar",
-                description: error.message || "No se pudo actualizar la configuración",
-                variant: "destructive",
-            });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    if (isLoading) {
+    if (!isMounted || (isLoading && !config)) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
@@ -196,7 +147,7 @@ export default function TenantsPage() {
                 subtitle="Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento."
                 actions={
                     <>
-                        <Button variant="outline" onClick={fetchConfig} disabled={isSaving}>Descartar</Button>
+                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>Refrescar</Button>
                         <Button
                             onClick={handleSave}
                             className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20"

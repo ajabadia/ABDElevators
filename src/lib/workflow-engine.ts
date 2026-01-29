@@ -23,7 +23,7 @@ export class WorkflowEngine {
      * Obtiene la definición de workflow activa para un tenant y tipo de entidad.
      */
     static async getDefinition(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
-        const { collection } = await getTenantCollection('workflow_definitions');
+        const collection = await getTenantCollection('workflow_definitions');
         return await collection.findOne({
             tenantId,
             entity_type,
@@ -37,7 +37,8 @@ export class WorkflowEngine {
     static async executeTransition(request: TransitionRequest) {
         const { caseId, toState, role, correlacion_id, comment, signature } = request;
 
-        const { collection: casesCollection, tenantId } = await getTenantCollection('casos');
+        const casesCollection = await getTenantCollection('casos');
+        const tenantId = casesCollection.tenantId;
         const definition = await this.getDefinition(tenantId);
 
         if (!definition) {
@@ -45,8 +46,7 @@ export class WorkflowEngine {
         }
 
         const caso = await casesCollection.findOne({
-            _id: new ObjectId(caseId),
-            tenantId
+            _id: new ObjectId(caseId)
         }) as any;
 
         if (!caso) {

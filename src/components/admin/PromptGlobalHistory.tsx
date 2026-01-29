@@ -1,53 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-    X,
-    History,
-    Calendar,
-    User,
-    Search,
-    Loader2,
-    CheckCircle2,
-    Code,
-    Clock
+    X, History, Calendar, User, Search, Loader2, Code, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useApiList } from '@/hooks/useApiList';
 
 interface PromptGlobalHistoryProps {
     onClose: () => void;
 }
 
 export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClose }) => {
-    const [history, setHistory] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const res = await fetch('/api/admin/prompts/history');
-                if (res.ok) {
-                    const data = await res.json();
-                    setHistory(data.history || []);
-                }
-            } catch (err) {
-                console.error("Error fetching global history:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    // 1. Gestión de datos con hook genérico
+    const {
+        data: history,
+        isLoading: loading
+    } = useApiList<any>({
+        endpoint: '/api/admin/prompts/history',
+        dataKey: 'history',
+        filters: { search } // Aunque el hook soporta debounce, el filtrado local del original era inmediato.
+    });
 
-        fetchHistory();
-    }, []);
-
+    // Filtrado local para búsqueda instantánea (mantenemos comportamiento del original)
     const filtered = history.filter(item =>
         item.promptName.toLowerCase().includes(search.toLowerCase()) ||
         item.promptKey.toLowerCase().includes(search.toLowerCase()) ||
-        item.changeReason.toLowerCase().includes(search.toLowerCase())
+        (item.changeReason || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -101,7 +85,7 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar space-y-4 bg-slate-900/20">
-                    {loading ? (
+                    {loading && history.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <Loader2 className="w-10 h-10 text-teal-500 animate-spin opacity-20" />
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest animate-pulse">Sincronizando historial...</p>
@@ -129,7 +113,7 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                                         <div className="flex items-start gap-2 bg-slate-900/50 p-3 rounded-2xl border border-slate-800/50">
                                             <Clock size={14} className="text-slate-500 mt-0.5 shrink-0" />
                                             <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                                                "{entry.changeReason}"
+                                                "{entry.changeReason || 'Sin motivo especificado'}"
                                             </p>
                                         </div>
                                     </div>
@@ -137,7 +121,7 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                                     <div className="flex flex-row md:flex-col gap-4 md:gap-2 text-[10px] md:border-l border-slate-800 md:pl-6 min-w-[150px]">
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <User size={12} className="text-teal-500/50" />
-                                            <span className="font-bold">{entry.changedBy.split('@')[0]}</span>
+                                            <span className="font-bold">{entry.changedBy?.split('@')[0] || 'Sistema'}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <Calendar size={12} className="text-teal-500/50" />

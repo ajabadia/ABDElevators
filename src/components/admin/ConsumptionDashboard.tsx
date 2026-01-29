@@ -12,6 +12,8 @@ import { generateInvoicePDF } from '@/lib/pdf-invoice-client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useApiItem } from '@/hooks/useApiItem';
+import { useApiMutation } from '@/hooks/useApiMutation';
 
 interface UsageStats {
     tokens: number;
@@ -39,12 +41,22 @@ interface UsageStats {
 }
 
 export function ConsumptionDashboard() {
-    const [stats, setStats] = useState<UsageStats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [downloading, setDownloading] = useState(false);
     const { toast } = useToast();
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Fiscal Config State (Mock)
+    // 1. Carga de estadísticas con hook genérico
+    const {
+        data: stats,
+        isLoading,
+        refresh: fetchStats
+    } = useApiItem<UsageStats>({
+        endpoint: '/api/admin/usage/stats',
+        dataKey: 'stats'
+    });
+
+    const [downloading, setDownloading] = useState(false);
+
+    // Fiscal Config State
     const [fiscalOpen, setFiscalOpen] = useState(false);
     const [fiscalData, setFiscalData] = useState({
         fiscalName: '',
@@ -52,27 +64,16 @@ export function ConsumptionDashboard() {
         address: ''
     });
 
-    const fetchStats = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/usage/stats');
-            if (res.ok) {
-                const data = await res.json();
-                setStats(data.stats);
-            }
-        } catch (err) {
-            toast({
-                title: 'Error',
-                description: 'No se pudieron cargar las estadísticas de consumo.',
-                variant: 'destructive'
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Mutación para guardar datos fiscales
+    const fiscalMutation = useApiMutation({
+        endpoint: '/api/admin/billing/fiscal',
+        method: 'PATCH',
+        successMessage: 'Datos fiscales actualizados correctamente',
+        onSuccess: () => setFiscalOpen(false)
+    });
 
     useEffect(() => {
-        fetchStats();
+        setIsMounted(true);
     }, []);
 
     const handleDownloadInvoice = async () => {
@@ -103,7 +104,7 @@ export function ConsumptionDashboard() {
     };
 
     const getUsagePercentage = (current: number, limit: number) => {
-        if (limit === Infinity || limit === 0) return 0;
+        if (!limit || limit === Infinity) return 0;
         return Math.min((current / limit) * 100, 100);
     };
 
@@ -113,9 +114,13 @@ export function ConsumptionDashboard() {
         return '';
     };
 
-
-    if (loading && !stats) {
-        return <div className="flex items-center justify-center p-20"><RefreshCcw className="animate-spin text-teal-600" /></div>;
+    if (!isMounted || (isLoading && !stats)) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 space-y-4">
+                <RefreshCcw className="animate-spin text-teal-600 h-8 w-8" />
+                <p className="text-slate-400 text-sm animate-pulse">Sincronizando métricas...</p>
+            </div>
+        );
     }
 
     const blockedStatus = stats?.status?.find(s => s.state === 'BLOCKED');
@@ -154,7 +159,7 @@ export function ConsumptionDashboard() {
                         variant="outline"
                         size="icon"
                         onClick={fetchStats}
-                        className={loading ? "animate-spin" : ""}
+                        className={isLoading ? "animate-spin" : ""}
                     >
                         <RefreshCcw size={16} />
                     </Button>

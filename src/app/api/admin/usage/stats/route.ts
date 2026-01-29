@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
         const db = await connectDB();
-        const { collection } = await getTenantCollection('usage_logs');
+        const collection = await getTenantCollection('usage_logs');
 
         // 1. Obtener configuración de facturación (Fase 9.2)
         const billingConfig = await db.collection('tenant_billing').findOne({ tenantId });
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
         const plan = await db.collection('pricing_plans').findOne({ slug: planSlug });
 
         // 3. Agregación de métricas principales
-        const stats = await collection.aggregate([
+        const stats = await collection.aggregate<any>([
             { $match: { tenantId } },
             {
                 $group: {
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
                     count: { $sum: 1 }
                 }
             }
-        ]).toArray();
+        ]);
 
         // Helper para calcular estado (Bloqueo/Recargo)
         const calculateStatus = (usage: number, metricConfig: any) => {
@@ -60,19 +60,19 @@ export async function GET(req: NextRequest) {
             return null;
         };
 
-        const reportsUsage = stats.find(s => s._id === 'REPORTS_GENERATED')?.total || 0;
+        const reportsUsage = stats.find((s: any) => s._id === 'REPORTS_GENERATED')?.total || 0;
         const reportsConfig = plan?.metrics?.REPORTS;
         const reportsStatus = calculateStatus(reportsUsage, reportsConfig);
 
         // 4. Formatear respuesta amigable con los nuevos límites
         const formattedStats = {
             reports_generated: reportsUsage,
-            tokens: stats.find(s => s._id === 'LLM_TOKENS')?.total || 0,
-            storage: stats.find(s => s._id === 'STORAGE_BYTES')?.total || 0,
-            searches: stats.find(s => s._id === 'VECTOR_SEARCH')?.total || 0,
-            api_requests: stats.find(s => s._id === 'API_CALL')?.total || 0,
-            savings: stats.find(s => s._id === 'SAVINGS_TOKENS')?.total || 0,
-            embeddings: stats.find(s => s._id === 'EMBEDDING_OPS')?.total || 0,
+            tokens: stats.find((s: any) => s._id === 'LLM_TOKENS')?.total || 0,
+            storage: stats.find((s: any) => s._id === 'STORAGE_BYTES')?.total || 0,
+            searches: stats.find((s: any) => s._id === 'VECTOR_SEARCH')?.total || 0,
+            api_requests: stats.find((s: any) => s._id === 'API_CALL')?.total || 0,
+            savings: stats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.total || 0,
+            embeddings: stats.find((s: any) => s._id === 'EMBEDDING_OPS')?.total || 0,
             tier: plan?.name?.toUpperCase() || 'STANDARD',
             planSlug: planSlug,
             limits: {
@@ -85,10 +85,10 @@ export async function GET(req: NextRequest) {
             status: [
                 reportsStatus ? { metric: 'REPORTS', ...reportsStatus } : null
             ].filter(Boolean),
-            history: await collection.find({ tenantId })
-                .sort({ timestamp: -1 })
-                .limit(50)
-                .toArray()
+            history: await collection.find({ tenantId }, {
+                sort: { timestamp: -1 },
+                limit: 50
+            })
         };
 
         return NextResponse.json({

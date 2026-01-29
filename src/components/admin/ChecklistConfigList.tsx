@@ -1,185 +1,137 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { ChecklistConfig } from '@/lib/schemas';
-import { logEventoCliente } from '@/lib/logger-client';
-import { Plus, Edit, Trash2, CheckCircle, XCircle, LayoutGrid } from 'lucide-react';
+import { Plus, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { useApiList } from '@/hooks/useApiList';
+import { useApiMutation } from '@/hooks/useApiMutation';
+import { DataTable } from '@/components/shared/DataTable';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 /**
  * ChecklistConfigList – Dashboard para visualizar y gestionar las configuraciones
  * de checklists dinámicos.
  */
 export const ChecklistConfigList: React.FC = () => {
-    const [configs, setConfigs] = useState<ChecklistConfig[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    // 1. Carga de datos con hook genérico
+    const { data: configs, isLoading, refresh } = useApiList<ChecklistConfig>({
+        endpoint: '/api/admin/configs-checklist',
+        dataKey: 'configs'
+    });
 
-    const fetchConfigs = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/configs-checklist');
+    // 2. Acción de eliminación con hook genérico
+    const { mutate: deleteConfig } = useApiMutation({
+        endpoint: (id: string) => `/api/admin/configs-checklist/${id}`,
+        method: 'DELETE',
+        confirmMessage: (id: string) => {
+            const config = configs.find(c => String(c._id) === id);
+            return `¿Estás seguro de que deseas eliminar la configuración "${config?.nombre || id}"?`;
+        },
+        successMessage: 'Configuración eliminada correctamente.',
+        onSuccess: () => refresh()
+    });
 
-            if (!res.ok) {
-                let errMessage = 'Error al obtener configuraciones';
-                try {
-                    const errData = await res.json();
-                    if (errData.message) errMessage = errData.message;
-                } catch (e) {
-                    // Si falla el parseo JSON (ej: error 500 HTML), usamos el status text
-                    errMessage = `Error ${res.status}: ${res.statusText}`;
-                }
-                throw new Error(errMessage); // In client components, throwing Error is okay if caught, but let's be consistent
-            }
-
-            const data = await res.json();
-            setConfigs(data.configs);
-            setError(null);
-        } catch (err: any) {
-            console.error('[ChecklistConfigList] Fetch error details:', err);
-            const errorMessage = (err && err.message) ? err.message : 'Error desconocido al cargar configuraciones';
-            setError(errorMessage);
-            await logEventoCliente({
-                nivel: 'ERROR',
-                origen: 'CHECKLIST_CONFIG_UI',
-                accion: 'FETCH_LIST_ERROR',
-                mensaje: errorMessage,
-                detalles: { error: JSON.stringify(err, Object.getOwnPropertyNames(err)) },
-                correlacion_id: crypto.randomUUID()
-            });
-        } finally {
-            setLoading(false);
+    // 3. Definición de columnas
+    const columns = [
+        {
+            header: 'Nombre',
+            render: (config: ChecklistConfig) => (
+                <div>
+                    <div className="font-bold text-slate-900 dark:text-white">{config.nombre}</div>
+                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                        {new Date(config.actualizado).toLocaleString()}
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: 'Categorías',
+            render: (config: ChecklistConfig) => (
+                <div className="flex gap-1 flex-wrap max-w-xs">
+                    {config.categorias.slice(0, 3).map(cat => (
+                        <span
+                            key={cat.id}
+                            className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase border"
+                            style={{
+                                backgroundColor: `${cat.color}15`,
+                                borderColor: `${cat.color}40`,
+                                color: cat.color
+                            }}
+                        >
+                            {cat.nombre}
+                        </span>
+                    ))}
+                    {config.categorias.length > 3 && (
+                        <span className="text-[10px] text-slate-400 font-bold px-1 py-0.5">
+                            +{config.categorias.length - 3}
+                        </span>
+                    )}
+                </div>
+            )
+        },
+        {
+            header: 'Estado',
+            render: (config: ChecklistConfig) => (
+                config.activo ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1.5 h-6">
+                        <CheckCircle size={10} />
+                        ACTIVO
+                    </Badge>
+                ) : (
+                    <Badge variant="outline" className="text-slate-400 gap-1.5 h-6">
+                        <XCircle size={10} />
+                        INACTIVO
+                    </Badge>
+                )
+            )
+        },
+        {
+            header: 'Acciones',
+            className: 'text-right',
+            render: (config: ChecklistConfig) => (
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all">
+                        <Link href={`/admin/configs-checklist/${config._id}`}>
+                            <Edit size={14} />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteConfig(String(config._id))}
+                        className="h-8 w-8 p-0 rounded-full hover:bg-rose-50 hover:text-rose-600 transition-all text-slate-400"
+                    >
+                        <Trash2 size={14} />
+                    </Button>
+                </div>
+            )
         }
-    };
-
-    useEffect(() => {
-        fetchConfigs();
-    }, []);
-
-    const handleDelete = async (id: string, nombre: string) => {
-        if (!confirm(`¿Estás seguro de que deseas eliminar la configuración "${nombre}"?`)) {
-            return;
-        }
-
-        try {
-            const res = await fetch(`/api/admin/configs-checklist/${id}`, {
-                method: 'DELETE',
-            });
-            if (!res.ok) throw new Error('Error al eliminar');
-
-            await fetchConfigs();
-            await logEventoCliente({
-                nivel: 'INFO',
-                origen: 'CHECKLIST_CONFIG_UI',
-                accion: 'DELETE_SUCCESS',
-                mensaje: `Configuración eliminada: ${nombre}`,
-                correlacion_id: crypto.randomUUID()
-            });
-        } catch (err: any) {
-            alert(err.message);
-        }
-    };
-
-    if (loading) return <div className="text-center py-10">Cargando configuraciones...</div>;
-    if (error) return <div className="text-red-500 text-center py-10">Error: {error}</div>;
+    ];
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+        <div className="space-y-4">
+            <div className="flex justify-between items-center mb-2">
                 <div>
-                    <h2 className="text-xl font-semibold text-slate-800">Checklists Disponibles</h2>
-                    <p className="text-sm text-slate-500">Gestiona las reglas de clasificación y orden de tus checklists.</p>
+                    <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Checklists Disponibles</h2>
+                    <p className="text-xs text-slate-500 font-medium">Gestiona las reglas de clasificación y orden de tus checklists.</p>
                 </div>
-                <Link
-                    href="/admin/configs-checklist/new"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
-                >
-                    <Plus size={18} />
-                    Nueva Configuración
-                </Link>
+                <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20 rounded-xl">
+                    <Link href="/admin/configs-checklist/new">
+                        <Plus size={18} />
+                        Nueva Configuración
+                    </Link>
+                </Button>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-slate-50 text-slate-600 text-sm uppercase tracking-wider">
-                            <th className="px-6 py-4 font-semibold">Nombre</th>
-                            <th className="px-6 py-4 font-semibold">Categorías</th>
-                            <th className="px-6 py-4 font-semibold">Estado</th>
-                            <th className="px-6 py-4 font-semibold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {configs.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
-                                    No hay configuraciones creadas todavía.
-                                </td>
-                            </tr>
-                        ) : (
-                            configs.map((config) => (
-                                <tr key={String(config._id)} className="hover:bg-slate-50/80 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="font-medium text-slate-900">{config.nombre}</div>
-                                        <div className="text-xs text-slate-400 mt-1">
-                                            Actualizado: {new Date(config.actualizado).toLocaleDateString()}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-1 flex-wrap">
-                                            {config.categorias.slice(0, 3).map(cat => (
-                                                <span
-                                                    key={cat.id}
-                                                    className="px-2 py-0.5 rounded-full text-[10px] font-medium border"
-                                                    style={{ backgroundColor: `${cat.color}15`, borderColor: cat.color, color: cat.color }}
-                                                >
-                                                    {cat.nombre}
-                                                </span>
-                                            ))}
-                                            {config.categorias.length > 3 && (
-                                                <span className="text-xs text-slate-400 flex items-center">
-                                                    +{config.categorias.length - 3} más
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {config.activo ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                                <CheckCircle size={14} />
-                                                Activo
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200">
-                                                <XCircle size={14} />
-                                                Inactivo
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Link
-                                                href={`/admin/configs-checklist/${config._id}`}
-                                                className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Edit size={18} />
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDelete(String(config._id), config.nombre)}
-                                                className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                columns={columns}
+                data={configs}
+                isLoading={isLoading}
+                emptyMessage="No hay configuraciones de checklist creadas todavía."
+                className="shadow-xl shadow-slate-200/50"
+            />
         </div>
     );
 };

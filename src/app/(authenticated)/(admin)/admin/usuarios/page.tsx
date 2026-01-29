@@ -1,26 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, UserCog, KeyRound, Mail } from "lucide-react";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { CreateUserModal } from "@/components/admin/CreateUserModal";
-import { EditUserModal } from "@/components/admin/EditUserModal";
+import { UserCog, KeyRound, Mail, Plus } from "lucide-react";
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
-import { useToast } from "@/hooks/use-toast";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
+
+// Nuevos componentes y hooks genéricos
+import { useApiList } from "@/hooks/useApiList";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { DataTable, Column } from "@/components/shared/DataTable";
+import { useFormModal } from "@/hooks/useFormModal";
+import { EntityEngine } from "@/core/engine/EntityEngine";
+import { generateColumnsFromEntity } from "@/components/shared/DynamicTableUtils";
+import { DynamicFormModal } from "@/components/shared/DynamicFormModal";
 
 interface Usuario {
     _id: string;
@@ -36,69 +33,68 @@ interface Usuario {
 
 export default function UsuariosPage() {
     const { data: session } = useSession();
-    const currentUserRole = session?.user?.role;
-    const isSuperAdmin = currentUserRole === 'SUPER_ADMIN';
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+    const [isMounted, setIsMounted] = useState(false);
 
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showInviteModal, setShowInviteModal] = useState(false);
-    const [editingUserId, setEditingUserId] = useState<string | null>(null);
-    const { toast } = useToast();
+    // 0. Obtener definición de la entidad desde el "Cerebro"
+    const entity = EntityEngine.getInstance().getEntity('usuario')!;
 
-    const fetchUsuarios = async () => {
-        try {
-            const res = await fetch('/api/admin/usuarios');
-            const data = await res.json();
-            setUsuarios(data.usuarios);
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudieron cargar los usuarios",
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    // 1. Gestión de datos con hook genérico
+    const { data: usuarios, isLoading, refresh } = useApiList<Usuario>({
+        endpoint: entity.api.list,
+        dataKey: 'usuarios',
+    });
+
+    // 2. Mutaciones con hook genérico
+    const { mutate: resetPassword } = useApiMutation<{ id: string, email: string }>({
+        endpoint: (vars: any) => `/api/admin/usuarios/${vars.id}/reset-password`,
+        method: 'POST',
+        confirmMessage: (vars: any) => `¿Resetear contraseña para ${vars.email}?`,
+        successMessage: (res: any) => `Nueva contraseña temporal: ${res.temp_password}`,
+    });
+
+    // 2. Modales con hook genérico
+    const createModal = useFormModal();
+    const inviteModal = useFormModal();
+    const editModal = useFormModal<Usuario>();
 
     useEffect(() => {
-        fetchUsuarios();
+        setIsMounted(true);
     }, []);
 
-    const handleResetPassword = async (userId: string, email: string) => {
-        if (!confirm(`¿Resetear contraseña para ${email}?`)) return;
+    // 3. Definición de columnas DINÁMICA + ACCIONES MANUALES
+    const dynamicColumns = generateColumnsFromEntity<Usuario>(entity);
 
-        try {
-            const res = await fetch(`/api/admin/usuarios/${userId}/reset-password`, {
-                method: 'POST',
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                toast({
-                    title: "Contraseña reseteada",
-                    description: `Nueva contraseña temporal: ${data.temp_password}`,
-                });
-            }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo resetear la contraseña",
-                variant: "destructive",
-            });
+    // Filtrar columnas sensibles o que requieren lógica especial
+    const columns: Column<Usuario>[] = [
+        ...dynamicColumns.filter((c: any) => {
+            if (c.accessorKey === 'tenantId' && !isSuperAdmin) return false;
+            return true;
+        }),
+        {
+            header: "Acciones",
+            cell: (u: Usuario) => (
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => editModal.openEdit(u)}
+                        className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                    >
+                        <UserCog className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => resetPassword({ id: u._id, email: u.email })}
+                        className="text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                        <KeyRound className="h-4 w-4" />
+                    </Button>
+                </div>
+            )
         }
-    };
-
-    const getRoleBadge = (rol: string) => {
-        const colors = {
-            SUPER_ADMIN: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-            ADMIN: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
-            TECNICO: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
-            INGENIERIA: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
-        };
-        return colors[rol as keyof typeof colors] || "";
-    };
+    ];
 
     return (
         <PageContainer>
@@ -106,25 +102,25 @@ export default function UsuariosPage() {
                 title="Gestión de Usuarios"
                 highlight="Usuarios"
                 subtitle={`Administra usuarios y permisos ${isSuperAdmin ? 'globales' : 'de tu organización'}`}
-                actions={
+                actions={isMounted && (
                     <>
                         <Button
                             variant="outline"
-                            onClick={() => setShowInviteModal(true)}
+                            onClick={() => inviteModal.openCreate()}
                             className="border-teal-200 text-teal-700 hover:bg-teal-50"
                         >
                             <Mail className="mr-2 h-4 w-4" />
                             Invitar Usuario
                         </Button>
                         <Button
-                            onClick={() => setShowCreateModal(true)}
+                            onClick={() => createModal.openCreate()}
                             className="bg-teal-600 hover:bg-teal-700"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Crear Manualmente
                         </Button>
                     </>
-                }
+                )}
             />
 
             <ContentCard noPadding={true}>
@@ -135,99 +131,46 @@ export default function UsuariosPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                    {loading ? (
-                        <div className="p-8 text-center text-slate-500">Cargando...</div>
-                    ) : (
-                        <Table>
-                            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                                <TableRow>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Nombre</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Email</TableHead>
-                                    {isSuperAdmin && (
-                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100 text-teal-600">Tenant</TableHead>
-                                    )}
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Puesto</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Rol</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Estado</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {usuarios.map((usuario) => (
-                                    <TableRow key={usuario._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                                        <TableCell className="font-medium dark:text-slate-100">
-                                            {usuario.nombre} {usuario.apellidos}
-                                        </TableCell>
-                                        <TableCell className="font-mono text-sm dark:text-slate-300">{usuario.email}</TableCell>
-                                        {isSuperAdmin && (
-                                            <TableCell className="font-bold text-xs text-teal-600 uppercase">
-                                                {usuario.tenantId}
-                                            </TableCell>
-                                        )}
-                                        <TableCell className="dark:text-slate-300">{usuario.puesto || '-'}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className={getRoleBadge(usuario.rol)}>
-                                                {usuario.rol}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={usuario.activo ? "default" : "secondary"}>
-                                                {usuario.activo ? 'Activo' : 'Inactivo'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setEditingUserId(usuario._id)}
-                                                    className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/20"
-                                                >
-                                                    <UserCog className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleResetPassword(usuario._id, usuario.email)}
-                                                    className="text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                                >
-                                                    <KeyRound className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
+                    <DataTable
+                        data={usuarios || []}
+                        columns={columns}
+                        isLoading={isLoading}
+                        emptyMessage="No se encontraron usuarios registrados."
+                    />
                 </CardContent>
             </ContentCard>
 
-            <CreateUserModal
-                open={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+            {/* CREACIÓN DINÁMICA (KIMI Engine) */}
+            <DynamicFormModal
+                open={createModal.isOpen}
+                entitySlug="usuario"
+                mode="create"
+                onClose={() => createModal.close()}
                 onSuccess={() => {
-                    fetchUsuarios();
-                    setShowCreateModal(false);
+                    refresh();
+                    createModal.close();
+                }}
+            />
+
+            {/* EDICIÓN DINÁMICA (KIMI Engine) */}
+            <DynamicFormModal
+                open={editModal.isOpen}
+                entitySlug="usuario"
+                mode="edit"
+                initialData={editModal.data}
+                onClose={() => editModal.close()}
+                onSuccess={() => {
+                    refresh();
+                    editModal.close();
                 }}
             />
 
             <InviteUserModal
-                open={showInviteModal}
-                onClose={() => setShowInviteModal(false)}
+                open={inviteModal.isOpen}
+                onClose={() => inviteModal.close()}
                 onSuccess={() => {
-                    fetchUsuarios();
-                    setShowInviteModal(false);
-                }}
-            />
-
-            <EditUserModal
-                userId={editingUserId}
-                open={!!editingUserId}
-                onClose={() => setEditingUserId(null)}
-                onSuccess={() => {
-                    fetchUsuarios();
-                    setEditingUserId(null);
+                    refresh();
+                    inviteModal.close();
                 }}
             />
         </PageContainer>

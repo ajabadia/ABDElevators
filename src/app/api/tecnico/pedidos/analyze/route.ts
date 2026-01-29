@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
-import { extractModelsWithGemini } from '@/lib/llm';
+import { analyzeEntityWithGemini } from '@/lib/llm';
 import { performTechnicalSearch } from '@/lib/rag-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { PedidoSchema, GenericCaseSchema } from '@/lib/schemas';
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
         // 0. De-duplicación por MD5 para pedidos (Ahorro de Tokens)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
-        const { collection: pedidosCollection } = await getTenantCollection('pedidos');
+        const pedidosCollection = await getTenantCollection('pedidos');
 
         const existingPedido = await pedidosCollection.findOne({
             archivo_md5: fileHash,
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. IA: Extraer modelos detectados (Flujo Síncrono Tradicional)
-        const modelosDetectados = await extractModelsWithGemini(pedidoText, tenantId, correlacion_id);
+        const modelosDetectados = await analyzeEntityWithGemini('pedido', pedidoText, tenantId, correlacion_id);
 
         // 3. RAG: Para cada modelo, buscar contexto relevante
         const resultsConContexto = await Promise.all(
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
         );
 
         // 4. Guardar resultado en DB con aislamiento de Tenant
-        const { collection } = await getTenantCollection('pedidos');
+        const collection = await getTenantCollection('pedidos');
 
         const pedidoData = {
             numero_pedido: file.name.split('.')[0],
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
 
         // 5. Visión 2.0: Guardar como Caso Genérico (Abstracción)
         try {
-            const { collection: caseCollection } = await getCaseCollection();
+            const caseCollection = await getCaseCollection();
             const genericCase = mapPedidoToCase({ ...validatedPedido, _id: insertResult.insertedId }, tenantId);
 
             // Inyectar hallazgos de riesgo en el caso genérico

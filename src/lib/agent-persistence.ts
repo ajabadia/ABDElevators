@@ -96,7 +96,7 @@ export class MongoDBSaver extends BaseCheckpointSaver {
                         $each: writes.map(w => ({ ...w, task_id, createdAt: new Date() }))
                     }
                 }
-            }
+            } as any
         );
     }
 

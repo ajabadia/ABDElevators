@@ -1,10 +1,8 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Search,
-    Filter,
     Inbox,
     RefreshCw,
     User,
@@ -13,8 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TicketStatusBadge, TicketPriorityBadge } from './TicketBadges';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatRelative } from '@/lib/date-utils';
+import { useApiList } from '@/hooks/useApiList';
 
 interface Ticket {
     _id: string;
@@ -29,76 +27,43 @@ interface Ticket {
     updatedAt: string;
 }
 
-interface User { _id: string; email: string; nombre: string; }
-
-export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Ticket) => void }) {
-    const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function TicketList({
+    onSelectTicket,
+    selectedId
+}: {
+    onSelectTicket: (t: Ticket) => void,
+    selectedId?: string | null
+}) {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-
-    // Filtros Multi-Tenant (Dropdowns)
-    const [tenants, setTenants] = useState<any[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
-
     const [tenantFilter, setTenantFilter] = useState('');
     const [userFilter, setUserFilter] = useState('');
 
-    const fetchTickets = async () => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-            if (statusFilter) params.append('status', statusFilter);
-            if (tenantFilter) params.append('tenantId', tenantFilter); // Soporte Multi-Tenant
-            if (userFilter) params.append('userEmail', userFilter); // Filtro usuario
-
-            const res = await fetch(`/api/soporte/tickets?${params.toString()}`);
-            if (res.ok) {
-                const data = await res.json();
-                setTickets(data.tickets || []);
-            }
-        } catch (error) {
-            console.error('Failed to fetch tickets', error);
-        } finally {
-            setLoading(false);
+    // 1. Gestión de datos con hook genérico
+    const { data: tickets, isLoading, refresh } = useApiList<Ticket>({
+        endpoint: '/api/soporte/tickets',
+        dataKey: 'tickets',
+        filters: {
+            status: statusFilter,
+            tenantId: tenantFilter,
+            userEmail: userFilter
         }
-    };
+    });
 
-    // Cargar Listas para filtros (Solo Admin)
-    useEffect(() => {
-        const fetchFilters = async () => {
-            try {
-                // Parallel fetch loose for UI resilience
-                const [tRes, uRes] = await Promise.all([
-                    fetch('/api/admin/tenants').catch(() => ({ ok: false, json: async () => ({}) })),
-                    fetch('/api/admin/usuarios').catch(() => ({ ok: false, json: async () => ({}) }))
-                ]);
+    // 2. Fetch de filtros (Listas para dropdowns)
+    const { data: tenants } = useApiList<any>({ endpoint: '/api/admin/tenants', dataKey: 'tenants' });
+    const { data: users } = useApiList<any>({ endpoint: '/api/admin/usuarios', dataKey: 'usuarios' });
 
-                if (tRes && (tRes as any).ok) {
-                    const data = await (tRes as any).json();
-                    if (data?.tenants) setTenants(data.tenants);
-                }
-                if (uRes && (uRes as any).ok) {
-                    const data = await (uRes as any).json();
-                    if (data?.usuarios) setUsers(data.usuarios);
-                }
-            } catch (e) {
-                // Silent fail for non-admins
-            }
-        };
-        fetchFilters();
-    }, []);
-
-    useEffect(() => {
-        fetchTickets();
-    }, [statusFilter, tenantFilter, userFilter]);
-
-    // Filtrado local por texto (más ágil)
-    const filteredTickets = tickets.filter(t =>
-        t.subject.toLowerCase().includes(search.toLowerCase()) ||
-        t.ticketNumber.toLowerCase().includes(search.toLowerCase()) ||
-        t.userEmail.toLowerCase().includes(search.toLowerCase())
-    );
+    // Filtrado local por texto para inmediatez
+    const filteredTickets = useMemo(() => {
+        if (!tickets) return [];
+        const s = search.toLowerCase();
+        return tickets.filter(t =>
+            t.subject.toLowerCase().includes(s) ||
+            t.ticketNumber.toLowerCase().includes(s) ||
+            t.userEmail.toLowerCase().includes(s)
+        );
+    }, [tickets, search]);
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -115,7 +80,6 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                 </div>
 
                 <div className="flex gap-2 overflow-x-auto pb-1">
-                    {/* Status Filter */}
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
@@ -127,8 +91,7 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                         <option value="RESOLVED">Resueltos</option>
                     </select>
 
-                    {/* Tenant Filter (Solo si tengo más de 1) */}
-                    {tenants.length > 1 && (
+                    {tenants && tenants.length > 1 && (
                         <select
                             value={tenantFilter}
                             onChange={(e) => setTenantFilter(e.target.value)}
@@ -141,8 +104,7 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                         </select>
                     )}
 
-                    {/* User Filter (Solo Admin con acceso a lista) */}
-                    {users.length > 0 && (
+                    {users && users.length > 0 && (
                         <select
                             value={userFilter}
                             onChange={(e) => setUserFilter(e.target.value)}
@@ -155,15 +117,15 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                         </select>
                     )}
 
-                    <Button variant="ghost" size="icon" onClick={fetchTickets} className="ml-auto">
-                        <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                    <Button variant="ghost" size="icon" onClick={() => refresh()} className="ml-auto">
+                        <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
                     </Button>
                 </div>
             </div>
 
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {loading && tickets.length === 0 ? (
+                {isLoading && (!tickets || tickets.length === 0) ? (
                     <div className="p-8 text-center text-slate-400 text-xs">Cargando tickets...</div>
                 ) : filteredTickets.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-slate-400">
@@ -176,7 +138,12 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                             <div
                                 key={ticket._id}
                                 onClick={() => onSelectTicket(ticket)}
-                                className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                                className={cn(
+                                    "p-4 cursor-pointer transition-all group border-l-4",
+                                    selectedId === ticket._id
+                                        ? "bg-blue-50/50 dark:bg-blue-900/10 border-l-blue-600 shadow-inner"
+                                        : "hover:bg-slate-50 dark:hover:bg-slate-800/50 border-l-transparent"
+                                )}
                             >
                                 <div className="flex justify-between items-start mb-1">
                                     <div className="flex items-center gap-2">
@@ -184,7 +151,7 @@ export default function TicketList({ onSelectTicket }: { onSelectTicket: (t: Tic
                                         <TicketStatusBadge status={ticket.status} />
                                     </div>
                                     <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                                        {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: es })}
+                                        {formatRelative(ticket.createdAt)}
                                     </span>
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-1 mb-2 group-hover:text-blue-600 transition-colors">

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         const validated = PromptSchema.parse(promptData);
 
         const { getTenantCollection } = await import('@/lib/db-tenant');
-        const { collection } = await getTenantCollection('prompts');
+        const collection = await getTenantCollection<any>('prompts');
         await collection.insertOne(validated);
 
         await logEvento({

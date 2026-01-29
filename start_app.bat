@@ -37,14 +37,36 @@ if not exist "node_modules" (
     echo.
 )
 
-echo [INFO] Iniciando servidor de desarrollo...
+echo [INFO] Verificando infraestructura local...
+echo.
+
+REM 1. Verificar Redis (Docker)
+docker ps >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [OK] Docker detectado.
+    docker inspect -f {{.State.Running}} abd-redis >nul 2>nul
+    if %errorlevel% neq 0 (
+        echo [INFO] Creando contenedor Redis 'abd-redis'...
+        docker run -d --name abd-redis -p 6379:6379 redis:alpine >nul
+    ) else (
+        echo [INFO] Iniciando contenedor 'abd-redis'...
+        docker start abd-redis >nul
+    )
+    echo [OK] Redis esta activo en el puerto 6379.
+) else (
+    echo [WARN] Docker no esta en ejecucion o no esta instalado.
+    echo        Los Async Jobs podrian fallar si no hay un Redis local.
+)
+echo.
+
+REM 2. Iniciar Worker en ventana separada
+echo [INFO] Iniciando Background Worker en ventana independiente...
+start "ABD Worker" cmd /c "npm run worker"
+
+echo.
+echo [OK] Todo listo. Iniciando frontend...
 echo.
 echo Servidor disponible en: http://localhost:3000
-echo.
-echo Usuarios de prueba:
-echo   - Admin:      admin@abd.com / admin123
-echo   - Tecnico:    tecnico@abd.com / tecnico123
-echo   - Ingenieria: ingenieria@abd.com / ingenieria123
 echo.
 echo Presiona Ctrl+C para detener el servidor
 echo ========================================
@@ -56,6 +78,8 @@ call npm run dev
 REM Si npm run dev termina (por error o Ctrl+C), pausar antes de cerrar
 echo.
 echo.
-echo El servidor se ha detenido.
+echo El servidor se ha detenido. Un momento mientras cerramos los servicios...
+docker stop abd-redis >nul 2>nul
+echo.
 echo Presiona cualquier tecla para cerrar esta ventana...
 pause >nul

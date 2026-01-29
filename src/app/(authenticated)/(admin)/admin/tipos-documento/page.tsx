@@ -1,18 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -20,115 +11,125 @@ import {
     DialogTitle,
     DialogTrigger
 } from '@/components/ui/dialog';
-import { Loader2, Plus, FileText, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle2, XCircle, Pencil, Trash2, Loader2 } from 'lucide-react';
+
+// Hooks y componentes genéricos
+import { useApiList } from '@/hooks/useApiList';
+import { useApiMutation } from '@/hooks/useApiMutation';
+import { DataTable, Column } from '@/components/shared/DataTable';
+
+interface TipoDocumento {
+    _id: string;
+    nombre: string;
+    descripcion?: string;
+    activo: boolean;
+    creado: string;
+}
 
 export default function TiposDocumentoPage() {
-    const [tipos, setTipos] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTipo, setEditingTipo] = useState<any>(null);
-    const { toast } = useToast();
+    const [editingTipo, setEditingTipo] = useState<TipoDocumento | null>(null);
 
-    useEffect(() => {
-        fetchTipos();
-    }, []);
+    // 1. Gestión de datos
+    const { data: tipos, isLoading, refresh } = useApiList<TipoDocumento>({
+        endpoint: '/api/admin/tipos-documento',
+    });
 
-    const fetchTipos = async () => {
-        try {
-            const res = await fetch('/api/admin/tipos-documento');
-            if (res.ok) {
-                const data = await res.json();
-                setTipos(data);
-            }
-        } catch (error) {
-            console.error('Error fetching types:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // 2. Mutaciones (Crear/Editar y Borrar)
+    const { mutate: saveTipo, isLoading: isSaving } = useApiMutation({
+        endpoint: editingTipo ? '/api/admin/tipos-documento' : '/api/admin/tipos-documento',
+        method: editingTipo ? 'PATCH' : 'POST',
+        onSuccess: () => {
+            setIsModalOpen(false);
+            setEditingTipo(null);
+            refresh();
+        },
+        successMessage: () => editingTipo ? 'Tipo actualizado correctamente' : 'Tipo creado correctamente',
+    });
 
-    const [isCreating, setIsCreating] = useState(false);
+    const { mutate: deleteTipo } = useApiMutation({
+        endpoint: (vars: { id: string }) => `/api/admin/tipos-documento?id=${vars.id}`,
+        method: 'DELETE',
+        confirmMessage: '¿Estás seguro de que deseas eliminar este tipo de documento?',
+        onSuccess: () => refresh(),
+    });
 
-    const handleAction = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsCreating(true);
+        const formData = new FormData(e.currentTarget);
+        const data: any = {
+            nombre: formData.get('nombre') as string,
+            descripcion: formData.get('descripcion') as string,
+            activo: true
+        };
 
-        try {
-            const formData = new FormData(e.currentTarget);
-            const data = {
-                nombre: formData.get('nombre') as string,
-                descripcion: formData.get('descripcion') as string,
-                activo: true
-            };
-
-            const url = '/api/admin/tipos-documento';
-            const method = editingTipo ? 'PATCH' : 'POST';
-            const body = editingTipo ? { ...data, id: editingTipo._id } : data;
-
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (res.ok) {
-                toast({
-                    title: editingTipo ? 'Tipo actualizado' : 'Tipo creado',
-                    description: `El tipo de documento se ha ${editingTipo ? 'actualizado' : 'guardado'} correctamente.`
-                });
-                setIsModalOpen(false);
-                setEditingTipo(null);
-                fetchTipos();
-            } else {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Error al procesar');
-            }
-        } catch (error: any) {
-            console.error('Error processing type:', error);
-            toast({
-                title: 'Error',
-                description: error.message || 'No se pudo procesar la solicitud.',
-                variant: 'destructive'
-            });
-        } finally {
-            setIsCreating(false);
+        if (editingTipo) {
+            data.id = editingTipo._id;
         }
+
+        saveTipo(data);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('¿Estás seguro de que deseas eliminar este tipo de documento?')) return;
-
-        try {
-            const res = await fetch(`/api/admin/tipos-documento?id=${id}`, {
-                method: 'DELETE'
-            });
-
-            if (res.ok) {
-                toast({
-                    title: 'Tipo eliminado',
-                    description: 'El tipo de documento se ha eliminado correctamente.'
-                });
-                fetchTipos();
-            } else {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Error al eliminar');
-            }
-        } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error.message,
-                variant: 'destructive'
-            });
+    // 3. Definición de columnas
+    const columns: Column<TipoDocumento>[] = [
+        {
+            header: "Nombre",
+            accessorKey: "nombre",
+            className: "font-medium"
+        },
+        {
+            header: "Descripción",
+            accessorKey: "descripcion",
+            cell: (t) => t.descripcion || '-'
+        },
+        {
+            header: "Estado",
+            cell: (t) => t.activo ? (
+                <span className="flex items-center gap-1 text-green-600 text-sm">
+                    <CheckCircle2 size={14} /> Activo
+                </span>
+            ) : (
+                <span className="flex items-center gap-1 text-slate-400 text-sm">
+                    <XCircle size={14} /> Inactivo
+                </span>
+            )
+        },
+        {
+            header: "Creado",
+            cell: (t) => (
+                <span className="text-slate-500 text-xs">
+                    {new Date(t.creado).toLocaleDateString()}
+                </span>
+            )
+        },
+        {
+            header: "Acciones",
+            className: "text-right",
+            cell: (t) => (
+                <div className="flex justify-end gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                        onClick={() => {
+                            setEditingTipo(t);
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => deleteTipo({ id: t._id })}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            )
         }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <Loader2 className="animate-spin text-teal-600" size={32} />
-            </div>
-        );
-    }
+    ];
 
     return (
         <div className="space-y-6">
@@ -154,7 +155,7 @@ export default function TiposDocumentoPage() {
                         <DialogHeader>
                             <DialogTitle>{editingTipo ? 'Editar Tipo de Documento' : 'Crear Nuevo Tipo de Documento'}</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={handleAction} className="space-y-4 pt-4">
+                        <form onSubmit={handleFormSubmit} className="space-y-4 pt-4">
                             <div className="space-y-2">
                                 <Label htmlFor="nombre">Nombre</Label>
                                 <Input id="nombre" name="nombre" defaultValue={editingTipo?.nombre} placeholder="Ej: Botonera, Motor, etc." required />
@@ -164,9 +165,9 @@ export default function TiposDocumentoPage() {
                                 <Input id="descripcion" name="descripcion" defaultValue={editingTipo?.descripcion} placeholder="Opcional" />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isCreating}>Cancelar</Button>
-                                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isCreating}>
-                                    {isCreating ? (
+                                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancelar</Button>
+                                <Button type="submit" className="bg-teal-600 hover:bg-teal-700" disabled={isSaving}>
+                                    {isSaving ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             {editingTipo ? 'Guardando...' : 'Creando...'}
@@ -179,72 +180,12 @@ export default function TiposDocumentoPage() {
                 </Dialog>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead>Creado</TableHead>
-                            <TableHead className="text-right">Acciones</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {tipos.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
-                                    No hay tipos de documento configurados.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            tipos.map((tipo) => (
-                                <TableRow key={tipo._id}>
-                                    <TableCell className="font-medium">{tipo.nombre}</TableCell>
-                                    <TableCell>{tipo.descripcion || '-'}</TableCell>
-                                    <TableCell>
-                                        {tipo.activo ? (
-                                            <span className="flex items-center gap-1 text-green-600 text-sm">
-                                                <CheckCircle2 size={14} /> Activo
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1 text-slate-400 text-sm">
-                                                <XCircle size={14} /> Inactivo
-                                            </span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-slate-500 text-xs text-nowrap">
-                                        {new Date(tipo.creado).toLocaleDateString()}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                                                onClick={() => {
-                                                    setEditingTipo(tipo);
-                                                    setIsModalOpen(true);
-                                                }}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                onClick={() => handleDelete(tipo._id)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            <DataTable
+                data={tipos || []}
+                columns={columns}
+                isLoading={isLoading}
+                emptyMessage="No hay tipos de documento configurados."
+            />
         </div>
     );
 }

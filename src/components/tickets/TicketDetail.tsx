@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -17,8 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TicketStatusBadge, TicketPriorityBadge } from './TicketBadges';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDateTime, formatDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
@@ -26,6 +24,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+
+// Nuevos hooks genéricos
+import { useApiMutation } from "@/hooks/useApiMutation";
 
 interface Ticket {
     _id: string;
@@ -55,12 +56,30 @@ interface Ticket {
     }>;
 }
 
-export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
+export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | null, onRefresh?: () => void }) {
     const [reply, setReply] = useState('');
-    const [sending, setSending] = useState(false);
-    // Para UX instántanea, podríamos usar estado local optimista, pero por ahora reload simple o revalidación
-    // Como esto es cliente, idealmente 'onReplySuccess' callback para recargar la data en el padre.
-    // Vamos a asumir que el padre pasará una función de refresh o implementaremos un mutate simple.
+
+    // 1. Mutaciones con hook genérico
+    const { mutate: sendReply, isLoading: sending } = useApiMutation({
+        endpoint: `/api/soporte/tickets/${ticket?._id}/reply`,
+        onSuccess: () => {
+            setReply('');
+            onRefresh?.();
+        },
+        successMessage: 'Respuesta enviada correctamente',
+    });
+
+    const { mutate: addInternalNote } = useApiMutation({
+        endpoint: `/api/soporte/tickets/${ticket?._id}/reply`,
+        onSuccess: () => onRefresh?.(),
+        successMessage: 'Nota interna guardada',
+    });
+
+    const { mutate: escalate } = useApiMutation({
+        endpoint: `/api/soporte/tickets/${ticket?._id}/reassign`,
+        onSuccess: () => onRefresh?.(),
+        successMessage: 'Ticket reasignado correctamente',
+    });
 
     if (!ticket) {
         return (
@@ -74,65 +93,21 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
         );
     }
 
-    const handleSendReply = async () => {
+    const handleSendReply = () => {
         if (!reply.trim()) return;
-        setSending(true);
-        try {
-            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reply`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: reply })
-            });
-
-            if (res.ok) {
-                setReply('');
-                window.location.reload();
-            } else {
-                alert("Error al enviar respuesta");
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSending(false);
-        }
+        sendReply({ content: reply });
     };
 
-    const handleEscalate = async (target: string) => {
+    const handleEscalateAction = (target: string) => {
         const note = prompt("Motivo del escalamiento (opcional):");
-        if (note === null) return; // Cancelado
-        try {
-            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reassign`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ assignedTo: target, note })
-            });
-            if (res.ok) window.location.reload();
-        } catch (e) {
-            alert("Error al escalar");
-        }
+        if (note === null) return;
+        escalate({ assignedTo: target, note });
     };
 
-    const handleInternalNote = async () => {
+    const handleInternalNoteAction = () => {
         const content = prompt("Escribe una nota interna (solo visible para administradores):");
         if (!content) return;
-
-        setSending(true);
-        try {
-            const res = await fetch(`/api/soporte/tickets/${ticket._id}/reply`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content, isInternal: true })
-            });
-            if (res.ok) {
-                window.location.reload();
-            } else {
-                alert("Error al guardar nota");
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSending(false);
-        }
+        addInternalNote({ content, isInternal: true });
     };
 
     return (
@@ -147,7 +122,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                         <TicketStatusBadge status={ticket.status} />
                     </div>
                     <div className="text-right text-xs text-slate-400">
-                        <p>{format(new Date(ticket.createdAt), "PPP p", { locale: es })}</p>
+                        <p>{formatDateTime(ticket.createdAt)}</p>
                     </div>
                 </div>
 
@@ -172,7 +147,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
 
                 {/* Support Actions Bar */}
                 <div className="flex gap-2 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200" onClick={handleInternalNote}>
+                    <Button variant="outline" size="sm" className="h-9 text-xs border-slate-200" onClick={handleInternalNoteAction}>
                         <Shield size={14} className="mr-2 text-amber-500" /> Nota Interna
                     </Button>
 
@@ -183,19 +158,19 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56">
-                            <DropdownMenuItem onClick={() => handleEscalate('SOPORTE_L2')}>
+                            <DropdownMenuItem onClick={() => handleEscalateAction('SOPORTE_L2')}>
                                 <div className="flex flex-col">
                                     <span className="font-bold">Soporte Nivel 2</span>
                                     <span className="text-[10px] text-slate-400">Técnicos Senior</span>
                                 </div>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEscalate('SOPORTE_L3')}>
+                            <DropdownMenuItem onClick={() => handleEscalateAction('SOPORTE_L3')}>
                                 <div className="flex flex-col">
                                     <span className="font-bold">Equipo Ingeniería (L3)</span>
                                     <span className="text-[10px] text-slate-400">Desarrollo ABD</span>
                                 </div>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEscalate('ADMIN_MASTER')}>
+                            <DropdownMenuItem onClick={() => handleEscalateAction('ADMIN_MASTER')}>
                                 <div className="flex flex-col">
                                     <span className="font-bold">Administrador General</span>
                                     <span className="text-[10px] text-slate-400">Supervisión Master</span>
@@ -242,7 +217,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                                     {msg.isInternal && <span className="ml-2 text-[9px] uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">Interna</span>}
                                 </span>
                                 <span className="text-xs text-slate-400">
-                                    {format(new Date(msg.timestamp), "d MMM HH:mm", { locale: es })}
+                                    {formatDateTime(msg.timestamp)}
                                 </span>
                             </div>
                             <div className={cn(
@@ -262,7 +237,7 @@ export default function TicketDetail({ ticket }: { ticket: Ticket | null }) {
                 {/* Placeholder para fin */}
                 <div className="flex justify-center">
                     <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                        Inicio del ticket {format(new Date(ticket.createdAt), "d MMM yyyy")}
+                        Inicio del ticket {formatDate(ticket.createdAt)}
                     </span>
                 </div>
             </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useDebounce } from '@/hooks/use-debounce';
+import React, { useState, useMemo } from 'react';
 import { Search, Database, FileText, Layers, Globe, Filter, RefreshCcw, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useApiList } from '@/hooks/useApiList';
+import { useFilterState } from '@/hooks/useFilterState';
+import { useApiExport } from '@/hooks/useApiExport';
+import { useToast } from '@/hooks/use-toast';
 
 interface Chunk {
     _id: string;
@@ -25,63 +28,69 @@ interface Chunk {
 }
 
 export const KnowledgeExplorer: React.FC = () => {
-    // Search States
-    const [browserSearch, setBrowserSearch] = useState("");
+    // 1. Gestión de Estado de Filtros Centralizada
+    const {
+        filters,
+        setFilter,
+        page,
+        setPage
+    } = useFilterState({
+        initialFilters: {
+            query: "",
+            searchType: 'regex',
+            language: 'all',
+            type: 'all',
+            limit: 20
+        }
+    });
+
+    const [simulationMode, setSimulationMode] = useState(false);
     const [simulatorSearch, setSimulatorSearch] = useState("");
 
-    // Filters
-    const [languageFilter, setLanguageFilter] = useState("all");
-    const [typeFilter, setTypeFilter] = useState("all"); // all, original, shadow
+    // 2. Exportación de Datos
+    const { exportData, isExporting } = useApiExport({
+        endpoint: '/api/admin/knowledge-base/export',
+        filename: 'knowledge-base-chunks'
+    });
 
-    // Data States
-    const [chunks, setChunks] = useState<Chunk[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [total, setTotal] = useState(0);
-    const [skip, setSkip] = useState(0);
-    const limit = 20;
-
-    const debouncedBrowserSearch = useDebounce(browserSearch, 500);
-
-    const fetchChunks = async (isSimulation = false) => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-
-            // Logic: 
-            // - Browser Mode: Uses debouncedBrowserSearch (regex search on text/model/source)
-            // - Simulator Mode: Uses simulatorSearch (conceptually different, but for now maps to same query param)
-            // TODO: Enhance API to distinguish between 'regex search' and 'semantic similarity search'
-
-            const query = isSimulation ? simulatorSearch : debouncedBrowserSearch;
-            const searchType = isSimulation ? 'semantic' : 'regex';
-
-            if (query) params.set("query", query);
-            params.set("searchType", searchType);
-
-            if (languageFilter !== "all" && !isSimulation) params.set("language", languageFilter);
-            if (typeFilter !== "all" && !isSimulation) params.set("type", typeFilter);
-
-            params.set("limit", limit.toString());
-            params.set("skip", skip.toString());
-
-            const res = await fetch(`/api/admin/knowledge-base/chunks?${params.toString()}`);
-            const data = await res.json();
-
-            if (data.success) {
-                setChunks(data.chunks);
-                setTotal(data.pagination.total);
-            }
-        } catch (error) {
-            console.error("Error fetching chunks:", error);
-        } finally {
-            setLoading(false);
+    // 3. Gestión de datos con hook genérico
+    const {
+        data: chunks,
+        isLoading,
+        total,
+        refresh
+    } = useApiList<Chunk>({
+        endpoint: '/api/admin/knowledge-base/chunks',
+        dataKey: 'chunks',
+        debounceMs: 500,
+        filters: {
+            ...filters,
+            query: simulationMode ? simulatorSearch : filters.query,
+            searchType: simulationMode ? 'semantic' : 'regex',
+            language: filters.language === 'all' ? undefined : filters.language,
+            type: filters.type === 'all' ? undefined : filters.type,
+            skip: ((page - 1) * filters.limit).toString(),
+            limit: filters.limit.toString()
         }
+    });
+
+    const handleSimulation = () => {
+        setSimulationMode(true);
+        // El hook reaccionará al cambio de simulatorSearch y simulationMode
     };
 
-    // Effect for Browser Search
-    useEffect(() => {
-        fetchChunks(false);
-    }, [debouncedBrowserSearch, languageFilter, typeFilter, skip]);
+    const handleBrowserSearch = (val: string) => {
+        setSimulationMode(false);
+        setFilter('query', val);
+    };
+
+    const handleExport = () => {
+        exportData({
+            ...filters,
+            query: filters.query,
+            total_records: total
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -90,9 +99,21 @@ export const KnowledgeExplorer: React.FC = () => {
                     <h2 className="text-3xl font-bold text-slate-900 font-outfit">Base de Conocimiento</h2>
                     <p className="text-slate-500">Explora los fragmentos vectoriales y verifica la indexación multilingüe.</p>
                 </div>
-                <Button onClick={() => fetchChunks(false)} variant="outline" size="sm">
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Actualizar
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={handleExport}
+                        variant="outline"
+                        size="sm"
+                        className="text-teal-600 border-teal-200 hover:bg-teal-50"
+                        disabled={isExporting || isLoading}
+                    >
+                        {isExporting ? <RefreshCcw className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                        Exportar Chunks
+                    </Button>
+                    <Button onClick={() => refresh()} variant="outline" size="sm">
+                        <RefreshCcw className="mr-2 h-4 w-4" /> Actualizar
+                    </Button>
+                </div>
             </div>
 
             {/* Metas & Stats */}
@@ -100,7 +121,7 @@ export const KnowledgeExplorer: React.FC = () => {
                 <Card className="border-none shadow-sm bg-slate-900 text-white">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-slate-400 font-medium">Total Chunks</CardDescription>
-                        <CardTitle className="text-3xl font-bold font-outfit">{total.toLocaleString()}</CardTitle>
+                        <CardTitle className="text-3xl font-bold font-outfit">{(total || 0).toLocaleString()}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card className="border-none shadow-sm bg-white">
@@ -134,7 +155,7 @@ export const KnowledgeExplorer: React.FC = () => {
                 </Card>
             </div>
 
-            {/* Search Debugger (Feature 25.2) */}
+            {/* Search Debugger */}
             <div className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-100 rounded-xl p-6 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                     <div className="flex-1 space-y-4">
@@ -153,14 +174,14 @@ export const KnowledgeExplorer: React.FC = () => {
                                 className="bg-white border-teal-200 focus-visible:ring-teal-500"
                                 value={simulatorSearch}
                                 onChange={(e) => setSimulatorSearch(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && fetchChunks(true)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSimulation()}
                             />
                             <Button
-                                onClick={() => fetchChunks(true)}
-                                disabled={loading || !simulatorSearch}
+                                onClick={handleSimulation}
+                                disabled={isLoading || !simulatorSearch}
                                 className="bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20"
                             >
-                                {loading ? <RefreshCw className="animate-spin h-4 w-4" /> : 'Simular Búsqueda'}
+                                {isLoading && simulationMode ? <RefreshCw className="animate-spin h-4 w-4" /> : 'Simular Búsqueda'}
                             </Button>
                         </div>
                     </div>
@@ -180,11 +201,11 @@ export const KnowledgeExplorer: React.FC = () => {
                             <Input
                                 placeholder="Buscar texto, modelo o archivo..."
                                 className="pl-9"
-                                value={browserSearch}
-                                onChange={(e) => setBrowserSearch(e.target.value)}
+                                value={filters.query}
+                                onChange={(e) => handleBrowserSearch(e.target.value)}
                             />
                         </div>
-                        <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                        <Select value={filters.language} onValueChange={(val) => setFilter('language', val)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Idioma" />
                             </SelectTrigger>
@@ -198,7 +219,7 @@ export const KnowledgeExplorer: React.FC = () => {
                                 <SelectItem value="pt">Portugués (PT)</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <Select value={filters.type} onValueChange={(val) => setFilter('type', val)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Tipo de Indexación" />
                             </SelectTrigger>
@@ -214,15 +235,15 @@ export const KnowledgeExplorer: React.FC = () => {
 
             <div className="space-y-4">
                 <div className="flex justify-between items-center text-sm text-slate-500">
-                    <span>Mostrando {chunks.length} de {total} fragmentos encontrados</span>
+                    <span>Mostrando {chunks?.length || 0} de {total || 0} fragmentos encontrados</span>
                 </div>
 
-                {loading ? (
+                {isLoading ? (
                     <div className="py-20 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
                         <p className="mt-4 text-slate-400">Cargando vectores...</p>
                     </div>
-                ) : chunks.length === 0 ? (
+                ) : !chunks || chunks.length === 0 ? (
                     <div className="py-20 text-center bg-slate-50 rounded-lg border border-slate-100">
                         <Database className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-slate-900">No se encontraron fragmentos</h3>
@@ -288,23 +309,23 @@ export const KnowledgeExplorer: React.FC = () => {
                     </div>
                 )}
 
-                {chunks.length > 0 && (
+                {chunks && chunks.length > 0 && (
                     <div className="p-4 border-t border-slate-100 bg-slate-50/30 flex justify-between items-center rounded-b-xl">
                         <p className="text-xs text-slate-500"> Mostrando {chunks.length} de {total} fragmentos</p>
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
-                                disabled={skip === 0}
-                                onClick={() => setSkip(Math.max(0, skip - limit))}
+                                disabled={page === 1}
+                                onClick={() => setPage((p: number) => Math.max(1, p - 1))}
                             >
                                 Anterior
                             </Button>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                disabled={skip + limit >= total}
-                                onClick={() => setSkip(skip + limit)}
+                                disabled={((page) * filters.limit) >= (total || 0)}
+                                onClick={() => setPage((p: number) => p + 1)}
                             >
                                 Siguiente
                             </Button>

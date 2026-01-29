@@ -50,40 +50,19 @@ export async function GET(req: NextRequest) {
         const priority = searchParams.get('priority') || undefined;
         const userEmail = searchParams.get('userEmail') || undefined;
 
-        // Lógica de Permisos Multi-Tenant (Igual que en Logs)
-        let allowedTenants: string[] = [];
+        // Lógica de Permisos Multi-Tenant (Simplificada: el Service usa el wrapper blindado)
         let filterUserId: string | undefined = undefined;
 
-        if (session.user.role === 'SUPER_ADMIN') {
-            // Ve todo (o filtra por tenant si quiere)
-            allowedTenants = []; // Si vacío en service -> debería manejar "todos" o lógica especial
-            // Para simplificar, en Service si tenantIds está vacío y es superadmin, buscaríamos todos.
-            // Pero aquí vamos a pasar todos los tenants activos si es necesario, o un wildcard.
-            // MEJORA: Obtener lista real de tenants si es SuperAdmin, o usar un flag *
-            // Por seguridad, SuperAdmin verá los de su contexto o todos si es explícito.
-            // En V1: Ver tickets DEL TENANT EN EL QUE ESTA O TODOS? 
-            // SuperAdmin suele querer ver todo.
-            const allTenants = await import('@/lib/tenant-service').then(m => m.TenantService.getAllTenants());
-            allowedTenants = allTenants.map(t => t.tenantId);
-
-        } else if (session.user.role === 'ADMIN') {
-            // Ve los de sus tenants permitidos
-            allowedTenants = [
-                (session.user as any).tenantId,
-                ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
-            ].filter(Boolean);
-        } else {
-            // Usuario normal (TECNICO/COMERCIAL): Solo ve SUS tickets de SU tenant
-            allowedTenants = [session.user.tenantId];
+        // Si no es admin/soporte, solo ve sus propios tickets
+        if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN' && session.user.role !== 'SUPPORT') {
             filterUserId = session.user.id;
         }
 
         const tickets = await TicketService.getTickets({
-            tenantIds: allowedTenants,
             userId: filterUserId,
             userEmail,
-            status,
-            priority
+            status: status || undefined,
+            priority: priority || undefined
         });
 
         return NextResponse.json({ success: true, tickets });

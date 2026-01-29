@@ -3,8 +3,9 @@ import { z } from "zod";
 import { ExternalServiceError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { UsageService } from './usage-service';
-
 import { PromptService } from './prompt-service';
+import { EntityEngine } from '@/core/engine/EntityEngine';
+import { AgentEngine } from '@/core/engine/AgentEngine';
 
 let genAIInstance: GoogleGenerativeAI | null = null;
 
@@ -212,6 +213,73 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
             detalles: errorDetails
         });
         throw new ExternalServiceError('Error extracting models with Gemini', errorDetails);
+    }
+}
+
+/**
+ * Analiza una entidad usando prompts adaptativos de la ontología. (Fase KIMI 5)
+ */
+export async function analyzeEntityWithGemini(
+    entitySlug: string,
+    text: string,
+    tenantId: string,
+    correlacion_id: string
+) {
+    const start = Date.now();
+    try {
+        const engine = EntityEngine.getInstance();
+        const agent = AgentEngine.getInstance();
+
+        let renderedPrompt = engine.renderPrompt(entitySlug, 'analyze', { text });
+        let modelName = 'gemini-1.5-flash';
+
+        // Inyectar aprendizaje del contexto del agente (Feedback Loop)
+        const learningContext = await agent.getCorrectionContext(entitySlug, tenantId);
+        if (learningContext) {
+            renderedPrompt += learningContext;
+        }
+
+        // Si la ontología no tiene prompt, caer en el PromptService (Legacy/DB)
+        if (!renderedPrompt) {
+            const result = await PromptService.getRenderedPrompt('MODEL_EXTRACTOR', { text }, tenantId);
+            renderedPrompt = result.text;
+            modelName = result.model;
+        }
+
+        const genAI = getGenAI();
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(renderedPrompt);
+        const responseText = result.response.text();
+
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+            throw new ExternalServiceError('No hay JSON válido en la respuesta de Gemini');
+        }
+
+        let resultData;
+        try {
+            resultData = JSON.parse(jsonMatch[0]);
+        } catch (parseError) {
+            throw new ExternalServiceError('Fallo al parsear JSON adaptativo', parseError as Error);
+        }
+
+        // Tracking de uso
+        const usage = (result.response as any).usageMetadata;
+        if (usage) {
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+        }
+
+        return resultData;
+    } catch (error: any) {
+        await logEvento({
+            nivel: 'ERROR',
+            origen: 'GEMINI_ADAPTIVE_ANALYSIS',
+            accion: 'ANALYSIS_ERROR',
+            mensaje: `Error analizando ${entitySlug}: ${error.message}`,
+            correlacion_id,
+            detalles: { entitySlug }
+        });
+        throw error;
     }
 }
 

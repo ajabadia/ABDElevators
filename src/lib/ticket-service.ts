@@ -1,21 +1,20 @@
-
-import { connectDB } from "@/lib/db";
 import { ObjectId } from "mongodb";
 import { Ticket, TicketSchema } from "@/lib/ticket-schema";
 import { AppError } from "./errors";
 import { logEvento } from "./logger";
+import { getTenantCollection } from "./db-tenant";
 import crypto from 'crypto';
 
 export class TicketService {
 
     /**
-     * Crea un nuevo ticket secuencial (TKT-YYYY-XXXXX)
+     * Crea un nuevo ticket secuencial con aislamiento garantizado.
      */
     static async createTicket(data: Omit<Ticket, 'ticketNumber' | 'createdAt' | 'updatedAt' | 'status'> & { status?: string }) {
-        const db = await connectDB();
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
 
-        // Generar ID secuencial "human readable"
-        const count = await db.collection("tickets").countDocuments();
+        // Generar ID secuencial
+        const count = await ticketColl.countDocuments();
         const year = new Date().getFullYear();
         const ticketNumber = `TKT-${year}-${(count + 1).toString().padStart(5, '0')}`;
 
@@ -30,8 +29,7 @@ export class TicketService {
         };
 
         const validated = TicketSchema.parse(newTicket);
-
-        const result = await db.collection("tickets").insertOne(validated);
+        const result = await ticketColl.insertOne(validated as any);
 
         await logEvento({
             nivel: 'INFO',
@@ -48,21 +46,18 @@ export class TicketService {
     }
 
     /**
-     * Recupera tickets aplicando lógica Multi-Tenant estricta
-     * @param options Filtros y contexto de seguridad
+     * Recupera tickets aplicando blindaje multi-tenant automático.
      */
     static async getTickets(options: {
-        tenantIds: string[]; // Lista de tenants permitidos para el usuario
-        userId?: string;     // Si es usuario normal, solo ve los suyos. Si es Admin/Tech, ve todos los del tenant.
-        userEmail?: string;  // Filtro por email (para Admin UI)
+        userId?: string;     // Si es usuario normal, solo ve los suyos.
+        userEmail?: string;  // Filtro por email
         status?: string;
         priority?: string;
         limit?: number;
     }) {
-        const db = await connectDB();
-        const query: any = {
-            tenantId: { $in: options.tenantIds }
-        };
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
+
+        const query: any = {};
 
         if (options.userId) {
             query.createdBy = options.userId;
@@ -75,17 +70,17 @@ export class TicketService {
         if (options.status) query.status = options.status;
         if (options.priority) query.priority = options.priority;
 
-        const tickets = await db.collection("tickets")
-            .find(query)
-            .sort({ updatedAt: -1, priority: -1 }) // Priorizar recientes y urgentes
-            .limit(options.limit || 50)
-            .toArray();
+        // Note: tenantId injection is handled by ticketColl automatically
+        const tickets = await ticketColl.find(query, {
+            sort: { updatedAt: -1, priority: -1 } as any,
+            limit: options.limit || 50
+        });
 
         return tickets;
     }
 
     /**
-     * Añade un mensaje público a la conversación del ticket
+     * Añade un mensaje a la conversación con validación de tenant.
      */
     static async addMessage(
         ticketId: string,
@@ -96,7 +91,7 @@ export class TicketService {
             isInternal?: boolean
         }
     ) {
-        const db = await connectDB();
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
 
         const newMessage = {
             id: crypto.randomUUID(),
@@ -105,24 +100,20 @@ export class TicketService {
             isInternal: message.isInternal || false
         };
 
-        // Si contesta el usuario, reabrimos si estaba esperando usuario
-        // Si contesta soporte, cambiamos a esperando usuario
-        let newStatus = undefined;
-        // Lógica de estado automática (opcional, pero recomendada)
-
         const updateOp: any = {
             $push: { messages: newMessage },
             $set: { updatedAt: new Date() }
         };
 
-        // ... (dentro de la clase)
-
-        await db.collection("tickets").updateOne(
-            { _id: new ObjectId(ticketId) },
+        const result = await ticketColl.updateOne(
+            { _id: new ObjectId(ticketId) as any },
             updateOp
         );
 
-        // Log para auditoría
+        if (result.matchedCount === 0) {
+            throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado o acceso denegado');
+        }
+
         await logEvento({
             nivel: 'INFO',
             origen: 'TICKET_SERVICE',
@@ -136,10 +127,10 @@ export class TicketService {
     }
 
     /**
-     * Reasigna un ticket y añade nota de escalamiento
+     * Reasigna un ticket con auditoría interna.
      */
     static async reassignTicket(ticketId: string, data: { assignedTo: string, note?: string, authorId: string }) {
-        const db = await connectDB();
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
         const timestamp = new Date();
 
         const updateOp: any = {
@@ -161,10 +152,14 @@ export class TicketService {
             };
         }
 
-        await db.collection("tickets").updateOne(
-            { _id: new ObjectId(ticketId) },
+        const result = await ticketColl.updateOne(
+            { _id: new ObjectId(ticketId) as any },
             updateOp
         );
+
+        if (result.matchedCount === 0) {
+            throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado o acceso denegado');
+        }
 
         await logEvento({
             nivel: 'INFO',
@@ -174,14 +169,5 @@ export class TicketService {
             correlacion_id: ticketId,
             detalles: { assignedTo: data.assignedTo, note: !!data.note }
         });
-    }
-
-    /**
-     * Añade nota interna o actualiza estado
-     */
-    static async updateTicket(id: string, updates: Partial<Ticket> & { note?: string, authorId?: string }) {
-        const db = await connectDB();
-        // Lógica de actualización (pendiente de implementación completa en fase UI)
-        // ...
     }
 }

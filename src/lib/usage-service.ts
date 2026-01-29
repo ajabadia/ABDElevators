@@ -97,7 +97,7 @@ export class UsageService {
     private static async logUsage(data: any) {
         try {
             const validated = UsageLogSchema.parse(data);
-            const { collection } = await getTenantCollection('usage_logs');
+            const collection = await getTenantCollection('usage_logs');
 
             await collection.insertOne(validated);
 
@@ -141,25 +141,22 @@ export class UsageService {
      */
     static async getTenantROI(tenantId: string) {
         try {
-            const db = await connectDB();
-            const usageColl = db.collection('usage_logs');
-            const pedidosColl = db.collection('pedidos');
+            const usageColl = await getTenantCollection('usage_logs');
+            const pedidosColl = await getTenantCollection('pedidos');
 
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
             // 1. Análisis Realizados (Pedidos procesados)
             const analysisCount = await pedidosColl.countDocuments({
-                tenantId: tenantId,
                 createdAt: { $gte: thirtyDaysAgo },
                 estado: 'completado'
             });
 
             // 2. Métricas de Usage Logs (Searches & Dedup)
-            const usageStats = await usageColl.aggregate([
+            const usageStats = await usageColl.aggregate<any>([
                 {
                     $match: {
-                        tenantId: tenantId,
                         timestamp: { $gte: thirtyDaysAgo }
                     }
                 },
@@ -170,7 +167,7 @@ export class UsageService {
                         totalValue: { $sum: '$valor' }
                     }
                 }
-            ]).toArray();
+            ]);
 
             const vectorSearches = usageStats.find((s: any) => s._id === 'VECTOR_SEARCH')?.count || 0;
             const dedupEvents = usageStats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.count || 0;

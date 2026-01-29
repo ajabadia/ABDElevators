@@ -28,6 +28,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { useApiList } from "@/hooks/useApiList";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiOptimistic } from "@/hooks/useApiOptimistic";
 import { logEventoCliente } from "@/lib/logger-client";
 
 interface Documento {
@@ -43,106 +46,82 @@ interface Documento {
 }
 
 export default function DocumentosPage() {
-    const [documentos, setDocumentos] = useState<Documento[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [isUploadOpen, setIsUploadOpen] = useState(false);
-    const { toast } = useToast();
 
-    const fetchDocumentos = async () => {
-        setIsLoading(true);
-        try {
-            const res = await fetch('/api/admin/documentos');
-            const data = await res.json();
-            if (data.success) {
-                setDocumentos(data.documentos);
-            }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo cargar el corpus técnico",
-                variant: "destructive",
+    // 1. Fetching con useApiList
+    const {
+        data: documentos,
+        isLoading,
+        refresh,
+        setData
+    } = useApiList<Documento>({
+        endpoint: '/api/admin/documentos',
+        filters: { search: searchTerm },
+        dataKey: 'documentos'
+    });
+
+    // 2. Optimización Perceptual (UX Instantánea)
+    const { updateOptimistic, deleteOptimistic } = useApiOptimistic(documentos, setData);
+
+    // 3. Mutaciones con useApiMutation
+    const statusMutation = useApiMutation({
+        endpoint: '/api/admin/documentos/status',
+        method: 'PATCH',
+        onSuccess: () => {
+            refresh();
+            logEventoCliente({
+                nivel: 'INFO',
+                origen: 'UI_DOCS',
+                accion: 'STATUS_CHANGE',
+                mensaje: 'Estado de documento actualizado',
             });
-        } finally {
-            setIsLoading(false);
         }
-    };
+    });
 
-    useEffect(() => {
-        fetchDocumentos();
-    }, []);
+    const deleteMutation = useApiMutation({
+        endpoint: (id) => `/api/admin/documentos/${id}`,
+        method: 'DELETE',
+        confirmMessage: (id) => `¿Estás seguro de eliminar este documento? Esta acción es irreversible.`,
+        onSuccess: () => {
+            refresh();
+            logEventoCliente({
+                nivel: 'WARN',
+                origen: 'UI_DOCS',
+                accion: 'DELETE_DOC',
+                mensaje: 'Documento eliminado del corpus',
+            });
+        }
+    });
 
     const handleStatusChange = async (documentId: string, nuevoEstado: string) => {
-        try {
-            const res = await fetch('/api/admin/documentos/status', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ documentId, nuevoEstado }),
-            });
-            const data = await res.json();
+        // Actualización optimista para feedback inmediato
+        updateOptimistic(documentId, { estado: nuevoEstado as any });
 
-            if (data.success) {
-                toast({
-                    title: "Estado actualizado",
-                    description: `El documento ahora está en estado ${nuevoEstado}`,
-                });
-                fetchDocumentos();
-                logEventoCliente({
-                    nivel: 'INFO',
-                    origen: 'UI_DOCS',
-                    accion: 'STATUS_CHANGE',
-                    mensaje: `Cambiado estado a ${nuevoEstado}`,
-                    correlacion_id: documentId
-                });
-            }
+        try {
+            await statusMutation.mutate({ documentId, nuevoEstado });
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo actualizar el estado",
-                variant: "destructive",
-            });
+            // Si falla, el refresh del useApiList (vía mutation onSuccess o error) restaurará el estado
+            refresh();
         }
     };
 
-    const handleDelete = async (documentId: string, nombre: string) => {
-        if (!confirm(`¿Estás seguro de eliminar "${nombre}"? Esta acción borrará el archivo de Cloudinary y todos sus fragmentos indexados de forma permanente.`)) {
-            return;
-        }
+    const handleDelete = async (documentId: string) => {
+        // Eliminación optimista
+        const originalData = [...documentos];
+        deleteOptimistic(documentId);
 
         try {
-            const res = await fetch(`/api/admin/documentos/${documentId}`, {
-                method: 'DELETE',
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                toast({
-                    title: "Documento eliminado",
-                    description: "El archivo y sus fragmentos han sido borrados de la base de datos.",
-                });
-                fetchDocumentos();
-                logEventoCliente({
-                    nivel: 'WARN',
-                    origen: 'UI_DOCS',
-                    accion: 'DELETE_DOC',
-                    mensaje: `Eliminado documento ${nombre}`,
-                    correlacion_id: documentId
-                });
-            }
+            await deleteMutation.mutate(documentId);
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "Fallo crítico al intentar eliminar el documento",
-                variant: "destructive",
-            });
+            setData(originalData);
         }
     };
 
-    const filteredDocs = documentos.filter(doc =>
-        doc.nombre_archivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.tipo_componente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.modelo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDocs = documentos; // useApiList ya maneja el filtrado via server/query si lo configuramos, 
+    // o si no, el search prop puede usarse para filtrar localmente si se desea.
+    // En este caso, lo dejamos para que useApiList lo maneje via API.
 
     const stats = {
         vigentes: documentos.filter(d => d.estado === 'vigente').length,
@@ -170,7 +149,7 @@ export default function DocumentosPage() {
                 isOpen={isUploadOpen}
                 onClose={() => {
                     setIsUploadOpen(false);
-                    fetchDocumentos();
+                    refresh();
                 }}
             />
 
@@ -324,7 +303,7 @@ export default function DocumentosPage() {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
-                                                    onClick={() => handleDelete(doc._id, doc.nombre_archivo)}
+                                                    onClick={() => handleDelete(doc._id)}
                                                     className="text-red-600 focus:text-red-600 focus:bg-red-50"
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" /> Eliminar Permanente
