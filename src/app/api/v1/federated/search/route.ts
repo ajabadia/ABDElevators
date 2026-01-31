@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FederatedKnowledgeService } from "@/lib/federated-knowledge-service";
 import { auth } from "@/lib/auth";
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
     try {
@@ -12,7 +13,10 @@ export async function POST(req: NextRequest) {
 
         if (!query) return NextResponse.json({ error: "Query required" }, { status: 400 });
 
-        const results = await FederatedKnowledgeService.searchGlobalPatterns(query, limit || 3);
+        const tenantId = (session.user as any).tenantId || 'GLOBAL';
+        const correlationId = crypto.randomUUID();
+
+        const results = await FederatedKnowledgeService.searchGlobalPatterns(query, tenantId, correlationId, limit || 3);
 
         return NextResponse.json({ success: true, data: results });
     } catch (error) {
