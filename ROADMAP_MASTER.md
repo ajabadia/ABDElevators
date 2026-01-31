@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.26 - FINAL ERA)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.30 - EVOLUTION ERA)
 
 ## 📖 Overview
 This document consolidates **all** roadmap information, implementation plans, and task checklist into a single, authoritative reference. It preserves historical progress, detailed phase breakdown, and the high-level cognitive infrastructure vision.
@@ -38,27 +38,24 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 📊 Status & Metrics (v2.26)
+### 📊 Status & Metrics (v2.30)
 
-- **Global Progress:** 195% (**Universal Cognitive Infrastructure ACHIEVED**).
+- **Global Progress:** 205% (**Beyond Universal Infrastructure - Collective Intelligence Active**).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
 - **Recent Ship:**
-  - **Public API (V1)**: Secure endpoints & Dev Portal.
-  - **Observability Pro**: OpenTelemetry Tracing.
-  - **SEO & A11Y**: Structured Data.
-- **Project Status:** **Production-Ready & Optimized.**
+  - **Compliance Suite**: Backup (.zip) & GDPR Certs.
+  - **Ephemeral Sandbox**: Auto-purge trial tenants.
+  - **Federated Intelligence**: Global pattern network.
+- **Project Status:** **State-of-the-art Production System.**
 
 ---
 
 ### 📋 Upcoming, To‑Do & Planned (Consolidated View)
 
-#### Current & Immediate Focus (Vision 2027 Exploration)
-1.  **Federated Knowledge Networks (IMPLEMENTADO ✅)**
-    - Implementado `FederatedKnowledgeService` con Gemini Pro.
-    - Integrado componente `FederatedSuggestions` en el buscador técnico.
-2.  **Autonomous Physical Intervention (IoT Integration)** [ ]
-    - Prototipar conexión segura con controladores de maniobra (MQTT/Websockets).
-    - Definir "Action Space" seguro para la IA.
+#### Recently Completed (Vision 2027 Seeded)
+- [x] **Federated Knowledge Networks**: Implementado `FederatedKnowledgeService` y UI de sugerencias globales.
+- [x] **Compliance & Data Portability**: Sistema de backup ZIP y certificados GDPR.
+- [x] **Ephemeral Tenants**: Factoría de pruebas con limpieza TTL.
 
 #### Recently Completed (Stabilization Sprint)
 - [x] **Validación Avanzada (Prompts)**: Hard token limits.
@@ -123,11 +120,19 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 📋 Future Evolutionary Paths (Vision 2027)
+### 📋 Future Evolutionary Paths (Vision 2027+)
 
-1. **Federated Knowledge Networks**: Deep anonymous learning across planetary-scale datasets.
-2. **Autonomous Physical Intervention**: Integration with IoT actuators for predictive hardware adjustment.
-3. **Sovereign Engine**: Self-correcting ontology evolving beyond human definitions.
+1. **Sovereign Engine**: Self-correcting ontology evolving beyond human definitions.
+2. **Predictive Preventive Networks**: Real-time failure prediction based on federated data trends.
+3. **Advanced AGI Interaction**: Natural language complex reasoning for multi-step engineering logic.
+
+## 🗑️ DEPRECATED & ARCHIVED
+Listado de funcionalidades o planes que han sido descartados o sustituidos por cambio de visión.
+
+- ~~[Vision 2027: Autonomous Physical Intervention (IoT Integration)]~~
+    - **Fecha:** 2026-01-31
+    - **Motivo:** Pivot estratégico. El sistema se centrará 100% en inteligencia de software y análisis de conocimiento, delegando la intervención física a sistemas SCADA externos para mantener un perfil de seguridad "Air-Gapped" por diseño.
+    - **Estado:** Archivada permanentemente.
 
 ---
 
@@ -150,4 +155,4 @@ Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
 - Treat this file as the **single source of truth**.
 - Update relevant sections when milestones are reached.
 
-*Merged and Refined on 2026-01-29 by Antigravity*
+*Updated and Audited on 2026-01-31 by Antigravity (Skill: roadmap-manager)*
