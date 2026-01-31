@@ -20,6 +20,8 @@ import { formatDateTime } from "@/lib/date-utils";
 
 import { DynamicFormModal } from "@/components/shared/DynamicFormModal";
 import { useFormModal } from "@/hooks/useFormModal";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function EntitiesPage() {
     const { data: session } = useSession();
@@ -116,22 +118,18 @@ export default function EntitiesPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Analysis <span className="text-teal-600">of {entity.plural}</span>
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Agentic processing and technical validation of specifications (KIMI Engine).
-                    </p>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
-                    <Zap size={14} className="text-amber-500" />
-                    Powered by Gemini 3 Flash
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Analysis"
+                highlight={`of ${entity.plural}`}
+                subtitle="Agentic processing and technical validation of specifications (KIMI Engine)."
+                actions={
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
+                        <Zap size={14} className="text-amber-500" />
+                        Powered by Gemini 3 Flash
+                    </div>
+                }
+            />
 
             {analysisResult ? (
                 <div className="space-y-6">
@@ -327,6 +325,6 @@ export default function EntitiesPage() {
                     editModal.close();
                 }}
             />
-        </div>
+        </PageContainer>
     );
 }
