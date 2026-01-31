@@ -16,16 +16,16 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **FASE 6: RAG PROFESIONAL** (Checklists Dinámicos, Configurador Visual, Validación Humana, Audit Trail).
 - [x] **FASE 7: GENERALIZACIÓN SAAS** (Core Abstraction, Workflows, Multi-tenant Metadata, Billing).
 
-#### 🟡 FASE 12: MODO DEMO EFÍMERO & FREE TRIAL (PENDIENTE)
-- [ ] **Ephemeral Tenant Factory**: Crear tenant de prueba con un solo click.
-- [ ] **Auto-Cleanup Engine (TTL)**: Borrado automático.
-- [ ] **Demo Data Seeding**: Ingesta dummy.
-
-#### 🛡️ FASE 13-16: SEGURIDAD, ALTA DISPONIBILIDAD & ESCALA GLOBAL
-- [ ] **FASE 13: CONTINUIDAD & DISASTER RECOVERY** (Pendiente)
-  - [ ] Unified Backup Engine.
-  - [ ] Cloudinary Archiver & S3 Sync.
-- [ ] **FASE 14: GDPR COMPLIANCE** (Pendiente - ver Backlog).
+#### 🟣 FASE 12-14: GOBIERNO, COMPLIANCE & CONTINUIDAD (COMPLETADO ✅)
+- [x] **FASE 12: MODO DEMO EFÍMERO & FREE TRIAL**
+  - [x] Ephemeral Tenant Factory.
+  - [x] Auto-Cleanup Engine (TTL).
+- [x] **FASE 13: CONTINUIDAD & DISASTER RECOVERY**
+  - [x] Unified Backup Engine (JSON Export).
+  - [x] Knowledge Package (.zip) for portability.
+- [x] **FASE 14: GDPR COMPLIANCE & DERECHO AL OLVIDO**
+  - [x] Permanent Purge System.
+  - [x] Deletion Certificate (PDF Signature).
 - [x] **FASE 16: MARKETING OVERHAUL** (Completado)
   - [x] Hero / Bento Redesign.
   - [x] FAQ & Vision.
@@ -53,9 +53,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 ### 📋 Upcoming, To‑Do & Planned (Consolidated View)
 
 #### Current & Immediate Focus (Vision 2027 Exploration)
-1.  **Federated Knowledge Networks (Investigation)** [ ]
-    - Definir protocolo de intercambio de conocimiento anonimizado entre tenants.
-    - Evaluar impacto en privacidad y seguridad.
+1.  **Federated Knowledge Networks (IMPLEMENTADO ✅)**
+    - Implementado `FederatedKnowledgeService` con Gemini Pro.
+    - Integrado componente `FederatedSuggestions` en el buscador técnico.
 2.  **Autonomous Physical Intervention (IoT Integration)** [ ]
     - Prototipar conexión segura con controladores de maniobra (MQTT/Websockets).
     - Definir "Action Space" seguro para la IA.
@@ -136,11 +136,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 ### 📉 BACKLOG & GAP ANALYSIS (vs v1.0)
 Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
 
-#### 📦 Data Portability (Ex-Phase 13)
-- [ ] **Knowledge Package (.zip)**: Funcionalidad para que un Tenant Admin descargue todos sus PDFs y metadatos en un zip standard. *Status: Backlog (Low Priority)*.
-
-#### ⚖️ GDPR Evidence (Ex-Phase 14)
-- [ ] **Deletion Certificate**: Generación de PDF firmado criptográficamente cuando se purgan datos ("Right to be Forgotten"). *Status: Backlog*.
+#### ✅ Data Portability & GDPR (Completado en Fase 13-14)
+- [x] **Knowledge Package (.zip)**: Exportación completa de metadatos y activos.
+- [x] **Deletion Certificate**: Documento legal de destrucción de datos.
 
 #### 💅 Frontend Standardization (Ex-Phase 31)
 - [ ] **Component Library Strictness**: Migrar 100% de la UI a componentes de `src/components/ui` (eliminar estilos inline arbitrarios).

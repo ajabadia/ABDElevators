@@ -3,31 +3,32 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+    Terminal,
+    CheckSquare,
+    ShieldAlert,
+    Search,
+    ShieldCheck,
+    Key,
+    TrendingUp,
+    Activity,
+    Scale,
+    Share2,
+    Building,
+    LifeBuoy,
+    GitBranch,
+    Bell,
+    ChevronLeft,
+    ChevronRight,
     LayoutDashboard,
     FileText,
     History,
     Settings,
     Shield,
     Users,
-    ChevronLeft,
-    ChevronRight,
     LogOut,
     Zap,
     UserCircle,
-    CreditCard,
-    Building,
-    GitBranch,
-    LifeBuoy,
-    Bell,
-    Terminal,
-    CheckSquare,
-    ShieldAlert,
-    Search,
-    ShieldCheck,
-    Activity,
-    TrendingUp,
-    Share2,
-    Key
+    CreditCard
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -177,6 +178,12 @@ export function AppSidebar() {
             icon: ShieldCheck,
             roles: ['SUPER_ADMIN'],
             module: 'RAG'
+        },
+        {
+            name: 'Compliance',
+            href: '/admin/compliance',
+            icon: Scale,
+            roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
             name: 'System Logs',

@@ -1,0 +1,22 @@
+
+import { NextRequest, NextResponse } from "next/server";
+import { FederatedKnowledgeService } from "@/lib/federated-knowledge-service";
+import { auth } from "@/lib/auth";
+
+export async function POST(req: NextRequest) {
+    try {
+        const session = await auth();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { query, limit } = await req.json();
+
+        if (!query) return NextResponse.json({ error: "Query required" }, { status: 400 });
+
+        const results = await FederatedKnowledgeService.searchGlobalPatterns(query, limit || 3);
+
+        return NextResponse.json({ success: true, data: results });
+    } catch (error) {
+        console.error("Federated Search Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

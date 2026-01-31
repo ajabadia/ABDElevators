@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { FederatedSuggestions } from "@/components/federated/FederatedSuggestions";
 
 export function AgenticSupportSearch() {
     const [query, setQuery] = useState("");
@@ -138,6 +139,9 @@ export function AgenticSupportSearch() {
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Sugerencias de Inteligencia Colectiva (Federación) */}
+                    <FederatedSuggestions query={query} />
 
                     {/* Documentos de Apoyo */}
                     <div className="space-y-4">
