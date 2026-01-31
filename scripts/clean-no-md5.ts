@@ -60,7 +60,7 @@ async function cleanLegacyData() {
         console.log(`\n📦 Pedidos a eliminar (sin MD5): ${pedidosToDelete.length}`);
 
         for (const pedido of pedidosToDelete) {
-            console.log(`   - Procesando Pedido: ${pedido.numero_pedido || pedido.nombre_archivo}`);
+            console.log(`   - Procesando Entity: ${pedido.numero_pedido || pedido.nombre_archivo}`);
             // Los pedidos viejos a veces no tienen cloudinary_public_id guardado igual que los docs, 
             // pero si lo tuvieran en metadatos, habría que borrarlo.
             // Asumimos limpiar solo el registro DB si no hay referencia clara a Cloudinary estructurada
@@ -68,7 +68,7 @@ async function cleanLegacyData() {
 
             // Si tiene pdf_texto, es un registro ligero, borramos db
             await pedidosCollection.deleteOne({ _id: pedido._id });
-            console.log(`     🗑️  Pedido eliminado de DB`);
+            console.log(`     🗑️  Entity eliminado de DB`);
         }
 
         // 3. Documentos de Usuario

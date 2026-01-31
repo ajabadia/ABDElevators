@@ -46,7 +46,7 @@ export async function GET() {
  * Crea o actualiza la configuración de un tenant
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
@@ -64,8 +64,7 @@ export async function POST(req: NextRequest) {
         }
 
         const updated = await TenantService.updateConfig(tenantId, config, {
-            performedBy: session.user.id || 'system',
-            correlacion_id
+            performedBy: session.user.id || 'system', correlationId
         });
         return NextResponse.json({ success: true, config: updated });
 

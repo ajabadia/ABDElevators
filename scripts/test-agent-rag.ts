@@ -30,7 +30,7 @@ async function testAgenticRAG() {
         await new Promise(r => setTimeout(r, 10000));
 
         const db = await connectDB();
-        const evaluation = await db.collection('rag_evaluations').findOne({ correlacion_id });
+        const evaluation = await db.collection('rag_evaluations').findOne({ correlationId: correlacion_id});
 
         if (evaluation) {
             console.log('\n✅ EVALUACIÓN ENCONTRADA:');

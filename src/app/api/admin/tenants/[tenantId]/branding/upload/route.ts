@@ -80,7 +80,7 @@ export async function POST(
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
         return NextResponse.json(
-            { success: false, message: 'Internal Server Error', correlacion_id },
+            { success: false, message: 'Internal Server Error', correlationId: correlacion_id},
             { status: 500 }
         );
     }

@@ -104,7 +104,7 @@ export function KnowledgeGovernance() {
                                                 </span>
                                                 <span className="text-slate-300">|</span>
                                                 <span className="bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded font-mono text-[9px]">
-                                                    ID: {log.correlacion_id.split('-')[0]}...
+                                                    ID: {log.correlationId.split('-')[0]}...
                                                 </span>
                                             </div>
                                         </div>

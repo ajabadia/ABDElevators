@@ -12,15 +12,14 @@ export class ObservabilityService {
      * Monitorea violaciones de SLA en tiempo real.
      * Se llama desde middlewares o interceptores de performance.
      */
-    static async trackSLAViolation(tenantId: string, endpoint: string, duration: number, threshold: number, correlacion_id: string) {
+    static async trackSLAViolation(tenantId: string, endpoint: string, duration: number, threshold: number, correlationId: string) {
         if (duration > threshold) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'SLA_MONITOR',
-                accion: 'SLA_VIOLATION',
-                mensaje: `Exceso de latencia en ${endpoint}: ${duration}ms (límite ${threshold}ms)`,
-                correlacion_id,
-                detalles: { duration, threshold, endpoint }
+                level: 'WARN',
+                source: 'SLA_MONITOR',
+                action: 'SLA_VIOLATION',
+                message: `Exceso de latencia en ${endpoint}: ${duration}ms (límite ${threshold}ms)`, correlationId,
+                details: { duration, threshold, endpoint }
             });
 
             // Si es una violación crítica (> 2x threshold), notificar a SuperAdmin
@@ -60,11 +59,11 @@ export class ObservabilityService {
             if (lastActivity && lastActivity.timestamp < fortyEightHoursAgo) {
                 // Solo notificar si antes tenían actividad recurrente
                 await logEvento({
-                    nivel: 'INFO',
-                    origen: 'ANOMALY_DETECTOR',
-                    accion: 'INACTIVITY_DETECTED',
-                    mensaje: `Tenant ${tenant.name} lleva >48h sin actividad operativa.`,
-                    correlacion_id: 'SYSTEM'
+                    level: 'INFO',
+                    source: 'ANOMALY_DETECTOR',
+                    action: 'INACTIVITY_DETECTED',
+                    message: `Tenant ${tenant.name} lleva >48h sin actividad operativa.`,
+                    correlationId: 'SYSTEM'
                 });
 
                 // Aquí se podría disparar una alerta comercial
@@ -82,12 +81,12 @@ export class ObservabilityService {
         oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
         const recentErrors = await db.collection('logs_aplicacion').countDocuments({
-            nivel: 'ERROR',
+            level: 'ERROR',
             timestamp: { $gte: oneHourAgo }
         });
 
         const recentSLA = await db.collection('logs_aplicacion').countDocuments({
-            accion: 'SLA_VIOLATION',
+            action: 'SLA_VIOLATION',
             timestamp: { $gte: oneHourAgo }
         });
 

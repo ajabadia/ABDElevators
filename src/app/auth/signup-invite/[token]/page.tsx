@@ -12,7 +12,7 @@ import Link from "next/link";
 interface InviteInfo {
     email: string;
     tenantName: string;
-    rol: string;
+    role: string;
 }
 
 export default function SignupInvitePage({ params }: { params: Promise<{ token: string }> }) {
@@ -25,8 +25,8 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
     const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
-        nombre: "",
-        apellidos: "",
+        firstName: "",
+        lastName: "",
         password: "",
         confirmPassword: "",
     });
@@ -74,8 +74,8 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     token,
-                    nombre: formData.nombre,
-                    apellidos: formData.apellidos,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
                     password: formData.password,
                 }),
             });
@@ -176,8 +176,8 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                                     <p className="font-bold text-slate-900">{inviteInfo?.tenantName}</p>
                                 </div>
                                 <div>
-                                    <Label className="text-xs text-slate-500">Rol</Label>
-                                    <p className="font-bold text-teal-600">{inviteInfo?.rol}</p>
+                                    <Label className="text-xs text-slate-500">Role</Label>
+                                    <p className="font-bold text-teal-600">{inviteInfo?.role}</p>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-slate-500">Email</Label>
@@ -200,23 +200,23 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="nombre">Nombre</Label>
+                                            <Label htmlFor="firstName">First Name</Label>
                                             <Input
-                                                id="nombre"
+                                                id="firstName"
                                                 required
-                                                value={formData.nombre}
-                                                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                                value={formData.firstName}
+                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                                 className="h-11"
                                                 placeholder="Ej: Juan"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="apellidos">Apellidos</Label>
+                                            <Label htmlFor="lastName">Last Name</Label>
                                             <Input
-                                                id="apellidos"
+                                                id="lastName"
                                                 required
-                                                value={formData.apellidos}
-                                                onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                                                value={formData.lastName}
+                                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                                 className="h-11"
                                                 placeholder="Ej: Pérez"
                                             />

@@ -30,9 +30,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            ...data,
-            correlacion_id
-        });
+            ...data, correlationId: correlacion_id});
     } catch (error: any) {
         return NextResponse.json({
             success: false,

@@ -44,17 +44,17 @@ export class ReliabilityEngine {
     public async runWithFailover<T>(
         action: () => Promise<T>,
         fallback: () => Promise<T>,
-        correlacion_id: string
+        correlationId: string
     ): Promise<T> {
         try {
             return await action();
         } catch (error: any) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'RELIABILITY_ENGINE',
-                accion: 'FAILOVER_TRIGGERED',
-                mensaje: `Sistema principal lento o caído: ${error.message}. Activando Fallback.`,
-                correlacion_id
+                level: 'WARN',
+                source: 'RELIABILITY_ENGINE',
+                action: 'FAILOVER_TRIGGERED',
+                message: `Primary system slow or down: ${error.message}. Activating Fallback.`,
+                correlationId
             });
             return await fallback();
         }

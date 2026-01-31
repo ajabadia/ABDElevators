@@ -15,7 +15,7 @@ const GraphState = Annotation.Root({
     generation: Annotation<string>(),
     retry_count: Annotation<number>(),
     tenantId: Annotation<string>(),
-    correlacion_id: Annotation<string>(),
+    correlationId: Annotation<string>(),
     is_grounded: Annotation<boolean>(),
     is_useful: Annotation<boolean>(),
     trace: Annotation<string[]>({
@@ -34,21 +34,21 @@ export class AgenticRAGService {
      * Nodo: Recuperación de Documentos
      */
     private static async retrieve(state: typeof GraphState.State) {
-        const { question, tenantId, correlacion_id } = state;
+        const { question, tenantId, correlationId } = state;
 
         await logEvento({
-            nivel: 'DEBUG',
-            origen: 'AGENT_RAG',
-            accion: 'RETRIEVE',
-            mensaje: `Recuperando docs para: ${question}`,
-            correlacion_id
+            level: 'DEBUG',
+            source: 'AGENT_RAG',
+            action: 'RETRIEVE',
+            message: `Retrieving docs for: ${question}`,
+            correlationId
         });
 
-        const docs = await hybridSearch(question, tenantId, correlacion_id, 3);
+        const docs = await hybridSearch(question, tenantId, correlationId, 3);
 
         return {
             documents: docs,
-            trace: [`RECUPERACIÓN: Encontrados ${docs.length} fragmentos.`]
+            trace: [`RETRIEVAL: Found ${docs.length} chunks.`]
         };
     }
 
@@ -56,18 +56,18 @@ export class AgenticRAGService {
      * Nodo: Calificación de Documentos (Garantiza relevancia)
      */
     private static async gradeDocuments(state: typeof GraphState.State) {
-        const { question, documents, tenantId, correlacion_id } = state;
+        const { question, documents, tenantId, correlationId } = state;
         const relevantDocs: RagResult[] = [];
 
         for (const doc of documents) {
             const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
                 'RAG_RELEVANCE_GRADER',
-                { question, document: doc.texto },
+                { question, document: doc.text },
                 tenantId
             );
 
             try {
-                const response = await callGeminiMini(gradePrompt, tenantId, { correlacion_id, model });
+                const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
                 const grade = JSON.parse(response);
                 if (grade.score === 'yes') {
                     relevantDocs.push(doc);
@@ -79,7 +79,7 @@ export class AgenticRAGService {
 
         return {
             documents: relevantDocs,
-            trace: [`CALIFICACIÓN_DOCS: ${relevantDocs.length}/${documents.length} documentos son técnicos y relevantes.`]
+            trace: [`GRADING_DOCS: ${relevantDocs.length}/${documents.length} documents are technical and relevant.`]
         };
     }
 
@@ -87,10 +87,10 @@ export class AgenticRAGService {
      * Nodo: Generación de Respuesta
      */
     private static async generate(state: typeof GraphState.State) {
-        const { question, documents, tenantId, correlacion_id } = state;
+        const { question, documents, tenantId, correlationId } = state;
         const context = documents.length > 0
-            ? documents.map(d => d.texto).join("\n\n---\n\n")
-            : "No hay documentos relevantes encontrados en el corpus.";
+            ? documents.map(d => d.text).join("\n\n---\n\n")
+            : "No relevant documents found in the corpus.";
 
         const { text: genPrompt, model } = await PromptService.getRenderedPrompt(
             'RAG_GENERATOR',
@@ -98,10 +98,10 @@ export class AgenticRAGService {
             tenantId
         );
 
-        const generation = await callGeminiMini(genPrompt, tenantId, { correlacion_id, model });
+        const generation = await callGeminiMini(genPrompt, tenantId, { correlationId, model });
         return {
             generation,
-            trace: ["GENERACIÓN: Respuesta redactada por el modelo técnico."]
+            trace: ["GENERATION: Response drafted by technical model."]
         };
     }
 
@@ -109,7 +109,7 @@ export class AgenticRAGService {
      * Nodo: Transformación de Consulta (Re-write para mejorar recall)
      */
     private static async transformQuery(state: typeof GraphState.State) {
-        const { question, tenantId, correlacion_id, retry_count } = state;
+        const { question, tenantId, correlationId, retry_count } = state;
 
         const { text: rewritePrompt, model } = await PromptService.getRenderedPrompt(
             'RAG_QUERY_REWRITER',
@@ -117,12 +117,12 @@ export class AgenticRAGService {
             tenantId
         );
 
-        const betterQuestion = await callGeminiMini(rewritePrompt, tenantId, { correlacion_id, model });
+        const betterQuestion = await callGeminiMini(rewritePrompt, tenantId, { correlationId, model });
 
         return {
             question: betterQuestion,
             retry_count: (retry_count || 0) + 1,
-            trace: [`RE-ESCRITURA: Consulta optimizada para mejor búsqueda: "${betterQuestion}"`]
+            trace: [`RE-WRITE: Query optimized for better recall: "${betterQuestion}"`]
         };
     }
 
@@ -130,10 +130,10 @@ export class AgenticRAGService {
      * Nodo: Grader de Alucinaciones
      */
     private static async gradeGenerationNode(state: typeof GraphState.State) {
-        const { documents, generation, tenantId, correlacion_id } = state;
+        const { documents, generation, tenantId, correlationId } = state;
         if (documents.length === 0) return { is_grounded: true };
 
-        const context = documents.map(d => d.texto).join("\n\n---\n\n");
+        const context = documents.map(d => d.text).join("\n\n---\n\n");
         const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
             'RAG_HALLUCINATION_GRADER',
             { documents: context, generation },
@@ -141,15 +141,15 @@ export class AgenticRAGService {
         );
 
         try {
-            const response = await callGeminiMini(gradePrompt, tenantId, { correlacion_id, model });
+            const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
             const grade = JSON.parse(response);
             const isGrounded = grade.score === 'yes';
             return {
                 is_grounded: isGrounded,
-                trace: [isGrounded ? "VERIFICACIÓN: Respuesta verificada contra documentos (Sin alucinaciones)." : "VERIFICACIÓN: Alucinación detectada. Procediendo a regenerar."]
+                trace: [isGrounded ? "VERIFICATION: Response verified against documents (No hallucinations)." : "VERIFICATION: Hallucination detected. Proceeding to regenerate."]
             };
         } catch (e) {
-            return { is_grounded: true, trace: ["VERIFICACIÓN: Error en juez de alucinaciones. Asumiendo grounded (fallback)."] };
+            return { is_grounded: true, trace: ["VERIFICATION: Error in hallucination grader. Assuming grounded (fallback)."] };
         }
     }
 
@@ -157,7 +157,7 @@ export class AgenticRAGService {
      * Nodo: Grader de Utilidad
      */
     private static async gradeAnswerNode(state: typeof GraphState.State) {
-        const { question, generation, tenantId, correlacion_id } = state;
+        const { question, generation, tenantId, correlationId } = state;
 
         const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
             'RAG_ANSWER_GRADER',
@@ -166,22 +166,22 @@ export class AgenticRAGService {
         );
 
         try {
-            const response = await callGeminiMini(gradePrompt, tenantId, { correlacion_id, model });
+            const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
             const grade = JSON.parse(response);
             const isUseful = grade.score === 'yes';
             return {
                 is_useful: isUseful,
-                trace: [isUseful ? "UTILIDAD: Respuesta calificada como útil para el técnico." : "UTILIDAD: Respuesta insuficiente. Intentando refinamiento de búsqueda."]
+                trace: [isUseful ? "UTILITY: Response rated as useful." : "UTILITY: Insufficient response. Trying query refinement."]
             };
         } catch (e) {
-            return { is_useful: true, trace: ["UTILIDAD: Error en juez de utilidad. Asumiendo okay."] };
+            return { is_useful: true, trace: ["UTILITY: Error in utility grader. Assuming okay."] };
         }
     }
 
     /**
      * Ejecuta el flujo agéntico completo
      */
-    public static async run(question: string, tenantId: string, correlacion_id: string) {
+    public static async run(question: string, tenantId: string, correlationId: string) {
         const workflow = new StateGraph(GraphState)
             .addNode("retrieve", this.retrieve.bind(this))
             .addNode("grade_documents", this.gradeDocuments.bind(this))
@@ -212,7 +212,7 @@ export class AgenticRAGService {
         const result = await app.invoke({
             question,
             tenantId,
-            correlacion_id,
+            correlationId,
             retry_count: 0,
             documents: [],
             generation: "",
@@ -221,14 +221,14 @@ export class AgenticRAGService {
             trace: []
         });
 
-        // Evaluación Automática (Phase 26.2)
+        // Evaluation Automática (Phase 26.2)
         // La ejecutamos en background para no penalizar el SLA del usuario final
         EvaluationService.evaluateSession(
             tenantId,
-            correlacion_id,
+            correlationId,
             question,
             result.generation,
-            result.documents.map((d: any) => d.texto),
+            result.documents.map((d: any) => d.text),
             result.trace
         ).catch(err => console.error("Error in background evaluation:", err));
 

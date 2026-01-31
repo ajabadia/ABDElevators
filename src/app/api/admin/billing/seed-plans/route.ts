@@ -23,12 +23,11 @@ export async function POST(req: Request) {
         const result = await BillingService.seedDefaultPlans();
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'ADMIN_BILLING',
-            accion: 'SEED_PLANS_SUCCESS',
-            mensaje: `Planes comerciales inicializados exitosamente por ${session.user.email}`,
-            correlacion_id,
-            detalles: { insertedCount: result.insertedCount }
+            level: 'INFO',
+            source: 'ADMIN_BILLING',
+            action: 'SEED_PLANS_SUCCESS',
+            message: `Planes comerciales inicializados exitosamente por ${session.user.email}`, correlationId: correlacion_id,
+            details: { insertedCount: result.insertedCount }
         });
 
         return NextResponse.json({

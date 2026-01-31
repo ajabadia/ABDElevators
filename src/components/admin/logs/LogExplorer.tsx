@@ -20,13 +20,13 @@ import { es } from "date-fns/locale";
 
 interface LogEntry {
     _id: string;
-    nivel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
-    origen: string;
-    accion: string;
-    mensaje: string;
-    correlacion_id: string;
+    level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+    source: string;
+    action: string;
+    message: string;
+    correlationId: string;
     tenantId?: string;
-    detalles?: any;
+    details?: any;
     stack?: string;
     timestamp: string;
 }
@@ -37,7 +37,7 @@ export function LogExplorer() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
-    const [nivel, setNivel] = useState<string>("");
+    const [level, setLevel] = useState<string>("");
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(false);
 
@@ -48,7 +48,7 @@ export function LogExplorer() {
                 page: page.toString(),
                 limit: "20",
                 ...(search && { search }),
-                ...(nivel && { nivel })
+                ...(level && { level })
             });
             const res = await fetch(`/api/admin/logs?${params}`);
             const result = await res.json();
@@ -61,7 +61,7 @@ export function LogExplorer() {
         } finally {
             setLoading(false);
         }
-    }, [page, search, nivel]);
+    }, [page, search, level]);
 
     useEffect(() => {
         fetchLogs();
@@ -75,8 +75,8 @@ export function LogExplorer() {
         return () => clearInterval(interval);
     }, [autoRefresh, fetchLogs]);
 
-    const getNivelBadge = (nivel: string) => {
-        switch (nivel) {
+    const getLevelBadge = (level: string) => {
+        switch (level) {
             case 'ERROR': return <Badge variant="destructive" className="gap-1"><AlertCircle size={12} /> ERROR</Badge>;
             case 'WARN': return <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 gap-1"><AlertTriangle size={12} /> WARN</Badge>;
             case 'DEBUG': return <Badge variant="secondary" className="gap-1 font-mono"><Terminal size={12} /> DEBUG</Badge>;
@@ -126,8 +126,8 @@ export function LogExplorer() {
                             <label className="text-xs font-bold uppercase text-slate-500">Nivel</label>
                             <select
                                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                value={nivel}
-                                onChange={(e) => setNivel(e.target.value)}
+                                value={level}
+                                onChange={(e) => setLevel(e.target.value)}
                             >
                                 <option value="">Todos los niveles</option>
                                 <option value="ERROR">Error</option>
@@ -178,20 +178,20 @@ export function LogExplorer() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                {getNivelBadge(log.nivel)}
+                                                {getLevelBadge(log.level)}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-bold text-teal-600 uppercase tracking-tight">{log.origen}</span>
-                                                    <span className="text-[11px] text-slate-500 font-mono">{log.accion}</span>
+                                                    <span className="text-xs font-bold text-teal-600 uppercase tracking-tight">{log.source}</span>
+                                                    <span className="text-[11px] text-slate-500 font-mono">{log.action}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 max-w-md">
-                                                <p className="truncate text-slate-700 font-medium" title={log.mensaje}>
-                                                    {log.mensaje}
+                                                <p className="truncate text-slate-700 font-medium" title={log.message}>
+                                                    {log.message}
                                                 </p>
                                                 <p className="text-[10px] text-slate-400 font-mono truncate">
-                                                    ID: {log.correlacion_id}
+                                                    ID: {log.correlationId}
                                                 </p>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -246,7 +246,7 @@ export function LogExplorer() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             Detalles del Evento
-                            {selectedLog && getNivelBadge(selectedLog.nivel)}
+                            {selectedLog && getLevelBadge(selectedLog.level)}
                         </DialogTitle>
                         <DialogDescription>
                             Trazabilidad completa de la operación y metadatos técnicos.
@@ -269,16 +269,16 @@ export function LogExplorer() {
                                         <Database size={10} /> Correlación ID
                                     </p>
                                     <p className="text-sm font-mono break-all text-teal-600">
-                                        {selectedLog.correlacion_id}
+                                        {selectedLog.correlationId}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold uppercase text-slate-400">Origen</p>
-                                    <p className="text-sm font-bold">{selectedLog.origen}</p>
+                                    <p className="text-sm font-bold">{selectedLog.source}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold uppercase text-slate-400">Acción</p>
-                                    <p className="text-sm font-mono">{selectedLog.accion}</p>
+                                    <p className="text-sm font-mono">{selectedLog.action}</p>
                                 </div>
                             </div>
 
@@ -286,16 +286,16 @@ export function LogExplorer() {
                                 <p className="text-[10px] font-bold uppercase text-slate-400">Mensaje Completo</p>
                                 <div className="p-3 bg-slate-900 rounded-lg">
                                     <p className="text-slate-100 text-sm font-mono leading-relaxed">
-                                        {selectedLog.mensaje}
+                                        {selectedLog.message}
                                     </p>
                                 </div>
                             </div>
 
-                            {selectedLog.detalles && (
+                            {selectedLog.details && (
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-bold uppercase text-slate-400">Detalles Adicionales</p>
                                     <pre className="p-3 bg-slate-100 rounded-lg text-[11px] overflow-auto max-h-48 font-mono">
-                                        {JSON.stringify(selectedLog.detalles, null, 2)}
+                                        {JSON.stringify(selectedLog.details, null, 2)}
                                     </pre>
                                 </div>
                             )}

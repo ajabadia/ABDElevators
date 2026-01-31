@@ -21,7 +21,7 @@ export class InfrastructureAutoscaler {
     /**
      * Evalúa métricas y ajusta recursos.
      */
-    public async evaluateAndScale(metrics: StressTestResult, correlacion_id: string) {
+    public async evaluateAndScale(metrics: StressTestResult, correlationId: string) {
         let targetTier = this.currentTier;
 
         if (metrics.p95Latency > 200 || metrics.cpuPeak > 70) {
@@ -33,21 +33,20 @@ export class InfrastructureAutoscaler {
         }
 
         if (targetTier !== this.currentTier) {
-            await this.applyScaling(targetTier, correlacion_id);
+            await this.applyScaling(targetTier, correlationId);
         }
     }
 
-    private async applyScaling(tier: string, correlacion_id: string) {
+    private async applyScaling(tier: string, correlationId: string) {
         // En un entorno real llamaría a APIs de Vercel, AWS o MongoDB Atlas
         console.log(`[Autoscaler] Escalando infraestructura a TIER: ${tier.toUpperCase()}`);
 
         await logEvento({
-            nivel: 'WARN',
-            origen: 'INFRA_AUTOSCALER',
-            accion: 'SCALING_OPERATION',
-            mensaje: `KIMI ha decidido escalar la infraestructura a nivel: ${tier}`,
-            correlacion_id,
-            detalles: { previousTier: this.currentTier, newTier: tier }
+            level: 'WARN',
+            source: 'INFRA_AUTOSCALER',
+            action: 'SCALING_OPERATION',
+            message: `KIMI ha decidido escalar la infraestructura a level: ${tier}`, correlationId,
+            details: { previousTier: this.currentTier, newTier: tier }
         });
 
         this.currentTier = tier as any;

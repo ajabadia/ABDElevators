@@ -72,7 +72,7 @@ export const AgentState = Annotation.Root({
     /**
      * ID de correlación para logs
      */
-    correlacion_id: Annotation<string>({
+    correlationId: Annotation<string>({
         reducer: (x, y) => y ?? x,
     }),
 });
@@ -84,7 +84,7 @@ export type AgentStateType = typeof AgentState.State;
  * Utiliza Gemini Flash para identificar qué se está pidiendo.
  */
 async function extractionNode(state: AgentStateType) {
-    const { tenantId, correlacion_id } = state;
+    const { tenantId, correlationId: correlacion_id} = state;
     const lastMessage = state.messages[state.messages.length - 1];
     const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
@@ -92,7 +92,7 @@ async function extractionNode(state: AgentStateType) {
 
     return {
         findings: models.map((m: any) => ({ ...m, source: 'extraction' })),
-        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.modelo).join(', ')}` }]
+        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')}` }]
     };
 }
 
@@ -101,12 +101,12 @@ async function extractionNode(state: AgentStateType) {
  * Recupera contexto relevante del corpus técnico basado en los modelos detectados.
  */
 async function retrievalNode(state: AgentStateType) {
-    const { findings, tenantId, correlacion_id, search_queries } = state;
+    const { findings, tenantId, correlationId: correlacion_id, search_queries } = state;
 
     // Si tenemos queries específicas del crítico, las usamos. Si no, usamos las basadas en modelos.
     const queries = search_queries.length > 0
         ? [search_queries[search_queries.length - 1]]
-        : findings.filter(f => f.source === 'extraction').map(m => `Especificaciones técnicas y normativa para ${m.tipo} modelo ${m.modelo}`);
+        : findings.filter(f => f.source === 'extraction').map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model}`);
 
     let allChunks: RagResult[] = [];
 
@@ -133,10 +133,10 @@ import { PromptService } from "./prompt-service";
  * Analiza el cruce entre el pedido y el RAG para detectar incompatibilidades.
  */
 async function riskAnalysisNode(state: AgentStateType) {
-    const { context_chunks, findings, tenantId, correlacion_id } = state;
+    const { context_chunks, findings, tenantId, correlationId: correlacion_id} = state;
 
-    const context = context_chunks.map(c => c.texto).join('\n---\n');
-    const models = findings.filter(f => f.source === 'extraction').map(f => f.modelo).join(', ');
+    const context = context_chunks.map(c => c.text).join('\n---\n');
+    const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
     // Renderizar prompt dinámico de riesgo para agente
     const renderedPrompt = await PromptService.renderPrompt(
@@ -145,7 +145,7 @@ async function riskAnalysisNode(state: AgentStateType) {
         tenantId!
     );
 
-    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlacion_id: correlacion_id! });
+    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlacion_id! });
 
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
@@ -168,7 +168,7 @@ async function riskAnalysisNode(state: AgentStateType) {
 import { MongoDBSaver } from "./agent-persistence";
 
 async function critiqueNode(state: AgentStateType) {
-    const { confidence_score, findings, messages, tenantId, correlacion_id } = state;
+    const { confidence_score, findings, messages, tenantId, correlationId: correlacion_id} = state;
 
     // Si la confianza es alta, aprobamos
     if (confidence_score > 0.7) {
@@ -191,7 +191,7 @@ async function critiqueNode(state: AgentStateType) {
     Genera una ÚNICA frase de búsqueda técnica para recuperar la normativa exacta que resolvería la duda.
     Responde solo con la frase de búsqueda.`;
 
-    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { correlacion_id: correlacion_id! });
+    const expandedQuery = await callGeminiMini(expansionPrompt, tenantId!, { correlationId: correlacion_id! });
 
     return {
         search_queries: [expandedQuery.trim()],

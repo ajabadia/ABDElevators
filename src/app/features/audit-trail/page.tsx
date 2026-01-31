@@ -100,7 +100,7 @@ export default function AuditTrailPage() {
                             <AuditStep
                                 number="1"
                                 title="Chunking con Metadatos"
-                                description="Cada chunk de texto indexado incluye metadatos completos: nombre del documento, página, párrafo, fecha de revisión, versión."
+                                description="Cada chunk de texto indexado incluye metadatos completos: name del documento, página, párrafo, fecha de revisión, versión."
                                 icon={<FileText size={20} />}
                             />
                             <AuditStep

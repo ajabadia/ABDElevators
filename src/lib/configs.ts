@@ -16,58 +16,38 @@ import { ObjectId } from "mongodb";
  * Retrieves a checklist configuration by its identifier.
  * If `id` is "default", returns the built‑in default configuration.
  */
-export async function getChecklistConfigById(id: string, correlacion_id_opt?: string): Promise<ChecklistConfig> {
-    const correlacion_id = correlacion_id_opt || crypto.randomUUID();
+export async function getChecklistConfigById(id: string, correlationId?: string): Promise<ChecklistConfig> {
     const start = Date.now();
+    const effectiveCorrelationId = correlationId || crypto.randomUUID();
     try {
         if (id === "default") {
-            // Lazy import to avoid circular dependencies if default config is defined elsewhere.
             const { defaultChecklistConfig } = await import("./default-checklist-config");
             return defaultChecklistConfig;
         }
 
         const db = await connectDB();
         const collection = db.collection("configs_checklist");
-        const raw = await collection.findOne({ _id: new (await import("mongodb")).ObjectId(id) });
+
+        const raw = await collection.findOne({ _id: new ObjectId(id) });
         if (!raw) {
             throw new NotFoundError(`Checklist config with id ${id} not found`);
         }
-        const parsed = ChecklistConfigSchema.parse(raw);
-        // Transform to the ChecklistConfig interface (omit _id)
-        const config: ChecklistConfig = {
-            nombre: parsed.nombre,
-            categorias: parsed.categorias,
-            items: parsed.items,
-            workflow_orden: parsed.workflow_orden,
-            activo: parsed.activo,
-            tenantId: parsed.tenantId,
-            creado: parsed.creado,
-            actualizado: parsed.actualizado
-        };
 
-        await logEvento({
-            nivel: "INFO",
-            origen: "CONFIGS_SERVICE",
-            accion: "GET",
-            mensaje: `Fetched checklist config ${id}`,
-            correlacion_id,
-            detalles: { duration_ms: Date.now() - start }
-        });
-        return config;
+        const parsed = ChecklistConfigSchema.parse(raw);
+        return parsed;
     } catch (error) {
         await logEvento({
-            nivel: "ERROR",
-            origen: "CONFIGS_SERVICE",
-            accion: "GET",
-            mensaje: `Error fetching checklist config ${id}`,
-            correlacion_id,
-            detalles: { error: (error as Error).message },
+            level: "ERROR",
+            source: "CONFIGS_SERVICE",
+            action: "GET",
+            message: `Error fetching checklist config ${id}`,
+            correlationId: effectiveCorrelationId,
+            details: { error: (error as Error).message },
             stack: (error as Error).stack
         });
         if (error instanceof NotFoundError) {
             throw error;
         }
-        // Wrap any other error as DatabaseError
         throw new DatabaseError("Failed to retrieve checklist config", error as Error);
     }
 }

@@ -43,14 +43,14 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            const oldIndex = config.categorias.findIndex((c) => c.id === active.id);
-            const newIndex = config.categorias.findIndex((c) => c.id === over.id);
+            const oldIndex = config.categories.findIndex((c) => c.id === active.id);
+            const newIndex = config.categories.findIndex((c) => c.id === over.id);
 
-            const newCategorias = arrayMove(config.categorias, oldIndex, newIndex);
+            const newCategories = arrayMove(config.categories, oldIndex, newIndex);
             onUpdate({
                 ...config,
-                categorias: newCategorias,
-                workflow_orden: newCategorias.map(c => c.id)
+                categories: newCategories,
+                workflowOrder: newCategories.map(c => c.id)
             });
         }
     };
@@ -59,40 +59,40 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
         const newId = uuidv4();
         const newCategory: ChecklistCategory = {
             id: newId,
-            nombre: 'Nueva Categoría',
+            name: 'Nueva Categoría',
             color: '#14b8a6', // Teal default
             keywords: [],
-            prioridad: config.categorias.length + 1
+            priority: config.categories.length + 1
         };
 
-        const newCategorias = [...config.categorias, newCategory];
+        const newCategories = [...config.categories, newCategory];
         onUpdate({
             ...config,
-            categorias: newCategorias,
-            workflow_orden: newCategorias.map(c => c.id)
+            categories: newCategories,
+            workflowOrder: newCategories.map(c => c.id)
         });
         setEditingCategoryId(newId);
     };
 
     const updateCategory = (updated: ChecklistCategory) => {
-        const newCategorias = config.categorias.map(c => c.id === updated.id ? updated : c);
+        const newCategories = config.categories.map(c => c.id === updated.id ? updated : c);
         onUpdate({
             ...config,
-            categorias: newCategorias
+            categories: newCategories
         });
     };
 
     const deleteCategory = (id: string) => {
-        const newCategorias = config.categorias.filter(c => c.id !== id);
+        const newCategories = config.categories.filter(c => c.id !== id);
         onUpdate({
             ...config,
-            categorias: newCategorias,
-            workflow_orden: newCategorias.map(c => c.id)
+            categories: newCategories,
+            workflowOrder: newCategories.map(c => c.id)
         });
         if (editingCategoryId === id) setEditingCategoryId(null);
     };
 
-    const editingCategory = config.categorias.find(c => c.id === editingCategoryId);
+    const editingCategory = config.categories.find(c => c.id === editingCategoryId);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -110,8 +110,8 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
                             <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de la Configuración</label>
                             <input
                                 type="text"
-                                value={config.nombre}
-                                onChange={(e) => onUpdate({ ...config, nombre: e.target.value })}
+                                value={config.name}
+                                onChange={(e) => onUpdate({ ...config, name: e.target.value })}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
                                 placeholder="Ej: Estándar Ascensores Residenciales"
                             />
@@ -120,10 +120,10 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
                         <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                             <span className="text-sm font-medium text-slate-700">Estado Activo</span>
                             <button
-                                onClick={() => onUpdate({ ...config, activo: !config.activo })}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.activo ? 'bg-teal-600' : 'bg-slate-300'}`}
+                                onClick={() => onUpdate({ ...config, isActive: !config.isActive })}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.isActive ? 'bg-teal-600' : 'bg-slate-300'}`}
                             >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.activo ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
                     </div>
@@ -150,11 +150,11 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
                             modifiers={[restrictToVerticalAxis]}
                         >
                             <SortableContext
-                                items={config.categorias.map(c => c.id)}
+                                items={config.categories.map(c => c.id)}
                                 strategy={verticalListSortingStrategy}
                             >
                                 <div className="space-y-1">
-                                    {config.categorias.map((category) => (
+                                    {config.categories.map((category) => (
                                         <SortableCategoryItem
                                             key={category.id}
                                             category={category}
@@ -162,7 +162,7 @@ export const ChecklistEditor: React.FC<ChecklistEditorProps> = ({ config, onUpda
                                             onSelect={() => setEditingCategoryId(category.id)}
                                         />
                                     ))}
-                                    {config.categorias.length === 0 && (
+                                    {config.categories.length === 0 && (
                                         <div className="py-10 px-4 text-center text-slate-400 text-sm italic">
                                             Sin categorías. Pulsa + para añadir.
                                         </div>

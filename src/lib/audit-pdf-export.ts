@@ -1,14 +1,14 @@
 import jsPDF from 'jspdf';
-import { ItemValidacion, ChecklistConfig, Pedido } from '@/lib/schemas';
+import { ItemValidation, ChecklistConfig, Entity } from '@/lib/schemas';
 
 interface AuditReportData {
-    pedido: Pedido;
+    entity: Entity;
     config: ChecklistConfig;
-    items: ItemValidacion[];
-    usuarioNome: string;
-    duracion_ms: number;
+    items: ItemValidation[];
+    userName: string;
+    durationMs: number;
     timestamp: Date;
-    correlacionId: string;
+    correlationId: string;
 }
 
 /**
@@ -32,8 +32,8 @@ export async function generateAuditPDF(data: AuditReportData): Promise<Blob> {
 
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Documento de Validación Técnica | Pedido: ${data.pedido.numero_pedido}`, 15, 28);
-    pdf.text(`ID Seguimiento: ${data.correlacionId}`, 15, 34);
+    pdf.text(`Documento de Validación Técnica | Entity: ${data.entity.identifier}`, 15, 28);
+    pdf.text(`ID Seguimiento: ${data.correlationId}`, 15, 34);
 
     y = 55;
 
@@ -46,11 +46,11 @@ export async function generateAuditPDF(data: AuditReportData): Promise<Blob> {
 
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Validador: ${data.usuarioNome}`, 15, y);
+    pdf.text(`Validador: ${data.userName}`, 15, y);
     pdf.text(`Fecha/Hora: ${data.timestamp.toLocaleString('es-ES')}`, 100, y);
     y += 6;
-    pdf.text(`Duración de revisión: ${Math.floor(data.duracion_ms / 1000)} segundos`, 15, y);
-    pdf.text(`Configuración aplicada: ${data.config.nombre}`, 100, y);
+    pdf.text(`Duración de revisión: ${Math.floor(data.durationMs / 1000)} segundos`, 15, y);
+    pdf.text(`Configuración aplicada: ${data.config.name}`, 100, y);
     y += 15;
 
     // Listado de Items
@@ -62,7 +62,7 @@ export async function generateAuditPDF(data: AuditReportData): Promise<Blob> {
     // Agrupar items por categoría para el PDF
     const itemsByCat: Record<string, typeof data.items> = {};
     data.items.forEach(item => {
-        const fullItem = data.config.categorias.flatMap(c => c.keywords).includes(item.itemId) ? '...' : item; // Simplificación
+        const fullItem = data.config.categories.flatMap(c => c.keywords).includes(item.itemId) ? '...' : item; // Simplificación
         // En un flujo real buscaríamos el texto del item original
     });
 
@@ -73,17 +73,17 @@ export async function generateAuditPDF(data: AuditReportData): Promise<Blob> {
         }
 
         // Fondo según estado
-        if (item.estado === 'OK') pdf.setFillColor(240, 253, 244); // Green-50
-        else if (item.estado === 'REVISAR') pdf.setFillColor(255, 251, 235); // Amber-50
+        if (item.status === 'OK') pdf.setFillColor(240, 253, 244); // Green-50
+        else if (item.status === 'REVIEW') pdf.setFillColor(255, 251, 235); // Amber-50
         else pdf.setFillColor(248, 250, 252); // Slate-50
 
         pdf.rect(15, y - 5, pageWidth - 30, 20, 'F');
 
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(11);
-        const statusColor = item.estado === 'OK' ? [21, 128, 61] : item.estado === 'REVISAR' ? [180, 83, 9] : [100, 116, 139];
+        const statusColor = item.status === 'OK' ? [21, 128, 61] : item.status === 'REVIEW' ? [180, 83, 9] : [100, 116, 139];
         pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-        pdf.text(`[${item.estado}]`, 18, y);
+        pdf.text(`[${item.status}]`, 18, y);
 
         pdf.setTextColor(30, 41, 59); // Slate-800
         pdf.text(`Punto de control #${index + 1}`, 45, y);
@@ -92,7 +92,7 @@ export async function generateAuditPDF(data: AuditReportData): Promise<Blob> {
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
         pdf.setTextColor(71, 85, 105); // Slate-600
-        const notes = item.notas || 'Sin observaciones técnicas adicionales.';
+        const notes = item.notes || 'Sin observaciones técnicas adicionales.';
         const splitNotes = pdf.splitTextToSize(`Notas: ${notes}`, pageWidth - 45);
         pdf.text(splitNotes, 18, y);
 

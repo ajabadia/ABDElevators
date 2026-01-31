@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { entitySlug, originalData, correctedData, correlacion_id } = body;
+        const { entitySlug, originalData, correctedData, correlationId: correlacion_id} = body;
 
         if (!entitySlug || !originalData || !correctedData) {
             return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });

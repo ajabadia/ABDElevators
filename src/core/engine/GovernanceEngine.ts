@@ -65,12 +65,12 @@ export class GovernanceEngine {
             await collection.insertOne(decisionLog as any);
 
             await logEvento({
-                nivel: audit.status === 'blocked' ? 'WARN' : 'INFO',
-                origen: 'AI_GOVERNANCE',
-                accion: 'AUDIT_LOG',
-                mensaje: `Decisión de IA registrada: ${audit.actionType} sobre ${audit.entitySlug} (Estado: ${audit.status})`,
-                correlacion_id: audit.correlacion_id,
-                detalles: { status: audit.status, confidence: audit.confidence }
+                level: audit.status === 'blocked' ? 'WARN' : 'INFO',
+                source: 'AI_GOVERNANCE',
+                action: 'AUDIT_LOG',
+                message: `AI Decision recorded: ${audit.actionType} on ${audit.entitySlug} (Status: ${audit.status})`,
+                correlationId: audit.correlationId,
+                details: { status: audit.status, confidence: audit.confidence }
             });
         } catch (error) {
             console.error('[GovernanceEngine] Error logging decision:', error);

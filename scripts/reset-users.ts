@@ -20,12 +20,12 @@ async function resetAndSeed() {
     try {
         await client.connect();
         console.log('✅ Conectado a MongoDB');
-        const db = client.db('ABDElevators');
-        const usuarios = db.collection('usuarios');
+        const db = client.db('ABDElevators-Auth');
+        const usersCollection = db.collection('users');
 
         // 1. Borrar todos los usuarios existentes
-        console.log('🗑️ Borrando todos los usuarios existentes...');
-        const deleteResult = await usuarios.deleteMany({});
+        console.log('🗑️ Borrando todos los usuarios existentes en ABDElevators-Auth.users...');
+        const deleteResult = await usersCollection.deleteMany({});
         console.log(`✅ Usuarios borrados: ${deleteResult.deletedCount}`);
 
         // 2. Definir usuarios según README.md
@@ -33,34 +33,38 @@ async function resetAndSeed() {
             {
                 email: 'admin@abd.com',
                 passwordPlain: 'admin123',
-                nombre: 'Admin',
-                rol: 'ADMIN'
+                firstName: 'Admin',
+                lastName: 'System',
+                role: 'SUPER_ADMIN'
             },
             {
                 email: 'tecnico@abd.com',
                 passwordPlain: 'tecnico123',
-                nombre: 'Técnico',
-                rol: 'TECNICO'
+                firstName: 'Técnico',
+                lastName: 'General',
+                role: 'TECHNICAL'
             },
             {
                 email: 'ingenieria@abd.com',
                 passwordPlain: 'ingenieria123',
-                nombre: 'Ingeniero',
-                rol: 'INGENIERIA'
+                firstName: 'Ingeniero',
+                lastName: 'Jefe',
+                role: 'ENGINEERING'
             }
         ];
 
         // 3. Insertar nuevos usuarios con passwords hasheados
         for (const u of usersToSeed) {
             const hashedPassword = await bcrypt.hash(u.passwordPlain, 10);
-            await usuarios.insertOne({
+            await usersCollection.insertOne({
                 email: u.email,
                 password: hashedPassword,
-                nombre: u.nombre,
-                rol: u.rol,
-                activo: true,
-                creado: new Date(),
-                modificado: new Date()
+                firstName: u.firstName,
+                lastName: u.lastName,
+                role: u.role,
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
             });
             console.log(`✅ Usuario creado: ${u.email} (Password: ${u.passwordPlain})`);
         }

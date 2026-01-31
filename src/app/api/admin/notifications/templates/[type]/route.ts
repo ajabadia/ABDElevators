@@ -137,12 +137,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ type
         }
 
         await logEvento({
-            nivel: 'WARN', // WARN porque es un cambio de config global sensible
-            origen: 'ADMIN_NOTIFICATIONS',
-            accion: 'UPDATE_TEMPLATE',
-            mensaje: `Plantilla ${type} actualizada por SuperAdmin`,
-            correlacion_id,
-            detalles: { type, userId }
+            level: 'WARN', // WARN porque es un cambio de config global sensible
+            source: 'ADMIN_NOTIFICATIONS',
+            action: 'UPDATE_TEMPLATE',
+            message: `Plantilla ${type} actualizada por SuperAdmin`, correlationId: correlacion_id,
+            details: { type, userId }
         });
 
         return NextResponse.json({ success: true, type });

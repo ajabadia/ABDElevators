@@ -16,15 +16,15 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Chunk {
     _id: string;
-    texto_chunk: string;
-    origen_doc: string;
-    modelo: string;
-    tipo_componente: string;
+    textChunk: string;
+    sourceDoc: string;
+    model: string;
+    componentType: string;
     language: string;
-    is_shadow?: boolean;
-    original_lang?: string;
-    texto_traducido?: string;
-    creado: string;
+    isShadow?: boolean;
+    originalLang?: string;
+    translatedText?: string;
+    createdAt: string;
 }
 
 export const KnowledgeExplorer: React.FC = () => {
@@ -252,15 +252,15 @@ export const KnowledgeExplorer: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 gap-4">
                         {chunks.map((chunk) => (
-                            <Card key={chunk._id} className={`overflow-hidden transition-all hover:shadow-md ${chunk.is_shadow ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200'}`}>
+                            <Card key={chunk._id} className={`overflow-hidden transition-all hover:shadow-md ${chunk.isShadow ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200'}`}>
                                 <CardContent className="p-0">
                                     <div className="flex flex-col md:flex-row">
                                         {/* Metadata Sidebar */}
-                                        <div className={`p-4 md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r ${chunk.is_shadow ? 'bg-indigo-50/50' : 'bg-slate-50'}`}>
+                                        <div className={`p-4 md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r ${chunk.isShadow ? 'bg-indigo-50/50' : 'bg-slate-50'}`}>
                                             <div className="space-y-3">
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant={chunk.is_shadow ? "secondary" : "outline"} className={chunk.is_shadow ? "bg-indigo-100 text-indigo-700 border-indigo-200" : "bg-white"}>
-                                                        {chunk.is_shadow ? (
+                                                    <Badge variant={chunk.isShadow ? "secondary" : "outline"} className={chunk.isShadow ? "bg-indigo-100 text-indigo-700 border-indigo-200" : "bg-white"}>
+                                                        {chunk.isShadow ? (
                                                             <span className="flex items-center gap-1"><Layers className="w-3 h-3" /> Shadow</span>
                                                         ) : (
                                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> Original</span>
@@ -272,18 +272,18 @@ export const KnowledgeExplorer: React.FC = () => {
                                                 </div>
 
                                                 <div className="text-xs text-slate-500 space-y-1">
-                                                    <p className="font-semibold text-slate-700 truncate" title={chunk.origen_doc}>{chunk.origen_doc}</p>
-                                                    <p>Modelo: <span className="font-mono text-slate-700">{chunk.modelo}</span></p>
-                                                    <p>Tipo: {chunk.tipo_componente}</p>
+                                                    <p className="font-semibold text-slate-700 truncate" title={chunk.sourceDoc}>{chunk.sourceDoc}</p>
+                                                    <p>Modelo: <span className="font-mono text-slate-700">{chunk.model}</span></p>
+                                                    <p>Tipo: {chunk.componentType}</p>
                                                     <p className="pt-2 border-t border-slate-200 mt-2">
-                                                        {format(new Date(chunk.creado), "d MMM yyyy, HH:mm", { locale: es })}
+                                                        {chunk.createdAt ? format(new Date(chunk.createdAt), "d MMM yyyy, HH:mm", { locale: es }) : 'N/A'}
                                                     </p>
                                                 </div>
 
-                                                {chunk.is_shadow && (
+                                                {chunk.isShadow && (
                                                     <div className="bg-indigo-100 rounded p-2 text-xs text-indigo-800">
                                                         <p className="font-bold">Traducción Automática</p>
-                                                        <p>Original: {chunk.original_lang?.toUpperCase()}</p>
+                                                        <p>Original: {chunk.originalLang?.toUpperCase()}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -292,10 +292,10 @@ export const KnowledgeExplorer: React.FC = () => {
                                         {/* Content */}
                                         <div className="p-4 flex-1">
                                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-mono bg-white p-3 rounded border border-slate-100 shadow-sm">
-                                                {chunk.texto_chunk.length > 500 ? `${chunk.texto_chunk.substring(0, 500)}...` : chunk.texto_chunk}
+                                                {chunk.textChunk ? (chunk.textChunk.length > 500 ? `${chunk.textChunk.substring(0, 500)}...` : chunk.textChunk) : ''}
                                             </p>
 
-                                            {chunk.is_shadow && (
+                                            {chunk.isShadow && (
                                                 <div className="mt-3 pt-3 border-t border-indigo-100">
                                                     <p className="text-xs font-bold text-indigo-600 mb-1">Mecanismo Dual-Index:</p>
                                                     <p className="text-xs text-slate-500">Este fragmento permite encontrar el documento original buscando en Español, aunque el manual sea Alemán/Inglés.</p>

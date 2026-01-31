@@ -5,18 +5,18 @@ import { PromptService } from './prompt-service';
 import { z } from 'zod';
 
 /**
- * Servicio de Inteligencia de Riesgos (Visión 2.0 - Fase 7.5)
+ * Risk Intelligence Service (Vision 2.0 - Phase 7.5)
  */
 export class RiskService {
     /**
-     * Analiza un caso en busca de riesgos utilizando el contexto del RAG.
+     * Analyzes a case for risks using RAG context.
      */
     static async analyzeRisks(
         caseContent: string,
         ragContext: string,
         industry: IndustryType,
         tenantId: string,
-        correlacion_id: string
+        correlationId: string
     ) {
         const start = Date.now();
 
@@ -28,38 +28,38 @@ export class RiskService {
                 tenantId
             );
 
-            const response = await callGeminiMini(renderedPrompt, tenantId, { correlacion_id, temperature: 0 });
+            const response = await callGeminiMini(renderedPrompt, tenantId, { correlationId, temperature: 0 });
 
-            // Extraer JSON
+            // Extract JSON
             const jsonMatch = response.match(/\[[\s\S]*\]/);
             if (!jsonMatch) return [];
 
             const findings = JSON.parse(jsonMatch[0]);
 
-            // Validar hallazgos con Zod
+            // Validate findings with Zod
             const validatedFindings = z.array(RiskFindingSchema).parse(findings);
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'RISK_SERVICE',
-                accion: 'ANALYZE_SUCCESS',
-                mensaje: `Análisis de riesgos completado para ${industry}. Hallazgos: ${validatedFindings.length}`,
-                correlacion_id,
-                detalles: { duration_ms: Date.now() - start, findings_count: validatedFindings.length }
+                level: 'INFO',
+                source: 'RISK_SERVICE',
+                action: 'ANALYZE_SUCCESS',
+                message: `Risk analysis completed for ${industry}. Findings: ${validatedFindings.length}`,
+                correlationId,
+                details: { durationMs: Date.now() - start, findingsCount: validatedFindings.length }
             });
 
             return validatedFindings;
 
         } catch (error: any) {
             await logEvento({
-                nivel: 'ERROR',
-                origen: 'RISK_SERVICE',
-                accion: 'ANALYZE_ERROR',
-                mensaje: `Error analizando riesgos: ${error.message}`,
-                correlacion_id,
+                level: 'ERROR',
+                source: 'RISK_SERVICE',
+                action: 'ANALYZE_ERROR',
+                message: `Error analyzing risks: ${error.message}`,
+                correlationId,
                 stack: error.stack
             });
-            return []; // Fallback seguro: no bloqueamos el flujo principal
+            return []; // Safe fallback
         }
     }
 }

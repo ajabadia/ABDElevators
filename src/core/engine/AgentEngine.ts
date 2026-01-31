@@ -9,7 +9,7 @@ export interface AICorrection {
     diff: Record<string, { from: any, to: any }>;
     tenantId: string;
     userId: string;
-    correlacion_id: string;
+    correlationId: string;
     createdAt: Date;
 }
 
@@ -37,7 +37,7 @@ export class AgentEngine {
         correctedData: any,
         userId: string,
         tenantId: string,
-        correlacion_id: string
+        correlationId: string
     ) {
         // Calcular el diff básico
         const diff: Record<string, { from: any, to: any }> = {};
@@ -67,19 +67,19 @@ export class AgentEngine {
                 diff,
                 tenantId,
                 userId,
-                correlacion_id,
+                correlationId,
                 createdAt: new Date()
             };
 
             const result = await collection.insertOne(correction as any);
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'AGENT_ENGINE',
-                accion: 'RECORD_CORRECTION',
-                mensaje: `Registrada corrección para ${entitySlug}`,
-                correlacion_id,
-                detalles: { fieldCount: Object.keys(diff).length }
+                level: 'INFO',
+                source: 'AGENT_ENGINE',
+                action: 'RECORD_CORRECTION',
+                message: `Recorded correction for ${entitySlug}`,
+                correlationId,
+                details: { fieldCount: Object.keys(diff).length }
             });
 
             return result.insertedId;

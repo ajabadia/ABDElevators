@@ -62,12 +62,11 @@ export async function POST(req: NextRequest) {
         });
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'BILLING_API',
-            accion: 'CHECKOUT_CREATED',
-            mensaje: `Checkout session created for tenant ${tenantId}`,
-            correlacion_id,
-            detalles: {
+            level: 'INFO',
+            source: 'BILLING_API',
+            action: 'CHECKOUT_CREATED',
+            message: `Checkout session created for tenant ${tenantId}`, correlationId: correlacion_id,
+            details: {
                 tenantId,
                 priceId,
                 billingPeriod,
@@ -81,11 +80,10 @@ export async function POST(req: NextRequest) {
         });
     } catch (error: any) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'BILLING_API',
-            accion: 'CHECKOUT_ERROR',
-            mensaje: `Error creating checkout: ${error.message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'BILLING_API',
+            action: 'CHECKOUT_ERROR',
+            message: `Error creating checkout: ${error.message}`, correlationId: correlacion_id,
             stack: error.stack,
         });
 

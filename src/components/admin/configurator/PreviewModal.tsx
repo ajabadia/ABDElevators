@@ -27,7 +27,7 @@ export function PreviewModal({ config }: PreviewModalProps) {
                             <Smartphone size={12} /> Live Preview
                         </div>
                         <h2 className="text-2xl font-black leading-tight">
-                            {config.nombre}
+                            {config.name}
                         </h2>
                         <p className="text-slate-500 text-xs mt-1">
                             Simulación de la vista móvil del técnico.
@@ -35,8 +35,8 @@ export function PreviewModal({ config }: PreviewModalProps) {
                     </header>
 
                     <div className="space-y-8">
-                        {config.workflow_orden.map((catId, idx) => {
-                            const cat = config.categorias.find(c => c.id === catId);
+                        {config.workflowOrder.map((catId, idx) => {
+                            const cat = config.categories.find(c => c.id === catId);
                             const items = config.items.filter(i => i.categoryId === catId);
                             if (!cat) return null;
 
@@ -50,7 +50,7 @@ export function PreviewModal({ config }: PreviewModalProps) {
                                 >
                                     <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2" style={{ color: cat.color }}>
                                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                                        {cat.nombre}
+                                        {cat.name}
                                     </h3>
 
                                     <div className="space-y-3">
@@ -84,7 +84,7 @@ export function PreviewModal({ config }: PreviewModalProps) {
                             );
                         })}
 
-                        {config.categorias.length === 0 && (
+                        {config.categories.length === 0 && (
                             <div className="py-20 text-center">
                                 <HelpCircle className="mx-auto text-slate-200 mb-2" size={40} />
                                 <p className="text-slate-400 text-sm italic">Configura alguna categoría para ver la previsualización.</p>

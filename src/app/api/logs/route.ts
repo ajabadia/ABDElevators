@@ -14,20 +14,28 @@ export async function POST(req: NextRequest) {
         const session = await auth();
 
         // Enforce basic structure
-        const { nivel, origen, accion, mensaje, detalles, stack } = body;
+        const { level, source, action, message, details, stack, correlationId } = body;
 
-        if (!nivel || !origen || !accion || !mensaje) {
+        // Fallback for legacy calls if necessary (though we refactored client)
+        const effectiveLevel = level || body.nivel;
+        const effectiveSource = source || body.origen;
+        const effectiveAction = action || body.accion;
+        const effectiveMessage = message || body.mensaje;
+        const effectiveDetails = details || body.detalles;
+        const effectiveCorrelationId = correlationId || body.correlacion_id || correlacion_id;
+
+        if (!effectiveLevel || !effectiveSource || !effectiveAction || !effectiveMessage) {
             return NextResponse.json({ error: 'Missing log fields' }, { status: 400 });
         }
 
         await logEvento({
-            nivel,
-            origen: `${origen}_CLIENT`,
-            accion,
-            mensaje,
-            correlacion_id: body.correlacion_id || correlacion_id,
+            level: effectiveLevel,
+            source: `${effectiveSource}_CLIENT`,
+            action: effectiveAction,
+            message: effectiveMessage,
+            correlationId: effectiveCorrelationId,
             tenantId: session?.user?.tenantId,
-            detalles,
+            details: effectiveDetails,
             stack
         });
 

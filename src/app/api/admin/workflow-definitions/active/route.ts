@@ -9,9 +9,15 @@ import { v4 as uuidv4 } from 'uuid';
  * Fase 7.2: Motor de Workflows Multinivel.
  */
 export async function GET(request: Request) {
-    const correlacion_id = uuidv4();
+    const correlationId = uuidv4();
     const { searchParams } = new URL(request.url);
-    const entity_type = (searchParams.get('entity_type') as 'PEDIDO' | 'EQUIPO' | 'USUARIO') || 'PEDIDO';
+    const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
+
+    let entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY';
+    if (rawType === 'PEDIDO') entityType = 'ENTITY';
+    else if (rawType === 'EQUIPO') entityType = 'EQUIPMENT';
+    else if (rawType === 'USUARIO') entityType = 'USER';
+    else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
     try {
         const session = await auth();
@@ -19,17 +25,17 @@ export async function GET(request: Request) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entity_type);
+        const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entityType);
 
         if (!definition) {
             // Si no hay definición propia, intentamos devolver la default (seeding rápido si es admin)
             // Por ahora solo lanzamos error si no existe, el admin debería haber inicializado.
-            throw new AppError('NOT_FOUND', 404, `No hay un workflow activo para ${entity_type}`);
+            throw new AppError('NOT_FOUND', 404, `No hay un workflow activo para ${entityType}`);
         }
 
         return NextResponse.json({ definition });
 
     } catch (error) {
-        return handleApiError(error, 'API_GET_ACTIVE_WORKFLOW', correlacion_id);
+        return handleApiError(error, 'API_GET_ACTIVE_WORKFLOW', correlationId);
     }
 }

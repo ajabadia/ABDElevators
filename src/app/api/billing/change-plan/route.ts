@@ -38,17 +38,16 @@ export async function POST(req: Request) {
         const result = await BillingService.changePlan(tenantId, newPlanSlug);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'API_BILLING',
-            accion: 'CHANGE_PLAN_SUCCESS',
-            mensaje: `Tenant ${tenantId} cambió al plan ${newPlanSlug}`,
-            correlacion_id,
-            detalles: { tenantId, newPlanSlug, creditApplied: result.creditApplied }
+            level: 'INFO',
+            source: 'API_BILLING',
+            action: 'CHANGE_PLAN_SUCCESS',
+            message: `Tenant ${tenantId} cambió al plan ${newPlanSlug}`, correlationId: correlacion_id,
+            details: { tenantId, newPlanSlug, creditApplied: result.creditApplied }
         });
 
         const duracion = Date.now() - inicio;
         if (duracion > 2000) {
-            await logEvento({ nivel: 'WARN', origen: 'API_BILLING', accion: 'SLOW_CHANGE_PLAN', mensaje: 'Cambio de plan lento', correlacion_id, detalles: { duracion } });
+            await logEvento({ level: 'WARN', source: 'API_BILLING', action: 'SLOW_CHANGE_PLAN', message: 'Cambio de plan lento', correlationId: correlacion_id, details: { duracion } });
         }
 
         return NextResponse.json({
@@ -63,11 +62,10 @@ export async function POST(req: Request) {
         }
 
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'API_BILLING',
-            accion: 'CHANGE_PLAN_ERROR',
-            mensaje: error.message,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'API_BILLING',
+            action: 'CHANGE_PLAN_ERROR',
+            message: error.message, correlationId: correlacion_id,
             stack: error.stack
         });
 

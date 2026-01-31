@@ -5,11 +5,11 @@ import { cn } from '@/lib/utils';
 
 export interface RiskFinding {
     id: string;
-    tipo: 'SEGURIDAD' | 'COMPATIBILIDAD' | 'LEGAL' | 'NORMATIVA' | 'GENERAL';
-    severidad: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-    mensaje: string;
-    referencia_rag?: string;
-    sugerencia?: string;
+    type: 'SECURITY' | 'COMPATIBILITY' | 'LEGAL' | 'REGULATORY' | 'GENERAL';
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    message: string;
+    ragReference?: string;
+    suggestion?: string;
 }
 
 interface RiskAlerterProps {
@@ -25,8 +25,8 @@ export function RiskAlerter({ risks, className }: RiskAlerterProps) {
                     <Info size={18} />
                 </div>
                 <div>
-                    <p className="text-sm font-bold text-teal-900 dark:text-teal-400">Verificación de Inteligencia Completada</p>
-                    <p className="text-xs text-teal-600 dark:text-teal-500/70">No se han detectado riesgos críticos o incompatibilidades en el análisis actual.</p>
+                    <p className="text-sm font-bold text-teal-900 dark:text-teal-400">Intelligence Verification Completed</p>
+                    <p className="text-xs text-teal-600 dark:text-teal-500/70">No critical risks or incompatibilities detected in the current analysis.</p>
                 </div>
             </div>
         );
@@ -54,7 +54,7 @@ export function RiskAlerter({ risks, className }: RiskAlerterProps) {
         <div className={cn("space-y-4", className)}>
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-tight">
-                    <ShieldAlert className="text-red-500" size={20} /> Alertar de Inteligencia ({risks.length})
+                    <ShieldAlert className="text-red-500" size={20} /> Intelligence Alerts ({risks.length})
                 </h3>
             </div>
             <div className="grid grid-cols-1 gap-4">
@@ -63,38 +63,38 @@ export function RiskAlerter({ risks, className }: RiskAlerterProps) {
                         key={risk.id}
                         className={cn(
                             "border-l-4 p-4 rounded-r-xl transition-all hover:translate-x-1 duration-200 shadow-sm",
-                            getSeverityStyles(risk.severidad)
+                            getSeverityStyles(risk.severity)
                         )}
                     >
                         <div className="flex items-start gap-4">
                             <div className="mt-1">
-                                {getIcon(risk.severidad)}
+                                {getIcon(risk.severity)}
                             </div>
                             <div className="flex-1 space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black uppercase tracking-widest opacity-70">
-                                        {risk.tipo}
+                                        {risk.type}
                                     </span>
                                     <span className={cn(
                                         "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                                        risk.severidad === 'CRITICAL' ? "border-red-400 bg-red-100" : "border-amber-400 bg-amber-100"
+                                        risk.severity === 'CRITICAL' ? "border-red-400 bg-red-100" : "border-amber-400 bg-amber-100"
                                     )}>
-                                        {risk.severidad}
+                                        {risk.severity}
                                     </span>
                                 </div>
-                                <p className="text-sm font-bold leading-tight">{risk.mensaje}</p>
+                                <p className="text-sm font-bold leading-tight">{risk.message}</p>
 
-                                {risk.referencia_rag && (
+                                {risk.ragReference && (
                                     <div className="flex items-center gap-2 text-[11px] opacity-80 italic">
                                         <ArrowRight size={12} />
-                                        <span>Fuente RAG: {risk.referencia_rag}</span>
+                                        <span>RAG Source: {risk.ragReference}</span>
                                     </div>
                                 )}
 
-                                {risk.sugerencia && (
+                                {risk.suggestion && (
                                     <div className="mt-3 bg-white/50 dark:bg-black/20 p-3 rounded-lg border border-current/10">
-                                        <p className="text-xs font-bold uppercase tracking-tighter mb-1">Acción Recomendada:</p>
-                                        <p className="text-xs opacity-90">{risk.sugerencia}</p>
+                                        <p className="text-xs font-bold uppercase tracking-tighter mb-1">Recommended Action:</p>
+                                        <p className="text-xs opacity-90">{risk.suggestion}</p>
                                     </div>
                                 )}
                             </div>

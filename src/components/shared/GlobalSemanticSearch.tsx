@@ -111,11 +111,11 @@ export function GlobalSemanticSearch() {
                             <Card key={i} className="border-none shadow-lg bg-white dark:bg-slate-950 transition-all hover:translate-x-1">
                                 <CardContent className="p-4 space-y-2">
                                     <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3">
-                                        "{res.texto}"
+                                        "{res.text}"
                                     </p>
                                     <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800">
                                         <Badge variant="secondary" className="text-[9px] lowercase font-mono opacity-60">
-                                            {res.tipo}
+                                            {res.type}
                                         </Badge>
                                         <ChevronRight size={14} className="text-slate-300" />
                                     </div>

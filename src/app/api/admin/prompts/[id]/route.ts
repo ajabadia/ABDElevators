@@ -12,7 +12,7 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     const { id } = await params;
 
     try {
@@ -43,12 +43,12 @@ export async function PATCH(
             session.user.email!,
             changeReason,
             isSuperAdmin ? undefined : tenantId,
-            { correlacion_id, ip, userAgent }
+            { correlationId, ip, userAgent }
         );
 
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlacion_id);
+        return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlationId);
     }
 }

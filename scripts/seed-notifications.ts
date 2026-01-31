@@ -31,7 +31,7 @@ async function seedNotifications() {
             userId: usuarioId, // Rename
             type: 'ANALYSIS_COMPLETE' as const, // Fix Enum
             level: 'INFO' as const, // Fix Enum
-            title: 'Nuevo Pedido Asignado',
+            title: 'Nuevo Entity Asignado',
             message: 'El pedido #ABC-999 se ha movido al estado "analizado" y requiere tu validación.',
             link: `/pedidos/${usuarioId}/validar`
         },

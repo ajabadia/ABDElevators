@@ -7,9 +7,9 @@ import { NotificationService } from './notification-service';
 
 export interface TransitionRequest {
     caseId: string;
-    toState: string; // ID del estado destino
+    toState: string; // ID of target state
     role: string;
-    correlacion_id: string;
+    correlationId: string;
     comment?: string;
     signature?: string;
 }
@@ -20,24 +20,24 @@ export interface TransitionRequest {
  */
 export class WorkflowEngine {
     /**
-     * Obtiene la definición de workflow activa para un tenant y tipo de entidad.
+     * Gets the active workflow definition for a tenant and entity type.
      */
-    static async getDefinition(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
+    static async getDefinition(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
         const collection = await getTenantCollection('workflow_definitions');
         return await collection.findOne({
             tenantId,
-            entity_type,
+            entityType,
             active: true
         }) as WorkflowDefinition | null;
     }
 
     /**
-     * Ejecuta una transición de estado validando condiciones y disparando acciones.
+     * Executes a state transition validating conditions and triggering actions.
      */
     static async executeTransition(request: TransitionRequest) {
-        const { caseId, toState, role, correlacion_id, comment, signature } = request;
+        const { caseId, toState, role, correlationId, comment, signature } = request;
 
-        const casesCollection = await getTenantCollection('casos');
+        const casesCollection = await getTenantCollection('cases');
         const tenantId = casesCollection.tenantId;
         const definition = await this.getDefinition(tenantId);
 
@@ -50,7 +50,7 @@ export class WorkflowEngine {
         }) as any;
 
         if (!caso) {
-            throw new NotFoundError('Caso/Pedido no encontrado');
+            throw new NotFoundError('Caso/Entity no encontrado');
         }
 
         // 1. Identificar la transición válida
@@ -92,10 +92,10 @@ export class WorkflowEngine {
             }
         }
 
-        // 5. Preparar actualización
+        // 5. Prepare update
         const updateData: any = {
             status: toState,
-            actualizado: new Date(),
+            updatedAt: new Date(),
         };
 
         const logEntry = {
@@ -105,7 +105,7 @@ export class WorkflowEngine {
             comment,
             signature,
             timestamp: new Date(),
-            correlacion_id
+            correlationId
         };
 
         // Mantener historial de transiciones
@@ -119,16 +119,16 @@ export class WorkflowEngine {
 
         // 6. Disparar Acciones Automáticas (Placeholder para lógica futura)
         if (transition.actions && transition.actions.length > 0) {
-            await this.handleActions(transition.actions, caso, correlacion_id);
+            await this.handleActions(transition.actions, caso, correlationId);
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'WORKFLOW_ENGINE',
-            accion: 'STATE_TRANSITION',
-            mensaje: `Pedido ${caseId} movido a ${toState} por ${role}`,
-            correlacion_id,
-            detalles: { caseId, from: caso.status, to: toState, role }
+            level: 'INFO',
+            source: 'WORKFLOW_ENGINE',
+            action: 'STATE_TRANSITION',
+            message: `Entity ${caseId} moved to ${toState} by ${role}`,
+            correlationId,
+            details: { caseId, from: caso.status, to: toState, role }
         });
 
         return { success: true, to: toState };
@@ -137,15 +137,15 @@ export class WorkflowEngine {
     /**
      * Orquestador de acciones secundarias (Visión 2.0 - Fase 7.2)
      */
-    private static async handleActions(actions: string[], caso: any, correlacion_id: string) {
+    private static async handleActions(actions: string[], caso: any, correlationId: string) {
         for (const action of actions) {
             await logEvento({
-                nivel: 'DEBUG',
-                origen: 'WORKFLOW_ENGINE',
-                accion: 'TRIGGER_ACTION',
-                mensaje: `Disparando acción automática: ${action}`,
-                correlacion_id,
-                detalles: { caseId: caso._id, action }
+                level: 'DEBUG',
+                source: 'WORKFLOW_ENGINE',
+                action: 'TRIGGER_ACTION',
+                message: `Triggering automatic action: ${action}`,
+                correlationId,
+                details: { caseId: caso._id, action }
             });
 
             try {
@@ -154,9 +154,9 @@ export class WorkflowEngine {
                         tenantId: caso.tenantId,
                         type: 'SYSTEM',
                         level: 'INFO',
-                        title: 'Actualización de Pedido',
-                        message: `El pedido ${caso.numero_pedido || caso._id} ha cambiado de estado a: ${caso.status}`,
-                        link: `/pedidos/${caso._id}`,
+                        title: 'Entity Update',
+                        message: `The entity ${caso.identifier || caso._id} has changed state to: ${caso.status}`,
+                        link: `/entities/${caso._id}`,
                         metadata: { caseId: caso._id, status: caso.status }
                     });
                 }
@@ -167,9 +167,9 @@ export class WorkflowEngine {
                         userId: caso.userId,
                         type: 'SYSTEM',
                         level: 'SUCCESS',
-                        title: 'Tu pedido ha avanzado',
-                        message: `Tu pedido ${caso.numero_pedido || caso._id} ahora está en: ${caso.status}`,
-                        link: `/pedidos/${caso._id}`,
+                        title: 'Your entity has advanced',
+                        message: `Your entity ${caso.identifier || caso._id} is now in: ${caso.status}`,
+                        link: `/entities/${caso._id}`,
                         metadata: { caseId: caso._id, status: caso.status }
                     });
                 }

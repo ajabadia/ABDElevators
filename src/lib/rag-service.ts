@@ -8,32 +8,32 @@ import { DatabaseError, AppError } from "@/lib/errors";
 import { UsageService } from "@/lib/usage-service";
 
 export interface RagResult {
-    texto: string;
+    text: string;
     source: string;
     score?: number;
-    tipo: string;
-    modelo: string;
-    cloudinary_url?: string;
+    type: string;
+    model: string;
+    cloudinaryUrl?: string;
     // Dual-Indexing Metadata (Phase 21.1)
     language?: string;
-    original_lang?: string;
-    is_shadow?: boolean;
+    originalLang?: string;
+    isShadow?: boolean;
 }
 
 const PerformTechnicalSearchSchema = z.object({
     query: z.string().min(1),
-    correlacion_id: z.string().uuid(),
+    correlationId: z.string().uuid(),
     limit: z.number().int().positive().optional()
 });
 
 const PureVectorSearchSchema = PerformTechnicalSearchSchema.extend({
-    min_score: z.number().min(0).max(1).optional()
+    minScore: z.number().min(0).max(1).optional()
 });
 
 const GetRelevantDocumentsSchema = z.object({
-    pedidoId: z.string().min(1),
+    entityId: z.string().min(1),
     topK: z.number().int().positive(),
-    correlacion_id: z.string().uuid()
+    correlationId: z.string().uuid()
 });
 
 /**
@@ -44,16 +44,16 @@ const GetRelevantDocumentsSchema = z.object({
 export async function performTechnicalSearch(
     query: string,
     tenantId: string,
-    correlacion_id: string,
+    correlationId: string,
     limit = 5,
     industry: string = 'ELEVATORS'
 ): Promise<RagResult[]> {
-    PerformTechnicalSearchSchema.parse({ query, correlacion_id, limit });
+    PerformTechnicalSearchSchema.parse({ query, correlationId, limit });
     const inicio = Date.now();
 
     try {
         const db = await connectDB();
-        const collection = db.collection('document_chunks');
+        const collection = db.collection('knowledge_chunks');
 
         const embeddings = new GoogleGenerativeAIEmbeddings({
             apiKey: process.env.GEMINI_API_KEY,
@@ -63,14 +63,14 @@ export async function performTechnicalSearch(
         const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
             collection: collection as any,
             indexName: "vector_index",
-            textKey: "texto_chunk",
+            textKey: "chunkText",
             embeddingKey: "embedding",
         });
 
         // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
         const filter = {
             $and: [
-                { estado: { $ne: "obsoleto" } },
+                { status: { $ne: "obsoleto" } },
                 { industry: industry },
                 {
                     $or: [
@@ -88,37 +88,35 @@ export async function performTechnicalSearch(
         });
 
         // Tracking de uso (Búsqueda Vectorial)
-        await UsageService.trackVectorSearch(tenantId, correlacion_id);
+        await UsageService.trackVectorSearch(tenantId, correlationId);
 
         await logEvento({
-            nivel: 'DEBUG',
-            origen: 'RAG_SERVICE',
-            accion: 'SEARCH_SUCCESS_MMR',
-            mensaje: `Búsqueda MMR para "${query}" devolvió ${results.length} resultados`,
-            correlacion_id,
+            level: 'DEBUG',
+            source: 'RAG_SERVICE',
+            action: 'SEARCH_SUCCESS_MMR',
+            message: `Búsqueda MMR para "${query}" devolvió ${results.length} resultados`,
+            correlationId,
             tenantId,
-            materiaId: 'ELEVATORS',
-            detalles: { limit, query, strategy: 'MMR' }
+            details: { limit, query, strategy: 'MMR' }
         });
 
         return results.map(doc => ({
-            texto: doc.pageContent,
-            source: doc.metadata.origen_doc,
+            text: doc.pageContent,
+            source: doc.metadata.sourceDoc,
             score: 0, // MMR de LangChain no devuelve score directo fácilmente en esta firma
-            tipo: doc.metadata.tipo_componente,
-            modelo: doc.metadata.modelo,
-            cloudinary_url: doc.metadata.cloudinary_url
+            type: doc.metadata.componentType,
+            model: doc.metadata.model,
+            cloudinaryUrl: doc.metadata.cloudinaryUrl
         }));
 
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'RAG_SERVICE',
-            accion: 'SEARCH_ERROR',
-            mensaje: `Error en búsqueda RAG (MMR): ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'RAG_SERVICE',
+            action: 'SEARCH_ERROR',
+            message: `Error en búsqueda RAG (MMR): ${(error as Error).message}`,
+            correlationId,
             tenantId,
-            materiaId: 'ELEVATORS',
             stack: (error as Error).stack
         });
 
@@ -130,14 +128,13 @@ export async function performTechnicalSearch(
         // SLA: El RAG Pro con MMR puede tomar hasta 1000ms
         if (duracionTotal > 1000) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'RAG_SERVICE',
-                accion: 'SLA_VIOLATION',
-                mensaje: `Búsqueda RAG MMR lenta: ${duracionTotal}ms`,
-                correlacion_id,
+                level: 'WARN',
+                source: 'RAG_SERVICE',
+                action: 'SLA_VIOLATION',
+                message: `Búsqueda RAG MMR lenta: ${duracionTotal}ms`,
+                correlationId,
                 tenantId,
-                materiaId: 'ELEVATORS',
-                detalles: { duracion_total_ms: duracionTotal }
+                details: { durationTotalMs: duracionTotal }
             });
         }
     }
@@ -150,14 +147,14 @@ export async function performTechnicalSearch(
 export async function performMultilingualSearch(
     query: string,
     tenantId: string,
-    correlacion_id: string,
+    correlationId: string,
     limit = 5
 ): Promise<RagResult[]> {
     const inicio = Date.now();
     try {
         const { multilingualService } = await import('@/lib/multilingual-service');
         const db = await connectDB();
-        const collection = db.collection('document_chunks');
+        const collection = db.collection('knowledge_chunks');
 
         const queryVector = await multilingualService.generateEmbedding(query);
 
@@ -177,41 +174,41 @@ export async function performMultilingualSearch(
             },
             {
                 "$project": {
-                    "texto_chunk": 1,
-                    "origen_doc": 1,
-                    "tipo_componente": 1,
-                    "modelo": 1,
+                    "chunkText": 1,
+                    "sourceDoc": 1,
+                    "componentType": 1,
+                    "model": 1,
                     "score": { "$meta": "vectorSearchScore" }
                 }
             }
         ]).toArray();
 
         await logEvento({
-            nivel: 'DEBUG',
-            origen: 'RAG_SERVICE',
-            accion: 'MULTILINGUAL_SEARCH_SUCCESS',
-            mensaje: `Búsqueda BGE-M3 para "${query}"`,
-            correlacion_id,
+            level: 'DEBUG',
+            source: 'RAG_SERVICE',
+            action: 'MULTILINGUAL_SEARCH_SUCCESS',
+            message: `Búsqueda BGE-M3 para "${query}"`,
+            correlationId,
             tenantId,
-            detalles: { hits: results.length, duracion_ms: Date.now() - inicio }
+            details: { hits: results.length, durationMs: Date.now() - inicio }
         });
 
         return results.map((doc: any) => ({
-            texto: doc.texto_chunk,
-            source: doc.origen_doc,
+            text: doc.chunkText,
+            source: doc.sourceDoc,
             score: doc.score,
-            tipo: doc.tipo_componente,
-            modelo: doc.modelo,
-            cloudinary_url: doc.cloudinary_url
+            type: doc.componentType,
+            model: doc.model,
+            cloudinaryUrl: doc.cloudinaryUrl
         }));
 
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'RAG_SERVICE',
-            accion: 'MULTILINGUAL_SEARCH_ERROR',
-            mensaje: error instanceof Error ? error.message : 'Unknown error',
-            correlacion_id
+            level: 'ERROR',
+            source: 'RAG_SERVICE',
+            action: 'MULTILINGUAL_SEARCH_ERROR',
+            message: error instanceof Error ? error.message : 'Unknown error',
+            correlationId
         });
         return [];
     }
@@ -225,21 +222,21 @@ export async function performMultilingualSearch(
 export async function hybridSearch(
     query: string,
     tenantId: string,
-    correlacion_id: string,
+    correlationId: string,
     limit = 5
 ): Promise<RagResult[]> {
     const inicio = Date.now();
     try {
         const [geminiResults, bgeResults] = await Promise.all([
-            performTechnicalSearch(query, tenantId, correlacion_id, limit * 2),
-            performMultilingualSearch(query, tenantId, correlacion_id, limit * 2)
+            performTechnicalSearch(query, tenantId, correlationId, limit * 2),
+            performMultilingualSearch(query, tenantId, correlationId, limit * 2)
         ]);
 
         const map = new Map<string, RagResult & { rankScore: number }>();
 
         const addToMap = (results: RagResult[], weight: number) => {
             results.forEach((res, index) => {
-                const key = res.texto.substring(0, 100);
+                const key = res.text.substring(0, 100);
                 const existing = map.get(key);
                 const score = weight * (1 / (index + 10)); // RRF simple: 1 / (rank + k)
 
@@ -262,17 +259,17 @@ export async function hybridSearch(
             .slice(0, limit);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'RAG_SERVICE',
-            accion: 'HYBRID_SEARCH_SUCCESS',
-            mensaje: `Búsqueda híbrida para "${query}"`,
-            correlacion_id,
+            level: 'INFO',
+            source: 'RAG_SERVICE',
+            action: 'HYBRID_SEARCH_SUCCESS',
+            message: `Búsqueda híbrida para "${query}"`,
+            correlationId,
             tenantId,
-            detalles: {
+            details: {
                 gemini_hits: geminiResults.length,
                 bge_hits: bgeResults.length,
                 merged_hits: merged.length,
-                duracion_ms: Date.now() - inicio
+                durationMs: Date.now() - inicio
             }
         });
 
@@ -280,7 +277,7 @@ export async function hybridSearch(
 
     } catch (error) {
         console.error("[HYBRID SEARCH ERROR]", error);
-        return performTechnicalSearch(query, tenantId, correlacion_id, limit);
+        return performTechnicalSearch(query, tenantId, correlationId, limit);
     }
 }
 /**
@@ -291,16 +288,16 @@ export async function hybridSearch(
 export async function pureVectorSearch(
     query: string,
     tenantId: string,
-    correlacion_id: string,
-    options: { limit?: number; min_score?: number; industry?: string } = {}
+    correlationId: string,
+    options: { limit?: number; minScore?: number; industry?: string } = {}
 ): Promise<RagResult[]> {
-    PureVectorSearchSchema.parse({ query, correlacion_id, ...options });
-    const { limit = 5, min_score = 0.6 } = options;
+    PureVectorSearchSchema.parse({ query, correlationId, ...options });
+    const { limit = 5, minScore = 0.6 } = options;
     const inicio = Date.now();
 
     try {
         const db = await connectDB();
-        const collection = db.collection('document_chunks');
+        const collection = db.collection('knowledge_chunks');
 
         const embeddings = new GoogleGenerativeAIEmbeddings({
             apiKey: process.env.GEMINI_API_KEY,
@@ -310,14 +307,14 @@ export async function pureVectorSearch(
         const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
             collection: collection as any,
             indexName: "vector_index",
-            textKey: "texto_chunk",
+            textKey: "chunkText",
             embeddingKey: "embedding",
         });
 
         // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
         const filter = {
             $and: [
-                { estado: { $ne: "obsoleto" } },
+                { status: { $ne: "obsoleto" } },
                 { industry: options.industry || 'ELEVATORS' },
                 {
                     $or: [
@@ -336,39 +333,37 @@ export async function pureVectorSearch(
         );
 
         // Tracking de uso (Búsqueda Vectorial)
-        await UsageService.trackVectorSearch(tenantId, correlacion_id);
+        await UsageService.trackVectorSearch(tenantId, correlationId);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'RAG_SERVICE',
-            accion: 'PURE_VECTOR_SEARCH_SUCCESS',
-            mensaje: `Búsqueda vectorial pura para "${query}"`,
-            correlacion_id,
+            level: 'INFO',
+            source: 'RAG_SERVICE',
+            action: 'PURE_VECTOR_SEARCH_SUCCESS',
+            message: `Búsqueda vectorial pura para "${query}"`,
+            correlationId,
             tenantId,
-            materiaId: 'ELEVATORS',
-            detalles: { limit, query, results: resultsWithScore.length }
+            details: { limit, query, results: resultsWithScore.length }
         });
 
         return resultsWithScore
-            .filter(([_, score]) => score >= min_score)
+            .filter(([_, score]) => score >= minScore)
             .map(([doc, score]) => ({
-                texto: doc.pageContent,
-                source: doc.metadata.origen_doc,
+                text: doc.pageContent,
+                source: doc.metadata.sourceDoc,
                 score,
-                tipo: doc.metadata.tipo_componente,
-                modelo: doc.metadata.modelo,
-                cloudinary_url: doc.metadata.cloudinary_url
+                type: doc.metadata.componentType,
+                model: doc.metadata.model,
+                cloudinaryUrl: doc.metadata.cloudinaryUrl
             }));
 
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'RAG_SERVICE',
-            accion: 'PURE_SEARCH_ERROR',
-            mensaje: `Error en búsqueda vectorial pura: ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'RAG_SERVICE',
+            action: 'PURE_SEARCH_ERROR',
+            message: `Error en búsqueda vectorial pura: ${(error as Error).message}`,
+            correlationId,
             tenantId,
-            materiaId: 'ELEVATORS',
             stack: (error as Error).stack
         });
         throw new DatabaseError('Error en búsqueda vectorial pura', error as Error);
@@ -378,52 +373,52 @@ export async function pureVectorSearch(
         // SLA Estricto para búsqueda pura: 200ms
         if (duracionTotal > 200) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'RAG_SERVICE',
-                accion: 'PURE_SLA_VIOLATION',
-                mensaje: `Búsqueda vectorial pura excedió SLA: ${duracionTotal}ms`,
-                correlacion_id,
-                detalles: { duracion_total_ms: duracionTotal }
+                level: 'WARN',
+                source: 'RAG_SERVICE',
+                action: 'PURE_SLA_VIOLATION',
+                message: `Búsqueda vectorial pura excedió SLA: ${duracionTotal}ms`,
+                correlationId,
+                details: { durationTotalMs: duracionTotal }
             });
         }
     }
 }
 
 /**
- * Retrieves relevant technical documents for a given pedido ID.
- * Generates an embedding for the pedido's text and performs a vector search.
+ * Retrieves relevant technical documents for a given entity ID.
+ * Generates an embedding for the entity's text and performs a vector search.
  */
 export async function getRelevantDocuments(
-    pedidoId: string,
+    entityId: string,
     tenantId: string,
-    options: { topK: number; correlacion_id: string }
+    options: { topK: number; correlationId: string }
 ): Promise<{ id: string; content: string }[]> {
-    GetRelevantDocumentsSchema.parse({ pedidoId, ...options });
-    const { topK, correlacion_id } = options;
+    GetRelevantDocumentsSchema.parse({ entityId, ...options });
+    const { topK, correlationId } = options;
     try {
         const db = await connectDB();
-        const pedido = await db.collection('pedidos').findOne({ _id: new (await import("mongodb")).ObjectId(pedidoId) });
+        const entity = await db.collection('entities').findOne({ _id: new (await import("mongodb")).ObjectId(entityId) });
 
-        if (!pedido) {
-            throw new AppError('NOT_FOUND', 404, `Pedido ${pedidoId} not found`);
+        if (!entity) {
+            throw new AppError('NOT_FOUND', 404, `Entity ${entityId} not found`);
         }
 
         // 🛡️ Tenant Isolation Check
-        if (pedido.tenantId && pedido.tenantId !== tenantId) {
+        if (entity.tenantId && entity.tenantId !== tenantId) {
             throw new AppError('FORBIDDEN', 403, `No tienes permiso para acceder a este recurso`);
         }
 
-        const textoPedido = pedido.pdf_texto || "";
-        if (!textoPedido) {
+        const entityText = entity.originalText || "";
+        if (!entityText) {
             return [];
         }
 
-        // Search using the full pedido text as query
-        const results = await performTechnicalSearch(textoPedido, tenantId, correlacion_id, topK);
+        // Search using the full entity text as query
+        const results = await performTechnicalSearch(entityText, tenantId, correlationId, topK);
 
         return results.map((r, index) => ({
             id: `doc_${index}`,
-            content: r.texto
+            content: r.text
         }));
     } catch (error) {
         throw error instanceof AppError ? error : new DatabaseError('Error retrieving relevant documents', error as Error);

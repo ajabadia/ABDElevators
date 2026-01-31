@@ -42,13 +42,13 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
     const [config, setConfig] = useState<ChecklistConfig>(initialConfig || {
         _id: '',
         tenantId: '',
-        nombre: 'Nueva Configuración',
-        categorias: [],
+        name: 'Nueva Configuración',
+        categories: [],
         items: [],
-        workflow_orden: [],
-        activo: true,
-        creado: new Date(),
-        actualizado: new Date()
+        workflowOrder: [],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
     });
 
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -64,27 +64,27 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
     );
 
     useEffect(() => {
-        if (config.categorias.length > 0 && !selectedCategoryId) {
-            setSelectedCategoryId(config.categorias[0].id);
+        if (config.categories.length > 0 && !selectedCategoryId) {
+            setSelectedCategoryId(config.categories[0].id);
         }
-    }, [config.categorias, selectedCategoryId]);
+    }, [config.categories, selectedCategoryId]);
 
     // Handlers para Categorías
     const addCategory = () => {
         const newId = crypto.randomUUID();
         const newCategory: ChecklistCategory = {
             id: newId,
-            nombre: 'Nueva Categoría',
+            name: 'Nueva Categoría',
             color: '#0D9488', // Teal-600
             keywords: [],
-            prioridad: config.categorias.length + 1,
-            icono: 'Layout'
+            priority: config.categories.length + 1,
+            icon: 'Layout'
         };
 
         setConfig(prev => ({
             ...prev,
-            categorias: [...prev.categorias, newCategory],
-            workflow_orden: [...prev.workflow_orden, newId]
+            categories: [...prev.categories, newCategory],
+            workflowOrder: [...prev.workflowOrder, newId]
         }));
         setSelectedCategoryId(newId);
     };
@@ -92,9 +92,9 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
     const deleteCategory = (id: string) => {
         setConfig(prev => ({
             ...prev,
-            categorias: prev.categorias.filter(c => c.id !== id),
+            categories: prev.categories.filter(c => c.id !== id),
             items: prev.items.filter(i => i.categoryId !== id),
-            workflow_orden: prev.workflow_orden.filter(oid => oid !== id)
+            workflowOrder: prev.workflowOrder.filter(oid => oid !== id)
         }));
         if (selectedCategoryId === id) setSelectedCategoryId(null);
     };
@@ -102,7 +102,7 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
     const updateCategory = (id: string, updates: Partial<ChecklistCategory>) => {
         setConfig(prev => ({
             ...prev,
-            categorias: prev.categorias.map(c => c.id === id ? { ...c, ...updates } : c)
+            categories: prev.categories.map(c => c.id === id ? { ...c, ...updates } : c)
         }));
     };
 
@@ -114,7 +114,7 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
             description: 'Nuevo punto de validación',
             categoryId: selectedCategoryId,
             notes: '',
-            icono: 'CheckCircle2'
+            icon: 'CheckCircle2'
         };
         setConfig(prev => ({
             ...prev,
@@ -141,19 +141,19 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
         const { active, over } = event;
         if (active.id !== over.id) {
             setConfig((prev) => {
-                const oldIndex = prev.workflow_orden.indexOf(active.id);
-                const newIndex = prev.workflow_orden.indexOf(over.id);
-                const newOrder = arrayMove(prev.workflow_orden, oldIndex, newIndex);
+                const oldIndex = prev.workflowOrder.indexOf(active.id);
+                const newIndex = prev.workflowOrder.indexOf(over.id);
+                const newOrder = arrayMove(prev.workflowOrder, oldIndex, newIndex);
 
                 // También reordenamos el array de categorías para consistencia visual
-                const sortedCats = [...prev.categorias].sort((a, b) =>
+                const sortedCats = [...prev.categories].sort((a, b) =>
                     newOrder.indexOf(a.id) - newOrder.indexOf(b.id)
                 );
 
                 return {
                     ...prev,
-                    workflow_orden: newOrder,
-                    categorias: sortedCats.map((c, idx) => ({ ...c, prioridad: idx + 1 }))
+                    workflowOrder: newOrder,
+                    categories: sortedCats.map((c, idx) => ({ ...c, priority: idx + 1 }))
                 };
             });
         }
@@ -216,7 +216,7 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
         }
     };
 
-    const currentCategory = config.categorias.find(c => c.id === selectedCategoryId);
+    const currentCategory = config.categories.find(c => c.id === selectedCategoryId);
     const currentItems = config.items.filter(i => i.categoryId === selectedCategoryId);
 
     return (
@@ -233,8 +233,8 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
                     <div className="h-6 w-px bg-slate-800 mx-2" />
                     <div className="flex flex-col">
                         <Input
-                            value={config.nombre}
-                            onChange={(e) => setConfig(prev => ({ ...prev, nombre: e.target.value }))}
+                            value={config.name}
+                            onChange={(e) => setConfig(prev => ({ ...prev, name: e.target.value }))}
                             className="h-8 bg-transparent border-none text-lg font-bold p-0 focus-visible:ring-0 text-white w-64"
                             placeholder="Nombre de la configuración"
                         />
@@ -305,11 +305,11 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
                                         onDragEnd={handleDragEndCategories}
                                     >
                                         <SortableContext
-                                            items={config.workflow_orden}
+                                            items={config.workflowOrder}
                                             strategy={verticalListSortingStrategy}
                                         >
-                                            {config.workflow_orden.map((id) => {
-                                                const cat = config.categorias.find(c => c.id === id);
+                                            {config.workflowOrder.map((id) => {
+                                                const cat = config.categories.find(c => c.id === id);
                                                 if (!cat) return null;
                                                 return (
                                                     <SortableCategory
@@ -324,7 +324,7 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
                                         </SortableContext>
                                     </DndContext>
 
-                                    {config.categorias.length === 0 && (
+                                    {config.categories.length === 0 && (
                                         <div className="py-12 text-center">
                                             <div className="inline-flex p-4 rounded-full bg-slate-900 border border-slate-800 mb-4">
                                                 <Sparkles className="text-slate-700" size={32} />
@@ -357,8 +357,8 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
                                                         </div>
                                                         <div className="flex-1">
                                                             <Input
-                                                                value={currentCategory?.nombre}
-                                                                onChange={(e) => updateCategory(selectedCategoryId, { nombre: e.target.value })}
+                                                                value={currentCategory?.name}
+                                                                onChange={(e) => updateCategory(selectedCategoryId, { name: e.target.value })}
                                                                 className="h-10 text-xl font-bold bg-transparent border-none p-0 focus-visible:ring-0 text-white"
                                                             />
                                                         </div>

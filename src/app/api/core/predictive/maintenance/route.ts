@@ -22,9 +22,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            predictions,
-            correlacion_id
-        });
+            predictions, correlationId: correlacion_id});
     } catch (error: any) {
         console.error('[CORE_PREDICTIVE] Error:', error);
         return NextResponse.json({

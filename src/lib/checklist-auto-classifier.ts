@@ -27,7 +27,7 @@ const ChecklistItemInputSchema = z.object({
 export function autoClassify(
     item: ChecklistItem,
     config: ChecklistConfig,
-    correlacion_id: string
+    correlationId: string
 ): string | null {
     // Validate inputs first
     const parsedItem = ChecklistItemInputSchema.safeParse(item);
@@ -43,7 +43,7 @@ export function autoClassify(
 
     const descriptionLower = item.description.toLowerCase();
     // Simple keyword matching: first category whose any keyword appears in description.
-    for (const category of config.categorias) {
+    for (const category of config.categories) {
         for (const kw of category.keywords) {
             if (descriptionLower.includes(kw.toLowerCase())) {
                 return category.id;
@@ -60,7 +60,7 @@ export function autoClassify(
 export function smartSort(
     items: ChecklistItem[],
     config: ChecklistConfig,
-    correlacion_id: string
+    correlationId: string
 ): ChecklistItem[] {
     const start = Date.now();
 
@@ -71,8 +71,8 @@ export function smartSort(
 
     // Build a map of categoryId -> priority for quick lookup
     const priorityMap: Record<string, number> = {};
-    for (const cat of config.categorias) {
-        priorityMap[cat.id] = cat.prioridad;
+    for (const cat of config.categories) {
+        priorityMap[cat.id] = cat.priority;
     }
 
     const sorted = [...items].sort((a, b) => {
@@ -88,12 +88,11 @@ export function smartSort(
     const durationMs = Date.now() - start;
     // Log performance – correlacion_id is not known here; we log without it but keep structure.
     void logEvento({
-        nivel: "INFO",
-        origen: "CHECKLIST_AUTO_CLASSIFIER",
-        accion: "SMART_SORT",
-        mensaje: `Sorted ${items.length} items`,
-        correlacion_id,
-        detalles: { duration_ms: durationMs }
+        level: "INFO",
+        source: "CHECKLIST_AUTO_CLASSIFIER",
+        action: "SMART_SORT",
+        message: `Sorted ${items.length} items`, correlationId,
+        details: { duration_ms: durationMs }
     });
 
     return sorted;

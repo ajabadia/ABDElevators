@@ -22,7 +22,7 @@ export class GeoKnowledgeDistributor {
     /**
      * Sincroniza el conocimiento de un tenant hacia regiones de réplica.
      */
-    public static async syncToReplicas(tenantId: string, correlacion_id: string) {
+    public static async syncToReplicas(tenantId: string, correlationId: string) {
         const start = Date.now();
         try {
             // En un sistema real, esto usaría Neo4j Fabric o replicación de clusters.
@@ -32,12 +32,11 @@ export class GeoKnowledgeDistributor {
             await new Promise(resolve => setTimeout(resolve, 300)); // Latencia de red simulada
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'GEO_DISTRIBUTOR',
-                accion: 'REPLICATION_SYNC',
-                mensaje: `Conocimiento replicado en ${this.regions.length} regiones para tenant ${tenantId}`,
-                correlacion_id,
-                detalles: { regions: this.regions.map(r => r.id), duration: Date.now() - start }
+                level: 'INFO',
+                source: 'GEO_DISTRIBUTOR',
+                action: 'REPLICATION_SYNC',
+                message: `Conocimiento replicado en ${this.regions.length} regiones para tenant ${tenantId}`, correlationId,
+                details: { regions: this.regions.map(r => r.id), duration: Date.now() - start }
             });
 
             return { success: true, regionsSynced: this.regions.length };

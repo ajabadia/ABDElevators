@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Shield } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useApiMutation } from "@/hooks/useApiMutation";
 
 interface InviteUserModalProps {
     open: boolean;
@@ -33,7 +34,6 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
     const { data: session } = useSession();
     const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
 
-    const [loading, setLoading] = useState(false);
     const [invited, setInvited] = useState(false);
     const { toast } = useToast();
 
@@ -43,41 +43,21 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
         tenantId: "", // Solo para SuperAdmins
     });
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-
-        try {
-            const res = await fetch('/api/admin/usuarios/invite', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                setInvited(true);
-                toast({
-                    title: "Invitación enviada",
-                    description: `Se ha enviado un email a ${formData.email}`,
-                });
-            } else {
-                toast({
-                    title: "Error",
-                    description: data.error?.message || "No se pudo enviar la invitación",
-                    variant: "destructive",
-                });
-            }
-        } catch (error) {
+    const { mutate: inviteUser, isLoading: loading } = useApiMutation({
+        endpoint: '/api/admin/usuarios/invite',
+        method: 'POST',
+        onSuccess: () => {
+            setInvited(true);
             toast({
-                title: "Error",
-                description: "Error al procesar la invitación",
-                variant: "destructive",
+                title: "Invitación enviada",
+                description: `Se ha enviado un email a ${formData.email}`,
             });
-        } finally {
-            setLoading(false);
         }
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        inviteUser(formData);
     };
 
     const handleClose = () => {

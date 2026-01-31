@@ -234,5 +234,13 @@ export async function getTenantCollection<T extends Document>(
 }
 
 export async function getCaseCollection(session?: any) {
-    return await getTenantCollection('casos', session);
+    return await getTenantCollection('cases', session);
+}
+
+export async function getEntityCollection(session?: any) {
+    return await getTenantCollection('entities', session);
+}
+
+export async function getKnowledgeAssetCollection(session?: any) {
+    return await getTenantCollection('knowledge_assets', session);
 }

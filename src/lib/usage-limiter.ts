@@ -80,21 +80,21 @@ async function sendLimitNotificationIfNeeded(
         });
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'USAGE_LIMITER',
-            accion: 'EMAIL_SENT',
-            mensaje: `Email de alerta enviado a ${admin.email} (${percentage.toFixed(1)}% de ${resourceType})`,
-            correlacion_id: `email-${tenantId}`,
-            detalles: { resourceType, percentage, to: admin.email },
+            level: 'INFO',
+            source: 'USAGE_LIMITER',
+            action: 'EMAIL_SENT',
+            message: `Email de alerta enviado a ${admin.email} (${percentage.toFixed(1)}% de ${resourceType})`,
+            correlationId: `email-${tenantId}`,
+            details: { resourceType, percentage, to: admin.email },
         });
     } catch (error) {
         // No bloquear la ejecución si falla el email
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'USAGE_LIMITER',
-            accion: 'EMAIL_FAILED',
-            mensaje: `Error enviando email de alerta: ${(error as Error).message}`,
-            correlacion_id: `email-error-${tenantId}`,
+            level: 'ERROR',
+            source: 'USAGE_LIMITER',
+            action: 'EMAIL_FAILED',
+            message: `Error enviando email de alerta: ${(error as Error).message}`,
+            correlationId: `email-error-${tenantId}`,
             stack: (error as Error).stack,
         });
     }
@@ -151,12 +151,12 @@ export async function checkLLMLimit(
     // Log de advertencia al 80%
     if (percentage >= 80 && percentage < 100) {
         await logEvento({
-            nivel: 'WARN',
-            origen: 'USAGE_LIMITER',
-            accion: 'APPROACHING_LIMIT',
-            mensaje: `Tenant ${tenantId} ha alcanzado el ${percentage.toFixed(1)}% de su límite de tokens LLM`,
-            correlacion_id: `limit-check-${tenantId}`,
-            detalles: { currentUsage, limit: plan.limits.llm_tokens_per_month, tier: plan.tier },
+            level: 'WARN',
+            source: 'USAGE_LIMITER',
+            action: 'APPROACHING_LIMIT',
+            message: `Tenant ${tenantId} ha alcanzado el ${percentage.toFixed(1)}% de su límite de tokens LLM`,
+            correlationId: `limit-check-${tenantId}`,
+            details: { currentUsage, limit: plan.limits.llm_tokens_per_month, tier: plan.tier },
         });
     }
 
@@ -280,12 +280,12 @@ export async function enforceLimits(
 
     if (!check.allowed) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'USAGE_LIMITER',
-            accion: 'LIMIT_EXCEEDED',
-            mensaje: `Tenant ${tenantId} bloqueado: ${check.reason}`,
-            correlacion_id: `limit-block-${tenantId}`,
-            detalles: { type, current: check.current, limit: check.limit },
+            level: 'ERROR',
+            source: 'USAGE_LIMITER',
+            action: 'LIMIT_EXCEEDED',
+            message: `Tenant ${tenantId} bloqueado: ${check.reason}`,
+            correlationId: `limit-block-${tenantId}`,
+            details: { type, current: check.current, limit: check.limit },
         });
 
         throw new AppError(

@@ -25,7 +25,7 @@ export class CrossVerticalEngine {
     public async semanticHorizontalSearch(
         query: string,
         tenantId: string,
-        correlacion_id: string
+        correlationId: string
     ): Promise<{ results: RagResult[]; aiSynthesis: string }> {
         const start = Date.now();
         try {
@@ -34,36 +34,36 @@ export class CrossVerticalEngine {
             // que atraviesa múltiples tenants. Aquí usamos el proxy de 'tenantId: global' 
             // y simulamos el acceso horizontal.
 
-            const results = await performTechnicalSearch(query, 'global', correlacion_id, 3);
+            const results = await performTechnicalSearch(query, 'global', correlationId, 3);
 
             if (results.length === 0) {
-                return { results: [], aiSynthesis: "No se ha encontrado conocimiento compartido relevante para esta consulta." };
+                return { results: [], aiSynthesis: "No shared knowledge found relevant to this query." };
             }
 
-            // 2. IA Agent: Sintetizar conocimiento de múltiples fuentes anónimas
-            const contextText = results.map((r, i) => `[Fuente ${i + 1}]: ${r.texto}`).join('\n\n');
+            // 2. IA Agent: Synthesize knowledge from multiple anonymous sources
+            const contextText = results.map((r, i) => `[Source ${i + 1}]: ${r.text}`).join('\n\n');
             const prompt = `
-                Actúa como un Especialista en Conocimiento Cruzado de ABDElevators.
-                He encontrado los siguientes fragmentos de conocimiento ANÓNIMOS de otras verticales:
+                Act as a Cross-Vertical Knowledge Specialist for ABDElevators.
+                I have found the following ANONYMOUS knowledge chunks from other verticals:
                 ${contextText}
 
-                Query del usuario: "${query}"
+                User Query: "${query}"
 
-                Tu tarea:
-                - Sintetiza una respuesta técnica útil basada SOLO en estos fragmentos.
-                - Mantén el anonimato (no menciones clientes ni nombres específicos si aparecieran).
-                - Sé crítico: si los fragmentos son contradictorios, indícalo.
+                Your task:
+                - Synthesize a useful technical response based ONLY on these chunks.
+                - Maintain anonymity (do not mention clients or specific names if they appear).
+                - Be critical: if the chunks are contradictory, indicate it.
             `;
 
-            const aiSynthesis = await callGeminiMini(prompt, tenantId, { correlacion_id, temperature: 0.3 });
+            const aiSynthesis = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.3 });
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'CROSS_VERTICAL_SEARCH',
-                accion: 'SEARCH_SUCCESS',
-                mensaje: `Búsqueda horizontal completada para: ${query}`,
-                correlacion_id,
-                detalles: { hits: results.length, duration: Date.now() - start }
+                level: 'INFO',
+                source: 'CROSS_VERTICAL_SEARCH',
+                action: 'SEARCH_SUCCESS',
+                message: `Horizontal search completed for: ${query}`,
+                correlationId,
+                details: { hits: results.length, duration: Date.now() - start }
             });
 
             return { results, aiSynthesis };

@@ -68,15 +68,14 @@ export class NotFoundError extends AppError {
 /**
  * Manejador centralizado de errores para API Routes.
  */
-export async function handleApiError(error: unknown, origen: string, correlacion_id: string) {
+export async function handleApiError(error: unknown, source: string, correlationId: string) {
   if (error instanceof AppError) {
     await logEvento({
-      nivel: 'WARN',
-      origen,
-      accion: 'API_ERROR',
-      mensaje: error.message,
-      correlacion_id,
-      detalles: error.details
+      level: 'WARN',
+      source,
+      action: 'API_ERROR',
+      message: error.message, correlationId,
+      details: error.details
     });
     return NextResponse.json(error.toJSON(), { status: error.status });
   }
@@ -86,11 +85,10 @@ export async function handleApiError(error: unknown, origen: string, correlacion
   const stack = error instanceof Error ? error.stack : undefined;
 
   await logEvento({
-    nivel: 'ERROR',
-    origen,
-    accion: 'INTERNAL_SERVER_ERROR',
-    mensaje: message,
-    correlacion_id,
+    level: 'ERROR',
+    source,
+    action: 'INTERNAL_SERVER_ERROR',
+    message: message, correlationId,
     stack
   });
 

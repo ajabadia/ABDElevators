@@ -32,7 +32,7 @@ export class PredictiveEngine {
     /**
      * Genera un tablero de mantenimiento predictivo para un tenant.
      */
-    public async getMaintenanceForecast(tenantId: string, correlacion_id: string): Promise<MaintenancePrediction[]> {
+    public async getMaintenanceForecast(tenantId: string, correlationId: string): Promise<MaintenancePrediction[]> {
         try {
             // 1. Extraer "Señales de Fallo" del grafo
             // Buscamos componentes con muchas correcciones o sin normativas claras
@@ -62,25 +62,25 @@ export class PredictiveEngine {
                 Devuelve SOLO el JSON.
             `;
 
-            const aiResponse = await callGeminiMini(prompt, tenantId, { correlacion_id, temperature: 0.3 });
+            const aiResponse = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.3 });
             const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
 
             if (!jsonMatch) return [];
 
             const predictions: MaintenancePrediction[] = JSON.parse(jsonMatch[0]);
 
-            // 3. Disparar Workflows Automatizados (Fase KIMI 10)
+            // 3. Trigger Automated Workflows (KIMI Phase 10)
             const workflow = WorkflowEngine.getInstance();
             for (const pred of predictions) {
-                await workflow.processEvent('on_prediction', pred, tenantId, correlacion_id);
+                await workflow.processEvent('on_prediction', pred, tenantId, correlationId);
             }
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'PREDICTIVE_ENGINE',
-                accion: 'GENERATE_FORECAST',
-                mensaje: `Generadas ${predictions.length} predicciones para tenant ${tenantId}`,
-                correlacion_id
+                level: 'INFO',
+                source: 'PREDICTIVE_ENGINE',
+                action: 'GENERATE_FORECAST',
+                message: `Generated ${predictions.length} predictions for tenant ${tenantId}`,
+                correlationId
             });
 
             return predictions;
@@ -88,11 +88,11 @@ export class PredictiveEngine {
         } catch (error: any) {
             console.error('[PredictiveEngine] Error:', error);
             await logEvento({
-                nivel: 'ERROR',
-                origen: 'PREDICTIVE_ENGINE',
-                accion: 'FORECAST_ERROR',
-                mensaje: error.message,
-                correlacion_id
+                level: 'ERROR',
+                source: 'PREDICTIVE_ENGINE',
+                action: 'FORECAST_ERROR',
+                message: error.message,
+                correlationId
             });
             return [];
         }
@@ -108,7 +108,7 @@ export class PredictiveEngine {
             {
                 name: 'high_frequency_unregulated',
                 query: `
-                    MATCH (m:modelo { tenantId: $tenantId })
+                    MATCH (m:model { tenantId: $tenantId })
                     OPTIONAL MATCH (m)-[r:CUMPLE_NORMA]->(n)
                     WITH m, count(r) as normas
                     WHERE normas = 0
@@ -119,7 +119,7 @@ export class PredictiveEngine {
             {
                 name: 'technician_overload_correlation',
                 query: `
-                    MATCH (u:usuario { tenantId: $tenantId })<-[:ANALIZADO_POR]-(p:pedido)-[:CONTIENE_MODELO]->(m:modelo)
+                    MATCH (u:usuario { tenantId: $tenantId })<-[:ANALIZADO_POR]-(p:pedido)-[:CONTIENE_MODELO]->(m:model)
                     WITH m, count(u) as ingenieros_distintos
                     WHERE ingenieros_distintos > 2
                     RETURN m.name as component, "Alta rotación de técnicos - posible ambigüedad técnica" as signal, 50 as raw_risk

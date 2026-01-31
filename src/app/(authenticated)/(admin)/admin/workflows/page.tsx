@@ -158,7 +158,7 @@ export default function AdminWorkflowPage() {
                             </div>
                             <div className="p-5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-teal-400/60 mb-2">Entidad Target</p>
-                                <p className="text-sm font-bold font-mono">{definition?.entity_type}</p>
+                                <p className="text-sm font-bold font-mono">{definition?.entityType}</p>
                             </div>
                         </div>
                     </section>

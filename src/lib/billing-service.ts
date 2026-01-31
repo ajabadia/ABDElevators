@@ -128,7 +128,7 @@ export class BillingService {
         // 3. Persistir cambios
         await TenantService.updateConfig(tenantId, updatedConfig, {
             performedBy: 'system-billing',
-            correlacion_id: `change-plan-${Date.now()}`
+            correlationId: `change-plan-${Date.now()}`
         });
 
         return { success: true, creditApplied: false };

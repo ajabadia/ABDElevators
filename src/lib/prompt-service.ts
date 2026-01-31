@@ -100,7 +100,7 @@ export class PromptService {
         changedBy: string,
         changeReason: string,
         tenantId?: string,
-        auditMetadata?: { correlacion_id?: string, ip?: string, userAgent?: string }
+        auditMetadata?: { correlationId?: string, ip?: string, userAgent?: string }
     ): Promise<void> {
         const collection = await getTenantCollection('prompts');
         const versionsCollection = await getTenantCollection('prompt_versions');
@@ -127,7 +127,7 @@ export class PromptService {
             variables: prompt.variables,
             changedBy,
             changeReason,
-            correlacion_id: auditMetadata?.correlacion_id,
+            correlationId: auditMetadata?.correlationId,
             ip: auditMetadata?.ip,
             userAgent: auditMetadata?.userAgent,
             createdAt: new Date()
@@ -151,12 +151,12 @@ export class PromptService {
         );
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'PROMPT_SERVICE',
-            accion: 'UPDATE_PROMPT',
-            mensaje: `Prompt ${prompt.key} actualizado a versión ${prompt.version + 1}`,
-            correlacion_id: auditMetadata?.correlacion_id || promptId,
-            detalles: { promptKey: prompt.key, newVersion: prompt.version + 1, changedBy, changeReason }
+            level: 'INFO',
+            source: 'PROMPT_SERVICE',
+            action: 'UPDATE_PROMPT',
+            message: `Prompt ${prompt.key} actualizado a versión ${prompt.version + 1}`,
+            correlationId: auditMetadata?.correlationId || promptId,
+            details: { promptKey: prompt.key, newVersion: prompt.version + 1, changedBy, changeReason }
         });
     }
 
@@ -220,12 +220,12 @@ export class PromptService {
         );
 
         await logEvento({
-            nivel: 'WARN',
-            origen: 'PROMPT_SERVICE',
-            accion: 'ROLLBACK_PROMPT',
-            mensaje: `Prompt ${prompt.key} revertido a versión ${targetVersion}`,
-            correlacion_id: promptId,
-            detalles: { promptKey: prompt.key, targetVersion, changedBy }
+            level: 'WARN',
+            source: 'PROMPT_SERVICE',
+            action: 'ROLLBACK_PROMPT',
+            message: `Prompt ${prompt.key} revertido a versión ${targetVersion}`,
+            correlationId: promptId,
+            details: { promptKey: prompt.key, targetVersion, changedBy }
         });
     }
 

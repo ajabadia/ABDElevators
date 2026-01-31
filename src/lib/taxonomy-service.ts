@@ -23,7 +23,7 @@ export class TaxonomyService {
     /**
      * Crea una nueva taxonomía.
      */
-    static async createTaxonomy(data: any, correlacion_id: string) {
+    static async createTaxonomy(data: any, correlationId: string) {
         const validated = TaxonomySchema.parse(data);
         const collection = await getTenantCollection('taxonomias');
 
@@ -41,12 +41,11 @@ export class TaxonomyService {
         const result = await collection.insertOne(validated);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TAXONOMY_SERVICE',
-            accion: 'CREATE_TAXONOMY',
-            mensaje: `Taxonomía '${validated.name}' creada para tenant ${validated.tenantId}`,
-            correlacion_id,
-            detalles: { key: validated.key, industry: validated.industry }
+            level: 'INFO',
+            source: 'TAXONOMY_SERVICE',
+            action: 'CREATE_TAXONOMY',
+            message: `Taxonomía '${validated.name}' creada para tenant ${validated.tenantId}`, correlationId,
+            details: { key: validated.key, industry: validated.industry }
         });
 
         return { ...validated, _id: result.insertedId };
@@ -55,7 +54,7 @@ export class TaxonomyService {
     /**
      * Actualiza una taxonomía existente.
      */
-    static async updateTaxonomy(id: string, data: any, tenantId: string, correlacion_id: string) {
+    static async updateTaxonomy(id: string, data: any, tenantId: string, correlationId: string) {
         const collection = await getTenantCollection('taxonomias');
 
         const existing = await collection.findOne({
@@ -67,7 +66,7 @@ export class TaxonomyService {
 
         const updateData = {
             ...data,
-            actualizado: new Date()
+            updatedAt: new Date()
         };
 
         await collection.updateOne(
@@ -76,12 +75,11 @@ export class TaxonomyService {
         );
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TAXONOMY_SERVICE',
-            accion: 'UPDATE_TAXONOMY',
-            mensaje: `Taxonomía ${id} actualizada`,
-            correlacion_id,
-            detalles: { id, tenantId }
+            level: 'INFO',
+            source: 'TAXONOMY_SERVICE',
+            action: 'UPDATE_TAXONOMY',
+            message: `Taxonomía ${id} actualizada`, correlationId,
+            details: { id, tenantId }
         });
 
         return { success: true };

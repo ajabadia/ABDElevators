@@ -47,9 +47,7 @@ export async function GET(
 
         return NextResponse.json({
             success: true,
-            entity,
-            correlacion_id
-        });
+            entity, correlationId: correlacion_id});
 
     } catch (error: any) {
         console.error(`[ENTITY_CORE_GET] Error (${type}/${id}):`, error);
@@ -95,14 +93,12 @@ export async function PATCH(
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'CORE_ENTITY_UPDATE',
-            accion: 'UPDATE',
-            mensaje: `${entityDef.name} actualizado: ${id}`,
-            correlacion_id
-        });
+            level: 'INFO',
+            source: 'CORE_ENTITY_UPDATE',
+            action: 'UPDATE',
+            message: `${entityDef.name} actualizado: ${id}`, correlationId: correlacion_id});
 
-        return NextResponse.json({ success: true, correlacion_id });
+        return NextResponse.json({ success: true, correlationId: correlacion_id});
 
     } catch (error: any) {
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });

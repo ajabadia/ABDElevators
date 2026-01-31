@@ -63,11 +63,11 @@ export async function POST(req: NextRequest) {
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'API_AUTOMATION',
-            accion: 'SAVE_WORKFLOW',
-            mensaje: `Workflow de IA guardado: ${workflow.name}`,
-            correlacion_id: crypto.randomUUID()
+            level: 'INFO',
+            source: 'API_AUTOMATION',
+            action: 'SAVE_WORKFLOW',
+            message: `Workflow de IA guardado: ${workflow.name}`,
+            correlationId: crypto.randomUUID()
         });
 
         return NextResponse.json({

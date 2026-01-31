@@ -47,12 +47,12 @@ export async function GET(req: Request) {
 
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'API_EVALUATIONS',
-            accion: 'FETCH_ERROR',
-            mensaje: (error as Error).message,
+            level: 'ERROR',
+            source: 'API_EVALUATIONS',
+            action: 'FETCH_ERROR',
+            message: (error as Error).message,
             tenantId,
-            correlacion_id: 'SYSTEM_FETCH'
+            correlationId: 'SYSTEM_FETCH'
         });
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

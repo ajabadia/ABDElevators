@@ -10,84 +10,84 @@ export class UsageService {
     /**
      * Registra el uso de tokens de LLM.
      */
-    static async trackLLM(tenantId: string, tokens: number, model: string, correlacion_id?: string) {
+    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'LLM_TOKENS',
-            valor: tokens,
-            recurso: model,
-            descripcion: `Consumo de ${tokens} tokens en modelo ${model}`,
-            correlacion_id
+            type: 'LLM_TOKENS',
+            value: tokens,
+            resource: model,
+            description: `Consumo de ${tokens} tokens en modelo ${model}`,
+            correlationId
         });
     }
 
     /**
      * Registra el uso de almacenamiento.
      */
-    static async trackStorage(tenantId: string, bytes: number, resource: string, correlacion_id?: string) {
+    static async trackStorage(tenantId: string, bytes: number, resource: string, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'STORAGE_BYTES',
-            valor: bytes,
-            recurso: resource,
-            descripcion: `Almacenamiento de ${Math.round(bytes / 1024)} KB en ${resource}`,
-            correlacion_id
+            type: 'STORAGE_BYTES',
+            value: bytes,
+            resource: resource,
+            description: `Almacenamiento de ${Math.round(bytes / 1024)} KB en ${resource}`,
+            correlationId
         });
     }
 
     /**
      * Registra una búsqueda vectorial.
      */
-    static async trackVectorSearch(tenantId: string, correlacion_id?: string) {
+    static async trackVectorSearch(tenantId: string, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'VECTOR_SEARCH',
-            valor: 1,
-            recurso: 'mongodb-vector-search',
-            descripcion: 'Consulta de búsqueda semántica realizada',
-            correlacion_id
+            type: 'VECTOR_SEARCH',
+            value: 1,
+            resource: 'mongodb-vector-search',
+            description: 'Consulta de búsqueda semántica realizada',
+            correlationId
         });
     }
 
     /**
      * Registra el ahorro por deduplicación (Ahorro tokens LLM).
      */
-    static async trackDeduplicationSaving(tenantId: string, estimatedTokens: number, correlacion_id?: string) {
+    static async trackDeduplicationSaving(tenantId: string, estimatedTokens: number, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'SAVINGS_TOKENS',
-            valor: estimatedTokens,
-            recurso: 'deduplication-md5',
-            descripcion: `Ahorro estimado de ${estimatedTokens} tokens por deduplicación`,
-            correlacion_id
+            type: 'SAVINGS_TOKENS',
+            value: estimatedTokens,
+            resource: 'deduplication-md5',
+            description: `Ahorro estimado de ${estimatedTokens} tokens por deduplicación`,
+            correlationId
         });
     }
 
     /**
      * Registra el uso de embeddings.
      */
-    static async trackEmbedding(tenantId: string, chunks: number, model: string, correlacion_id?: string) {
+    static async trackEmbedding(tenantId: string, chunks: number, model: string, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'EMBEDDING_OPS',
-            valor: chunks,
-            recurso: model,
-            descripcion: `Generación de embeddings para ${chunks} fragmentos con ${model}`,
-            correlacion_id
+            type: 'EMBEDDING_OPS',
+            value: chunks,
+            resource: model,
+            description: `Generación de embeddings para ${chunks} fragmentos con ${model}`,
+            correlationId
         });
     }
 
     /**
-     * Registra la generación de un nuevo informe/pedido.
+     * Registra la generación de un nuevo informe/entidad.
      */
-    static async trackReportGeneration(tenantId: string, pedidoId: string, correlacion_id?: string) {
+    static async trackReportGeneration(tenantId: string, entityId: string, correlationId?: string) {
         return this.logUsage({
             tenantId,
-            tipo: 'REPORTS_GENERATED',
-            valor: 1, // 1 Informe
-            recurso: pedidoId,
-            descripcion: `Generación de informe para pedido ${pedidoId}`,
-            correlacion_id
+            type: 'REPORTS_GENERATED',
+            value: 1, // 1 Informe
+            resource: entityId,
+            description: `Generación de informe para entidad ${entityId}`,
+            correlationId
         });
     }
 
@@ -102,7 +102,7 @@ export class UsageService {
             await collection.insertOne(validated);
 
             // Detector de anomalías: Si el consumo es muy alto en una sola operación
-            if (validated.tipo === 'LLM_TOKENS' && validated.valor > 10000) {
+            if (validated.type === 'LLM_TOKENS' && validated.value > 10000) {
                 // Import dinámico para evitar ciclos si NotificationService usa UsageService en el futuro
                 const { NotificationService } = await import('@/lib/notification-service');
 
@@ -111,20 +111,20 @@ export class UsageService {
                     type: 'BILLING_EVENT',
                     level: 'WARNING',
                     title: 'Pico de Consumo Detectado',
-                    message: `Se ha detectado una operación con un consumo inusual de ${validated.valor.toLocaleString()} tokens en el modelo ${validated.recurso}. Revisa si es un comportamiento esperado.`,
+                    message: `Se ha detectado una operación con un consumo inusual de ${validated.value.toLocaleString()} tokens en el modelo ${validated.resource}. Revisa si es un comportamiento esperado.`,
                     link: '/admin/billing',
                     metadata: {
-                        resource: validated.recurso,
-                        value: validated.valor
+                        resource: validated.resource,
+                        value: validated.value
                     }
                 });
 
                 await logEvento({
-                    nivel: 'WARN',
-                    origen: 'USAGE_SERVICE',
-                    accion: 'HIGH_CONSUMPTION',
-                    mensaje: `Alto consumo de tokens detectado para tenant ${validated.tenantId}: ${validated.valor}`,
-                    correlacion_id: validated.correlacion_id || 'SYSTEM'
+                    level: 'WARN',
+                    source: 'USAGE_SERVICE',
+                    action: 'HIGH_CONSUMPTION',
+                    message: `Alto consumo de tokens detectado para tenant ${validated.tenantId}: ${validated.value}`,
+                    correlationId: validated.correlationId || 'SYSTEM'
                 });
             }
 
@@ -142,15 +142,15 @@ export class UsageService {
     static async getTenantROI(tenantId: string) {
         try {
             const usageColl = await getTenantCollection('usage_logs');
-            const pedidosColl = await getTenantCollection('pedidos');
+            const entitiesColl = await getTenantCollection('entities');
 
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            // 1. Análisis Realizados (Pedidos procesados)
-            const analysisCount = await pedidosColl.countDocuments({
+            // 1. Análisis Realizados (Entidades procesadas)
+            const analysisCount = await entitiesColl.countDocuments({
                 createdAt: { $gte: thirtyDaysAgo },
-                estado: 'completado'
+                status: 'completed'
             });
 
             // 2. Métricas de Usage Logs (Searches & Dedup)
@@ -162,9 +162,9 @@ export class UsageService {
                 },
                 {
                     $group: {
-                        _id: '$tipo',
+                        _id: '$type',
                         count: { $sum: 1 },
-                        totalValue: { $sum: '$valor' }
+                        totalValue: { $sum: '$value' }
                     }
                 }
             ]);
@@ -234,11 +234,11 @@ export class UsageService {
             const db = await connectDB();
 
             // 1. Validaciones Realizadas (Calidad)
-            // Asumiendo que existe colección 'validaciones' basada en ValidacionSchema
-            const validacionesColl = db.collection('validaciones');
-            const validationsCount = await validacionesColl.countDocuments({
+            // Asumiendo que existe colección 'validations' basada en ValidationSchema
+            const validationsColl = db.collection('validations');
+            const validationsCount = await validationsColl.countDocuments({
                 tenantId: tenantId,
-                validadoPor: userId
+                validatedBy: userId
             });
 
             // 2. Tickets Creados (Soporte)

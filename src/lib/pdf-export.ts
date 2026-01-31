@@ -1,21 +1,21 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-interface ModeloDetectado {
-    tipo: string;
-    modelo: string;
-    contexto_rag?: Array<{
-        texto: string;
+interface DetectedModel {
+    type: string;
+    model: string;
+    ragContext?: Array<{
+        text: string;
         source: string;
         score: number;
     }>;
 }
 
 interface ReportData {
-    numeroPedido: string;
-    fechaAnalisis: Date;
-    modelos: ModeloDetectado[];
-    correlacionId: string;
+    identifier: string;
+    analysisDate: Date;
+    models: DetectedModel[];
+    correlationId: string;
 }
 
 /**
@@ -50,13 +50,13 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
-        pdf.text(`Pedido: ${data.numeroPedido}`, 15, yPosition);
+        pdf.text(`Entity: ${data.identifier}`, 15, yPosition);
 
         yPosition += 10;
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(`Fecha de análisis: ${data.fechaAnalisis.toLocaleDateString('es-ES')}`, 15, yPosition);
-        pdf.text(`ID de correlación: ${data.correlacionId}`, 15, yPosition + 5);
+        pdf.text(`Fecha de análisis: ${data.analysisDate.toLocaleDateString('es-ES')}`, 15, yPosition);
+        pdf.text(`ID de correlación: ${data.correlationId}`, 15, yPosition + 5);
 
         yPosition += 15;
 
@@ -66,7 +66,7 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
         pdf.text('Componentes Detectados', 15, yPosition);
         yPosition += 8;
 
-        data.modelos.forEach((modelo, idx) => {
+        data.models.forEach((model, idx) => {
             // Verificar si necesitamos nueva página
             if (yPosition > pageHeight - 40) {
                 pdf.addPage();
@@ -80,19 +80,19 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
             pdf.setTextColor(13, 148, 136);
-            pdf.text(`${idx + 1}. ${modelo.tipo}: ${modelo.modelo}`, 18, yPosition);
+            pdf.text(`${idx + 1}. ${model.type}: ${model.model}`, 18, yPosition);
 
             yPosition += 12;
 
             // Contexto RAG
-            if (modelo.contexto_rag && modelo.contexto_rag.length > 0) {
+            if (model.ragContext && model.ragContext.length > 0) {
                 pdf.setFontSize(10);
                 pdf.setFont('helvetica', 'bold');
                 pdf.setTextColor(0, 0, 0);
                 pdf.text('Documentación Técnica:', 18, yPosition);
                 yPosition += 6;
 
-                modelo.contexto_rag.forEach((ctx, ctxIdx) => {
+                model.ragContext.forEach((ctx, ctxIdx) => {
                     if (yPosition > pageHeight - 30) {
                         pdf.addPage();
                         yPosition = 20;
@@ -108,7 +108,7 @@ export async function generatePDFReport(data: ReportData): Promise<Blob> {
                     // Texto del fragmento (con wrapping)
                     pdf.setFontSize(9);
                     pdf.setTextColor(0, 0, 0);
-                    const lines = pdf.splitTextToSize(ctx.texto, pageWidth - 45);
+                    const lines = pdf.splitTextToSize(ctx.text, pageWidth - 45);
                     pdf.text(lines, 20, yPosition);
                     yPosition += lines.length * 4 + 5;
                 });

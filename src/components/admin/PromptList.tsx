@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { PromptEditor } from './PromptEditor';
 import { PromptVersionList } from './PromptVersionList';
-import { logEventoCliente } from '@/lib/logger-client';
+import { logClientEvent } from '@/lib/logger-client';
 
 /**
  * PromptList – muestra una tabla con todos los prompts y permite crear, editar y
@@ -43,12 +43,12 @@ export const PromptList: React.FC = () => {
         if (!res.ok) {
             // Log error using structured logger (assume logEvento is globally available)
             // Log error using structured client logger
-            await logEventoCliente({
-                nivel: 'ERROR',
-                origen: 'PROMPT_UI',
-                accion: 'FETCH_LIST_ERROR',
-                mensaje: 'Failed to fetch prompts',
-                correlacion_id: crypto.randomUUID()
+            await logClientEvent({
+                level: 'ERROR',
+                source: 'PROMPT_UI',
+                action: 'FETCH_LIST_ERROR',
+                message: 'Failed to fetch prompts',
+                correlationId: crypto.randomUUID()
             });
             return;
         }

@@ -53,9 +53,7 @@ export async function GET(
                 page,
                 limit,
                 pages: Math.ceil(total / limit)
-            },
-            correlacion_id
-        });
+            }, correlationId: correlacion_id});
 
     } catch (error: any) {
         console.error(`[ENTITY_CORE_LIST] Error (${type}):`, error);

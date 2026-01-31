@@ -11,7 +11,7 @@ async function seedEvaluations() {
     const sampleEvaluations = [
         {
             tenantId,
-            correlacion_id: uuidv4(),
+            correlationId: uuidv4(),
             query: "¿Cómo configuro el operador de puertas Quantum?",
             generation: "Para configurar el operador Quantum, debe ajustar el potenciómetro P1 para la velocidad de cierre y P2 para la apertura. Verifique el LED de estado.",
             context_chunks: ["Manual Quantum P1/P2 config", "LED diagnostics Quantum"],
@@ -32,7 +32,7 @@ async function seedEvaluations() {
         },
         {
             tenantId,
-            correlacion_id: uuidv4(),
+            correlationId: uuidv4(),
             query: "Protocolo de seguridad EN 81-20",
             generation: "La normativa EN 81-20 exige que el foso tenga un espacio de refugio de al menos 0.5m x 0.6m x 0.8m.",
             context_chunks: ["EN 81-20 safety requirements section 5.2"],

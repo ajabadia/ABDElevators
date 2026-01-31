@@ -65,12 +65,12 @@ export class PerformanceGuard {
         };
 
         await logEvento({
-            nivel: testResult.successRate < 95 ? 'ERROR' : 'INFO',
-            origen: 'PERFORMANCE_GUARD',
-            accion: 'STRESS_TEST_COMPLETE',
-            mensaje: `Stress Test finalizado: ${testResult.successRate.toFixed(2)}% success rate con ${config.virtualUsers} usuarios.`,
-            correlacion_id: crypto.randomUUID(),
-            detalles: testResult
+            level: testResult.successRate < 95 ? 'ERROR' : 'INFO',
+            source: 'PERFORMANCE_GUARD',
+            action: 'STRESS_TEST_COMPLETE',
+            message: `Stress Test finalizado: ${testResult.successRate.toFixed(2)}% success rate con ${config.virtualUsers} usuarios.`,
+            correlationId: crypto.randomUUID(),
+            details: testResult
         });
 
         return testResult;

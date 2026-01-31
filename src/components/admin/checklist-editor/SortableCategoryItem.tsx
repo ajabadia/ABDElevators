@@ -58,7 +58,7 @@ export function SortableCategoryItem({ category, isActive, onSelect }: SortableC
 
             <div className="flex-1 min-w-0">
                 <div className={`font-medium truncate ${isActive ? 'text-teal-900' : 'text-slate-700'}`}>
-                    {category.nombre}
+                    {category.name}
                 </div>
                 <div className="text-[10px] text-slate-400 font-medium tracking-tight">
                     {category.keywords.length} PALABRAS CLAVE

@@ -56,46 +56,46 @@ export function AppSidebar() {
     const menuItems: MenuItem[] = [
         {
             name: 'Dashboard',
-            href: (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? '/admin' : (userRole === 'INGENIERIA' ? '/admin/documentos' : '/pedidos'),
+            href: (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? '/admin' : (userRole === 'ENGINEERING' ? '/admin/knowledge-assets' : '/entities'),
             icon: LayoutDashboard
         },
         {
-            name: `${labels.plural} Técnico`,
-            href: '/pedidos',
+            name: `Technical Entities`,
+            href: '/entities',
             icon: Zap,
-            roles: ['ADMIN', 'TECNICO'],
+            roles: ['ADMIN', 'TECHNICAL'],
             module: 'TECHNICAL'
         },
         {
-            name: 'Mapa Semántico',
-            href: '/grafos',
+            name: 'Semantic Map',
+            href: '/graphs',
             icon: Share2,
-            roles: ['ADMIN', 'TECNICO'],
+            roles: ['ADMIN', 'TECHNICAL'],
             module: 'TECHNICAL'
         },
         {
-            name: 'Documentos RAG',
-            href: '/admin/documentos',
+            name: 'Knowledge Assets',
+            href: '/admin/knowledge-assets',
             icon: FileText,
-            roles: ['ADMIN', 'INGENIERIA'],
+            roles: ['ADMIN', 'ENGINEERING'],
             module: 'RAG'
         },
         {
-            name: 'Explorador RAG',
+            name: 'Search Explorer',
             href: '/admin/knowledge-base',
             icon: Search,
             roles: ['ADMIN', 'SUPER_ADMIN'],
             module: 'RAG'
         },
         {
-            name: 'Tipos de Documento',
-            href: '/admin/tipos-documento',
+            name: 'Document Types',
+            href: '/admin/document-types',
             icon: Settings,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Mis Archivos',
-            href: '/mis-documentos',
+            name: 'My Files',
+            href: '/admin/my-documents',
             icon: Shield
         },
         {
@@ -105,8 +105,8 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Checklists',
-            href: '/admin/configs-checklist',
+            name: 'Checklist Configs',
+            href: '/admin/checklist-configs',
             icon: CheckSquare,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
@@ -117,69 +117,69 @@ export function AppSidebar() {
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Notificaciones',
+            name: 'Notifications',
             href: '/admin/notifications',
             icon: Bell,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Hacer una consulta',
-            href: '/soporte',
+            name: 'Technical Support',
+            href: '/admin/support',
             icon: LifeBuoy,
-            roles: ['TECNICO', 'INGENIERIA']
+            roles: ['TECHNICAL', 'ENGINEERING']
         },
         {
-            name: 'Usuarios',
-            href: '/admin/usuarios',
+            name: 'Users',
+            href: '/admin/users',
             icon: Users,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Facturación',
+            name: 'Billing',
             href: '/admin/billing',
             icon: CreditCard,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Organización',
-            href: '/admin/tenants',
+            name: 'Organizations',
+            href: '/admin/organizations',
             icon: Building,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Soporte',
-            href: '/admin/soporte',
+            name: 'Support',
+            href: '/admin/support',
             icon: LifeBuoy,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Auditoría',
-            href: '/admin/auditoria',
+            name: 'Audit',
+            href: '/admin/audit',
             icon: History,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {
-            name: 'Analíticas Globales',
+            name: 'Global Analytics',
             href: '/admin/analytics',
             icon: TrendingUp,
             roles: ['SUPER_ADMIN']
         },
         {
-            name: 'Calidad RAG',
+            name: 'RAG Quality',
             href: '/admin/rag-quality',
             icon: ShieldCheck,
             roles: ['SUPER_ADMIN'],
             module: 'RAG'
         },
         {
-            name: 'Logs del Sistema',
+            name: 'System Logs',
             href: '/admin/logs',
             icon: Activity,
             roles: ['SUPER_ADMIN']
         },
         {
-            name: 'Perfil',
-            href: '/perfil',
+            name: 'Profile',
+            href: '/admin/profile',
             icon: UserCircle
         },
     ];
@@ -296,7 +296,7 @@ export function AppSidebar() {
                         )}
                     >
                         <LogOut size={18} />
-                        {!isCollapsed && <span className="text-sm font-medium">Cerrar Sesión</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">Sign Out</span>}
                     </button>
                 </div>
             </div>

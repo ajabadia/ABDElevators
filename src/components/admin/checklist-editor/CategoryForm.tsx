@@ -61,15 +61,15 @@ export function CategoryForm({ category, onSave, onDelete }: CategoryFormProps) 
                         className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-current/20"
                         style={{ backgroundColor: category.color }}
                     >
-                        {category.icono && ICON_MAP[category.icono] ? (
-                            React.createElement(ICON_MAP[category.icono], { size: 24 })
+                        {category.icon && ICON_MAP[category.icon] ? (
+                            React.createElement(ICON_MAP[category.icon], { size: 24 })
                         ) : (
                             <Hash size={24} />
                         )}
                     </div>
                     <div>
                         <h3 className="text-xl font-bold text-slate-900">Configurar Categoría</h3>
-                        <p className="text-sm text-slate-500 font-medium">{category.nombre || 'Nueva Categoría'}</p>
+                        <p className="text-sm text-slate-500 font-medium">{category.name || 'Nueva Categoría'}</p>
                     </div>
                 </div>
                 <button
@@ -87,8 +87,8 @@ export function CategoryForm({ category, onSave, onDelete }: CategoryFormProps) 
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Nombre de Categoría</label>
                         <input
                             type="text"
-                            value={category.nombre}
-                            onChange={(e) => onSave({ ...category, nombre: e.target.value })}
+                            value={category.name}
+                            onChange={(e) => onSave({ ...category, name: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all font-medium"
                             placeholder="Ej: Seguridad Eléctrica"
                         />
@@ -102,9 +102,9 @@ export function CategoryForm({ category, onSave, onDelete }: CategoryFormProps) 
                                 return (
                                     <button
                                         key={iconName}
-                                        onClick={() => onSave({ ...category, icono: iconName })}
+                                        onClick={() => onSave({ ...category, icon: iconName })}
                                         className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center
-                                            ${category.icono === iconName
+                                            ${category.icon === iconName
                                                 ? 'border-teal-500 bg-teal-50 text-teal-600 scale-105 shadow-sm'
                                                 : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'}
                                         `}
@@ -139,8 +139,8 @@ export function CategoryForm({ category, onSave, onDelete }: CategoryFormProps) 
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Prioridad en Visualización</label>
                         <input
                             type="number"
-                            value={category.prioridad}
-                            onChange={(e) => onSave({ ...category, prioridad: parseInt(e.target.value) || 0 })}
+                            value={category.priority}
+                            onChange={(e) => onSave({ ...category, priority: parseInt(e.target.value) || 0 })}
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all font-medium"
                         />
                         <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold px-1 flex items-center gap-1">

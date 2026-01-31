@@ -9,7 +9,7 @@ async function checkIngestLogs() {
         await client.connect();
         const db = client.db('ABDElevators-Logs');
         const logs = await db.collection('logs_aplicacion')
-            .find({ origen: 'API_INGEST' })
+            .find({ source: 'API_INGEST' })
             .sort({ timestamp: -1 })
             .limit(10)
             .toArray();

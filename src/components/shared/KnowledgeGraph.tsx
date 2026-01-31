@@ -39,7 +39,7 @@ export function KnowledgeGraph() {
             // Mock data fallback for demonstration if Neo4j fails
             setGraphData({
                 nodes: [
-                    { id: '1', label: 'Pedido #7890', type: 'pedido', color: '#00acc1' },
+                    { id: '1', label: 'Entity #7890', type: 'pedido', color: '#00acc1' },
                     { id: '2', label: 'Técnico Juan', type: 'usuario', color: '#43a047' },
                     { id: '3', label: 'Modelo KONE MonoSpace', type: 'modelo', color: '#f4511e' },
                     { id: '4', label: 'Norma EN 81-20', type: 'normativa', color: '#5e35b1' },

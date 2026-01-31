@@ -4,16 +4,16 @@ import { AppError, ValidationError, NotFoundError, DatabaseError } from '@/lib/e
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { AcceptInviteSchema, UsuarioSchema } from '@/lib/schemas';
+import { AcceptInviteSchema, UserSchema } from '@/lib/schemas';
 
 /**
  * POST /api/auth/invite/accept
- * Procesa la aceptación de una invitación, crea el usuario y marca la invitación como usada.
- * Utiliza transacciones de MongoDB para asegurar atomicidad (Regla de Oro #7).
+ * Processes invitation acceptance, creates the user and marks the invitation as used.
+ * Uses MongoDB transactions to ensure atomicity (Rule #7).
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
 
     try {
         const body = await req.json();
@@ -22,64 +22,62 @@ export async function POST(req: NextRequest) {
         const client = await getMongoClient();
         const db = await connectAuthDB();
 
-        // 1. Verificar la invitación
-        const invite = await db.collection('invitaciones').findOne({ token: validated.token });
+        // 1. Verify invitation
+        const invite = await db.collection('invitations').findOne({ token: validated.token });
 
         if (!invite) {
             throw new NotFoundError('Invitación no encontrada');
         }
 
-        if (invite.estado !== 'PENDIENTE') {
-            throw new AppError('INVITE_ALREADY_USED', 400, `Esta invitación ya no es válida (${invite.estado.toLowerCase()})`);
+        if (invite.status !== 'PENDING' && invite.status !== 'PENDIENTE') {
+            throw new AppError('INVITE_ALREADY_USED', 400, `Esta invitación ya no es válida (${invite.status.toLowerCase()})`);
         }
 
-        if (new Date() > new Date(invite.expira)) {
+        if (new Date() > new Date(invite.expiresAt || invite.expira)) {
             throw new AppError('INVITE_EXPIRED', 400, 'La invitación ha expirado');
         }
 
-        // 2. Verificar si el usuario se registró mientras tanto por otra vía
+        // 2. Check if user registered in the meantime
         const existingUser = await db.collection('users').findOne({ email: invite.email });
         if (existingUser) {
             throw new ValidationError('El email asignado a esta invitación ya está registrado');
         }
 
-        // 3. Preparar datos del usuario
+        // 3. Prepare user data
         const hashedPassword = await bcrypt.hash(validated.password, 10);
 
-        const nuevoUsuario = {
+        const newUser = {
             email: invite.email,
             password: hashedPassword,
-            nombre: validated.nombre,
-            apellidos: validated.apellidos,
-            puesto: '',
-            rol: invite.rol,
+            firstName: validated.firstName,
+            lastName: validated.lastName,
+            position: '',
+            role: invite.role || invite.rol,
             tenantId: invite.tenantId,
             industry: invite.industry || 'ELEVATORS',
             activeModules: ['TECHNICAL', 'RAG'],
-            activo: true,
-            creado: new Date(),
-            modificado: new Date(),
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         };
 
-        const validatedUser = UsuarioSchema.parse(nuevoUsuario);
+        const validatedUser = UserSchema.parse(newUser);
 
-        // 4. Ejecutar transacción (SI EL CLUSTER LO SOPORTA)
-        // Nota: session.withTransaction requiere que MongoDB sea un Replica Set.
-        // En Atlas (Free Tier o superior) siempre lo es.
+        // 4. Execute transaction
         const session = client.startSession();
 
         try {
             await session.withTransaction(async () => {
-                // A. Crear usuario
+                // A. Create user
                 await db.collection('users').insertOne(validatedUser, { session });
 
-                // B. Marcar invitación como usada
-                await db.collection('invitaciones').updateOne(
+                // B. Mark invitation as used
+                await db.collection('invitations').updateOne(
                     { _id: invite._id },
                     {
                         $set: {
-                            estado: 'ACEPTADA',
-                            usadoAt: new Date()
+                            status: 'ACCEPTED',
+                            usedAt: new Date()
                         }
                     },
                     { session }
@@ -90,12 +88,12 @@ export async function POST(req: NextRequest) {
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'API_INVITE_ACCEPT',
-            accion: 'INVITE_ACCEPTED',
-            mensaje: `Invitación aceptada por ${invite.email} en tenant ${invite.tenantId}`,
-            correlacion_id,
-            detalles: { email: invite.email, tenantId: invite.tenantId, rol: invite.rol }
+            level: 'INFO',
+            source: 'AUTH_INVITE_ACCEPT_API',
+            action: 'INVITE_ACCEPTED',
+            message: `Invitation accepted by ${invite.email} in tenant ${invite.tenantId}`,
+            correlationId,
+            details: { email: invite.email, tenantId: invite.tenantId, role: invite.role || invite.rol }
         });
 
         return NextResponse.json({
@@ -115,11 +113,11 @@ export async function POST(req: NextRequest) {
         }
 
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'API_INVITE_ACCEPT',
-            accion: 'ACCEPT_ERROR',
-            mensaje: error.message,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'AUTH_INVITE_ACCEPT_API',
+            action: 'ACCEPT_ERROR',
+            message: error.message,
+            correlationId,
             stack: error.stack
         });
 
@@ -128,14 +126,14 @@ export async function POST(req: NextRequest) {
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 2000) {
+        const durationMs = Date.now() - start;
+        if (durationMs > 2000) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'API_INVITE_ACCEPT',
-                accion: 'PERFORMANCE_SLA_VIOLATION',
-                mensaje: `POST /api/auth/invite/accept tomó ${duracion}ms`,
-                correlacion_id
+                level: 'WARN',
+                source: 'AUTH_INVITE_ACCEPT_API',
+                action: 'PERFORMANCE_SLA_VIOLATION',
+                message: `POST /api/auth/invite/accept took ${durationMs}ms`,
+                correlationId
             });
         }
     }

@@ -27,7 +27,7 @@ async function check() {
             console.log('🔹 Rol:', user.rol);
             console.log('🔹 TenantId:', user.tenantId);
             console.log('🔹 Industry:', user.industry);
-            console.log('🔹 Activo:', user.activo);
+            console.log('🔹 Activo:', user.active);
             console.log('🔹 Password (hash length):', user.password?.length);
         } else {
             console.log('❌ Usuario NO encontrado:', email);

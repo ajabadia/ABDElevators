@@ -60,7 +60,7 @@ export function SortableCategory({ category, isActive, onClick, onDelete }: Sort
             </div>
 
             <span className="flex-1 text-sm font-bold truncate">
-                {category.nombre}
+                {category.name}
             </span>
 
             <button

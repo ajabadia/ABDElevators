@@ -41,13 +41,13 @@ async function startWorker() {
 
         if (job) {
             await logEvento({
-                nivel: 'ERROR',
-                origen: 'ASYNC_WORKER',
-                accion: 'JOB_FAILED',
-                mensaje: errorMsg,
-                correlacion_id: job.id || 'unknown',
+                level: 'ERROR',
+                source: 'ASYNC_WORKER',
+                action: 'JOB_FAILED',
+                message: errorMsg,
+                correlationId: job.id || 'unknown',
                 tenantId: job.data.tenantId,
-                detalles: { error: err.message, stack: err.stack }
+                details: { error: err.message, stack: err.stack }
             });
         }
     });

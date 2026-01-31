@@ -11,7 +11,7 @@ process.env.SINGLE_TENANT_ID = 'demo_legal_tenant';
 async function runLegalDemo() {
     console.log('🚀 Iniciando Simulación Multi-Industria: SECTOR LEGAL\n');
 
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     const tenantId = 'bufete_perez_legal';
     const industry = 'LEGAL';
 
@@ -41,23 +41,23 @@ async function runLegalDemo() {
     console.log('--------------------------------------------------');
 
     try {
-        const riesgos = await RiskService.analyzeRisks(
+        const risks = await RiskService.analyzeRisks(
             contractSnippet,
             legalPolicyContext,
             industry as any,
             tenantId,
-            correlacion_id
+            correlationId
         );
 
-        if (riesgos.length === 0) {
+        if (risks.length === 0) {
             console.log('✅ No se detectaron riesgos. El contrato cumple las políticas.');
         } else {
-            console.log(`⚠️ SE DETECTARON ${riesgos.length} RIESGOS CRÍTICOS:\n`);
-            riesgos.forEach((r, i) => {
-                console.log(`${i + 1}. [${r.severidad}] ${r.tipo}`);
-                console.log(`   MENSAJE: ${r.mensaje}`);
-                console.log(`   REF. RAG: ${r.referencia_rag}`);
-                console.log(`   SUGERENCIA: ${r.sugerencia}\n`);
+            console.log(`⚠️ SE DETECTARON ${risks.length} RIESGOS CRÍTICOS:\n`);
+            risks.forEach((r, i) => {
+                console.log(`${i + 1}. [${r.severity}] ${r.type}`);
+                console.log(`   MENSAJE: ${r.message}`);
+                console.log(`   REF. RAG: ${r.ragReference}`);
+                console.log(`   SUGERENCIA: ${r.suggestion}\n`);
             });
         }
 

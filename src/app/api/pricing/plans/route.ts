@@ -41,12 +41,10 @@ export async function GET() {
 
     } catch (error: any) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'API_PRICING',
-            accion: 'FETCH_PLANS_ERROR',
-            mensaje: error.message,
-            correlacion_id
-        });
+            level: 'ERROR',
+            source: 'API_PRICING',
+            action: 'FETCH_PLANS_ERROR',
+            message: error.message, correlationId: correlacion_id});
 
         return NextResponse.json(
             { success: false, message: 'Error al cargar los planes de precios' },

@@ -7,42 +7,42 @@ import { ChecklistConfig } from "@/lib/schemas";
  * Includes initial departments: Mantenimiento, Instalación, Ingeniería.
  */
 export const defaultChecklistConfig: ChecklistConfig = {
-    nombre: "Configuración Estándar ABD",
-    categorias: [
+    name: "Configuración Estándar ABD",
+    categories: [
         {
             id: "550e8400-e29b-41d4-a716-446655440000",
-            nombre: "Mantenimiento Preventivo",
+            name: "Mantenimiento Preventivo",
             color: "#3b82f6", // Blue
             keywords: ["voltaje", "aceite", "limpieza", "engrase", "inspección"],
-            prioridad: 1,
-            icono: "Wrench"
+            priority: 1,
+            icon: "Wrench"
         },
         {
             id: "550e8400-e29b-41d4-a716-446655440001",
-            nombre: "Instalación Eléctrica",
+            name: "Instalación Eléctrica",
             color: "#ef4444", // Red
             keywords: ["cableado", "cuadro", "fase", "tierra", "conexión"],
-            prioridad: 2,
-            icono: "Zap"
+            priority: 2,
+            icon: "Zap"
         },
         {
             id: "550e8400-e29b-41d4-a716-446655440002",
-            nombre: "Ingeniería de Diseño",
+            name: "Ingeniería de Diseño",
             color: "#10b981", // Green
             keywords: ["plano", "dimensiones", "carga", "especificación", "normativa"],
-            prioridad: 3,
-            icono: "FileText"
+            priority: 3,
+            icon: "FileText"
         }
     ],
     items: [],
-    workflow_orden: [
+    workflowOrder: [
         "550e8400-e29b-41d4-a716-446655440000",
         "550e8400-e29b-41d4-a716-446655440001",
         "550e8400-e29b-41d4-a716-446655440002"
     ],
-    activo: true,
+    isActive: true,
     tenantId: 'system',
-    creado: new Date('2026-01-01'),
-    actualizado: new Date('2026-01-01')
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01')
 };
 

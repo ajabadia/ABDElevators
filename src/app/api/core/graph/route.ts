@@ -20,19 +20,16 @@ export async function GET(req: NextRequest) {
         const graph = await GraphEngine.getInstance().getTenantGraph(tenantId);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'CORE_GRAPH',
-            accion: 'GET_GRAPH',
-            mensaje: 'Grafo obtenido correctamente',
-            correlacion_id,
-            detalles: { nodeCount: graph.nodes.length, linkCount: graph.links.length }
+            level: 'INFO',
+            source: 'CORE_GRAPH',
+            action: 'GET_GRAPH',
+            message: 'Grafo obtenido correctamente', correlationId: correlacion_id,
+            details: { nodeCount: graph.nodes.length, linkCount: graph.links.length }
         });
 
         return NextResponse.json({
             success: true,
-            graph,
-            correlacion_id
-        });
+            graph, correlationId: correlacion_id});
     } catch (error: any) {
         console.error('[CORE_GRAPH] Error:', error);
         return NextResponse.json({

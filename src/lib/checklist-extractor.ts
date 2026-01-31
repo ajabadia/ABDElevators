@@ -21,7 +21,7 @@ const ExtractChecklistInputSchema = z.object({
             content: z.string()
         })
     ),
-    correlacion_id: z.string().uuid(),
+    correlationId: z.string().uuid(),
     tenantId: z.string()
 });
 
@@ -37,12 +37,12 @@ const ExtractChecklistInputSchema = z.object({
 export async function extractChecklist(
     docs: { id: string; content: string }[],
     tenantId: string,
-    correlacion_id: string
+    correlationId: string
 ): Promise<ChecklistItem[]> {
     // -------------------
     // 1️⃣ Input validation (Zod First)
     // -------------------
-    const parsed = ExtractChecklistInputSchema.safeParse({ docs, correlacion_id, tenantId });
+    const parsed = ExtractChecklistInputSchema.safeParse({ docs, correlationId, tenantId });
     if (!parsed.success) {
         throw new ValidationError("Invalid input for checklist extraction", parsed.error);
     }
@@ -60,7 +60,7 @@ export async function extractChecklist(
         // -------------------
         // 3️⃣ Call the LLM (lightweight mini‑prompt)
         // -------------------
-        const rawResponse = await callGeminiMini(renderedPrompt, tenantId, { correlacion_id });
+        const rawResponse = await callGeminiMini(renderedPrompt, tenantId, { correlationId });
 
         // Assume the response is a JSON string representing ChecklistItem[]
         let items: unknown;
@@ -85,12 +85,11 @@ export async function extractChecklist(
         // -------------------
         const durationMs = Date.now() - start;
         await logEvento({
-            nivel: "INFO",
-            origen: "CHECKLIST_EXTRACTOR",
-            accion: "EXTRACT",
-            mensaje: `Extracted ${parsedItems.length} checklist items`,
-            correlacion_id,
-            detalles: { duration_ms: durationMs, doc_count: docs.length }
+            level: "INFO",
+            source: "CHECKLIST_EXTRACTOR",
+            action: "EXTRACT",
+            message: `Extracted ${parsedItems.length} checklist items`, correlationId,
+            details: { duration_ms: durationMs, doc_count: docs.length }
         });
 
         // -------------------
@@ -100,12 +99,11 @@ export async function extractChecklist(
     } catch (error) {
         // Log error before re‑throwing
         await logEvento({
-            nivel: "ERROR",
-            origen: "CHECKLIST_EXTRACTOR",
-            accion: "EXTRACT",
-            mensaje: "Error during checklist extraction",
-            correlacion_id,
-            detalles: { error: (error as Error).message },
+            level: "ERROR",
+            source: "CHECKLIST_EXTRACTOR",
+            action: "EXTRACT",
+            message: "Error during checklist extraction", correlationId,
+            details: { error: (error as Error).message },
             stack: (error as Error).stack
         });
         if (error instanceof AppError) {

@@ -27,19 +27,16 @@ export async function GET(req: NextRequest) {
         const learnedCount = await agent.countDocuments({});
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'CORE_INSIGHTS',
-            accion: 'GET_INSIGHTS',
-            mensaje: `Insights generados para tenant ${tenantId}. Aprendizajes: ${learnedCount}`,
-            correlacion_id,
-            detalles: { count: insights.length, learnedCount }
+            level: 'INFO',
+            source: 'CORE_INSIGHTS',
+            action: 'GET_INSIGHTS',
+            message: `Insights generados para tenant ${tenantId}. Aprendizajes: ${learnedCount}`, correlationId: correlacion_id,
+            details: { count: insights.length, learnedCount }
         });
 
         return NextResponse.json({
             success: true,
-            insights,
-            correlacion_id
-        });
+            insights, correlationId: correlacion_id});
     } catch (error: any) {
         console.error('[CORE_INSIGHTS] Error:', error);
         return NextResponse.json({

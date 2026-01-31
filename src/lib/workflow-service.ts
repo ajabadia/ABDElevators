@@ -12,7 +12,7 @@ export class WorkflowService {
     /**
      * Crea o actualiza una definición de workflow.
      */
-    static async createOrUpdateDefinition(definition: Partial<WorkflowDefinition>, correlacion_id: string) {
+    static async createOrUpdateDefinition(definition: Partial<WorkflowDefinition>, correlationId: string) {
         const validated = WorkflowDefinitionSchema.parse(definition);
         const collection = await getTenantCollection('workflow_definitions');
         const tenantId = collection.tenantId;
@@ -20,29 +20,28 @@ export class WorkflowService {
         // Solo un workflow por tipo de entidad puede ser default
         if (validated.is_default) {
             await collection.updateMany(
-                { entity_type: validated.entity_type },
+                { entityType: validated.entityType },
                 { $set: { is_default: false } }
             );
         }
 
         const query = {
-            entity_type: validated.entity_type,
+            entityType: validated.entityType,
             name: validated.name
         };
 
         const result = await collection.updateOne(
             query,
-            { $set: { ...validated, actualizado: new Date() } },
+            { $set: { ...validated, updatedAt: new Date() } },
             { upsert: true }
         );
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'WORKFLOW_SERVICE',
-            accion: 'UPSERT_DEFINITION',
-            mensaje: `Workflow '${validated.name}' actualizado para tenant ${tenantId}`,
-            correlacion_id,
-            detalles: { name: validated.name, entity_type: validated.entity_type }
+            level: 'INFO',
+            source: 'WORKFLOW_SERVICE',
+            action: 'UPSERT_DEFINITION',
+            message: `Workflow '${validated.name}' actualizado para tenant ${tenantId}`, correlationId,
+            details: { name: validated.name, entity_type: validated.entityType }
         });
 
         return result.upsertedId || result.matchedCount;
@@ -51,28 +50,28 @@ export class WorkflowService {
     /**
      * Lista todas las definiciones para un tenant y tipo.
      */
-    static async listDefinitions(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
+    static async listDefinitions(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
         const collection = await getTenantCollection('workflow_definitions');
-        return await collection.find({ entity_type }, { sort: { actualizado: -1 } }) as WorkflowDefinition[];
+        return await collection.find({ entityType }, { sort: { updatedAt: -1 } }) as WorkflowDefinition[];
     }
 
     /**
      * Obtiene el workflow activo para una entidad.
      */
-    static async getActiveWorkflow(tenantId: string, entity_type: 'PEDIDO' | 'EQUIPO' | 'USUARIO' = 'PEDIDO') {
+    static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
         const collection = await getTenantCollection('workflow_definitions');
-        return await collection.findOne({ entity_type, active: true }) as WorkflowDefinition | null;
+        return await collection.findOne({ entityType, active: true }) as WorkflowDefinition | null;
     }
 
     /**
      * Inicializa un workflow por defecto para un nuevo Tenant (Seeding).
      */
-    static async seedDefaultWorkflow(tenantId: string, industry: any, correlacion_id: string) {
+    static async seedDefaultWorkflow(tenantId: string, industry: any, correlationId: string) {
         const defaultWorkflow: Partial<WorkflowDefinition> = {
             tenantId,
             industry,
             name: 'Flujo Estándar',
-            entity_type: 'PEDIDO',
+            entityType: 'ENTITY',
             is_default: true,
             active: true,
             initial_state: 'ingresado',
@@ -90,6 +89,6 @@ export class WorkflowService {
             ]
         };
 
-        return await this.createOrUpdateDefinition(defaultWorkflow, correlacion_id);
+        return await this.createOrUpdateDefinition(defaultWorkflow, correlationId);
     }
 }

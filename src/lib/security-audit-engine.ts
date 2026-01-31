@@ -31,7 +31,7 @@ export class SecurityAuditEngine {
     /**
      * Ejecuta una auditoría completa del sistema.
      */
-    public async performUniversalAudit(tenantId: string, correlacion_id: string): Promise<AuditReport> {
+    public async performUniversalAudit(tenantId: string, correlationId: string): Promise<AuditReport> {
         const engine = EntityEngine.getInstance();
         const entities = engine.getAllEntities();
         const findings: string[] = [];
@@ -68,12 +68,11 @@ export class SecurityAuditEngine {
         };
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'SECURITY_AUDITOR',
-            accion: 'SYSTEM_AUDIT_COMPLETE',
-            mensaje: `Auditoría universal completada. Score: ${report.securityScore}%`,
-            correlacion_id,
-            detalles: report
+            level: 'INFO',
+            source: 'SECURITY_AUDITOR',
+            action: 'SYSTEM_AUDIT_COMPLETE',
+            message: `Auditoría universal completada. Score: ${report.securityScore}%`, correlationId,
+            details: report
         });
 
         return report;

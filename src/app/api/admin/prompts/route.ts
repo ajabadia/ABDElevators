@@ -83,12 +83,11 @@ export async function POST(req: NextRequest) {
         await collection.insertOne(validated);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'API_PROMPTS',
-            accion: 'CREATE_PROMPT',
-            mensaje: `Nuevo prompt creado: ${validated.key}`,
-            correlacion_id,
-            detalles: { promptKey: validated.key, category: validated.category }
+            level: 'INFO',
+            source: 'API_PROMPTS',
+            action: 'CREATE_PROMPT',
+            message: `Nuevo prompt creado: ${validated.key}`, correlationId: correlacion_id,
+            details: { promptKey: validated.key, category: validated.category }
         });
 
         return NextResponse.json({ success: true, prompt: validated });

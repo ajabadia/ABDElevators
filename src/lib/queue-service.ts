@@ -65,14 +65,14 @@ export class QueueService {
         });
 
         await logEvento({
-            nivel: 'DEBUG',
-            origen: 'QUEUE_SERVICE',
-            accion: 'JOB_ADDED',
-            mensaje: `Trabajo ${type} encolado con ID ${job.id}`,
-            correlacion_id: jobId,
+            level: 'DEBUG',
+            source: 'QUEUE_SERVICE',
+            action: 'JOB_ADDED',
+            message: `Trabajo ${type} encolado con ID ${job.id}`,
+            correlationId: jobId,
             tenantId: payload.tenantId,
             userId: payload.userId,
-            detalles: { jobId: job.id, type }
+            details: { jobId: job.id, type }
         });
 
         return job;

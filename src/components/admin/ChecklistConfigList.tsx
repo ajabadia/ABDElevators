@@ -27,7 +27,7 @@ export const ChecklistConfigList: React.FC = () => {
         method: 'DELETE',
         confirmMessage: (id: string) => {
             const config = configs.find(c => String(c._id) === id);
-            return `¿Estás seguro de que deseas eliminar la configuración "${config?.nombre || id}"?`;
+            return `¿Estás seguro de que deseas eliminar la configuración "${config?.name || id}"?`;
         },
         successMessage: 'Configuración eliminada correctamente.',
         onSuccess: () => refresh()
@@ -39,9 +39,9 @@ export const ChecklistConfigList: React.FC = () => {
             header: 'Nombre',
             render: (config: ChecklistConfig) => (
                 <div>
-                    <div className="font-bold text-slate-900 dark:text-white">{config.nombre}</div>
+                    <div className="font-bold text-slate-900 dark:text-white">{config.name}</div>
                     <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                        {new Date(config.actualizado).toLocaleString()}
+                        {new Date(config.updatedAt).toLocaleString()}
                     </div>
                 </div>
             )
@@ -50,7 +50,7 @@ export const ChecklistConfigList: React.FC = () => {
             header: 'Categorías',
             render: (config: ChecklistConfig) => (
                 <div className="flex gap-1 flex-wrap max-w-xs">
-                    {config.categorias.slice(0, 3).map(cat => (
+                    {config.categories.slice(0, 3).map(cat => (
                         <span
                             key={cat.id}
                             className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase border"
@@ -60,12 +60,12 @@ export const ChecklistConfigList: React.FC = () => {
                                 color: cat.color
                             }}
                         >
-                            {cat.nombre}
+                            {cat.name}
                         </span>
                     ))}
-                    {config.categorias.length > 3 && (
+                    {config.categories.length > 3 && (
                         <span className="text-[10px] text-slate-400 font-bold px-1 py-0.5">
-                            +{config.categorias.length - 3}
+                            +{config.categories.length - 3}
                         </span>
                     )}
                 </div>
@@ -74,7 +74,7 @@ export const ChecklistConfigList: React.FC = () => {
         {
             header: 'Estado',
             render: (config: ChecklistConfig) => (
-                config.activo ? (
+                config.isActive ? (
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1.5 h-6">
                         <CheckCircle size={10} />
                         ACTIVO

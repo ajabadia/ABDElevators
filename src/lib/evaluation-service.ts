@@ -15,27 +15,27 @@ export class EvaluationService {
      */
     static async evaluateSession(
         tenantId: string,
-        correlacion_id: string,
+        correlationId: string,
         query: string,
         generation: string,
         documents: string[],
         trace: string[] = []
     ) {
-        const inicio = Date.now();
+        const start = Date.now();
 
         try {
-            // 1. Faithfulness (Basado en RAG_HALLUCINATION_GRADER)
-            const faithfulness = await this.calculateFaithfulness(tenantId, generation, documents, correlacion_id);
+            // 1. Faithfulness (Based on RAG_HALLUCINATION_GRADER)
+            const faithfulness = await this.calculateFaithfulness(tenantId, generation, documents, correlationId);
 
-            // 2. Answer Relevance (Basado en RAG_ANSWER_GRADER)
-            const answerRelevance = await this.calculateAnswerRelevance(tenantId, query, generation, correlacion_id);
+            // 2. Answer Relevance (Based on RAG_ANSWER_GRADER)
+            const answerRelevance = await this.calculateAnswerRelevance(tenantId, query, generation, correlationId);
 
-            // 3. Context Precision (Basado en RAG_RELEVANCE_GRADER promediado)
-            const contextPrecision = await this.calculateContextPrecision(tenantId, query, documents, correlacion_id);
+            // 3. Context Precision (Based on RAG_RELEVANCE_GRADER averaged)
+            const contextPrecision = await this.calculateContextPrecision(tenantId, query, documents, correlationId);
 
             const evaluation = {
                 tenantId,
-                correlacion_id,
+                correlationId,
                 query,
                 generation,
                 context_chunks: documents,
@@ -55,32 +55,32 @@ export class EvaluationService {
             await db.collection('rag_evaluations').insertOne(validated);
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'EVALUATION_SERVICE',
-                accion: 'EVALUATION_SUCCESS',
-                mensaje: `Evaluación RAG completada para ${correlacion_id}`,
+                level: 'INFO',
+                source: 'EVALUATION_SERVICE',
+                action: 'EVALUATION_SUCCESS',
+                message: `RAG Evaluation completed for ${correlationId}`,
                 tenantId,
-                correlacion_id,
-                detalles: { metrics: validated.metrics, duracion_ms: Date.now() - inicio }
+                correlationId,
+                details: { metrics: validated.metrics, durationMs: Date.now() - start }
             });
 
             return validated;
 
         } catch (error) {
             await logEvento({
-                nivel: 'ERROR',
-                origen: 'EVALUATION_SERVICE',
-                accion: 'EVALUATION_ERROR',
-                mensaje: `Error evaluando sesión RAG: ${(error as Error).message}`,
+                level: 'ERROR',
+                source: 'EVALUATION_SERVICE',
+                action: 'EVALUATION_ERROR',
+                message: `Error evaluating RAG session: ${(error as Error).message}`,
                 tenantId,
-                correlacion_id,
+                correlationId,
                 stack: (error as Error).stack
             });
             throw error;
         }
     }
 
-    private static async calculateFaithfulness(tenantId: string, generation: string, documents: string[], correlacion_id: string): Promise<number> {
+    private static async calculateFaithfulness(tenantId: string, generation: string, documents: string[], correlationId: string): Promise<number> {
         const context = documents.join("\n\n---\n\n");
         const { text: prompt, model } = await PromptService.getRenderedPrompt(
             'RAG_HALLUCINATION_GRADER',
@@ -88,23 +88,23 @@ export class EvaluationService {
             tenantId
         );
 
-        const response = await callGeminiMini(prompt, tenantId, { correlacion_id, model });
+        const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
         try {
             const grade = JSON.parse(response);
             return grade.score === 'yes' ? 1.0 : 0.0;
         } catch {
-            return 0.5; // Incertidumbre
+            return 0.5; // Uncertainty
         }
     }
 
-    private static async calculateAnswerRelevance(tenantId: string, query: string, generation: string, correlacion_id: string): Promise<number> {
+    private static async calculateAnswerRelevance(tenantId: string, query: string, generation: string, correlationId: string): Promise<number> {
         const { text: prompt, model } = await PromptService.getRenderedPrompt(
             'RAG_ANSWER_GRADER',
             { question: query, generation },
             tenantId
         );
 
-        const response = await callGeminiMini(prompt, tenantId, { correlacion_id, model });
+        const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
         try {
             const grade = JSON.parse(response);
             return grade.score === 'yes' ? 1.0 : 0.0;
@@ -113,7 +113,7 @@ export class EvaluationService {
         }
     }
 
-    private static async calculateContextPrecision(tenantId: string, query: string, documents: string[], correlacion_id: string): Promise<number> {
+    private static async calculateContextPrecision(tenantId: string, query: string, documents: string[], correlationId: string): Promise<number> {
         if (documents.length === 0) return 0;
 
         let hits = 0;
@@ -125,7 +125,7 @@ export class EvaluationService {
             );
 
             try {
-                const response = await callGeminiMini(prompt, tenantId, { correlacion_id, model });
+                const response = await callGeminiMini(prompt, tenantId, { correlationId: correlationId, model });
                 const grade = JSON.parse(response);
                 if (grade.score === 'yes') hits++;
             } catch {

@@ -45,7 +45,7 @@ async function setupDatabasePro() {
         // Agregamos TTL (Time To Live) de 180 días para logs de aplicación para cumplir con MongoDB Pro (Storage Optimization)
         await logsDb.collection('logs_aplicacion').createIndex({ timestamp: 1 }, { expireAfterSeconds: 15552000 });
         await logsDb.collection('logs_aplicacion').createIndex({ tenantId: 1, timestamp: -1 });
-        await logsDb.collection('logs_aplicacion').createIndex({ nivel: 1 });
+        await logsDb.collection('logs_aplicacion').createIndex({ level: 1 });
         console.log('✅ Índices en [Logs DB] creados (con TTL de 180 días).');
 
         console.log('\n✨ Configuración MongoDB Pro finalizada con éxito.');

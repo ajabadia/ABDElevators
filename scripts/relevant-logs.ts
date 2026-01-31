@@ -9,7 +9,7 @@ async function checkAllRecentLogs() {
         await client.connect();
         const db = client.db('ABDElevators-Logs');
         const logs = await db.collection('logs_aplicacion')
-            .find({ origen: { $in: ['API_INGEST', 'MIDDLEWARE', 'SECURITY_MIDDLEWARE', 'GEMINI_EMBEDDING', 'GEMINI_MINI'] } })
+            .find({ source: { $in: ['API_INGEST', 'MIDDLEWARE', 'SECURITY_MIDDLEWARE', 'GEMINI_EMBEDDING', 'GEMINI_MINI'] } })
             .sort({ timestamp: -1 })
             .limit(50)
             .toArray();

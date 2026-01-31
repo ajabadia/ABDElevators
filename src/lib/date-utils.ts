@@ -16,7 +16,7 @@ export function formatDateTime(date: Date | string | number): string {
 }
 
 /**
- * Formato largo para cabeceras o detalles: miércoles, 28 de enero de 2026
+ * Formato largo para cabeceras o details: miércoles, 28 de enero de 2026
  */
 export function formatDateLong(date: Date | string | number): string {
     return fnsFormat(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });

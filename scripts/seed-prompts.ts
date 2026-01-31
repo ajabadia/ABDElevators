@@ -107,7 +107,7 @@ Responde ÚNICAMENTE con el array JSON.`,
         template: `Eres un ingeniero técnico especializado en ascensores. Genera un informe profesional basado en la siguiente información validada:
 
 ## DATOS DEL PEDIDO
-- Número de Pedido: {{numeroPedido}}
+- Número de Entity: {{numeroPedido}}
 - Cliente: {{cliente}}
 - Fecha de Ingreso: {{fechaIngreso}}
 

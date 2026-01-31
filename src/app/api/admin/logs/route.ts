@@ -19,15 +19,15 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');
-        const nivel = searchParams.get('nivel'); // ERROR, WARN, INFO, DEBUG
-        const origen = searchParams.get('origen');
+        const level = searchParams.get('level') || searchParams.get('nivel'); // Support both for transition
+        const source = searchParams.get('source') || searchParams.get('origen');
         const search = searchParams.get('search');
-        const tenantIdFilter = searchParams.get('tenantId'); // Optional filter within allowed scope
-        const userId = searchParams.get('userId');
+        const tenantIdFilter = searchParams.get('tenantId');
         const userEmail = searchParams.get('userEmail');
 
         // Contexto de base de datos de LOGS blindado
-        const logColl = await getTenantCollection('logs_aplicacion', session, 'LOGS');
+        // Use 'application_logs' to match logger.ts
+        const logColl = await getTenantCollection('application_logs', session, 'LOGS');
 
         const query: any = {};
 
@@ -40,16 +40,16 @@ export async function GET(req: NextRequest) {
             query.tenantId = tenantIdFilter;
         }
 
-        if (nivel && nivel !== 'ALL') query.nivel = nivel;
-        if (origen) query.origen = { $regex: origen, $options: 'i' };
+        if (level && level !== 'ALL') query.level = level;
+        if (source) query.source = { $regex: source, $options: 'i' };
         if (userEmail) query.userEmail = { $regex: userEmail, $options: 'i' };
 
         if (search) {
             query.$or = [
-                { mensaje: { $regex: search, $options: 'i' } },
-                { accion: { $regex: search, $options: 'i' } },
-                { correlacion_id: { $regex: search, $options: 'i' } },
-                { userEmail: { $regex: search, $options: 'i' } } // Search includes user email now
+                { message: { $regex: search, $options: 'i' } },
+                { action: { $regex: search, $options: 'i' } },
+                { correlationId: { $regex: search, $options: 'i' } },
+                { userEmail: { $regex: search, $options: 'i' } }
             ];
         }
 
@@ -60,8 +60,8 @@ export async function GET(req: NextRequest) {
             });
 
         // Stats rápidos para el header
-        const errorCount = await logColl.countDocuments({ ...query, nivel: 'ERROR' });
-        const warnCount = await logColl.countDocuments({ ...query, nivel: 'WARN' });
+        const errorCount = await logColl.countDocuments({ ...query, level: 'ERROR' });
+        const warnCount = await logColl.countDocuments({ ...query, level: 'WARN' });
 
         return NextResponse.json({
             success: true,

@@ -42,56 +42,75 @@ export async function POST(req: NextRequest) {
     } catch (err) {
         const error = err as Error;
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'STRIPE_WEBHOOK',
-            accion: 'SIGNATURE_VERIFICATION_FAILED',
-            mensaje: `Webhook signature verification failed: ${error.message}`,
-            correlacion_id: 'stripe-webhook-error',
+            level: 'ERROR',
+            source: 'STRIPE_WEBHOOK',
+            action: 'SIGNATURE_VERIFICATION_FAILED',
+            message: `Webhook signature verification failed: ${error.message}`,
+            correlationId: 'stripe-webhook-error',
             stack: error.stack,
         });
         return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
     }
 
-    const correlacion_id = `stripe-${event.id}`;
+    const correlationId = `stripe-${event.id}`;
 
     try {
+        const db = await connectDB();
+
+        // 🛡️ Idempotency Check: Prevenir procesamiento doble del mismo evento
+        const existingEvent = await db.collection('processed_events').findOne({ eventId: event.id });
+        if (existingEvent) {
+            await logEvento({
+                level: 'INFO',
+                source: 'STRIPE_WEBHOOK',
+                action: 'IDEMPOTENCY_BYPASS',
+                message: `Evento Stripe ya procesado anteriormente: ${event.id}`, correlationId,
+            });
+            return NextResponse.json({ received: true, duplicated: true });
+        }
+
         switch (event.type) {
             case 'customer.subscription.created':
             case 'customer.subscription.updated':
-                await handleSubscriptionUpdate(event.data.object as Stripe.Subscription, correlacion_id);
+                await handleSubscriptionUpdate(event.data.object as Stripe.Subscription, correlationId);
                 break;
 
             case 'customer.subscription.deleted':
-                await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, correlacion_id);
+                await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, correlationId);
                 break;
 
             case 'invoice.payment_succeeded':
-                await handlePaymentSucceeded(event.data.object as Stripe.Invoice, correlacion_id);
+                await handlePaymentSucceeded(event.data.object as Stripe.Invoice, correlationId);
                 break;
 
             case 'invoice.payment_failed':
-                await handlePaymentFailed(event.data.object as Stripe.Invoice, correlacion_id);
+                await handlePaymentFailed(event.data.object as Stripe.Invoice, correlationId);
                 break;
 
             default:
                 await logEvento({
-                    nivel: 'DEBUG',
-                    origen: 'STRIPE_WEBHOOK',
-                    accion: 'UNHANDLED_EVENT',
-                    mensaje: `Unhandled event type: ${event.type}`,
-                    correlacion_id,
+                    level: 'DEBUG',
+                    source: 'STRIPE_WEBHOOK',
+                    action: 'UNHANDLED_EVENT',
+                    message: `Unhandled event type: ${event.type}`, correlationId,
                 });
         }
+
+        // Marcar como procesado exitosamente
+        await db.collection('processed_events').insertOne({
+            eventId: event.id,
+            type: event.type,
+            processedAt: new Date(), correlationId
+        });
 
         return NextResponse.json({ received: true });
     } catch (error) {
         const err = error as Error;
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'STRIPE_WEBHOOK',
-            accion: 'PROCESSING_ERROR',
-            mensaje: `Error processing webhook: ${err.message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'STRIPE_WEBHOOK',
+            action: 'PROCESSING_ERROR',
+            message: `Error processing webhook: ${err.message}`, correlationId,
             stack: err.stack,
         });
         return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
@@ -101,7 +120,7 @@ export async function POST(req: NextRequest) {
 /**
  * Maneja creación/actualización de suscripción
  */
-async function handleSubscriptionUpdate(subscription: Stripe.Subscription, correlacion_id: string) {
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription, correlationId: string) {
     const tenantId = subscription.metadata.tenantId;
     if (!tenantId) {
         throw new Error('Missing tenantId in subscription metadata');
@@ -123,12 +142,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, corre
     });
 
     await logEvento({
-        nivel: 'INFO',
-        origen: 'STRIPE_WEBHOOK',
-        accion: 'SUBSCRIPTION_UPDATED',
-        mensaje: `Subscription updated for tenant ${tenantId} to tier ${tier}`,
-        correlacion_id,
-        detalles: {
+        level: 'INFO',
+        source: 'STRIPE_WEBHOOK',
+        action: 'SUBSCRIPTION_UPDATED',
+        message: `Subscription updated for tenant ${tenantId} to tier ${tier}`, correlationId,
+        details: {
             tenantId,
             tier,
             status: subscription.status,
@@ -140,7 +158,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, corre
 /**
  * Maneja cancelación de suscripción
  */
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription, correlacion_id: string) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, correlationId: string) {
     const tenantId = subscription.metadata.tenantId;
     if (!tenantId) {
         throw new Error('Missing tenantId in subscription metadata');
@@ -156,29 +174,27 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, corr
     });
 
     await logEvento({
-        nivel: 'WARN',
-        origen: 'STRIPE_WEBHOOK',
-        accion: 'SUBSCRIPTION_CANCELLED',
-        mensaje: `Subscription cancelled for tenant ${tenantId}, downgraded to FREE`,
-        correlacion_id,
-        detalles: { tenantId, subscriptionId: subscription.id },
+        level: 'WARN',
+        source: 'STRIPE_WEBHOOK',
+        action: 'SUBSCRIPTION_CANCELLED',
+        message: `Subscription cancelled for tenant ${tenantId}, downgraded to FREE`, correlationId,
+        details: { tenantId, subscriptionId: subscription.id },
     });
 }
 
 /**
  * Maneja pago exitoso
  */
-async function handlePaymentSucceeded(invoice: Stripe.Invoice, correlacion_id: string) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, correlationId: string) {
     const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
     const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : (invoice as any).subscription?.id || '';
 
     await logEvento({
-        nivel: 'INFO',
-        origen: 'STRIPE_WEBHOOK',
-        accion: 'PAYMENT_SUCCEEDED',
-        mensaje: `Payment succeeded for customer ${customerId}`,
-        correlacion_id,
-        detalles: {
+        level: 'INFO',
+        source: 'STRIPE_WEBHOOK',
+        action: 'PAYMENT_SUCCEEDED',
+        message: `Payment succeeded for customer ${customerId}`, correlationId,
+        details: {
             customerId,
             subscriptionId,
             amount: invoice.amount_paid / 100,
@@ -190,17 +206,16 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, correlacion_id: s
 /**
  * Maneja pago fallido
  */
-async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: string) {
+async function handlePaymentFailed(invoice: Stripe.Invoice, correlationId: string) {
     const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
     const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : (invoice as any).subscription?.id || '';
 
     await logEvento({
-        nivel: 'ERROR',
-        origen: 'STRIPE_WEBHOOK',
-        accion: 'PAYMENT_FAILED',
-        mensaje: `Payment failed for customer ${customerId}`,
-        correlacion_id,
-        detalles: {
+        level: 'ERROR',
+        source: 'STRIPE_WEBHOOK',
+        action: 'PAYMENT_FAILED',
+        message: `Payment failed for customer ${customerId}`, correlationId,
+        details: {
             customerId,
             subscriptionId,
             amount: invoice.amount_due / 100,
@@ -228,8 +243,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: stri
             if (admin?.email) {
                 // Contar intentos fallidos
                 const failedPayments = await authDb.collection('logs').countDocuments({
-                    origen: 'STRIPE_WEBHOOK',
-                    accion: 'PAYMENT_FAILED',
+                    source: 'STRIPE_WEBHOOK',
+                    action: 'PAYMENT_FAILED',
                     'detalles.customerId': customerId,
                     timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Últimos 30 días
                 });
@@ -255,23 +270,21 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, correlacion_id: stri
                     );
 
                     await logEvento({
-                        nivel: 'ERROR',
-                        origen: 'STRIPE_WEBHOOK',
-                        accion: 'ACCOUNT_SUSPENDED',
-                        mensaje: `Cuenta suspendida por 3 pagos fallidos: ${tenant.tenantId}`,
-                        correlacion_id,
-                        detalles: { tenantId: tenant.tenantId, failedPayments: failedPayments + 1 },
+                        level: 'ERROR',
+                        source: 'STRIPE_WEBHOOK',
+                        action: 'ACCOUNT_SUSPENDED',
+                        message: `Cuenta suspendida por 3 pagos fallidos: ${tenant.tenantId}`, correlationId,
+                        details: { tenantId: tenant.tenantId, failedPayments: failedPayments + 1 },
                     });
                 }
             }
         }
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'STRIPE_WEBHOOK',
-            accion: 'EMAIL_FAILED',
-            mensaje: `Error enviando email de pago fallido: ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'STRIPE_WEBHOOK',
+            action: 'EMAIL_FAILED',
+            message: `Error enviando email de pago fallido: ${(error as Error).message}`, correlationId,
             stack: (error as Error).stack,
         });
     }

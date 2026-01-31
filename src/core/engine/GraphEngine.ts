@@ -37,7 +37,7 @@ export class GraphEngine {
             const params = {
                 id: doc._id.toString(),
                 tenantId: tenantId,
-                name: doc.numero_pedido || doc.nombre || doc.email || 'Sin nombre',
+                name: doc.numero_pedido || doc.name || doc.email || 'Sin nombre',
                 metadata: JSON.stringify(doc)
             };
 
@@ -49,7 +49,7 @@ export class GraphEngine {
 
     /**
      * Crea relaciones automáticas basadas en la ontología.
-     * Ejemplo: Pedido -> Usuario (ANALIZADO_POR)
+     * Ejemplo: Entity -> Usuario (ANALIZADO_POR)
      */
     public async buildImplicitRelationships(tenantId: string) {
         const ontology = EntityEngine.getInstance().getOntologyInfo(); // Mock: need to get full ontology

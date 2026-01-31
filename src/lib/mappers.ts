@@ -1,43 +1,43 @@
-import { Pedido, GenericCase, IndustryType } from '@/lib/schemas';
+import { Entity, GenericCase, IndustryType } from '@/lib/schemas';
 
 /**
- * Mapea un Pedido de Ascensor (Legacy) a un Caso Genérico (Vision 2.0).
+ * Maps an Entity (Legacy Entity) to a Generic Case (Vision 2.0).
  */
-export function mapPedidoToCase(pedido: any, tenantId: string): GenericCase {
+export function mapEntityToCase(entity: any, tenantId: string): GenericCase {
     return {
-        _id: pedido._id?.toString() || '',
+        _id: entity._id?.toString() || '',
         tenantId,
         industry: 'ELEVATORS' as IndustryType,
-        type: 'Mantenimiento',
-        priority: 'MEDIUM', // Valor por defecto para legacy
-        status: pedido.estado === 'analizado' ? 'COMPLETED' : 'IN_PROGRESS',
+        type: 'General',
+        priority: 'MEDIUM', // Default for legacy
+        status: entity.status === 'analyzed' ? 'COMPLETED' : 'IN_PROGRESS',
         metadata: {
             industry_specific: {
-                numero_pedido: pedido.numero_pedido,
-                modelos_detectados: pedido.modelos_detectados,
-                texto_original: pedido.texto_original,
+                identifier: entity.identifier,
+                detectedPatterns: entity.detectedPatterns,
+                originalText: entity.originalText,
             },
             taxonomies: {},
-            tags: ['elevator', 'maintenance'],
+            tags: ['general'],
         },
-        creado: pedido.creado || new Date(),
-        actualizado: new Date(),
-        transitions_history: pedido.transitions_history || [],
+        createdAt: entity.createdAt || new Date(),
+        updatedAt: new Date(),
+        transitions_history: entity.transitions_history || [],
     };
 }
 
 /**
- * Mapea un Caso Genérico a la estructura esperada por la UI de Pedidos (Compatibilidad).
+ * Maps a Generic Case back to the structure expected by the Entity UI (Compatibility).
  */
-export function mapCaseToPedido(genericCase: GenericCase): any {
+export function mapCaseToEntity(genericCase: GenericCase): any {
     if (genericCase.industry !== 'ELEVATORS') return null;
 
     return {
         _id: genericCase._id,
-        numero_pedido: genericCase.metadata.industry_specific.numero_pedido,
-        texto_original: genericCase.metadata.industry_specific.texto_original,
-        modelos_detectados: genericCase.metadata.industry_specific.modelos_detectados,
-        estado: genericCase.status === 'COMPLETED' ? 'analizado' : 'procesando',
-        creado: genericCase.creado,
+        identifier: genericCase.metadata.industry_specific.identifier,
+        originalText: genericCase.metadata.industry_specific.originalText,
+        detectedPatterns: genericCase.metadata.industry_specific.detectedPatterns,
+        status: genericCase.status === 'COMPLETED' ? 'analyzed' : 'processing',
+        createdAt: genericCase.createdAt,
     };
 }

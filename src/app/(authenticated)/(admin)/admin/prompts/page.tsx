@@ -26,49 +26,46 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 
+// Hooks y componentes genéricos
+import { useApiList } from '@/hooks/useApiList';
+import { useApiMutation } from '@/hooks/useApiMutation';
+import { useFormModal } from '@/hooks/useFormModal';
+
 /**
  * AdminPromptsPage: Gestión de Prompts de IA.
  * Fase 7.6: Gestión Dinámica de Prompts.
  * Actualizado con Editor Pro y Visual UI.
  */
 export default function AdminPromptsPage() {
-    const [prompts, setPrompts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedPrompt, setSelectedPrompt] = useState<any | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
+    const modal = useFormModal<any>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory, setShowGlobalHistory] = useState(false);
 
-    const fetchPrompts = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/prompts');
-            if (res.ok) {
-                const data = await res.json();
-                setPrompts(data.prompts || []);
-
-                // Extraer tenants únicos para el filtro
-                if (data.prompts) {
-                    const tenantsList = data.prompts.map((p: any) => ({
-                        id: p.tenantId,
-                        name: p.tenantInfo?.name || p.tenantId
-                    }));
-                    const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as any[];
-                    setUniqueTenants(unique);
-                }
+    // 1. Gestión de datos con hook genérico
+    const {
+        data: prompts = [],
+        isLoading: loading,
+        refresh: fetchPrompts
+    } = useApiList<any>({
+        endpoint: '/api/admin/prompts',
+        dataKey: 'prompts',
+        onSuccess: (data) => {
+            if (data && data.length > 0) {
+                const tenantsList = data.map((p: any) => ({
+                    id: p.tenantId,
+                    name: p.tenantInfo?.name || p.tenantId
+                }));
+                const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as any[];
+                setUniqueTenants(unique);
             }
-        } catch (error) {
-            console.error('Error fetching prompts:', error);
-            toast({ title: "Error", description: "No se pudieron cargar los prompts.", variant: "destructive" });
-        } finally {
-            setLoading(false);
         }
-    };
+    });
 
     useEffect(() => {
-        fetchPrompts();
+        // Inicialización ya manejada por useApiList autoFetch por defecto si no se especifica?
+        // useApiList tiene autoFetch: true por defecto si no se pasa.
     }, []);
 
     const filteredPrompts = prompts.filter(p => {
@@ -78,18 +75,8 @@ export default function AdminPromptsPage() {
         return matchesSearch && matchesTenant;
     });
 
-    const handleCreateNew = () => {
-        setSelectedPrompt(null);
-        setIsEditing(true);
-    };
-
-    const handleEdit = (prompt: Prompt) => {
-        setSelectedPrompt(prompt);
-        setIsEditing(true);
-    };
-
     const handleSaved = () => {
-        setIsEditing(false);
+        modal.close();
         fetchPrompts();
         toast({ title: "Guardado", description: "El prompt se ha actualizado correctamente." });
     };
@@ -110,7 +97,7 @@ export default function AdminPromptsPage() {
                         >
                             <History className="w-4 h-4 mr-2" /> Historial Global
                         </Button>
-                        <Button onClick={handleCreateNew} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
+                        <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
                             <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
                         </Button>
                     </>
@@ -163,10 +150,10 @@ export default function AdminPromptsPage() {
                                     {filteredPrompts.map(p => (
                                         <div
                                             key={(p as any)._id}
-                                            onClick={() => handleEdit(p)}
+                                            onClick={() => modal.openEdit(p)}
                                             className={cn(
                                                 "p-4 rounded-2xl cursor-pointer transition-all group relative flex items-center justify-between",
-                                                selectedPrompt === p && isEditing
+                                                modal.data === p && modal.isOpen
                                                     ? "bg-teal-600 shadow-md shadow-teal-500/20"
                                                     : "hover:bg-slate-50 dark:hover:bg-slate-900"
                                             )}
@@ -174,14 +161,14 @@ export default function AdminPromptsPage() {
                                             <div className="flex items-center gap-4">
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden border",
-                                                    selectedPrompt === p && isEditing ? "bg-white/20 border-white/20" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                                    modal.data === p && modal.isOpen ? "bg-white/20 border-white/20" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                                                 )}>
                                                     {p.tenantInfo?.branding?.logo?.url ? (
                                                         <img src={p.tenantInfo.branding.logo.url} alt="" className="w-full h-full object-contain p-1" />
                                                     ) : (
                                                         <div className={cn(
                                                             "w-full h-full flex items-center justify-center text-[10px] font-black uppercase",
-                                                            selectedPrompt === p && isEditing ? "text-white" : "text-slate-400"
+                                                            modal.data === p && modal.isOpen ? "text-white" : "text-slate-400"
                                                         )}>
                                                             {(p.tenantInfo?.name || p.tenantId).substring(0, 2)}
                                                         </div>
@@ -189,7 +176,7 @@ export default function AdminPromptsPage() {
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className={cn("text-xs font-black tracking-tight flex items-center gap-1", selectedPrompt === p && isEditing ? "text-white" : "text-slate-900 dark:text-white")}>
+                                                        <h3 className={cn("text-xs font-black tracking-tight flex items-center gap-1", modal.data === p && modal.isOpen ? "text-white" : "text-slate-900 dark:text-white")}>
                                                             {p.name}
                                                             {(p as any)._validationError && (
                                                                 <AlertTriangle className="w-3 h-3 text-amber-500" />
@@ -197,7 +184,7 @@ export default function AdminPromptsPage() {
                                                         </h3>
                                                         <span className={cn(
                                                             "text-[9px] font-bold px-1.5 py-0.5 rounded",
-                                                            selectedPrompt === p && isEditing ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                                                            modal.data === p && modal.isOpen ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
                                                         )}>
                                                             V{p.version}
                                                         </span>
@@ -208,17 +195,17 @@ export default function AdminPromptsPage() {
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", selectedPrompt === p && isEditing ? "text-white" : "text-slate-400 font-mono")}>
+                                                        <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", modal.data === p && modal.isOpen ? "text-white" : "text-slate-400 font-mono")}>
                                                             {p.key}
                                                         </p>
                                                         <span className="text-[10px] opacity-20">|</span>
-                                                        <p className={cn("text-[9px] font-bold tracking-tight italic", selectedPrompt === p && isEditing ? "text-white/70" : "text-teal-500/70")}>
+                                                        <p className={cn("text-[9px] font-bold tracking-tight italic", modal.data === p && modal.isOpen ? "text-white/70" : "text-teal-500/70")}>
                                                             {p.tenantInfo?.name || p.tenantId}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <ChevronRight className={cn("w-4 h-4 transition-all", selectedPrompt === p && isEditing ? "text-white" : "text-slate-300 group-hover:text-teal-400")} />
+                                            <ChevronRight className={cn("w-4 h-4 transition-all", modal.data === p && modal.isOpen ? "text-white" : "text-slate-300 group-hover:text-teal-400")} />
                                         </div>
                                     ))}
                                 </div>
@@ -245,13 +232,13 @@ export default function AdminPromptsPage() {
                 {/* Editor Container Section */}
                 <ContentCard noPadding={true} className="lg:col-span-12 xl:col-span-8 flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/20 p-1 rounded-2xl">
                     <AnimatePresence mode="wait">
-                        {isEditing ? (
+                        {modal.isOpen ? (
                             <div className="h-full">
                                 <PromptEditor
-                                    key={selectedPrompt ? (selectedPrompt as any)._id || selectedPrompt.key : 'new-prompt'}
-                                    initialPrompt={selectedPrompt || undefined}
+                                    key={modal.data ? (modal.data as any)._id || modal.data.key : 'new-prompt'}
+                                    initialPrompt={modal.data || undefined}
                                     onSaved={handleSaved}
-                                    onCancel={() => setIsEditing(false)}
+                                    onCancel={() => modal.close()}
                                 />
                             </div>
                         ) : (
@@ -270,7 +257,7 @@ export default function AdminPromptsPage() {
                                     </p>
                                 </div>
                                 <Button
-                                    onClick={handleCreateNew}
+                                    onClick={modal.openCreate}
                                     variant="outline"
                                     className="mt-6 rounded-2xl border-dashed border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
                                 >

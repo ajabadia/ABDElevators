@@ -16,21 +16,21 @@ async function createIndexes() {
         // Let's at least index the hash field for performance.
 
         const docsCol = db.collection('documentos_tecnicos');
-        const hashResult = await docsCol.createIndex({ archivo_md5: 1 }, { background: true });
-        console.log(`Created index on documentos_tecnicos.archivo_md5: ${hashResult}`);
+        const hashResult = await docsCol.createIndex({ fileMd5: 1 }, { background: true });
+        console.log(`Created index on documentos_tecnicos.fileMd5: ${hashResult}`);
 
         // Composite index for tenant lookups
-        const tenantHashResult = await docsCol.createIndex({ tenantId: 1, archivo_md5: 1 }, { background: true });
-        console.log(`Created composite index on documentos_tecnicos.tenantId + archivo_md5: ${tenantHashResult}`);
+        const tenantHashResult = await docsCol.createIndex({ tenantId: 1, fileMd5: 1 }, { background: true });
+        console.log(`Created composite index on documentos_tecnicos.tenantId + fileMd5: ${tenantHashResult}`);
 
 
         // 2. Pedidos
         const pedidosCol = db.collection('pedidos');
-        const pedHashResult = await pedidosCol.createIndex({ archivo_md5: 1 }, { background: true });
-        console.log(`Created index on pedidos.archivo_md5: ${pedHashResult}`);
+        const pedHashResult = await pedidosCol.createIndex({ fileMd5: 1 }, { background: true });
+        console.log(`Created index on pedidos.fileMd5: ${pedHashResult}`);
 
-        const pedTenantHashResult = await pedidosCol.createIndex({ tenantId: 1, archivo_md5: 1 }, { background: true });
-        console.log(`Created composite index on pedidos.tenantId + archivo_md5: ${pedTenantHashResult}`);
+        const pedTenantHashResult = await pedidosCol.createIndex({ tenantId: 1, fileMd5: 1 }, { background: true });
+        console.log(`Created composite index on pedidos.tenantId + fileMd5: ${pedTenantHashResult}`);
 
         console.log('All indexes created successfully.');
     } catch (error) {

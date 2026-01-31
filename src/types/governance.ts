@@ -8,7 +8,7 @@ export interface AIDecisionAudit {
     confidence: number;
     status: 'executed' | 'blocked' | 'pending_review' | 'overridden';
     tenantId: string;
-    correlacion_id: string;
+    correlationId: string;
 }
 
 export interface GovernancePolicy {

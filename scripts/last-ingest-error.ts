@@ -9,7 +9,7 @@ async function checkIngestLogs() {
         await client.connect();
         const db = client.db('ABDElevators-Logs');
         const log = await db.collection('logs_aplicacion')
-            .findOne({ origen: 'API_INGEST', nivel: 'ERROR' }, { sort: { timestamp: -1 } });
+            .findOne({ source: 'API_INGEST', level: 'ERROR' }, { sort: { timestamp: -1 } });
 
         if (log) {
             console.log("LAST INGEST ERROR:");

@@ -29,7 +29,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [deduplicated, setDeduplicated] = useState(false); // Nueva bandera
-    const [tiposDocs, setTiposDocs] = useState<{ nombre: string }[]>([]);
+    const [tiposDocs, setTiposDocs] = useState<{ name: string }[]>([]);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -195,8 +195,8 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                     </SelectTrigger>
                                     <SelectContent>
                                         {tiposDocs.map((t) => (
-                                            <SelectItem key={t.nombre} value={t.nombre.toLowerCase()}>
-                                                {t.nombre}
+                                            <SelectItem key={t.name} value={t.name.toLowerCase()}>
+                                                {t.name}
                                             </SelectItem>
                                         ))}
                                         {tiposDocs.length === 0 && (

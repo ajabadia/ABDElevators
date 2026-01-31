@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
         // 🛡️ Rate Limiting (Regla #9 Hardening)
         // Evitamos rate limit en prefetches de Next.js para mejorar performance
         const isPrefetch = request.headers.get('Purpose') === 'prefetch' || request.headers.get('Next-Purpose') === 'prefetch';
-        const isApiOrAdmin = pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/pedidos');
+        const isApiOrAdmin = pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/entities');
 
         if (isApiOrAdmin && !isPublicPath && !isPrefetch && process.env.NODE_ENV !== 'development') {
             const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
@@ -64,12 +64,12 @@ export async function middleware(request: NextRequest) {
 
             if (!rate.success) {
                 await logEvento({
-                    nivel: 'WARN',
-                    origen: 'SECURITY_MIDDLEWARE',
-                    accion: 'RATE_LIMIT_EXCEEDED',
-                    mensaje: `Rate limit excedido para: ${rateKey}`,
-                    correlacion_id: crypto.randomUUID(),
-                    detalles: { rateKey, pathname, currentLimit: limit }
+                    level: 'WARN',
+                    source: 'SECURITY_MIDDLEWARE',
+                    action: 'RATE_LIMIT_EXCEEDED',
+                    message: `Rate limit excedido para: ${rateKey}`,
+                    correlationId: crypto.randomUUID(),
+                    details: { rateKey, pathname, currentLimit: limit }
                 });
 
                 // Si es una navegación (browser), redirigir a página de error bonita
@@ -96,13 +96,13 @@ export async function middleware(request: NextRequest) {
             }
         }
 
-        // 🔄 Redirección si ya está logueado e intenta ir a login
+        // 🔄 Redirection if already logged in and trying to go to login
         if (session && pathname === '/login') {
-            const target = session.user.role === 'INGENIERIA' ? '/admin/documentos' : '/pedidos';
+            const target = session.user.role === 'INGENIERIA' ? '/admin/knowledge-assets' : '/entities';
             return NextResponse.redirect(new URL(target, request.url));
         }
 
-        // Si no está autenticado y intenta acceder a ruta protegida
+        // If not authenticated and trying to access protected route
         if (!session && !isPublicPath) {
             if (pathname.startsWith('/api')) {
                 return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -110,42 +110,42 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // Control de acceso basado en roles
+        // Role-based access control
         if (session) {
             const userRole = session.user?.role;
 
-            // 🛡️ Restricción SUPER_ADMIN: Acceso total (bypass checks)
+            // 🛡️ SUPER_ADMIN Restriction: Full access (bypass checks)
             if (userRole === 'SUPER_ADMIN') {
-                // Continúa
+                // Continue
             } else {
-                // ADMIN normal: Acceso a todo /admin y /pedidos
-                // TECNICO: Solo /pedidos, /perfil y comunes
-                // INGENIERIA: Solo /admin/documentos (read-only) y comunes
+                // Regular ADMIN: Access to all /admin and /entities
+                // TECHNICIAN: Only /entities, /profile and common routes
+                // ENGINEERING: Only /admin/knowledge-assets (read-only) and common routes
 
                 if (pathname.startsWith('/admin')) {
-                    const isEngineeringDocs = pathname.startsWith('/admin/documentos') && userRole === 'INGENIERIA';
+                    const isEngineeringDocs = pathname.startsWith('/admin/knowledge-assets') && userRole === 'INGENIERIA';
                     const isAdmin = userRole === 'ADMIN';
 
                     if (!isAdmin && !isEngineeringDocs) {
-                        return NextResponse.redirect(new URL('/pedidos', request.url));
+                        return NextResponse.redirect(new URL('/entities', request.url));
                     }
 
-                    // Restricción específica para INGENIERIA en Documentos (read-only)
+                    // Specific restriction for ENGINEERING on Knowledge Assets (read-only)
                     if (isEngineeringDocs && request.method !== 'GET') {
                         return NextResponse.json({ error: 'Acceso de solo lectura para Ingeniería' }, { status: 403 });
                     }
                 }
 
-                // Restricción de /pedidos para Ingeniería
-                if (pathname.startsWith('/pedidos') && userRole === 'INGENIERIA') {
-                    return NextResponse.redirect(new URL('/admin/documentos', request.url));
+                // Restriction of /entities for Engineering
+                if (pathname.startsWith('/entities') && userRole === 'INGENIERIA') {
+                    return NextResponse.redirect(new URL('/admin/knowledge-assets', request.url));
                 }
             }
         }
 
         // Security & Correlation Headers (Regla #9)
         const response = NextResponse.next();
-        const correlacion_id_resp = crypto.randomUUID();
+        const correlationIdResp = crypto.randomUUID();
 
         // ⏱️ Medir latencia (Regla #8 Performance)
         const start = Date.now();
@@ -160,7 +160,7 @@ export async function middleware(request: NextRequest) {
         response.headers.set('X-Frame-Options', 'DENY');
         response.headers.set('X-XSS-Protection', '1; mode=block');
         response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        response.headers.set('X-Correlacion-ID', correlacion_id_resp);
+        response.headers.set('X-Correlation-ID', correlationIdResp);
         response.headers.set('X-Request-Start', start.toString());
 
         if (process.env.NODE_ENV === 'production') {
@@ -172,17 +172,17 @@ export async function middleware(request: NextRequest) {
         console.error('Middleware Critical Error:', error);
         // Intentar loguear el error si es posible
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'MIDDLEWARE',
-            accion: 'UNCAUGHT_EXCEPTION',
-            mensaje: error.message || 'Error desconocido en middleware',
-            correlacion_id: 'mw-fail',
+            level: 'ERROR',
+            source: 'MIDDLEWARE',
+            action: 'UNCAUGHT_EXCEPTION',
+            message: error.message || 'Error desconocido en middleware',
+            correlationId: 'mw-fail',
             stack: error.stack
         }).catch(() => { });
 
         // En caso de fallo crítico del middleware, bloqueamos por seguridad.
         return NextResponse.json(
-            { error: 'Internal Server Error (Security Middleware)', correlacion_id: 'mw-fail' },
+            { error: 'Internal Server Error (Security Middleware)', correlationId: 'mw-fail' },
             { status: 500 }
         );
     }

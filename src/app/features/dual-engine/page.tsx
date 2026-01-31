@@ -122,7 +122,7 @@ export default function DualEnginePage() {
                             <Step
                                 number="5"
                                 title="Estructuración de Datos"
-                                description="El texto final se estructura en JSON con metadatos: tipo de componente, modelo, especificaciones técnicas, referencias normativas."
+                                description="El texto final se estructura en JSON con metadatos: type de componente, modelo, especificaciones técnicas, referencias normativas."
                                 icon={<Table size={20} />}
                             />
                         </div>

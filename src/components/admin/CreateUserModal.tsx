@@ -41,10 +41,10 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
 
     const [formData, setFormData] = useState({
         email: "",
-        nombre: "",
-        apellidos: "",
-        puesto: "",
-        rol: "TECNICO" as "SUPER_ADMIN" | "ADMIN" | "TECNICO" | "INGENIERIA",
+        firstName: "",
+        lastName: "",
+        jobTitle: "",
+        role: "TECHNICAL" as "SUPER_ADMIN" | "ADMIN" | "TECHNICAL" | "ENGINEERING",
         tenantId: "", // Solo para SuperAdmins
         activeModules: ["TECHNICAL", "RAG"] as string[],
     });
@@ -54,7 +54,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         setLoading(true);
 
         try {
-            const res = await fetch('/api/admin/usuarios', {
+            const res = await fetch('/api/admin/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -63,7 +63,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             const data = await res.json();
 
             if (res.ok) {
-                setTempPassword(data.temp_password);
+                setTempPassword(data.tempPassword);
                 toast({
                     title: "Usuario creado",
                     description: `Usuario ${formData.email} creado exitosamente`,
@@ -92,10 +92,10 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         }
         setFormData({
             email: "",
-            nombre: "",
-            apellidos: "",
-            puesto: "",
-            rol: "TECNICO",
+            firstName: "",
+            lastName: "",
+            jobTitle: "",
+            role: "TECHNICAL",
             tenantId: "",
             activeModules: ["TECHNICAL", "RAG"],
         });
@@ -139,21 +139,21 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="nombre">Nombre *</Label>
+                                <Label htmlFor="firstName">First Name *</Label>
                                 <Input
-                                    id="nombre"
+                                    id="firstName"
                                     required
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="apellidos">Apellidos *</Label>
+                                <Label htmlFor="lastName">Last Name *</Label>
                                 <Input
-                                    id="apellidos"
+                                    id="lastName"
                                     required
-                                    value={formData.apellidos}
-                                    onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -184,20 +184,20 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="puesto">Puesto</Label>
+                            <Label htmlFor="jobTitle">Job Title</Label>
                             <Input
-                                id="puesto"
-                                placeholder="Ej: Técnico de Mantenimiento"
-                                value={formData.puesto}
-                                onChange={(e) => setFormData({ ...formData, puesto: e.target.value })}
+                                id="jobTitle"
+                                placeholder="Ej: Maintenance Technician"
+                                value={formData.jobTitle}
+                                onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="rol">Rol *</Label>
+                            <Label htmlFor="role">Role *</Label>
                             <Select
-                                value={formData.rol}
-                                onValueChange={(value: any) => setFormData({ ...formData, rol: value })}
+                                value={formData.role}
+                                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -205,8 +205,8 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                                 <SelectContent>
                                     {isSuperAdmin && <SelectItem value="SUPER_ADMIN">Super Administrador</SelectItem>}
                                     <SelectItem value="ADMIN">Administrador</SelectItem>
-                                    <SelectItem value="TECNICO">Técnico</SelectItem>
-                                    <SelectItem value="INGENIERIA">Ingeniería</SelectItem>
+                                    <SelectItem value="TECHNICAL">Técnico</SelectItem>
+                                    <SelectItem value="ENGINEERING">Ingeniería</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

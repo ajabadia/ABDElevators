@@ -22,14 +22,14 @@ async function runBenchmark() {
     const results: any[] = [];
 
     for (const queryObj of TEST_QUERIES) {
-        const correlacion_id = crypto.randomUUID();
+        const correlationId = crypto.randomUUID();
         console.log(`\n🔍 Query: "${queryObj.q}" (${queryObj.lang})`);
 
         // 1. Gemini Search (Standard)
         const startGemini = Date.now();
         let geminiResults = [];
         try {
-            geminiResults = await performTechnicalSearch(queryObj.q, tenantId, correlacion_id, 3);
+            geminiResults = await performTechnicalSearch(queryObj.q, tenantId, correlationId, 3);
         } catch (e) {
             console.error('   ❌ Gemini Search failed:', (e as Error).message);
         }
@@ -41,7 +41,7 @@ async function runBenchmark() {
         try {
             // Force ENABLE_LOCAL_EMBEDDINGS for the script
             process.env.ENABLE_LOCAL_EMBEDDINGS = 'true';
-            bgeResults = await performMultilingualSearch(queryObj.q, tenantId, correlacion_id, 3);
+            bgeResults = await performMultilingualSearch(queryObj.q, tenantId, correlationId, 3);
         } catch (e) {
             console.error('   ❌ BGE-M3 Search failed:', (e as Error).message);
         }
@@ -51,7 +51,7 @@ async function runBenchmark() {
         const startHybrid = Date.now();
         let hybridResults = [];
         try {
-            hybridResults = await hybridSearch(queryObj.q, tenantId, correlacion_id, 3);
+            hybridResults = await hybridSearch(queryObj.q, tenantId, correlationId, 3);
         } catch (e) {
             console.error('   ❌ Hybrid Search failed:', (e as Error).message);
         }

@@ -110,12 +110,11 @@ export async function PUT(req: NextRequest) {
         );
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TENANT_NOTIFICATIONS',
-            accion: 'UPDATE_CONFIG',
-            mensaje: `Configuración de notificaciones actualizada por ${session.user?.email}`,
-            correlacion_id,
-            detalles: { tenantId, userId }
+            level: 'INFO',
+            source: 'TENANT_NOTIFICATIONS',
+            action: 'UPDATE_CONFIG',
+            message: `Configuración de notificaciones actualizada por ${session.user?.email}`, correlationId: correlacion_id,
+            details: { tenantId, userId }
         });
 
         return NextResponse.json({ success: true });

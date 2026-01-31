@@ -14,27 +14,27 @@ export const DocumentChunkSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string().optional(), // 'global' if shared
     industry: IndustryTypeSchema.default('ELEVATORS'),
-    tipo_componente: z.string(),
-    modelo: z.string(),
-    origen_doc: z.string(),
-    tipo_documento_id: z.string().optional(), // Referencia al maestro de tipos
-    version_doc: z.string(),
-    fecha_revision: z.date(),
-    pagina_aproximada: z.number().optional(),
-    texto_chunk: z.string(),
-    texto_traducido: z.string().optional(), // Traducción técnica al Castellano (Phase 21.1)
-    texto_antes: z.string().optional(),
-    texto_despues: z.string().optional(),
+    componentType: z.string(),
+    model: z.string(),
+    sourceDoc: z.string(),
+    documentTypeId: z.string().optional(), // Referencia al maestro de tipos
+    version: z.string(),
+    revisionDate: z.date(),
+    approxPage: z.number().optional(),
+    chunkText: z.string(),
+    translatedText: z.string().optional(), // Traducción técnica al Castellano (Phase 21.1)
+    textBefore: z.string().optional(),
+    textAfter: z.string().optional(),
     language: z.string().default('es'), // Idioma detectado del documento
     embedding: z.array(z.number()), // Gemini 004
     embedding_multilingual: z.array(z.number()).optional(), // BGE-M3 (Phase 21.1)
 
     // Metadata para Dual-Indexing (Shadow Chunks)
-    is_shadow: z.boolean().default(false).optional(),
-    original_lang: z.string().optional(),
-    ref_chunk_id: z.any().optional(),
+    isShadow: z.boolean().default(false).optional(),
+    originalLang: z.string().optional(),
+    refChunkId: z.any().optional(),
 
-    creado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
 });
 
 export const TaxonomyValueSchema = z.object({
@@ -54,7 +54,7 @@ export const TaxonomySchema = z.object({
     multiple: z.boolean().default(false),
     required: z.boolean().default(false),
     active: z.boolean().default(true),
-    creado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
 });
 
 /**
@@ -69,17 +69,17 @@ export const WorkflowLogSchema = z.object({
     role: z.string(),
     comment: z.string().optional(),
     signature: z.string().optional(),
-    correlacion_id: z.string().optional(),
+    correlationId: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
 });
 
 export const RiskFindingSchema = z.object({
     id: z.string(),
-    tipo: z.enum(['SEGURIDAD', 'COMPATIBILIDAD', 'LEGAL', 'NORMATIVA', 'GENERAL']),
-    severidad: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
-    mensaje: z.string(),
-    referencia_rag: z.string().optional(),
-    sugerencia: z.string().optional(),
+    type: z.enum(['SECURITY', 'COMPATIBILITY', 'LEGAL', 'REGULATORY', 'GENERAL']),
+    severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+    message: z.string(),
+    ragReference: z.string().optional(),
+    suggestion: z.string().optional(),
 });
 
 export const GenericCaseSchema = z.object({
@@ -97,33 +97,33 @@ export const GenericCaseSchema = z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
     }),
     transitions_history: z.array(WorkflowLogSchema).default([]),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
 });
 
-export const InviteSchema = z.object({
+export const UserInviteSchema = z.object({
     _id: z.any().optional(),
     email: z.string().email(),
     tenantId: z.string(),
     industry: IndustryTypeSchema.default('ELEVATORS'),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     token: z.string(),
-    invitadoPor: z.string(),
-    estado: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'PENDIENTE']).default('PENDIENTE'), // 'PENDIENTE' legacy
-    expira: z.date(),
-    creado: z.date().default(() => new Date()),
+    invitedBy: z.string(),
+    status: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED']), // 'PENDIENTE' legacy
+    expiresAt: z.date(),
+    createdAt: z.date().default(() => new Date()),
 });
 
 export type GenericCase = z.infer<typeof GenericCaseSchema>;
 export type RiskFinding = z.infer<typeof RiskFindingSchema>;
-export type UserInvite = z.infer<typeof InviteSchema>; // Exported as UserInvite to avoid name clashes
+export type UserInvite = z.infer<typeof UserInviteSchema>; // Exported as UserInvite to avoid name clashes
 export type WorkflowLog = z.infer<typeof WorkflowLogSchema>;
 
 export const AcceptInviteSchema = z.object({
     token: z.string(),
     password: z.string().min(8),
-    nombre: z.string().min(2),
-    apellidos: z.string().min(2),
+    firstName: z.string().min(2),
+    lastName: z.string().min(2),
 });
 
 export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
@@ -140,7 +140,7 @@ export const WorkflowStateSchema = z.object({
     is_final: z.boolean().default(false),
     can_edit: z.boolean().default(true), // ¿Se pueden editar datos en este estado?
     requires_validation: z.boolean().default(false), // ¿Bloquea el flujo hasta validación humana?
-    roles_allowed: z.array(z.string()).default(['ADMIN', 'TECNICO']),
+    roles_allowed: z.array(z.string()).default(['ADMIN', 'TECHNICAL']),
 });
 
 export const WorkflowTransitionSchema = z.object({
@@ -163,14 +163,14 @@ export const WorkflowDefinitionSchema = z.object({
     tenantId: z.string(),
     industry: IndustryTypeSchema,
     name: z.string(),
-    entity_type: z.enum(['PEDIDO', 'EQUIPO', 'USUARIO']).default('PEDIDO'),
+    entityType: z.enum(['ENTITY', 'EQUIPMENT', 'USER']).default('ENTITY'),
     states: z.array(WorkflowStateSchema),
     transitions: z.array(WorkflowTransitionSchema),
     initial_state: z.string(),
     is_default: z.boolean().default(false),
     active: z.boolean().default(true),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
 });
 
 export type WorkflowState = z.infer<typeof WorkflowStateSchema>;
@@ -178,42 +178,45 @@ export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
 export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 
 /**
- * Esquema para Pedidos de Ascensores (Legacy compatibility wrapper)
+ * Esquema para Entidades (Legacy Entity compatibility wrapper)
  */
-export const PedidoSchema = z.object({
+export const EntitySchema = z.object({
     _id: z.any().optional(),
-    numero_pedido: z.string(),
-    nombre_archivo: z.string().optional(),
-    texto_original: z.string(),
-    modelos_detectados: z.array(z.object({
-        tipo: z.string(),
-        modelo: z.string(),
+    identifier: z.string(),
+    filename: z.string().optional(),
+    originalText: z.string(),
+    detectedPatterns: z.array(z.object({
+        type: z.string(),
+        model: z.string(),
     })),
-    fecha_analisis: z.date().default(() => new Date()),
-    estado: z.string().default('ingresado'),
-    error_mensaje: z.string().nullable().optional(),
+    analysisDate: z.date().default(() => new Date()),
+    status: z.string().default('received'),
+    isValidated: z.boolean().default(false),
+    client: z.string().optional(),
+    receivedAt: z.date().optional(),
+    errorMessage: z.string().nullable().optional(),
     tenantId: z.string().optional(), // Inyectado por el middleware/helper
     metadata: z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
     }).optional(),
     transitions_history: z.array(WorkflowLogSchema).default([]),
-    archivo_md5: z.string().optional(),
-    creado: z.date().default(() => new Date()),
+    fileMd5: z.string().optional(),
+    createdAt: z.date().default(() => new Date()),
 });
 
-export type Pedido = z.infer<typeof PedidoSchema>;
+export type Entity = z.infer<typeof EntitySchema>;
 
 /**
  * Esquema para Auditoría RAG (Trazabilidad)
  * Regla de Oro #4
  */
-export const AuditoriaRagSchema = z.object({
+export const RagAuditSchema = z.object({
     _id: z.any().optional(),
-    correlacion_id: z.string().uuid(),
-    fase: z.string(),                    // 'EXTRACCION_MODELOS', 'VECTOR_SEARCH', 'REPORTE'
+    correlationId: z.string().uuid(),
+    phase: z.string(),                    // 'EXTRACCION_MODELOS', 'VECTOR_SEARCH', 'REPORTE'
     input: z.any(),                      // prompt o query
     output: z.any(),                     // respuesta Gemini o resultados search
-    duracion_ms: z.number(),
+    durationMs: z.number(),
     token_usage: z.object({
         prompt: z.number(),
         completion: z.number(),
@@ -228,7 +231,7 @@ export const AuditoriaRagSchema = z.object({
  * Esquema para Auditoría de Ingesta (Fase "Audit Trail Robusto" - Ingesta)
  * Registra quién subió qué, desde dónde y cuándo.
  */
-export const AuditIngestSchema = z.object({
+export const IngestAuditSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
     performedBy: z.string(), // Email o ID del usuario
@@ -242,7 +245,7 @@ export const AuditIngestSchema = z.object({
     docId: z.any().optional(), // ID en documentos_tecnicos
 
     // Metadata
-    correlacion_id: z.string(),
+    correlationId: z.string(),
     status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE']),
     details: z.object({
         chunks: z.number().default(0),
@@ -257,7 +260,7 @@ export const AuditIngestSchema = z.object({
 export const RagEvaluationSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    correlacion_id: z.string().uuid(),
+    correlationId: z.string().uuid(),
     query: z.string(),
     generation: z.string(),
     context_chunks: z.array(z.string()),
@@ -276,52 +279,52 @@ export const RagEvaluationSchema = z.object({
     timestamp: z.date().default(() => new Date()),
 });
 
-export type TipoDocumento = z.infer<typeof TipoDocumentoSchema>;
+export type DocumentType = z.infer<typeof DocumentTypeSchema>;
 
 /**
  * Esquema para Logs de Aplicación
  */
-export const LogAplicacionSchema = z.object({
+export const ApplicationLogSchema = z.object({
     _id: z.any().optional(),
-    nivel: z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR']),
-    origen: z.string(),
-    accion: z.string(),
-    mensaje: z.string(),
-    correlacion_id: z.string(),
-    detalles: z.any().optional(),
+    level: z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR']),
+    source: z.string(),
+    action: z.string(),
+    message: z.string(),
+    correlationId: z.string(),
+    details: z.any().optional(),
     stack: z.string().optional(),
     timestamp: z.date(),
 });
 
 /**
- * Esquema para Documentos Técnicos (metadatos)
+ * Esquema para Activos de Conocimiento (metadatos)
  */
-export const DocumentoTecnicoSchema = z.object({
+export const KnowledgeAssetSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    nombre_archivo: z.string(),
-    tipo_componente: z.string(),
-    modelo: z.string(),
+    filename: z.string(),
+    componentType: z.string(),
+    model: z.string(),
     version: z.string(),
-    fecha_revision: z.date(),
+    revisionDate: z.date(),
     language: z.string().default('es'), // Idioma principal detectado
-    estado: z.enum(['vigente', 'obsoleto', 'borrador']),
-    cloudinary_url: z.string().optional(),
-    cloudinary_public_id: z.string().optional(),
-    archivo_md5: z.string().optional(), // Para de-duplicación y ahorro de tokens
-    total_chunks: z.number(),
-    creado: z.date().default(() => new Date()),
+    status: z.enum(['vigente', 'obsoleto', 'borrador']),
+    cloudinaryUrl: z.string().optional(),
+    cloudinaryPublicId: z.string().optional(),
+    fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
+    totalChunks: z.number(),
+    createdAt: z.date().default(() => new Date()),
 });
 
 /**
  * Esquema para Tipos de Documento (configurables por admin)
  */
-export const TipoDocumentoSchema = z.object({
+export const DocumentTypeSchema = z.object({
     _id: z.any().optional(),
-    nombre: z.string(),
-    descripcion: z.string().optional(),
-    activo: z.boolean().default(true),
-    creado: z.date().default(() => new Date()),
+    name: z.string(),
+    description: z.string().optional(),
+    isActive: z.boolean().default(true),
+    createdAt: z.date().default(() => new Date()),
 });
 
 /**
@@ -330,7 +333,7 @@ export const TipoDocumentoSchema = z.object({
 export const TenantAccessSchema = z.object({
     tenantId: z.string(),
     name: z.string(),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     industry: IndustryTypeSchema.default('ELEVATORS'),
 });
 
@@ -346,16 +349,16 @@ export const UserNotificationPreferenceSchema = z.object({
 /**
  * Esquema para Usuarios (extendido con perfil completo)
  */
-export const UsuarioSchema = z.object({
+export const UserSchema = z.object({
     _id: z.any().optional(),
     email: z.string().email(),
     password: z.string(),
-    nombre: z.string(),
-    apellidos: z.string(),
-    puesto: z.string().optional(),
-    foto_url: z.string().url().optional(),
-    foto_cloudinary_id: z.string().optional(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']), // Rol principal/default
+    firstName: z.string(),
+    lastName: z.string(),
+    jobTitle: z.string().optional(),
+    photoUrl: z.string().url().optional(),
+    photoCloudinaryId: z.string().optional(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']), // Role principal/default
     tenantId: z.string(), // Tenant actual/default
     industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
@@ -366,20 +369,20 @@ export const UsuarioSchema = z.object({
     // Notificaciones (Fase 23.5)
     notificationPreferences: z.array(UserNotificationPreferenceSchema).optional(),
 
-    activo: z.boolean().default(true),
-    creado: z.date(),
-    modificado: z.date(),
+    isActive: z.boolean().default(true),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 });
 
 /**
  * Esquema para Actualización de Perfil (Usuario)
  */
 export const UpdateProfileSchema = z.object({
-    nombre: z.string().min(2, 'Nombre demasiado corto').optional(),
-    apellidos: z.string().min(2, 'Apellidos demasiado cortos').optional(),
-    puesto: z.string().optional(),
-    foto_url: z.string().url().optional(),
-    foto_cloudinary_id: z.string().optional(),
+    firstName: z.string().min(2, 'Nombre demasiado corto').optional(),
+    lastName: z.string().min(2, 'Apellidos demasiado cortos').optional(),
+    jobTitle: z.string().optional(),
+    photoUrl: z.string().url().optional(),
+    photoCloudinaryId: z.string().optional(),
 });
 
 /**
@@ -398,10 +401,10 @@ export const ChangePasswordSchema = z.object({
  */
 export const CreateUserSchema = z.object({
     email: z.string().email('Email inválido'),
-    nombre: z.string().min(2, 'Nombre requerido'),
-    apellidos: z.string().min(2, 'Apellidos requeridos'),
-    puesto: z.string().optional(),
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']),
+    firstName: z.string().min(2, 'Nombre requerido'),
+    lastName: z.string().min(2, 'Apellidos requeridos'),
+    jobTitle: z.string().optional(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 });
 
@@ -409,25 +412,25 @@ export const CreateUserSchema = z.object({
  * Esquema para Actualización de Usuario (Admin)
  */
 export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
-    rol: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVO', 'TECNICO', 'INGENIERIA']).optional(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']).optional(),
     activeModules: z.array(z.string()).optional(),
-    activo: z.boolean().optional(),
+    isActive: z.boolean().optional(),
 });
 
 /**
  * Esquema para Documentos de Usuario
  */
-export const DocumentoUsuarioSchema = z.object({
+export const UserDocumentSchema = z.object({
     _id: z.any().optional(),
-    usuario_id: z.string(),
-    nombre_original: z.string(),
-    nombre_guardado: z.string(),
-    cloudinary_url: z.string(),
-    cloudinary_public_id: z.string(),
-    tipo_mime: z.string(),
-    tamanio_bytes: z.number(),
-    descripcion: z.string().optional(),
-    creado: z.date(),
+    userId: z.string(),
+    originalName: z.string(),
+    savedName: z.string(),
+    cloudinaryUrl: z.string(),
+    cloudinaryPublicId: z.string(),
+    mimeType: z.string(),
+    sizeBytes: z.number(),
+    description: z.string().optional(),
+    createdAt: z.date(),
 });
 
 /**
@@ -498,13 +501,13 @@ export const TenantConfigSchema = z.object({
             email: z.string().optional(), // Validado como email si canal es EMAIL
         }).optional(),
     }).optional(),
-    creado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
 });
 
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;
-export type DocumentoTecnico = z.infer<typeof DocumentoTecnicoSchema>;
-export type Usuario = z.infer<typeof UsuarioSchema>;
-export type DocumentoUsuario = z.infer<typeof DocumentoUsuarioSchema>;
+export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type UserDocument = z.infer<typeof UserDocumentSchema>;
 
 
 /**
@@ -513,11 +516,11 @@ export type DocumentoUsuario = z.infer<typeof DocumentoUsuarioSchema>;
 export const UsageLogSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    tipo: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED']),
-    valor: z.number(),                  // Cantidad (tokens, bytes, etc)
-    recurso: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
-    descripcion: z.string().optional(),
-    correlacion_id: z.string().optional(),
+    type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED']),
+    value: z.number(),                  // Cantidad (tokens, bytes, etc)
+    resource: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
+    description: z.string().optional(),
+    correlationId: z.string().optional(),
     metadata: z.record(z.string(), z.any()).optional(),
     timestamp: z.date().default(() => new Date()),
 });
@@ -841,7 +844,7 @@ export const TenantConfigHistorySchema = z.object({
     performedBy: z.string(), // ID del Usuario/Admin
     ip: z.string().optional(),
     userAgent: z.string().optional(),
-    correlacion_id: z.string(),
+    correlationId: z.string(),
 
     timestamp: z.date().default(() => new Date()),
 });
@@ -902,11 +905,11 @@ export const MfaConfigSchema = z.object({
 
 export const ChecklistCategorySchema = z.object({
     id: z.string(),
-    nombre: z.string(),
+    name: z.string(),
     color: z.string().optional(),
     keywords: z.array(z.string()).default([]),
-    prioridad: z.number().default(1),
-    icono: z.string().optional(),
+    priority: z.number().default(1),
+    icon: z.string().optional(),
 });
 
 export const ChecklistItemSchema = z.object({
@@ -914,67 +917,67 @@ export const ChecklistItemSchema = z.object({
     categoryId: z.string().nullable().optional(),
     description: z.string().min(1),
     notes: z.string().optional(),
-    icono: z.string().optional(),
+    icon: z.string().optional(),
 });
 
 export const ChecklistConfigSchema = z.object({
     _id: z.any().optional(),
-    nombre: z.string(),
-    categorias: z.array(ChecklistCategorySchema).default([]),
+    name: z.string(),
+    categories: z.array(ChecklistCategorySchema).default([]),
     items: z.array(ChecklistItemSchema).default([]),
-    workflow_orden: z.array(z.string()).default([]),
-    activo: z.boolean().default(true),
+    workflowOrder: z.array(z.string()).default([]),
+    isActive: z.boolean().default(true),
     tenantId: z.string(),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
 });
 
-export const ValidacionItemSchema = z.object({
-    campo: z.string(),
-    valorOriginal: z.any(),
-    valorCorregido: z.any().optional(),
-    estado: z.enum(['APROBADO', 'CORREGIDO', 'RECHAZADO']).default('APROBADO'),
-    comentario: z.string().optional(),
+export const ValidationItemSchema = z.object({
+    field: z.string(),
+    originalValue: z.any(),
+    correctedValue: z.any().optional(),
+    status: z.enum(['APPROVED', 'CORRECTED', 'REJECTED']).default('APPROVED'),
+    comment: z.string().optional(),
 });
 
-export const ValidacionSchema = z.object({
+export const ValidationSchema = z.object({
     _id: z.any().optional(),
-    pedidoId: z.string(),
+    entityId: z.string(),
     tenantId: z.string(),
-    validadoPor: z.string(), // User ID
-    nombreTecnico: z.string().optional(),
-    items: z.array(ValidacionItemSchema),
-    estadoGeneral: z.enum(['APROBADO', 'RECHAZADO', 'PARCIAL']).default('APROBADO'),
-    tiempoValidacion: z.number(), // Segundos
-    observaciones: z.string().optional(),
+    validatedBy: z.string(), // User ID
+    technicianName: z.string().optional(),
+    items: z.array(ValidationItemSchema),
+    generalStatus: z.enum(['APPROVED', 'REJECTED', 'PARTIAL']).default('APPROVED'),
+    validationTime: z.number(), // Segundos
+    observations: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
 });
 
 export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
-export type ValidacionItem = z.infer<typeof ValidacionItemSchema>;
-export type Validacion = z.infer<typeof ValidacionSchema>;
+export type ValidationItem = z.infer<typeof ValidationItemSchema>;
+export type Validation = z.infer<typeof ValidationSchema>;
 
-export const ItemValidacionSchema = z.object({
+export const ItemValidationSchema = z.object({
     itemId: z.string(),
-    estado: z.enum(['OK', 'REVISAR', 'PENDIENTE']).default('PENDIENTE'),
-    notas: z.string().optional(),
+    status: z.enum(['OK', 'REVIEW', 'PENDING']).default('PENDING'),
+    notes: z.string().optional(),
 });
-export type ItemValidacion = z.infer<typeof ItemValidacionSchema>;
+export type ItemValidation = z.infer<typeof ItemValidationSchema>;
 
 export const ContactRequestSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string().optional(),
-    nombre: z.string().min(2),
+    name: z.string().min(2),
     email: z.string().email(),
-    asunto: z.string().min(5),
-    mensaje: z.string().min(10),
-    estado: z.enum(['pendiente', 'resuelto', 'proceso']).default('pendiente'),
-    respuesta: z.string().optional(),
-    respondidoPor: z.string().optional(),
-    creado: z.date().default(() => new Date()),
-    actualizado: z.date().default(() => new Date()),
+    subject: z.string().min(5),
+    message: z.string().min(10),
+    status: z.enum(['pending', 'resolved', 'in_progress']).default('pending'),
+    answer: z.string().optional(),
+    answeredBy: z.string().optional(),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
 });
 
 export type ContactRequest = z.infer<typeof ContactRequestSchema>;
@@ -998,7 +1001,7 @@ export const PromptVersionSchema = z.object({
     variables: z.array(PromptVariableSchema).default([]),
     changedBy: z.string(),
     changeReason: z.string().optional(),
-    correlacion_id: z.string().optional(), // Trazabilidad bancaria
+    correlationId: z.string().optional(), // Trazabilidad bancaria
     ip: z.string().optional(),
     userAgent: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
@@ -1020,7 +1023,7 @@ export const PromptSchema = z.object({
     updatedAt: z.date().default(() => new Date()),
     updatedBy: z.string().optional(),
     createdBy: z.string().optional(),
-    creado: z.date().default(() => new Date()),
+    createdAt: z.date().default(() => new Date()),
 }).refine(data => {
     if (data.maxLength && data.template.length > data.maxLength) return false;
     return true;

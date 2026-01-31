@@ -11,24 +11,23 @@ export class ContactService {
     /**
      * Crea una nueva solicitud de contacto.
      */
-    static async createRequest(data: Partial<ContactRequest>, correlacion_id: string) {
+    static async createRequest(data: Partial<ContactRequest>, correlationId: string) {
         const validated = ContactRequestSchema.parse({
             ...data,
-            creado: new Date(),
-            actualizado: new Date(),
-            estado: 'pendiente'
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            status: 'pending'
         });
 
         const collection = await getTenantCollection('contact_requests');
         const result = await collection.insertOne(validated);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'CONTACT_SERVICE',
-            accion: 'CREATE_REQUEST',
-            mensaje: `Nueva solicitud de contacto de ${validated.email}`,
-            correlacion_id,
-            detalles: { id: result.insertedId, email: validated.email }
+            level: 'INFO',
+            source: 'CONTACT_SERVICE',
+            action: 'CREATE_REQUEST',
+            message: `Nueva solicitud de contacto de ${validated.email}`, correlationId,
+            details: { id: result.insertedId, email: validated.email }
         });
 
         return result;
@@ -40,23 +39,23 @@ export class ContactService {
     static async listAll(tenantId?: string) {
         const collection = await getTenantCollection('contact_requests');
         const query = tenantId ? { tenantId } : {};
-        return await collection.find(query, { sort: { creado: -1 } }) as ContactRequest[];
+        return await collection.find(query, { sort: { createdAt: -1 } }) as any[];
     }
 
     /**
      * Responde a una solicitud.
      */
-    static async respondRequest(id: string, respuesta: string, adminId: string, correlacion_id: string) {
+    static async respondRequest(id: string, answer: string, adminId: string, correlationId: string) {
         const collection = await getTenantCollection('contact_requests');
 
         const result = await collection.updateOne(
             { _id: new ObjectId(id) },
             {
                 $set: {
-                    respuesta,
-                    respondidoPor: adminId,
-                    estado: 'resuelto',
-                    actualizado: new Date()
+                    answer,
+                    answeredBy: adminId,
+                    status: 'resolved',
+                    updatedAt: new Date()
                 }
             }
         );
@@ -66,12 +65,11 @@ export class ContactService {
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'CONTACT_SERVICE',
-            accion: 'RESPOND_REQUEST',
-            mensaje: `Solicitud ${id} respondida`,
-            correlacion_id,
-            detalles: { id, adminId }
+            level: 'INFO',
+            source: 'CONTACT_SERVICE',
+            action: 'RESPOND_REQUEST',
+            message: `Solicitud ${id} respondida`, correlationId,
+            details: { id, adminId }
         });
 
         return { success: true };

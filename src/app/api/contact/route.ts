@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             requestId: result.insertedId,
-            mensaje: 'Solicitud enviada correctamente. Un administrador se pondrá en contacto pronto.'
+            message: 'Solicitud enviada correctamente. Un administrador se pondrá en contacto pronto.'
         });
 
     } catch (error) {

@@ -27,6 +27,8 @@ interface Ticket {
     updatedAt: string;
 }
 
+import { useFilterState } from '@/hooks/useFilterState';
+
 export default function TicketList({
     onSelectTicket,
     selectedId
@@ -34,36 +36,44 @@ export default function TicketList({
     onSelectTicket: (t: Ticket) => void,
     selectedId?: string | null
 }) {
-    const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
-    const [tenantFilter, setTenantFilter] = useState('');
-    const [userFilter, setUserFilter] = useState('');
+    // 1. Gestión de Estado de Filtros Centralizada
+    const {
+        filters,
+        setFilter
+    } = useFilterState({
+        initialFilters: {
+            search: '',
+            status: '',
+            tenantId: '',
+            userEmail: ''
+        }
+    });
 
-    // 1. Gestión de datos con hook genérico
+    // 2. Gestión de datos con hook genérico
     const { data: tickets, isLoading, refresh } = useApiList<Ticket>({
         endpoint: '/api/soporte/tickets',
         dataKey: 'tickets',
         filters: {
-            status: statusFilter,
-            tenantId: tenantFilter,
-            userEmail: userFilter
+            status: filters.status,
+            tenantId: filters.tenantId,
+            userEmail: filters.userEmail
         }
     });
 
-    // 2. Fetch de filtros (Listas para dropdowns)
+    // 3. Fetch de filtros (Listas para dropdowns)
     const { data: tenants } = useApiList<any>({ endpoint: '/api/admin/tenants', dataKey: 'tenants' });
     const { data: users } = useApiList<any>({ endpoint: '/api/admin/usuarios', dataKey: 'usuarios' });
 
     // Filtrado local por texto para inmediatez
     const filteredTickets = useMemo(() => {
         if (!tickets) return [];
-        const s = search.toLowerCase();
+        const s = filters.search.toLowerCase();
         return tickets.filter(t =>
             t.subject.toLowerCase().includes(s) ||
             t.ticketNumber.toLowerCase().includes(s) ||
             t.userEmail.toLowerCase().includes(s)
         );
-    }, [tickets, search]);
+    }, [tickets, filters.search]);
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -73,16 +83,16 @@ export default function TicketList({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         placeholder="Buscar ticket, email o ID..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        value={filters.search}
+                        onChange={(e) => setFilter('search', e.target.value)}
                         className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm py-2.5 pl-9 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                     />
                 </div>
 
                 <div className="flex gap-2 overflow-x-auto pb-1">
                     <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        value={filters.status}
+                        onChange={(e) => setFilter('status', e.target.value)}
                         className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                     >
                         <option value="">Todos los Estados</option>
@@ -93,8 +103,8 @@ export default function TicketList({
 
                     {tenants && tenants.length > 1 && (
                         <select
-                            value={tenantFilter}
-                            onChange={(e) => setTenantFilter(e.target.value)}
+                            value={filters.tenantId}
+                            onChange={(e) => setFilter('tenantId', e.target.value)}
                             className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[150px]"
                         >
                             <option value="">Todas las Empresas</option>
@@ -106,8 +116,8 @@ export default function TicketList({
 
                     {users && users.length > 0 && (
                         <select
-                            value={userFilter}
-                            onChange={(e) => setUserFilter(e.target.value)}
+                            value={filters.userEmail}
+                            onChange={(e) => setFilter('userEmail', e.target.value)}
                             className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2 px-3 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[150px]"
                         >
                             <option value="">Todos los Usuarios</option>

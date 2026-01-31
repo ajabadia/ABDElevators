@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
             throw new NotFoundError('Invitación no encontrada');
         }
 
-        if (invite.estado !== 'PENDIENTE') {
-            throw new AppError('INVITE_ALREADY_USED', 400, `Esta invitación ya ha sido ${invite.estado.toLowerCase()}`);
+        if (invite.status !== 'PENDIENTE') {
+            throw new AppError('INVITE_ALREADY_USED', 400, `Esta invitación ya ha sido ${invite.status.toLowerCase()}`);
         }
 
         if (new Date() > new Date(invite.expira)) {
@@ -56,12 +56,11 @@ export async function GET(req: NextRequest) {
         }
 
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'API_INVITE_VERIFY',
-            accion: 'VERIFY_ERROR',
-            mensaje: error.message,
-            correlacion_id,
-            detalles: { token }
+            level: 'ERROR',
+            source: 'API_INVITE_VERIFY',
+            action: 'VERIFY_ERROR',
+            message: error.message, correlationId: correlacion_id,
+            details: { token }
         });
 
         return NextResponse.json(

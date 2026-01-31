@@ -35,9 +35,9 @@ export async function GET(req: NextRequest) {
         if (nivel && nivel !== 'ALL') query.nivel = nivel;
         if (search) {
             query.$or = [
-                { mensaje: { $regex: search, $options: 'i' } },
-                { accion: { $regex: search, $options: 'i' } },
-                { correlacion_id: { $regex: search, $options: 'i' } }
+                { message: { $regex: search, $options: 'i' } },
+                { action: { $regex: search, $options: 'i' } },
+                { correlationId: { $regex: search, $options: 'i' } }
             ];
         }
 

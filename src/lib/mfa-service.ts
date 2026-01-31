@@ -27,12 +27,12 @@ export class MfaService {
         const qrCode = await QRCode.toDataURL(otpauth);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'MFA_SERVICE',
-            accion: 'MFA_SETUP_INITIATED',
-            mensaje: `Inicio de configuración MFA para usuario: ${userId}`,
-            correlacion_id: generateUUID(),
-            detalles: { userId }
+            level: 'INFO',
+            source: 'MFA_SERVICE',
+            action: 'MFA_SETUP_INITIATED',
+            message: `Inicio de configuración MFA para usuario: ${userId}`,
+            correlationId: generateUUID(),
+            details: { userId }
         });
 
         return { secret, qrCode };
@@ -46,12 +46,12 @@ export class MfaService {
 
         if (!result.valid) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'MFA_SERVICE',
-                accion: 'MFA_ENABLE_FAILED',
-                mensaje: `Intento fallido de activar MFA para usuario: ${userId}`,
-                correlacion_id: generateUUID(),
-                detalles: { userId }
+                level: 'WARN',
+                source: 'MFA_SERVICE',
+                action: 'MFA_ENABLE_FAILED',
+                message: `Intento fallido de activar MFA para usuario: ${userId}`,
+                correlationId: generateUUID(),
+                details: { userId }
             });
             return { success: false, recoveryCodes: [] };
         }
@@ -86,12 +86,12 @@ export class MfaService {
         );
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'MFA_SERVICE',
-            accion: 'MFA_ENABLED',
-            mensaje: `MFA activado exitosamente para usuario: ${userId}`,
-            correlacion_id: generateUUID(),
-            detalles: { userId }
+            level: 'INFO',
+            source: 'MFA_SERVICE',
+            action: 'MFA_ENABLED',
+            message: `MFA activado exitosamente para usuario: ${userId}`,
+            correlationId: generateUUID(),
+            details: { userId }
         });
 
         return { success: true, recoveryCodes: rawCodes };
@@ -110,21 +110,21 @@ export class MfaService {
 
         if (!result.valid) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'MFA_SERVICE',
-                accion: 'MFA_VERIFICATION_FAILED',
-                mensaje: `Fallo de verificación MFA para usuario: ${userId}`,
-                correlacion_id: generateUUID(),
-                detalles: { userId }
+                level: 'WARN',
+                source: 'MFA_SERVICE',
+                action: 'MFA_VERIFICATION_FAILED',
+                message: `Fallo de verificación MFA para usuario: ${userId}`,
+                correlationId: generateUUID(),
+                details: { userId }
             });
         } else {
             await logEvento({
-                nivel: 'INFO',
-                origen: 'MFA_SERVICE',
-                accion: 'MFA_VERIFICATION_SUCCESS',
-                mensaje: `Verificación MFA exitosa para usuario: ${userId}`,
-                correlacion_id: generateUUID(),
-                detalles: { userId }
+                level: 'INFO',
+                source: 'MFA_SERVICE',
+                action: 'MFA_VERIFICATION_SUCCESS',
+                message: `Verificación MFA exitosa para usuario: ${userId}`,
+                correlationId: generateUUID(),
+                details: { userId }
             });
         }
 
@@ -143,12 +143,12 @@ export class MfaService {
         );
 
         await logEvento({
-            nivel: 'WARN',
-            origen: 'MFA_SERVICE',
-            accion: 'MFA_DISABLED',
-            mensaje: `MFA desactivado para usuario: ${userId}`,
-            correlacion_id: generateUUID(),
-            detalles: { userId }
+            level: 'WARN',
+            source: 'MFA_SERVICE',
+            action: 'MFA_DISABLED',
+            message: `MFA desactivado para usuario: ${userId}`,
+            correlationId: generateUUID(),
+            details: { userId }
         });
     }
 

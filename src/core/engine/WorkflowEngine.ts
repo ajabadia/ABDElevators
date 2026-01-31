@@ -26,7 +26,7 @@ export class WorkflowEngine {
         eventType: WorkflowTrigger['type'],
         data: any,
         tenantId: string,
-        correlacion_id: string
+        correlationId: string
     ) {
         try {
             // 1. Obtener flujos activos para este tenant y tipo de evento
@@ -35,15 +35,15 @@ export class WorkflowEngine {
 
             for (const wf of workflows) {
                 if (this.evaluateTrigger(wf.trigger, data)) {
-                    await this.executeActions(wf.actions, data, tenantId, correlacion_id);
+                    await this.executeActions(wf.actions, data, tenantId, correlationId);
 
                     await logEvento({
-                        nivel: 'INFO',
-                        origen: 'WORKFLOW_ENGINE',
-                        accion: 'EXECUTE_WORKFLOW',
-                        mensaje: `Ejecutado workflow "${wf.name}" para tenant ${tenantId}`,
-                        correlacion_id,
-                        detalles: { workflowId: wf.id }
+                        level: 'INFO',
+                        source: 'WORKFLOW_ENGINE',
+                        action: 'EXECUTE_WORKFLOW',
+                        message: `Executed workflow "${wf.name}" for tenant ${tenantId}`,
+                        correlationId,
+                        details: { workflowId: wf.id }
                     });
                 }
             }
@@ -67,7 +67,7 @@ export class WorkflowEngine {
         }
     }
 
-    private async executeActions(actions: WorkflowAction[], data: any, tenantId: string, correlacion_id: string) {
+    private async executeActions(actions: WorkflowAction[], data: any, tenantId: string, correlationId: string) {
         for (const action of actions) {
             switch (action.type) {
                 case 'notify':
@@ -76,12 +76,12 @@ export class WorkflowEngine {
                     break;
                 case 'log':
                     await logEvento({
-                        nivel: 'WARN',
-                        origen: 'KIMI_AUTOMATION',
-                        accion: 'AUTOMATED_ALERT',
-                        mensaje: action.params.message || 'Alerta automatizada detectada',
-                        correlacion_id,
-                        detalles: { triggerData: data }
+                        level: 'WARN',
+                        source: 'KIMI_AUTOMATION',
+                        action: 'AUTOMATED_ALERT',
+                        message: action.params.message || 'Alerta automatizada detectada',
+                        correlationId,
+                        details: { triggerData: data }
                     });
                     break;
                 case 'update_entity':
@@ -103,7 +103,7 @@ export class WorkflowEngine {
                             confidence: 1.0,
                             status: 'blocked',
                             tenantId,
-                            correlacion_id
+                            correlationId
                         });
                         break;
                     }
@@ -123,7 +123,7 @@ export class WorkflowEngine {
                             confidence: 1.0,
                             status: 'executed',
                             tenantId,
-                            correlacion_id
+                            correlationId
                         });
                     }
                     break;

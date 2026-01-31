@@ -21,14 +21,14 @@ function getGenAI() {
 
 const GenerateEmbeddingSchema = z.object({
     text: z.string().min(1),
-    correlacion_id: z.string()
+    correlationId: z.string()
 });
 
 const CallGeminiMiniSchema = z.object({
     prompt: z.string().min(1),
     tenantId: z.string(),
     options: z.object({
-        correlacion_id: z.string().uuid(),
+        correlationId: z.string().uuid(),
         temperature: z.number().min(0).max(1).optional(),
         model: z.string().optional()
     })
@@ -48,8 +48,8 @@ function mapModelName(model: string): string {
 /**
  * Genera embeddings ...
  */
-export async function generateEmbedding(text: string, tenantId: string, correlacion_id: string): Promise<number[]> {
-    GenerateEmbeddingSchema.parse({ text, correlacion_id });
+export async function generateEmbedding(text: string, tenantId: string, correlationId: string): Promise<number[]> {
+    GenerateEmbeddingSchema.parse({ text, correlationId });
     const start = Date.now();
     try {
         const genAI = getGenAI();
@@ -59,26 +59,26 @@ export async function generateEmbedding(text: string, tenantId: string, correlac
         const duration = Date.now() - start;
         if (duration > 1000) {
             await logEvento({
-                nivel: 'WARN',
-                origen: 'GEMINI_EMBEDDING',
-                accion: 'SLA_VIOLATION',
-                mensaje: `Embedding lento: ${duration}ms`,
-                correlacion_id,
-                detalles: { duration_ms: duration, text_length: text.length }
+                level: 'WARN',
+                source: 'GEMINI_EMBEDDING',
+                action: 'SLA_VIOLATION',
+                message: `Embedding lento: ${duration}ms`,
+                correlationId,
+                details: { durationMs: duration, textLength: text.length }
             });
         }
 
         // Tracking de uso de AI (Aproximación para embeddings: 1 request = 1 unidad o tokens estimados)
-        await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlacion_id);
+        await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlationId);
 
         return result.embedding.values;
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'GEMINI_EMBEDDING',
-            accion: 'EMBED_ERROR',
-            mensaje: `Fallo en embedding Gemini: ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'GEMINI_EMBEDDING',
+            action: 'EMBED_ERROR',
+            message: `Fallo en embedding Gemini: ${(error as Error).message}`,
+            correlationId,
             stack: (error as Error).stack
         });
         throw new ExternalServiceError('Error generating embedding with Gemini', error as Error);
@@ -89,10 +89,10 @@ export async function generateEmbedding(text: string, tenantId: string, correlac
 export async function callGeminiMini(
     prompt: string,
     tenantId: string,
-    options: { correlacion_id: string; temperature?: number; model?: string }
+    options: { correlationId: string; temperature?: number; model?: string }
 ): Promise<string> {
-    CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlacion_id: options.correlacion_id } });
-    const { correlacion_id, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlationId: options.correlationId } });
+    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
     const modelName = mapModelName(rawModel);
     const start = Date.now();
 
@@ -110,7 +110,7 @@ export async function callGeminiMini(
         // Tracking de uso (Tokens reales)
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
         }
 
         return responseText;
@@ -128,13 +128,13 @@ export async function callGeminiMini(
         console.error(`[AI ERROR] Gemini Failure in ${modelName}:`, rawMessage);
 
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'GEMINI_MINI',
-            accion: 'CALL_ERROR',
-            mensaje: `Error en Gemini Mini (${modelName}): ${rawMessage}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'GEMINI_MINI',
+            action: 'CALL_ERROR',
+            message: `Error en Gemini Mini (${modelName}): ${rawMessage}`,
+            correlationId,
             stack: error.stack,
-            detalles: errorDetails
+            details: errorDetails
         });
 
         throw new AppError(
@@ -148,19 +148,19 @@ export async function callGeminiMini(
 
 const ExtractModelsSchema = z.object({
     text: z.string().min(1),
-    correlacion_id: z.string()
+    correlationId: z.string()
 });
 
 const ExtractedModelsArraySchema = z.array(z.object({
-    tipo: z.enum(["botonera", "motor", "cuadro", "puerta", "otros"]),
-    modelo: z.string()
+    type: z.string(),
+    model: z.string()
 }));
 
 /**
  * Extrae modelos ...
  */
-export async function extractModelsWithGemini(text: string, tenantId: string, correlacion_id: string) {
-    ExtractModelsSchema.parse({ text, correlacion_id });
+export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string) {
+    ExtractModelsSchema.parse({ text, correlationId });
     const start = Date.now();
     try {
         const genAI = getGenAI();
@@ -194,7 +194,7 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
         // Tracking de uso (Tokens reales)
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
         }
 
         return modelos;
@@ -204,13 +204,13 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
             stack: (error as Error).stack
         };
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'GEMINI_EXTRACTION',
-            accion: 'EXTRACT_ERROR',
-            mensaje: `Fallo en extracción Gemini: ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'GEMINI_EXTRACTION',
+            action: 'EXTRACT_ERROR',
+            message: `Fallo en extracción Gemini: ${(error as Error).message}`,
+            correlationId,
             stack: (error as Error).stack,
-            detalles: errorDetails
+            details: errorDetails
         });
         throw new ExternalServiceError('Error extracting models with Gemini', errorDetails);
     }
@@ -223,7 +223,7 @@ export async function analyzeEntityWithGemini(
     entitySlug: string,
     text: string,
     tenantId: string,
-    correlacion_id: string
+    correlationId: string
 ) {
     const start = Date.now();
     try {
@@ -266,18 +266,18 @@ export async function analyzeEntityWithGemini(
         // Tracking de uso
         const usage = (result.response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
         }
 
         return resultData;
     } catch (error: any) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'GEMINI_ADAPTIVE_ANALYSIS',
-            accion: 'ANALYSIS_ERROR',
-            mensaje: `Error analizando ${entitySlug}: ${error.message}`,
-            correlacion_id,
-            detalles: { entitySlug }
+            level: 'ERROR',
+            source: 'GEMINI_ADAPTIVE_ANALYSIS',
+            action: 'ANALYSIS_ERROR',
+            message: `Error analizando ${entitySlug}: ${error.message}`,
+            correlationId,
+            details: { entitySlug }
         });
         throw error;
     }
@@ -290,7 +290,7 @@ export async function analyzeEntityWithGemini(
 export async function callGemini(
     prompt: string,
     tenantId: string,
-    correlacion_id: string,
+    correlationId: string,
     options?: {
         temperature?: number;
         maxTokens?: number;
@@ -319,17 +319,17 @@ export async function callGemini(
         // Tracking de uso
         const usage = (response as any).usageMetadata;
         if (usage) {
-            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlacion_id);
+            await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'GEMINI_GENERATION',
-            accion: 'TEXT_GENERATED',
-            mensaje: `Texto generado con ${modelName}`,
-            correlacion_id,
-            detalles: {
-                duration_ms: duration,
+            level: 'INFO',
+            source: 'GEMINI_GENERATION',
+            action: 'TEXT_GENERATED',
+            message: `Texto generado con ${modelName}`,
+            correlationId,
+            details: {
+                durationMs: duration,
                 tokens: usage?.totalTokenCount,
                 promptLength: prompt.length,
                 responseLength: text.length
@@ -339,11 +339,11 @@ export async function callGemini(
         return text;
     } catch (error) {
         await logEvento({
-            nivel: 'ERROR',
-            origen: 'GEMINI_GENERATION',
-            accion: 'GENERATION_ERROR',
-            mensaje: `Error en generación: ${(error as Error).message}`,
-            correlacion_id,
+            level: 'ERROR',
+            source: 'GEMINI_GENERATION',
+            action: 'GENERATION_ERROR',
+            message: `Error en generación: ${(error as Error).message}`,
+            correlationId,
             stack: (error as Error).stack
         });
         throw new ExternalServiceError('Error generating text with Gemini', error as Error);

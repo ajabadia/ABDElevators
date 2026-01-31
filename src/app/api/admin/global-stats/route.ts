@@ -55,12 +55,12 @@ export async function GET(req: NextRequest) {
 
         // 5. Performance Metrics (SLA Violations)
         const slaViolations = await db.collection('logs_aplicacion').countDocuments({
-            accion: 'SLA_VIOLATION',
+            action: 'SLA_VIOLATION',
             timestamp: { $gte: thirtyDaysAgo }
         });
 
         const recentErrors = await db.collection('logs_aplicacion').countDocuments({
-            nivel: 'ERROR',
+            level: 'ERROR',
             timestamp: { $gte: thirtyDaysAgo }
         });
 

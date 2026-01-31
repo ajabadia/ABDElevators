@@ -10,11 +10,11 @@ import crypto from 'crypto';
  * Lista y filtra fragmentos del RAG para inspección administrativa.
  */
 export async function GET(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
         const session = await auth();
         if (!['ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role || '')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
         }
 
         const { searchParams } = new URL(req.url);
@@ -34,16 +34,16 @@ export async function GET(req: NextRequest) {
 
         if (searchType === 'semantic' && query) {
             const { hybridSearch } = await import('@/lib/rag-service');
-            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlacion_id, limit);
-            total = chunks.length; // En búsqueda semántica el total es el del bloque devuelto
+            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlationId, limit);
+            total = chunks.length;
         } else {
-            // Construir filtro para búsqueda tradicional (Regex)
+            // Build filter for traditional search (Regex)
             const filter: any = {};
             if (query) {
                 filter.$or = [
-                    { texto_chunk: { $regex: query, $options: 'i' } },
-                    { modelo: { $regex: query, $options: 'i' } },
-                    { origen_doc: { $regex: query, $options: 'i' } }
+                    { chunkText: { $regex: query, $options: 'i' } },
+                    { model: { $regex: query, $options: 'i' } },
+                    { sourceDoc: { $regex: query, $options: 'i' } }
                 ];
             }
             if (language) {
@@ -51,14 +51,14 @@ export async function GET(req: NextRequest) {
             }
 
             if (type === 'shadow') {
-                filter.is_shadow = true;
+                filter.isShadow = true;
             } else if (type === 'original') {
-                filter.is_shadow = { $ne: true };
+                filter.isShadow = { $ne: true };
             }
 
             chunks = await collection
                 .find(filter)
-                .sort({ creado: -1 })
+                .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
                 .toArray();
@@ -77,6 +77,6 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error) {
-        return handleApiError(error, 'API_KB_CHUNKS', correlacion_id);
+        return handleApiError(error, 'API_KB_CHUNKS', correlationId);
     }
 }

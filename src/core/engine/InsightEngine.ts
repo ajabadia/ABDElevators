@@ -30,7 +30,7 @@ export class InsightEngine {
     /**
      * Genera insights basados en patrones del grafo para un tenant.
      */
-    public async generateInsights(tenantId: string, correlacion_id: string): Promise<KimiInsight[]> {
+    public async generateInsights(tenantId: string, correlationId: string): Promise<KimiInsight[]> {
         try {
             // 1. Extraer patrones crudos del grafo (Neo4j)
             const patterns = await this.extractGraphPatterns(tenantId);
@@ -67,26 +67,26 @@ export class InsightEngine {
                 Devuelve SOLO el array JSON.
             `;
 
-            const aiResponse = await callGeminiMini(prompt, tenantId, { correlacion_id, temperature: 0.4 });
+            const aiResponse = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0.4 });
 
             const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
             if (!jsonMatch) return [];
 
             const insights: KimiInsight[] = JSON.parse(jsonMatch[0]);
 
-            // 3. Disparar Workflows Automatizados (Fase KIMI 10)
+            // 3. Trigger Automated Workflows (KIMI Phase 10)
             const workflow = WorkflowEngine.getInstance();
             for (const insight of insights) {
-                await workflow.processEvent('on_insight', insight, tenantId, correlacion_id);
+                await workflow.processEvent('on_insight', insight, tenantId, correlationId);
             }
 
             await logEvento({
-                nivel: 'INFO',
-                origen: 'INSIGHT_ENGINE',
-                accion: 'GENERATE_INSIGHTS',
-                mensaje: `Generados ${insights.length} insights para tenant ${tenantId}`,
-                correlacion_id,
-                detalles: { patternCount: patterns.length }
+                level: 'INFO',
+                source: 'INSIGHT_ENGINE',
+                action: 'GENERATE_INSIGHTS',
+                message: `Generated ${insights.length} insights for tenant ${tenantId}`,
+                correlationId,
+                details: { patternCount: patterns.length }
             });
 
             return insights;
@@ -94,11 +94,11 @@ export class InsightEngine {
         } catch (error: any) {
             console.error('[InsightEngine] Error:', error);
             await logEvento({
-                nivel: 'ERROR',
-                origen: 'INSIGHT_ENGINE',
-                accion: 'GENERATE_ERROR',
-                mensaje: error.message,
-                correlacion_id
+                level: 'ERROR',
+                source: 'INSIGHT_ENGINE',
+                action: 'GENERATE_ERROR',
+                message: error.message,
+                correlationId
             });
             return [];
         }
@@ -123,7 +123,7 @@ export class InsightEngine {
             {
                 name: 'popular_models',
                 query: `
-                    MATCH (p:pedido { tenantId: $tenantId })-[r:CONTIENE_MODELO]->(m:modelo)
+                    MATCH (p:pedido { tenantId: $tenantId })-[r:CONTIENE_MODELO]->(m:model)
                     RETURN m.name as modelo, count(p) as frecuencia
                     ORDER BY frecuencia DESC
                     LIMIT 3
@@ -133,7 +133,7 @@ export class InsightEngine {
             {
                 name: 'compliance_gaps',
                 query: `
-                    MATCH (m:modelo { tenantId: $tenantId })
+                    MATCH (m:model { tenantId: $tenantId })
                     WHERE NOT (m)-[:CUMPLE_NORMA]->()
                     RETURN m.name as modelo_sin_norma
                     LIMIT 3

@@ -9,7 +9,7 @@ async function checkMiddlewareLogs() {
         await client.connect();
         const db = client.db('ABDElevators-Logs');
         const logs = await db.collection('logs_aplicacion')
-            .find({ origen: 'SECURITY_MIDDLEWARE' })
+            .find({ source: 'SECURITY_MIDDLEWARE' })
             .sort({ timestamp: -1 })
             .limit(10)
             .toArray();

@@ -6,9 +6,9 @@ import { IndustryType } from './types';
  */
 export const INDUSTRY_LABELS: Record<IndustryType, any> = {
     ELEVATORS: {
-        singular: 'Pedido',
+        singular: 'Entity',
         plural: 'Pedidos',
-        action: 'Analizar Pedido',
+        action: 'Analizar Entity',
         description: 'Sube un pedido en PDF para extraer modelos y consultar la base de conocimiento RAG.',
         placeholder: 'Número de pedido...',
         recent_title: 'Análisis Recientes',

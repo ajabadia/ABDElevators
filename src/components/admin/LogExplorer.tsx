@@ -10,18 +10,20 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApiList } from '@/hooks/useApiList';
+import { useFilterState } from '@/hooks/useFilterState';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 // Definición de tipos para los logs
 interface LogEntry {
     _id: string;
-    nivel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
-    origen: string;
-    accion: string;
-    mensaje: string;
-    correlacion_id?: string;
+    level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+    source: string;
+    action: string;
+    message: string;
+    correlationId?: string;
     tenantId?: string;
     timestamp: string;
-    detalles?: any;
+    details?: any;
     stack?: string;
 }
 
@@ -32,14 +34,14 @@ interface AuditEntry {
     previousState?: any;
     newState: any;
     performedBy: string;
-    correlacion_id?: string;
+    correlationId?: string;
     timestamp: string;
     ip?: string;
     userAgent?: string;
     promptName?: string;
 }
 
-interface User { _id: string; email: string; nombre: string; }
+interface User { _id: string; email: string; name: string; }
 interface Tenant { tenantId: string; name: string; }
 
 /**
@@ -66,12 +68,18 @@ function getObjectDiff(prev: any, next: any): Record<string, { prev: any, next: 
 export default function LogExplorer() {
     // 1. Filtros y Estados UI
     const [viewMode, setViewMode] = useState<'LOGS' | 'AUDIT'>('LOGS');
-    const [search, setSearch] = useState('');
-    const [levelFilter, setLevelFilter] = useState<'ALL' | 'ERROR' | 'WARN' | 'INFO'>('ALL');
-    const [originFilter, setOriginFilter] = useState('');
-    const [userFilter, setUserFilter] = useState('');
-    const [tenantFilter, setTenantFilter] = useState('');
-    const [autoRefresh, setAutoRefresh] = useState(false);
+    const { filters, setFilter, clearFilters, activeFilters } = useFilterState({
+        initialFilters: {
+            search: '',
+            level: 'ALL' as 'ALL' | 'ERROR' | 'WARN' | 'INFO',
+            source: '',
+            userEmail: '',
+            tenantId: '',
+            limit: '100'
+        }
+    });
+
+    const [autoRefresh, setAutoRefresh] = useLocalStorage('logexplorer_autorefresh', false);
 
     // Selección para detalle
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
@@ -91,12 +99,8 @@ export default function LogExplorer() {
         dataKey: 'logs',
         autoFetch: viewMode === 'LOGS',
         filters: {
-            nivel: levelFilter !== 'ALL' ? levelFilter : undefined,
-            search,
-            origen: originFilter || undefined,
-            userEmail: userFilter || undefined,
-            tenantId: tenantFilter || undefined,
-            limit: '100'
+            ...activeFilters,
+            level: filters.level !== 'ALL' ? filters.level : undefined,
         }
     });
 
@@ -110,7 +114,7 @@ export default function LogExplorer() {
     } = useApiList<AuditEntry>({
         endpoint: '/api/admin/audit/combined', // Asumimos que crearemos este endpoint o usamos uno base
         autoFetch: viewMode === 'AUDIT',
-        filters: { search, userEmail: userFilter, tenantId: tenantFilter }
+        filters: activeFilters
     });
 
     // Efecto para Auto-Refresh
@@ -124,8 +128,8 @@ export default function LogExplorer() {
 
     const handleExport = async (format: 'json' | 'csv') => {
         const params = new URLSearchParams();
-        if (levelFilter !== 'ALL') params.append('nivel', levelFilter);
-        if (search) params.append('search', search);
+        if (filters.level !== 'ALL') params.append('level', filters.level);
+        if (filters.search) params.append('search', filters.search);
         params.append('format', format);
         params.append('limit', '1000');
         window.open(`/api/admin/logs/export?${params.toString()}`, '_blank');
@@ -175,7 +179,7 @@ export default function LogExplorer() {
                     <div>
                         <p className="text-[10px] uppercase font-bold text-rose-400 tracking-wider">Errores Críticos</p>
                         <h3 className="text-xl font-black text-rose-700 dark:text-rose-400">
-                            {viewMode === 'LOGS' ? logs?.filter(l => l.nivel === 'ERROR').length : '0'}
+                            {viewMode === 'LOGS' ? logs?.filter(l => l.level === 'ERROR').length : '0'}
                         </h3>
                     </div>
                 </div>
@@ -214,14 +218,14 @@ export default function LogExplorer() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         placeholder={viewMode === 'LOGS' ? "Buscar en logs..." : "Buscar en historial..."}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        value={filters.search}
+                        onChange={(e) => setFilter('search', e.target.value)}
                         className="w-full bg-white dark:bg-slate-950 border-none rounded-lg text-xs py-2.5 pl-9 focus:ring-1 focus:ring-teal-500 outline-none"
                     />
                 </div>
                 <select
-                    value={userFilter}
-                    onChange={(e) => setUserFilter(e.target.value)}
+                    value={filters.userEmail}
+                    onChange={(e) => setFilter('userEmail', e.target.value)}
                     className="w-48 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2.5 px-3 focus:ring-1 focus:ring-teal-500 outline-none appearance-none cursor-pointer"
                 >
                     <option value="">Todos los Usuarios</option>
@@ -229,8 +233,8 @@ export default function LogExplorer() {
                 </select>
 
                 <select
-                    value={tenantFilter}
-                    onChange={(e) => setTenantFilter(e.target.value)}
+                    value={filters.tenantId}
+                    onChange={(e) => setFilter('tenantId', e.target.value)}
                     className="w-48 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2.5 px-3 focus:ring-1 focus:ring-teal-500 outline-none appearance-none cursor-pointer"
                 >
                     <option value="">Todos los Tenants</option>
@@ -242,11 +246,11 @@ export default function LogExplorer() {
                     {['ALL', 'ERROR', 'WARN', 'INFO'].map((l) => (
                         <button
                             key={l}
-                            onClick={() => setLevelFilter(l as any)}
+                            onClick={() => setFilter('level', l as any)}
                             disabled={viewMode === 'AUDIT'}
                             className={cn(
                                 "text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
-                                levelFilter === l ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-slate-700" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+                                filters.level === l ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-slate-700" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
                                 viewMode === 'AUDIT' && "opacity-30 cursor-not-allowed"
                             )}
                         >
@@ -292,20 +296,20 @@ export default function LogExplorer() {
                                 className={cn(
                                     "grid grid-cols-12 gap-4 p-3 border-b border-slate-50 dark:border-slate-900 items-start cursor-pointer transition-colors text-xs font-mono",
                                     selectedLog?._id === log._id ? "bg-teal-50 dark:bg-teal-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/50",
-                                    log.nivel === 'ERROR' && "bg-rose-50/50 dark:bg-rose-950/10"
+                                    log.level === 'ERROR' && "bg-rose-50/50 dark:bg-rose-950/10"
                                 )}
                             >
                                 <div className="col-span-2 text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">
                                     {new Date(log.timestamp).toLocaleTimeString()}
                                     <span className="text-[10px] opacity-50 ml-1">{new Date(log.timestamp).toLocaleDateString()}</span>
                                 </div>
-                                <div className="col-span-1">{getLevelBadge(log.nivel)}</div>
+                                <div className="col-span-1">{getLevelBadge(log.level)}</div>
                                 <div className="col-span-2 flex flex-col">
-                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate" title={log.origen}>{log.origen}</span>
-                                    <span className="text-[10px] text-slate-400 truncate">{log.accion}</span>
+                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate" title={log.source}>{log.source}</span>
+                                    <span className="text-[10px] text-slate-400 truncate">{log.action}</span>
                                 </div>
                                 <div className="col-span-5 text-slate-600 dark:text-slate-400 break-words leading-relaxed font-sans">
-                                    {log.mensaje}
+                                    {log.message}
                                 </div>
                                 <div className="col-span-2 text-right">
                                     <Badge variant="outline" className="text-[9px] h-5 border-slate-200 dark:border-slate-800 text-slate-400 font-mono">
@@ -342,7 +346,7 @@ export default function LogExplorer() {
                                     </div>
                                     <div className="col-span-3 text-slate-400 text-[10px] flex flex-col gap-0.5">
                                         <div className="flex items-center gap-1"><Server size={8} /> IP: <span className="font-mono">{audit.ip || '0.0.0.0'}</span></div>
-                                        <div className="flex items-center gap-1 text-[8px]"><Activity size={8} /> CORR: <span className="font-mono text-slate-300">{audit.correlacion_id?.substring(0, 13) || 'N/A'}</span></div>
+                                        <div className="flex items-center gap-1 text-[8px]"><Activity size={8} /> CORR: <span className="font-mono text-slate-300">{audit.correlationId?.substring(0, 13) || 'N/A'}</span></div>
                                     </div>
                                     <div className="col-span-2 text-right self-center">
                                         <Button variant="ghost" size="sm" className="h-7 text-[9px] uppercase font-black tracking-widest text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -368,8 +372,8 @@ export default function LogExplorer() {
                     >
                         <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 px-6">
                             <div className="flex items-center gap-3">
-                                {getLevelBadge(selectedLog.nivel)}
-                                <span className="text-xs font-mono text-slate-400">{selectedLog.correlacion_id || 'no-trace-id'}</span>
+                                {getLevelBadge(selectedLog.level)}
+                                <span className="text-xs font-mono text-slate-400">{selectedLog.correlationId || 'no-trace-id'}</span>
                             </div>
                             <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors group">
                                 <span className="sr-only">Cerrar</span>
@@ -379,7 +383,7 @@ export default function LogExplorer() {
                         <div className="flex-1 overflow-auto p-6 space-y-4 font-mono text-xs">
                             <section>
                                 <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-1 border-b pb-1 flex items-center gap-2"><Activity size={10} /> Mensaje del Evento</h4>
-                                <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed py-2 font-sans text-sm">{selectedLog.mensaje}</p>
+                                <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed py-2 font-sans text-sm">{selectedLog.message}</p>
                             </section>
 
                             {selectedLog.stack && (
@@ -391,12 +395,12 @@ export default function LogExplorer() {
                                 </section>
                             )}
 
-                            {selectedLog.detalles && (
+                            {selectedLog.details && (
                                 <section>
                                     <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-2 border-b pb-1">Contexto Estructurado (JSON)</h4>
                                     <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                                         <pre className="text-slate-600 dark:text-slate-400 overflow-x-auto scrollbar-thin">
-                                            {JSON.stringify(selectedLog.detalles, null, 2)}
+                                            {JSON.stringify(selectedLog.details, null, 2)}
                                         </pre>
                                     </div>
                                 </section>
@@ -448,7 +452,7 @@ export default function LogExplorer() {
                                 </div>
                                 <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
                                     <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Activity size={10} /> Correlación</p>
-                                    <p className="text-xs font-mono truncate text-slate-500" title={selectedAudit.correlacion_id}>{selectedAudit.correlacion_id?.substring(0, 16) || 'N/A'}</p>
+                                    <p className="text-xs font-mono truncate text-slate-500" title={selectedAudit.correlationId}>{selectedAudit.correlationId?.substring(0, 16) || 'N/A'}</p>
                                     <button className="text-[9px] text-blue-500 font-bold hover:underline">Ver Trace</button>
                                 </div>
                             </div>

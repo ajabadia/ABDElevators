@@ -63,12 +63,15 @@ This document consolidates **all** roadmap information, implementation plans, an
 1. **Validación Avanzada (Prompts)** [x]
    - Implementar "Hard Limit" para longitud de prompts en `PromptService`.
    - Bloquear guardado si excede tokens máximos seguros.
-2. **Estabilidad y Testeo (Unit Testing)** [ ]
+2. **Refactorización de Facturación & Consumo** [x]
+   - Migración de `fiscalData` en `ConsumptionDashboard` a `useApiItem`.
+3. **Optimización de LogExplorer** [x]
+   - Implementación de `useFilterState` para unificar filtros técnicos.
+4. **Estandarización de Modales & Persistencia** [x]
+   - Creación de `useFormModal` y `useLocalStorage`.
+   - Implementación en `TiposDocumentoPage` y `AdminPromptsPage`.
+5. **Estabilidad y Testeo (Unit Testing)** [ ]
    - Aumentar cobertura de tests unitarios al 80% en servicios críticos.
-3. **Optimización Perceptual** [ ]
-   - Skeleton loadings y optimización móvil real.
-4. **State & Cache Management** [ ]
-   - Adopción total de Zustand + React Query (Eliminar `location.reload`).
 
 ---
 

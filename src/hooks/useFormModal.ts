@@ -1,15 +1,16 @@
 import { useState, useCallback } from 'react';
 
 interface UseFormModalOptions<T> {
+    onSuccess?: (data: T) => void;
+    onError?: (error: string) => void;
     onClose?: () => void;
-    onSubmitSuccess?: (data: T) => void;
 }
 
 /**
- * Hook para gestionar el estado de diálogos/modales de creación y edición.
- * Unifica el patrón de 'isModalOpen' + 'editingEntity'.
+ * Hook estandarizado para gestionar estados de modales de formulario (Crear/Editar).
+ * Proporciona flags de modo, gestión de datos del item seleccionado y helpers de apertura/cierre.
  */
-export function useFormModal<T extends Record<string, any>>(options: UseFormModalOptions<T> = {}) {
+export function useFormModal<T = any>(options?: UseFormModalOptions<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const [mode, setMode] = useState<'create' | 'edit'>('create');
     const [data, setData] = useState<T | null>(null);
@@ -20,21 +21,18 @@ export function useFormModal<T extends Record<string, any>>(options: UseFormModa
         setIsOpen(true);
     }, []);
 
-    const openEdit = useCallback((entityData: T) => {
+    const openEdit = useCallback((item: T) => {
         setMode('edit');
-        setData(entityData);
+        setData(item);
         setIsOpen(true);
     }, []);
 
     const close = useCallback(() => {
         setIsOpen(false);
-        options.onClose?.();
+        setData(null);
+        setMode('create');
+        options?.onClose?.();
     }, [options]);
-
-    const handleSuccess = useCallback((result: T) => {
-        close();
-        options.onSubmitSuccess?.(result);
-    }, [close, options]);
 
     return {
         isOpen,
@@ -44,8 +42,7 @@ export function useFormModal<T extends Record<string, any>>(options: UseFormModa
         openCreate,
         openEdit,
         close,
-        handleSuccess,
-        isEditing: mode === 'edit',
-        isCreating: mode === 'create'
+        isCreate: mode === 'create',
+        isEdit: mode === 'edit',
     };
 }

@@ -7,11 +7,11 @@ async function testLog() {
     console.log("Testing logEvento...");
     try {
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TEST_SCRIPT',
-            accion: 'TEST_LOG',
-            mensaje: 'Testing if logs are reaching the DB',
-            correlacion_id: 'test-' + Date.now()
+            level: 'INFO',
+            source: 'TEST_SCRIPT',
+            action: 'TEST_LOG',
+            message: 'Testing if logs are reaching the DB',
+            correlationId: 'test-' + Date.now()
         });
         console.log("Log sent successfully.");
     } catch (e) {

@@ -6,21 +6,21 @@
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
 export interface ClientLogEntry {
-    nivel: LogLevel;
-    origen: string;
-    accion: string;
-    mensaje: string;
-    correlacion_id?: string;
-    detalles?: Record<string, unknown>;
+    level: LogLevel;
+    source: string;
+    action: string;
+    message: string;
+    correlationId?: string;
+    details?: Record<string, unknown>;
     stack?: string;
 }
 
-export async function logEventoCliente(entry: ClientLogEntry): Promise<void> {
+export async function logClientEvent(entry: ClientLogEntry): Promise<void> {
     // Console output for immediate developer feedback
-    if (entry.nivel === 'ERROR') {
-        console.error(`[CLIENT] [${entry.origen}] [${entry.accion}] ${entry.mensaje}`, entry.detalles || '');
+    if (entry.level === 'ERROR') {
+        console.error(`[CLIENT] [${entry.source}] [${entry.action}] ${entry.message}`, entry.details || '');
     } else {
-        console.log(`[CLIENT] [${entry.origen}] [${entry.accion}] ${entry.mensaje}`);
+        console.log(`[CLIENT] [${entry.source}] [${entry.action}] ${entry.message}`);
     }
 
     try {
@@ -32,7 +32,7 @@ export async function logEventoCliente(entry: ClientLogEntry): Promise<void> {
             },
             body: JSON.stringify({
                 ...entry,
-                correlacion_id: entry.correlacion_id || crypto.randomUUID()
+                correlationId: entry.correlationId || crypto.randomUUID()
             }),
         });
     } catch (error) {

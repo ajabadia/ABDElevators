@@ -56,7 +56,7 @@ export class TenantService {
     /**
      * Actualiza o crea la configuración de un tenant e inserta registro en auditoría.
      */
-    static async updateConfig(tenantId: string, data: any, metadata?: { performedBy: string, correlacion_id?: string }) {
+    static async updateConfig(tenantId: string, data: any, metadata?: { performedBy: string, correlationId?: string }) {
         try {
             const db = await connectAuthDB();
 
@@ -87,19 +87,19 @@ export class TenantService {
                     previousState,
                     newState: validated,
                     performedBy: metadata.performedBy,
-                    correlacion_id: metadata.correlacion_id || `sys-${Date.now()}`,
+                    correlationId: metadata.correlationId || `sys-${Date.now()}`,
                     timestamp: new Date()
                 });
             }
 
             // 5. Log de evento estándar
             await logEvento({
-                nivel: 'INFO',
-                origen: 'TENANT_SERVICE',
-                accion: 'UPDATE_CONFIG',
-                mensaje: `Configuración actualizada para tenant: ${tenantId}`,
-                correlacion_id: metadata?.correlacion_id || `system-${tenantId}`,
-                detalles: { tenantId }
+                level: 'INFO',
+                source: 'TENANT_SERVICE',
+                action: 'UPDATE_CONFIG',
+                message: `Configuración actualizada para tenant: ${tenantId}`,
+                correlationId: metadata?.correlationId || `system-${tenantId}`,
+                details: { tenantId }
             });
 
             return validated;

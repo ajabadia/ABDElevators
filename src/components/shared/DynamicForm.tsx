@@ -57,7 +57,7 @@ export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: Dy
                         entitySlug,
                         originalData: initialData,
                         correctedData: formData,
-                        correlacion_id: initialData.correlacion_id
+                        correlationId: initialData.correlacion_id
                     })
                 });
             } catch (err) {

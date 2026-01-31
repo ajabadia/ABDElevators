@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 
-import { ProfilePhotoUpload } from "@/components/perfil/ProfilePhotoUpload";
+import { ProfilePhotoUpload } from "@/components/profile/ProfilePhotoUpload";
 
 interface EditUserModalProps {
     userId: string | null;
@@ -40,13 +40,13 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
 
     const [formData, setFormData] = useState({
         email: "",
-        nombre: "",
-        apellidos: "",
-        puesto: "",
-        rol: "TECNICO" as "ADMIN" | "TECNICO" | "INGENIERIA",
-        activo: true,
-        foto_url: "",
-        foto_cloudinary_id: "",
+        firstName: "",
+        lastName: "",
+        jobTitle: "",
+        role: "TECHNICAL" as "ADMIN" | "TECHNICAL" | "ENGINEERING",
+        active: true,
+        photoUrl: "",
+        photoCloudinaryId: "",
         activeModules: [] as string[],
     });
 
@@ -59,18 +59,18 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
     const fetchUser = async () => {
         setFetching(true);
         try {
-            const res = await fetch(`/api/admin/usuarios/${userId}`);
+            const res = await fetch(`/api/admin/users/${userId}`);
             if (res.ok) {
                 const data = await res.json();
                 setFormData({
                     email: data.email,
-                    nombre: data.nombre,
-                    apellidos: data.apellidos,
-                    puesto: data.puesto || "",
-                    rol: data.rol,
-                    activo: data.activo,
-                    foto_url: data.foto_url || "",
-                    foto_cloudinary_id: data.foto_cloudinary_id || "",
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    jobTitle: data.jobTitle || "",
+                    role: data.role,
+                    active: data.active,
+                    photoUrl: data.photoUrl || "",
+                    photoCloudinaryId: data.photoCloudinaryId || "",
                     activeModules: data.activeModules || ["TECHNICAL", "RAG"],
                 });
             }
@@ -90,7 +90,7 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
         setLoading(true);
 
         try {
-            const res = await fetch(`/api/admin/usuarios/${userId}`, {
+            const res = await fetch(`/api/admin/users/${userId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -139,31 +139,31 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex justify-center pb-4 border-b">
                             <ProfilePhotoUpload
-                                currentPhotoUrl={formData.foto_url}
+                                currentPhotoUrl={formData.photoUrl}
                                 onUploadSuccess={(url, publicId) => {
-                                    setFormData(prev => ({ ...prev, foto_url: url, foto_cloudinary_id: publicId }));
+                                    setFormData(prev => ({ ...prev, photoUrl: url, photoCloudinaryId: publicId }));
                                 }}
-                                uploadUrl={`/api/admin/usuarios/${userId}/upload-photo`}
+                                uploadUrl={`/api/admin/users/${userId}/upload-photo`}
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="edit-nombre">Nombre *</Label>
+                                <Label htmlFor="edit-firstName">First Name *</Label>
                                 <Input
-                                    id="edit-nombre"
+                                    id="edit-firstName"
                                     required
-                                    value={formData.nombre}
-                                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="edit-apellidos">Apellidos *</Label>
+                                <Label htmlFor="edit-lastName">Last Name *</Label>
                                 <Input
-                                    id="edit-apellidos"
+                                    id="edit-lastName"
                                     required
-                                    value={formData.apellidos}
-                                    onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                 />
                             </div>
                         </div>
@@ -180,28 +180,28 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-puesto">Puesto</Label>
+                            <Label htmlFor="edit-jobTitle">Job Title</Label>
                             <Input
-                                id="edit-puesto"
-                                placeholder="Ej: Técnico de Mantenimiento"
-                                value={formData.puesto}
-                                onChange={(e) => setFormData({ ...formData, puesto: e.target.value })}
+                                id="edit-jobTitle"
+                                placeholder="Ej: Maintenance Technician"
+                                value={formData.jobTitle}
+                                onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-rol">Rol *</Label>
+                            <Label htmlFor="edit-role">Role *</Label>
                             <Select
-                                value={formData.rol}
-                                onValueChange={(value: any) => setFormData({ ...formData, rol: value })}
+                                value={formData.role}
+                                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ADMIN">Administrador</SelectItem>
-                                    <SelectItem value="TECNICO">Técnico</SelectItem>
-                                    <SelectItem value="INGENIERIA">Ingeniería</SelectItem>
+                                    <SelectItem value="TECHNICAL">Técnico</SelectItem>
+                                    <SelectItem value="ENGINEERING">Ingeniería</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -244,14 +244,14 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
 
                         <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
                             <div className="space-y-0.5">
-                                <Label>Estado de la Cuenta</Label>
+                                <Label>Account Status</Label>
                                 <p className="text-xs text-slate-500">
-                                    {formData.activo ? "Usuario puede acceder al sistema" : "Acceso deshabilitado"}
+                                    {formData.active ? "User can access the system" : "Access disabled"}
                                 </p>
                             </div>
                             <Switch
-                                checked={formData.activo}
-                                onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
+                                checked={formData.active}
+                                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                             />
                         </div>
 

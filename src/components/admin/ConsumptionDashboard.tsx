@@ -12,8 +12,10 @@ import { generateInvoicePDF } from '@/lib/pdf-invoice-client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface UsageStats {
     tokens: number;
@@ -55,13 +57,42 @@ export function ConsumptionDashboard() {
     });
 
     const [downloading, setDownloading] = useState(false);
+    const [autoRefresh, setAutoRefresh] = useLocalStorage('admin-billing-autorefresh', false);
 
-    // Fiscal Config State
+    // Auto-refresh logic
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (autoRefresh) {
+            interval = setInterval(() => {
+                fetchStats();
+            }, 10000); // 10s
+        }
+        return () => clearInterval(interval);
+    }, [autoRefresh, fetchStats]);
+
+    // 2. Gestión de datos fiscales con hook genérico
     const [fiscalOpen, setFiscalOpen] = useState(false);
-    const [fiscalData, setFiscalData] = useState({
+    const [fiscalDraft, setFiscalDraft] = useState({
         fiscalName: '',
         taxId: '',
         address: ''
+    });
+
+    const {
+        data: fiscalData,
+        refresh: refreshFiscal
+    } = useApiItem<any>({
+        endpoint: '/api/admin/billing/fiscal',
+        autoFetch: true,
+        onSuccess: (data) => {
+            if (data) {
+                setFiscalDraft({
+                    fiscalName: data.fiscalName || '',
+                    taxId: data.taxId || '',
+                    address: data.address || ''
+                });
+            }
+        }
     });
 
     // Mutación para guardar datos fiscales
@@ -69,7 +100,10 @@ export function ConsumptionDashboard() {
         endpoint: '/api/admin/billing/fiscal',
         method: 'PATCH',
         successMessage: 'Datos fiscales actualizados correctamente',
-        onSuccess: () => setFiscalOpen(false)
+        onSuccess: () => {
+            setFiscalOpen(false);
+            refreshFiscal();
+        }
     });
 
     useEffect(() => {
@@ -157,9 +191,18 @@ export function ConsumptionDashboard() {
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
+                        size="sm"
+                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={cn("gap-2", autoRefresh ? "bg-teal-50 border-teal-200 text-teal-700 shadow-inner" : "")}
+                    >
+                        <RefreshCcw size={14} className={autoRefresh ? "animate-spin" : ""} />
+                        {autoRefresh ? "Auto ON" : "Auto OFF"}
+                    </Button>
+                    <Button
+                        variant="ghost"
                         size="icon"
                         onClick={fetchStats}
-                        className={isLoading ? "animate-spin" : ""}
+                        className={cn("h-9 w-9", isLoading ? "animate-spin" : "")}
                     >
                         <RefreshCcw size={16} />
                     </Button>
@@ -361,14 +404,14 @@ export function ConsumptionDashboard() {
                                             </td>
                                             <td className="p-4">
                                                 <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-600">
-                                                    {log.tipo}
+                                                    {log.type}
                                                 </span>
                                             </td>
                                             <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                                                 {log.recurso}
                                             </td>
                                             <td className="p-4 text-sm font-bold text-right text-slate-900 dark:text-white">
-                                                {log.tipo === 'STORAGE_BYTES' ? formatBytes(log.valor) : log.valor.toLocaleString()}
+                                                {log.type === 'STORAGE_BYTES' ? formatBytes(log.valor || 0) : (log.valor || 0).toLocaleString()}
                                             </td>
                                         </tr>
                                     ))}
@@ -390,9 +433,9 @@ export function ConsumptionDashboard() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2 text-sm text-slate-600">
-                                    <p><span className="font-bold">Razón Social:</span> {fiscalData.fiscalName || 'No configurado'}</p>
-                                    <p><span className="font-bold">CIF/NIF:</span> {fiscalData.taxId || '---'}</p>
-                                    <p><span className="font-bold">Dirección:</span> {fiscalData.address || '---'}</p>
+                                    <p><span className="font-bold">Razón Social:</span> {fiscalData?.fiscalName || 'No configurado'}</p>
+                                    <p><span className="font-bold">CIF/NIF:</span> {fiscalData?.taxId || '---'}</p>
+                                    <p><span className="font-bold">Dirección:</span> {fiscalData?.address || '---'}</p>
                                 </div>
                             </CardContent>
                             <CardFooter>
@@ -408,17 +451,23 @@ export function ConsumptionDashboard() {
                                         <div className="space-y-4 py-4">
                                             <div className="space-y-2">
                                                 <Label>Razón Social (Empresa)</Label>
-                                                <Input value={fiscalData.fiscalName} onChange={e => setFiscalData(prev => ({ ...prev, fiscalName: e.target.value }))} />
+                                                <Input value={fiscalDraft.fiscalName} onChange={e => setFiscalDraft(prev => ({ ...prev, fiscalName: e.target.value }))} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>CIF / VAT ID</Label>
-                                                <Input value={fiscalData.taxId} onChange={e => setFiscalData(prev => ({ ...prev, taxId: e.target.value }))} />
+                                                <Input value={fiscalDraft.taxId} onChange={e => setFiscalDraft(prev => ({ ...prev, taxId: e.target.value }))} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Dirección Fiscal</Label>
-                                                <Input value={fiscalData.address} onChange={e => setFiscalData(prev => ({ ...prev, address: e.target.value }))} />
+                                                <Input value={fiscalDraft.address} onChange={e => setFiscalDraft(prev => ({ ...prev, address: e.target.value }))} />
                                             </div>
-                                            <Button onClick={() => setFiscalOpen(false)} className="w-full">Guardar Cambios</Button>
+                                            <Button
+                                                onClick={() => fiscalMutation.mutate(fiscalDraft)}
+                                                className="w-full"
+                                                disabled={fiscalMutation.isLoading}
+                                            >
+                                                {fiscalMutation.isLoading ? 'Guardando...' : 'Guardar Cambios'}
+                                            </Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>

@@ -26,7 +26,7 @@ interface RagEvaluation {
     };
     trace?: string[];
     timestamp: string;
-    correlacion_id: string;
+    correlationId: string;
 }
 
 export default function RagQualityDashboard() {
@@ -185,7 +185,7 @@ export default function RagQualityDashboard() {
                                     <div className="mt-4 mb-2 p-3 bg-slate-900 rounded border border-slate-800 font-mono text-[11px] text-emerald-400/90 overflow-x-auto space-y-1 animate-in slide-in-from-top-2 duration-300">
                                         <div className="text-slate-500 mb-2 border-b border-slate-800 pb-1 flex justify-between">
                                             <span>AGENT_TRACE_TERMINAL v2.0</span>
-                                            <span>{ev.correlacion_id}</span>
+                                            <span>{ev.correlationId}</span>
                                         </div>
                                         {ev.trace.map((step, idx) => (
                                             <div key={idx} className="flex gap-2">
@@ -199,7 +199,7 @@ export default function RagQualityDashboard() {
 
                                 <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
                                     <div className="flex gap-3">
-                                        <span>ID: {ev.correlacion_id}</span>
+                                        <span>ID: {ev.correlationId}</span>
                                         <button
                                             onClick={() => setExpandedEval(expandedEval === ev._id ? null : ev._id)}
                                             className="hover:text-indigo-500 font-medium"

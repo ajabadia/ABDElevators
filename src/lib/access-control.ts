@@ -27,12 +27,12 @@ export class AccessControlService {
                 const message = `Límite de ${metric} excedido. ${usageResult.actionApplied || 'Contacte a soporte.'}`;
 
                 await logEvento({
-                    nivel: 'WARN',
-                    origen: 'ACCESS_CONTROL',
-                    accion: 'BLOCKED_BY_LIMIT',
-                    mensaje: message,
-                    detalles: { tenantId, metric, usageResult },
-                    correlacion_id: 'SYSTEM_BILLING'
+                    level: 'WARN',
+                    source: 'ACCESS_CONTROL',
+                    action: 'BLOCKED_BY_LIMIT',
+                    message: message,
+                    details: { tenantId, metric, usageResult },
+                    correlationId: 'SYSTEM_BILLING'
                 });
 
                 throw new AppError('FORBIDDEN', 403, message);

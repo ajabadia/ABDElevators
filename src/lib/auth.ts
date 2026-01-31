@@ -47,11 +47,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                     if (!user) {
                         await logEvento({
-                            nivel: 'WARN',
-                            origen: 'AUTH',
-                            accion: 'LOGIN_FAIL_USER_NOT_FOUND',
-                            mensaje: `Intento de login fallido: ${email} (no existe)`,
-                            correlacion_id: `auth-fail-${Date.now()}`
+                            level: 'WARN',
+                            source: 'AUTH',
+                            action: 'LOGIN_FAIL_USER_NOT_FOUND',
+                            message: `Intento de login fallido: ${email} (no existe)`,
+                            correlationId: `auth-fail-${Date.now()}`
                         });
                         return null;
                     }
@@ -61,11 +61,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                     if (!isValidPassword) {
                         await logEvento({
-                            nivel: 'WARN',
-                            origen: 'AUTH',
-                            accion: 'LOGIN_FAIL_PASSWORD',
-                            mensaje: `Intento de login fallido: ${email} (contraseña incorrecta)`,
-                            correlacion_id: `auth-fail-${Date.now()}`
+                            level: 'WARN',
+                            source: 'AUTH',
+                            action: 'LOGIN_FAIL_PASSWORD',
+                            message: `Intento de login fallido: ${email} (contraseña incorrecta)`,
+                            correlationId: `auth-fail-${Date.now()}`
                         });
                         return null;
                     }
@@ -76,11 +76,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                         if (!mfaCode) {
                             await logEvento({
-                                nivel: 'INFO',
-                                origen: 'AUTH',
-                                accion: 'MFA_REQUIRED',
-                                mensaje: `Login paso 1: Usuario ${email} requiere MFA`,
-                                correlacion_id: `auth-mfa-${Date.now()}`
+                                level: 'INFO',
+                                source: 'AUTH',
+                                action: 'MFA_REQUIRED',
+                                message: `Login paso 1: Usuario ${email} requiere MFA`,
+                                correlationId: `auth-mfa-${Date.now()}`
                             });
                             // Lanzamos un error específico que el frontend pueda capturar
                             throw new Error("MFA_REQUIRED");
@@ -89,35 +89,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         const isMfaValid = await MfaService.verify(user._id.toString(), mfaCode);
                         if (!isMfaValid) {
                             await logEvento({
-                                nivel: 'WARN',
-                                origen: 'AUTH',
-                                accion: 'MFA_FAIL',
-                                mensaje: `Intento de login fallido: Código MFA incorrecto para ${email}`,
-                                correlacion_id: `auth-mfa-err-${Date.now()}`
+                                level: 'WARN',
+                                source: 'AUTH',
+                                action: 'MFA_FAIL',
+                                message: `Intento de login fallido: Código MFA incorrecto para ${email}`,
+                                correlationId: `auth-mfa-err-${Date.now()}`,
+                                details: { email }
                             });
                             throw new Error("INVALID_MFA_CODE");
                         }
                     }
 
                     await logEvento({
-                        nivel: 'INFO',
-                        origen: 'AUTH',
-                        accion: 'LOGIN_SUCCESS',
-                        mensaje: `Usuario logueado: ${email}`,
-                        correlacion_id: `auth-${Date.now()}`
+                        level: 'INFO',
+                        source: 'AUTH',
+                        action: 'LOGIN_SUCCESS',
+                        message: `Usuario logueado: ${email}`,
+                        correlationId: `auth-${Date.now()}`,
+                        details: { email, userId: user._id.toString() }
                     });
 
                     // Retornar usuario con rol y tenant context
                     return {
                         id: user._id.toString(),
                         email: user.email,
-                        name: user.nombre,
-                        role: user.rol, // Acting role
-                        baseRole: user.rol, // Permanent role from DB
+                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+                        role: user.role, // Acting role
+                        baseRole: user.role, // Permanent role from DB
                         tenantId: user.tenantId || process.env.SINGLE_TENANT_ID,
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
-                        image: user.foto_url,
+                        image: user.photoUrl,
                         tenantAccess: user.tenantAccess || []
                     };
                 } catch (error: any) {
@@ -129,11 +131,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     console.error("[Auth ERROR] Exception during authorize:", error);
                     try {
                         await logEvento({
-                            nivel: 'ERROR',
-                            origen: 'AUTH',
-                            accion: 'LOGIN_EXCEPTION',
-                            mensaje: error.message,
-                            correlacion_id: `auth-err-${Date.now()}`,
+                            level: 'ERROR',
+                            source: 'AUTH',
+                            action: 'LOGIN_EXCEPTION',
+                            message: error.message,
+                            correlationId: `auth-err-${Date.now()}`,
                             stack: error.stack
                         });
                     } catch (e) {

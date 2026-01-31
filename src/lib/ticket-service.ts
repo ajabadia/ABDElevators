@@ -32,11 +32,11 @@ export class TicketService {
         const result = await ticketColl.insertOne(validated as any);
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TICKET_SERVICE',
-            accion: 'CREATE_TICKET',
-            mensaje: `Ticket creado ${ticketNumber} para ${data.userEmail}`,
-            correlacion_id: ticketNumber,
+            level: 'INFO',
+            source: 'TICKET_SERVICE',
+            action: 'CREATE_TICKET',
+            message: `Ticket creado ${ticketNumber} para ${data.userEmail}`,
+            correlationId: ticketNumber,
             tenantId: data.tenantId,
             userId: data.createdBy,
             userEmail: data.userEmail
@@ -115,12 +115,12 @@ export class TicketService {
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TICKET_SERVICE',
-            accion: 'ADD_MESSAGE',
-            mensaje: `Nuevo mensaje en ticket ${ticketId} por ${message.author}`,
-            correlacion_id: ticketId,
-            detalles: { author: message.author }
+            level: 'INFO',
+            source: 'TICKET_SERVICE',
+            action: 'ADD_MESSAGE',
+            message: `Nuevo mensaje en ticket ${ticketId} por ${message.author}`,
+            correlationId: ticketId,
+            details: { author: message.author }
         });
 
         return newMessage;
@@ -162,12 +162,12 @@ export class TicketService {
         }
 
         await logEvento({
-            nivel: 'INFO',
-            origen: 'TICKET_SERVICE',
-            accion: 'REASSIGN_TICKET',
-            mensaje: `Ticket ${ticketId} reasignado a ${data.assignedTo}`,
-            correlacion_id: ticketId,
-            detalles: { assignedTo: data.assignedTo, note: !!data.note }
+            level: 'INFO',
+            source: 'TICKET_SERVICE',
+            action: 'REASSIGN_TICKET',
+            message: `Ticket ${ticketId} reasignado a ${data.assignedTo}`,
+            correlationId: ticketId,
+            details: { assignedTo: data.assignedTo, note: !!data.note }
         });
     }
 }
