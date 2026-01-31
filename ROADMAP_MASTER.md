@@ -16,27 +16,19 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **FASE 6: RAG PROFESIONAL** (Checklists Dinámicos, Configurador Visual, Validación Humana, Audit Trail).
 - [x] **FASE 7: GENERALIZACIÓN SAAS** (Core Abstraction, Workflows, Multi-tenant Metadata, Billing).
 
-#### 🟣 FASE 8-12: PREDICCIÓN, AUTOMATIZACIÓN & GOBIERNO (COMPLETADO ✅)
-- [x] **FASE 8: PREDICTIVE ANALYTICS** (Detección de patrones y fallos potenciales).
-- [x] **FASE 11: ADVANCED MULTI-TENANCY & GLOBAL GOVERNANCE**
-  - [x] Context Switching: Selector global persistente.
-  - [x] RBAC Cross-Tenant: Usuarios en múltiples organizaciones.
-  - [x] Data Isolation: Middleware de filtrado dinámico.
-  - [x] Global Dashboard: Vista agregada de métricas.
-- [x] **FASE 12: MODO DEMO EFÍMERO & FREE TRIAL** (Evolucionado a Universal Sandbox).
-  - [x] Ephemeral Tenant Factory.
-  - [x] Auto-Cleanup Engine (TTL).
-  - [x] Demo Data Seeding.
+#### 🟡 FASE 12: MODO DEMO EFÍMERO & FREE TRIAL (PENDIENTE)
+- [ ] **Ephemeral Tenant Factory**: Crear tenant de prueba con un solo click.
+- [ ] **Auto-Cleanup Engine (TTL)**: Borrado automático.
+- [ ] **Demo Data Seeding**: Ingesta dummy.
 
-#### 🛡️ FASE 13-16: SEGURIDAD, ALTA DISPONIBILIDAD & ESCALA GLOBAL (COMPLETADO ✅)
-- [x] **FASE 13: CONTINUIDAD, BACKUP & DISASTER RECOVERY**
-  - [x] Unified Backup Engine (mongodump cross-tenant).
-  - [x] Cloudinary Archiver & S3 Sync.
-- [x] **FASE 14: GDPR COMPLIANCE & DERECHO AL OLVIDO**
-  - [x] Purge System & Document Shredding.
-- [x] **FASE 16: MARKETING OVERHAUL**
-  - [x] Hero / Bento Redesign (Aesthetics 2.0).
-  - [x] FAQ & Vision (/about page).
+#### 🛡️ FASE 13-16: SEGURIDAD, ALTA DISPONIBILIDAD & ESCALA GLOBAL
+- [ ] **FASE 13: CONTINUIDAD & DISASTER RECOVERY** (Pendiente)
+  - [ ] Unified Backup Engine.
+  - [ ] Cloudinary Archiver & S3 Sync.
+- [ ] **FASE 14: GDPR COMPLIANCE** (Pendiente - ver Backlog).
+- [x] **FASE 16: MARKETING OVERHAUL** (Completado)
+  - [x] Hero / Bento Redesign.
+  - [x] FAQ & Vision.
 
 #### 🚀 FASE 17-18: AUTONOMÍA OPERATIVA & AUDITORÍA TOTAL (COMPLETADO ✅)
 - [x] **FASE 17: AI Infrastructure Autoscaling** - Implementation of the `InfrastructureAutoscaler`.
