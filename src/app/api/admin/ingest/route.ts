@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
 import { ValidationError, AppError, DatabaseError } from '@/lib/errors';
 import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/lib/llm';
-import { extractTextFromPDF } from '@/lib/pdf-utils';
+import { extractTextAdvanced, extractTextFromPDF } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
 import { uploadRAGDocument } from '@/lib/cloudinary';
 import { z } from 'zod';
@@ -183,9 +183,9 @@ export async function POST(req: NextRequest) {
         const cloudinaryResult = await uploadRAGDocument(buffer, file.name, tenantId);
         await logEvento({ level: 'DEBUG', source: 'API_INGEST', action: 'PROCESS', message: 'Uploaded to Cloudinary', correlationId });
 
-        // 2. Extract Text
-        const text = await extractTextFromPDF(buffer);
-        await logEvento({ level: 'DEBUG', source: 'API_INGEST', action: 'PROCESS', message: `Text extracted: ${text.length} chars`, correlationId });
+        // 2. Extract Text (Advanced Hybrid Strategy - Phase 27)
+        const text = await extractTextAdvanced(buffer);
+        await logEvento({ level: 'DEBUG', source: 'API_INGEST', action: 'PROCESS', message: `Text extracted (PyMuPDF): ${text.length} chars`, correlationId });
 
         // 2.1. Detect Language (Phase 21.1)
         const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
