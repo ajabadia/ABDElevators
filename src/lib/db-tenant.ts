@@ -15,6 +15,7 @@ import {
 import { connectDB, connectLogsDB, getMongoClient } from '@/lib/db';
 import { auth } from './auth';
 import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 
 /**
  * Interface para el contexto de sesión necesario para el aislamiento.
@@ -220,14 +221,29 @@ export async function getTenantCollection<T extends Document>(
         try {
             session = await auth();
         } catch (e) {
+            console.warn('[db-tenant] Failed to retrieve session from auth()', e);
         }
     }
 
-    const db = dbType === 'LOGS' ? await connectLogsDB() : await connectDB();
-
+    // 🛡️ REGLA DE ORO #9: Hardening Multi-tenant
+    // Si no hay sesión y no estamos en modo Single Tenant, BLOQUEO TOTAL.
     if (!session?.user && !process.env.SINGLE_TENANT_ID) {
-        throw new AppError('UNAUTHORIZED', 401, 'Aislamiento de Tenant fallido: Contexto no encontrado');
+        const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado`;
+        console.error(`[SECURITY ALERT] ${errorMsg}`);
+
+        // Auditamos el fallo si es posible (Fire-and-forget)
+        logEvento({
+            level: 'ERROR',
+            source: 'DB_TENANT',
+            action: 'ISOLATION_FAILURE',
+            message: errorMsg,
+            correlationId: 'security-fault'
+        }).catch(() => { });
+
+        throw new AppError('UNAUTHORIZED', 401, errorMsg);
     }
+
+    const db = dbType === 'LOGS' ? await connectLogsDB() : await connectDB();
 
     const rawCollection = db.collection<T>(collectionName);
     return new SecureCollection<T>(rawCollection, session, options);

@@ -408,10 +408,10 @@ export function ConsumptionDashboard() {
                                                 </span>
                                             </td>
                                             <td className="p-4 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                {log.recurso}
+                                                {log.resource}
                                             </td>
                                             <td className="p-4 text-sm font-bold text-right text-slate-900 dark:text-white">
-                                                {log.type === 'STORAGE_BYTES' ? formatBytes(log.valor || 0) : (log.valor || 0).toLocaleString()}
+                                                {log.type === 'STORAGE_BYTES' ? formatBytes(log.value || 0) : (log.value || 0).toLocaleString()}
                                             </td>
                                         </tr>
                                     ))}

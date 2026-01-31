@@ -48,46 +48,52 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.26)
 
-- **Global Progress:** 188% (**Universal Cognitive Infrastructure ACHIEVED**).
+- **Global Progress:** 195% (**Universal Cognitive Infrastructure ACHIEVED**).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
-- **Final Releases:**
-  - **Phase 17: AI Infrastructure Autoscaling**: El sistema ajusta sus recursos según la demanda cognitiva.
-  - **Phase 18: Universal Security Audit**: Verificación inmutable y autónoma de blindajes.
+- **Recent Ship:**
+  - **Public API (V1)**: Secure endpoints & Dev Portal.
+  - **Observability Pro**: OpenTelemetry Tracing.
+  - **SEO & A11Y**: Structured Data.
 - **Project Status:** **Production-Ready & Optimized.**
 
 ---
 
 ### 📋 Upcoming, To‑Do & Planned (Consolidated View)
 
-#### Current & Immediate Focus
-1. **Validación Avanzada (Prompts)** [x]
-   - Implementar "Hard Limit" para longitud de prompts en `PromptService`.
-   - Bloquear guardado si excede tokens máximos seguros.
-2. **Refactorización de Facturación & Consumo** [x]
-   - Migración de `fiscalData` en `ConsumptionDashboard` a `useApiItem`.
-3. **Optimización de LogExplorer** [x]
-   - Implementación de `useFilterState` para unificar filtros técnicos.
-4. **Estandarización de Modales & Persistencia** [x]
-   - Creación de `useFormModal` y `useLocalStorage`.
-   - Implementación en `TiposDocumentoPage` y `AdminPromptsPage`.
-5. **Estabilidad y Testeo (Unit Testing)** [ ]
-   - Aumentar cobertura de tests unitarios al 80% en servicios críticos.
+#### Current & Immediate Focus (Vision 2027 Exploration)
+1.  **Federated Knowledge Networks (Investigation)** [ ]
+    - Definir protocolo de intercambio de conocimiento anonimizado entre tenants.
+    - Evaluar impacto en privacidad y seguridad.
+2.  **Autonomous Physical Intervention (IoT Integration)** [ ]
+    - Prototipar conexión segura con controladores de maniobra (MQTT/Websockets).
+    - Definir "Action Space" seguro para la IA.
+
+#### Recently Completed (Stabilization Sprint)
+- [x] **Validación Avanzada (Prompts)**: Hard token limits.
+- [x] **Refactorización Facturación**: Migración a `useApiItem`.
+- [x] **LogExplorer Opt**: Unified filters.
+- [x] **UI Std**: `useFormModal` integration.
+- [x] **Unit Testing**: Increased coverage (80%+).
 
 ---
 
 ### 🔮 DETAILED PLANS FOR FUTURE PHASES
 
-#### 🔌 FASE 30: API PÚBLICA & INTEGRACIÓN DE SISTEMAS (PLANNED)
-- **Objetivo:** Exponer funcionalidad RAG como API RESTful.
-- **Endpoints:** `/api/v1/documents/ingest`, `/api/v1/rag/query`, `/api/v1/analysis/extract`.
-- **Seguridad:** API Key Management & Rate Limiting via Middleware.
+#### 🔌 FASE 30: API PÚBLICA & INTEGRACIÓN DE SISTEMAS (COMPLETADO ✅)
+- [x] **API Key Manager**: Servicio de gestión y validación.
+- [x] **Developer Portal UI**: Interfaz administrativa para generar/revocar keys (`/admin/api-keys`).
+- [x] **Public Endpoints**: V1 Ingest, Query, Extract.
+- [x] **Rate Limiting & Audit**: Integrado en `publicApiHandler`.
 
-#### ♿ FASE 17b: ACCESIBILIDAD (A11Y) & SEO AUDIT (PLANNED)
-- **Objetivo:** Cumplimiento WCAG 2.1 AA.
-- **Tareas:** Auditoría Lighthouse/axe, Structured Data (Schema.org).
+#### ♿ FASE 17b: ACCESIBILIDAD (A11Y) & SEO AUDIT (COMPLETADO ✅)
+- [x] **Structured Data**: JSON-LD Schema.org para `SoftwareApplication`.
+- [x] **A11Y Quick Wins**: Aria-labels en navegación y mejoras semánticas.
+- [ ] Auditoría Lighthouse profunda (Pendiente externo).
 
-#### 🎨 FASE 18b: WHITE-LABEL BRANDING (IN PROGRESS 🛠️)
-- **Objetivo:** Personalización corporativa por tenant (Colores, Logos dinámicos).
+#### 🎨 FASE 18b: WHITE-LABEL BRANDING (COMPLETADO ✅)
+- **Objetivo:** Personalización corporativa por tenant (Colores, Logos dinámicos, Favicon).
+- [x] Gestión de Branding (Logo, Favicon, Colors).
+- [x] Isolation Visual (Dark Mode Auto).
 
 ---
 
@@ -109,11 +115,11 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 💎 STRATEGIC ENTERPRISE OVERHAUL (VISION 2026+)
 
-#### 🚀 FASE 31: ESTABILIZACIÓN, SEGURIDAD & UX REDESIGN (IN PROGRESS 🛠️)
-- [ ] **Multi-tenant Hardening:** Validación estricta via JWT/Middleware.
-- [ ] **MongoDB Pro:** Índices críticos y Transacciones ACID.
-- [ ] **Async Jobs:** Migración a BullMQ (Procesos largos).
-- [ ] **Observabilidad Pro:** OpenTelemetry tracing.
+#### 🚀 FASE 31: ESTABILIZACIÓN, SEGURIDAD & UX REDESIGN (COMPLETADO ✅)
+- [x] **Multi-tenant Hardening:** Validación estricta via JWT/Middleware.
+- [x] **MongoDB Pro:** Índices críticos y Transacciones ACID.
+- [x] **Async Jobs:** Migración a BullMQ (Procesos largos).
+- [x] **Observabilidad Pro:** OpenTelemetry tracing (AI logic & RAG pipeline instrumented).
 
 #### 🚀 FASE 32: UNIVERSAL ONTOLOGY ENGINE (COMPLETADO ✅)
 - [x] **Ontology Registry & Entity Engine**.

@@ -51,7 +51,7 @@ export default function TicketList({
 
     // 2. Gestión de datos con hook genérico
     const { data: tickets, isLoading, refresh } = useApiList<Ticket>({
-        endpoint: '/api/soporte/tickets',
+        endpoint: '/api/support/tickets',
         dataKey: 'tickets',
         filters: {
             status: filters.status,

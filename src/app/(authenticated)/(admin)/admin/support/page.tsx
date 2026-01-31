@@ -102,7 +102,7 @@ function TicketDetailWrapper({
     onActionComplete: () => void
 }) {
     const { data: ticket, isLoading, refresh } = useApiItem<TicketUI>({
-        endpoint: `/api/soporte/tickets/${ticketId}`,
+        endpoint: `/api/support/tickets/${ticketId}`,
         dataKey: 'ticket'
     });
 

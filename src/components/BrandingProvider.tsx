@@ -41,7 +41,18 @@ export default function BrandingProvider({ children }: BrandingProviderProps) {
                 const data = await res.json();
 
                 if (data.success && data.config?.branding) {
-                    const { colors, autoDarkMode } = data.config.branding;
+                    const { colors, autoDarkMode, favicon } = data.config.branding;
+
+                    // Update Favicon
+                    if (favicon?.url) {
+                        let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+                        if (!link) {
+                            link = document.createElement('link');
+                            link.rel = 'icon';
+                            document.getElementsByTagName('head')[0].appendChild(link);
+                        }
+                        link.href = favicon.url;
+                    }
 
                     if (!colors) return;
 

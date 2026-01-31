@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserCog, KeyRound, Mail, Plus } from "lucide-react";
+import { UserCog, KeyRound, Mail, Plus, Shield } from "lucide-react";
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
 import { useSession } from "next-auth/react";
 import { PageContainer } from "@/components/ui/page-container";
@@ -29,6 +29,7 @@ interface User {
     tenantId?: string;
     isActive: boolean;
     createdAt: string;
+    mfaEnabled?: boolean;
 }
 
 export default function UsuariosPage() {
@@ -71,6 +72,23 @@ export default function UsuariosPage() {
             if (c.accessorKey === 'tenantId' && !isSuperAdmin) return false;
             return true;
         }),
+        {
+            header: "Seguridad",
+            accessorKey: "mfaEnabled", // Para sort
+            cell: (u: User) => (
+                <div className="flex items-center gap-2">
+                    {u.mfaEnabled ? (
+                        <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full text-xs font-medium border border-emerald-100">
+                            <Shield className="w-3 h-3" /> MFA Activo
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-1 rounded-full text-xs font-medium border border-slate-100">
+                            <Shield className="w-3 h-3 grayscale opacity-50" /> Sin MFA
+                        </div>
+                    )}
+                </div>
+            )
+        },
         {
             header: "Acciones",
             cell: (u: User) => (

@@ -39,7 +39,6 @@ describe("PromptService Extended Coverage", () => {
         template: "v1 template",
         variables: [],
         createdAt: new Date(),
-        // Add missing fields required by PromptVersionSchema
         tenantId: mockTenantId,
         changedBy: "test_user"
     };
@@ -57,10 +56,10 @@ describe("PromptService Extended Coverage", () => {
 
             (getTenantCollection as any).mockImplementation(async (name: string) => {
                 if (name === 'prompts') {
-                    return { collection: { findOne: mockFindOnePrompt, updateOne: mockUpdateOne }, tenantId: mockTenantId };
+                    return { findOne: mockFindOnePrompt, updateOne: mockUpdateOne, tenantId: mockTenantId };
                 }
                 if (name === 'prompt_versions') {
-                    return { collection: { findOne: mockFindOneVersion, insertOne: mockInsertOne }, tenantId: mockTenantId };
+                    return { findOne: mockFindOneVersion, insertOne: mockInsertOne, tenantId: mockTenantId };
                 }
             });
 
@@ -86,14 +85,14 @@ describe("PromptService Extended Coverage", () => {
             );
 
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: "ROLLBACK_PROMPT",
-                detalles: expect.objectContaining({ targetVersion: 1 })
+                action: "ROLLBACK_PROMPT",
+                details: expect.objectContaining({ targetVersion: 1 })
             }));
         });
 
         it("should throw NOT_FOUND if target version does not exist", async () => {
             (getTenantCollection as any).mockResolvedValue({
-                collection: { findOne: jest.fn().mockResolvedValue(null) },
+                findOne: jest.fn().mockResolvedValue(null),
                 tenantId: mockTenantId
             });
 
@@ -104,14 +103,11 @@ describe("PromptService Extended Coverage", () => {
 
     describe("listPrompts", () => {
         it("should list active prompts for a tenant", async () => {
-            const mockFind = jest.fn().mockReturnValue({
-                sort: jest.fn().mockReturnValue({
-                    toArray: jest.fn().mockResolvedValue([mockPrompt])
-                })
-            });
+            // SecureCollection.find returns an array of documents directly.
+            const mockFind = jest.fn().mockResolvedValue([mockPrompt]);
 
             (getTenantCollection as any).mockResolvedValue({
-                collection: { find: mockFind },
+                find: mockFind,
                 tenantId: mockTenantId
             });
 
@@ -122,20 +118,16 @@ describe("PromptService Extended Coverage", () => {
             expect(mockFind).toHaveBeenCalledWith(expect.objectContaining({
                 tenantId: mockTenantId,
                 $or: expect.arrayContaining([{ active: true }])
-            }));
+            }), expect.any(Object));
         });
     });
 
     describe("getVersionHistory", () => {
         it("should return version history sorted by version descending", async () => {
-            const mockFind = jest.fn().mockReturnValue({
-                sort: jest.fn().mockReturnValue({
-                    toArray: jest.fn().mockResolvedValue([mockVersionSnapshot])
-                })
-            });
+            const mockFind = jest.fn().mockResolvedValue([mockVersionSnapshot]);
 
             (getTenantCollection as any).mockResolvedValue({
-                collection: { find: mockFind },
+                find: mockFind,
                 tenantId: mockTenantId
             });
 
@@ -146,7 +138,7 @@ describe("PromptService Extended Coverage", () => {
             expect(mockFind).toHaveBeenCalledWith(expect.objectContaining({
                 promptId: expect.any(ObjectId),
                 tenantId: mockTenantId
-            }));
+            }), expect.any(Object));
         });
     });
 });

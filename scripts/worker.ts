@@ -1,7 +1,13 @@
 import { Worker, Job } from 'bullmq';
 import { getRedisConnection } from '../src/lib/redis';
 import { logEvento } from '../src/lib/logger';
-import { JobType, JobPayload } from '../src/lib/queue-service';
+import { JobPayload } from '../src/lib/queue-service';
+import { AsyncJobsLogic } from '../src/lib/async-jobs-logic';
+import { connectDB, connectAuthDB, connectLogsDB } from '../src/lib/db';
+import { initTracing } from '../src/lib/tracing';
+
+// 🛡️ FASE 31: Observabilidad Pro
+initTracing('abd-async-worker');
 
 /**
  * Worker principal de ABDElevators para procesamiento asíncrono.
@@ -10,29 +16,43 @@ import { JobType, JobPayload } from '../src/lib/queue-service';
 async function startWorker() {
     console.log('👷 Iniciando Worker de Procesos Asíncronos...');
 
+    // Asegurar conexiones DB antes de empezar
+    try {
+        await Promise.all([
+            connectDB(),
+            connectAuthDB(),
+            connectLogsDB()
+        ]);
+        console.log('📂 Conexiones a Bases de Datos establecidas.');
+    } catch (dbErr) {
+        console.error('❌ Error conectando a BD:', dbErr);
+        process.exit(1);
+    }
+
     const connection = getRedisConnection();
 
     // 1. Worker para Análisis de PDF
     const analysisWorker = new Worker<JobPayload>(
         'PDF_ANALYSIS',
         async (job: Job<JobPayload>) => {
-            await processPdfJob(job);
+            console.log(`[Worker] Procesando PDF Analysis Job ${job.id}`);
+            return await AsyncJobsLogic.processPdfAnalysis(
+                job.data,
+                job.id!,
+                (p) => job.updateProgress(p)
+            );
         },
-        { connection, concurrency: 2 }
+        {
+            connection,
+            concurrency: 2,
+            removeOnComplete: { count: 100 },
+            removeOnFail: { count: 500 }
+        }
     );
 
-    // 2. Worker para Generación de Informes
-    const reportWorker = new Worker<JobPayload>(
-        'REPORT_GENERATION',
-        async (job: Job<JobPayload>) => {
-            await processReportJob(job);
-        },
-        { connection, concurrency: 5 }
-    );
-
-    // Eventos Globales de los Workers
+    // Eventos Globales
     analysisWorker.on('completed', (job) => {
-        console.log(`✅ Job ${job.id} completado con éxito.`);
+        console.log(`✅ Job ${job.id} de tipo ${job.name} completado con éxito.`);
     });
 
     analysisWorker.on('failed', async (job, err) => {
@@ -48,37 +68,11 @@ async function startWorker() {
                 correlationId: job.id || 'unknown',
                 tenantId: job.data.tenantId,
                 details: { error: err.message, stack: err.stack }
-            });
+            }).catch(() => { });
         }
     });
 
     console.log('🚀 Workers registrados y escuchando colas.');
-}
-
-// Simuladores de procesos pesados
-async function processPdfJob(job: Job<JobPayload>) {
-    const { tenantId, data } = job.data;
-    console.log(`Analyzing PDF for Tenant ${tenantId}: ${data.filename}`);
-
-    // Simulación de procesamiento pesado (IA + Parsing)
-    let progress = 0;
-    for (let i = 0; i < 5; i++) {
-        await new Promise(r => setTimeout(r, 1000));
-        progress += 20;
-        await job.updateProgress(progress);
-    }
-
-    return { success: true, analysisId: 'ANL-' + Date.now() };
-}
-
-async function processReportJob(job: Job<JobPayload>) {
-    const { tenantId, data } = job.data;
-    console.log(`Generating Report for Tenant ${tenantId}: ${data.reportType}`);
-
-    // Simulación de generación de PDF masivo
-    await new Promise(r => setTimeout(r, 3000));
-
-    return { success: true, reportUrl: `https://storage.abd.com/reports/${tenantId}/report.pdf` };
 }
 
 // Iniciar

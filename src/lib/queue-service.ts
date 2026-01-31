@@ -15,6 +15,7 @@ export type JobType =
 export interface JobPayload {
     tenantId: string;
     userId: string;
+    correlationId?: string;
     data: any;
 }
 

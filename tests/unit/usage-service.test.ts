@@ -36,22 +36,22 @@ describe("UsageService", () => {
         it("should log LLM tokens usage", async () => {
             const mockInsertOne = jest.fn().mockResolvedValue({ acknowledged: true });
             (getTenantCollection as any).mockResolvedValue({
-                collection: { insertOne: mockInsertOne }
+                insertOne: mockInsertOne
             });
 
             await UsageService.trackLLM(mockTenantId, 500, "gemini-3-flash");
 
             expect(mockInsertOne).toHaveBeenCalledWith(expect.objectContaining({
-                tipo: 'LLM_TOKENS',
-                valor: 500,
-                recurso: 'gemini-3-flash'
+                type: 'LLM_TOKENS',
+                value: 500,
+                resource: 'gemini-3-flash'
             }));
         });
 
         it("should trigger a notification if consumption is high", async () => {
             const mockInsertOne = jest.fn().mockResolvedValue({ acknowledged: true });
             (getTenantCollection as any).mockResolvedValue({
-                collection: { insertOne: mockInsertOne }
+                insertOne: mockInsertOne
             });
 
             await UsageService.trackLLM(mockTenantId, 15000, "gemini-3-pro");
@@ -62,7 +62,7 @@ describe("UsageService", () => {
                 title: 'Pico de Consumo Detectado'
             }));
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: 'HIGH_CONSUMPTION'
+                action: 'HIGH_CONSUMPTION'
             }));
         });
     });
@@ -71,14 +71,14 @@ describe("UsageService", () => {
         it("should log storage usage", async () => {
             const mockInsertOne = jest.fn().mockResolvedValue({ acknowledged: true });
             (getTenantCollection as any).mockResolvedValue({
-                collection: { insertOne: mockInsertOne }
+                insertOne: mockInsertOne
             });
 
             await UsageService.trackStorage(mockTenantId, 1024 * 1024, "document_1.pdf");
 
             expect(mockInsertOne).toHaveBeenCalledWith(expect.objectContaining({
-                tipo: 'STORAGE_BYTES',
-                valor: 1048576
+                type: 'STORAGE_BYTES',
+                value: 1048576
             }));
         });
     });
@@ -86,20 +86,25 @@ describe("UsageService", () => {
     describe("getTenantROI", () => {
         it("should calculate ROI metrics based on usage logs and orders", async () => {
             const mockCountDocuments = jest.fn().mockResolvedValue(10); // 10 reports
-            const mockAggregate = jest.fn().mockReturnValue({
-                toArray: jest.fn().mockResolvedValue([
-                    { _id: 'VECTOR_SEARCH', count: 20 },
-                    { _id: 'SAVINGS_TOKENS', count: 5, totalValue: 5000 }
-                ])
-            });
 
-            const mockDb = {
-                collection: jest.fn().mockImplementation((name) => {
-                    if (name === 'pedidos') return { countDocuments: mockCountDocuments };
-                    if (name === 'usage_logs') return { aggregate: mockAggregate };
-                })
+            // Note: SecureCollection.aggregate returns an array directly because it calls .toArray() internally.
+            const mockAggregate = jest.fn().mockResolvedValue([
+                { _id: 'VECTOR_SEARCH', count: 20 },
+                { _id: 'SAVINGS_TOKENS', count: 5, totalValue: 5000 }
+            ]);
+
+            const mockUsageLogs = {
+                aggregate: mockAggregate
             };
-            (connectDB as any).mockResolvedValue(mockDb);
+            const mockEntities = {
+                countDocuments: mockCountDocuments
+            };
+
+            (getTenantCollection as any).mockImplementation((name: string) => {
+                if (name === 'usage_logs') return Promise.resolve(mockUsageLogs);
+                if (name === 'entities') return Promise.resolve(mockEntities);
+                return Promise.resolve({});
+            });
 
             const result = await UsageService.getTenantROI(mockTenantId);
 

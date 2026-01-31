@@ -49,6 +49,8 @@ import BrandingProvider from "@/components/BrandingProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 
+import { StructuredData } from "@/components/seo/StructuredData";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +66,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <StructuredData />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

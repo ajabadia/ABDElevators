@@ -1,0 +1,303 @@
+PASS tests/unit/workflow-service.test.ts
+PASS tests/unit/pdf-export.test.ts
+  ● Console
+
+    console.log
+      PDF generado en 47ms
+
+      at generatePDFReport (src/lib/pdf-export.ts:135:17)
+
+PASS tests/unit/usage-service.test.ts
+PASS tests/unit/usage-service-coverage.test.ts
+  ● Console
+
+    console.error
+      [UsageService] Error calculating User Metrics: Error: DB Connection Failed
+          at Object.<anonymous> (D:\desarrollos\ABDElevators\tests\unit\usage-service-coverage.test.ts:47:50)
+          at Promise.finally.completed (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+          at _callCircusTest (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+          at D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+          at _runTestsForDescribeBlock (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+          at run (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+          at jestAdapter (D:\desarrollos\ABDElevators\node_modules\jest-circus\build\runner.js:101:19)
+          at runTestInternal (D:\desarrollos\ABDElevators\node_modules\jest-runner\build\testWorker.js:275:16)
+          at runTest (D:\desarrollos\ABDElevators\node_modules\jest-runner\build\testWorker.js:343:7)
+          at Object.worker (D:\desarrollos\ABDElevators\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 264 |[39m
+     [90m 265 |[39m         } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 266 |[39m             console[33m.[39merror([32m'[UsageService] Error calculating User Metrics:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 267 |[39m             [36mreturn[39m { validationsCount[33m:[39m [35m0[39m[33m,[39m ticketsCreated[33m:[39m [35m0[39m[33m,[39m ticketsResolved[33m:[39m [35m0[39m[33m,[39m efficiencyScore[33m:[39m [35m0[39m }[33m;[39m
+     [90m 268 |[39m         }
+     [90m 269 |[39m     }[0m
+
+      at Function.getUserMetrics (src/lib/usage-service.ts:266:21)
+      at Object.<anonymous> (tests/unit/usage-service-coverage.test.ts:49:28)
+
+PASS tests/unit/checklist-extractor.test.ts
+FAIL tests/unit/prompt-service.test.ts
+  ● PromptService › getPrompt › should return a prompt if found and active
+
+    TypeError: collection.findOne is not a function
+
+    [0m [90m 15 |[39m         [36mconst[39m collection [33m=[39m [36mawait[39m getTenantCollection([32m'prompts'[39m)[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne({ key[33m,[39m tenantId[33m,[39m active[33m:[39m [36mtrue[39m })[33m;[39m
+     [90m    |[39m                                         [31m[1m^[22m[39m
+     [90m 18 |[39m
+     [90m 19 |[39m         [36mif[39m ([33m![39mprompt) {
+     [90m 20 |[39m             console[33m.[39merror([32m`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`[39m)[33m;[39m[0m
+
+      at Function.getPrompt (src/lib/prompt-service.ts:17:41)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:49:28)
+
+  ● PromptService › getPrompt › should throw NOT_FOUND if prompt does not exist
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected constructor: AppError
+    Received constructor: TypeError
+
+    Received message: "collection.findOne is not a function"
+
+        [0m [90m 15 |[39m         [36mconst[39m collection [33m=[39m [36mawait[39m getTenantCollection([32m'prompts'[39m)[33m;[39m
+         [90m 16 |[39m
+        [31m[1m>[22m[39m[90m 17 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne({ key[33m,[39m tenantId[33m,[39m active[33m:[39m [36mtrue[39m })[33m;[39m
+         [90m    |[39m                                         [31m[1m^[22m[39m
+         [90m 18 |[39m
+         [90m 19 |[39m         [36mif[39m ([33m![39mprompt) {
+         [90m 20 |[39m             console[33m.[39merror([32m`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`[39m)[33m;[39m[0m
+
+      at Function.getPrompt (src/lib/prompt-service.ts:17:41)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:66:13)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:67:26)
+
+  ● PromptService › getRenderedPrompt › should render template with variables
+
+    TypeError: collection.findOne is not a function
+
+    [0m [90m 15 |[39m         [36mconst[39m collection [33m=[39m [36mawait[39m getTenantCollection([32m'prompts'[39m)[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne({ key[33m,[39m tenantId[33m,[39m active[33m:[39m [36mtrue[39m })[33m;[39m
+     [90m    |[39m                                         [31m[1m^[22m[39m
+     [90m 18 |[39m
+     [90m 19 |[39m         [36mif[39m ([33m![39mprompt) {
+     [90m 20 |[39m             console[33m.[39merror([32m`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`[39m)[33m;[39m[0m
+
+      at Function.getPrompt (src/lib/prompt-service.ts:17:41)
+      at Function.getRenderedPrompt (src/lib/prompt-service.ts:35:24)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:83:28)
+
+  ● PromptService › getRenderedPrompt › should throw if required variables are missing
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected pattern: /Variables requeridas faltantes/
+    Received message: "collection.findOne is not a function"
+
+        [0m [90m 15 |[39m         [36mconst[39m collection [33m=[39m [36mawait[39m getTenantCollection([32m'prompts'[39m)[33m;[39m
+         [90m 16 |[39m
+        [31m[1m>[22m[39m[90m 17 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne({ key[33m,[39m tenantId[33m,[39m active[33m:[39m [36mtrue[39m })[33m;[39m
+         [90m    |[39m                                         [31m[1m^[22m[39m
+         [90m 18 |[39m
+         [90m 19 |[39m         [36mif[39m ([33m![39mprompt) {
+         [90m 20 |[39m             console[33m.[39merror([32m`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`[39m)[33m;[39m[0m
+
+      at Function.getPrompt (src/lib/prompt-service.ts:17:41)
+      at Function.getRenderedPrompt (src/lib/prompt-service.ts:35:24)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:101:13)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:102:26)
+
+  ● PromptService › updatePrompt › should create a version snapshot and update the prompt
+
+    TypeError: collection.findOne is not a function
+
+    [0m [90m 109 |[39m         [36mif[39m (tenantId) query[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+     [90m 110 |[39m
+    [31m[1m>[22m[39m[90m 111 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne(query)[33m;[39m
+     [90m     |[39m                                         [31m[1m^[22m[39m
+     [90m 112 |[39m         [36mif[39m ([33m![39mprompt) {
+     [90m 113 |[39m             [36mthrow[39m [36mnew[39m [33mAppError[39m([32m'NOT_FOUND'[39m[33m,[39m [35m404[39m[33m,[39m [32m'Prompt no encontrado'[39m)[33m;[39m
+     [90m 114 |[39m         }[0m
+
+      at Function.updatePrompt (src/lib/prompt-service.ts:111:41)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:121:13)
+
+  ● PromptService › updatePrompt › should throw if maxLength is exceeded
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected pattern: /excede el máximo permitido/
+    Received message: "collection.findOne is not a function"
+
+        [0m [90m 109 |[39m         [36mif[39m (tenantId) query[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+         [90m 110 |[39m
+        [31m[1m>[22m[39m[90m 111 |[39m         [36mconst[39m prompt [33m=[39m [36mawait[39m collection[33m.[39mfindOne(query)[33m;[39m
+         [90m     |[39m                                         [31m[1m^[22m[39m
+         [90m 112 |[39m         [36mif[39m ([33m![39mprompt) {
+         [90m 113 |[39m             [36mthrow[39m [36mnew[39m [33mAppError[39m([32m'NOT_FOUND'[39m[33m,[39m [35m404[39m[33m,[39m [32m'Prompt no encontrado'[39m)[33m;[39m
+         [90m 114 |[39m         }[0m
+
+      at Function.updatePrompt (src/lib/prompt-service.ts:111:41)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:149:13)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/prompt-service.test.ts:155:24)
+
+FAIL tests/unit/mfa-service.test.ts
+  ● MfaService › setup › should generate a secret and a QR code
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"accion": "MFA_SETUP_INITIATED"}
+    Received: {"action": "MFA_SETUP_INITIATED", "correlationId": "ae1af986-880a-4ece-b0f0-f87fea6ef92a", "details": {"userId": "697dbf2e9de8cef876b1ee20"}, "level": "INFO", "message": "Inicio de configuración MFA para usuario: 697dbf2e9de8cef876b1ee20", "source": "MFA_SERVICE"}
+
+    Number of calls: 1
+
+    [0m [90m 55 |[39m                 qrCode[33m:[39m [32m"data:image/png;base64,..."[39m
+     [90m 56 |[39m             })[33m;[39m
+    [31m[1m>[22m[39m[90m 57 |[39m             expect(logEvento)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 58 |[39m                 accion[33m:[39m [32m"MFA_SETUP_INITIATED"[39m
+     [90m 59 |[39m             }))[33m;[39m
+     [90m 60 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/mfa-service.test.ts:57:31)
+
+  ● MfaService › enable › should enable MFA and return recovery codes if token is valid
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"accion": "MFA_ENABLED"}
+    Received: {"action": "MFA_ENABLED", "correlationId": "f34343ea-dfea-4d15-bd17-22ab646e4489", "details": {"userId": "697dbf2e9de8cef876b1ee20"}, "level": "INFO", "message": "MFA activado exitosamente para usuario: 697dbf2e9de8cef876b1ee20", "source": "MFA_SERVICE"}
+
+    Number of calls: 1
+
+    [0m [90m 79 |[39m             expect(result[33m.[39mrecoveryCodes)[33m.[39mtoHaveLength([35m8[39m)[33m;[39m
+     [90m 80 |[39m             expect(mockUpdateOne)[33m.[39mtoHaveBeenCalledTimes([35m2[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 81 |[39m             expect(logEvento)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 82 |[39m                 accion[33m:[39m [32m"MFA_ENABLED"[39m
+     [90m 83 |[39m             }))[33m;[39m
+     [90m 84 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/mfa-service.test.ts:81:31)
+
+  ● MfaService › enable › should return failure if token is invalid
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"accion": "MFA_ENABLE_FAILED"}
+    Received: {"action": "MFA_ENABLE_FAILED", "correlationId": "80d3e19a-2b8d-48e7-ad16-b8d719617b10", "details": {"userId": "697dbf2e9de8cef876b1ee20"}, "level": "WARN", "message": "Intento fallido de activar MFA para usuario: 697dbf2e9de8cef876b1ee20", "source": "MFA_SERVICE"}
+
+    Number of calls: 1
+
+    [0m [90m 90 |[39m
+     [90m 91 |[39m             expect(result[33m.[39msuccess)[33m.[39mtoBe([36mfalse[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 92 |[39m             expect(logEvento)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 93 |[39m                 accion[33m:[39m [32m"MFA_ENABLE_FAILED"[39m
+     [90m 94 |[39m             }))[33m;[39m
+     [90m 95 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/mfa-service.test.ts:92:31)
+
+  ● MfaService › verify › should verify token if MFA is enabled
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"accion": "MFA_VERIFICATION_SUCCESS"}
+    Received: {"action": "MFA_VERIFICATION_SUCCESS", "correlationId": "6d38b474-3ce0-4879-9ab2-93c23784ded3", "details": {"userId": "697dbf2e9de8cef876b1ee20"}, "level": "INFO", "message": "Verificación MFA exitosa para usuario: 697dbf2e9de8cef876b1ee20", "source": "MFA_SERVICE"}
+
+    Number of calls: 1
+
+    [0m [90m 122 |[39m
+     [90m 123 |[39m             expect(result)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 124 |[39m             expect(logEvento)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39mobjectContaining({
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 125 |[39m                 accion[33m:[39m [32m"MFA_VERIFICATION_SUCCESS"[39m
+     [90m 126 |[39m             }))[33m;[39m
+     [90m 127 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (tests/unit/mfa-service.test.ts:124:31)
+
+FAIL tests/unit/prompt-service-coverage.test.ts
+  ● PromptService Extended Coverage › rollbackToVersion › should rollback to a previous version
+
+    TypeError: versionsCollection.findOne is not a function
+
+    [0m [90m 179 |[39m         [36mif[39m (tenantId) versionQuery[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+     [90m 180 |[39m
+    [31m[1m>[22m[39m[90m 181 |[39m         [36mconst[39m versionSnapshot [33m=[39m [36mawait[39m versionsCollection[33m.[39mfindOne(versionQuery)[33m;[39m
+     [90m     |[39m                                                          [31m[1m^[22m[39m
+     [90m 182 |[39m
+     [90m 183 |[39m         [36mif[39m ([33m![39mversionSnapshot) {
+     [90m 184 |[39m             [36mthrow[39m [36mnew[39m [33mAppError[39m([32m'NOT_FOUND'[39m[33m,[39m [35m404[39m[33m,[39m [32m`Versión ${targetVersion} no encontrada`[39m)[33m;[39m[0m
+
+      at Function.rollbackToVersion (src/lib/prompt-service.ts:181:58)
+      at Object.<anonymous> (tests/unit/prompt-service-coverage.test.ts:67:13)
+
+  ● PromptService Extended Coverage › rollbackToVersion › should throw NOT_FOUND if target version does not exist
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected pattern: /Versión 99 no encontrada/
+    Received message: "versionsCollection.findOne is not a function"
+
+        [0m [90m 179 |[39m         [36mif[39m (tenantId) versionQuery[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+         [90m 180 |[39m
+        [31m[1m>[22m[39m[90m 181 |[39m         [36mconst[39m versionSnapshot [33m=[39m [36mawait[39m versionsCollection[33m.[39mfindOne(versionQuery)[33m;[39m
+         [90m     |[39m                                                          [31m[1m^[22m[39m
+         [90m 182 |[39m
+         [90m 183 |[39m         [36mif[39m ([33m![39mversionSnapshot) {
+         [90m 184 |[39m             [36mthrow[39m [36mnew[39m [33mAppError[39m([32m'NOT_FOUND'[39m[33m,[39m [35m404[39m[33m,[39m [32m`Versión ${targetVersion} no encontrada`[39m)[33m;[39m[0m
+
+      at Function.rollbackToVersion (src/lib/prompt-service.ts:181:58)
+      at Object.<anonymous> (tests/unit/prompt-service-coverage.test.ts:100:13)
+      at Object.toThrow (node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (tests/unit/prompt-service-coverage.test.ts:101:26)
+
+  ● PromptService Extended Coverage › listPrompts › should list active prompts for a tenant
+
+    TypeError: collection.find is not a function
+
+    [0m [90m 241 |[39m         [36mif[39m (tenantId) filter[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+     [90m 242 |[39m
+    [31m[1m>[22m[39m[90m 243 |[39m         [36mconst[39m prompts [33m=[39m [36mawait[39m collection[33m.[39mfind(filter[33m,[39m { sort[33m:[39m { tenantId[33m:[39m [35m1[39m[33m,[39m category[33m:[39m [35m1[39m[33m,[39m name[33m:[39m [35m1[39m } })[33m;[39m
+     [90m     |[39m                                          [31m[1m^[22m[39m
+     [90m 244 |[39m
+     [90m 245 |[39m         [36mreturn[39m prompts[33m.[39mmap(p [33m=>[39m {
+     [90m 246 |[39m             [36mconst[39m result [33m=[39m [33mPromptSchema[39m[33m.[39msafeParse(p)[33m;[39m[0m
+
+      at Function.listPrompts (src/lib/prompt-service.ts:243:42)
+      at Object.<anonymous> (tests/unit/prompt-service-coverage.test.ts:118:28)
+
+  ● PromptService Extended Coverage › getVersionHistory › should return version history sorted by version descending
+
+    TypeError: collection.find is not a function
+
+    [0m [90m 261 |[39m         [36mif[39m (tenantId) query[33m.[39mtenantId [33m=[39m tenantId[33m;[39m
+     [90m 262 |[39m
+    [31m[1m>[22m[39m[90m 263 |[39m         [36mconst[39m versions [33m=[39m [36mawait[39m collection[33m.[39mfind(query[33m,[39m { sort[33m:[39m { version[33m:[39m [33m-[39m[35m1[39m } })[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 264 |[39m
+     [90m 265 |[39m         [36mreturn[39m versions[33m.[39mmap(v [33m=>[39m [33mPromptVersionSchema[39m[33m.[39mparse(v))[33m;[39m
+     [90m 266 |[39m     }[0m
+
+      at Function.getVersionHistory (src/lib/prompt-service.ts:263:43)
+      at Object.<anonymous> (tests/unit/prompt-service-coverage.test.ts:142:28)
+
+Test Suites: 3 failed, 5 passed, 8 total
+Tests:       14 failed, 12 passed, 26 total
+Snapshots:   0 total
+Time:        4.383 s
+Ran all test suites matching tests/unit/.

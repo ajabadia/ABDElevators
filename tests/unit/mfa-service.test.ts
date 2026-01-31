@@ -55,7 +55,7 @@ describe("MfaService", () => {
                 qrCode: "data:image/png;base64,..."
             });
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: "MFA_SETUP_INITIATED"
+                action: "MFA_SETUP_INITIATED"
             }));
         });
     });
@@ -79,7 +79,7 @@ describe("MfaService", () => {
             expect(result.recoveryCodes).toHaveLength(8);
             expect(mockUpdateOne).toHaveBeenCalledTimes(2);
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: "MFA_ENABLED"
+                action: "MFA_ENABLED"
             }));
         });
 
@@ -90,7 +90,7 @@ describe("MfaService", () => {
 
             expect(result.success).toBe(false);
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: "MFA_ENABLE_FAILED"
+                action: "MFA_ENABLE_FAILED"
             }));
         });
     });
@@ -122,7 +122,7 @@ describe("MfaService", () => {
 
             expect(result).toBe(true);
             expect(logEvento).toHaveBeenCalledWith(expect.objectContaining({
-                accion: "MFA_VERIFICATION_SUCCESS"
+                action: "MFA_VERIFICATION_SUCCESS"
             }));
         });
     });

@@ -26,7 +26,8 @@ import {
     ShieldCheck,
     Activity,
     TrendingUp,
-    Share2
+    Share2,
+    Key
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -138,6 +139,12 @@ export function AppSidebar() {
             name: 'Billing',
             href: '/admin/billing',
             icon: CreditCard,
+            roles: ['ADMIN', 'SUPER_ADMIN']
+        },
+        {
+            name: 'API Keys',
+            href: '/admin/api-keys',
+            icon: Key,
             roles: ['ADMIN', 'SUPER_ADMIN']
         },
         {

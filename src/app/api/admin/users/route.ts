@@ -40,10 +40,30 @@ export async function GET(req: NextRequest) {
             filter = { tenantId: { $in: allowedIds } };
         }
 
-        const users = await db.collection('users')
-            .find(filter, { projection: { password: 0 } })
-            .sort({ createdAt: -1 })
-            .toArray();
+        const users = await db.collection('users').aggregate([
+            { $match: filter },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'mfa_configs',
+                    localField: '_id', // Assuming _id is stored as string in mfa_configs.userId or need conversion?
+                    // Actually mfa_configs.userId is typically string. _id is ObjectId.
+                    // Let's assume userId in mfa_configs is string representation of ObjectId.
+                    let: { userId: { $toString: "$_id" } },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+                        { $project: { enabled: 1 } }
+                    ],
+                    as: 'mfaConfig'
+                }
+            },
+            {
+                $addFields: {
+                    mfaEnabled: { $ifNull: [{ $arrayElemAt: ["$mfaConfig.enabled", 0] }, false] }
+                }
+            },
+            { $project: { password: 0, mfaConfig: 0 } }
+        ]).toArray();
 
         return NextResponse.json({ users });
     } catch (error: any) {

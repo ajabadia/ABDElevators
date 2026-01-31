@@ -14,9 +14,9 @@ export function PublicNavbar() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <nav className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-            <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-                <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
+        <nav aria-label="Main navigation" className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
+            <Link href="/" aria-label="ABD RAG Platform Home" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
+                <div role="img" aria-hidden="true" className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-black text-white">A</div>
                 <div className="text-xl font-black tracking-tighter text-white font-outfit">
                     ABD<span className="text-teal-500"> RAG</span>
                 </div>

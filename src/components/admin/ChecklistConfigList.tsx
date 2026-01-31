@@ -17,13 +17,13 @@ import { Button } from '@/components/ui/button';
 export const ChecklistConfigList: React.FC = () => {
     // 1. Carga de datos con hook genérico
     const { data: configs, isLoading, refresh } = useApiList<ChecklistConfig>({
-        endpoint: '/api/admin/configs-checklist',
+        endpoint: '/api/admin/checklist-configs',
         dataKey: 'configs'
     });
 
     // 2. Acción de eliminación con hook genérico
     const { mutate: deleteConfig } = useApiMutation({
-        endpoint: (id: string) => `/api/admin/configs-checklist/${id}`,
+        endpoint: (id: string) => `/api/admin/checklist-configs/${id}`,
         method: 'DELETE',
         confirmMessage: (id: string) => {
             const config = configs.find(c => String(c._id) === id);
@@ -37,7 +37,7 @@ export const ChecklistConfigList: React.FC = () => {
     const columns = [
         {
             header: 'Nombre',
-            render: (config: ChecklistConfig) => (
+            cell: (config: ChecklistConfig) => (
                 <div>
                     <div className="font-bold text-slate-900 dark:text-white">{config.name}</div>
                     <div className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -48,7 +48,7 @@ export const ChecklistConfigList: React.FC = () => {
         },
         {
             header: 'Categorías',
-            render: (config: ChecklistConfig) => (
+            cell: (config: ChecklistConfig) => (
                 <div className="flex gap-1 flex-wrap max-w-xs">
                     {config.categories.slice(0, 3).map(cat => (
                         <span
@@ -73,7 +73,7 @@ export const ChecklistConfigList: React.FC = () => {
         },
         {
             header: 'Estado',
-            render: (config: ChecklistConfig) => (
+            cell: (config: ChecklistConfig) => (
                 config.isActive ? (
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1.5 h-6">
                         <CheckCircle size={10} />
@@ -90,10 +90,10 @@ export const ChecklistConfigList: React.FC = () => {
         {
             header: 'Acciones',
             className: 'text-right',
-            render: (config: ChecklistConfig) => (
+            cell: (config: ChecklistConfig) => (
                 <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all">
-                        <Link href={`/admin/configs-checklist/${config._id}`}>
+                        <Link href={`/admin/checklist-configs/${config._id}`}>
                             <Edit size={14} />
                         </Link>
                     </Button>
@@ -118,7 +118,7 @@ export const ChecklistConfigList: React.FC = () => {
                     <p className="text-xs text-slate-500 font-medium">Gestiona las reglas de clasificación y orden de tus checklists.</p>
                 </div>
                 <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20 rounded-xl">
-                    <Link href="/admin/configs-checklist/new">
+                    <Link href="/admin/checklist-configs/new">
                         <Plus size={18} />
                         Nueva Configuración
                     </Link>

@@ -41,8 +41,9 @@ describe("PromptService", () => {
     describe("getPrompt", () => {
         it("should return a prompt if found and active", async () => {
             const mockFindOne = jest.fn().mockResolvedValue(mockPrompt);
-            (getTenantCollection as jest.Mock).mockResolvedValue({
-                collection: { findOne: mockFindOne },
+            // SecureCollection mock should have findOne directly
+            (getTenantCollection as any).mockResolvedValue({
+                findOne: mockFindOne,
                 tenantId: mockTenantId
             });
 
@@ -59,7 +60,7 @@ describe("PromptService", () => {
         it("should throw NOT_FOUND if prompt does not exist", async () => {
             const mockFindOne = jest.fn().mockResolvedValue(null);
             (getTenantCollection as any).mockResolvedValue({
-                collection: { findOne: mockFindOne },
+                findOne: mockFindOne,
                 tenantId: mockTenantId
             });
 
@@ -72,11 +73,12 @@ describe("PromptService", () => {
         it("should render template with variables", async () => {
             const mockFindOne = jest.fn().mockResolvedValue(mockPrompt);
             const mockUpdateOne = jest.fn().mockResolvedValue({});
+
+            // Note: getPrompt is called first which calls getTenantCollection
+            // then getRenderedPrompt calls getTenantCollection again for auditing.
             (getTenantCollection as any).mockResolvedValue({
-                collection: {
-                    findOne: mockFindOne,
-                    updateOne: mockUpdateOne
-                },
+                findOne: mockFindOne,
+                updateOne: mockUpdateOne,
                 tenantId: mockTenantId
             });
 
@@ -94,7 +96,7 @@ describe("PromptService", () => {
         it("should throw if required variables are missing", async () => {
             const mockFindOne = jest.fn().mockResolvedValue(mockPrompt);
             (getTenantCollection as any).mockResolvedValue({
-                collection: { findOne: mockFindOne },
+                findOne: mockFindOne,
                 tenantId: mockTenantId
             });
 
@@ -111,10 +113,10 @@ describe("PromptService", () => {
 
             (getTenantCollection as any).mockImplementation(async (name: string) => {
                 if (name === 'prompts') {
-                    return { collection: { findOne: mockFindOne, updateOne: mockUpdateOne } };
+                    return { findOne: mockFindOne, updateOne: mockUpdateOne, tenantId: mockTenantId };
                 }
                 if (name === 'prompt_versions') {
-                    return { collection: { insertOne: mockInsertOne } };
+                    return { insertOne: mockInsertOne, tenantId: mockTenantId };
                 }
             });
 
@@ -143,7 +145,8 @@ describe("PromptService", () => {
             const promptWithLimit = { ...mockPrompt, maxLength: 10 };
             const mockFindOne = jest.fn().mockResolvedValue(promptWithLimit);
             (getTenantCollection as any).mockResolvedValue({
-                collection: { findOne: mockFindOne }
+                findOne: mockFindOne,
+                tenantId: mockTenantId
             });
 
             await expect(PromptService.updatePrompt(

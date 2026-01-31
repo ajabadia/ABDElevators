@@ -84,12 +84,13 @@ export async function POST(req: NextRequest) {
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
         if (ingestOnly) {
-            // Fast Save without Analysis (for subsequent SSE agent)
+            // 🛡️ MIGRACIÓN A BULLMQ (Fase 31: Async Jobs)
+            // Guardamos el estado inicial en "received"
             const insertResult = await entitiesCollection.insertOne({
                 identifier: file.name.split('.')[0],
                 filename: file.name,
                 md5Hash: fileHash,
-                originalText: entityText, // Important for SSE agent
+                originalText: entityText, // Ya lo extrajimos para ahorrarle trabajo al worker si queremos, o el worker lo puede re-hacer si le pasamos el buffer
                 analysisDate: new Date(),
                 status: 'received',
                 tenantId,
@@ -97,9 +98,33 @@ export async function POST(req: NextRequest) {
                 correlationId
             });
 
+            // Encolar trabajo asíncrono
+            const { queueService } = await import('@/lib/queue-service');
+            const job = await queueService.addJob('PDF_ANALYSIS', {
+                tenantId,
+                userId: session.user.id || 'unknown',
+                correlationId,
+                data: {
+                    entityId: insertResult.insertedId.toString(),
+                    filename: file.name,
+                    industry,
+                    fileBuffer: textBuffer.toString('base64'), // Pasamos buffer por ahora (Asumiendo < 1MB)
+                }
+            });
+
+            await logEvento({
+                level: 'INFO',
+                source: 'TECHNICAL_ENTITIES_ANALYZE_API',
+                action: 'ENQUEUED',
+                message: `Análisis de ${file.name} encolado (Job: ${job.id})`,
+                correlationId,
+                details: { jobId: job.id, entityId: insertResult.insertedId }
+            });
+
             return NextResponse.json({
                 success: true,
                 entityId: insertResult.insertedId,
+                jobId: job.id,
                 correlationId
             });
         }

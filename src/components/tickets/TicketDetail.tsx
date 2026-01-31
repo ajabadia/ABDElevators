@@ -61,7 +61,7 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
 
     // 1. Mutaciones con hook genérico
     const { mutate: sendReply, isLoading: sending } = useApiMutation({
-        endpoint: `/api/soporte/tickets/${ticket?._id}/reply`,
+        endpoint: `/api/support/tickets/${ticket?._id}/reply`,
         onSuccess: () => {
             setReply('');
             onRefresh?.();
@@ -70,13 +70,13 @@ export default function TicketDetail({ ticket, onRefresh }: { ticket: Ticket | n
     });
 
     const { mutate: addInternalNote } = useApiMutation({
-        endpoint: `/api/soporte/tickets/${ticket?._id}/reply`,
+        endpoint: `/api/support/tickets/${ticket?._id}/reply`,
         onSuccess: () => onRefresh?.(),
         successMessage: 'Nota interna guardada',
     });
 
     const { mutate: escalate } = useApiMutation({
-        endpoint: `/api/soporte/tickets/${ticket?._id}/reassign`,
+        endpoint: `/api/support/tickets/${ticket?._id}/reassign`,
         onSuccess: () => onRefresh?.(),
         successMessage: 'Ticket reasignado correctamente',
     });

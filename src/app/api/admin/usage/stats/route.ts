@@ -24,8 +24,10 @@ export async function GET(req: NextRequest) {
         const db = await connectDB();
         const collection = await getTenantCollection('usage_logs');
 
-        // 1. Obtener configuración de facturación (Fase 9.2)
+        // 1. Obtener configuración de facturación y Tenant Config (Limit Override)
         const billingConfig = await db.collection('tenant_billing').findOne({ tenantId });
+        const tenantConfig = await db.collection('tenants').findOne({ tenantId });
+
         const planSlug = billingConfig?.planSlug || 'standard';
 
         // 2. Obtener detalles del plan desde pricing_plans
@@ -36,8 +38,8 @@ export async function GET(req: NextRequest) {
             { $match: { tenantId } },
             {
                 $group: {
-                    _id: "$tipo",
-                    total: { $sum: "$valor" },
+                    _id: "$type",
+                    total: { $sum: "$value" },
                     count: { $sum: 1 }
                 }
             }
@@ -64,13 +66,18 @@ export async function GET(req: NextRequest) {
         const reportsConfig = plan?.metrics?.REPORTS;
         const reportsStatus = calculateStatus(reportsUsage, reportsConfig);
 
+        // Determine storage limit: Tenant Override > Plan Limit > Default 1GB
+        const storageLimit = tenantConfig?.storage?.quota_bytes
+            ? tenantConfig.storage.quota_bytes
+            : (plan?.metrics?.STORAGE?.includedUnits ?? (1024 * 1024 * 1024));
+
         // 4. Formatear respuesta amigable con los nuevos límites
         const formattedStats = {
             reports_generated: reportsUsage,
             tokens: stats.find((s: any) => s._id === 'LLM_TOKENS')?.total || 0,
             storage: stats.find((s: any) => s._id === 'STORAGE_BYTES')?.total || 0,
             searches: stats.find((s: any) => s._id === 'VECTOR_SEARCH')?.total || 0,
-            api_requests: stats.find((s: any) => s._id === 'API_CALL')?.total || 0,
+            api_requests: stats.find((s: any) => s._id === 'API_REQUEST')?.total || 0,
             savings: stats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.total || 0,
             embeddings: stats.find((s: any) => s._id === 'EMBEDDING_OPS')?.total || 0,
             tier: plan?.name?.toUpperCase() || 'STANDARD',
@@ -78,7 +85,7 @@ export async function GET(req: NextRequest) {
             limits: {
                 reports: reportsConfig?.includedUnits ?? 10,
                 tokens: plan?.metrics?.REPORTS?.includedUnits ? Infinity : 100000, // Legacy fallback
-                storage: plan?.metrics?.STORAGE?.includedUnits ?? (1024 * 1024 * 1024), // 1GB default
+                storage: storageLimit,
                 searches: plan?.metrics?.VECTOR_SEARCH?.includedUnits ?? 500,
                 api_requests: plan?.metrics?.API_CALLS?.includedUnits ?? 1000,
             },

@@ -90,10 +90,30 @@ export default function TenantsPage() {
     const [isMounted, setIsMounted] = useState(false);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+    const [usageStats, setUsageStats] = useState<any>(null);
+    const [isLoadingUsage, setIsLoadingUsage] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (config?.tenantId) {
+            const fetchUsage = async () => {
+                setIsLoadingUsage(true);
+                try {
+                    const res = await fetch(`/api/admin/usage/stats?tenantId=${config.tenantId}`);
+                    const data = await res.json();
+                    if (data.success) setUsageStats(data.stats);
+                } catch (err) {
+                    console.error("Error fetching usage stats", err);
+                } finally {
+                    setIsLoadingUsage(false);
+                }
+            };
+            fetchUsage();
+        }
+    }, [config?.tenantId]);
 
     // 1. Carga de datos con useApiList
     const {
@@ -346,39 +366,122 @@ export default function TenantsPage() {
                                                 <p className="text-[11px] text-slate-400">Dimensiones mín: 400x400px. Fondo transparente recomendado (PNG).</p>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex items-center space-x-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                                        <Switch
-                                            id="auto-dark-mode"
-                                            checked={config?.branding?.autoDarkMode !== false}
-                                            onCheckedChange={(checked) => setConfig(prev => prev ? {
-                                                ...prev,
-                                                branding: {
-                                                    ...(prev.branding || {}),
-                                                    autoDarkMode: checked
-                                                }
-                                            } : null)}
-                                        />
-                                        <div className="flex flex-col">
-                                            <Label htmlFor="auto-dark-mode" className="text-sm font-bold">Modo Oscuro Automático</Label>
-                                            <span className="text-[10px] text-slate-500">Calcula automáticamente variantes legibles para el tema oscuro.</span>
+                                        <div className="space-y-4 pt-4 border-t border-slate-100">
+                                            <Label className="text-slate-700 font-semibold">Favicon / Icono de Pestaña</Label>
+                                            <div className="flex items-center gap-8 p-6 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 transition-colors group">
+                                                <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 relative overflow-hidden">
+                                                    {isUploadingFavicon ? (
+                                                        <Loader2 className="animate-spin text-teal-600" size={24} />
+                                                    ) : config?.branding?.favicon?.url ? (
+                                                        <img src={config.branding.favicon.url} alt="Favicon preview" className="object-contain w-8 h-8" />
+                                                    ) : (
+                                                        <Globe size={24} className="text-slate-200" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            type="file"
+                                                            accept="image/x-icon,image/png,image/svg+xml"
+                                                            className="hidden"
+                                                            id="favicon-upload"
+                                                            onChange={async (e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (!file || !config) return;
+
+                                                                setIsUploadingFavicon(true);
+                                                                const formData = new FormData();
+                                                                formData.append('file', file);
+                                                                formData.append('type', 'favicon');
+
+                                                                try {
+                                                                    const res = await fetch(`/api/admin/tenants/${config.tenantId}/branding/upload`, {
+                                                                        method: 'POST',
+                                                                        body: formData
+                                                                    });
+                                                                    const data = await res.json();
+                                                                    if (data.success) {
+                                                                        setConfig({
+                                                                            ...config,
+                                                                            branding: {
+                                                                                ...(config.branding || {}),
+                                                                                favicon: data.asset
+                                                                            }
+                                                                        });
+                                                                        toast({ title: "Favicon actualizado", description: "El icono de pestaña se ha guardado correctamente." });
+                                                                    }
+                                                                } catch (err) {
+                                                                    toast({ title: "Error", description: "Fallo al subir el favicon", variant: "destructive" });
+                                                                } finally {
+                                                                    setIsUploadingFavicon(false);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Label htmlFor="favicon-upload" className="cursor-pointer">
+                                                            <Button variant="outline" size="sm" asChild disabled={isUploadingFavicon}>
+                                                                <span>
+                                                                    {isUploadingFavicon ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Upload size={14} className="mr-2" />}
+                                                                    Subir Favicon
+                                                                </span>
+                                                            </Button>
+                                                        </Label>
+                                                        {config?.branding?.favicon?.url && (
+                                                            <Button variant="ghost" className="text-destructive h-8 px-2 hover:bg-destructive/10"
+                                                                onClick={() => setConfig(prev => prev ? { ...prev, branding: { ...prev.branding, favicon: undefined } } : null)}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400">Archivos .ico, .png o .svg. Recomendado 32x32px.</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {config?.branding?.autoDarkMode === false && (
-                                        <div className="grid grid-cols-2 gap-8 animate-in slide-in-from-top-2 duration-300">
-                                            <div className="space-y-3">
-                                                <Label className="text-slate-700 font-semibold">Primario (Dark Mode)</Label>
-                                                <div className="flex gap-3">
-                                                    <div
-                                                        className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
-                                                        style={{ backgroundColor: config?.branding?.colors?.primaryDark || config?.branding?.colors?.primary || '#38bdf8' }}
-                                                    >
-                                                        <input
-                                                            type="color"
-                                                            className="opacity-0 w-full h-full cursor-pointer"
-                                                            value={config?.branding?.colors?.primaryDark || config?.branding?.colors?.primary || '#38bdf8'}
+                                        <div className="flex items-center space-x-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                            <Switch
+                                                id="auto-dark-mode"
+                                                checked={config?.branding?.autoDarkMode !== false}
+                                                onCheckedChange={(checked) => setConfig(prev => prev ? {
+                                                    ...prev,
+                                                    branding: {
+                                                        ...(prev.branding || {}),
+                                                        autoDarkMode: checked
+                                                    }
+                                                } : null)}
+                                            />
+                                            <div className="flex flex-col">
+                                                <Label htmlFor="auto-dark-mode" className="text-sm font-bold">Modo Oscuro Automático</Label>
+                                                <span className="text-[10px] text-slate-500">Calcula automáticamente variantes legibles para el tema oscuro.</span>
+                                            </div>
+                                        </div>
+
+                                        {config?.branding?.autoDarkMode === false && (
+                                            <div className="grid grid-cols-2 gap-8 animate-in slide-in-from-top-2 duration-300">
+                                                <div className="space-y-3">
+                                                    <Label className="text-slate-700 font-semibold">Primario (Dark Mode)</Label>
+                                                    <div className="flex gap-3">
+                                                        <div
+                                                            className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
+                                                            style={{ backgroundColor: config?.branding?.colors?.primaryDark || config?.branding?.colors?.primary || '#38bdf8' }}
+                                                        >
+                                                            <input
+                                                                type="color"
+                                                                className="opacity-0 w-full h-full cursor-pointer"
+                                                                value={config?.branding?.colors?.primaryDark || config?.branding?.colors?.primary || '#38bdf8'}
+                                                                onChange={(e) => setConfig(prev => prev ? {
+                                                                    ...prev,
+                                                                    branding: {
+                                                                        ...(prev.branding || {}),
+                                                                        colors: { ...(prev.branding?.colors || {}), primaryDark: e.target.value }
+                                                                    }
+                                                                } : null)}
+                                                            />
+                                                        </div>
+                                                        <Input
+                                                            value={config?.branding?.colors?.primaryDark || ''}
+                                                            placeholder={config?.branding?.colors?.primary}
                                                             onChange={(e) => setConfig(prev => prev ? {
                                                                 ...prev,
                                                                 branding: {
@@ -386,33 +489,33 @@ export default function TenantsPage() {
                                                                     colors: { ...(prev.branding?.colors || {}), primaryDark: e.target.value }
                                                                 }
                                                             } : null)}
+                                                            className="font-mono"
                                                         />
                                                     </div>
-                                                    <Input
-                                                        value={config?.branding?.colors?.primaryDark || ''}
-                                                        placeholder={config?.branding?.colors?.primary}
-                                                        onChange={(e) => setConfig(prev => prev ? {
-                                                            ...prev,
-                                                            branding: {
-                                                                ...(prev.branding || {}),
-                                                                colors: { ...(prev.branding?.colors || {}), primaryDark: e.target.value }
-                                                            }
-                                                        } : null)}
-                                                        className="font-mono"
-                                                    />
                                                 </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <Label className="text-slate-700 font-semibold">Acento (Dark Mode)</Label>
-                                                <div className="flex gap-3">
-                                                    <div
-                                                        className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
-                                                        style={{ backgroundColor: config?.branding?.colors?.accentDark || config?.branding?.colors?.accent || '#60a5fa' }}
-                                                    >
-                                                        <input
-                                                            type="color"
-                                                            className="opacity-0 w-full h-full cursor-pointer"
-                                                            value={config?.branding?.colors?.accentDark || config?.branding?.colors?.accent || '#60a5fa'}
+                                                <div className="space-y-3">
+                                                    <Label className="text-slate-700 font-semibold">Acento (Dark Mode)</Label>
+                                                    <div className="flex gap-3">
+                                                        <div
+                                                            className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
+                                                            style={{ backgroundColor: config?.branding?.colors?.accentDark || config?.branding?.colors?.accent || '#60a5fa' }}
+                                                        >
+                                                            <input
+                                                                type="color"
+                                                                className="opacity-0 w-full h-full cursor-pointer"
+                                                                value={config?.branding?.colors?.accentDark || config?.branding?.colors?.accent || '#60a5fa'}
+                                                                onChange={(e) => setConfig(prev => prev ? {
+                                                                    ...prev,
+                                                                    branding: {
+                                                                        ...(prev.branding || {}),
+                                                                        colors: { ...(prev.branding?.colors || {}), accentDark: e.target.value }
+                                                                    }
+                                                                } : null)}
+                                                            />
+                                                        </div>
+                                                        <Input
+                                                            value={config?.branding?.colors?.accentDark || ''}
+                                                            placeholder={config?.branding?.colors?.accent}
                                                             onChange={(e) => setConfig(prev => prev ? {
                                                                 ...prev,
                                                                 branding: {
@@ -420,24 +523,13 @@ export default function TenantsPage() {
                                                                     colors: { ...(prev.branding?.colors || {}), accentDark: e.target.value }
                                                                 }
                                                             } : null)}
+                                                            className="font-mono"
                                                         />
                                                     </div>
-                                                    <Input
-                                                        value={config?.branding?.colors?.accentDark || ''}
-                                                        placeholder={config?.branding?.colors?.accent}
-                                                        onChange={(e) => setConfig(prev => prev ? {
-                                                            ...prev,
-                                                            branding: {
-                                                                ...(prev.branding || {}),
-                                                                colors: { ...(prev.branding?.colors || {}), accentDark: e.target.value }
-                                                            }
-                                                        } : null)}
-                                                        className="font-mono"
-                                                    />
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -568,6 +660,35 @@ export default function TenantsPage() {
                                         }}
                                         className="text-lg font-bold"
                                     />
+
+                                    {/* Real-time Usage Visualization (Fase 31) */}
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex justify-between items-end text-xs">
+                                            <span className="text-slate-500 font-medium">Uso Actual (Cloudinary / Storage)</span>
+                                            <span className="font-bold text-slate-700">
+                                                {usageStats?.storage ? Math.round(usageStats.storage / (1024 * 1024)) : 0} MB / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                                            <div
+                                                className={cn(
+                                                    "h-full transition-all duration-1000",
+                                                    (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-red-500" :
+                                                        (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-teal-500"
+                                                )}
+                                                style={{ width: `${Math.min(100, Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                            <span className="text-slate-400 italic">Métrica de consumo en tiempo real</span>
+                                            <span className={cn(
+                                                "font-bold",
+                                                (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-red-600" : "text-slate-500"
+                                            )}>
+                                                {Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% Utilizado
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
                                         <AlertCircle size={16} />
                                         <span className="text-[10px]">Al superar la cuota, se bloqueará el acceso a nuevas peticiones de análisis.</span>
@@ -984,6 +1105,6 @@ export default function TenantsPage() {
                     </Dialog>
                 </div>
             </ContentCard>
-        </PageContainer>
+        </PageContainer >
     );
 }

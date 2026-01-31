@@ -40,7 +40,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
     const fetchTypes = async () => {
         try {
-            const res = await fetch('/api/admin/tipos-documento');
+            const res = await fetch('/api/admin/document-types');
             if (res.ok) {
                 const data = await res.json();
                 setTiposDocs(data);

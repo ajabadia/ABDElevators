@@ -14,7 +14,7 @@ export default function ChecklistEditorPage() {
     const isNew = id === 'new';
 
     const { data: config, isLoading, error } = useApiItem<ChecklistConfig>({
-        endpoint: `/api/admin/configs-checklist/${id}`,
+        endpoint: `/api/admin/checklist-configs/${id}`,
         autoFetch: !isNew,
         dataKey: 'config'
     });
@@ -42,7 +42,7 @@ export default function ChecklistEditorPage() {
                     {error || "No se pudo recuperar la configuración solicitada de la base de datos."}
                 </p>
                 <Link
-                    href="/admin/configs-checklist"
+                    href="/admin/checklist-configs"
                     className="px-8 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-all border border-slate-700 shadow-xl"
                 >
                     Volver al Dashboard
