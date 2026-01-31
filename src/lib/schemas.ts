@@ -1080,3 +1080,34 @@ export const ApiKeyLogSchema = z.object({
 export type ApiKey = z.infer<typeof ApiKeySchema>;
 export type ApiKeyLog = z.infer<typeof ApiKeyLogSchema>;
 export type ApiKeyPermission = z.infer<typeof ApiKeyPermissionSchema>;
+
+/**
+ * ⚡ FASE 32: Federated Knowledge Networks (Vision 2027)
+ * Schemas for anonymous pattern sharing.
+ */
+
+export const FederatedPatternSchema = z.object({
+    _id: z.any().optional(),
+
+    // Core Pattern Data (Sanitized)
+    problemVector: z.string(), // Generic description: "Inverter Overvoltage on Deceleration"
+    solutionVector: z.string(), // Generic solution: "Check braking resistor and increase decel time"
+
+    // Search Optimization
+    keywords: z.array(z.string()), // ["inverter", "overvoltage", "braking"]
+    embedding: z.array(z.number()).optional(), // Semantic search vector
+
+    // Impact & Reliability
+    confidenceScore: z.number().min(0).max(1), // AI calculated confidence
+    validationCount: z.number().default(0), // How many times this pattern helped others
+
+    // Governance
+    originIndustry: IndustryTypeSchema.default('ELEVATORS'),
+    originTenantHash: z.string(), // One-way hash of tenantId for anonymous attribution stats
+    status: z.enum(['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'FLAGGED']).default('DRAFT'),
+
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date())
+});
+
+export type FederatedPattern = z.infer<typeof FederatedPatternSchema>;

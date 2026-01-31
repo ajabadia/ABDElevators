@@ -139,8 +139,20 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 🗑️ DEPRECATED & ARCHIVED
-- ~~[Fase 15: Landing Page Reality Check]~~ (2026-01-28) - Superado por Fase 16.
+---
+
+### 📉 BACKLOG & GAP ANALYSIS (vs v1.0)
+Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
+
+#### 📦 Data Portability (Ex-Phase 13)
+- [ ] **Knowledge Package (.zip)**: Funcionalidad para que un Tenant Admin descargue todos sus PDFs y metadatos en un zip standard. *Status: Backlog (Low Priority)*.
+
+#### ⚖️ GDPR Evidence (Ex-Phase 14)
+- [ ] **Deletion Certificate**: Generación de PDF firmado criptográficamente cuando se purgan datos ("Right to be Forgotten"). *Status: Backlog*.
+
+#### 💅 Frontend Standardization (Ex-Phase 31)
+- [ ] **Component Library Strictness**: Migrar 100% de la UI a componentes de `src/components/ui` (eliminar estilos inline arbitrarios).
+- [ ] **Zustand Adoption**: Eliminar `useState` complejos en favor de stores globales para evitar prop-drilling.
 
 ---
 
