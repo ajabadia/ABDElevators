@@ -1,6 +1,6 @@
 "use client";
 
-import { Cpu, Database, ShieldCheck, ChevronRight } from "lucide-react";
+import { Cpu, Database, ShieldCheck, ChevronRight, Share2, FileArchive, Rocket } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
 import { SectionHeading } from "./SectionHeading";
@@ -34,6 +34,24 @@ export function FeatureGrid() {
                         title={featT('f3_title')}
                         description={featT('f3_desc')}
                         link="/features/audit-trail"
+                    />
+                    <FeatureCard
+                        icon={<Share2 className="text-purple-400" size={32} />}
+                        title={featT('f4_title')}
+                        description={featT('f4_desc')}
+                        link="/features/federated"
+                    />
+                    <FeatureCard
+                        icon={<FileArchive className="text-amber-400" size={32} />}
+                        title={featT('f5_title')}
+                        description={featT('f5_desc')}
+                        link="/features/compliance"
+                    />
+                    <FeatureCard
+                        icon={<Rocket className="text-rose-400" size={32} />}
+                        title={featT('f6_title')}
+                        description={featT('f6_desc')}
+                        link="/features/pdf-bridge"
                     />
                 </div>
             </div>

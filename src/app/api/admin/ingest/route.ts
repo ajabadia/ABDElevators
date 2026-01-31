@@ -293,6 +293,7 @@ export async function POST(req: NextRequest) {
                     translatedText: translatedText,
                     embedding: embeddingGemini,
                     embedding_multilingual: embeddingBGE,
+                    cloudinaryUrl: cloudinaryResult.secureUrl,
                     isShadow: false,
                     createdAt: new Date(),
                 };
@@ -315,6 +316,7 @@ export async function POST(req: NextRequest) {
                         chunkText: translatedText,
                         refChunkId: originalChunkId,
                         embedding: embeddingShadow,
+                        cloudinaryUrl: cloudinaryResult.secureUrl,
                         isShadow: true,
                         createdAt: new Date(),
                     };

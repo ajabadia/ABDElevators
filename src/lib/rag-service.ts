@@ -123,7 +123,7 @@ export async function performTechnicalSearch(
                 score: 0, // MMR de LangChain no devuelve score directo fácilmente en esta firma
                 type: doc.metadata.componentType,
                 model: doc.metadata.model,
-                cloudinaryUrl: doc.cloudinaryUrl
+                cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
             }));
 
             // SLA: El RAG Pro con MMR puede tomar hasta 1000ms
@@ -410,7 +410,7 @@ export async function pureVectorSearch(
                     score,
                     type: doc.metadata.componentType,
                     model: doc.metadata.model,
-                    cloudinaryUrl: doc.metadata.cloudinaryUrl
+                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
                 }));
 
             const duracionTotal = Date.now() - inicio;

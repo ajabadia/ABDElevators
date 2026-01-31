@@ -37,7 +37,13 @@
         "f2_title": "Hybrid Vector Search",
         "f2_desc": "Contextual semantic search that understands expert intent, not just keywords.",
         "f3_title": "Audit-Trail Pro",
-        "f3_desc": "Full traceability: every generated paragraph includes a direct citation to the original source document."
+        "f3_desc": "Full traceability: every generated paragraph includes a direct citation to the original source document.",
+        "f4_title": "Federated Intelligence",
+        "f4_desc": "Global knowledge network that detects anonymous patterns across tenants to optimize technical suggestions.",
+        "f5_title": "Compliance ZIP & GDPR",
+        "f5_desc": "Total portability: export your knowledge in signed ZIP packages and generate GDPR deletion certificates.",
+        "f6_title": "Advanced PDF Bridge",
+        "f6_desc": "Hybrid Python/Node engine (PyMuPDF) that processes complex blueprints and layouts with absolute fidelity."
     },
     "solutions": {
         "title": "Industry Solutions",

@@ -33,6 +33,7 @@ export const DocumentChunkSchema = z.object({
     isShadow: z.boolean().default(false).optional(),
     originalLang: z.string().optional(),
     refChunkId: z.any().optional(),
+    cloudinaryUrl: z.string().optional(),
 
     createdAt: z.date().default(() => new Date()),
 });
