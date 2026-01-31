@@ -89,35 +89,51 @@ export function UserNav() {
                     </div>
                 </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 mt-2 p-2 border-slate-200 dark:border-slate-800 shadow-xl" align="end" forceMount>
-                <div className="flex items-center gap-3 p-2 mb-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
-                    <Avatar className="h-12 w-12 border border-white dark:border-slate-700 shadow-sm">
+            <DropdownMenuContent className="w-80 mt-2 p-2 border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl" align="end" forceMount>
+                <div className="flex items-center gap-4 p-4 mb-2 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/20 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                    <Avatar className="h-14 w-14 border-2 border-white dark:border-slate-700 shadow-md">
                         <AvatarImage src={user.image || ""} alt={user.name || ""} />
-                        <AvatarFallback className="bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 font-bold">
+                        <AvatarFallback className="bg-teal-500 text-white font-bold text-lg">
                             {initials}
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col overflow-hidden">
-                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{user.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate tracking-tight">{user.email}</p>
+                        <p className="text-base font-black text-slate-900 dark:text-white truncate tracking-tight">{user.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">{user.email}</p>
                     </div>
                 </div>
 
-                <DropdownMenuSeparator />
+                <DropdownMenuGroup className="p-1 space-y-1">
+                    <Link href="/admin/profile" className="w-full">
+                        <DropdownMenuItem className="cursor-pointer rounded-lg py-3 px-4 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                            <User className="mr-3 h-4 w-4 text-slate-400 group-hover:text-teal-500 transition-colors" />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold">Mi Perfil</span>
+                                <span className="text-[10px] text-slate-500">Ajustes de cuenta y seguridad</span>
+                            </div>
+                        </DropdownMenuItem>
+                    </Link>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-2 bg-slate-100 dark:bg-slate-800" />
+
+                <div className="px-4 py-2 mb-1">
+                    <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Contexto de Trabajo</h3>
+                </div>
 
                 <DropdownMenuGroup className="space-y-1 p-1">
                     {/* Switcher de Tenant */}
                     {hasMultipleTenants ? (
                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
-                                <Building2 className="mr-2 h-4 w-4 text-teal-500" />
-                                <div className="flex flex-col items-start leading-none">
-                                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Empresa Activa</span>
-                                    <span className="text-sm font-semibold truncate max-w-[180px]">{currentTenantName}</span>
+                            <DropdownMenuSubTrigger className="rounded-lg py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
+                                <Building2 className="mr-3 h-4 w-4 text-teal-500" />
+                                <div className="flex flex-col items-start leading-none gap-0.5">
+                                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">Empresa Actual</span>
+                                    <span className="text-sm font-bold truncate max-w-[180px]">{currentTenantName}</span>
                                 </div>
                             </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-64 p-2 shadow-2xl ml-1">
-                                <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Seleccionar Organización</DropdownMenuLabel>
+                            <DropdownMenuSubContent className="w-64 p-2 shadow-2xl ml-1 rounded-xl">
+                                <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Organizaciones Disponibles</DropdownMenuLabel>
                                 {user.tenantAccess?.map((access) => (
                                     <DropdownMenuItem
                                         key={access.tenantId}
@@ -137,34 +153,30 @@ export function UserNav() {
                             </DropdownMenuSubContent>
                         </DropdownMenuSub>
                     ) : (
-                        <div className="flex items-center px-2 py-2 select-none opacity-80">
+                        <div className="flex items-center px-4 py-2 select-none opacity-80">
                             <Building2 className="mr-3 h-4 w-4 text-slate-400" />
-                            <div className="flex flex-col leading-none">
-                                <span className="text-[10px] uppercase font-bold text-slate-400">Empresa</span>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{currentTenantName}</span>
+                            <div className="flex flex-col leading-none gap-0.5">
+                                <span className="text-[10px] uppercase font-black text-slate-400">Empresa</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{currentTenantName}</span>
                             </div>
                         </div>
                     )}
 
                     {/* Switcher de Perfil/Rol */}
                     <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
-                            <Shield className="mr-2 h-4 w-4 text-blue-500" />
-                            <div className="flex flex-col items-start leading-none">
-                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Perfil de Acceso</span>
-                                <span className="text-sm font-semibold">{user.role}</span>
+                        <DropdownMenuSubTrigger className="rounded-lg py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
+                            <Shield className="mr-3 h-4 w-4 text-blue-500" />
+                            <div className="flex flex-col items-start leading-none gap-0.5">
+                                <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">Nivel de Acceso</span>
+                                <span className="text-sm font-bold">{user.role}</span>
                             </div>
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-56 p-2 ml-1">
-                            <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Cambiar Nivel de Permisos</DropdownMenuLabel>
+                        <DropdownMenuSubContent className="w-56 p-2 ml-1 rounded-xl">
+                            <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Permisos Activos</DropdownMenuLabel>
                             {['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA'].map((role) => {
-                                // Determinamos si puede cambiar basándonos en su rol REAL (baseRole)
                                 const isRealSuperAdmin = user.baseRole === 'SUPER_ADMIN';
                                 const isRealAdmin = user.baseRole === 'ADMIN';
-
-                                const canSwitch = isRealSuperAdmin ||
-                                    (isRealAdmin && role !== 'SUPER_ADMIN') ||
-                                    (user.role === role);
+                                const canSwitch = isRealSuperAdmin || (isRealAdmin && role !== 'SUPER_ADMIN') || (user.role === role);
 
                                 return (
                                     <DropdownMenuItem
@@ -186,76 +198,34 @@ export function UserNav() {
                                     </DropdownMenuItem>
                                 );
                             })}
-                            {user.baseRole !== user.role && (
-                                <p className="text-[9px] text-teal-600 dark:text-teal-400 px-2 mt-2 leading-tight font-medium">
-                                    Estás en modo simulación. Puedes volver a tu rol original en cualquier momento.
-                                </p>
-                            )}
-                            {user.baseRole !== 'SUPER_ADMIN' && user.baseRole !== 'ADMIN' && (
-                                <p className="text-[9px] text-slate-400 px-2 mt-2 leading-tight">
-                                    Sólo los administradores pueden alternar perfiles.
-                                </p>
-                            )}
-                        </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-
-                    {/* Switcher de Materia / Industria */}
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
-                            <Briefcase className="mr-2 h-4 w-4 text-amber-500" />
-                            <div className="flex flex-col items-start leading-none">
-                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Materia de Trabajo</span>
-                                <span className="text-sm font-semibold">{user.industry}</span>
-                            </div>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-56 p-2 ml-1">
-                            <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Cambiar Vertical</DropdownMenuLabel>
-                            {industries.map((ind) => (
-                                <DropdownMenuItem
-                                    key={ind}
-                                    onClick={() => handleSwitchContext(user.tenantId, user.role, ind)}
-                                    className={cn(
-                                        "flex justify-between items-center rounded-md px-2 py-2 cursor-pointer mb-1 last:mb-0",
-                                        user.industry === ind && "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                                    )}
-                                >
-                                    <span className="text-sm">{ind}</span>
-                                    {user.industry === ind && <Check className="h-4 w-4" />}
-                                </DropdownMenuItem>
-                            ))}
                         </DropdownMenuSubContent>
                     </DropdownMenuSub>
                 </DropdownMenuGroup>
 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-2 bg-slate-100 dark:bg-slate-800" />
 
                 <DropdownMenuGroup className="p-1">
-                    <Link href="/perfil" className="w-full">
-                        <DropdownMenuItem className="cursor-pointer rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">
-                            <User className="mr-2 h-4 w-4 text-slate-400" />
-                            <span className="text-sm">Editar mi Perfil</span>
-                        </DropdownMenuItem>
-                    </Link>
-                    <Link href="/contacto" className="w-full">
-                        <DropdownMenuItem className="cursor-pointer rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">
-                            <HelpCircle className="mr-2 h-4 w-4 text-slate-400" />
-                            <span className="text-sm">Centro de Ayuda</span>
+                    <Link href="/admin/support" className="w-full">
+                        <DropdownMenuItem className="cursor-pointer rounded-lg py-2 px-4 hover:bg-slate-100 dark:hover:bg-slate-800 group transition-colors">
+                            <HelpCircle className="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500 transition-colors" />
+                            <span className="text-sm font-medium">Ayuda y Soporte</span>
                         </DropdownMenuItem>
                     </Link>
                 </DropdownMenuGroup>
 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-2 bg-slate-100 dark:bg-slate-800" />
 
                 <div className="p-1">
                     <DropdownMenuItem
-                        className="cursor-pointer rounded-md text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/20 focus:text-red-600 dark:focus:text-red-400 transition-colors font-semibold py-2"
+                        className="cursor-pointer rounded-lg text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/10 focus:text-red-600 dark:focus:text-red-400 transition-colors font-black py-3 px-4"
                         onClick={() => signOut({ callbackUrl: '/login' })}
                     >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Cerrar sesión</span>
+                        <LogOut className="mr-3 h-4 w-4" />
+                        <span>Cerrar Sesión</span>
                     </DropdownMenuItem>
                 </div>
             </DropdownMenuContent>
+
         </DropdownMenu>
     );
 }

@@ -126,6 +126,13 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Interactive Demos:** Mockups dinámicos de los nuevos servicios agénticos.
 - [x] **Documentation Sync:** ROADMAP_MASTER y Landing alineados al 100% en la v2.30.
 
+#### 💅 FASE 34: UX HARMONY & NAVIGATION OVERHAUL (EN PROCESO 🚧)
+- **Objetivo:** Reducir la fatiga cognitiva y mejorar la usabilidad mediante una jerarquía clara y navegación intuitiva.
+- [x] **Sidebar Semantic Grouping:** Organización de menús en secciones (Core, Inventario, Studio, Admin, Governance).
+- [x] **Universal UserNav Refactor:** Simplificación del menú de usuario para separar ajustes personales de configuración de sistema.
+- [ ] **Shortcut System (Command Center):** Implementar buscador global como paleta de comandos (Ctrl+K).
+- [ ] **Visual Consistency Audit:** Asegurar que todos los modales y tablas sigan el mismo patrón de diseño (Skill: ui-styling).
+
 ---
 
 ### 📋 Future Evolutionary Paths (Vision 2027+)
