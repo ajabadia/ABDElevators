@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useSidebar } from '@/context/SidebarContext';
 import { NotificationBell } from './NotificationBell';
+import { CommandMenu } from './CommandMenu';
 import { UserNav } from './UserNav';
 import { useSession } from 'next-auth/react';
 import { useBranding } from '@/context/BrandingContext';
@@ -28,13 +29,8 @@ export function Header() {
                 >
                     <Menu size={20} />
                 </button>
-                <div className="relative group flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search entities, components or manuals..."
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-slate-900 dark:text-slate-100"
-                    />
+                <div className="flex-1">
+                    <CommandMenu />
                 </div>
             </div>
 

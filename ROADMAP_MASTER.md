@@ -130,7 +130,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Objetivo:** Reducir la fatiga cognitiva y mejorar la usabilidad mediante una jerarquía clara y navegación intuitiva.
 - [x] **Sidebar Semantic Grouping:** Organización de menús en secciones (Core, Inventario, Studio, Admin, Governance).
 - [x] **Universal UserNav Refactor:** Simplificación del menú de usuario para separar ajustes personales de configuración de sistema.
-- [ ] **Shortcut System (Command Center):** Implementar buscador global como paleta de comandos (Ctrl+K).
+- [x] **Shortcut System (Command Center):** Implementar buscador global como paleta de comandos (Ctrl+K).
 - [ ] **Visual Consistency Audit:** Asegurar que todos los modales y tablas sigan el mismo patrón de diseño (Skill: ui-styling).
 
 ---
