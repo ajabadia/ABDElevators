@@ -34,7 +34,10 @@ export async function GET(request: Request) {
             adminUserFound: !!user,
             adminUserRoleRaw: user ? (user.role || user.rol) : 'N/A',
             adminUserKeys: user ? Object.keys(user) : [],
-            sampleSchemas: schemas
+            sampleSchemas: schemas,
+            deployTimestamp: new Date().toISOString(),
+            envAuthUrl: process.env.AUTH_URL || 'N/A',
+            envNextAuthUrl: process.env.NEXTAUTH_URL || 'N/A'
         });
 
     } catch (error: any) {
