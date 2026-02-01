@@ -57,16 +57,29 @@ export async function POST(req: NextRequest) {
     try {
         const db = await connectDB();
 
-        // 🛡️ Idempotency Check: Prevenir procesamiento doble del mismo evento
-        const existingEvent = await db.collection('processed_events').findOne({ eventId: event.id });
-        if (existingEvent) {
-            await logEvento({
-                level: 'INFO',
-                source: 'STRIPE_WEBHOOK',
-                action: 'IDEMPOTENCY_BYPASS',
-                message: `Evento Stripe ya procesado anteriormente: ${event.id}`, correlationId,
+        // 🛡️ Idempotency Check (Atomic Claim Pattern)
+        // Intentamos insertar el evento con estado 'PROCESSING'. 
+        // Si ya existe (duplicate key error), es que ya se está procesando o terminó.
+        try {
+            await db.collection('processed_events').insertOne({
+                eventId: event.id,
+                type: event.type,
+                status: 'PROCESSING',
+                createdAt: new Date(),
+                correlationId
             });
-            return NextResponse.json({ received: true, duplicated: true });
+        } catch (err: any) {
+            // Si el error es código 11000 (Duplicate Key), ignoramos y retornamos OK
+            if (err.code === 11000) {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'STRIPE_WEBHOOK',
+                    action: 'IDEMPOTENCY_BYPASS',
+                    message: `Evento Stripe ya procesado/en proceso: ${event.id}`, correlationId,
+                });
+                return NextResponse.json({ received: true, duplicated: true });
+            }
+            throw err; // Otro error de DB
         }
 
         switch (event.type) {
@@ -97,11 +110,15 @@ export async function POST(req: NextRequest) {
         }
 
         // Marcar como procesado exitosamente
-        await db.collection('processed_events').insertOne({
-            eventId: event.id,
-            type: event.type,
-            processedAt: new Date(), correlationId
-        });
+        await db.collection('processed_events').updateOne(
+            { eventId: event.id },
+            {
+                $set: {
+                    status: 'COMPLETED',
+                    processedAt: new Date()
+                }
+            }
+        );
 
         return NextResponse.json({ received: true });
     } catch (error) {

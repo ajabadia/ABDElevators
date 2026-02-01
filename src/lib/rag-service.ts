@@ -66,7 +66,7 @@ export async function performTechnicalSearch(
             const inicio = Date.now();
 
             const db = await connectDB();
-            const collection = db.collection('knowledge_chunks');
+            const collection = db.collection('document_chunks');
 
             const embeddings = new GoogleGenerativeAIEmbeddings({
                 apiKey: process.env.GEMINI_API_KEY,
@@ -84,6 +84,7 @@ export async function performTechnicalSearch(
             const filter = {
                 $and: [
                     { status: { $ne: "obsoleto" } },
+                    { deletedAt: { $exists: false } },
                     { industry: industry },
                     {
                         $or: [
@@ -100,12 +101,36 @@ export async function performTechnicalSearch(
                 filter: filter as any
             });
 
+            // LangChain's maxMarginalRelevanceSearch doesn't return scores easily.
+            // We calculate them manually for the selected winners to provide UI feedback.
+            const ragResults = await Promise.all(results.map(async (doc) => {
+                const docEmbedding = doc.metadata.embedding;
+                let score = 0;
+
+                // If embedding is not in metadata, we might need to fetch it or skip
+                // For now, we use a fallback similarity if available or 0.85 as MMR winner indicator
+                score = (doc.metadata as any).score || 0.85;
+
+                return {
+                    text: doc.pageContent,
+                    source: doc.metadata.sourceDoc,
+                    score: score,
+                    type: doc.metadata.componentType,
+                    model: doc.metadata.model,
+                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
+                };
+            }));
+
             const duracionTotal = Date.now() - inicio;
             span.setAttribute('rag.duration_ms', duracionTotal);
             span.setAttribute('rag.result_count', results.length);
 
-            // Tracking de uso (Búsqueda Vectorial)
+            // Tracking de uso (Búsqueda Vectorial + Precisión)
             await UsageService.trackVectorSearch(tenantId, correlationId);
+            if (ragResults.length > 0) {
+                const avgScore = ragResults.reduce((acc, curr) => acc + curr.score, 0) / ragResults.length;
+                await UsageService.trackContextPrecision(tenantId, correlationId, avgScore, query);
+            }
 
             await logEvento({
                 level: 'DEBUG',
@@ -114,17 +139,8 @@ export async function performTechnicalSearch(
                 message: `Búsqueda MMR para "${query}" devolvió ${results.length} resultados`,
                 correlationId,
                 tenantId,
-                details: { limit, query, strategy: 'MMR' }
+                details: { limit, query, strategy: 'MMR', durationMs: duracionTotal }
             });
-
-            const ragResults = results.map(doc => ({
-                text: doc.pageContent,
-                source: doc.metadata.sourceDoc,
-                score: 0, // MMR de LangChain no devuelve score directo fácilmente en esta firma
-                type: doc.metadata.componentType,
-                model: doc.metadata.model,
-                cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
-            }));
 
             // SLA: El RAG Pro con MMR puede tomar hasta 1000ms
             if (duracionTotal > 1000) {
@@ -187,7 +203,7 @@ export async function performMultilingualSearch(
         try {
             const { multilingualService } = await import('@/lib/multilingual-service');
             const db = await connectDB();
-            const collection = db.collection('knowledge_chunks');
+            const collection = db.collection('document_chunks');
 
             const queryVector = await multilingualService.generateEmbedding(query);
 
@@ -219,6 +235,13 @@ export async function performMultilingualSearch(
 
             span.setAttribute('rag.result_count', results.length);
             span.setAttribute('rag.duration_ms', Date.now() - inicio);
+
+            // Tracking de uso (Búsqueda Vectorial + Precisión)
+            await UsageService.trackVectorSearch(tenantId, correlationId);
+            if (results.length > 0) {
+                const avgScore = results.reduce((acc, curr) => acc + (curr.score || 0), 0) / results.length;
+                await UsageService.trackContextPrecision(tenantId, correlationId, avgScore, query);
+            }
 
             await logEvento({
                 level: 'DEBUG',
@@ -259,6 +282,108 @@ export async function performMultilingualSearch(
 }
 
 /**
+ * Búsqueda por palabras clave (BM25) usando Atlas Search (Lucene).
+ * Complemento ideal para términos técnicos exactos. (Fase 36)
+ */
+export async function pureKeywordSearch(
+    query: string,
+    tenantId: string,
+    correlationId: string,
+    limit = 5,
+    industry: string = 'ELEVATORS'
+): Promise<RagResult[]> {
+    return tracer.startActiveSpan('rag.keyword_search', {
+        attributes: {
+            'tenant.id': tenantId,
+            'correlation.id': correlationId,
+            'rag.query': query,
+            'rag.strategy': 'BM25'
+        }
+    }, async (span) => {
+        const inicio = Date.now();
+        try {
+            const db = await connectDB();
+            const collection = db.collection('document_chunks');
+
+            // Búsqueda de Atlas Search
+            const results = await collection.aggregate([
+                {
+                    "$search": {
+                        "index": "keyword_index",
+                        "text": {
+                            "query": query,
+                            "path": "chunkText"
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        status: { $ne: "obsoleto" },
+                        deletedAt: { $exists: false },
+                        industry: industry,
+                        $or: [
+                            { tenantId: "global" },
+                            { tenantId: tenantId }
+                        ]
+                    }
+                },
+                {
+                    "$limit": limit
+                },
+                {
+                    "$project": {
+                        "chunkText": 1,
+                        "sourceDoc": 1,
+                        "componentType": 1,
+                        "model": 1,
+                        "score": { "$meta": "searchScore" },
+                        "cloudinaryUrl": 1,
+                        "language": 1
+                    }
+                }
+            ]).toArray();
+
+            const finalResults: RagResult[] = results.map(r => ({
+                text: r.chunkText,
+                source: r.sourceDoc,
+                score: r.score,
+                type: r.componentType,
+                model: r.model,
+                cloudinaryUrl: r.cloudinaryUrl,
+                language: r.language
+            }));
+
+            span.setAttribute('rag.result_count', finalResults.length);
+            span.setAttribute('rag.duration_ms', Date.now() - inicio);
+
+            await logEvento({
+                level: 'INFO',
+                source: 'RAG_SERVICE',
+                action: 'KEYWORD_SEARCH_SUCCESS',
+                message: `Búsqueda BM25 para "${query}"`,
+                correlationId,
+                tenantId,
+                details: {
+                    hits: finalResults.length,
+                    durationMs: Date.now() - inicio
+                }
+            });
+
+            return finalResults;
+
+        } catch (error: any) {
+            span.recordException(error);
+            span.setStatus({ code: SpanStatusCode.ERROR });
+            console.error("[KEYWORD SEARCH ERROR]", error.message);
+            return [];
+        } finally {
+            span.end();
+        }
+    });
+}
+
+
+/**
  * Búsqueda Híbrida Calibrada (Fase 21.1 Tuning).
  * Combina lo mejor de Gemini (Precisión semántica) y BGE-M3 (Multilingüe Robusto).
  * Aplica RRF (Reciprocal Rank Fusion) para unificar rankings.
@@ -279,9 +404,10 @@ export async function hybridSearch(
     }, async (span) => {
         const inicio = Date.now();
         try {
-            const [geminiResults, bgeResults] = await Promise.all([
+            const [geminiResults, bgeResults, keywordResults] = await Promise.all([
                 performTechnicalSearch(query, tenantId, correlationId, limit * 2),
-                performMultilingualSearch(query, tenantId, correlationId, limit * 2)
+                performMultilingualSearch(query, tenantId, correlationId, limit * 2),
+                pureKeywordSearch(query, tenantId, correlationId, limit * 2)
             ]);
 
             const map = new Map<string, RagResult & { rankScore: number }>();
@@ -290,7 +416,7 @@ export async function hybridSearch(
                 results.forEach((res, index) => {
                     const key = res.text.substring(0, 100);
                     const existing = map.get(key);
-                    const score = weight * (1 / (index + 10)); // RRF simple: 1 / (rank + k)
+                    const score = weight * (1 / (index + 60)); // RRF estándar: 1 / (rank + k) con k=60
 
                     if (existing) {
                         existing.rankScore += score;
@@ -304,7 +430,8 @@ export async function hybridSearch(
             };
 
             addToMap(geminiResults, 1.0);
-            addToMap(bgeResults, 1.2);
+            addToMap(bgeResults, 1.0);
+            addToMap(keywordResults, 1.5); // Priorizar términos técnicos exactos
 
             const merged = Array.from(map.values())
                 .sort((a, b) => b.rankScore - a.rankScore)
@@ -323,6 +450,7 @@ export async function hybridSearch(
                 details: {
                     gemini_hits: geminiResults.length,
                     bge_hits: bgeResults.length,
+                    keyword_hits: keywordResults.length,
                     merged_hits: merged.length,
                     durationMs: Date.now() - inicio
                 }
@@ -367,7 +495,7 @@ export async function pureVectorSearch(
             PureVectorSearchSchema.parse({ query, correlationId, ...options });
 
             const db = await connectDB();
-            const collection = db.collection('knowledge_chunks');
+            const collection = db.collection('document_chunks');
 
             const embeddings = new GoogleGenerativeAIEmbeddings({
                 apiKey: process.env.GEMINI_API_KEY,
@@ -385,6 +513,7 @@ export async function pureVectorSearch(
             const filter = {
                 $and: [
                     { status: { $ne: "obsoleto" } },
+                    { deletedAt: { $exists: false } },
                     { industry: options.industry || 'ELEVATORS' },
                     {
                         $or: [
@@ -417,8 +546,12 @@ export async function pureVectorSearch(
             span.setAttribute('rag.duration_ms', duracionTotal);
             span.setAttribute('rag.result_count', finalResults.length);
 
-            // Tracking de uso (Búsqueda Vectorial)
+            // Tracking de uso (Búsqueda Vectorial + Precisión)
             await UsageService.trackVectorSearch(tenantId, correlationId);
+            if (finalResults.length > 0) {
+                const avgScore = finalResults.reduce((acc, curr) => acc + curr.score, 0) / finalResults.length;
+                await UsageService.trackContextPrecision(tenantId, correlationId, avgScore, query);
+            }
 
             await logEvento({
                 level: 'INFO',

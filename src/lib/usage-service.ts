@@ -22,6 +22,22 @@ export class UsageService {
     }
 
     /**
+     * Registra el uso de tokens de LLM en modo Shadow (Fase 36 - A/B Testing).
+     */
+    static async trackShadowLLM(tenantId: string, tokens: number, model: string, correlationId?: string) {
+        return this.logUsage({
+            tenantId,
+            type: 'LLM_TOKENS',
+            value: tokens,
+            resource: model,
+            description: `[SHADOW] Consumo de ${tokens} tokens en modelo ${model}`,
+            correlationId,
+            metadata: { isShadow: true }
+        });
+    }
+
+
+    /**
      * Registra el uso de almacenamiento.
      */
     static async trackStorage(tenantId: string, bytes: number, resource: string, correlationId?: string) {
@@ -31,6 +47,20 @@ export class UsageService {
             value: bytes,
             resource: resource,
             description: `Almacenamiento de ${Math.round(bytes / 1024)} KB en ${resource}`,
+            correlationId
+        });
+    }
+
+    /**
+     * Registra la precisión del contexto RAG (Phase 36).
+     */
+    static async trackContextPrecision(tenantId: string, correlationId: string, averageScore: number, query: string) {
+        return this.logUsage({
+            tenantId,
+            type: 'RAG_PRECISION',
+            value: averageScore,
+            resource: 'rag-engine',
+            description: `Precisión promedio de ${(averageScore * 100).toFixed(1)}% para consulta: "${query.substring(0, 50)}..."`,
             correlationId
         });
     }

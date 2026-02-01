@@ -7,24 +7,12 @@ import { NextResponse } from 'next/server';
  * For production persistence, use Upstash Redis.
  */
 
-interface RateLimitStore {
-    [key: string]: {
-        count: number;
-        reset: number;
-    };
-}
+import { connectDB } from './db';
 
-const store: RateLimitStore = {};
-
-// Clean up store periodically
-setInterval(() => {
-    const now = Date.now();
-    for (const key in store) {
-        if (store[key].reset < now) {
-            delete store[key];
-        }
-    }
-}, 1000 * 60 * 5); // Cada 5 minutos
+/**
+ * Atomic Rate Limiter using MongoDB (Atomic $inc).
+ * Replaces the ephemeral in-memory store with a persistent, cluster-safe solution.
+ */
 
 export interface RateLimitOptions {
     limit: number;
@@ -33,36 +21,59 @@ export interface RateLimitOptions {
 
 export async function rateLimit(key: string, options: RateLimitOptions) {
     const now = Date.now();
-    const entry = store[key];
+    const windowStart = now - (now % options.windowMs); // Floor to nearest window start (Fixed Window)
 
-    if (!entry || entry.reset < now) {
-        store[key] = {
-            count: 1,
-            reset: now + options.windowMs
+    // Key structure: rate_limit:IP_WINDOWSTART
+    // This creates a unique key for each window period.
+    const uniqueKey = `${key}_${windowStart}`;
+
+    try {
+        const db = await connectDB();
+        const collection = db.collection('rate_limits');
+
+        // Atomic Increment
+        // upsert: true -> If not exists, insert with count: 0 (then $inc to 1)
+        // $setOnInsert -> Sets 'reset' (expireAt) only on creation
+        const result = await collection.findOneAndUpdate(
+            { key: uniqueKey },
+            {
+                $inc: { count: 1 },
+                $setOnInsert: {
+                    reset: new Date(now + options.windowMs), // Used for TTL
+                    createdAt: new Date()
+                }
+            },
+            {
+                upsert: true,
+                returnDocument: 'after'
+            }
+        );
+
+        if (!result) {
+            // Should not happen with upsert: true
+            throw new Error('Rate limit update failed');
+        }
+
+        const currentCount = result.count;
+        const resetTime = result.reset ? result.reset.getTime() : (now + options.windowMs);
+
+        const remaining = Math.max(0, options.limit - currentCount);
+
+        return {
+            success: currentCount <= options.limit,
+            limit: options.limit,
+            remaining: remaining,
+            reset: resetTime
         };
+
+    } catch (error) {
+        console.error('Rate Limit Error (Fallback to Allow):', error);
+        // Fail open strategy: If DB fails, allow traffic (don't block legitimate users because of infra issues)
         return {
             success: true,
             limit: options.limit,
-            remaining: options.limit - 1,
-            reset: store[key].reset
+            remaining: 1,
+            reset: now + options.windowMs
         };
     }
-
-    entry.count++;
-
-    if (entry.count > options.limit) {
-        return {
-            success: false,
-            limit: options.limit,
-            remaining: 0,
-            reset: entry.reset
-        };
-    }
-
-    return {
-        success: true,
-        limit: options.limit,
-        remaining: options.limit - entry.count,
-        reset: entry.reset
-    };
 }

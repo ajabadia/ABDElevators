@@ -54,7 +54,19 @@ export function useApiList<T>({
     const filtersRef = useRef(filters);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Ref para el AbortController activo
+    const abortControllerRef = useRef<AbortController | null>(null);
+
     const fetchData = useCallback(async (currentFilters: Record<string, any>) => {
+        // Cancelar request anterior si existe
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Nuevo controlador
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         setIsLoading(true);
         setError(null);
 
@@ -67,7 +79,8 @@ export function useApiList<T>({
             });
 
             const url = queryParams.toString() ? `${endpoint}?${queryParams.toString()}` : endpoint;
-            const res = await fetch(url);
+
+            const res = await fetch(url, { signal: controller.signal });
             const json = await res.json();
 
             if (!res.ok || !json.success) {
@@ -97,6 +110,9 @@ export function useApiList<T>({
 
             onSuccessRef.current?.(transformedItems);
         } catch (err: any) {
+            if (err.name === 'AbortError') {
+                return; // Ignorar cancelaciones
+            }
             const message = err.message || 'Error desconocido';
             setError(message);
             toast({
@@ -106,9 +122,12 @@ export function useApiList<T>({
             });
             onErrorRef.current?.(message);
         } finally {
-            setIsLoading(false);
+            // Solo limpiar loading si este es el request activo
+            if (abortControllerRef.current === controller) {
+                setIsLoading(false);
+            }
         }
-    }, [endpoint, dataKey, toast]); // eliminamos callbacks de dependencias
+    }, [endpoint, dataKey, toast]);
 
     // Efecto para fetch inicial y cambios de filtros con debounce
     useEffect(() => {

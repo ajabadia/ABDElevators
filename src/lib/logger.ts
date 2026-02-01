@@ -16,15 +16,46 @@ export interface LogEntry {
     timestamp?: Date;
 }
 
+import { createHash } from 'crypto';
+
 /**
  * Registra un evento de forma estructurada en la base de datos (colección application_logs).
  * Sigue la Regla de Oro #4.
  * 
  * UPDATE: Usamos connectLogsDB() para soportar aislamiento futuro de logs.
+ * UPDATE (Phase 35): Hashing automático de PII (Emails, IPs).
  */
 export async function logEvento(entry: LogEntry): Promise<void> {
     const timestamp = new Date();
-    const logData = { ...entry, timestamp };
+
+    // 🛡️ PII OBFUSCATION LOGIC
+    // Hash sensitive fields (Email, IP) to preserve analytics without compromising privacy
+    const safeEntry = { ...entry };
+
+    if (safeEntry.userEmail) {
+        // Guardamos el hash para búsquedas exactas (e.g. "buscar logs de este hash")
+        const emailHash = createHash('sha256').update(safeEntry.userEmail.toLowerCase().trim()).digest('hex');
+        (safeEntry as any).userEmailHash = emailHash;
+
+        // Mask for readability: j***@gmail.com
+        const [local, domain] = safeEntry.userEmail.split('@');
+        safeEntry.userEmail = `${local.charAt(0)}***@${domain}`;
+    }
+
+    if (safeEntry.details && typeof safeEntry.details === 'object') {
+        // Deep clone simple to avoid mutating original details reference if used elsewhere
+        const safeDetails = { ...safeEntry.details };
+
+        if (safeDetails.ip) {
+            safeDetails.ipHash = createHash('sha256').update(safeDetails.ip).digest('hex');
+            safeDetails.ip = '***.***.***.***'; // Redact
+        }
+
+        // Add more PII fields here if needed (phone, address, etc)
+        safeEntry.details = safeDetails;
+    }
+
+    const logData = { ...safeEntry, timestamp };
 
     // Always log to console for development visibility
     if (entry.level === 'ERROR') {

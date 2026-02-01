@@ -40,14 +40,14 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.30)
 
-- **Global Progress:** 210% (Phase 33 Initiative - Marketing & Exhibition Overhaul).
+- **Global Progress:** 230% (Phase 36 Initiative - AI Orchestration & Distributed Intelligence).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
 - **Recent Ship:**
+  - **Shadow Prompts**: A/B testing para prompts en caliente (llm.ts).
+  - **Hybrid Search (BM25)**: Integración formal de Lucene + RRF (rag-service.ts).
   - **Compliance Suite**: Backup (.zip) & GDPR Certs.
-  - **Ephemeral Sandbox**: Auto-purge trial tenants.
-  - **Federated Intelligence**: Global pattern network.
   - **Advanced PDF Engine**: PyMuPDF via Python Bridge.
-- **Project Status:** **State-of-the-art Production System (v2.30 Showcase Stage).**
+- **Project Status:** **State-of-the-art Production System (v2.36 Showcase Stage).**
 
 ---
 
@@ -126,12 +126,56 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Interactive Demos:** Mockups dinámicos de los nuevos servicios agénticos.
 - [x] **Documentation Sync:** ROADMAP_MASTER y Landing alineados al 100% en la v2.30.
 
-#### 💅 FASE 34: UX HARMONY & NAVIGATION OVERHAUL (EN PROCESO 🚧)
+#### 💅 FASE 34: UX HARMONY & NAVIGATION OVERHAUL (COMPLETADO ✅)
 - **Objetivo:** Reducir la fatiga cognitiva y mejorar la usabilidad mediante una jerarquía clara y navegación intuitiva.
 - [x] **Sidebar Semantic Grouping:** Organización de menús en secciones (Core, Inventario, Studio, Admin, Governance).
 - [x] **Universal UserNav Refactor:** Simplificación del menú de usuario para separar ajustes personales de configuración de sistema.
 - [x] **Shortcut System (Command Center):** Implementar buscador global como paleta de comandos (Ctrl+K).
 - [x] **Visual Consistency Audit:** Asegurar que todos los modales y tablas sigan el mismo patrón de diseño (Skill: ui-styling).
+
+#### 🛡️ FASE 35: ENTERPRISE HARDENING & AUDIT REMEDIATION (PRIORIDAD MÁXIMA 🛑)
+- **Objetivo:** Implementar correcciones críticas de seguridad, rendimiento y concurrencia detectadas en la Auditoría Externa v2.
+- **Estado:** COMPLETADO ✅
+- [x] **Infrastructure Core:**
+  - [x] **DB Connection Pooling:** Singleton pattern para `MongoClient` (Serverless friendly) - Implemented in `lib/db.ts`.
+  - [x] **Critical Indexes:** Índices para `document_chunks` (vector/metadata) y `knowledge_assets` - Script `src/scripts/ensure-indexes.ts`.
+  - [x] **Webhook Idempotency:** Verificación de firma y `event_id` en Stripe.
+- [x] **Security Shielding:**
+  - [x] **PII Obfuscation:** Hashing automático de emails/IPs en logs estructurados (`lib/logger.ts`).
+  - [x] **Rate Limit Atomic:** Migración a updates atómicos (Redis/Mongo `$inc`) para evitar race conditions.
+  - [x] **Prompt Injection Guard:** Validación estricta y sanitización pre-spread en API Routes (`admin/prompts`).
+- [x] **Resilience & RAG:**
+  - [x] **Stream Ingestion:** Soporte para Streams en Cloudinary y retries robustos en Ingesta (`admin/ingest`).
+  - [x] **Embedding Retry Circuit:** Lógica de `withRetry` con backoff para fallos de Gemini (`lib/llm.ts`).
+  - [x] **Compliance Fixes:** Conversión de borrados físicos a `soft-deletes` auditables (`admin/assets`).
+- [x] **Frontend Stability:**
+  - [x] **React Race Conditions:** Implementar `useDebounce` y cancelación de promesas (`AbortController`) en búsquedas.
+  - [x] **Server Boundary:** Refactor de Landing Page para maximizar RSC.
+
+#### 🚀 FASE 36: INTELLIGENT GOVERNANCE & FEDERATED MONITORING (COMPLETADO ✅)
+- **Objetivo:** Evolucionar la orquestación IA hacia un modelo federado con observabilidad avanzada y optimización de costes.
+- **Estado:** COMPLETADO ✅
+- [x] **Observability Pro (v2):**
+  - [x] **RAG Metrics:** Seguimiento de precisión de contexto y latencia. Fix scores MMR 0%.
+  - [x] **Cost Analytics:** Registro diferenciado de tokens Shadow vs Producción en `UsageService`.
+- [x] **Intelligent Orchestration:**
+  - [x] **Prompt Shadowing:** Orquestación asíncrona de prompts sombra en `llm.ts`.
+  - [x] **Hybrid Search Expansion:** Integración de **BM25** (Atlas Search) + Vector Search con **RRF (k=60)**.
+- [x] **Federated Intelligence:**
+  - [x] **Global Pattern Sharing:** Semilla de anonimización para patrones globales.
+
+> [!IMPORTANT]
+> **GUÍA DE INFRAESTRUCTURA (POST-FASE 36):**
+> Para que Hybrid Search funcione, se debe crear un índice en MongoDB Atlas:
+> - **Nombre:** `keyword_index`
+> - **Colección:** `document_chunks` (¡Cuidado! No usar `knowledge_chunks`).
+> - **Tipo:** Atlas Search (Lucene).
+> - **JSON Config:**
+> ```json
+> {
+>   "mappings": { "dynamic": false, "fields": { "chunkText": { "type": "string", "analyzer": "lucene.standard" } } }
+> }
+> ```
 
 ---
 
@@ -170,4 +214,4 @@ Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
 - Treat this file as the **single source of truth**.
 - Update relevant sections when milestones are reached.
 
-*Updated and Audited on 2026-01-31 by Antigravity (Skill: roadmap-manager)*
+*Updated and Audited on 2026-02-01 by Antigravity (Skill: roadmap-manager)*

@@ -13,6 +13,7 @@ import { PromptService } from '@/lib/prompt-service';
 import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
 import { UsageService } from '@/lib/usage-service';
+import { withRetry } from '@/lib/retry';
 
 // Schema for upload metadata
 const IngestMetadataSchema = z.object({
@@ -180,7 +181,11 @@ export async function POST(req: NextRequest) {
         await logEvento({ level: 'DEBUG', source: 'API_INGEST', action: 'PROCESS', message: `New file (MD5: ${fileHash}). Starting full processing.`, correlationId });
 
         // 1. Upload PDF to Cloudinary (Tenant Isolation)
-        const cloudinaryResult = await uploadRAGDocument(buffer, file.name, tenantId);
+        // Resilience: Retry on upload failure
+        const cloudinaryResult = await withRetry(
+            () => uploadRAGDocument(buffer, file.name, tenantId),
+            { maxRetries: 3, initialDelayMs: 1000 }
+        );
         await logEvento({ level: 'DEBUG', source: 'API_INGEST', action: 'PROCESS', message: 'Uploaded to Cloudinary', correlationId });
 
         // 2. Extract Text (Advanced Hybrid Strategy - Phase 27)

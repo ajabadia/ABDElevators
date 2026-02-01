@@ -36,6 +36,8 @@ export const DocumentChunkSchema = z.object({
     cloudinaryUrl: z.string().optional(),
 
     createdAt: z.date().default(() => new Date()),
+    deletedAt: z.date().optional(),
+    status: z.enum(['vigente', 'obsoleto', 'borrador']).optional(),
 });
 
 export const TaxonomyValueSchema = z.object({
@@ -203,6 +205,7 @@ export const EntitySchema = z.object({
     transitions_history: z.array(WorkflowLogSchema).default([]),
     fileMd5: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
+    deletedAt: z.date().optional(),
 });
 
 export type Entity = z.infer<typeof EntitySchema>;
@@ -315,6 +318,7 @@ export const KnowledgeAssetSchema = z.object({
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
     totalChunks: z.number(),
     createdAt: z.date().default(() => new Date()),
+    deletedAt: z.date().optional(),
 });
 
 /**
@@ -373,6 +377,7 @@ export const UserSchema = z.object({
     isActive: z.boolean().default(true),
     createdAt: z.date(),
     updatedAt: z.date(),
+    deletedAt: z.date().optional(),
 });
 
 /**
@@ -517,7 +522,7 @@ export type UserDocument = z.infer<typeof UserDocumentSchema>;
 export const UsageLogSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED']),
+    type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED', 'RAG_PRECISION']),
     value: z.number(),                  // Cantidad (tokens, bytes, etc)
     resource: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
     description: z.string().optional(),
@@ -1021,6 +1026,9 @@ export const PromptSchema = z.object({
     version: z.number().default(1),
     active: z.boolean().default(true),
     maxLength: z.number().optional(),
+    isShadowActive: z.boolean().default(false), // Activa la ejecución en paralelo de un prompt sombra
+    shadowPromptKey: z.string().optional(),     // Key del prompt a usar como sombra (A/B testing)
+    shadowModel: z.string().optional(),         // Modelo específico para la sombra
     updatedAt: z.date().default(() => new Date()),
     updatedBy: z.string().optional(),
     createdBy: z.string().optional(),

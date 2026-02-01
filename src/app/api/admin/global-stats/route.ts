@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 
@@ -10,10 +10,7 @@ import { AppError } from '@/lib/errors';
  */
 export async function GET(req: NextRequest) {
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await requireSuperAdmin();
 
         const db = await connectDB();
         const authDb = await connectAuthDB();

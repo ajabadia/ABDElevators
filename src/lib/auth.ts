@@ -219,3 +219,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     debug: process.env.NODE_ENV === 'development',
 });
+
+// 🛡️ SECURITY HELPERS (Fase 35)
+
+/**
+ * Ensures a user is authenticated. Throws 401 if not.
+ * @returns session
+ */
+import { AppError } from "@/lib/errors";
+
+export async function requireAuth() {
+    const session = await auth();
+    if (!session?.user) {
+        throw new AppError('UNAUTHORIZED', 401, 'No session active');
+    }
+    return session;
+}
+
+/**
+ * Ensures user is SUPER_ADMIN. Throws 403 if not.
+ * Centralizes critical permission logic (DRY).
+ * @returns session
+ */
+export async function requireSuperAdmin() {
+    const session = await auth();
+    if (!session?.user) {
+        throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
+    }
+
+    if (session.user.role !== 'SUPER_ADMIN') {
+        // Log unauthorized attempt? Could be useful.
+        /* await logEvento({ ... }) */
+        throw new AppError('FORBIDDEN', 403, 'Permission Denied: SUPER_ADMIN required');
+    }
+    return session;
+}

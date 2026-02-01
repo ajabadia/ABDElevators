@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from "zod";
 import { ExternalServiceError, AppError } from '@/lib/errors';
+import { withRetry } from './retry';
 import { logEvento } from '@/lib/logger';
 import { UsageService } from './usage-service';
 import { PromptService } from './prompt-service';
@@ -66,7 +67,14 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 
             const genAI = getGenAI();
             const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-            const result = await model.embedContent(text);
+
+            const result = await withRetry(() => model.embedContent(text), {
+                maxRetries: 3,
+                shouldRetry: (err) => {
+                    const status = err?.status || err?.response?.status;
+                    return status === 429 || status >= 500;
+                }
+            });
 
             const duration = Date.now() - start;
             span.setAttribute('genai.duration_ms', duration);
@@ -104,6 +112,63 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             span.end();
         }
     });
+}
+
+/**
+ * Ejecuta una llamada sombra al LLM en segundo plano (Fase 36).
+ */
+async function runShadowCall(
+    prompt: string,
+    modelName: string,
+    tenantId: string,
+    correlationId: string,
+    originalKey: string,
+    shadowKey: string
+) {
+    try {
+        const start = Date.now();
+        const genAI = getGenAI();
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        // No bloqueamos; ejecución ligera
+        const result = await model.generateContent(prompt);
+        const duration = Date.now() - start;
+        const responseText = result.response.text();
+
+        // Tracking de tokens sombra (Fase 36)
+        const usage = (result.response as any).usageMetadata;
+        if (usage) {
+            await UsageService.trackShadowLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+        }
+
+        await logEvento({
+            level: 'INFO',
+            source: 'GEMINI_SHADOW',
+            action: 'SHADOW_EXECUTION',
+            message: `Ejecución sombra para "${originalKey}" usando "${shadowKey}" en ${duration}ms`,
+            correlationId,
+            tenantId,
+            details: {
+                originalKey,
+                shadowKey,
+                model: modelName,
+                durationMs: duration,
+                responsePreview: responseText.substring(0, 200) + '...'
+            }
+        });
+
+    } catch (err: any) {
+        // Error silencioso para el usuario, pero registrado
+        await logEvento({
+            level: 'WARN',
+            source: 'GEMINI_SHADOW',
+            action: 'SHADOW_ERROR',
+            message: `Fallo en ejecución sombra ${shadowKey}: ${err.message}`,
+            correlationId,
+            tenantId,
+            details: { shadowKey, originalKey }
+        });
+    }
 }
 
 
@@ -212,11 +277,20 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
             const genAI = getGenAI();
 
             // Renderizar el prompt dinámico y obtener el modelo configurado
-            const { text: renderedPrompt, model: modelName } = await PromptService.getRenderedPrompt(
+            const { production, shadow } = await PromptService.getPromptWithShadow(
                 'MODEL_EXTRACTOR',
                 { text },
                 tenantId
             );
+
+            const renderedPrompt = production.text;
+            const modelName = production.model;
+
+            if (shadow) {
+                runShadowCall(shadow.text, shadow.model, tenantId, correlationId, 'MODEL_EXTRACTOR', shadow.key).catch(e =>
+                    console.error("[SHADOW ORCHESTRATION ERROR]", e)
+                );
+            }
 
             span.setAttribute('genai.model', modelName);
 
@@ -307,9 +381,13 @@ export async function analyzeEntityWithGemini(
 
             // Si la ontología no tiene prompt, caer en el PromptService (Legacy/DB)
             if (!renderedPrompt) {
-                const result = await PromptService.getRenderedPrompt('MODEL_EXTRACTOR', { text }, tenantId);
-                renderedPrompt = result.text;
-                modelName = result.model;
+                const { production, shadow } = await PromptService.getPromptWithShadow('MODEL_EXTRACTOR', { text }, tenantId);
+                renderedPrompt = production.text;
+                modelName = production.model;
+
+                if (shadow) {
+                    runShadowCall(shadow.text, shadow.model, tenantId, correlationId, 'MODEL_ADAPTIVE', shadow.key).catch(console.error);
+                }
                 span.setAttribute('prompt.source', 'legacy_db');
             } else {
                 span.setAttribute('prompt.source', 'ontology');

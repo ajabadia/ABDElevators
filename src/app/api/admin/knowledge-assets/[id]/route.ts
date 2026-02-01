@@ -48,54 +48,58 @@ export async function DELETE(
         // 2. Atomic Operation (Simulated via try/catch as Atlas generic tier might not support multi-doc transactions)
         // In production use session.withTransaction() if available
 
-        // 2.1 Delete from Cloudinary if exists
-        if (publicId) {
-            try {
-                await deletePDFFromCloudinary(publicId);
-            } catch (cloudErr) {
-                await logEvento({
-                    level: 'WARN',
-                    source: 'API_ASSET_DELETE',
-                    action: 'CLOUDINARY_DELETE_FAIL',
-                    message: `Could not delete from Cloudinary, publicId: ${publicId}. Continuing with DB.`,
-                    correlationId,
-                    details: { error: (cloudErr as Error).message }
-                });
-            }
-        }
+        // 2. Soft Delete Operation (Compliance: Audit & Recovery)
+        // We do NOT delete from Cloudinary to allow recovery.
 
-        // 2.2 Delete associated chunks
-        // Use publicId as join key if exists, else filename (legacy fallback)
+        const now = new Date();
+
+        // 2.1 Update associated chunks to 'obsoleto'
         const filename = asset.filename || asset.nombre_archivo;
         const chunkFilter: any = publicId
             ? { cloudinary_public_id: publicId, tenantId: asset.tenantId }
-            : { origen_doc: filename, tenantId: asset.tenantId };
+            : { origen_doc: filename, tenantId: asset.tenantId }; // Legacy fallback
 
-        const chunkDeleteResult = await db.collection('document_chunks').deleteMany(chunkFilter);
+        const chunkUpdateResult = await db.collection('document_chunks').updateMany(
+            chunkFilter,
+            {
+                $set: {
+                    status: 'obsoleto',
+                    deletedAt: now
+                }
+            }
+        );
 
-        // 2.3 Delete master document
-        const assetDeleteResult = await db.collection('knowledge_assets').deleteOne({
-            _id: new ObjectId(id)
-        });
+        // 2.2 Update master document to 'obsoleto'
+        const assetUpdateResult = await db.collection('knowledge_assets').updateOne(
+            { _id: new ObjectId(id) },
+            {
+                $set: {
+                    status: 'obsoleto',
+                    deletedAt: now,
+                    updatedAt: now
+                }
+            }
+        );
 
         await logEvento({
             level: 'INFO',
             source: 'API_ASSET_DELETE',
-            action: 'SUCCESS',
-            message: `Document ${filename} deleted successfully`,
+            action: 'SOFT_DELETE_SUCCESS',
+            message: `Document ${filename} soft-deleted successfully`,
             correlationId,
             details: {
                 assetId: id,
-                chunksDeleted: chunkDeleteResult.deletedCount,
-                assetDeleted: assetDeleteResult.deletedCount
+                chunksAffected: chunkUpdateResult.modifiedCount,
+                assetAffected: assetUpdateResult.modifiedCount
             }
         });
 
         return NextResponse.json({
             success: true,
-            message: 'Document and fragments deleted successfully',
+            message: 'Document and fragments soft-deleted successfully',
             details: {
-                chunks: chunkDeleteResult.deletedCount
+                chunks: chunkUpdateResult.modifiedCount,
+                type: 'soft-delete'
             }
         });
 

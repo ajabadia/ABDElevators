@@ -13,7 +13,12 @@ let mainPromise: Promise<MongoClient> | null = null;
 let authClient: MongoClient;
 let authPromise: Promise<MongoClient> | null = null;
 
-const options: MongoClientOptions = {};
+const options: MongoClientOptions = {
+    maxPoolSize: 10, // Limit pool size for serverless
+    minPoolSize: 5,  // Maintain a baseline for quick bursts
+    maxIdleTimeMS: 60000, // Close idle connections to prevent ghost connections
+    connectTimeoutMS: 10000, // Fail fast
+};
 
 /**
  * Conexión a la Base de Datos de NEGOCIO (Principal)
@@ -39,9 +44,15 @@ export async function connectDB(): Promise<Db> {
         }
     }
 
-    const connectedClient = await mainPromise;
-    // Usamos el nombre de la DB principal
-    return connectedClient.db('ABDElevators');
+    try {
+        const connectedClient = await mainPromise;
+        // Usamos el nombre de la DB principal
+        return connectedClient.db('ABDElevators');
+    } catch (e) {
+        // Reset promise on failure so we can retry
+        mainPromise = null;
+        throw new DatabaseError('Failed to connect to Main DB', e as Error);
+    }
 }
 
 /**
@@ -54,6 +65,12 @@ export async function connectAuthDB(): Promise<Db> {
 
     if (!authUri) {
         throw new DatabaseError('Please add your MONGODB_AUTH_URI or MONGODB_URI to .env.local');
+    }
+
+    // Optimization: If URIs are identical, reuse the main connection promise to save sockets
+    if (authUri === process.env.MONGODB_URI && mainPromise) {
+        const client = await mainPromise;
+        return client.db('ABDElevators-Auth');
     }
 
     if (!authPromise) {
@@ -72,9 +89,13 @@ export async function connectAuthDB(): Promise<Db> {
         }
     }
 
-    const connectedClient = await authPromise;
-    // Usamos un nombre específico para la DB de seguridad
-    return connectedClient.db('ABDElevators-Auth');
+    try {
+        const connectedClient = await authPromise;
+        return connectedClient.db('ABDElevators-Auth');
+    } catch (e) {
+        authPromise = null;
+        throw new DatabaseError('Failed to connect to Auth DB', e as Error);
+    }
 }
 
 let logsClient: MongoClient;
@@ -90,6 +111,14 @@ export async function connectLogsDB(): Promise<Db> {
 
     if (!logsUri) {
         throw new DatabaseError('Please add your MONGODB_LOGS_URI or MONGODB_URI to .env.local');
+    }
+
+    // Optimization: Reuse main connection if URIs match
+    if (logsUri === process.env.MONGODB_URI && mainPromise) {
+        const client = await mainPromise;
+        // Si tenemos URI específica, usamos 'ABDElevators-Logs', sino la principal
+        const dbName = process.env.MONGODB_LOGS_URI ? 'ABDElevators-Logs' : 'ABDElevators';
+        return client.db(dbName);
     }
 
     if (!logsPromise) {
@@ -108,10 +137,14 @@ export async function connectLogsDB(): Promise<Db> {
         }
     }
 
-    const connectedClient = await logsPromise;
-    // Si tenemos URI específica, usamos 'ABDElevators-Logs', sino la principal
-    const dbName = process.env.MONGODB_LOGS_URI ? 'ABDElevators-Logs' : 'ABDElevators';
-    return connectedClient.db(dbName);
+    try {
+        const connectedClient = await logsPromise;
+        const dbName = process.env.MONGODB_LOGS_URI ? 'ABDElevators-Logs' : 'ABDElevators';
+        return connectedClient.db(dbName);
+    } catch (e) {
+        logsPromise = null;
+        throw new DatabaseError('Failed to connect to Logs DB', e as Error);
+    }
 }
 
 /**

@@ -79,6 +79,85 @@ export class PromptService {
     }
 
     /**
+     * Obtiene el prompt principal y el de sombra (si está activo). (Fase 36)
+     */
+    static async getPromptWithShadow(
+        key: string,
+        variables: Record<string, any>,
+        tenantId: string
+    ): Promise<{
+        production: { text: string, model: string },
+        shadow?: { text: string, model: string, key: string }
+    }> {
+        const promptObj = await this.getPrompt(key, tenantId);
+        const production = await this.render(promptObj, variables, tenantId);
+
+        if (promptObj.isShadowActive && promptObj.shadowPromptKey) {
+            try {
+                const shadowPromptObj = await this.getPrompt(promptObj.shadowPromptKey, tenantId);
+                const shadowRendered = await this.render(shadowPromptObj, variables, tenantId);
+
+                return {
+                    production,
+                    shadow: {
+                        text: shadowRendered.text,
+                        model: (promptObj as any).shadowModel || shadowRendered.model,
+                        key: promptObj.shadowPromptKey
+                    }
+                };
+            } catch (err) {
+                console.error(`[SHADOW PROMPT ERROR] Error renderizando sombra "${promptObj.shadowPromptKey}":`, err);
+                return { production };
+            }
+        }
+
+        return { production };
+    }
+
+    /**
+     * Helper interno para renderizar un prompt cargado
+     */
+    private static async render(
+        prompt: Prompt,
+        variables: Record<string, any>,
+        tenantId: string
+    ): Promise<{ text: string, model: string }> {
+        // Validar que todas las variables requeridas estén presentes
+        const missingVars = prompt.variables
+            .filter(v => v.required && !(v.name in variables))
+            .map(v => v.name);
+
+        if (missingVars.length > 0) {
+            throw new AppError(
+                'MISSING_VARIABLES',
+                400,
+                `Variables requeridas faltantes: ${missingVars.join(', ')}`
+            );
+        }
+
+        const allVariables = { ...variables, tenantId };
+        let rendered = prompt.template;
+        for (const [varName, varValue] of Object.entries(allVariables)) {
+            const placeholder = `{{${varName}}}`;
+            rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), String(varValue));
+        }
+
+        // Auditar uso asíncronamente
+        getTenantCollection('prompts').then(col => {
+            col.updateOne(
+                { _id: (prompt as any)._id },
+                {
+                    $inc: { usageCount: 1 },
+                    $set: { lastUsedAt: new Date() }
+                }
+            ).catch(err => console.error("Error auditing prompt usage:", err));
+        });
+
+        const model = (prompt as any).model || 'gemini-1.5-flash';
+        return { text: rendered, model };
+    }
+
+    /**
      * Renderiza un prompt reemplazando variables (Legacy compatibility)
      */
     static async renderPrompt(

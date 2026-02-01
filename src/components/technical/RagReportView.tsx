@@ -69,7 +69,7 @@ export function RagReportView({ identifier, detectedPatterns, risks = [] }: RagR
                             </h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                                {m.ragContext.length > 0 ? (
+                                {(m.ragContext?.length || 0) > 0 ? (
                                     m.ragContext.map((ctx, cIdx) => (
                                         <div key={cIdx} className="bg-slate-50 border border-slate-100 rounded-xl p-4 relative group">
                                             <div className="flex items-center justify-between mb-2">

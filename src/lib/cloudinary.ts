@@ -10,11 +10,15 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Helper type for Stream input (Node or Web)
+type StreamInput = Buffer | ReadableStream<Uint8Array> | NodeJS.ReadableStream;
+
 /**
  * Función genérica para subir a una carpeta específica (con aislamiento por tenant)
+ * Supports Buffer or Stream
  */
 async function uploadToFolder(
-    buffer: Buffer,
+    input: StreamInput,
     filename: string,
     folder: string,
     resourceType: 'raw' | 'image' = 'raw'
@@ -41,29 +45,49 @@ async function uploadToFolder(
             }
         );
 
-        uploadStream.end(buffer);
+        if (Buffer.isBuffer(input)) {
+            uploadStream.end(input);
+        } else if (input instanceof ReadableStream) {
+            // Web Stream to Node Stream
+            // @ts-ignore
+            const { Readable } = require('stream');
+            // @ts-ignore
+            const nodeStream = Readable.fromWeb(input);
+            nodeStream.pipe(uploadStream);
+        } else {
+            // Node Stream
+            input.pipe(uploadStream);
+        }
     });
 }
 
 /**
  * Sube un PDF técnico para el RAG (Carpeta aislada por tenant)
+ * Supports Streaming directly from Request
  */
 export async function uploadRAGDocument(
-    buffer: Buffer,
+    input: StreamInput,
     filename: string,
-    tenantId: string
+    tenantId: string,
+    estimatedSize?: number // Optional for logging/quota check if stream
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    // 1. Verificar quota del tenant
-    const hasQuota = await TenantService.hasStorageQuota(tenantId, buffer.length);
-    if (!hasQuota) {
-        throw new AppError('STORAGE_QUOTA_EXCEEDED', 403, 'El tenant ha excedido su cuota de almacenamiento');
+    // 1. Verificar quota del tenant (Approximation if stream)
+    const size = Buffer.isBuffer(input) ? input.length : (estimatedSize || 0);
+
+    // We check quota if size is known or > 0. If unknown stream, we might check post-upload?
+    // For now, if size provided or buffer, checking:
+    if (size > 0) {
+        const hasQuota = await TenantService.hasStorageQuota(tenantId, size);
+        if (!hasQuota) {
+            throw new AppError('STORAGE_QUOTA_EXCEEDED', 403, 'El tenant ha excedido su cuota de almacenamiento');
+        }
     }
 
     // 2. Obtener prefijo de carpeta según config del tenant
     const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
 
-    const result = await uploadToFolder(buffer, filename, `${folderPrefix}/documentos-rag`);
-    await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-rag-docs');
+    const result = await uploadToFolder(input, filename, `${folderPrefix}/documentos-rag`);
+    await UsageService.trackStorage(tenantId, size, 'cloudinary-rag-docs');
     return result;
 }
 

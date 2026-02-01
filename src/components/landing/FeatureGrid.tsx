@@ -1,83 +1,79 @@
 "use client";
 
-import { Cpu, Database, ShieldCheck, ChevronRight, Share2, FileArchive, Rocket } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from 'next-intl';
-import { SectionHeading } from "./SectionHeading";
+import { Search, FileText, Shield, Archive, ArrowRight } from "lucide-react";
 
 export function FeatureGrid() {
-    const featT = useTranslations('features');
+    const t = useTranslations('features');
+
+    const features = [
+        {
+            icon: <Search className="w-8 h-8 text-white" />,
+            title: t('f1_title'),
+            desc: t('f1_desc'),
+            gradient: "from-blue-500 to-cyan-500"
+        },
+        {
+            icon: <FileText className="w-8 h-8 text-white" />,
+            title: t('f2_title'),
+            desc: t('f2_desc'),
+            gradient: "from-emerald-500 to-teal-500"
+        },
+        {
+            icon: <Shield className="w-8 h-8 text-white" />,
+            title: t('f3_title'),
+            desc: t('f3_desc'),
+            gradient: "from-purple-500 to-indigo-500"
+        },
+        {
+            icon: <Archive className="w-8 h-8 text-white" />,
+            title: t('f4_title'),
+            desc: t('f4_desc'),
+            gradient: "from-orange-500 to-red-500"
+        }
+    ];
 
     return (
-        <section id="tecnologia" className="py-32 bg-slate-950 relative">
+        <section id="features" className="py-24 md:py-32 bg-slate-950">
             <div className="container mx-auto px-6">
-                <SectionHeading
-                    title={featT('title')}
-                    subtitle={featT('subtitle')}
-                />
+                <div className="mb-20 max-w-2xl">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-outfit">
+                        {t('title')}
+                    </h2>
+                    <p className="text-xl text-slate-400">
+                        {t('subtitle')}
+                    </p>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <FeatureCard
-                        icon={<Cpu className="text-teal-400" size={32} />}
-                        title={featT('f1_title')}
-                        description={featT('f1_desc')}
-                        link="/features/dual-engine"
-                    />
-                    <FeatureCard
-                        icon={<Database className="text-blue-400" size={32} />}
-                        title={featT('f2_title')}
-                        description={featT('f2_desc')}
-                        link="/features/vector-search"
-                    />
-                    <FeatureCard
-                        icon={<ShieldCheck className="text-emerald-400" size={32} />}
-                        title={featT('f3_title')}
-                        description={featT('f3_desc')}
-                        link="/features/audit-trail"
-                    />
-                    <FeatureCard
-                        icon={<Share2 className="text-purple-400" size={32} />}
-                        title={featT('f4_title')}
-                        description={featT('f4_desc')}
-                        link="/features/federated"
-                    />
-                    <FeatureCard
-                        icon={<FileArchive className="text-amber-400" size={32} />}
-                        title={featT('f5_title')}
-                        description={featT('f5_desc')}
-                        link="/features/compliance"
-                    />
-                    <FeatureCard
-                        icon={<Rocket className="text-rose-400" size={32} />}
-                        title={featT('f6_title')}
-                        description={featT('f6_desc')}
-                        link="/features/pdf-bridge"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {features.map((item, idx) => (
+                        <div
+                            key={idx}
+                            className="group relative p-1 rounded-3xl bg-gradient-to-br from-white/10 to-transparent hover:from-teal-500/50 hover:to-blue-500/50 transition-all duration-500"
+                        >
+                            <div className="relative h-full bg-slate-950 rounded-[1.4rem] p-8 md:p-12 overflow-hidden">
+                                {/* Blob de fondo */}
+                                <div className={`absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br ${item.gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-500`} />
+
+                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-8 shadow-lg shadow-white/5`}>
+                                    {item.icon}
+                                </div>
+
+                                <h3 className="text-2xl font-bold text-white mb-4">
+                                    {item.title}
+                                </h3>
+                                <p className="text-slate-400 text-lg leading-relaxed mb-8">
+                                    {item.desc}
+                                </p>
+
+                                <div className="flex items-center text-white font-bold text-sm group-hover:translate-x-2 transition-transform cursor-pointer">
+                                    Saber más <ArrowRight className="w-4 h-4 ml-2" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
-    );
-}
-
-function FeatureCard({ icon, title, description, link }: { icon: React.ReactNode; title: string; description: string; link?: string }) {
-    return (
-        <div className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-teal-500/30 transition-all group hover:-translate-y-2 duration-300">
-            <div className="mb-6 p-4 rounded-2xl bg-slate-900 w-fit group-hover:scale-110 transition-transform duration-500 shadow-xl border border-white/5">
-                {icon}
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4 font-outfit">{title}</h3>
-            <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
-            {link ? (
-                <Link href={link}>
-                    <div className="mt-8 flex items-center gap-2 text-teal-400 font-bold text-xs uppercase tracking-widest cursor-pointer hover:gap-3 transition-all">
-                        Saber más <ChevronRight size={14} />
-                    </div>
-                </Link>
-            ) : (
-                <div className="mt-8 flex items-center gap-2 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed">
-                    Próximamente <ChevronRight size={14} />
-                </div>
-            )}
-        </div>
     );
 }
