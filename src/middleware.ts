@@ -36,6 +36,12 @@ export async function middleware(request: NextRequest) {
             '/error',
         ];
 
+        // 🛡️ Mapeo de errores de NextAuth (Fix 404)
+        if (pathname === '/api/auth/error') {
+            const error = request.nextUrl.searchParams.get('error');
+            return NextResponse.redirect(new URL(`/auth/error?error=${error || 'Default'}`, request.url));
+        }
+
         const isPublicPath = publicPaths.some(path => {
             if (path === '/') {
                 return pathname === '/';
