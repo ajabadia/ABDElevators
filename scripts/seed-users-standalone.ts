@@ -33,44 +33,44 @@ async function seed() {
             {
                 email: 'admin@abd.com',
                 password: adminHash,
-                nombre: 'Admin',
-                apellidos: 'Sistema',
-                puesto: 'Administrador de Sistemas',
-                rol: 'ADMIN',
+                firstName: 'Admin',
+                lastName: 'Sistema',
+                position: 'Administrador de Sistemas',
+                role: 'ADMIN',
                 tenantId: 'default_tenant',
                 industry: 'ELEVATORS',
                 activeModules: ['TECHNICAL', 'RAG'],
-                activo: true,
-                creado: new Date(),
-                modificado: new Date()
+                active: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
             },
             {
                 email: 'tecnico@abd.com',
                 password: tecnicoHash,
-                nombre: 'Técnico',
-                apellidos: 'Pruebas',
-                puesto: 'Técnico de Campo',
-                rol: 'TECNICO',
+                firstName: 'Técnico',
+                lastName: 'Pruebas',
+                position: 'Técnico de Campo',
+                role: 'TECNICO',
                 tenantId: 'default_tenant',
                 industry: 'ELEVATORS',
                 activeModules: ['TECHNICAL', 'RAG'],
-                activo: true,
-                creado: new Date(),
-                modificado: new Date()
+                active: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
             },
             {
                 email: 'ingenieria@abd.com',
                 password: ingenieriaHash,
-                nombre: 'Ingeniero',
-                apellidos: 'Diseño',
-                puesto: 'Ingeniero de Producto',
-                rol: 'INGENIERIA',
+                firstName: 'Ingeniero',
+                lastName: 'Diseño',
+                position: 'Ingeniero de Producto',
+                role: 'INGENIERIA',
                 tenantId: 'default_tenant',
                 industry: 'ELEVATORS',
                 activeModules: ['TECHNICAL', 'RAG'],
-                activo: true,
-                creado: new Date(),
-                modificado: new Date()
+                active: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
             }
         ];
 

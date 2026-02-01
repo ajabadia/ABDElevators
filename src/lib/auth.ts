@@ -110,16 +110,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     });
 
                     // Retornar usuario con rol y tenant context
+                    // ⚠️ COMPATIBILIDAD: Soportamos claves en español (legacy) y en inglés
+                    const role = user.role || user.rol || 'USER';
+                    const firstName = user.firstName || user.nombre || '';
+                    const lastName = user.lastName || user.apellidos || '';
+
                     return {
                         id: user._id.toString(),
                         email: user.email,
-                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-                        role: user.role, // Acting role
-                        baseRole: user.role, // Permanent role from DB
-                        tenantId: user.tenantId || process.env.SINGLE_TENANT_ID,
+                        name: `${firstName} ${lastName}`.trim() || user.email,
+                        role: role, // Acting role
+                        baseRole: role, // Permanent role from DB
+                        tenantId: user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant',
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL', 'RAG'],
-                        image: user.photoUrl,
+                        image: user.photoUrl || user.image,
                         tenantAccess: user.tenantAccess || []
                     };
                 } catch (error: any) {
