@@ -75,7 +75,7 @@ npm run ensure-indexes       # Verifica índices críticos en DB
 | Email | Password | Rol | Permisos |
 |-------|----------|-----|----------|
 | **superadmin@abd.com** | `super123` | SUPER_ADMIN | **Acceso Total:** Gobierno global y multinivel |
-| **admin@abd.com** | `admin123` | ADMIN | **Tenant Admin:** Gestión de usuarios y documentos |
+| **admin@abd.com** | `super123` | ADMIN | **Tenant Admin:** Gestión de usuarios y documentos |
 | **tecnico@abd.com** | `tecnico123` | TECNICO | **Técnico:** Portal de validación y workflow |
 | **ingenieria@abd.com** | `ingenieria123` | INGENIERIA | **Consulta:** Solo lectura documentos técnicos |
 
