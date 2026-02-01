@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { connectDB, connectAuthDB } from "./db";
-import bcrypt from "bcryptjs";
+// import bcrypt from "bcryptjs"; // Switched to require for CJS compatibility
+const bcrypt = require("bcryptjs");
 import { z } from "zod";
 import { logEvento } from "./logger";
 import { SessionService } from "./session-service";

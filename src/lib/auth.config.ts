@@ -8,6 +8,7 @@ export const authConfig = {
     trustHost: true,
     callbacks: {
         async jwt({ token, user, trigger, session }) {
+            console.log("🧩 [JWT Callback] Triggered. User?", !!user, "Trigger:", trigger);
             if (user) {
                 token.id = user.id;
                 token.role = user.role;
@@ -22,6 +23,7 @@ export const authConfig = {
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
+                console.log("🔄 [JWT Update] Session update requested");
                 if (session.user.image) token.image = session.user.image as string;
                 if (session.user.name) token.name = session.user.name as string;
                 if (session.user.tenantId) token.tenantId = session.user.tenantId as string;
@@ -32,6 +34,7 @@ export const authConfig = {
             return token;
         },
         async session({ session, token }) {
+            // console.log("📦 [Session Callback] Token ID:", token.id);
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
@@ -48,6 +51,8 @@ export const authConfig = {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/admin');
             const isOnAuth = nextUrl.pathname.startsWith('/auth') || nextUrl.pathname.startsWith('/login');
+
+            console.log(`🛡️ [Authorized] Path: ${nextUrl.pathname}, LoggedIn: ${isLoggedIn}`);
 
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
