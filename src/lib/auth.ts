@@ -187,10 +187,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
+                console.log("🔄 [Auth Update] Triggered with:", JSON.stringify(session.user, null, 2));
+
                 if (session.user.image) token.image = session.user.image as string;
                 if (session.user.name) token.name = session.user.name as string;
-                if (session.user.tenantId) token.tenantId = session.user.tenantId as string;
-                if (session.user.role) token.role = session.user.role as string;
+                if (session.user.tenantId) {
+                    console.log(`   -> Updating tenantId: ${token.tenantId} -> ${session.user.tenantId}`);
+                    token.tenantId = session.user.tenantId as string;
+                }
+                if (session.user.role) {
+                    console.log(`   -> Updating role: ${token.role} -> ${session.user.role}`);
+                    token.role = session.user.role as string;
+                }
                 if (session.user.industry) token.industry = session.user.industry as string;
             }
 
@@ -212,6 +220,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     pages: {
         signIn: "/login",
+        error: "/auth/error", // Custom error page to avoid 404s
     },
     session: {
         strategy: "jwt",
