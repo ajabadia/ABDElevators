@@ -15,6 +15,11 @@ const LoginSchema = z.object({
     mfaCode: z.string().optional(), // Código de 6 dígitos
 });
 
+// Vercel Fix: Ensure AUTH_URL is set
+if (!process.env.AUTH_URL && process.env.VERCEL_URL) {
+    process.env.AUTH_URL = `https://${process.env.VERCEL_URL}`;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         Credentials({
