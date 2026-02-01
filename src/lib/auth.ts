@@ -18,9 +18,14 @@ const LoginSchema = z.object({
     mfaCode: z.string().optional(), // Código de 6 dígitos
 });
 
-// Vercel Fix: Ensure AUTH_URL is set
-if (!process.env.AUTH_URL && process.env.VERCEL_URL) {
-    process.env.AUTH_URL = `https://${process.env.VERCEL_URL}`;
+// Vercel Fix: Ensure AUTH_URL is dynamic to match the current deployment (Preview/Production)
+if (process.env.VERCEL) {
+    const protocol = 'https';
+    const host = process.env.VERCEL_URL;
+    if (host) {
+        process.env.AUTH_URL = `${protocol}://${host}`;
+        console.log("📝 [AUTH] Dynamic AUTH_URL set to:", process.env.AUTH_URL);
+    }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -103,6 +108,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     session: { strategy: "jwt" },
+    basePath: "/api/auth",
     debug: true,
     logger: {
         error(error: Error) {
