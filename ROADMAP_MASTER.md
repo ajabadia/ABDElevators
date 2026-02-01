@@ -40,14 +40,14 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.30)
 
-- **Global Progress:** 230% (Phase 36 Initiative - AI Orchestration & Distributed Intelligence).
+- **Global Progress:** 240% (Phase 37 Initiative - Sovereign Engine & Federated Deepening).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
 - **Recent Ship:**
+  - **Sovereign Engine**: Worker autónomo de descubrimiento de patrones (`intelligence-worker`).
+  - **Federated Insight UI**: Feedback loop colaborativo con `FederatedPatternCard`.
   - **Shadow Prompts**: A/B testing para prompts en caliente (llm.ts).
   - **Hybrid Search (BM25)**: Integración formal de Lucene + RRF (rag-service.ts).
-  - **Compliance Suite**: Backup (.zip) & GDPR Certs.
-  - **Advanced PDF Engine**: PyMuPDF via Python Bridge.
-- **Project Status:** **State-of-the-art Production System (v2.36 Showcase Stage).**
+- **Project Status:** **State-of-the-art Production System (v2.36 Sovereign Era).**
 
 ---
 
@@ -163,6 +163,19 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [x] **Hybrid Search Expansion:** Integración de **BM25** (Atlas Search) + Vector Search con **RRF (k=60)**.
 - [x] **Federated Intelligence:**
   - [x] **Global Pattern Sharing:** Semilla de anonimización para patrones globales.
+
+#### 🚀 FASE 37: SOVEREIGN ENGINE & FEDERATED INTELLIGENCE DEEPENING (COMPLETADO ✅)
+- **Objetivo:** Evolucionar hacia un sistema auto-gestionado de conocimiento global y patrones predictivos.
+- [x] **Sovereign Engine:** Worker autónomo (`intelligence-worker.ts`) para descubrimiento de patrones en logs históricos.
+- [x] **Global Vector Registry:** Implementación de búsqueda vectorial nativa sobre el repositorio federado (`federated_vector_index`).
+- [x] **Cross-Tenant Validation:** Sistema de reputación y validación de conocimiento compartido (`FederatedPatternCard`).
+- [x] **React Modernization:** Migración a Zustand para orquestación de estado en el Workspace técnico.
+
+#### 🚀 FASE 38: ADMIN INTELLIGENCE DASHBOARD (PLANIFICADO)
+- **Objetivo:** Visualización estratégica de los patrones globales y gestión de la red federada.
+- [ ] **Intelligence Dashboard:** `/admin/intelligence/trends` con métricas de adopción de patrones.
+- [ ] **Pattern Governance:** UI para moderación de patrones detectados automáticamente.
+- [ ] **ROI Analytics:** Cálculo de ahorro de tiempo basado en reutilización de soluciones.
 
 > [!IMPORTANT]
 > **GUÍA DE INFRAESTRUCTURA (POST-FASE 36):**
