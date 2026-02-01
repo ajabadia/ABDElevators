@@ -59,7 +59,7 @@ export const authConfig = {
                 return false; // Redirect unauthenticated users to login page
             } else if (isOnAuth) {
                 if (isLoggedIn) {
-                    return Response.redirect(new URL('/admin/documentos', nextUrl));
+                    return Response.redirect(new URL('/admin/knowledge-assets', nextUrl));
                 }
                 return true;
             }
