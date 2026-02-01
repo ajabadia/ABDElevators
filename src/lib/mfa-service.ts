@@ -2,7 +2,7 @@ import { generateSecret, generateURI, verify } from 'otplib';
 import QRCode from 'qrcode';
 import { connectAuthDB } from '@/lib/db';
 import { MfaConfig, MfaConfigSchema } from '@/lib/schemas';
-import bcrypt from 'bcryptjs';
+const bcrypt = require('bcryptjs');
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 

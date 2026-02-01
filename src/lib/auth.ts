@@ -160,7 +160,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // PERO podríamos necesitar extender session si quisiéramos validación extra de DB que config no tiene.
     // Por ahora, confiamos en authConfig.
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-    debug: true, // Force debug logs on Vercel
+    debug: true,
+    basePath: "/api/auth",
 });
 
 // 🛡️ SECURITY HELPERS (Fase 35)

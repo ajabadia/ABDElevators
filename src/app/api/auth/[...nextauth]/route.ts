@@ -1,16 +1,13 @@
-import { NextRequest } from "next/server";
 import { handlers } from "@/lib/auth";
+import { NextRequest } from "next/server";
+export const runtime = 'nodejs';
 
-export const runtime = 'nodejs'; // Force Node.js runtime for Bcrypt/Mongo compatibility
+export const GET = (req: NextRequest) => {
+    console.log("🔥 [AUTH ROUTE] GET Request for:", req.nextUrl.pathname);
+    return handlers.GET(req);
+};
 
-const { GET: AuthGET, POST: AuthPOST } = handlers;
-
-export async function GET(request: NextRequest) {
-    // console.log("🔥 [API/AUTH] GET Request:", request.url);
-    return AuthGET(request);
-}
-
-export async function POST(request: NextRequest) {
-    // console.log("🔥 [API/AUTH] POST Request:", request.url);
-    return AuthPOST(request);
-}
+export const POST = (req: NextRequest) => {
+    console.log("🔥 [AUTH ROUTE] POST Request for:", req.nextUrl.pathname);
+    return handlers.POST(req);
+};

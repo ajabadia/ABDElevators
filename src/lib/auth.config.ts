@@ -6,6 +6,7 @@ export const authConfig = {
         error: "/auth/error",
     },
     trustHost: true,
+    secret: process.env.AUTH_SECRET,
     callbacks: {
         async jwt({ token, user, trigger, session }) {
             console.log("🧩 [JWT Callback] Triggered. User?", !!user, "Trigger:", trigger);
