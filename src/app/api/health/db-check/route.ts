@@ -40,7 +40,9 @@ export async function GET(request: Request) {
             envNextAuthUrl: process.env.NEXTAUTH_URL || 'N/A',
             hasAuthSecret: !!process.env.AUTH_SECRET,
             hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-            nodeEnv: process.env.NODE_ENV
+            nodeEnv: process.env.NODE_ENV,
+            // 4. Verify Password Integrity (admin@abd.com / super123)
+            passwordCheck: user ? await require('bcryptjs').compare('super123', user.password) : 'UserNotFound'
         });
 
     } catch (error: any) {
