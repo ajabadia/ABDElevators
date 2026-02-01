@@ -42,7 +42,8 @@ export default function LoginPage() {
                     setError("Credenciales inválidas");
                 }
             } else {
-                router.push("/admin/documentos");
+                // FIXED: Redirect to valid admin page
+                router.push("/admin/knowledge-assets");
                 router.refresh();
             }
         } catch (err) {
