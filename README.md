@@ -1,6 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 2.0)
+# ABD Multi-Industry RAG Platform (Vision 2.36 - EVOLUTION ERA)
 
-Sistema RAG (Retrieval-Augmented Generation) genérico y multi-tenant diseñado para análisis de documentos técnicos, legales e industriales. Evolucionado desde el prototipo ABD RAG Plataform hacia una solución SaaS horizontal.
+Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
+
+Actualizado a la **v2.36** con capacidades avanzadas de orquestación IA y búsqueda híbrida.
 
 ## 🚀 Inicio Rápido
 
@@ -16,119 +18,75 @@ npm run dev
 
 ## 📋 Requisitos Previos
 
-- Node.js 18+ 
-- MongoDB Atlas (cuenta gratuita)
-- Google AI Studio API Key (Gemini)
+- **Node.js**: 18.17+ (Recomendado 20.xLTS)
+- **MongoDB Atlas**: Cluster con soporte para Vector Search y Atlas Search.
+- **Google AI Studio Key**: API de Gemini 1.5 Pro / Flash.
+- **Cloudinary**: Para gestión de activos y PDFs.
 
-## ⚙️ Configuración
+## 🛠️ Configuración de Infraestructura Crítica
 
-1. **Clonar el repositorio**
-```bash
-git clone https://github.com/ajabadia/ABDElevators.git
-cd ABDElevators
-```
+Para la v2.36, es imperativo configurar los siguientes índices en MongoDB Atlas:
 
-2. **Instalar dependencias**
-```bash
-npm install
-```
+1.  **Vector Search Index**: Llamado `vector_index` en la colección `document_chunks`.
+2.  **Atlas Search (BM25)**: Llamado `keyword_index` en la colección `document_chunks`.
+    - **Configuración JSON**:
+      ```json
+      { "mappings": { "dynamic": false, "fields": { "chunkText": { "type": "string", "analyzer": "lucene.standard" } } } }
+      ```
 
-3. **Configurar variables de entorno**
+## ⚙️ Variables de Entorno (.env.local)
 
-Crear archivo `.env.local`:
 ```env
-# Database
-MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/ABDElevators
+# Database & Security
+MONGODB_URI=mongodb+srv://...
+NEXTAUTH_SECRET=tu_secreto_robusto
+ENCRYPTION_SECRET=hash_hexadecimal_de_32_bytes
 
-# AI
+# AI Orchestration
 GEMINI_API_KEY=AIzaSy...
+ENABLE_LOCAL_EMBEDDINGS=false
 
-# Auth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=genera_con_openssl_rand_base64_32
+# Cloudinary & Storage
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
 
-# Cloudinary (para almacenar PDFs)
-CLOUDINARY_CLOUD_NAME=tu_cloud_name
-CLOUDINARY_API_KEY=tu_api_key
-CLOUDINARY_API_SECRET=tu_api_secret
+# Monitoring (Optional)
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 # Para Tracing
 ```
 
-4. **Crear usuarios iniciales**
-```bash
-npm run seed-users
-```
+## 📊 Características de la Era de Evolución (v2.30 - v2.36)
 
-56. **Crear usuario raíz (SuperAdmin)**
-```bash
-npm run create-super-admin
-```
+- 🔍 **Hybrid Search Engine**: Fusión de búsqueda semántica (Vector) y palabra clave (BM25) mediante **RRF (Reciprocal Rank Fusion)** para máxima precisión técnica.
+- 🧠 **Shadow Prompts**: Orquestación agéntica que permite probar nuevos prompts en segundo plano (A/B Testing) sin afectar la experiencia del usuario.
+- 🛡️ **Enterprise Hardening**: Protección contra Inyección de Prompts, Rate Limiting atómico y hashing de PII en logs.
+- 📊 **Advanced Observability**: Tracing distribuido con OpenTelemetry para monitorear cada paso del pipeline RAG e IA.
+- 📦 **Compliance Suite**: Exportación de conocimiento en formato ZIP portátil y certificados de derecho al olvido (GDPR).
+- 🧬 **Universal Ontology Engine**: Motor de entidades adaptativo que evoluciona el esquema de datos según el aprendizaje del sistema.
+- ⚡ **Stream Ingestion**: Pipeline de ingesta optimizado con deduplicación MD5 y soporte para streams pesados.
 
-7. **Iniciar servidor de desarrollo**
-```bash
-npm run dev
-```
-
-## 👥 Usuarios de Prueba
-
-| Email | Password | Rol | Permisos |
-|-------|----------|-----|----------|
-| superadmin@abd.com | super123 | SUPER_ADMIN | **Acceso Total:** Gobierno global y multinivel |
-| admin@abd.com | admin123 | ADMIN | **Tenant Admin:** Gestión de usuarios y documentos |
-| tecnico@abd.com | tecnico123 | TECNICO | **Técnico:** Portal de validación y workflow |
-| ingenieria@abd.com | ingenieria123 | INGENIERIA | **Consulta:** Solo lectura documentos técnicos |
-
-## 📁 Estructura del Proyecto
+## 📁 Estructura del Core
 
 ```
 src/
-├── app/
-│   ├── (authenticated)/         # Rutas protegidas por NextAuth
-│   │   ├── (admin)/             # Panel administrativo global
-│   │   └── pedidos/             # Portal técnico y validación
-│   ├── api/                     # API routes (Workflow, RAG, Soporte)
-│   └── login/                   # Autenticación
-├── components/
-│   ├── workflow/                # Motor de estados y transiciones
-│   ├── tecnico/                 # Validadores y checklists
-│   └── shared/                  # Header, Sidebar, Notificaciones
-└── lib/
-    ├── workflow-engine.ts       # Lógica de transiciones de estado
-    ├── notification-service.ts  # Alertas In-App y Email (Resend)
-    ├── contact-service.ts       # Sistema de soporte técnico
-    ├── auth.ts                  # NextAuth v5 config
-    └── db-tenant.ts             # Aislamiento sagrado de datos
+├── app/                 # Next.js 15 App Router (RSCs & API Routes)
+├── core/                # Engine agéntico y de ontologías
+├── components/          # UI Components (Admin, Técnico, Shared)
+├── lib/                 # Core Services (LLM, RAG, Usage, Mapping)
+└── scripts/             # Herramientas de mantenimiento e índices
 ```
 
-## 🔧 Scripts Disponibles
+## 🔧 Scripts de Mantenimiento
 
 ```bash
-npm run dev                  # Servidor desarrollo
-npm run build                # Build producción
-npm run create-super-admin   # Crear usuario raíz global (Fase 10)
-npm run seed-users           # Crear usuarios de prueba por defecto
-npm run seed-workflows       # Inicializar workflows estándar
-npm run seed-notifications   # Cargar notificaciones de ejemplo
-npm run test                 # Ejecutar tests unitarios (Jest)
+npm run dev                  # Servidor de desarrollo
+npm run ensure-indexes       # Verifica y crea índices críticos en DB
+npm run seed-prompts         # Inicializa los prompts maestros del sistema
+npm run create-super-admin   # Genera el usuario de gobierno global
+npm run test                 # Suite de tests unitarios y RAG coverage
 ```
 
-## 🌐 Deployment en Vercel
+## 📝 Licencia & Propiedad
 
-1. Conectar repositorio en Vercel
-2. Configurar variables de entorno (incluir `RESEND_API_KEY` para emails)
-3. Deploy automático en cada push a `main`
+**ABD RAG Platform © 2026** - *State-of-the-Art Engineering for the AI Era.*
 
-## 📊 Características (Visión 2.0)
-
-- ✅ **Motor de Workflows:** Estados y transiciones dinámicas configurables por el Admin.
-- ✅ **Notificaciones Hub:** Sistema push in-app con campana animada y correos transaccionales.
-- ✅ **Soporte Técnico:** Módulo de contacto directo de técnicos con administración.
-- ✅ **Ingeniería de Prompts:** Editor en vivo para ajustar el comportamiento de los modelos Gemini.
-- ✅ **Aislamiento Multi-tenant:** Los datos y flujos están segmentados por TenantId.
-- ✅ **Hardening de Seguridad:** Middleware avanzado con protección de APIs y rate limiting.
-- ✅ **Trazabilidad Total:** Audit trail completo con `correlacion_id` y firma digital.
-- ✅ **RAG Avanzado:** Búsqueda vectorial con MongoDB Atlas y Gemini 2.0 Flash.
-- ✅ **Ingesta Inteligente:** Deduplicación automática de archivos (MD5) para ahorro de espacio y tokens.
-
-## 📝 Licencia
-
-Propietario - ABD RAG Plataform © 2026
