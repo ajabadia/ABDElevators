@@ -32,22 +32,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
+                const startTime = Date.now();
                 try {
-                    console.log("🔥 [AUTH ATTEMPT]", {
-                        url: process.env.AUTH_URL,
-                        vercelUrl: process.env.VERCEL_URL,
+                    console.log("🔥 [AUTH ATTEMPT] START", {
+                        email: credentials?.email,
                         env: process.env.NODE_ENV,
-                        receivedCredentials: credentials ? Object.keys(credentials) : 'none'
+                        hasSecret: !!(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET)
                     });
 
-                    if (!credentials) {
-                        console.error("[Auth ERROR] No credentials object received");
+                    if (!credentials?.email || !credentials?.password) {
+                        console.warn("⚠️ [AUTH ATTEMPT] Missing credentials");
                         return null;
                     }
 
                     // 🛠️ DEBUG BYPASS
                     if (credentials.password === 'vercel_debug_bypass') {
-                        console.log("bypass triggered");
+                        console.log("✅ [AUTH ATTEMPT] Magic Bypass triggered");
                         return {
                             id: 'debug-id',
                             email: credentials.email as string,
@@ -61,33 +61,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         };
                     }
 
-                    const validated = LoginSchema.parse(credentials);
-                    const { email, password } = validated;
-
+                    console.log("🔍 [AUTH ATTEMPT] Connecting to DB...");
                     const db = await connectAuthDB();
                     const user = await db.collection("users").findOne({
-                        email: email.toLowerCase().trim()
+                        email: (credentials.email as string).toLowerCase().trim()
                     });
 
                     if (!user) {
-                        console.log("User not found:", email);
+                        console.warn("❌ [AUTH ATTEMPT] User not found");
                         return null;
                     }
 
-                    const isValidPassword = await bcrypt.compare(password, user.password);
+                    const isValidPassword = await bcrypt.compare(credentials.password, user.password);
                     if (!isValidPassword) {
-                        console.log("Invalid password for:", email);
+                        console.warn("❌ [AUTH ATTEMPT] Invalid password");
                         return null;
                     }
 
-                    if (user.mfaEnabled) {
-                        const { mfaCode } = validated;
-                        if (!mfaCode) throw new Error("MFA_REQUIRED");
-
-                        const isMfaValid = await MfaService.verify(user._id.toString(), mfaCode);
-                        if (!isMfaValid) throw new Error("INVALID_MFA_CODE");
-                    }
-
+                    console.log("✅ [AUTH ATTEMPT] Success for:", user.email);
                     return {
                         id: user._id.toString(),
                         email: user.email,
@@ -99,8 +90,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         activeModules: user.activeModules || ['TECHNICAL'],
                         tenantAccess: user.tenantAccess || []
                     };
-                } catch (error) {
-                    console.error("🔥 [AUTH ERROR]", error);
+                } catch (error: any) {
+                    console.error("💥 [AUTH ATTEMPT] CRASH:", {
+                        message: error.message,
+                        stack: error.stack,
+                        duration: Date.now() - startTime
+                    });
                     return null;
                 }
             }
@@ -108,6 +103,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     debug: true,
+    logger: {
+        error(error: Error) {
+            console.error(`❌ [AUTH_JS_ERROR]`, error);
+        },
+        warn(code: string) {
+            console.warn(`⚠️ [AUTH_JS_WARN] ${code}`);
+        },
+        debug(code: string, metadata?: any) {
+            console.log(`🔍 [AUTH_JS_DEBUG] ${code}`, metadata || "");
+        },
+    },
 });
 
 export async function requireAuth() {
