@@ -5,7 +5,7 @@ import { authConfig } from './lib/auth.config';
 const { auth } = NextAuth(authConfig);
 
 export const config = {
-    matcher: ["/admin/:path*", "/login", "/auth-pages/:path*"],
+    matcher: ["/admin/:path*", "/login", "/auth-pages/:path*", "/api/auth/:path*"],
 };
 
 /**
