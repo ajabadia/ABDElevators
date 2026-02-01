@@ -30,6 +30,7 @@ export async function middleware(request: NextRequest) {
             '/features',
             '/upgrade',
             '/auth', // Allows /auth/error, /auth/verify, etc.
+            '/api/health', // Diagnostic endpoints
             '/auth/signup-invite',
             '/error',
         ];
