@@ -15,11 +15,10 @@ export const config = {
  * Regla de Oro #8 (Performance) y #9 (Security)
  * optimized for Vercel Edge Runtime (No DB imports)
  */
-export async function middleware(request: NextRequest) {
+export default auth(async function middleware(request: NextRequest) {
     try {
-        const session = await auth();
-
         const { pathname } = request.nextUrl;
+        const session = (request as any).auth; // In the wrapper, session is available here
 
         // 🛡️ Rutas públicas
         const publicPaths = [
@@ -35,6 +34,7 @@ export async function middleware(request: NextRequest) {
             '/auth',
             '/api/health',
             '/api/debug',
+            '/api/debug-auth',
             '/auth/signup-invite',
             '/error',
         ];
@@ -50,12 +50,9 @@ export async function middleware(request: NextRequest) {
             return pathname.startsWith(path);
         });
 
-        // 🛡️ Rate Limiting (DISABLED FOR EDGE COMPATIBILITY)
-        // TODO: Implement Upstash/Redis rate limiting for Edge
-
         // 🔄 Redirection if already logged in
         if (session && pathname === '/login') {
-            const target = session.user.role === 'INGENIERIA' ? '/admin/knowledge-assets' : '/entities';
+            const target = '/admin/knowledge-assets';
             return NextResponse.redirect(new URL(target, request.url));
         }
 
@@ -96,4 +93,4 @@ export async function middleware(request: NextRequest) {
             { status: 500 }
         );
     }
-}
+});
