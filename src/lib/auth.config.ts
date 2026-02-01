@@ -8,6 +8,19 @@ export const authConfig = {
     basePath: "/api/auth",
     trustHost: true,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    cookies: {
+        sessionToken: {
+            name: process.env.NODE_ENV === "production"
+                ? "__Secure-next-auth.session-token"
+                : "next-auth.session-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            }
+        }
+    },
     callbacks: {
         async jwt({ token, user, trigger, session }) {
             console.log("🧩 [JWT Callback] Triggered. User?", !!user, "Trigger:", trigger);

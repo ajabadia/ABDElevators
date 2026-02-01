@@ -5,103 +5,25 @@ import { authConfig } from './lib/auth.config';
 const { auth } = NextAuth(authConfig);
 
 export const config = {
-    matcher: ["/admin/:path*", "/login", "/auth-pages/:path*", "/api/auth/:path*"],
+    // Only protect admin routes, let everything else pass
+    matcher: ["/admin/:path*", "/login"],
 };
 
-/**
- * Middleware de Seguridad y Performance
- * Regla de Oro #8 (Performance) y #9 (Security)
- * optimized for Vercel Edge Runtime (No DB imports)
- */
 export default auth(async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const session = (request as any).auth;
 
-    // 🛡️ [Rule #5] Fix 404 on Auth Error - Redirect to the new safe path EARLY
-    if (pathname === '/api/auth/error') {
-        const error = request.nextUrl.searchParams.get('error');
-        console.log("🔄 [MIDDLEWARE] Redirecting /api/auth/error to /auth-pages/error", { error });
-        return NextResponse.redirect(new URL(`/auth-pages/error?error=${error || 'Default'}`, request.url));
+    console.log(`🛡️ [MIDDLEWARE] Path: ${pathname}, Session: ${!!session}`);
+
+    // Redirect to dashboard if logged in and trying to access login page
+    if (session && pathname === '/login') {
+        return NextResponse.redirect(new URL('/admin/knowledge-assets', request.url));
     }
 
-    // 🚀 [Rule #5] NO processing for other static files or API routes
-    if (
-        pathname.startsWith('/api') ||
-        pathname.startsWith('/_next') ||
-        pathname.startsWith('/static') ||
-        pathname.includes('.') ||
-        pathname === '/health'
-    ) {
-        return NextResponse.next();
+    // Protect admin routes
+    if (!session && pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    try {
-        const session = (request as any).auth;
-
-        // 🛡️ Rutas públicas
-        const publicPaths = [
-            '/',
-            '/login',
-            '/api/auth',
-            '/api/webhooks',
-            '/privacy',
-            '/terms',
-            '/architecture',
-            '/features',
-            '/upgrade',
-            '/auth-pages',
-            '/api/health',
-            '/api/debug',
-            '/api/debug-auth',
-            '/error',
-        ];
-
-
-        const isPublicPath = publicPaths.some(path => {
-            if (path === '/') return pathname === '/';
-            return pathname.startsWith(path);
-        });
-
-        // 🔄 Redirection if already logged in
-        if (session && pathname === '/login') {
-            const target = '/admin/knowledge-assets';
-            return NextResponse.redirect(new URL(target, request.url));
-        }
-
-        // If not authenticated
-        if (!session && !isPublicPath) {
-            if (pathname.startsWith('/api')) {
-                return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-            }
-            return NextResponse.redirect(new URL('/login', request.url));
-        }
-
-        // Role-based logic
-        if (session && pathname.startsWith('/admin')) {
-            const userRole = session.user?.role;
-            const isEngineeringDocs = pathname.startsWith('/admin/knowledge-assets') && userRole === 'INGENIERIA';
-            const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
-
-            if (!isAdmin && !isEngineeringDocs) {
-                return NextResponse.redirect(new URL('/entities', request.url));
-            }
-        }
-
-        // Security Headers
-        const response = NextResponse.next();
-        response.headers.set('X-Edge-Middleware', 'true');
-
-        // Basic Security Headers (Rule #9)
-        response.headers.set('X-Content-Type-Options', 'nosniff');
-        response.headers.set('X-Frame-Options', 'DENY');
-        response.headers.set('X-XSS-Protection', '1; mode=block');
-
-        return response;
-
-    } catch (error: any) {
-        console.error('Middleware Critical Error:', error);
-        return NextResponse.json(
-            { error: 'Internal Server Error (Security Middleware)' },
-            { status: 500 }
-        );
-    }
+    return NextResponse.next();
 });
