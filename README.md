@@ -101,6 +101,7 @@ src/
 - ✅ **Enterprise Hardening**: Protección contra Inyecciones, Rate Limiting atómico y PII Obfuscation.
 - ✅ **Compliance & Portability**: Backup encriptado (.zip) y generación de Certificados GDPR.
 - ✅ **Sovereign Engine**: Worker autónomo que descubre patrones técnicos en logs históricos (`intelligence-worker`).
+- ✅ **Admin Intelligence Dashboard**: Visualización estratégica de tendencias y ROI con gobernanza de patrones.
 - ✅ **Federated Intelligence**: Red de conocimiento global con validación cruzada y búsqueda vectorial nativa.
 - ✅ **Multi-tenant Isolation**: Aislamiento lógicos de datos y configuraciones por organización/industria.
 - ✅ **Python PDF Bridge**: Integración de alto rendimiento con PyMuPDF para documentos complejos.

@@ -40,14 +40,14 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.30)
 
-- **Global Progress:** 240% (Phase 37 Initiative - Sovereign Engine & Federated Deepening).
+- **Global Progress:** 250% (Phase 38 Initiative - Sovereign Governance).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
 - **Recent Ship:**
   - **Sovereign Engine**: Worker autónomo de descubrimiento de patrones (`intelligence-worker`).
-  - **Federated Insight UI**: Feedback loop colaborativo con `FederatedPatternCard`.
-  - **Shadow Prompts**: A/B testing para prompts en caliente (llm.ts).
+  - **Federated Governance**: `/admin/intelligence/trends` Dashbaord y moderación.
+  - **Sovereign Intelligence**: `GlobalPatternsTable` y análisis de impacto ROI.
   - **Hybrid Search (BM25)**: Integración formal de Lucene + RRF (rag-service.ts).
-- **Project Status:** **State-of-the-art Production System (v2.36 Sovereign Era).**
+- **Project Status:** **State-of-the-art Production System (v2.37 Sovereign Governance).**
 
 ---
 
