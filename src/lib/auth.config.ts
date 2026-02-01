@@ -51,18 +51,9 @@ export const authConfig = {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/admin');
-            const isOnAuth = nextUrl.pathname.startsWith('/auth-pages') || nextUrl.pathname.startsWith('/login');
-
-            console.log(`🛡️ [Authorized] Path: ${nextUrl.pathname}, LoggedIn: ${isLoggedIn}`);
 
             if (isOnDashboard) {
-                if (isLoggedIn) return true;
-                return false; // Redirect unauthenticated users to login page
-            } else if (isOnAuth) {
-                if (isLoggedIn) {
-                    return Response.redirect(new URL('/admin/knowledge-assets', nextUrl));
-                }
-                return true;
+                return isLoggedIn;
             }
             return true;
         },
