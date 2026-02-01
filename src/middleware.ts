@@ -16,7 +16,14 @@ export const config = {
 export default auth(async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // 🚀 [Rule #5] NO processing for static files or API routes early
+    // 🛡️ [Rule #5] Fix 404 on Auth Error - Redirect to the new safe path EARLY
+    if (pathname === '/api/auth/error') {
+        const error = request.nextUrl.searchParams.get('error');
+        console.log("🔄 [MIDDLEWARE] Redirecting /api/auth/error to /auth-pages/error", { error });
+        return NextResponse.redirect(new URL(`/auth-pages/error?error=${error || 'Default'}`, request.url));
+    }
+
+    // 🚀 [Rule #5] NO processing for other static files or API routes
     if (
         pathname.startsWith('/api') ||
         pathname.startsWith('/_next') ||
@@ -48,11 +55,6 @@ export default auth(async function middleware(request: NextRequest) {
             '/error',
         ];
 
-        // 🛡️ Fix 404 on Auth Error - Redirect to the new safe path
-        if (pathname === '/api/auth/error') {
-            const error = request.nextUrl.searchParams.get('error');
-            return NextResponse.redirect(new URL(`/auth-pages/error?error=${error || 'Default'}`, request.url));
-        }
 
         const isPublicPath = publicPaths.some(path => {
             if (path === '/') return pathname === '/';
