@@ -5,7 +5,6 @@ export const authConfig = {
         signIn: "/login",
         error: "/auth-pages/error",
     },
-    basePath: "/api/auth",
     trustHost: true,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     callbacks: {

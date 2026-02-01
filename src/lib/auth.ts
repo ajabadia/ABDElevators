@@ -21,6 +21,15 @@ const LoginSchema = z.object({
 // Auth.js v5 detects AUTH_URL automatically in Vercel. 
 // We only ensure it's trusted via authConfig.trustHost.
 
+console.log("🛠️ [AUTH_INIT] File loaded at:", new Date().toISOString());
+console.log("🛠️ [AUTH_INIT] ENV check:", {
+    HAS_SECRET: !!(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
+    SECRET_PREFIX: (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "").substring(0, 4),
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL: !!process.env.VERCEL,
+    AUTH_URL: process.env.AUTH_URL || "not-set"
+});
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
     providers: [
@@ -31,11 +40,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async authorize(credentials) {
                 const startTime = Date.now();
+                console.log("🔥 [AUTH ATTEMPT] BEGIN", { email: credentials?.email });
                 try {
-                    console.log("🔥 [AUTH ATTEMPT] START", {
-                        email: credentials?.email,
+                    console.log("🔥 [AUTH ATTEMPT] Details:", {
                         env: process.env.NODE_ENV,
-                        hasSecret: !!(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET)
+                        hasSecret: !!(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
+                        trustHost: authConfig.trustHost
                     });
 
                     if (!credentials?.email || !credentials?.password) {
@@ -45,7 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                     // 🛠️ DEBUG BYPASS
                     if (credentials.password === 'vercel_debug_bypass') {
-                        console.log("✅ [AUTH ATTEMPT] Magic Bypass triggered");
+                        console.log("✅ [AUTH ATTEMPT] MAGIC BYPASS TRIGGERED");
                         return {
                             id: 'debug-id',
                             email: credentials.email as string,
@@ -66,17 +76,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     });
 
                     if (!user) {
-                        console.warn("❌ [AUTH ATTEMPT] User not found");
+                        console.warn("❌ [AUTH ATTEMPT] User not found:", credentials.email);
                         return null;
                     }
 
+                    console.log("🔍 [AUTH ATTEMPT] User found, comparing password...");
                     const isValidPassword = await bcrypt.compare(credentials.password, user.password);
                     if (!isValidPassword) {
-                        console.warn("❌ [AUTH ATTEMPT] Invalid password");
+                        console.warn("❌ [AUTH ATTEMPT] Invalid password for:", user.email);
                         return null;
                     }
 
-                    console.log("✅ [AUTH ATTEMPT] Success for:", user.email);
+                    console.log("✅ [AUTH ATTEMPT] SUCCESS for:", user.email);
                     return {
                         id: user._id.toString(),
                         email: user.email,
@@ -89,10 +100,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         tenantAccess: user.tenantAccess || []
                     };
                 } catch (error: any) {
-                    console.error("💥 [AUTH ATTEMPT] CRASH:", {
+                    console.error("💥 [AUTH ATTEMPT] CRITICAL ERROR:", {
                         message: error.message,
                         stack: error.stack,
-                        duration: Date.now() - startTime
                     });
                     return null;
                 }
@@ -103,13 +113,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session: { strategy: "jwt" },
     debug: true,
     logger: {
-        error(error: Error) {
+        error(error: any) {
             console.error(`❌ [AUTH_JS_ERROR]`, error);
         },
-        warn(code: string) {
+        warn(code: any) {
             console.warn(`⚠️ [AUTH_JS_WARN] ${code}`);
         },
-        debug(code: string, metadata?: any) {
+        debug(code: any, metadata?: any) {
             console.log(`🔍 [AUTH_JS_DEBUG] ${code}`, metadata || "");
         },
     },
