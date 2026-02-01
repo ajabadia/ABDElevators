@@ -166,14 +166,30 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 > [!IMPORTANT]
 > **GUÍA DE INFRAESTRUCTURA (POST-FASE 36):**
-> Para que Hybrid Search funcione, se debe crear un índice en MongoDB Atlas:
+> Para que el motor RAG Híbrido funcione, se deben crear dos índices en MongoDB Atlas sobre la colección `document_chunks`:
+>
+> **1. Búsqueda por Palabras Clave (Standard Search Index)**
 > - **Nombre:** `keyword_index`
-> - **Colección:** `document_chunks` (¡Cuidado! No usar `knowledge_chunks`).
 > - **Tipo:** Atlas Search (Lucene).
 > - **JSON Config:**
 > ```json
 > {
 >   "mappings": { "dynamic": false, "fields": { "chunkText": { "type": "string", "analyzer": "lucene.standard" } } }
+> }
+> ```
+>
+> **2. Búsqueda Vectorial (Vector Search Index)**
+> - **Nombre:** `vector_index`
+> - **Tipo:** Atlas Vector Search.
+> - **JSON Config:**
+> ```json
+> {
+>   "fields": [
+>     { "type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine" },
+>     { "type": "filter", "path": "status" },
+>     { "type": "filter", "path": "industry" },
+>     { "type": "filter", "path": "tenantId" }
+>   ]
 > }
 > ```
 
