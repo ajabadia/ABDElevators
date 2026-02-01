@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
             '/arquitectura',
             '/features',
             '/upgrade',
+            '/auth', // Allows /auth/error, /auth/verify, etc.
             '/auth/signup-invite',
             '/error',
         ];

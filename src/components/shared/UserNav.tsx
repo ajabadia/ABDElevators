@@ -61,6 +61,10 @@ export function UserNav() {
                     industry
                 }
             });
+
+            // 🕒 Wait for cookie propagation
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             // Force hard reload to ensure all providers (Ability, Navigation, etc) reset completely
             window.location.href = '/';
         } catch (error) {
