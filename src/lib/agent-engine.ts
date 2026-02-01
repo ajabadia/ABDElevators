@@ -75,6 +75,14 @@ export const AgentState = Annotation.Root({
     correlationId: Annotation<string>({
         reducer: (x, y) => y ?? x,
     }),
+
+    /**
+     * Insights federados (Vision 2027)
+     */
+    federated_insights: Annotation<any[]>({
+        reducer: (x, y) => x.concat(y),
+        default: () => [],
+    }),
 });
 
 export type AgentStateType = typeof AgentState.State;
@@ -84,7 +92,7 @@ export type AgentStateType = typeof AgentState.State;
  * Utiliza Gemini Flash para identificar qué se está pidiendo.
  */
 async function extractionNode(state: AgentStateType) {
-    const { tenantId, correlationId: correlacion_id} = state;
+    const { tenantId, correlationId: correlacion_id } = state;
     const lastMessage = state.messages[state.messages.length - 1];
     const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
 
@@ -133,15 +141,20 @@ import { PromptService } from "./prompt-service";
  * Analiza el cruce entre el pedido y el RAG para detectar incompatibilidades.
  */
 async function riskAnalysisNode(state: AgentStateType) {
-    const { context_chunks, findings, tenantId, correlationId: correlacion_id} = state;
+    const { context_chunks, findings, tenantId, correlationId: correlacion_id, federated_insights } = state;
 
     const context = context_chunks.map(c => c.text).join('\n---\n');
+    const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector}\n  SOLUTION: ${p.solutionVector}`).join('\n') || 'No global patterns found.';
     const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
     // Renderizar prompt dinámico de riesgo para agente
     const renderedPrompt = await PromptService.renderPrompt(
         'AGENT_RISK_ANALYSIS',
-        { context, models },
+        {
+            context,
+            models,
+            global_patterns: globalPatterns
+        },
         tenantId!
     );
 
@@ -168,7 +181,7 @@ async function riskAnalysisNode(state: AgentStateType) {
 import { MongoDBSaver } from "./agent-persistence";
 
 async function critiqueNode(state: AgentStateType) {
-    const { confidence_score, findings, messages, tenantId, correlationId: correlacion_id} = state;
+    const { confidence_score, findings, messages, tenantId, correlationId: correlacion_id } = state;
 
     // Si la confianza es alta, aprobamos
     if (confidence_score > 0.7) {
@@ -212,16 +225,50 @@ function shouldContinue(state: AgentStateType) {
     return END;
 }
 
+import { FederatedKnowledgeService } from "./federated-knowledge-service";
+
+/**
+ * NODO: Descubrimiento Federado (Vision 2027)
+ * Busca patrones técnicos en otros tenants de forma anónima para enriquecer el análisis.
+ */
+async function federatedDiscoveryNode(state: AgentStateType) {
+    const { findings, tenantId, correlationId: correlacion_id } = state;
+
+    // Usamos los modelos detectados para buscar patrones globales
+    const queries = findings.filter(f => f.source === 'extraction').map(m => `${m.type} ${m.model}`);
+
+    let allInsights: any[] = [];
+
+    for (const query of queries) {
+        const insights = await FederatedKnowledgeService.searchGlobalPatterns(
+            query,
+            tenantId!,
+            correlacion_id!
+        );
+        allInsights = [...allInsights, ...insights];
+    }
+
+    return {
+        federated_insights: allInsights,
+        messages: [{
+            role: 'assistant',
+            content: `Federated Intelligence: He encontrado ${allInsights.length} patrones globales relevantes para este hardware.`
+        }]
+    };
+}
+
 const checkpointer = new MongoDBSaver();
 
 const workflow = new StateGraph(AgentState)
     .addNode("extract", extractionNode)
     .addNode("retrieve", retrievalNode)
+    .addNode("federated_discovery", federatedDiscoveryNode) // Nuevo Nodo Federado
     .addNode("analyze_risks", riskAnalysisNode)
-    .addNode("critique", critiqueNode) // Nuevo nodo
+    .addNode("critique", critiqueNode)
     .addEdge(START, "extract")
     .addEdge("extract", "retrieve")
-    .addEdge("retrieve", "analyze_risks")
+    .addEdge("retrieve", "federated_discovery") // Flujo hacia red federada
+    .addEdge("federated_discovery", "analyze_risks") // Unión de conocimiento local + global
     .addEdge("analyze_risks", "critique")
     .addConditionalEdges(
         "critique",

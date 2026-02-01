@@ -9,6 +9,7 @@ import { AppError, ValidationError } from '@/lib/errors';
 import { EntitySchema, GenericCaseSchema } from '@/lib/schemas';
 import { mapEntityToCase } from '@/lib/mappers';
 import { RiskService } from '@/lib/risk-service';
+import { FederatedKnowledgeService } from '@/lib/federated-knowledge-service';
 import crypto from 'crypto';
 
 /**
@@ -144,6 +145,14 @@ export async function POST(req: NextRequest) {
             })
         );
 
+        // --- VISION 2027: Federated Discovery ---
+        const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
+            detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
+            tenantId,
+            correlationId,
+            3
+        );
+
         // --- VISION 2.0: RISK DETECTION (Phase 7.5) ---
         const consolidatedContext = resultsWithContext
             .map(r => `Component ${r.model}: ${r.ragContext.map((c: any) => c.text).join(' ')}`)
@@ -172,7 +181,11 @@ export async function POST(req: NextRequest) {
             status: 'analyzed' as const,
             tenantId,
             fileMd5: fileHash,
-            createdAt: new Date()
+            createdAt: new Date(),
+            metadata: {
+                risks: detectedRisks,
+                federatedInsights: federatedInsights
+            }
         };
 
         const validatedEntity = EntitySchema.parse(entityData);
@@ -190,7 +203,8 @@ export async function POST(req: NextRequest) {
             // Inject risk findings into the generic case
             genericCase.metadata = {
                 ...genericCase.metadata,
-                risks: detectedRisks
+                risks: detectedRisks,
+                federatedInsights: federatedInsights
             };
 
             const validatedCase = GenericCaseSchema.parse(genericCase);
@@ -205,6 +219,7 @@ export async function POST(req: NextRequest) {
             entityId: insertResult.insertedId,
             patterns: resultsWithContext,
             risks: detectedRisks,
+            federatedInsights: federatedInsights,
             correlationId,
         });
 

@@ -1,11 +1,14 @@
 "use client";
 
-import { FileText, CheckCircle2, ChevronRight, BookOpen, AlertCircle } from "lucide-react";
+import { FileText, CheckCircle2, ChevronRight, BookOpen, AlertCircle, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ExportButton } from "./ExportButton";
 import { RiskAlerter, RiskFinding } from "../shared/RiskAlerter";
+
+import { FederatedPatternCard } from "../federated/FederatedPatternCard";
+import { FederatedPattern } from "@/lib/schemas";
 
 interface RagContext {
     text: string;
@@ -24,9 +27,15 @@ interface RagReportViewProps {
     identifier: string;
     detectedPatterns: AnalyzedModel[];
     risks?: RiskFinding[];
+    federatedInsights?: FederatedPattern[];
 }
 
-export function RagReportView({ identifier, detectedPatterns, risks = [] }: RagReportViewProps) {
+export function RagReportView({
+    identifier,
+    detectedPatterns,
+    risks = [],
+    federatedInsights = []
+}: RagReportViewProps) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center justify-between">
@@ -41,6 +50,25 @@ export function RagReportView({ identifier, detectedPatterns, risks = [] }: RagR
 
             {/* Risk & Intelligence Panel */}
             <RiskAlerter risks={risks} />
+
+            {/* Federated Global Intelligence (Vision 2027) */}
+            {federatedInsights.length > 0 && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-900 shadow-inner">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Globe className="h-5 w-5 text-blue-600" />
+                        <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">Collective Global Intelligence</h3>
+                        <Badge variant="outline" className="ml-2 border-blue-400 text-blue-600">BETA</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {federatedInsights.map((insight, idx) => (
+                            <FederatedPatternCard key={idx} pattern={insight} />
+                        ))}
+                    </div>
+                    <p className="mt-4 text-[10px] text-blue-400 font-medium italic">
+                        * Estos insights provienen de la red federada anónima y han sido validados por otros técnicos de la industria.
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6">
                 {detectedPatterns.map((m, idx) => (

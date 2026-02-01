@@ -7,6 +7,7 @@ import { EntitySchema, GenericCaseSchema } from './schemas';
 import { mapEntityToCase } from './mappers';
 import { logEvento } from './logger';
 import { ObjectId } from 'mongodb';
+import { FederatedKnowledgeService } from './federated-knowledge-service';
 
 /**
  * Lógica de procesamiento para trabajos asíncronos (Fase 31: BullMQ).
@@ -42,7 +43,6 @@ export class AsyncJobsLogic {
             const detectedPatterns = await analyzeEntityWithGemini('pedido', text, tenantId, correlationId);
             await updateProgress(50);
 
-            // 3. Búsqueda RAG (Contexto Técnico)
             const resultsWithContext = await Promise.all(
                 detectedPatterns.map(async (m: { type: string; model: string }) => {
                     const query = `${m.type} model ${m.model}`;
@@ -53,6 +53,15 @@ export class AsyncJobsLogic {
                     };
                 })
             );
+
+            // --- VISION 2027: Federated Discovery ---
+            const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
+                detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
+                tenantId,
+                correlationId,
+                3
+            );
+
             await updateProgress(70);
 
             // 4. Análisis de Riesgos
@@ -80,7 +89,8 @@ export class AsyncJobsLogic {
                 })),
                 ragContextFull: resultsWithContext,
                 metadata: {
-                    risks: detectedRisks
+                    risks: detectedRisks,
+                    federatedInsights: federatedInsights
                 },
                 status: 'analyzed',
                 updatedAt: new Date()

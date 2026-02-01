@@ -1,17 +1,13 @@
-# Configuración de MongoDB Atlas Vector Search
+# Configuración de Búsqueda Atlas (Vector + Keyword)
 
-Para que el motor RAG de **ABD RAG Plataform** funcione correctamente, es necesario configurar un índice de búsqueda vectorial en la colección `document_chunks`.
+Para que el motor RAG de **ABD RAG Plataform** funcione correctamente en la v2.36+, es necesario configurar dos tipos de índices en la colección `document_chunks`.
 
-## Parámetros del Índice
+## 1. Vector Search Index (Semántico)
 
 - **Nombre del Índice:** `vector_index`
 - **Colección:** `document_chunks`
-- **Base de Datos:** `ABDElevators`
 
-## Definición JSON (Atlas Search Index)
-
-Utilice la siguiente configuración al crear el índice desde el panel de MongoDB Atlas:
-
+### Definición JSON:
 ```json
 {
   "fields": [
@@ -21,36 +17,43 @@ Utilice la siguiente configuración al crear el índice desde el panel de MongoD
       "numDimensions": 768,
       "similarity": "cosine"
     },
-    {
-      "type": "filter",
-      "path": "estado"
-    },
-    {
-      "type": "filter",
-      "path": "tipo_componente"
-    },
-    {
-      "type": "filter",
-      "path": "modelo"
-    }
+    { "type": "filter", "path": "status" },
+    { "type": "filter", "path": "industry" },
+    { "type": "filter", "path": "tenantId" }
   ]
 }
 ```
 
-### Explicación de Campos:
+## 2. Atlas Search Index (Keyword/BM25)
 
-1.  **embedding**: Campo principal que contiene los vectores generados por `Gemini text-embedding-004`. 
-    *   **Dimensiones**: 768 (estándar para el modelo 004).
-    *   **Similitud**: `cosine` (recomendado para embeddings de texto).
-2.  **estado**: Permite filtrar documentos `obsoletos` o `borradores` durante la búsqueda.
-3.  **tipo_componente / modelo**: Permite realizar búsquedas filtradas por metadatos específicos para mejorar la precisión.
+Este índice es crítico para la recuperación de términos técnicos exactos (IDs de error, números de pieza).
 
-## Verificación de Funcionamiento
+- **Nombre del Índice:** `keyword_index`
+- **Colección:** `document_chunks`
 
-Puede verificar que el índice está activo ejecutando una búsqueda desde el endpoint:
-`GET /api/pedidos/[id]/vector-search`
+### Definición JSON:
+```json
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "chunkText": {
+        "type": "string",
+        "analyzer": "lucene.standard"
+      }
+    }
+  }
+}
+```
 
-Si el índice no está configurado, la API devolverá un error de `DatabaseError` indicando que el índice `vector_index` no existe.
+## 🔄 Lógica Híbrida (RRF)
+
+El sistema combina ambos resultados usando el algoritmo **Reciprocal Rank Fusion (RRF)**:
+1.  **Vector Search**: Recupera contexto semántico (MMR).
+2.  **Multilingual Search**: Soporte Cross-Language (BGE-M3).
+3.  **Keyword Search**: Prioriza coincidencias exactas (BM25).
+
+Los resultados se unifican con un factor de suavizado `k=60`, dando mayor peso relativo a las coincidencias por palabra clave para asegurar la precisión técnica.
 
 ---
-*Documentación generada por Antigravity (IA).*
+*Documentación avanzada - v2.36.*

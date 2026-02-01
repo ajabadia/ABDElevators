@@ -4,6 +4,7 @@ import { generateEmbedding } from './llm';
 import { ApplicationLogSchema } from './schemas';
 import crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ObjectId } from 'mongodb';
 
 // Initialize Gemini for Anonymization
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -101,32 +102,83 @@ export class FederatedKnowledgeService {
     }
 
     /**
-     * Search for patterns in the global registry.
-     * Uses Vector Search if available, otherwise fallback to Text Search (keywords).
+     * Search for patterns in the global registry using Atlas Vector Search.
+     * Fallback to keyword filtering if vector search fails or returns no results.
      */
     static async searchGlobalPatterns(query: string, tenantId: string, correlationId: string, limit: number = 3): Promise<FederatedPattern[]> {
         const db = await connectDB();
+        const collection = db.collection('federated_patterns');
 
-        // 1. Generate query embedding
-        const queryEmbedding = await generateEmbedding(query, tenantId, correlationId);
+        try {
+            // 1. Generate query embedding
+            const queryEmbedding = await generateEmbedding(query, tenantId, correlationId);
 
-        // 2. Vector Search (Simulated for now with basic filter if no vector index)
-        // In real Prod: db.collection.aggregate([{$vectorSearch: ...}])
+            // 2. Vector Search (Using Atlas native $vectorSearch)
+            const pipeline = [
+                {
+                    $vectorSearch: {
+                        index: "federated_vector_index", // Infrastructure requirement
+                        path: "embedding",
+                        queryVector: queryEmbedding,
+                        numCandidates: 100,
+                        limit: limit,
+                        filter: { status: 'PUBLISHED' }
+                    }
+                },
+                {
+                    $addFields: {
+                        score: { $meta: "vectorSearchScore" }
+                    }
+                }
+            ];
 
-        const patterns = await db.collection('federated_patterns')
-            .find({ status: 'PUBLISHED' })
-            .limit(limit * 2)
+            const results = await collection.aggregate(pipeline).toArray();
+
+            if (results.length > 0) {
+                return results as unknown as FederatedPattern[];
+            }
+        } catch (error) {
+            console.warn("[Federated] Vector search failed or index missing, falling back to keyword search.", error);
+        }
+
+        // 3. Fallback: Keyword Search (regex on problemVector or keywords)
+        // This ensures the system works even before indices are fully built
+        const fallback = await collection.find({
+            status: 'PUBLISHED',
+            $or: [
+                { problemVector: { $regex: query, $options: 'i' } },
+                { keywords: { $in: [query.toLowerCase()] } }
+            ]
+        })
+            .sort({ validationCount: -1, confidenceScore: -1 })
+            .limit(limit)
             .toArray();
 
-        // Basic cosine similarity ranking (in-memory for v1 MVP)
-        const ranked = patterns.map(p => ({
-            ...p,
-            similarity: this.cosineSimilarity(queryEmbedding, p.embedding || [])
-        }))
-            .sort((a, b) => b.similarity - a.similarity)
-            .slice(0, limit);
+        return fallback as unknown as FederatedPattern[];
+    }
 
-        return ranked as unknown as FederatedPattern[];
+    /**
+     * Validates a pattern as useful, increasing its reputation.
+     * Core of the Cross-Tenant Peer Review system.
+     */
+    static async validatePattern(patternId: string, tenantId: string): Promise<boolean> {
+        try {
+            const db = await connectDB();
+            const collection = db.collection('federated_patterns');
+
+            const result = await collection.updateOne(
+                { _id: new ObjectId(patternId), status: 'PUBLISHED' },
+                {
+                    $inc: { validationCount: 1 },
+                    $set: { updatedAt: new Date() }
+                }
+            );
+
+            return result.modifiedCount > 0;
+        } catch (error) {
+            console.error("[Federated] Validation error:", error);
+            return false;
+        }
     }
 
     private static cosineSimilarity(vecA: number[], vecB: number[]) {

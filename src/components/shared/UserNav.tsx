@@ -33,6 +33,7 @@ export function UserNav() {
     const { data: session, update } = useSession();
     const user = session?.user;
     const [mounted, setMounted] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -49,22 +50,34 @@ export function UserNav() {
         : '??';
 
     const handleSwitchContext = async (tenantId: string, role: string, industry: string) => {
-        await update({
-            user: {
-                ...user,
-                tenantId,
-                role,
-                industry
-            }
-        });
-        // Recargar para asegurar que todos los componentes y datos usen el nuevo contexto
-        window.location.reload();
+        if (isUpdating) return;
+        setIsUpdating(true);
+        try {
+            await update({
+                user: {
+                    ...user,
+                    tenantId,
+                    role,
+                    industry
+                }
+            });
+            // Force hard reload to ensure all providers (Ability, Navigation, etc) reset completely
+            window.location.href = '/';
+        } catch (error) {
+            console.error("Context switch failed", error);
+            setIsUpdating(false);
+        }
+    };
+
+    const handleSignOut = () => {
+        // Redirigir explícitamente a /login para evitar 404s en Vercel
+        signOut({ callbackUrl: '/login', redirect: true });
     };
 
     // Determinar si hay múltiples opciones
     const hasMultipleTenants = (user.tenantAccess?.length || 0) > 1;
-    const isSuperAdmin = user.role === 'SUPER_ADMIN';
-    const industries = ['ELEVATORS', 'LEGAL', 'IT', 'GENERIC'];
+    // const isSuperAdmin = user.role === 'SUPER_ADMIN'; // Unused
+    // const industries = ['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']; // Unused
 
     // Encontrar el nombre del tenant actual desde tenantAccess si existe
     const currentTenantName = user.tenantAccess?.find(t => t.tenantId === user.tenantId)?.name || user.tenantId;
@@ -181,11 +194,12 @@ export function UserNav() {
                                 return (
                                     <DropdownMenuItem
                                         key={role}
-                                        disabled={!canSwitch}
+                                        disabled={!canSwitch || isUpdating}
                                         onClick={() => handleSwitchContext(user.tenantId, role, user.industry)}
                                         className={cn(
                                             "flex justify-between items-center rounded-md px-2 py-2 cursor-pointer mb-1 last:mb-0",
-                                            user.role === role && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                                            user.role === role && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+                                            (!canSwitch || isUpdating) && "opacity-50 cursor-not-allowed"
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
@@ -218,14 +232,13 @@ export function UserNav() {
                 <div className="p-1">
                     <DropdownMenuItem
                         className="cursor-pointer rounded-lg text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-900/10 focus:text-red-600 dark:focus:text-red-400 transition-colors font-black py-3 px-4"
-                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        onClick={handleSignOut}
                     >
                         <LogOut className="mr-3 h-4 w-4" />
                         <span>Cerrar Sesión</span>
                     </DropdownMenuItem>
                 </div>
             </DropdownMenuContent>
-
         </DropdownMenu>
     );
 }

@@ -171,11 +171,12 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Cross-Tenant Validation:** Sistema de reputación y validación de conocimiento compartido (`FederatedPatternCard`).
 - [x] **React Modernization:** Migración a Zustand para orquestación de estado en el Workspace técnico.
 
-#### 🚀 FASE 38: ADMIN INTELLIGENCE DASHBOARD (PLANIFICADO)
+#### 🚀 FASE 38: ADMIN INTELLIGENCE DASHBOARD (COMPLETADO ✅)
 - **Objetivo:** Visualización estratégica de los patrones globales y gestión de la red federada.
-- [ ] **Intelligence Dashboard:** `/admin/intelligence/trends` con métricas de adopción de patrones.
-- [ ] **Pattern Governance:** UI para moderación de patrones detectados automáticamente.
-- [ ] **ROI Analytics:** Cálculo de ahorro de tiempo basado en reutilización de soluciones.
+- [x] **Intelligence Dashboard:** `/admin/intelligence/trends` con métricas de adopción de patrones.
+- [x] **Pattern Governance:** UI para moderación (`GlobalPatternsTable`) con acciones de archivo.
+- [x] **ROI Analytics:** Cálculo de ahorro de tiempo estimado (`ImpactScoreCard`).
+- [x] **Backend Analytics:** `IntelligenceAnalyticsService` para agregaciones.
 
 > [!IMPORTANT]
 > **GUÍA DE INFRAESTRUCTURA (POST-FASE 36):**

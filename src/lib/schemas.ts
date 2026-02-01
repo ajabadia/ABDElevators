@@ -97,6 +97,7 @@ export const GenericCaseSchema = z.object({
         taxonomies: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
         tags: z.array(z.string()),
         risks: z.array(RiskFindingSchema).optional(), // Hallazgos de inteligencia
+        federatedInsights: z.array(z.any()).optional(), // Insights Federados
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
     }),
     transitions_history: z.array(WorkflowLogSchema).default([]),
@@ -201,6 +202,9 @@ export const EntitySchema = z.object({
     tenantId: z.string().optional(), // Inyectado por el middleware/helper
     metadata: z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
+        modelos: z.array(z.any()).optional(),
+        risks: z.array(RiskFindingSchema).optional(),
+        federatedInsights: z.array(z.any()).optional(),
     }).optional(),
     transitions_history: z.array(WorkflowLogSchema).default([]),
     fileMd5: z.string().optional(),

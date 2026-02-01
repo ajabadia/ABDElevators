@@ -20,7 +20,8 @@ import {
     TrendingUp,
     ShieldCheck,
     Bell,
-    UserCircle
+    UserCircle,
+    BrainCircuit
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -181,6 +182,13 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/rag-quality',
                 icon: ShieldCheck,
                 roles: ['SUPER_ADMIN'],
+                module: 'RAG'
+            },
+            {
+                name: 'Active Intelligence',
+                href: '/admin/intelligence/trends',
+                icon: BrainCircuit,
+                roles: ['SUPER_ADMIN', 'ADMIN'],
                 module: 'RAG'
             }
         ]

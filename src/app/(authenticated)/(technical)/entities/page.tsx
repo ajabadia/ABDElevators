@@ -107,7 +107,8 @@ export default function EntitiesPage() {
                 setAnalysisResult({
                     entityId: entityData.identifier || entityData.id || entityData.numero_pedido,
                     patterns: entityData.detectedPatterns || entityData.modelos_detectados || entityData.metadata?.modelos || [],
-                    risks: entityData.risks || entityData.metadata?.risks || []
+                    risks: entityData.risks || entityData.metadata?.risks || [],
+                    federatedInsights: entityData.federatedInsights || entityData.metadata?.federatedInsights || []
                 });
                 setShowTrace(false);
                 refresh();
@@ -140,6 +141,7 @@ export default function EntitiesPage() {
                         identifier={analysisResult.entityId}
                         detectedPatterns={analysisResult.patterns}
                         risks={analysisResult.risks}
+                        federatedInsights={analysisResult.federatedInsights}
                     />
                 </div>
             ) : (

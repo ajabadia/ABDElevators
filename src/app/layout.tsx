@@ -50,6 +50,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 
 import { StructuredData } from "@/components/seo/StructuredData";
+import { Toaster } from "sonner";
 
 export default async function RootLayout({
   children,
@@ -76,6 +77,7 @@ export default async function RootLayout({
             <SessionProvider session={session}>
               <BrandingProvider>
                 <SidebarProvider>
+                  <Toaster position="top-right" richColors />
                   {children}
                 </SidebarProvider>
               </BrandingProvider>
