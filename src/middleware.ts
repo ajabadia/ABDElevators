@@ -5,8 +5,7 @@ import { authConfig } from './lib/auth.config';
 const { auth } = NextAuth(authConfig);
 
 export const config = {
-    // matcher: ["/admin/:path*", "/login", "/auth/:path*"],
-    matcher: [],
+    matcher: ["/admin/:path*", "/login", "/auth-pages/:path*"],
 };
 
 /**
@@ -27,21 +26,20 @@ export default auth(async function middleware(request: NextRequest) {
             '/api/webhooks',
             '/privacy',
             '/terms',
-            '/arquitectura',
+            '/architecture',
             '/features',
             '/upgrade',
-            '/auth',
+            '/auth-pages',
             '/api/health',
             '/api/debug',
             '/api/debug-auth',
-            '/auth/signup-invite',
             '/error',
         ];
 
-        // 🛡️ Fix 404 on Auth Error
+        // 🛡️ Fix 404 on Auth Error - Redirect to the new safe path
         if (pathname === '/api/auth/error') {
             const error = request.nextUrl.searchParams.get('error');
-            return NextResponse.redirect(new URL(`/auth/error?error=${error || 'Default'}`, request.url));
+            return NextResponse.redirect(new URL(`/auth-pages/error?error=${error || 'Default'}`, request.url));
         }
 
         const isPublicPath = publicPaths.some(path => {
