@@ -6,7 +6,7 @@ const { auth } = NextAuth(authConfig);
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|[\\w-]+\\.\\w+).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|[\\w-]+\\.\\w+).*)',
     ],
 };
 
