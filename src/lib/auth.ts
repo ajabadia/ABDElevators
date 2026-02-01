@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             async authorize(credentials) {
                 // FORCE CONSOLE LOG - DEBUG VERCEL
                 console.log("🔥 [AUTH START] Authorize called. Email:", credentials?.email);
+                console.log("   -> AUTH_URL Configured:", process.env.AUTH_URL ? "YES" : "NO");
 
                 try {
                     console.log("🕵️ [Auth Step] Parsing credentials...");
