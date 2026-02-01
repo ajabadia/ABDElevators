@@ -14,9 +14,21 @@ export const config = {
  * optimized for Vercel Edge Runtime (No DB imports)
  */
 export default auth(async function middleware(request: NextRequest) {
+    const { pathname } = request.nextUrl;
+
+    // 🚀 [Rule #5] NO processing for static files or API routes early
+    if (
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/static') ||
+        pathname.includes('.') ||
+        pathname === '/health'
+    ) {
+        return NextResponse.next();
+    }
+
     try {
-        const { pathname } = request.nextUrl;
-        const session = (request as any).auth; // In the wrapper, session is available here
+        const session = (request as any).auth;
 
         // 🛡️ Rutas públicas
         const publicPaths = [
