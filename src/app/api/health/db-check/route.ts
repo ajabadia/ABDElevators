@@ -37,7 +37,10 @@ export async function GET(request: Request) {
             sampleSchemas: schemas,
             deployTimestamp: new Date().toISOString(),
             envAuthUrl: process.env.AUTH_URL || 'N/A',
-            envNextAuthUrl: process.env.NEXTAUTH_URL || 'N/A'
+            envNextAuthUrl: process.env.NEXTAUTH_URL || 'N/A',
+            hasAuthSecret: !!process.env.AUTH_SECRET,
+            hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
+            nodeEnv: process.env.NODE_ENV
         });
 
     } catch (error: any) {
