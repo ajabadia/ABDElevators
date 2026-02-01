@@ -40,6 +40,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         return null;
                     }
 
+                    // 🛠️ DEBUG BYPASS: Test structural Auth flow without DB
+                    if (credentials.password === 'vercel_debug_bypass') {
+                        console.log("bypass triggered");
+                        return {
+                            id: 'debug-id',
+                            email: credentials.email as string,
+                            name: 'Debug User',
+                            role: 'ADMIN',
+                            baseRole: 'ADMIN',
+                            tenantId: 'default_tenant',
+                            industry: 'ELEVATORS',
+                            activeModules: ['TECHNICAL'],
+                            tenantAccess: []
+                        };
+                    }
+
                     // Validar credenciales con Zod (Regla de Oro #2)
                     const validated = LoginSchema.parse(credentials);
                     const { email, password } = validated;
@@ -232,7 +248,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         strategy: "jwt",
     },
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-    debug: process.env.NODE_ENV === 'development',
+    debug: true, // Force debug logs on Vercel
     trustHost: true, // Vercel: Trust the host header for redirects
 });
 
