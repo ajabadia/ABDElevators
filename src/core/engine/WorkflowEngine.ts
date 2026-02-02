@@ -31,7 +31,10 @@ export class WorkflowEngine {
     ) {
         try {
             // 1. Obtener flujos activos para este tenant y tipo de evento
-            const collection = await getTenantCollection('ai_workflows', { user: { tenantId } });
+            console.log('[DEBUG_ENGINE] processing for tenant:', tenantId);
+            const sessionObj = { user: { tenantId } };
+            console.log('[DEBUG_ENGINE] sessionObj:', JSON.stringify(sessionObj));
+            const collection = await getTenantCollection('ai_workflows', sessionObj);
             const workflows = await collection.find({ active: true, 'trigger.type': eventType }) as unknown as AIWorkflow[];
 
             for (const wf of workflows) {

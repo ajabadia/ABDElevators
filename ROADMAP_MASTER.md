@@ -106,6 +106,31 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Migration:** Movimiento de `configurator` y `checklists` a `src/verticals/elevators`.
 - [x] **UI Updates:** Selector de Industria (Mock) y RAG Reasoning.
 
+#### ⚡ FASE 48: VISUAL WORKFLOW EDITOR (COMPLETADO ✅)
+- **Objetivo:** Permitir a usuarios avanzados diseñar flujos RAG personalizados (If-This-Then-That) mediante interfaz visual.
+- [x] **React Flow Integration:** Canvas infinito con Drag & Drop (`@xyflow/react`).
+- [x] **Custom Nodes:** Implementados nodos Trigger, Action y Condition.
+- [x] **Workflow Store:** Gestión de estado con Zustand.
+- [x] **Persistence:** API `/api/admin/workflows` para guardar definiciones.
+
+#### ⚙️ FASE 49: WORKFLOW COMPILATION & EXECUTION (COMPLETADO ✅)
+- **Objetivo:** Traducir el diseño visual en lógica ejecutable por el `WorkflowEngine`.
+- [x] **Compiler Logic:** Algoritmo de recorrido de grafo (Graph Traversal).
+- [x] **Schema Mapping:** Convertir Nodos Visuales -> `AIWorkflow` Schema.
+- [x] **Hybrid Storage:** Guardar definición visual (UI) + Lógica compilada (Backend).
+
+#### 🧪 FASE 50: E2E VALIDATION (COMPLETADO ✅)
+- **Objetivo:** Verificar el ciclo completo: Dibujar -> Compilar -> Ejecutar.
+- [x] **E2E Script:** `test-workflow-e2e.ts`.
+- [x] **Validation:** Confirmar que `WorkflowEngine` respeta las reglas creadas visualmente.
+
+#### 🎨 FASE 51: ADVANCED WORKFLOW EDITOR (FUTURO)
+- **Objetivo:** UI Polish y expansión de capacidades lógicas.
+- [ ] **UI Refinement:** Mejorar estética de nodos, minimapas, y controles de zoom.
+- [ ] **More Nodes:** Loop Node, Wait Node, Switch Case Node.
+- [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
+- [ ] **Testing UI:** Panel para ejecutar pruebas manuales desde el editor.
+
 ---
 
 ### 💎 STRATEGIC ENTERPRISE OVERHAUL (VISION 2026+)

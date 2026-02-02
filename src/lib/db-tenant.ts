@@ -226,27 +226,20 @@ export async function getTenantCollection<T extends Document>(
     }
 
     // 🛡️ REGLA DE ORO #9: Hardening Multi-tenant
-    // Si no hay sesión y no estamos en modo Single Tenant, BLOQUEO TOTAL.
-    if (!session?.user && !process.env.SINGLE_TENANT_ID) {
-        const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado`;
-        console.error(`[SECURITY ALERT] ${errorMsg}`);
+    const hasValidSession = session && session.user && session.user.tenantId;
+    const isSingleTenantMode = !!process.env.SINGLE_TENANT_ID;
 
-        // Auditamos el fallo si es posible (Fire-and-forget)
-        logEvento({
-            level: 'ERROR',
-            source: 'DB_TENANT',
-            action: 'ISOLATION_FAILURE',
-            message: errorMsg,
-            correlationId: 'security-fault'
-        }).catch(() => { });
-
-        throw new AppError('UNAUTHORIZED', 401, errorMsg);
+    if (hasValidSession || isSingleTenantMode) {
+        // Safe to proceed
+        const db = dbType === 'LOGS' ? await connectLogsDB() : await connectDB();
+        const rawCollection = db.collection<T>(collectionName);
+        return new SecureCollection<T>(rawCollection, session, options);
     }
 
-    const db = dbType === 'LOGS' ? await connectLogsDB() : await connectDB();
-
-    const rawCollection = db.collection<T>(collectionName);
-    return new SecureCollection<T>(rawCollection, session, options);
+    // Attempted access without valid session
+    const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado (User: ${!!session?.user})`;
+    console.error(`[SECURITY ALERT] ${errorMsg}`);
+    throw new AppError('UNAUTHORIZED', 401, errorMsg);
 }
 
 export async function getCaseCollection(session?: any) {
