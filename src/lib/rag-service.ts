@@ -22,6 +22,8 @@ export interface RagResult {
     language?: string;
     originalLang?: string;
     isShadow?: boolean;
+    chunkType?: string;
+    approxPage?: number;
 }
 
 const PerformTechnicalSearchSchema = z.object({
@@ -120,7 +122,9 @@ export async function performTechnicalSearch(
                     score: score,
                     type: doc.metadata.componentType,
                     model: doc.metadata.model,
-                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
+                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
+                    chunkType: doc.metadata.chunkType,
+                    approxPage: doc.metadata.approxPage
                 };
             }));
 
@@ -269,7 +273,9 @@ export async function performMultilingualSearch(
                 score: doc.score,
                 type: doc.componentType,
                 model: doc.model,
-                cloudinaryUrl: doc.cloudinaryUrl
+                cloudinaryUrl: doc.cloudinaryUrl,
+                chunkType: doc.chunkType,
+                approxPage: doc.approxPage
             }));
 
         } catch (error) {
@@ -361,7 +367,9 @@ export async function pureKeywordSearch(
                 type: r.componentType,
                 model: r.model,
                 cloudinaryUrl: r.cloudinaryUrl,
-                language: r.language
+                language: r.language,
+                chunkType: r.chunkType,
+                approxPage: r.approxPage
             }));
 
             span.setAttribute('rag.result_count', finalResults.length);
@@ -554,7 +562,9 @@ export async function pureVectorSearch(
                     score,
                     type: doc.metadata.componentType,
                     model: doc.metadata.model,
-                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl
+                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
+                    chunkType: doc.metadata.chunkType,
+                    approxPage: doc.metadata.approxPage
                 }));
 
             const duracionTotal = Date.now() - inicio;

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FileText, ExternalLink, ShieldCheck } from 'lucide-react';
+import { FileText, ExternalLink, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import { RagResult } from '@/lib/rag-service';
 
 interface VectorResultsTableProps {
@@ -62,8 +62,16 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
                                 </div>
                             </td>
                             <td className="px-6 py-4">
-                                <div className="text-sm font-medium text-slate-900 line-clamp-1">
-                                    {result.source}
+                                <div className="flex items-center gap-2">
+                                    <div className="text-sm font-medium text-slate-900 line-clamp-1">
+                                        {result.source}
+                                    </div>
+                                    {result.chunkType === 'VISUAL' && (
+                                        <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-[10px] font-bold text-purple-700 ring-1 ring-inset ring-purple-700/10">
+                                            <ImageIcon className="mr-1 h-3 w-3" />
+                                            ESQUEMA
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="mt-1 text-sm text-slate-500 line-clamp-2 italic">
                                     "{result.text}"
@@ -79,15 +87,22 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
                             </td>
                             <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                 {result.cloudinaryUrl ? (
-                                    <a
-                                        href={result.cloudinaryUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center text-teal-600 hover:text-teal-900 transition-colors"
-                                    >
-                                        <ExternalLink className="mr-1 h-4 w-4" />
-                                        Ver PDF
-                                    </a>
+                                    <div className="flex flex-col items-end">
+                                        <a
+                                            href={result.cloudinaryUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center text-teal-600 hover:text-teal-900 transition-colors"
+                                        >
+                                            <ExternalLink className="mr-1 h-4 w-4" />
+                                            Ver PDF
+                                        </a>
+                                        {result.approxPage && (
+                                            <span className="text-[10px] text-slate-400 mt-0.5">
+                                                Página {result.approxPage}
+                                            </span>
+                                        )}
+                                    </div>
                                 ) : (
                                     <span className="text-slate-400 text-xs italic">Sin archivo</span>
                                 )}

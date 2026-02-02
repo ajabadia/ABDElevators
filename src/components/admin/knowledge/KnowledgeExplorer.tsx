@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, Database, FileText, Layers, Globe, Filter, RefreshCcw, RefreshCw } from 'lucide-react';
+import { Search, Database, FileText, Layers, Globe, Filter, RefreshCcw, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,12 +18,14 @@ import { useEnvironmentStore } from '@/store/environment-store';
 
 interface Chunk {
     _id: string;
-    textChunk: string;
+    chunkText: string;
     sourceDoc: string;
     model: string;
     componentType: string;
     language: string;
     environment: string;
+    chunkType?: 'TEXT' | 'VISUAL';
+    approxPage?: number;
     isShadow?: boolean;
     originalLang?: string;
     translatedText?: string;
@@ -296,9 +298,25 @@ export const KnowledgeExplorer: React.FC = () => {
 
                                         {/* Content */}
                                         <div className="p-4 flex-1">
-                                            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-mono bg-white p-3 rounded border border-slate-100 shadow-sm">
-                                                {chunk.textChunk ? (chunk.textChunk.length > 500 ? `${chunk.textChunk.substring(0, 500)}...` : chunk.textChunk) : ''}
-                                            </p>
+                                            <div className="relative group">
+                                                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap font-mono bg-white p-3 rounded border border-slate-100 shadow-sm">
+                                                    {chunk.chunkText ? (chunk.chunkText.length > 500 ? `${chunk.chunkText.substring(0, 500)}...` : chunk.chunkText) : ''}
+                                                </p>
+                                                {chunk.chunkType === 'VISUAL' && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 py-0.5 text-[10px] font-black uppercase tracking-tighter shadow-sm flex items-center gap-1">
+                                                            <ImageIcon size={10} /> Esquema Visual
+                                                        </Badge>
+                                                    </div>
+                                                )}
+                                                {chunk.approxPage && (
+                                                    <div className="absolute bottom-2 right-2">
+                                                        <span className="text-[10px] font-bold text-slate-400 bg-white/80 px-1 rounded">
+                                                            Pág {chunk.approxPage}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
 
                                             {chunk.isShadow && (
                                                 <div className="mt-3 pt-3 border-t border-indigo-100">

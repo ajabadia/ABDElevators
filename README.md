@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 2.36 - EVOLUTION ERA)
+# ABD Multi-Industry RAG Platform (Vision 3.0 - EVOLUTION ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v2.36** marca la entrada en la "Era de Evolución", con capacidades de orquestación IA distribuida, búsqueda híbrida y gobierno corporativo avanzado.
+Esta versión **v2.85** marca la entrada en la "Era de Evolución + Inteligencia Visual", con capacidades de orquestación IA distribuida, búsqueda híbrida, aislamiento de entornos y comprensión multimodal de planos y esquemas.
 
 ## 🚀 Inicio Rápido
 
@@ -94,17 +94,19 @@ src/
 ```
 
 ## 📊 Características Clave
-
-- ✅ **Hybrid Search Engine**: Fusión de **BM25 (Atlas Search)** + **Vector (Semantic)** mediante RRF para precisión técnica absoluta.
-- ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
-- ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.
-- ✅ **Enterprise Hardening**: Protección contra Inyecciones, Rate Limiting atómico y PII Obfuscation.
-- ✅ **Compliance & Portability**: Backup encriptado (.zip) y generación de Certificados GDPR.
-- ✅ **Sovereign Engine**: Worker autónomo que descubre patrones técnicos en logs históricos (`intelligence-worker`).
-- ✅ **Admin Intelligence Dashboard**: Visualización estratégica de tendencias y ROI con gobernanza de patrones.
-- ✅ **Federated Intelligence**: Red de conocimiento global con validación cruzada y búsqueda vectorial nativa.
-- ✅ **Multi-tenant Isolation**: Aislamiento lógicos de datos y configuraciones por organización/industria.
-- ✅ **Python PDF Bridge**: Integración de alto rendimiento con PyMuPDF para documentos complejos.
+ 
+ - ✅ **Hybrid Search Engine**: Fusión de **BM25 (Atlas Search)** + **Vector (Semantic)** mediante RRF para precisión técnica absoluta.
+ - ✅ **Visual Intelligence (Multi-modal)**: Comprensión nativa de planos, esquemas y diagramas técnicos con Gemini 2.0/3.
+ - ✅ **Environment Sandboxing**: Aislamiento total entre entornos (Staging / Producción) con flujos de promoción atómicos.
+ - ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
+ - ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.
+ - ✅ **Enterprise Hardening**: Protección contra Inyecciones, Rate Limiting atómico y PII Obfuscation.
+ - ✅ **Guardian V2 (ABAC)**: Sistema de permisos granular basado en atributos y políticas dinámicas.
+ - ✅ **Compliance & Portability**: Backup encriptado (.zip) y generación de Certificados GDPR.
+ - ✅ **Sovereign Engine**: Worker autónomo que descubre patrones técnicos en logs históricos (`intelligence-worker`).
+ - ✅ **Admin Intelligence Dashboard**: Visualización estratégica de tendencias y ROI con gobernanza de patrones.
+ - ✅ **Federated Intelligence**: Red de conocimiento global con validación cruzada y búsqueda vectorial nativa.
+ - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria.
 
 ## 🔧 Scripts Disponibles
 

@@ -40,12 +40,12 @@
         "subtitle": "Diseñado para equipos que no pueden permitirse errores de interpretación.",
         "f1_title": "Búsqueda Instantánea",
         "f1_desc": "Pregunta en lenguaje natural y obtén respuestas precisas en menos de 500ms, con cita exacta al documento fuente.",
-        "f2_title": "Extracción Inteligente",
-        "f2_desc": "OCR avanzado + IA para extraer tablas, diagramas y especificaciones técnicas de PDFs complejos sin intervención manual.",
+        "f2_title": "Inteligencia Visual",
+        "f2_desc": "Comprensión nativa de planos técnicos, esquemas eléctricos y diagramas complejos con Gemini 2.0/3. Identificación automática de componentes visuales.",
         "f3_title": "Cumplimiento Automático",
         "f3_desc": "Auditoría total: cada respuesta incluye referencia al documento original. Exportación ZIP firmada para cumplimiento GDPR.",
-        "f4_title": "Multi-Empresa Seguro",
-        "f4_desc": "Aislamiento total entre organizaciones. Cada empresa tiene su propia base de conocimiento privada y protegida."
+        "f4_title": "Entornos & Sandboxing",
+        "f4_desc": "Aislamiento total de prompts, workflows y documentos por entorno (Staging/Producción) con flujos de promoción seguros."
     },
     "solutions": {
         "title": "Soluciones por Sector",

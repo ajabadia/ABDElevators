@@ -9,7 +9,8 @@ import {
     Loader2,
     BrainCircuit,
     Info,
-    Shield
+    Shield,
+    Image as ImageIcon
 } from 'lucide-react';
 import { ContentCard } from '@/components/ui/content-card';
 import { Button } from '@/components/ui/button';
@@ -110,14 +111,29 @@ export function GlobalSemanticSearch() {
                         {results.map((res, i) => (
                             <ContentCard key={i} className="shadow-lg hover:translate-x-1 transition-all" noPadding>
                                 <div className="p-4 space-y-2">
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                                            {res.source}
+                                            {res.approxPage && ` • Pág ${res.approxPage}`}
+                                        </span>
+                                        {res.chunkType === 'VISUAL' && (
+                                            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-1.5 py-0 h-4 text-[9px] font-black">
+                                                <ImageIcon size={10} className="mr-1" /> ESQUEMA
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
                                         "{res.text}"
                                     </p>
                                     <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800">
                                         <Badge variant="secondary" className="text-[9px] lowercase font-mono opacity-60">
                                             {res.type}
                                         </Badge>
-                                        <ChevronRight size={14} className="text-slate-300" />
+                                        {res.cloudinaryUrl && (
+                                            <a href={res.cloudinaryUrl} target="_blank" rel="noopener noreferrer">
+                                                <ChevronRight size={14} className="text-teal-600 hover:scale-125 transition-transform" />
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </ContentCard>

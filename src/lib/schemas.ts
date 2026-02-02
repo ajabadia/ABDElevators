@@ -24,8 +24,10 @@ export const DocumentChunkSchema = z.object({
     version: z.string(),
     revisionDate: z.date(),
     approxPage: z.number().optional(),
+    chunkType: z.enum(['TEXT', 'VISUAL']).default('TEXT'),
     chunkText: z.string(),
     translatedText: z.string().optional(), // Traducción técnica al Castellano (Phase 21.1)
+    visualDescription: z.string().optional(), // Descripción técnica para visual chunks
     textBefore: z.string().optional(),
     textAfter: z.string().optional(),
     language: z.string().default('es'), // Idioma detectado del documento

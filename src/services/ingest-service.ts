@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, IngestAuditSchema, KnowledgeAssetSchema } from '@/lib/schemas';
 import { AppError, DatabaseError, ValidationError, ExternalServiceError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/lib/llm';
+import { generateEmbedding, extractModelsWithGemini, callGeminiMini, analyzePDFVisuals } from '@/lib/llm';
 import { extractTextAdvanced } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
 import { uploadRAGDocument } from '@/lib/cloudinary';
@@ -188,8 +188,11 @@ export class IngestService {
             { maxRetries: 3, initialDelayMs: 1000 }
         );
 
-        // 2. Extract Text
-        const text = await extractTextAdvanced(buffer);
+        // 2. Extract Text & Visuals in PARALLEL (Phase 52)
+        const [text, visualFindings] = await Promise.all([
+            extractTextAdvanced(buffer),
+            analyzePDFVisuals(buffer, tenantId, correlationId)
+        ]);
 
         // 2.1. Detect Language
         const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
@@ -203,10 +206,11 @@ export class IngestService {
         const detectedModels = await extractModelsWithGemini(text, tenantId, correlationId);
         const primaryModel = detectedModels.length > 0 ? detectedModels[0].model : 'UNKNOWN';
 
-        // 4. Chunking
-        const chunks = await chunkText(text);
+        // 4. Chunking (Text + Visual)
+        const textChunks = await chunkText(text);
 
         // 5.1. Save Document Metadata
+        const totalChunks = textChunks.length + visualFindings.length;
         const documentMetadata = {
             tenantId,
             filename: file.name,
@@ -219,7 +223,7 @@ export class IngestService {
             cloudinaryUrl: cloudinaryResult.secureUrl,
             cloudinaryPublicId: cloudinaryResult.publicId,
             fileMd5: fileHash,
-            totalChunks: chunks.length,
+            totalChunks: totalChunks,
             environment,
             createdAt: new Date(),
         };
@@ -228,16 +232,25 @@ export class IngestService {
         const insertResult = await knowledgeAssetsCollection.insertOne(validatedDocumentMetadata);
         const docId = insertResult.insertedId;
 
-        // 5.2. Process Chunks with Batching & Resilience
-        // Dynamic import to avoid circular dependencies if any, though regular import relies on lib
+        // 5.2. Process ALL Chunks (Text + Visual)
         const { multilingualService } = await import('@/lib/multilingual-service');
         const BATCH_SIZE = 10;
         let successCount = 0;
         let failCount = 0;
 
-        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+        // Combinar chunks de texto y hallazgos visuales para procesamiento uniforme
+        const allChunksToProcess = [
+            ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc, page: undefined })),
+            ...visualFindings.map(vf => ({
+                type: 'VISUAL' as const,
+                text: vf.technical_description,
+                page: vf.page
+            }))
+        ];
+
+        for (let i = 0; i < allChunksToProcess.length; i += BATCH_SIZE) {
             // CIRCUIT BREAKER Check
-            if (chunks.length > 20 && (failCount / chunks.length) > 0.2) {
+            if (allChunksToProcess.length > 20 && (failCount / allChunksToProcess.length) > 0.2) {
                 await logEvento({
                     level: 'ERROR',
                     source: 'INGEST_SERVICE',
@@ -248,11 +261,13 @@ export class IngestService {
                 throw new ExternalServiceError('Ingestion aborted due to high error rate (External API instability)');
             }
 
-            const batch = chunks.slice(i, i + BATCH_SIZE);
-            const batchPromises = batch.map(async (chunkText) => {
+            const batch = allChunksToProcess.slice(i, i + BATCH_SIZE);
+            const batchPromises = batch.map(async (chunkData) => {
                 let translatedText: string | undefined = undefined;
+                const chunkText = chunkData.text;
 
-                if (detectedLang !== 'es') {
+                // Solo traducir si es texto y no es español
+                if (chunkData.type === 'TEXT' && detectedLang !== 'es') {
                     try {
                         const { text: translationPrompt, model: transModel } = await PromptService.getRenderedPrompt(
                             'TECHNICAL_TRANSLATOR',
@@ -276,7 +291,7 @@ export class IngestService {
                     embeddingShadow = await generateEmbedding(translatedText, tenantId, correlationId);
                 }
 
-                return { chunkText, translatedText, embeddingGemini, embeddingBGE, embeddingShadow };
+                return { ...chunkData, translatedText, embeddingGemini, embeddingBGE, embeddingShadow };
             });
 
             // Use Promise.allSettled for Resilience
@@ -303,14 +318,17 @@ export class IngestService {
                 const documentChunk = {
                     _id: originalChunkId,
                     tenantId,
-                    industry: "ELEVATORS",
+                    industry: "ELEVATORS" as const,
                     componentType: metadata.type,
                     model: primaryModel,
                     sourceDoc: file.name,
                     version: metadata.version,
                     revisionDate: new Date(),
-                    language: detectedLang,
-                    chunkText: data.chunkText,
+                    language: data.type === 'VISUAL' ? 'es' : detectedLang, // Visuals are generated in Spanish usually
+                    chunkType: data.type,
+                    chunkText: data.text,
+                    visualDescription: data.type === 'VISUAL' ? data.text : undefined,
+                    approxPage: data.page,
                     translatedText: data.translatedText,
                     embedding: data.embeddingGemini,
                     embedding_multilingual: data.embeddingBGE,
@@ -321,11 +339,11 @@ export class IngestService {
                 };
                 await documentChunksCollection.insertOne(DocumentChunkSchema.parse(documentChunk));
 
-                // Insert Shadow Chunk
-                if (data.translatedText && data.embeddingShadow) {
+                // Insert Shadow Chunk (Sólo para TEXT)
+                if (data.type === 'TEXT' && data.translatedText && data.embeddingShadow) {
                     const shadowChunk = {
                         tenantId,
-                        industry: "ELEVATORS",
+                        industry: "ELEVATORS" as const,
                         componentType: metadata.type,
                         model: primaryModel,
                         sourceDoc: file.name,
@@ -334,6 +352,7 @@ export class IngestService {
                         language: 'es',
                         originalLang: detectedLang,
                         chunkText: data.translatedText,
+                        chunkType: 'TEXT' as const,
                         refChunkId: originalChunkId,
                         embedding: data.embeddingShadow,
                         cloudinaryUrl: cloudinaryResult.secureUrl,
@@ -363,7 +382,7 @@ export class IngestService {
             correlationId,
             status: finalStatus as any, // Cast for enum mismatch potential
             details: {
-                chunks_total: chunks.length,
+                chunks_total: allChunksToProcess.length,
                 chunks_success: successCount,
                 chunks_failed: failCount,
                 duration_ms: Date.now() - start,

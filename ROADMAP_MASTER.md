@@ -44,14 +44,13 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.60)
 
-- **Global Progress:** 280% (Phase 59 Implementation - Environments).
+- **Global Progress:** 285% (Phase 52 Implementation - Visual Intelligence).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
-- **Recent Ship:** Environments (Staging / User Sandbox). Aislamiento total de Prompts, Workflows y Knowledge Assets por entorno + mecanismo de promoción a Producción.
+- **Recent Ship:** Visual Intelligence (Gemini Native Multimodal PDF). Comprensión de esquemas técnicos, diagramas y planos directamente desde el RAG. Badges visuales en resultados y navegación por páginas (`approxPage`).
   - **Environment Isolation:** Segregación de datos en DB y filtros en RAG Service.
   - **Promotion Flow:** `EnvironmentService` para publicación atómica de Staging a Producción.
-  - **Switcher UI:** Selector global persistente en el Header.
-  - **Resilience:** Fix de TypeScript para despliegues en Vercel.
-- **Project Status:** **Multi-Environment Ready (v2.80).**
+  - **Visual Intelligence:** Integración multimodal nativa con Gemini 2.0/3 para planos y esquemas.
+- **Project Status:** **Visual Intelligence Ready (v2.85).**
 
 ---
 
@@ -158,13 +157,11 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **More Nodes:** Loop Node, Wait Node, Switch Case Node.
 - [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
 
-#### 👁️ FASE 52: VISUAL INTELLIGENCE (MULTI-MODAL RAG)
-
+#### 👁️ FASE 52: VISUAL INTELLIGENCE (MULTI-MODAL RAG) (COMPLETADO ✅)
 - **Objetivo:** Ingesta y comprensión de diagramas técnicos (Esquemas eléctricos/mecánicos).
-
-- [ ] **Multi-Modal Pipeline:** Soporte para extracción de imágenes en PDFs.
-- [ ] **Vision LLM:** Integración de prompts multimodales (Gemini Pro Vision) para describir diagramas.
-- [ ] **Schema Search:** Capacidad de buscar "Fusible F4" y recibir la imagen del esquema resaltada.
+- [X] **Multi-Modal Pipeline:** Integración nativa con Gemini 2.0/3 para PDFs.
+- [X] **Vision LLM:** Procesamiento de diagramas con descripciones técnicas automáticas.
+- [X] **Schema Navigation:** Identificación de página exacta (`approxPage`) para navegación técnica.
 
 #### 📊 FASE 53: WORKFLOW ANALYTICS
 
