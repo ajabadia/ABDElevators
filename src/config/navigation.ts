@@ -21,7 +21,8 @@ import {
     ShieldCheck,
     Bell,
     UserCircle,
-    BrainCircuit
+    BrainCircuit,
+    ShieldAlert
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -190,6 +191,12 @@ export const menuSections: MenuSection[] = [
                 icon: BrainCircuit,
                 roles: ['SUPER_ADMIN', 'ADMIN'],
                 module: 'RAG'
+            },
+            {
+                name: 'Guardian Console',
+                href: '/admin/permissions',
+                icon: ShieldAlert,
+                roles: ['SUPER_ADMIN', 'ADMIN']
             }
         ]
     },

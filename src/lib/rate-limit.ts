@@ -1,79 +1,76 @@
-import { NextResponse } from 'next/server';
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 /**
- * Basic in-memory rate limiter for serverless environment.
- * Note: Since Next.js Edge/Middleware instances are ephemeral,
- * this provides "soft" rate limiting per instance.
- * For production persistence, use Upstash Redis.
+ * Global Redis Client for Rate Limiting
+ * Uses HTTP-based connection compatible with Vercel Edge Runtime.
  */
+const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL || "https://global.upstash.io",
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || "token",
+});
 
-import { connectDB } from './db';
+// Cache limiters to prevent re-initialization
+const limiters = new Map<string, Ratelimit>();
 
-/**
- * Atomic Rate Limiter using MongoDB (Atomic $inc).
- * Replaces the ephemeral in-memory store with a persistent, cluster-safe solution.
- */
-
-export interface RateLimitOptions {
+export interface RateLimitResult {
+    success: boolean;
     limit: number;
-    windowMs: number;
+    remaining: number;
+    reset: number;
 }
 
-export async function rateLimit(key: string, options: RateLimitOptions) {
-    const now = Date.now();
-    const windowStart = now - (now % options.windowMs); // Floor to nearest window start (Fixed Window)
+/**
+ * Standardized Rate Limits
+ */
+export const LIMITS = {
+    AUTH: { limit: 10, window: "5 m" as const },      // 10 attempts per 5 minutes (Strict for Login/Signup)
+    ADMIN: { limit: 100, window: "1 m" as const },    // 100 req/min (Admin actions)
+    PUBLIC: { limit: 60, window: "1 m" as const },    // 60 req/min (Public endpoints)
+    CORE: { limit: 300, window: "1 m" as const },     // 300 req/min (Authorized App usage)
+};
 
-    // Key structure: rate_limit:IP_WINDOWSTART
-    // This creates a unique key for each window period.
-    const uniqueKey = `${key}_${windowStart}`;
+/**
+ * Check Rate Limit
+ * @param identifier - Unique ID (IP address, User ID, etc.)
+ * @param config - Rate limit configuration { limit, window }
+ * @returns RateLimitResult
+ */
+export async function checkRateLimit(
+    identifier: string,
+    config: { limit: number, window: "1 s" | "10 s" | "1 m" | "5 m" | "1 h" | string } = LIMITS.CORE
+): Promise<RateLimitResult> {
+
+    // Fail Open if Env variables are missing (Dev mode or Misconfiguration)
+    // Checks if URL looks like the default placeholder or is empty
+    const isMisconfigured = !process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL === "https://global.upstash.io";
+
+    if (isMisconfigured) {
+        // Only warn in production to avoid noise in dev if not set up
+        if (process.env.NODE_ENV === 'production') {
+            console.warn("⚠️ Rate Limiting Disabled: UPSTASH_REDIS_REST_URL not configured correctly.");
+        }
+        return { success: true, limit: config.limit, remaining: config.limit, reset: Date.now() };
+    }
+
+    const key = `limit:${config.limit}:${config.window}`;
+
+    if (!limiters.has(key)) {
+        limiters.set(key, new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(config.limit, config.window as any),
+            analytics: true,
+            prefix: "abdelevators:ratelimit",
+        }));
+    }
+
+    const limiter = limiters.get(key)!;
 
     try {
-        const db = await connectDB();
-        const collection = db.collection('rate_limits');
-
-        // Atomic Increment
-        // upsert: true -> If not exists, insert with count: 0 (then $inc to 1)
-        // $setOnInsert -> Sets 'reset' (expireAt) only on creation
-        const result = await collection.findOneAndUpdate(
-            { key: uniqueKey },
-            {
-                $inc: { count: 1 },
-                $setOnInsert: {
-                    reset: new Date(now + options.windowMs), // Used for TTL
-                    createdAt: new Date()
-                }
-            },
-            {
-                upsert: true,
-                returnDocument: 'after'
-            }
-        );
-
-        if (!result) {
-            // Should not happen with upsert: true
-            throw new Error('Rate limit update failed');
-        }
-
-        const currentCount = result.count;
-        const resetTime = result.reset ? result.reset.getTime() : (now + options.windowMs);
-
-        const remaining = Math.max(0, options.limit - currentCount);
-
-        return {
-            success: currentCount <= options.limit,
-            limit: options.limit,
-            remaining: remaining,
-            reset: resetTime
-        };
-
+        const { success, limit, remaining, reset } = await limiter.limit(identifier);
+        return { success, limit, remaining, reset };
     } catch (error) {
-        console.error('Rate Limit Error (Fallback to Allow):', error);
-        // Fail open strategy: If DB fails, allow traffic (don't block legitimate users because of infra issues)
-        return {
-            success: true,
-            limit: options.limit,
-            remaining: 1,
-            reset: now + options.windowMs
-        };
+        console.error("Rate Limit Error (Fail Open):", error);
+        return { success: true, limit: config.limit, remaining: config.limit, reset: Date.now() };
     }
 }

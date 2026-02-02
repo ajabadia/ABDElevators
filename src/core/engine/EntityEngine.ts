@@ -102,7 +102,9 @@ export class EntityEngine {
 
         let rendered = entity.prompts[promptType] as string;
         for (const [key, value] of Object.entries(variables)) {
-            rendered = rendered.replace(new RegExp(`{{${key}}}`, 'g'), value);
+            // SECURITY: Sanitize key to prevent regex mutation since it comes from dynamic input
+            const safeKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            rendered = rendered.replace(new RegExp(`{{${safeKey}}}`, 'g'), value);
         }
         return rendered;
     }

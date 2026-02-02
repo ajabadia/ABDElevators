@@ -378,6 +378,9 @@ export const UserSchema = z.object({
     // Notificaciones (Fase 23.5)
     notificationPreferences: z.array(UserNotificationPreferenceSchema).optional(),
 
+    // Guardian V2 (Fase 58)
+    permissionGroups: z.array(z.string()).default([]), // IDs de PermissionGroup
+
     isActive: z.boolean().default(true),
     createdAt: z.date(),
     updatedAt: z.date(),
@@ -795,9 +798,97 @@ export const SystemEmailTemplateSchema = z.object({
 });
 
 /**
- * Historial de Auditoría: Plantillas del Sistema
- * Guarda una copia de CADA versión que ha existido.
+ * 🛡️ FASE 58: Guardian V2 - Schemas
  */
+
+export const PermissionActionSchema = z.enum([
+    'read', 'write', 'delete', 'approve', 'reject', 'export', 'impersonate', 'manage'
+]);
+
+export const PermissionResourceSchema = z.enum([
+    'knowledge-asset', 'workflow', 'user', 'settings', 'billing', 'reports', 'developer-tools'
+]);
+
+/**
+ * Granular Permission Policy
+ * Defines a specific rule: "Allow/Deny [Action] on [Resource] with [Conditions]"
+ */
+export const PermissionPolicySchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+
+    effect: z.enum(['ALLOW', 'DENY']).default('ALLOW'),
+    resources: z.array(z.string()), // ['workflow:*', 'settings:billing'] (Glob patterns)
+    actions: z.array(z.string()), // ['read', 'write']
+
+    // ABAC Conditions
+    conditions: z.object({
+        ipRange: z.array(z.string()).optional(), // CIDR blocks
+        timeWindow: z.object({
+            start: z.string(), // "09:00"
+            end: z.string(),   // "17:00"
+            days: z.array(z.number()).optional() // [1,2,3,4,5] (Mon-Fri)
+        }).optional(),
+        attributes: z.record(z.string(), z.any()).optional() // { "department": "HR" }
+    }).optional(),
+
+    isActive: z.boolean().default(true),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+/**
+ * Permission Group (Hierarchical)
+ * Groups contain Users and have attached Policies.
+ */
+export const PermissionGroupSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    name: z.string(),
+    slug: z.string(), // normalized name
+    description: z.string().optional(),
+
+    parentId: z.string().nullable().optional(), // For hierarchy
+    policies: z.array(z.string()), // Array of Policy IDs
+
+    // Virtual field for UI (computed)
+    memberCount: z.number().default(0).optional(),
+
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+
+/**
+ * Access Evaluation Log (Audit)
+ * Records every "Guardian.evaluate()" outcome.
+ */
+export const AccessLogSchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    userId: z.string(),
+    resource: z.string(),
+    action: z.string(),
+
+    decision: z.enum(['ALLOW', 'DENY']),
+    reason: z.string(), // "Matched policy X", "Implicit deny", "IP restriction"
+
+    policyId: z.string().optional(), // Which policy triggered the decision
+
+    context: z.object({
+        ip: z.string().optional(),
+        userAgent: z.string().optional(),
+        timestamp: z.date()
+    }),
+
+    createdAt: z.date().default(() => new Date()),
+});
+
+export type PermissionPolicy = z.infer<typeof PermissionPolicySchema>;
+export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
+export type AccessLog = z.infer<typeof AccessLogSchema>;
+
 export const SystemEmailTemplateHistorySchema = z.object({
     _id: z.any().optional(),
     originalTemplateId: z.any(), // Link al documento padre en 'system_email_templates'

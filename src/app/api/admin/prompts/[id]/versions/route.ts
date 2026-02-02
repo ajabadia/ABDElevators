@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
 import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
 /**
@@ -51,9 +52,8 @@ export async function POST(
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        // FASE 58: Enforce Guardian V2 ABAC
+        await enforcePermission('developer-tools:prompts', 'manage');
 
         const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
         const tenantId = (session.user as any).tenantId;
