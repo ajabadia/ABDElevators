@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
         const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
         const skip = parseInt(searchParams.get('skip') || '0');
         const language = searchParams.get('language');
+        const environment = searchParams.get('environment') || 'PRODUCTION';
 
         const db = await connectDB();
         const collection = db.collection('document_chunks');
@@ -34,11 +35,14 @@ export async function GET(req: NextRequest) {
 
         if (searchType === 'semantic' && query) {
             const { hybridSearch } = await import('@/lib/rag-service');
-            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlationId, limit);
+            // hybridSearch already takes environment or filters by tenant (we should update it if needed)
+            // For now, RAG service should be environment-aware.
+            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlationId, limit, environment);
             total = chunks.length;
         } else {
             // Build filter for traditional search (Regex)
             const filter: any = {};
+            filter.environment = environment;
             if (query) {
                 filter.$or = [
                     { chunkText: { $regex: query, $options: 'i' } },

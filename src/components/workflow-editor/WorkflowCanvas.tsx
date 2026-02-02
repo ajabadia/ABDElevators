@@ -25,6 +25,9 @@ import { ConditionNode } from './CustomNodes/ConditionNode';
 import { Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+import { useEnvironmentStore } from '@/store/environment-store';
+import { useEffect } from 'react';
+
 const nodeTypes = {
     trigger: TriggerNode,
     action: ActionNode,
@@ -39,6 +42,31 @@ const WorkflowCanvasContent = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
     const { toast } = useToast();
+    const { environment } = useEnvironmentStore();
+
+    // Load workflow on environment change
+    useEffect(() => {
+        const fetchWorkflow = async () => {
+            try {
+                // For MVP, we fetch the first one or a hardcoded one for this demo view
+                const res = await fetch(`/api/admin/workflows?environment=${environment}`);
+                const data = await res.json();
+                if (data.success && data.items?.length > 0) {
+                    const latest = data.items[0];
+                    if (latest.visual) {
+                        setNodes(latest.visual.nodes || []);
+                        setEdges(latest.visual.edges || []);
+                    }
+                } else {
+                    setNodes([]);
+                    setEdges([]);
+                }
+            } catch (err) {
+                console.error("Error loading workflow:", err);
+            }
+        };
+        fetchWorkflow();
+    }, [environment, setNodes, setEdges]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -96,7 +124,8 @@ const WorkflowCanvasContent = () => {
                 body: JSON.stringify({
                     name: "Elevator Incident Flow", // Hardcoded for Demo
                     nodes: flow.nodes,
-                    edges: flow.edges
+                    edges: flow.edges,
+                    environment
                 }),
             });
 

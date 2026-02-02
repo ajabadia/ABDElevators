@@ -51,11 +51,15 @@ export async function POST(req: NextRequest) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
         }
 
+        // Environment detection: priority header > body > PRODUCTION
+        const environment = req.headers.get('x-environment') || (formData.get('environment') as string) || 'PRODUCTION';
+
         // DELEGATE TO SERVICE
         const result = await IngestService.processDocument({
             file,
             metadata,
             tenantId,
+            environment,
             userEmail,
             ip,
             userAgent,

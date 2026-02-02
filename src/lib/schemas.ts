@@ -6,6 +6,9 @@ import { z } from 'zod';
 export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
 export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
+export const AppEnvironmentEnum = z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']);
+export type AppEnvironment = z.infer<typeof AppEnvironmentEnum>;
+
 /**
  * Esquema para fragmentos de documentos (RAG Corpus)
  * Regla de Oro #2: Validación Zod ANTES del procesamiento.
@@ -38,6 +41,7 @@ export const DocumentChunkSchema = z.object({
     createdAt: z.date().default(() => new Date()),
     deletedAt: z.date().optional(),
     status: z.enum(['vigente', 'obsoleto', 'borrador']).optional(),
+    environment: AppEnvironmentEnum.default('PRODUCTION'),
 });
 
 export const TaxonomyValueSchema = z.object({
@@ -173,6 +177,7 @@ export const WorkflowDefinitionSchema = z.object({
     initial_state: z.string(),
     is_default: z.boolean().default(false),
     active: z.boolean().default(true),
+    environment: AppEnvironmentEnum.default('PRODUCTION'),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
@@ -1105,6 +1110,7 @@ export const PromptVersionSchema = z.object({
     correlationId: z.string().optional(), // Trazabilidad bancaria
     ip: z.string().optional(),
     userAgent: z.string().optional(),
+    environment: AppEnvironmentEnum.default('PRODUCTION'),
     createdAt: z.date().default(() => new Date()),
 });
 
@@ -1114,6 +1120,7 @@ export const PromptSchema = z.object({
     key: z.string(),
     name: z.string(),
     description: z.string().optional(),
+    environment: AppEnvironmentEnum.default('PRODUCTION'),
     category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST']).default('GENERAL'),
     model: z.string().default('gemini-1.5-flash'), // Permite elegir el modelo por cada prompt
     template: z.string(),

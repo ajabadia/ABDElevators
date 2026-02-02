@@ -21,6 +21,7 @@ export interface IngestOptions {
     };
     tenantId: string;
     userEmail: string;
+    environment?: string;
     ip?: string;
     userAgent?: string;
     correlationId?: string;
@@ -42,7 +43,7 @@ export class IngestService {
      * Processes a document (PDF) for RAG ingestion: deduplication, upload, extraction, chunking, embedding, and indexing.
      */
     static async processDocument(options: IngestOptions): Promise<IngestResult> {
-        const { file, metadata, tenantId, userEmail, ip = '0.0.0.0', userAgent = 'System' } = options;
+        const { file, metadata, tenantId, userEmail, environment = 'PRODUCTION', ip = '0.0.0.0', userAgent = 'System' } = options;
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
 
@@ -115,6 +116,7 @@ export class IngestService {
                 cloudinaryPublicId: existingDoc.cloudinaryPublicId,
                 fileMd5: fileHash,
                 totalChunks: existingDoc.totalChunks,
+                environment,
                 createdAt: new Date(),
             };
 
@@ -133,6 +135,7 @@ export class IngestService {
                     tenantId,
                     sourceDoc: file.name,
                     version: metadata.version,
+                    environment,
                     createdAt: new Date()
                 }));
                 // Remove _id for bulk insert
@@ -217,6 +220,7 @@ export class IngestService {
             cloudinaryPublicId: cloudinaryResult.publicId,
             fileMd5: fileHash,
             totalChunks: chunks.length,
+            environment,
             createdAt: new Date(),
         };
 
@@ -312,6 +316,7 @@ export class IngestService {
                     embedding_multilingual: data.embeddingBGE,
                     cloudinaryUrl: cloudinaryResult.secureUrl,
                     isShadow: false,
+                    environment,
                     createdAt: new Date(),
                 };
                 await documentChunksCollection.insertOne(DocumentChunkSchema.parse(documentChunk));
@@ -333,6 +338,7 @@ export class IngestService {
                         embedding: data.embeddingShadow,
                         cloudinaryUrl: cloudinaryResult.secureUrl,
                         isShadow: true,
+                        environment,
                         createdAt: new Date(),
                     };
                     await documentChunksCollection.insertOne(DocumentChunkSchema.parse(shadowChunk));

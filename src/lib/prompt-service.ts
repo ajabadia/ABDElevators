@@ -11,10 +11,10 @@ export class PromptService {
     /**
      * Obtiene un prompt activo por su key
      */
-    static async getPrompt(key: string, tenantId: string): Promise<Prompt> {
+    static async getPrompt(key: string, tenantId: string, environment: string = 'PRODUCTION'): Promise<Prompt> {
         const collection = await getTenantCollection('prompts');
 
-        const prompt = await collection.findOne({ key, tenantId, active: true });
+        const prompt = await collection.findOne({ key, tenantId, active: true, environment });
 
         if (!prompt) {
             console.error(`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`);
@@ -30,9 +30,10 @@ export class PromptService {
     static async getRenderedPrompt(
         key: string,
         variables: Record<string, any>,
-        tenantId: string
+        tenantId: string,
+        environment: string = 'PRODUCTION'
     ): Promise<{ text: string, model: string }> {
-        const prompt = await this.getPrompt(key, tenantId);
+        const prompt = await this.getPrompt(key, tenantId, environment);
 
         // Validar que todas las variables requeridas estén presentes
         const missingVars = prompt.variables
@@ -209,6 +210,7 @@ export class PromptService {
             correlationId: auditMetadata?.correlationId,
             ip: auditMetadata?.ip,
             userAgent: auditMetadata?.userAgent,
+            environment: prompt.environment || 'PRODUCTION',
             createdAt: new Date()
         };
 
@@ -279,6 +281,7 @@ export class PromptService {
             variables: prompt.variables,
             changedBy,
             changeReason: `Rollback a versión ${targetVersion}`,
+            environment: prompt.environment || 'PRODUCTION',
             createdAt: new Date()
         };
 
@@ -311,13 +314,14 @@ export class PromptService {
     /**
      * Lista todos los prompts (por tenant o global para SuperAdmins)
      */
-    static async listPrompts(tenantId?: string | null, activeOnly: boolean = true): Promise<Prompt[]> {
+    static async listPrompts(tenantId?: string | null, activeOnly: boolean = true, environment: string = 'PRODUCTION'): Promise<Prompt[]> {
         const collection = await getTenantCollection('prompts');
         let filter: any = {};
         if (activeOnly) {
             filter.$or = [{ active: true }, { active: { $exists: false } }];
         }
         if (tenantId) filter.tenantId = tenantId;
+        filter.environment = environment;
 
         const prompts = await collection.find(filter, { sort: { tenantId: 1, category: 1, name: 1 } });
 

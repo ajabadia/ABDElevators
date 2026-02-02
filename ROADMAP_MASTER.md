@@ -44,13 +44,14 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.60)
 
-- **Global Progress:** 275% (Phase 58 Implementation - Enterprise Governance).
+- **Global Progress:** 280% (Phase 59 Implementation - Environments).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
-- **Recent Ship:** Guardian V2 (Enterprise Governance). Implementación del motor ABAC, jerarquía de grupos y consola de administración de permisos.
-  - **ABAC Engine:** Motor de evaluación granular.
-  - **Guardian Console:** Matrix, Groups, Simulator & Audit Logs (Standardized UI).
-  - **Enforcement:** `useGuardian` hook y `enforcePermission` server-side check.
-- **Project Status:** **Enterprise Security Ready (v2.60).**
+- **Recent Ship:** Environments (Staging / User Sandbox). Aislamiento total de Prompts, Workflows y Knowledge Assets por entorno + mecanismo de promoción a Producción.
+  - **Environment Isolation:** Segregación de datos en DB y filtros en RAG Service.
+  - **Promotion Flow:** `EnvironmentService` para publicación atómica de Staging a Producción.
+  - **Switcher UI:** Selector global persistente en el Header.
+  - **Resilience:** Fix de TypeScript para despliegues en Vercel.
+- **Project Status:** **Multi-Environment Ready (v2.80).**
 
 ---
 
@@ -215,13 +216,15 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **JIT Access & Dashboard:** Sistema "Break Glass" + Centro de Escalaciones (`/admin/permissions/escalations`).
 - [X] **Permission Simulator:** Herramienta "Ver como usuario" para depuración de reglas (`/admin/permissions/simulate`).
 
-#### 🎨 FASE 59: UX/DX POLISH & GLOBAL TOOLS
+#### 🌐 FASE 59: ENVIRONMENTS (STAGING / USER SANDBOX) (COMPLETADO ✅)
 
-- **Objetivo:** Mejoras finales de usabilidad y experiencia de desarrollador (Ref: `documentación/13`/`00.md`).
+- **Objetivo:** Implementar aislamiento de datos y lógica de promoción entre entornos (Ref: Phase 59 Plan).
 
-- [ ] **Global Command Center:** Búsqueda tipo "Spotlight" (Cmd+K) integrada globalmente.
-- [ ] **Onboarding "War Room":** Modos de visualización adaptativos (Denso vs Zen).
-- [ ] **Strict Types:** Endurecimiento general de TypeScript y eliminación de `any`.
+- [X] **Core Isolation:** Implementar campo `environment` en Prompts, Workflows y Documentos.
+- [X] **Environment Switcher UI:** Selector global persistente en el Header (`EnvironmentSwitcher.tsx`).
+- [X] **Promotion Logic:** Servicio para promover configuraciones de Staging -> Producción.
+- [X] **RAG Filtering:** Búsqueda vectorial filtrada por el entorno activo en `rag-service.ts`.
+- [X] **Vercel Build Fix:** Optimización de tipos y null-checks para despliegues estables.
 
 #### 📨 FASE 60: ADVANCED INVITATION SYSTEM
 - **Objetivo:** Escalabilidad en onboarding y gestión de accesos temporales (Ref: User Request).

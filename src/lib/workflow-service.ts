@@ -12,22 +12,28 @@ export class WorkflowService {
     /**
      * Crea o actualiza una definición de workflow.
      */
+    /**
+     * Crea o actualiza una definición de workflow.
+     */
     static async createOrUpdateDefinition(definition: Partial<WorkflowDefinition>, correlationId: string) {
         const validated = WorkflowDefinitionSchema.parse(definition);
         const collection = await getTenantCollection('workflow_definitions');
         const tenantId = collection.tenantId;
+        const environment = validated.environment;
 
         // Solo un workflow por tipo de entidad puede ser default
         if (validated.is_default) {
             await collection.updateMany(
-                { entityType: validated.entityType },
+                { tenantId, entityType: validated.entityType, environment },
                 { $set: { is_default: false } }
             );
         }
 
         const query = {
+            tenantId,
             entityType: validated.entityType,
-            name: validated.name
+            name: validated.name,
+            environment
         };
 
         const result = await collection.updateOne(
@@ -40,8 +46,8 @@ export class WorkflowService {
             level: 'INFO',
             source: 'WORKFLOW_SERVICE',
             action: 'UPSERT_DEFINITION',
-            message: `Workflow '${validated.name}' actualizado para tenant ${tenantId}`, correlationId,
-            details: { name: validated.name, entity_type: validated.entityType }
+            message: `Workflow '${validated.name}' actualizado para tenant ${tenantId} en ${environment}`, correlationId,
+            details: { name: validated.name, entity_type: validated.entityType, environment }
         });
 
         return result.upsertedId || result.matchedCount;
@@ -50,17 +56,17 @@ export class WorkflowService {
     /**
      * Lista todas las definiciones para un tenant y tipo.
      */
-    static async listDefinitions(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
+    static async listDefinitions(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION') {
         const collection = await getTenantCollection('workflow_definitions');
-        return await collection.find({ entityType }, { sort: { updatedAt: -1 } }) as WorkflowDefinition[];
+        return await collection.find({ tenantId, entityType, environment }, { sort: { updatedAt: -1 } }) as WorkflowDefinition[];
     }
 
     /**
      * Obtiene el workflow activo para una entidad.
      */
-    static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
+    static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION') {
         const collection = await getTenantCollection('workflow_definitions');
-        return await collection.findOne({ entityType, active: true }) as WorkflowDefinition | null;
+        return await collection.findOne({ tenantId, entityType, active: true, environment }) as WorkflowDefinition | null;
     }
 
     /**
@@ -74,6 +80,7 @@ export class WorkflowService {
             entityType: 'ENTITY',
             is_default: true,
             active: true,
+            environment: 'PRODUCTION', // Default for seeding
             initial_state: 'ingresado',
             states: [
                 { id: 'ingresado', label: 'Ingresado', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECNICO', 'INGENIERIA'] },

@@ -14,6 +14,8 @@ import { useFilterState } from '@/hooks/useFilterState';
 import { useApiExport } from '@/hooks/useApiExport';
 import { useToast } from '@/hooks/use-toast';
 
+import { useEnvironmentStore } from '@/store/environment-store';
+
 interface Chunk {
     _id: string;
     textChunk: string;
@@ -21,6 +23,7 @@ interface Chunk {
     model: string;
     componentType: string;
     language: string;
+    environment: string;
     isShadow?: boolean;
     originalLang?: string;
     translatedText?: string;
@@ -28,6 +31,7 @@ interface Chunk {
 }
 
 export const KnowledgeExplorer: React.FC = () => {
+    const { environment } = useEnvironmentStore();
     // 1. Gestión de Estado de Filtros Centralizada
     const {
         filters,
@@ -65,6 +69,7 @@ export const KnowledgeExplorer: React.FC = () => {
         debounceMs: 500,
         filters: {
             ...filters,
+            environment,
             query: simulationMode ? simulatorSearch : filters.query,
             searchType: simulationMode ? 'semantic' : 'regex',
             language: filters.language === 'all' ? undefined : filters.language,

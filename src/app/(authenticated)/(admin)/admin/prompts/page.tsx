@@ -13,7 +13,8 @@ import {
     ChevronRight,
     Plus,
     Sparkles,
-    Trash2
+    Trash2,
+    Rocket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
@@ -22,9 +23,11 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PromptEditor } from '@/components/admin/PromptEditor';
 import { PromptGlobalHistory } from '@/components/admin/PromptGlobalHistory';
+import { Badge } from '@/components/ui/badge';
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
+import { useEnvironmentStore } from '@/store/environment-store';
 
 // Hooks y componentes genéricos
 import { useApiList } from '@/hooks/useApiList';
@@ -42,6 +45,7 @@ export default function AdminPromptsPage() {
     const [tenantFilter, setTenantFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory, setShowGlobalHistory] = useState(false);
+    const { environment } = useEnvironmentStore();
 
     // 1. Gestión de datos con hook genérico
     const {
@@ -50,6 +54,8 @@ export default function AdminPromptsPage() {
         refresh: fetchPrompts
     } = useApiList<any>({
         endpoint: '/api/admin/prompts',
+        filters: { environment }, // useApiList will append this to the URL automatically
+        autoFetch: true,
         dataKey: 'prompts',
         onSuccess: (data) => {
             if (data && data.length > 0) {
@@ -81,6 +87,25 @@ export default function AdminPromptsPage() {
         toast({ title: "Guardado", description: "El prompt se ha actualizado correctamente." });
     };
 
+    const handlePromote = async () => {
+        if (!modal.data) return;
+        try {
+            const res = await fetch(`/api/admin/environments/promote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'PROMPT',
+                    id: (modal.data as any)._id
+                })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message);
+            toast({ title: "Promovido", description: "El prompt ha sido promovido a Producción." });
+        } catch (err: any) {
+            toast({ title: "Error", description: err.message, variant: "destructive" });
+        }
+    };
+
     return (
         <PageContainer className="h-full pb-10">
             {/* Header */}
@@ -97,6 +122,15 @@ export default function AdminPromptsPage() {
                         >
                             <History className="w-4 h-4 mr-2" /> Historial Global
                         </Button>
+                        {environment === 'STAGING' && modal.isOpen && modal.data && (
+                            <Button
+                                onClick={handlePromote}
+                                variant="outline"
+                                className="rounded-xl border-amber-200 bg-amber-50 dark:bg-amber-900/10 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/20"
+                            >
+                                <Rocket className="w-4 h-4 mr-2" /> Promover a Producción
+                            </Button>
+                        )}
                         <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
                             <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
                         </Button>
@@ -193,6 +227,14 @@ export default function AdminPromptsPage() {
                                                                 INACTIVO
                                                             </span>
                                                         )}
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[8px] h-4 py-0",
+                                                            environment === 'PRODUCTION' ? "text-emerald-500 border-emerald-500/20" :
+                                                                environment === 'STAGING' ? "text-amber-500 border-amber-500/20" :
+                                                                    "text-purple-500 border-purple-500/20"
+                                                        )}>
+                                                            {environment}
+                                                        </Badge>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <p className={cn("text-[10px] uppercase font-bold tracking-tighter opacity-50", modal.data === p && modal.isOpen ? "text-white" : "text-slate-400 font-mono")}>

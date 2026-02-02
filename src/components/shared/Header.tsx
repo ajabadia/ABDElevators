@@ -9,6 +9,7 @@ import { UserNav } from './UserNav';
 import { useSession } from 'next-auth/react';
 import { useBranding } from '@/context/BrandingContext';
 import { DynamicBreadcrumb } from './DynamicBreadcrumb';
+import { EnvironmentSwitcher } from './EnvironmentSwitcher';
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -85,6 +86,7 @@ export function Header() {
                 <div className="w-full max-w-sm hidden lg:block mr-2">
                     <CommandMenu />
                 </div>
+                <EnvironmentSwitcher />
                 <ThemeToggle />
                 <NotificationBell />
                 <div className="h-6 w-px bg-border mx-1"></div>

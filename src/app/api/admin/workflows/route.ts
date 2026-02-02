@@ -1,60 +1,76 @@
-
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth'; // Assuming auth is set up
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
+import { WorkflowService } from '@/lib/workflow-service';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(1),
     nodes: z.array(z.any()), // React Flow nodes
     edges: z.array(z.any()), // React Flow edges
-    active: z.boolean().default(true)
+    active: z.boolean().default(true),
+    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).optional()
 });
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
     try {
         const session = await auth();
-        if (!session?.user?.email) { // Simple auth check
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!session?.user) {
+            throw new AppError('UNAUTHORIZED', 401, 'No session');
+        }
+
+        const { searchParams } = new URL(req.url);
+        const environment = searchParams.get('environment') || 'PRODUCTION';
+        const tenantId = (session.user as any).tenantId;
+
+        const items = await WorkflowService.listDefinitions(tenantId, 'ENTITY', environment);
+        return NextResponse.json({ success: true, items });
+    } catch (error) {
+        return handleApiError(error, 'API_WORKFLOWS_GET', 'system');
+    }
+}
+
+export async function POST(req: NextRequest) {
+    try {
+        const session = await auth();
+        if (!session?.user?.email) {
+            throw new AppError('UNAUTHORIZED', 401, 'No authorized session');
         }
 
         const body = await req.json();
+        const environment = body.environment || 'PRODUCTION';
+
         const validated = WorkflowSchema.parse(body);
+        const tenantId = (session.user as any).tenantId;
 
         const db = await connectDB();
         const workflows = db.collection('workflow_definitions');
-
-        // Simple Upsert logic for MVP: if ID provided, update; else insert
-        // React Flow doesn't inherently provide a "Workflow ID", we'd need to generate one or pass it
-        // For this demo, we'll treat it as "Create New" or "Update if exists by Name" (simplified)
 
         const visibleGraph = {
             nodes: validated.nodes,
             edges: validated.edges
         };
 
-        // Validate and Compile Logic
-        // We catch compilation errors to prevent saving invalid graphs as "active"
         let executableLogic: Partial<import('@/types/workflow').AIWorkflow> | null = null;
         let compilationError: string | null = null;
 
         try {
             const { compileGraphToLogic } = await import('@/lib/workflow-compiler');
-            executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, session.user.email); // Using email as tenant for now
+            executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId);
         } catch (e: any) {
             console.warn('Workflow Compilation Failed:', e);
             compilationError = e.message;
-            // We still save the visual part so user doesn't lose work, but mark as inactive? 
-            // For MVP, we proceed but log error.
         }
 
         const result = await workflows.updateOne(
-            { name: validated.name },
+            { name: validated.name, tenantId, environment },
             {
                 $set: {
                     ...validated,
+                    tenantId,
+                    environment,
                     visual: visibleGraph,
                     executable: executableLogic,
                     compilationError: compilationError,
@@ -77,10 +93,6 @@ export async function POST(req: Request) {
         });
 
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Validation Error', details: error.issues }, { status: 400 });
-        }
-        console.error('Workflow Save Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_WORKFLOWS_POST', 'system');
     }
 }

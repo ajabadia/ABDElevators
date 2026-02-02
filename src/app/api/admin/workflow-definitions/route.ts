@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
+        const environment = searchParams.get('environment') || 'PRODUCTION';
         const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
         let entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY';
         if (rawType === 'PEDIDO') entityType = 'ENTITY';
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
         else if (rawType === 'USUARIO') entityType = 'USER';
         else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
-        const definitions = await WorkflowService.listDefinitions(session.user.tenantId, entityType);
+        const definitions = await WorkflowService.listDefinitions(session.user.tenantId, entityType, environment);
         return NextResponse.json({ definitions });
 
     } catch (error) {

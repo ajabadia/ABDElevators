@@ -24,9 +24,12 @@ export async function GET(req: NextRequest) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
 
+        const { searchParams } = new URL(req.url);
+        const environment = searchParams.get('environment') || 'PRODUCTION';
+
         // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
         // False = incluir inactivos (para que los admins puedan verlos y reactivarlos)
-        const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId, false);
+        const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId, false, environment);
 
         // Enriquecer con info del tenant (solo si es SuperAdmin para que sepa de quién es cada uno)
         if (isSuperAdmin) {
@@ -90,7 +93,8 @@ export async function POST(req: NextRequest) {
             createdBy: session.user.email || undefined,
             updatedBy: session.user.email || undefined,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            environment: body.environment || 'PRODUCTION'
         };
 
         const validated = PromptSchema.parse(promptData);
@@ -98,10 +102,14 @@ export async function POST(req: NextRequest) {
         const { getTenantCollection } = await import('@/lib/db-tenant');
         const collection = await getTenantCollection<any>('prompts');
 
-        // Check duplication by key
-        const existing = await collection.findOne({ key: validated.key, tenantId });
+        // Check duplication by key AND environment
+        const existing = await collection.findOne({
+            key: validated.key,
+            tenantId,
+            environment: validated.environment
+        });
         if (existing) {
-            throw new AppError('CONFLICT', 409, `Prompt key '${validated.key}' already exists`);
+            throw new AppError('CONFLICT', 409, `Prompt key '${validated.key}' already exists in ${validated.environment}`);
         }
 
         await collection.insertOne(validated);

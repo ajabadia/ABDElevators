@@ -50,7 +50,8 @@ export async function performTechnicalSearch(
     tenantId: string,
     correlationId: string,
     limit = 5,
-    industry: string = 'ELEVATORS'
+    industry: string = 'ELEVATORS',
+    environment: string = 'PRODUCTION'
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.technical_search', {
         attributes: {
@@ -58,7 +59,8 @@ export async function performTechnicalSearch(
             'correlation.id': correlationId,
             'rag.query': query,
             'rag.limit': limit,
-            'rag.strategy': 'MMR'
+            'rag.strategy': 'MMR',
+            'rag.environment': environment
         }
     }, async (span) => {
         try {
@@ -80,12 +82,13 @@ export async function performTechnicalSearch(
                 embeddingKey: "embedding",
             });
 
-            // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
+            // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado + Entorno
             const filter = {
                 $and: [
                     { status: { $ne: "obsoleto" } },
                     { deletedAt: { $exists: false } },
                     { industry: industry },
+                    { environment: environment },
                     {
                         $or: [
                             { tenantId: "global" },
@@ -189,14 +192,16 @@ export async function performMultilingualSearch(
     query: string,
     tenantId: string,
     correlationId: string,
-    limit = 5
+    limit = 5,
+    environment: string = 'PRODUCTION'
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.multilingual_search', {
         attributes: {
             'tenant.id': tenantId,
             'correlation.id': correlationId,
             'rag.query': query,
-            'rag.strategy': 'BGE-M3'
+            'rag.strategy': 'BGE-M3',
+            'rag.environment': environment
         }
     }, async (span) => {
         const inicio = Date.now();
@@ -217,7 +222,10 @@ export async function performMultilingualSearch(
                         "numCandidates": limit * 20,
                         "limit": limit,
                         "filter": {
-                            "tenantId": { "$in": ["global", tenantId] }
+                            "$and": [
+                                { "tenantId": { "$in": ["global", tenantId] } },
+                                { "environment": environment }
+                            ]
                         }
                     }
                 },
@@ -290,14 +298,16 @@ export async function pureKeywordSearch(
     tenantId: string,
     correlationId: string,
     limit = 5,
-    industry: string = 'ELEVATORS'
+    industry: string = 'ELEVATORS',
+    environment: string = 'PRODUCTION'
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.keyword_search', {
         attributes: {
             'tenant.id': tenantId,
             'correlation.id': correlationId,
             'rag.query': query,
-            'rag.strategy': 'BM25'
+            'rag.strategy': 'BM25',
+            'rag.environment': environment
         }
     }, async (span) => {
         const inicio = Date.now();
@@ -321,6 +331,7 @@ export async function pureKeywordSearch(
                         status: { $ne: "obsoleto" },
                         deletedAt: { $exists: false },
                         industry: industry,
+                        environment: environment,
                         $or: [
                             { tenantId: "global" },
                             { tenantId: tenantId }
@@ -392,22 +403,24 @@ export async function hybridSearch(
     query: string,
     tenantId: string,
     correlationId: string,
-    limit = 5
+    limit = 5,
+    environment: string = 'PRODUCTION'
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.hybrid_search', {
         attributes: {
             'tenant.id': tenantId,
             'correlation.id': correlationId,
             'rag.query': query,
-            'rag.strategy': 'RRF_HYBRID'
+            'rag.strategy': 'RRF_HYBRID',
+            'rag.environment': environment
         }
     }, async (span) => {
         const inicio = Date.now();
         try {
             const [geminiResults, bgeResults, keywordResults] = await Promise.all([
-                performTechnicalSearch(query, tenantId, correlationId, limit * 2),
-                performMultilingualSearch(query, tenantId, correlationId, limit * 2),
-                pureKeywordSearch(query, tenantId, correlationId, limit * 2)
+                performTechnicalSearch(query, tenantId, correlationId, limit * 2, 'ELEVATORS', environment),
+                performMultilingualSearch(query, tenantId, correlationId, limit * 2, environment),
+                pureKeywordSearch(query, tenantId, correlationId, limit * 2, 'ELEVATORS', environment)
             ]);
 
             const map = new Map<string, RagResult & { rankScore: number }>();
@@ -479,17 +492,18 @@ export async function pureVectorSearch(
     query: string,
     tenantId: string,
     correlationId: string,
-    options: { limit?: number; minScore?: number; industry?: string } = {}
+    options: { limit?: number; minScore?: number; industry?: string; environment?: string } = {}
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.pure_vector_search', {
         attributes: {
             'tenant.id': tenantId,
             'correlation.id': correlationId,
             'rag.query': query,
-            'rag.strategy': 'SIMILARITY'
+            'rag.strategy': 'SIMILARITY',
+            'rag.environment': options.environment || 'PRODUCTION'
         }
     }, async (span) => {
-        const { limit = 5, minScore = 0.6 } = options;
+        const { limit = 5, minScore = 0.6, environment = 'PRODUCTION' } = options;
         const inicio = Date.now();
         try {
             PureVectorSearchSchema.parse({ query, correlationId, ...options });
@@ -509,12 +523,13 @@ export async function pureVectorSearch(
                 embeddingKey: "embedding",
             });
 
-            // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado
+            // FILTRO HÍBRIDO: Aislamiento por Tenant + Industria + Estado + Entorno
             const filter = {
                 $and: [
                     { status: { $ne: "obsoleto" } },
                     { deletedAt: { $exists: false } },
                     { industry: options.industry || 'ELEVATORS' },
+                    { environment: environment },
                     {
                         $or: [
                             { tenantId: "global" },
