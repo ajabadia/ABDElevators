@@ -10,7 +10,7 @@ import { AppError } from '@/lib/errors';
  */
 export async function GET(
     req: NextRequest,
-    { params }: { params: { docId: string } }
+    { params }: { params: Promise<{ docId: string }> }
 ) {
     try {
         const session = await auth();
@@ -18,7 +18,7 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const docId = params.docId;
+        const { docId } = await params;
         if (!docId) {
             throw new AppError('VALIDATION_ERROR', 400, 'docId is required');
         }

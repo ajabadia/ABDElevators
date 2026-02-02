@@ -273,6 +273,22 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **Automated Testing**: Integrar tests de accesibilidad (axe-core) en el pipeline de CI/CD.
 - [ ] **Accessibility Statement**: Página pública de declaración de conformidad.
 
+#### 📄 FASE 64: BRANDED INDUSTRIAL REPORTS & CUSTOM TEMPLATES (FUTURO)
+
+- **Objetivo:** Convertir el informe técnico en un producto final de marca blanca listo para el cliente final.
+
+- [ ] **Branding Configuration**: Permitir a cada Tenant subir su logo y colores específicos para el PDF.
+- [ ] **Custom Templates**: Editor de plantillas para añadir disclaimers legales, firmas y metadatos personalizados.
+- [ ] **Automated Delivery**: Configurar envío automático del reporte al finalizar flujos específicos.
+
+#### 🧹 FASE 65: DATA RETENTION & ANALYTICS PURGING (FUTURO)
+
+- **Objetivo:** Optimizar el rendimiento de la base de datos a largo plazo y cumplir con políticas de minimización de datos.
+
+- [ ] **Retention Policies**: Definir periodos de vida para logs de auditoría y analíticas (ej. 90 días).
+- [ ] **Analytics Aggregation**: Comprimir logs detallados en métricas agregadas antes de borrarlos.
+- [ ] **Cold Storage Export**: Opcionalmente mover datos históricos a almacenamiento de bajo coste.
+
 ---
 
 ### 💎 STRATEGIC ENTERPRISE OVERHAUL (VISION 2026+)

@@ -16,11 +16,11 @@ const SearchParamsSchema = z.object({
  */
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = crypto.randomUUID();
     const startTime = Date.now();
-    const workflowId = params.id;
+    const { id: workflowId } = await params;
 
     try {
         const session = await auth();
