@@ -125,11 +125,13 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] **Validation:** Confirmar que `WorkflowEngine` respeta las reglas creadas visualmente.
 
 #### 🎨 FASE 51: ADVANCED WORKFLOW EDITOR (FUTURO)
-- **Objetivo:** UI Polish y expansión de capacidades lógicas.
+- **Objetivo:** UI Polish, Edición, y Seguridad Multi-tenant.
+- [ ] **Load & Edit:** Capacidad de cargar workflows existentes en el Canvas (`GET /api/admin/workflows/[id]`).
+- [ ] **Tenant Isolation:** Revisar rigurosamente que los workflows estén aislados por `tenantId`.
+- [ ] **RBAC Permissions:** Asegurar que solo roles `ADMIN` o `EDITOR` puedan modificar flujos.
 - [ ] **UI Refinement:** Mejorar estética de nodos, minimapas, y controles de zoom.
 - [ ] **More Nodes:** Loop Node, Wait Node, Switch Case Node.
 - [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
-- [ ] **Testing UI:** Panel para ejecutar pruebas manuales desde el editor.
 
 ---
 
