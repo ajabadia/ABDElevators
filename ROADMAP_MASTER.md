@@ -133,6 +133,18 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **More Nodes:** Loop Node, Wait Node, Switch Case Node.
 - [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
 
+#### 👁️ FASE 52: VISUAL INTELLIGENCE (MULTI-MODAL RAG)
+- **Objetivo:** Ingesta y comprensión de diagramas técnicos (Esquemas eléctricos/mecánicos).
+- [ ] **Multi-Modal Pipeline:** Soporte para extracción de imágenes en PDFs.
+- [ ] **Vision LLM:** Integración de prompts multimodales (Gemini Pro Vision) para describir diagramas.
+- [ ] **Schema Search:** Capacidad de buscar "Fusible F4" y recibir la imagen del esquema resaltada.
+
+#### 📊 FASE 53: WORKFLOW ANALYTICS
+- **Objetivo:** Observabilidad y optimización de procesos de negocio.
+- [ ] **Execution Heatmaps:** Visualización térmica sobre el canvas (nodos más visitados).
+- [ ] **Bottleneck Detection:** Identificación de nodos lentos o con alta tasa de fallo.
+- [ ] **Business KPIs:** Dashboard de métricas de negocio derivadas de los flujos (ej. "Tiempo medio de resolución").
+
 ---
 
 ### 💎 STRATEGIC ENTERPRISE OVERHAUL (VISION 2026+)
