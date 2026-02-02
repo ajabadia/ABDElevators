@@ -323,12 +323,17 @@ export const KnowledgeAssetSchema = z.object({
     version: z.string(),
     revisionDate: z.date(),
     language: z.string().default('es'), // Idioma principal detectado
-    status: z.enum(['vigente', 'obsoleto', 'borrador']),
+    status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
+    ingestionStatus: z.enum(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']).default('PENDING'),
+    progress: z.number().min(0).max(100).default(0), // Porcentaje de avance
+    attempts: z.number().default(0), // Reintentos realizados
+    error: z.string().optional(), // Para registrar errores asíncronos
     cloudinaryUrl: z.string().optional(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
-    totalChunks: z.number(),
+    totalChunks: z.number().default(0),
     createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()), // Añadido para seguimiento de cambios
     deletedAt: z.date().optional(),
 });
 
@@ -387,6 +392,7 @@ export const UserSchema = z.object({
 
     // Guardian V2 (Fase 58)
     permissionGroups: z.array(z.string()).default([]), // IDs de PermissionGroup
+    permissionOverrides: z.array(z.string()).default([]), // IDs de PermissionPolicy (excepciones directas)
 
     isActive: z.boolean().default(true),
     createdAt: z.date(),
@@ -435,6 +441,8 @@ export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
     role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']).optional(),
     activeModules: z.array(z.string()).optional(),
     isActive: z.boolean().optional(),
+    permissionGroups: z.array(z.string()).optional(),
+    permissionOverrides: z.array(z.string()).optional(),
 });
 
 /**

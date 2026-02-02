@@ -44,18 +44,29 @@ REM 1. Verificar Redis (Docker)
 docker ps >nul 2>nul
 if %errorlevel% equ 0 (
     echo [OK] Docker detectado.
-    docker inspect -f {{.State.Running}} abd-redis >nul 2>nul
-    if %errorlevel% neq 0 (
-        echo [INFO] Creando contenedor Redis 'abd-redis'...
+    for /f "tokens=*" %%i in ('docker ps -a -q -f name^=abd-redis') do set REDIS_ID=%%i
+    if not defined REDIS_ID (
+        echo [INFO] Creando nuevo contenedor Redis 'abd-redis'...
         docker run -d --name abd-redis -p 6379:6379 redis:alpine >nul
     ) else (
-        echo [INFO] Iniciando contenedor 'abd-redis'...
+        echo [INFO] Asegurando que 'abd-redis' este iniciado...
         docker start abd-redis >nul
     )
     echo [OK] Redis esta activo en el puerto 6379.
 ) else (
     echo [WARN] Docker no esta en ejecucion o no esta instalado.
     echo        Los Async Jobs podrian fallar si no hay un Redis local.
+)
+echo.
+
+REM 2. Limpiar procesos en Puerto 3000 (Next.js)
+netstat -ano | findstr :3000 | findstr LISTENING >nul
+if %errorlevel% equ 0 (
+    echo [INFO] Detectada instancia previa en puerto 3000. Limpiando para evitar conflictos...
+    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3000 ^| findstr LISTENING') do (
+        taskkill /F /PID %%a >nul 2>&1
+    )
+    echo [OK] Puerto 3000 liberado.
 )
 echo.
 

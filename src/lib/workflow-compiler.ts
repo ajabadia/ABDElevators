@@ -26,9 +26,9 @@ export function compileGraphToLogic(
     }
 
     // Default trigger structure based on label
-    // In a real app, the node.data would contain specific config (events, thresholds)
     let trigger: WorkflowTrigger = {
-        type: 'on_entity_change', // Valid type
+        type: 'on_entity_change',
+        nodeId: triggerNode.id, // Tag with node ID
         condition: {
             field: 'riskScore',
             operator: 'gt',
@@ -39,7 +39,6 @@ export function compileGraphToLogic(
     const actions: WorkflowAction[] = [];
 
     // 2. Traversal Helper
-    // We follow the graph from Trigger -> Downstream
     const traverse = (currentNodeId: string) => {
         const outgoingEdges = edges.filter(e => e.source === currentNodeId);
 
@@ -49,29 +48,20 @@ export function compileGraphToLogic(
 
             // HANDLE CONDITION NODES (Refine the Trigger)
             if (targetNode.type === 'condition') {
-                // Parse label like "Score < 50" or "High Risk"
-                // For MVP, we assume the node data has this info.
-                // Here we just mock parsing "If Score < 50"
                 if (targetNode.data.label && typeof targetNode.data.label === 'string') {
                     if (targetNode.data.label.includes('<')) {
                         trigger.condition.operator = 'lt';
-                        trigger.condition.value = 50; // Mock parsing
+                        trigger.condition.value = 50;
                     } else {
                         trigger.condition.operator = 'gt';
-                        trigger.condition.value = 50; // Default
+                        trigger.condition.value = 50;
                     }
                 }
-
-                // Continue traversal from this Condition
-                // Note: Conditions usually have 'true'/'false' outputs. 
-                // We'd need to check edge.sourceHandle to know which path.
-                // MVP: We assume linear "If True" path for simplicity.
                 traverse(targetNode.id);
             }
 
             // HANDLE ACTION NODES
             if (targetNode.type === 'action') {
-                // Map visual label to logical action type
                 let actionType: WorkflowAction['type'] = 'log';
                 let params: any = { message: `Executed ${targetNode.data.label}` };
 
@@ -88,10 +78,10 @@ export function compileGraphToLogic(
 
                 actions.push({
                     type: actionType,
+                    nodeId: targetNode.id, // Tag with node ID
                     params: params
                 });
 
-                // Continue traversal (chaining actions)
                 traverse(targetNode.id);
             }
         });
@@ -106,6 +96,6 @@ export function compileGraphToLogic(
         trigger: trigger,
         actions: actions,
         tenantId: tenantId,
-        id: crypto.randomUUID(), // Temp ID
+        id: crypto.randomUUID(),
     };
 }

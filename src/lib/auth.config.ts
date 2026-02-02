@@ -33,6 +33,8 @@ export const authConfig = {
                 token.activeModules = user.activeModules;
                 token.image = user.image;
                 token.tenantAccess = user.tenantAccess;
+                token.permissionGroups = user.permissionGroups;
+                token.permissionOverrides = user.permissionOverrides;
                 token.lastValidated = Date.now();
             }
 
@@ -59,6 +61,8 @@ export const authConfig = {
                 session.user.activeModules = token.activeModules as string[];
                 session.user.image = token.image as string | null | undefined;
                 session.user.tenantAccess = token.tenantAccess as any;
+                session.user.permissionGroups = token.permissionGroups as string[];
+                session.user.permissionOverrides = token.permissionOverrides as string[];
             }
             return session;
         },

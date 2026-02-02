@@ -2,7 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v2.90** marca la entrada en la "Era de Evolución + Inteligencia Visual", con capacidades de orquestación IA distribuida, búsqueda híbrida potenciada por grafos, aislamiento de entornos y protección de datos mediante desidentificación PII.
+Esta versión **v3.0.0** marca la entrada en la "Era de Evolución + Gobernanza Avanzada", con capacidades de permisos dinámicos (Guardian V2), búsqueda híbrida potenciada por grafos, aislamiento de entornos y optimización de costes mediante caché semántica.
 
 ## 🚀 Inicio Rápido
 
@@ -94,12 +94,15 @@ src/
 ```
 
 ## 📊 Características Clave
+  - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
+  - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
   - ✅ **Hybrid Search Engine**: Fusión de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF para precisión técnica absoluta.
   - ✅ **Semantic Cache (High Performance)**: Reducción de latencia de ~7s a 2ms (99.9% mejora) y ahorro de costes del 100% en consultas repetitivas.
   - ✅ **PII Masking Engine (Privacy First)**: Desidentificación automática de correos, teléfonos y documentos de identidad antes de procesar con LLMs.
   - ✅ **Graph-Enhanced RAG**: Navegación estructural de conocimiento basada en entidades y relaciones técnicas complejas.
   - ✅ **RAG Evaluation Dashboard**: Observabilidad nativa con Juez LLM (Gemini 1.5 Pro) para medir fidelidad y relevancia de respuestas.
   - ✅ **Visual Intelligence (Multi-modal)**: Comprensión nativa de planos, esquemas y diagramas técnicos con Gemini 2.0/3.
+  - ✅ **Async Ingest (High-Scale)**: Procesamiento pesado en segundo plano con BullMQ y seguimiento de progreso en tiempo real con reintentos automáticos.
   - ✅ **Environment Sandboxing**: Aislamiento total entre entornos (Staging / Producción) con flujos de promoción atómicos.
   - ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
   - ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.

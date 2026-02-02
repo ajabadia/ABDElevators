@@ -39,6 +39,9 @@ export async function runQuery(query: string, params: Record<string, any> = {}) 
     }
 }
 
+// Alias for transition/compatibility
+export const runCypher = runQuery;
+
 /**
  * Close the driver (use only on app shutdown if necessary)
  */

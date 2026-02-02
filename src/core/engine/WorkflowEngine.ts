@@ -3,6 +3,7 @@ import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { GovernanceEngine } from './GovernanceEngine';
 import { AIWorkflow, WorkflowAction, WorkflowTrigger } from '@/types/workflow';
+import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
 
 /**
  * WorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
@@ -30,16 +31,30 @@ export class WorkflowEngine {
         correlationId: string
     ) {
         try {
-            // 1. Obtener flujos activos para este tenant y tipo de evento
-            console.log('[DEBUG_ENGINE] processing for tenant:', tenantId);
             const sessionObj = { user: { tenantId } };
-            console.log('[DEBUG_ENGINE] sessionObj:', JSON.stringify(sessionObj));
             const collection = await getTenantCollection('ai_workflows', sessionObj);
             const workflows = await collection.find({ active: true, 'trigger.type': eventType }) as unknown as AIWorkflow[];
 
             for (const wf of workflows) {
-                if (this.evaluateTrigger(wf.trigger, data)) {
-                    await this.executeActions(wf.actions, data, tenantId, correlationId);
+                const startTime = Date.now();
+                const isTriggered = this.evaluateTrigger(wf.trigger, data);
+                const duration = Date.now() - startTime;
+
+                // Analytics: Record Trigger Evaluation
+                if (wf.trigger.nodeId) {
+                    await WorkflowAnalyticsService.recordEvent({
+                        workflowId: wf.id || String((wf as any)._id),
+                        nodeId: wf.trigger.nodeId,
+                        tenantId,
+                        type: 'trigger',
+                        status: isTriggered ? 'SUCCESS' : 'SKIPPED',
+                        durationMs: duration,
+                        correlationId
+                    });
+                }
+
+                if (isTriggered) {
+                    await this.executeActions(wf.id || String((wf as any)._id), wf.actions, data, tenantId, correlationId);
 
                     await logEvento({
                         level: 'INFO',
@@ -71,66 +86,67 @@ export class WorkflowEngine {
         }
     }
 
-    private async executeActions(actions: WorkflowAction[], data: any, tenantId: string, correlationId: string) {
+    private async executeActions(workflowId: string, actions: WorkflowAction[], data: any, tenantId: string, correlationId: string) {
         for (const action of actions) {
-            switch (action.type) {
-                case 'notify':
-                    // Mock: En un sistema real, enviaría a un servicio de notificaciones/Pusher/Email
-                    console.log(`[WorkflowAction] NOTIFICACIÓN: ${action.params.message} `, data);
-                    break;
-                case 'log':
-                    await logEvento({
-                        level: 'WARN',
-                        source: 'AI_AUTOMATION',
-                        action: 'AUTOMATED_ALERT',
-                        message: action.params.message || 'Alerta automatizada detectada',
-                        correlationId,
-                        details: { triggerData: data }
-                    });
-                    break;
-                case 'update_entity':
-                    // Evaluación de Gobierno (Fase KIMI 12)
-                    const gov = GovernanceEngine.getInstance();
-                    const { canExecute } = await gov.evaluateAction(
-                        'WORKFLOW_ENGINE',
-                        action.params.entitySlug || '*',
-                        'update_entity',
-                        tenantId
-                    );
+            const startTime = Date.now();
+            let status: 'SUCCESS' | 'FAILED' = 'SUCCESS';
+            let errorMessage: string | undefined;
 
-                    if (!canExecute) {
-                        await gov.logDecision({
-                            agentId: 'WORKFLOW_ENGINE',
-                            entitySlug: action.params.entitySlug || '*',
-                            actionType: 'update_entity',
-                            decision: action.params,
-                            confidence: 1.0,
-                            status: 'blocked',
-                            tenantId,
-                            correlationId
+            try {
+                switch (action.type) {
+                    case 'notify':
+                        console.log(`[WorkflowAction] NOTIFICACIÓN: ${action.params.message} `, data);
+                        break;
+                    case 'log':
+                        await logEvento({
+                            level: 'WARN',
+                            source: 'AI_AUTOMATION',
+                            action: 'AUTOMATED_ALERT',
+                            message: action.params.message || 'Alerta automatizada detectada',
+                            correlationId,
+                            details: { triggerData: data }
                         });
                         break;
-                    }
+                    case 'update_entity':
+                        const gov = GovernanceEngine.getInstance();
+                        const { canExecute } = await gov.evaluateAction(
+                            'WORKFLOW_ENGINE',
+                            action.params.entitySlug || '*',
+                            'update_entity',
+                            tenantId
+                        );
 
-                    // Ejemplo: Cambiar estado del pedido si el riesgo es alto
-                    const { entitySlug, idField, updates } = action.params;
-                    const id = data[idField];
-                    if (id && entitySlug) {
-                        const coll = await getTenantCollection(entitySlug, { user: { tenantId } });
-                        await coll.updateOne({ _id: id } as any, { $set: updates });
+                        if (!canExecute) {
+                            status = 'FAILED';
+                            errorMessage = 'Blocked by Governance Engine';
+                            break;
+                        }
 
-                        await gov.logDecision({
-                            agentId: 'WORKFLOW_ENGINE',
-                            entitySlug: entitySlug,
-                            actionType: 'update_entity',
-                            decision: updates,
-                            confidence: 1.0,
-                            status: 'executed',
-                            tenantId,
-                            correlationId
-                        });
-                    }
-                    break;
+                        const { entitySlug, idField, updates } = action.params;
+                        const id = data[idField];
+                        if (id && entitySlug) {
+                            const coll = await getTenantCollection(entitySlug, { user: { tenantId } });
+                            await coll.updateOne({ _id: id } as any, { $set: updates });
+                        }
+                        break;
+                }
+            } catch (error: any) {
+                status = 'FAILED';
+                errorMessage = error.message;
+            } finally {
+                // Analytics: Record Action Execution
+                if (action.nodeId) {
+                    await WorkflowAnalyticsService.recordEvent({
+                        workflowId,
+                        nodeId: action.nodeId,
+                        tenantId,
+                        type: 'action',
+                        status,
+                        durationMs: Date.now() - startTime,
+                        correlationId,
+                        error: errorMessage
+                    });
+                }
             }
         }
     }

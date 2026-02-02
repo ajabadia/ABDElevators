@@ -16,6 +16,8 @@ declare module "next-auth" {
         industry: string;
         activeModules: string[];
         tenantAccess?: TenantAccess[];
+        permissionGroups?: string[];
+        permissionOverrides?: string[];
     }
 
     interface Session {
@@ -27,6 +29,8 @@ declare module "next-auth" {
             industry: string;
             activeModules: string[];
             tenantAccess?: TenantAccess[];
+            permissionGroups?: string[];
+            permissionOverrides?: string[];
         } & DefaultSession["user"];
     }
 }
@@ -40,5 +44,7 @@ declare module "next-auth/jwt" {
         industry: string;
         activeModules: string[];
         tenantAccess?: TenantAccess[];
+        permissionGroups?: string[];
+        permissionOverrides?: string[];
     }
 }

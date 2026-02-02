@@ -97,7 +97,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         tenantId: user.tenantId || 'default_tenant',
                         industry: user.industry || 'ELEVATORS',
                         activeModules: user.activeModules || ['TECHNICAL'],
-                        tenantAccess: user.tenantAccess || []
+                        tenantAccess: user.tenantAccess || [],
+                        permissionGroups: user.permissionGroups || [],
+                        permissionOverrides: user.permissionOverrides || []
                     };
                 } catch (error: any) {
                     console.error("💥 [AUTH ATTEMPT] CRITICAL ERROR:", {

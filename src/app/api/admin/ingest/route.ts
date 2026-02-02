@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
         const environment = req.headers.get('x-environment') || (formData.get('environment') as string) || 'PRODUCTION';
         const maskPii = formData.get('maskPii') !== 'false'; // Default to true if not explicitly 'false'
 
-        // DELEGATE TO SERVICE
-        const result = await IngestService.processDocument({
+        // 5. DELEGATE TO SERVICE (PHASE 1: PREP)
+        const prep = await IngestService.prepareIngest({
             file,
             metadata,
             tenantId,
@@ -68,7 +68,38 @@ export async function POST(req: NextRequest) {
             maskPii
         });
 
-        return NextResponse.json(result);
+        if (prep.status === 'DUPLICATE') {
+            return NextResponse.json({
+                success: true,
+                message: 'Document already indexed.',
+                docId: prep.docId,
+                isDuplicate: true
+            });
+        }
+
+        // 6. ENQUEUE HEAVY ANALYSIS (PHASE 2: ASYNC)
+        const { queueService } = await import('@/lib/queue-service');
+        const job = await queueService.addJob('PDF_ANALYSIS', {
+            tenantId,
+            userId: session.user.id as string,
+            correlationId,
+            data: {
+                docId: prep.docId,
+                options: {
+                    maskPii,
+                    userEmail,
+                    environment
+                }
+            }
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: 'Ingestion started in background.',
+            docId: prep.docId,
+            jobId: job.id,
+            correlationId
+        });
 
     } catch (error: any) {
         console.error(`[INGEST ERROR] Correlation: ${correlationId}`, error);

@@ -41,400 +41,291 @@ export interface IngestResult {
 
 export class IngestService {
     /**
-     * Processes a document (PDF) for RAG ingestion: deduplication, upload, extraction, chunking, embedding, and indexing.
+     * Phase 1: Preparation (Síncrono)
+     * Realiza validaciones rápidas, de-duplicación y subida inicial.
+     * Registra el activo con estado 'PENDING'.
      */
-    static async processDocument(options: IngestOptions): Promise<IngestResult> {
-        const { file, metadata, tenantId, userEmail, environment = 'PRODUCTION', ip = '0.0.0.0', userAgent = 'System' } = options;
+    static async prepareIngest(options: IngestOptions): Promise<{ docId: string; status: string; correlationId: string; isDuplicate?: boolean }> {
+        const { file, metadata, tenantId, environment = 'PRODUCTION' } = options;
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
 
-        // 1. Critical Size Validation (Prevent OOM)
+        // 1. Critical Size Validation
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-        // @ts-ignore - file.size might be missing in some mock inputs, but File always has it
+        // @ts-ignore
         const fileSize = file.size || 0;
         if (fileSize > MAX_FILE_SIZE) {
             throw new ValidationError(`File too large. Max size is 50MB. Received: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
         }
 
-        await logEvento({
-            level: 'INFO',
-            source: 'INGEST_SERVICE',
-            action: 'START',
-            message: `Starting ingest for ${file.name}`,
-            correlationId,
-            details: { filename: file.name, size: fileSize }
-        });
-
-        // We still need the buffer for Text Extraction and hash calculation (until pdf-utils supports streams)
-        // Since we validated size <= 50MB, this Buffer.from is safe(r).
         const buffer = Buffer.from(await file.arrayBuffer());
-
-        // 0. Deduplication by MD5
         const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
+
         const db = await connectDB();
-        const documentChunksCollection = db.collection('document_chunks');
         const knowledgeAssetsCollection = db.collection('knowledge_assets');
 
-        const existingDoc = await knowledgeAssetsCollection.findOne({ fileMd5: fileHash });
+        // Deduplicación
+        const existingDoc = await knowledgeAssetsCollection.findOne({
+            fileMd5: fileHash,
+            tenantId,
+            environment
+        });
 
         if (existingDoc) {
-            await logEvento({
-                level: 'INFO',
-                source: 'INGEST_SERVICE',
-                action: 'DEDUPLICATION',
-                message: `Identical document detected (MD5: ${fileHash}).`,
-                correlationId,
-                details: { originalDocId: existingDoc._id, filename: file.name }
-            });
-
-            // If it already exists for this tenant
-            const currentTenantDoc = await knowledgeAssetsCollection.findOne({
-                fileMd5: fileHash,
-                tenantId
-            });
-
-            if (currentTenantDoc) {
-                return {
-                    success: true,
-                    correlationId,
-                    message: "Document already indexed for this tenant.",
-                    chunks: currentTenantDoc.totalChunks,
-                    isDuplicate: true
-                };
-            }
-
-            // If exists in another tenant, clone valid metadata
-            const newDocMetadata = {
-                tenantId,
-                filename: file.name,
-                componentType: metadata.type,
-                model: existingDoc.model,
-                version: metadata.version,
-                revisionDate: new Date(),
-                language: existingDoc.language || 'es',
-                status: 'vigente' as const,
-                cloudinaryUrl: existingDoc.cloudinaryUrl,
-                cloudinaryPublicId: existingDoc.cloudinaryPublicId,
-                fileMd5: fileHash,
-                totalChunks: existingDoc.totalChunks,
-                environment,
-                createdAt: new Date(),
-            };
-
-            const validatedNewDoc = KnowledgeAssetSchema.parse(newDocMetadata);
-            await knowledgeAssetsCollection.insertOne(validatedNewDoc);
-
-            // Clone chunks (AI Token Savings)
-            const originalChunks = await documentChunksCollection.find({
-                cloudinary_public_id: existingDoc.cloudinaryPublicId
-            }).toArray();
-
-            if (originalChunks.length > 0) {
-                const newChunks = originalChunks.map(chunk => ({
-                    ...chunk,
-                    _id: undefined,
-                    tenantId,
-                    sourceDoc: file.name,
-                    version: metadata.version,
-                    environment,
-                    createdAt: new Date()
-                }));
-                // Remove _id for bulk insert
-                newChunks.forEach(c => delete (c as any)._id);
-                await documentChunksCollection.insertMany(newChunks);
-            }
-
-            // SAVINGS TRACKING
-            const estimatedSavedTokens = (originalChunks.length * 150) + 1000;
-            await UsageService.trackDeduplicationSaving(tenantId, estimatedSavedTokens, correlationId);
-
-            // AUTO-AUDIT: Duplicate Record
-            const auditEntry = {
-                tenantId,
-                performedBy: userEmail,
-                ip,
-                userAgent,
-                filename: file.name,
-                fileSize: fileSize,
-                md5: fileHash,
-                docId: validatedNewDoc._id ?? undefined,
-                correlationId,
-                status: 'DUPLICATE' as const,
-                details: {
-                    chunks: originalChunks.length,
-                    duration_ms: Date.now() - start,
-                    savings_tokens: estimatedSavedTokens
-                }
-            };
-            await db.collection('audit_ingestion').insertOne(IngestAuditSchema.parse(auditEntry));
-
             return {
-                success: true,
+                docId: existingDoc._id.toString(),
+                status: 'DUPLICATE',
                 correlationId,
-                message: `Document reused by content match (${originalChunks.length} chunks). Estimated savings: ${estimatedSavedTokens} tokens.`,
-                chunks: originalChunks.length,
-                isCloned: true,
-                savings: estimatedSavedTokens
+                isDuplicate: true
             };
         }
 
-        // Full Processing
-        await logEvento({ level: 'DEBUG', source: 'INGEST_SERVICE', action: 'PROCESS', message: `New file (MD5: ${fileHash}). Starting full processing.`, correlationId });
-
-        // 1. Upload PDF
-        // Note: Ideally use file.stream() here if we didn't need the buffer for extraction/hash. 
-        // We pass the buffer since we already paid the memory cost.
+        // 2. Upload PDF a Cloudinary (Necesario antes de encolar si queremos persistencia del binario)
         const cloudinaryResult = await withRetry(
             () => uploadRAGDocument(buffer, file.name, tenantId),
             { maxRetries: 3, initialDelayMs: 1000 }
         );
 
-        // 2. Extract Text & Visuals in PARALLEL (Phase 52)
-        const [rawText, visualFindings] = await Promise.all([
-            extractTextAdvanced(buffer),
-            analyzePDFVisuals(buffer, tenantId, correlationId)
-        ]);
-
-        // 2.1 PII Masking (Phase 61)
-        let text = rawText;
-        const maskPii = options.maskPii !== false; // Default to true
-
-        if (maskPii) {
-            const { PIIMasker } = await import('@/lib/pii-masker');
-            const { maskedText, metadata: piiMetadata } = PIIMasker.mask(rawText, tenantId, correlationId);
-            text = maskedText;
-
-            if (piiMetadata.count > 0) {
-                await logEvento({
-                    level: 'INFO',
-                    source: 'INGEST_SERVICE',
-                    action: 'PII_DETECTION',
-                    message: `De-identified ${piiMetadata.count} PII items in ${file.name}`,
-                    correlationId,
-                    details: { piiCount: piiMetadata.count, piiTypes: piiMetadata.types }
-                });
-            }
-        } else {
-            await logEvento({
-                level: 'WARN',
-                source: 'INGEST_SERVICE',
-                action: 'PII_MASKING_DISABLED',
-                message: `PII Masking explicitly disabled for document: ${file.name}. Sensitive data may be stored.`,
-                correlationId
-            });
-        }
-
-        // 2.1. Detect Language
-        const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
-            'LANGUAGE_DETECTOR',
-            { text: text.substring(0, 2000) },
-            tenantId
-        );
-        const detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlationId, model: langModel })).trim().toLowerCase().substring(0, 2);
-
-        // 3. AI: Extract Models
-        const detectedModels = await extractModelsWithGemini(text, tenantId, correlationId);
-        const primaryModel = detectedModels.length > 0 ? detectedModels[0].model : 'UNKNOWN';
-
-        // 4. Chunking (Text + Visual)
-        const textChunks = await chunkText(text);
-
-        // 5.1. Save Document Metadata
-        const totalChunks = textChunks.length + visualFindings.length;
-        const documentMetadata = {
+        // 3. Crear Registro Inicial en 'knowledge_assets'
+        const docMetadata = {
             tenantId,
             filename: file.name,
             componentType: metadata.type,
-            model: primaryModel,
+            model: 'PENDING',
             version: metadata.version,
             revisionDate: new Date(),
-            language: detectedLang,
             status: 'vigente' as const,
+            ingestionStatus: 'PENDING' as const,
             cloudinaryUrl: cloudinaryResult.secureUrl,
             cloudinaryPublicId: cloudinaryResult.publicId,
             fileMd5: fileHash,
-            totalChunks: totalChunks,
+            totalChunks: 0,
             environment,
             createdAt: new Date(),
+            updatedAt: new Date(),
         };
 
-        const validatedDocumentMetadata = KnowledgeAssetSchema.parse(documentMetadata);
-        const insertResult = await knowledgeAssetsCollection.insertOne(validatedDocumentMetadata);
-        const docId = insertResult.insertedId;
-
-        // 5.1.5. Graph Extraction (Phase 61)
-        const { GraphExtractionService } = await import('@/services/graph-extraction-service');
-        await GraphExtractionService.extractAndPersist(
-            text,
-            tenantId,
-            correlationId,
-            { sourceDoc: file.name }
-        ).catch(e => console.error("[GRAPH EXTRACTION ERROR]", e));
-
-        // 5.2. Process ALL Chunks (Text + Visual)
-        const { multilingualService } = await import('@/lib/multilingual-service');
-        const BATCH_SIZE = 10;
-        let successCount = 0;
-        let failCount = 0;
-
-        // Combinar chunks de texto y hallazgos visuales para procesamiento uniforme
-        const allChunksToProcess = [
-            ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc, page: undefined })),
-            ...visualFindings.map(vf => ({
-                type: 'VISUAL' as const,
-                text: vf.technical_description,
-                page: vf.page
-            }))
-        ];
-
-        for (let i = 0; i < allChunksToProcess.length; i += BATCH_SIZE) {
-            // CIRCUIT BREAKER Check
-            if (allChunksToProcess.length > 20 && (failCount / allChunksToProcess.length) > 0.2) {
-                await logEvento({
-                    level: 'ERROR',
-                    source: 'INGEST_SERVICE',
-                    action: 'CIRCUIT_BREAKER_TRIP',
-                    message: `Aborting ingestion. Error rate exceeded 20% (${failCount} failures).`,
-                    correlationId
-                });
-                throw new ExternalServiceError('Ingestion aborted due to high error rate (External API instability)');
-            }
-
-            const batch = allChunksToProcess.slice(i, i + BATCH_SIZE);
-            const batchPromises = batch.map(async (chunkData) => {
-                let translatedText: string | undefined = undefined;
-                const chunkText = chunkData.text;
-
-                // Solo traducir si es texto y no es español
-                if (chunkData.type === 'TEXT' && detectedLang !== 'es') {
-                    try {
-                        const { text: translationPrompt, model: transModel } = await PromptService.getRenderedPrompt(
-                            'TECHNICAL_TRANSLATOR',
-                            { text: chunkText, targetLanguage: 'Spanish' },
-                            tenantId
-                        );
-                        translatedText = await callGeminiMini(translationPrompt, tenantId, { correlationId, model: transModel });
-                    } catch (e) {
-                        // Silent fail on translation is acceptable for now
-                    }
-                }
-
-                // Generate Embeddings
-                const [embeddingGemini, embeddingBGE] = await Promise.all([
-                    generateEmbedding(chunkText, tenantId, correlationId),
-                    multilingualService.generateEmbedding(chunkText)
-                ]);
-
-                let embeddingShadow: number[] | undefined;
-                if (translatedText) {
-                    embeddingShadow = await generateEmbedding(translatedText, tenantId, correlationId);
-                }
-
-                return { ...chunkData, translatedText, embeddingGemini, embeddingBGE, embeddingShadow };
-            });
-
-            // Use Promise.allSettled for Resilience
-            const results = await Promise.allSettled(batchPromises);
-
-            // Process results
-            const dbOps = results.map(async (res) => {
-                if (res.status === 'rejected') {
-                    failCount++;
-                    console.error(`[INGEST BATCH ERROR] Chunk processing failed:`, res.reason);
-                    return; // Skip this chunk
-                }
-
-                const data = res.value;
-                successCount++;
-
-                // Usage Tracking (Approximation)
-                await UsageService.trackEmbedding(tenantId, 1, 'text-embedding-004', correlationId);
-                if (data.translatedText) await UsageService.trackEmbedding(tenantId, 1, 'text-embedding-004-shadow', correlationId);
-                if (data.embeddingBGE.length > 0) await UsageService.trackEmbedding(tenantId, 1, 'bge-m3-local', correlationId);
-
-                // Insert Original Chunk
-                const originalChunkId = new ObjectId();
-                const documentChunk = {
-                    _id: originalChunkId,
-                    tenantId,
-                    industry: "ELEVATORS" as const,
-                    componentType: metadata.type,
-                    model: primaryModel,
-                    sourceDoc: file.name,
-                    version: metadata.version,
-                    revisionDate: new Date(),
-                    language: data.type === 'VISUAL' ? 'es' : detectedLang, // Visuals are generated in Spanish usually
-                    chunkType: data.type,
-                    chunkText: data.text,
-                    visualDescription: data.type === 'VISUAL' ? data.text : undefined,
-                    approxPage: data.page,
-                    translatedText: data.translatedText,
-                    embedding: data.embeddingGemini,
-                    embedding_multilingual: data.embeddingBGE,
-                    cloudinaryUrl: cloudinaryResult.secureUrl,
-                    isShadow: false,
-                    environment,
-                    createdAt: new Date(),
-                };
-                await documentChunksCollection.insertOne(DocumentChunkSchema.parse(documentChunk));
-
-                // Insert Shadow Chunk (Sólo para TEXT)
-                if (data.type === 'TEXT' && data.translatedText && data.embeddingShadow) {
-                    const shadowChunk = {
-                        tenantId,
-                        industry: "ELEVATORS" as const,
-                        componentType: metadata.type,
-                        model: primaryModel,
-                        sourceDoc: file.name,
-                        version: metadata.version,
-                        revisionDate: new Date(),
-                        language: 'es',
-                        originalLang: detectedLang,
-                        chunkText: data.translatedText,
-                        chunkType: 'TEXT' as const,
-                        refChunkId: originalChunkId,
-                        embedding: data.embeddingShadow,
-                        cloudinaryUrl: cloudinaryResult.secureUrl,
-                        isShadow: true,
-                        environment,
-                        createdAt: new Date(),
-                    };
-                    await documentChunksCollection.insertOne(DocumentChunkSchema.parse(shadowChunk));
-                }
-            });
-
-            await Promise.all(dbOps);
-        }
-
-        // AUTO-AUDIT: Success or Partial Success
-        const finalStatus = failCount === 0 ? 'SUCCESS' : (successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED');
-
-        const auditEntry = {
-            tenantId,
-            performedBy: userEmail,
-            ip,
-            userAgent,
-            filename: file.name,
-            fileSize: fileSize,
-            md5: fileHash,
-            docId: docId,
-            correlationId,
-            status: finalStatus as any, // Cast for enum mismatch potential
-            details: {
-                chunks_total: allChunksToProcess.length,
-                chunks_success: successCount,
-                chunks_failed: failCount,
-                duration_ms: Date.now() - start,
-            }
-        };
-        await db.collection('audit_ingestion').insertOne(IngestAuditSchema.parse(auditEntry));
+        const validatedDoc = KnowledgeAssetSchema.parse(docMetadata);
+        const result = await knowledgeAssetsCollection.insertOne(validatedDoc);
 
         return {
-            success: successCount > 0,
-            correlationId,
-            message: `Document processed. Success: ${successCount}. Failed: ${failCount}.`,
-            chunks: successCount,
-            language: detectedLang
+            docId: result.insertedId.toString(),
+            status: 'PENDING',
+            correlationId
         };
+    }
+
+    /**
+     * Phase 2: Heavy Analysis (Asíncrono)
+     * Realiza el análisis multimodal, PII, embeddings y guardado de chunks.
+     * Diseñado para ser ejecutado por un worker de BullMQ.
+     */
+    static async executeAnalysis(docId: string, options: Partial<IngestOptions> & { job?: any }): Promise<IngestResult> {
+        const correlationId = options.correlationId || crypto.randomUUID();
+        const start = Date.now();
+        const job = options.job;
+
+        const db = await connectDB();
+        const knowledgeAssetsCollection = db.collection('knowledge_assets');
+        const documentChunksCollection = db.collection('document_chunks');
+
+        const assetId = new ObjectId(docId);
+        const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });
+
+        if (!asset) {
+            throw new AppError('NOT_FOUND', 404, `Knowledge asset ${docId} not found`);
+        }
+
+        const currentAttempts = (asset.attempts || 0) + 1;
+
+        await knowledgeAssetsCollection.updateOne(
+            { _id: assetId },
+            {
+                $set: {
+                    ingestionStatus: 'PROCESSING',
+                    attempts: currentAttempts,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        const updateProgress = async (percent: number) => {
+            if (job) await job.updateProgress(percent);
+            await knowledgeAssetsCollection.updateOne(
+                { _id: assetId },
+                { $set: { progress: percent, updatedAt: new Date() } }
+            );
+        };
+
+        try {
+            await updateProgress(5); // Start processing
+
+            // Descargar el binario de Cloudinary
+            const response = await fetch(asset.cloudinaryUrl);
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            await updateProgress(15); // Downloaded
+
+            // 1. Extract Text & Visuals
+            const [rawText, visualFindings] = await Promise.all([
+                extractTextAdvanced(buffer),
+                analyzePDFVisuals(buffer, asset.tenantId, correlationId)
+            ]);
+
+            await updateProgress(40); // Analysis complete
+
+            // 2. PII Masking
+            let text = rawText;
+            const maskPii = options.maskPii !== false;
+            if (maskPii) {
+                const { PIIMasker } = await import('@/lib/pii-masker');
+                const { maskedText } = PIIMasker.mask(rawText, asset.tenantId, correlationId);
+                text = maskedText;
+            }
+
+            await updateProgress(50); // PII complete
+
+            // 3. Language & Models
+            const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
+                'LANGUAGE_DETECTOR',
+                { text: text.substring(0, 2000) },
+                asset.tenantId
+            );
+            const detectedLang = (await callGeminiMini(languagePrompt, asset.tenantId, { correlationId, model: langModel })).trim().toLowerCase().substring(0, 2);
+            const detectedModels = await extractModelsWithGemini(text, asset.tenantId, correlationId);
+            const primaryModel = detectedModels.length > 0 ? detectedModels[0].model : 'UNKNOWN';
+
+            await updateProgress(60); // Metadata complete
+
+            // 4. Chunking
+            const textChunks = await chunkText(text);
+
+            // 5. Graph Extraction (Phase 61)
+            const { GraphExtractionService } = await import('@/services/graph-extraction-service');
+            await GraphExtractionService.extractAndPersist(
+                text,
+                asset.tenantId,
+                correlationId,
+                { sourceDoc: asset.filename }
+            ).catch(e => console.error("[GRAPH EXTRACTION ERROR]", e));
+
+            await updateProgress(70); // Chunks generated
+
+            // 6. Process Chunks (Parallel Batches)
+            const allChunksToProcess = [
+                ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc, page: undefined })),
+                ...visualFindings.map(vf => ({
+                    type: 'VISUAL' as const,
+                    text: vf.technical_description,
+                    page: vf.page
+                }))
+            ];
+
+            const { multilingualService } = await import('@/lib/multilingual-service');
+            const BATCH_SIZE = 10;
+            let successCount = 0;
+
+            const totalChunks = allChunksToProcess.length;
+            for (let i = 0; i < totalChunks; i += BATCH_SIZE) {
+                const batch = allChunksToProcess.slice(i, i + BATCH_SIZE);
+                const results = await Promise.allSettled(batch.map(async (chunkData) => {
+                    const [embeddingGemini, embeddingBGE] = await Promise.all([
+                        generateEmbedding(chunkData.text, asset.tenantId, correlationId),
+                        multilingualService.generateEmbedding(chunkData.text)
+                    ]);
+
+                    const chunkId = new ObjectId();
+                    const documentChunk = DocumentChunkSchema.parse({
+                        _id: chunkId,
+                        tenantId: asset.tenantId,
+                        industry: "ELEVATORS",
+                        componentType: asset.componentType,
+                        model: primaryModel,
+                        sourceDoc: asset.filename,
+                        version: asset.version,
+                        revisionDate: asset.revisionDate,
+                        language: chunkData.type === 'VISUAL' ? 'es' : detectedLang,
+                        chunkType: chunkData.type,
+                        chunkText: chunkData.text,
+                        approxPage: chunkData.page,
+                        embedding: embeddingGemini,
+                        embedding_multilingual: embeddingBGE,
+                        cloudinaryUrl: asset.cloudinaryUrl,
+                        environment: asset.environment,
+                        createdAt: new Date(),
+                    });
+
+                    await documentChunksCollection.insertOne(documentChunk);
+                    return true;
+                }));
+
+                successCount += results.filter(r => r.status === 'fulfilled').length;
+
+                // Progress within chunk processing (70-95%)
+                const chunkPercent = Math.min(95, 70 + Math.floor((i + batch.length) / totalChunks * 25));
+                await updateProgress(chunkPercent);
+            }
+
+            // 7. Final Update
+            await knowledgeAssetsCollection.updateOne(
+                { _id: assetId },
+                {
+                    $set: {
+                        ingestionStatus: 'COMPLETED',
+                        progress: 100,
+                        model: primaryModel,
+                        language: detectedLang,
+                        totalChunks: successCount,
+                        updatedAt: new Date()
+                    }
+                }
+            );
+
+            // Audit
+            await db.collection('audit_ingestion').insertOne(IngestAuditSchema.parse({
+                tenantId: asset.tenantId,
+                performedBy: options.userEmail || 'system_worker',
+                filename: asset.filename,
+                fileSize: 0,
+                md5: asset.fileMd5 || 'unknown',
+                docId: assetId,
+                correlationId,
+                status: 'SUCCESS',
+                details: { chunks: successCount, duration_ms: Date.now() - start, attempts: currentAttempts }
+            }));
+
+            return {
+                success: true,
+                correlationId,
+                message: "Processed successfully",
+                chunks: successCount
+            };
+
+        } catch (error: any) {
+            console.error(`[ASYNC INGEST ERROR] ${docId} (Attempt ${currentAttempts})`, error);
+            await knowledgeAssetsCollection.updateOne(
+                { _id: assetId },
+                { $set: { ingestionStatus: 'FAILED', error: error.message, updatedAt: new Date() } }
+            );
+            throw error;
+        }
+    }
+
+    /**
+     * Legacy/Synchronous Wrapper (for backward compatibility if needed)
+     */
+    static async processDocument(options: IngestOptions): Promise<IngestResult> {
+        const prep = await this.prepareIngest(options);
+        if (prep.status === 'DUPLICATE') {
+            return {
+                success: true,
+                correlationId: prep.correlationId,
+                message: "Document already indexed.",
+                chunks: 0,
+                isDuplicate: true
+            };
+        }
+        return this.executeAnalysis(prep.docId, options);
     }
 }

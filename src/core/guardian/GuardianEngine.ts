@@ -82,69 +82,66 @@ export class GuardianEngine {
     }
 
     /**
-     * Resolves all policies applicable to the user (Groups + Hierarchy)
+     * Resolves all policies applicable to the user (Overrides + Groups + Hierarchy)
      */
     private async getUserEffectivePolicies(user: User, tenantId: string): Promise<PermissionPolicy[]> {
         const groupsCollection = await getTenantCollection('permission_groups');
         const policiesCollection = await getTenantCollection('policies');
 
-        // 1. Identify User Groups
-        const userGroupIds = user.permissionGroups || [];
-        if (userGroupIds.length === 0) {
-            return [];
-        }
-
-        // 2. Resolve Group Hierarchy (Recursive)
-        const allGroupIds = new Set<string>(userGroupIds);
-        const processedGroups = new Set<string>();
         const policyIds = new Set<string>();
 
-        // Breadth-First Search for hierarchy
-        const queue = [...userGroupIds];
+        // 1. Collect Direct User Overrides
+        if (user.permissionOverrides && Array.isArray(user.permissionOverrides)) {
+            user.permissionOverrides.forEach(id => policyIds.add(id));
+        }
 
-        while (queue.length > 0) {
-            const currentGroupId = queue.shift()!;
-            if (processedGroups.has(currentGroupId)) continue;
-            processedGroups.add(currentGroupId);
+        // 2. Identify User Groups
+        const userGroupIds = user.permissionGroups || [];
 
-            // Fetch group
-            const group = await groupsCollection.findOne({
-                _id: new ObjectId(currentGroupId),
-                tenantId
-            });
+        // 3. Resolve Group Hierarchy (Recursive BFS)
+        if (userGroupIds.length > 0) {
+            const processedGroups = new Set<string>();
+            const queue = [...userGroupIds];
 
-            if (group) {
-                // Collect Policies
-                if (group.policies && Array.isArray(group.policies)) {
-                    group.policies.forEach((pid: string) => policyIds.add(pid));
-                }
+            while (queue.length > 0) {
+                const currentGroupId = queue.shift()!;
+                if (processedGroups.has(currentGroupId)) continue;
+                processedGroups.add(currentGroupId);
 
-                // Add Parent to queue
-                if (group.parentId) {
-                    queue.push(group.parentId);
-                    allGroupIds.add(group.parentId);
+                // Fetch group
+                const group = await groupsCollection.findOne({
+                    _id: new ObjectId(currentGroupId),
+                    tenantId
+                });
+
+                if (group) {
+                    // Collect Policies from Group
+                    if (group.policies && Array.isArray(group.policies)) {
+                        group.policies.forEach((pid: string) => policyIds.add(pid));
+                    }
+
+                    // Add Parent to queue for inheritance
+                    if (group.parentId) {
+                        queue.push(group.parentId);
+                    }
                 }
             }
         }
 
         if (policyIds.size === 0) return [];
 
-        // 3. Fetch Policies
+        // 4. Fetch All Collected Policies
         const policiesCur = await policiesCollection.find({
             _id: { $in: Array.from(policyIds).map(id => new ObjectId(id)) },
-            active: true // active field match with schema? schema says isActive. 
-            // Let's assume database field name is 'isActive' to match schema default
+            isActive: true
         });
 
         const policies: PermissionPolicy[] = [];
         await policiesCur.forEach(doc => {
-            // Mapping DB doc to Schema
             policies.push(doc as unknown as PermissionPolicy);
         });
 
-        // Ensure we filter by isActive in case query didn't catch it 
-        // (if DB field differs from query)
-        return policies.filter(p => p.isActive !== false);
+        return policies;
     }
 
     private matchResource(patterns: string[], resource: string): boolean {

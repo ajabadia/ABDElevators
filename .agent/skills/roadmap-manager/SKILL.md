@@ -1,59 +1,54 @@
 ---
 name: roadmap-manager
-description: Gestiona y actualiza el ROADMAP_MASTER.md, documentando avances, nuevas funcionalidades y deprecando elementos obsoletos sin borrar el historial.
+description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los avances con la Landing Page (i18n), README.md y el mapa de arquitectura (map.md).
 ---
-# Roadmap Manager Skill
+# Roadmap Manager Skill (v3.0 - Unified Sync)
 
 ## Cuándo usar este skill
 - Cuando se finalice una fase de desarrollo (al terminar un `walkthrough.md`).
-- Cuando el usuario solicite añadir nuevas funcionalidades a futuro.
-- Cuando se decida abandonar o sustituir una funcionalidad existente (deprecación).
-- Al iniciar una nueva sesión de desarrollo para sincronizar el estado global.
+- Cuando se completen funcionalidades críticas ("Killer Features") que aporten valor comercial.
+- Cuando se creen, modifiquen o eliminen rutas de la aplicación.
+- Al actualizar versiones del sistema o cambiar la visión estratégica.
 
 ## Inputs necesarios
-- `ROADMAP_MASTER.md`: El documento fuente de verdad.
-- `walkthrough.md` (o historial reciente): Para identificar qué se ha completado.
-- Instrucciones del usuario sobre nuevas ideas o cambios de dirección.
+- `ROADMAP_MASTER.md`: Fuente de verdad del progreso técnico.
+- `walkthrough.md`: Detalle de lo último implementado.
+- `messages/[es|en].json`: Diccionarios de la Landing Page.
+- `README.md`: Documentación técnica de bienvenida.
+- `map.md`: Registro de rutas y funcionalidades.
 
 ## Workflow
 
-### 1. Análisis de Estado
-- Lee el `ROADMAP_MASTER.md` actual.
-- Revisa los últimos cambios en el código y el archivo `walkthrough.md` más reciente.
-- Identifica qué hitos se han cumplido y cuáles han cambiado de prioridad.
+### 1. Actualización del Roadmap
+1. Lee `ROADMAP_MASTER.md` y marca como completado lo verificado en el `walkthrough.md`.
+2. Actualiza métricas de progreso global y la sección de "Recent Ship".
 
-### 2. Actualización de Avances
-- Marca como completados `[x]` los hitos realizados.
-- Actualiza la sección de **Status & Metrics** (Global Progress, Recent Ship, Current Focus).
-- Si un hito se ha completado parcialmente, añade sub-pasos detallados.
+### 2. Sincronización de Marketing & Landing (Killer Features)
+1. Evalúa si el avance es una funcionalidad visible para el usuario final.
+2. Si lo es:
+    - Actualiza `messages/es.json` y `messages/en.json` (secciones `hero`, `features`, `enterprise`).
+    - Traduce fielmente manteniendo el tono profesional y premium.
 
-### 3. Gestión de Nuevas Funcionalidades
-- Añade las nuevas propuestas del usuario en la sección correspondiente (`Upcoming & To-Do` o una nueva `FASE`).
-- Asegúrate de asignarles un objetivo claro y una lista de hitos iniciales.
+### 3. Actualización Técnica (README.md)
+1. Si hay un salto de versión o nuevas capacidades core:
+    - Actualiza el título y la descripción inicial del `README.md`.
+    - Añade los nuevos hitos a la sección "Características Clave".
+    - Verifica que los "Usuarios de Prueba" o "Estructura del Proyecto" sigan siendo correctos.
 
-### 4. Deprecación de Funcionalidades (REGLA DE ORO)
-- **NUNCA BORRES INFORMACIÓN HISTÓRICA**.
-- Si una funcionalidad, plan o fase ya no se va a realizar o ha sido sustituida:
-    1. Cámbiala de su sección actual.
-    2. Muévela a la sección `## 🗑️ DEPRECATED & ARCHIVED`.
-    3. Añade metadatos: `[DEPRECADO: AAAA-MM-DD]`, `[MOTIVO: descripción breve]`.
-    4. Si hay una nueva funcionalidad que la sustituye, añade un link o referencia.
+### 4. Sincronización Arquitectónica (map.md)
+1. Si el desarrollo implicó nuevas rutas (`/app/.../page.tsx`) o APIs (`/api/.../route.ts`):
+    - Añade la nueva entrada al `map.md` relacionándola con su funcionalidad.
+    - Si una ruta fue eliminada o deprecada, refléjalo en el mapa.
 
-### 5. Consolidación
-- Verifica que el documento sigue siendo legible y está bien estructurado.
-- Firma la actualización con la fecha actual y la versión si aplica.
+## Instrucciones y Reglas
+- **REGLA DE ORO**: La sincronización debe ser atómica. Si actualizas el Roadmap, revisa el resto de archivos.
+- **TONO**: Mantén un lenguaje de "Grado Industrial" y "Vanguardia Agéntica".
+- **DEPRECACIÓN**: Sigue la regla de no borrar historial en el Roadmap; usa la sección `🗑️ DEPRECATED & ARCHIVED`.
 
 ## Output (formato exacto)
-- `ROADMAP_MASTER.md` actualizado.
-- Un breve resumen para el usuario de qué ha cambiado (Nuevos hitos, Completados, Deprecados).
+1. **Informe de Sincronización**: Lista de archivos modificados.
+2. **Resumen de Cambios**: Breve descripción de qué se ha actualizado en cada lugar (ej: "Añadida Feature X a la Landing en ES/EN").
+3. **Persistencia**: Actualización efectiva de todos los archivos involucrados.
 
-## Sección de Deprecados (Plantilla)
-```markdown
-## 🗑️ DEPRECATED & ARCHIVED
-Listado de funcionalidades o planes que han sido descartados o sustituidos.
-
-- ~~[FASE X: Nombre Original]~~
-    - **Fecha:** 2026-01-28
-    - **Motivo:** Sustituido por la arquitectura de microservicios en Fase 42.
-    - **Estado:** Histórico conservado.
-```
+## Manejo de Errores
+- Si no encuentras alguno de los archivos secundarios (`map.md` o `README.md`), pregunta al usuario si debe ser creado o si hay una ruta alternativa.

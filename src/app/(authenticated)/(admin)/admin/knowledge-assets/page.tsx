@@ -46,6 +46,10 @@ interface KnowledgeAsset {
     model: string;
     version: string;
     status: 'vigente' | 'obsoleto' | 'borrador' | 'archivado' | 'active' | 'obsolete' | 'draft' | 'archived';
+    ingestionStatus?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    progress?: number;
+    attempts?: number;
+    error?: string;
     totalChunks: number;
     createdAt: string;
     updatedAt: string;
@@ -124,6 +128,15 @@ export default function DocumentsPage() {
             setData(originalData);
         }
     };
+
+    // 4. Auto-refresh si hay procesamientos activos
+    useEffect(() => {
+        const hasProcessing = documents.some(d => d.ingestionStatus === 'PROCESSING' || d.ingestionStatus === 'PENDING');
+        if (hasProcessing) {
+            const interval = setInterval(refresh, 3000); // Refrescar cada 3s si hay trabajo
+            return () => clearInterval(interval);
+        }
+    }, [documents, refresh]);
 
     const filteredDocs = documents;
 
@@ -246,28 +259,60 @@ export default function DocumentsPage() {
                                             <p className="text-xs font-bold text-slate-700">{doc.model}</p>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-mono text-xs text-slate-500">v{doc.version}</TableCell>
                                     <TableCell>
-                                        {['vigente', 'active'].includes(doc.status) && (
-                                            <Badge className="bg-emerald-100/50 text-emerald-700 border-emerald-200/50 gap-1 hover:bg-emerald-100/50 shadow-none">
-                                                <CheckCircle2 size={12} /> Active
-                                            </Badge>
-                                        )}
-                                        {['obsoleto', 'obsolete'].includes(doc.status) && (
-                                            <Badge className="bg-amber-100/50 text-amber-700 border-amber-200/50 gap-1 hover:bg-amber-100/50 shadow-none">
-                                                <AlertCircle size={12} /> Obsolete
-                                            </Badge>
-                                        )}
-                                        {['archivado', 'archived'].includes(doc.status) && (
-                                            <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100 shadow-none">
-                                                <Archive size={12} /> Archived
-                                            </Badge>
-                                        )}
-                                        {['borrador', 'draft'].includes(doc.status) && (
-                                            <Badge className="bg-blue-100/50 text-blue-700 border-blue-200/50 gap-1 hover:bg-blue-100/50 shadow-none">
-                                                <Clock size={12} /> Draft
-                                            </Badge>
-                                        )}
+                                        <div className="flex flex-col gap-1">
+                                            {/* Badge de Ingesta (Phase 54) */}
+                                            {doc.ingestionStatus === 'PENDING' && (
+                                                <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 animate-pulse">
+                                                    <Clock size={12} /> Pending Analysis
+                                                </Badge>
+                                            )}
+                                            {doc.ingestionStatus === 'PROCESSING' && (
+                                                <div className="space-y-1 w-32">
+                                                    <div className="flex justify-between text-[10px] text-teal-600 font-bold">
+                                                        <span>Analyzing...</span>
+                                                        <span>{doc.progress}%</span>
+                                                    </div>
+                                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="bg-teal-500 h-full transition-all duration-500"
+                                                            style={{ width: `${doc.progress}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {doc.ingestionStatus === 'FAILED' && (
+                                                <Badge className="bg-red-100 text-red-700 border-red-200 gap-1" title={doc.error}>
+                                                    <AlertCircle size={12} /> Failed ({doc.attempts} att)
+                                                </Badge>
+                                            )}
+
+                                            {/* Badge de Estado del Documento (Existente) */}
+                                            {(!doc.ingestionStatus || doc.ingestionStatus === 'COMPLETED') && (
+                                                <>
+                                                    {['vigente', 'active'].includes(doc.status) && (
+                                                        <Badge className="bg-emerald-100/50 text-emerald-700 border-emerald-200/50 gap-1 hover:bg-emerald-100/50 shadow-none">
+                                                            <CheckCircle2 size={12} /> Active
+                                                        </Badge>
+                                                    )}
+                                                    {['obsoleto', 'obsolete'].includes(doc.status) && (
+                                                        <Badge className="bg-amber-100/50 text-amber-700 border-amber-200/50 gap-1 hover:bg-amber-100/50 shadow-none">
+                                                            <AlertCircle size={12} /> Obsolete
+                                                        </Badge>
+                                                    )}
+                                                    {['archivado', 'archived'].includes(doc.status) && (
+                                                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100 shadow-none">
+                                                            <Archive size={12} /> Archived
+                                                        </Badge>
+                                                    )}
+                                                    {['borrador', 'draft'].includes(doc.status) && (
+                                                        <Badge className="bg-blue-100/50 text-blue-700 border-blue-200/50 gap-1 hover:bg-blue-100/50 shadow-none">
+                                                            <Clock size={12} /> Draft
+                                                        </Badge>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
@@ -275,7 +320,7 @@ export default function DocumentsPage() {
                                             <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
                                                 <div
                                                     className="bg-teal-500 h-full transition-all duration-1000"
-                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 100) * 100)}%` }}
+                                                    style={{ width: `${Math.min(100, (doc.totalChunks === 0 ? 0 : (doc.totalChunks / 100) * 100))}%` }}
                                                 ></div>
                                             </div>
                                         </div>

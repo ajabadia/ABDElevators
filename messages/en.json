@@ -20,14 +20,20 @@
         "badge": "Enterprise Knowledge Intelligence",
         "title": "Transform your documents into active value.",
         "subtitle": "The ultimate RAG platform for high-precision industries. Intelligent indexing, semantic search, and AI-assisted analysis powered by Gemini 2.0 Flash with full traceability.",
+        "benefit1": "Find specifications in under 3 seconds",
+        "benefit2": "Extract data from plans and complex tables automatically",
+        "benefit3": "Comply with regulations (EN 81-20, GDPR) with zero extra effort",
         "cta_main": "Get started",
-        "cta_sec": "View architecture"
+        "cta_sec": "View architecture",
+        "cta_note": "No card required · Guided demo in 20 minutes"
     },
     "stats": {
-        "accuracy": "RAG Accuracy",
-        "latency": "Inference Latency",
-        "compliant": "SOC2 Compliant",
-        "corpus_indexed": "Indexed Corpus"
+        "stat1_value": "15h/week",
+        "stat1_label": "Savings per technician",
+        "stat2_value": ">98%",
+        "stat2_label": "Extraction accuracy",
+        "stat3_value": "GDPR Ready",
+        "stat3_label": "Automatic compliance"
     },
     "features": {
         "title": "Elite Knowledge Engineering",
@@ -43,7 +49,11 @@
         "f5_title": "Compliance ZIP & GDPR",
         "f5_desc": "Total portability: export your knowledge in signed ZIP packages and generate GDPR deletion certificates.",
         "f6_title": "Advanced PDF Bridge",
-        "f6_desc": "Hybrid Python/Node engine (PyMuPDF) that processes complex blueprints and layouts with absolute fidelity."
+        "f6_desc": "Hybrid Python/Node engine (PyMuPDF) that processes complex blueprints and layouts with absolute fidelity.",
+        "f7_title": "High-Performance Ingestion",
+        "f7_desc": "Robust asynchronous processing via BullMQ. Track heavy document analysis progress in real-time with automatic self-healing retries.",
+        "f8_title": "Observability & Alerting",
+        "f8_desc": "Proactive detection of workflow anomalies. Automatic alerts for error or latency spikes and server-side PDF technical reporting."
     },
     "solutions": {
         "title": "Industry Solutions",
@@ -54,6 +64,34 @@
         "s2_desc": "Proactive risk detection in complex contracts and clause verification against case law.",
         "s3_title": "IT & Technical Support",
         "s3_desc": "Complex issue resolution by consulting service manuals and historical knowledge bases."
+    },
+    "enterprise": {
+        "title": "Enterprise & Compliance",
+        "subtitle": "Security and control for professional teams with advanced governance.",
+        "f1_title": "Identity Governance (Guardian V2)",
+        "f1_desc": "Dynamic RBAC/ABAC control with user overrides. Define complex policies per tenant and manage granular exceptions with our permission matrix.",
+        "f2_title": "Encryption & Performance",
+        "f2_desc": "AES-256-GCM encryption and high-efficiency semantic cache. Drastically reduce AI costs and improve user experience (latency <2ms).",
+        "f3_title": "Observability & Quality",
+        "f3_desc": "Native RAG evaluation dashboard with LLM Judge. Measure faithfulness and relevance of every response in real-time for maximum technical reliability.",
+        "f4_title": "Portability & Compliance",
+        "f4_desc": "Export your knowledge in signed ZIP files. GDPR deletion certificates and fully integrated Audit Trail."
+    },
+    "pricing": {
+        "title": "Plans designed for professional teams",
+        "subtitle": "Total transparency. No hidden costs. Cancel anytime.",
+        "monthly": "Monthly",
+        "annually": "Annually",
+        "save": "Save 20%",
+        "cta_trial": "Start 14-day free trial",
+        "cta_contact": "Contact sales",
+        "popular": "Most popular",
+        "per_month": "/month",
+        "features_title": "All included:",
+        "plan_starter": "Standard",
+        "plan_pro": "Pro",
+        "plan_premium": "Premium",
+        "plan_enterprise": "Enterprise"
     },
     "security": {
         "title": "Enterprise-Grade Security",
@@ -87,6 +125,24 @@
         "address": " Calle de la Técnica, 42, 28001 Madrid, Spain",
         "phone": "+34 912 345 678",
         "email": "contact@abdelevators.com"
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Everything you need to know before you start.",
+        "q1": "Do I need to install anything or is it 100% web-based?",
+        "a1": "It is 100% cloud-based. You only need a modern browser. No complex installations or configurations required.",
+        "q2": "Are my documents used to train AI models?",
+        "a2": "No. Your data is private and is never used to train the base models of Gemini or any other provider.",
+        "q3": "How does multi-tenant data isolation work?",
+        "a3": "Each organization has its own vectorial namespace and logically separated database collections with independent encryption.",
+        "q4": "Can I cancel at any time?",
+        "a4": "Yes, you can cancel your subscription at any time from the billing panel without penalties."
+    },
+    "cta": {
+        "title": "Ready to transform your document management?",
+        "subtitle": "Join companies that already trust ABD RAG to manage their critical knowledge.",
+        "cta_main": "Start free trial",
+        "cta_sec": "Talk to sales"
     },
     "terms": {
         "title": "Terms of Service",

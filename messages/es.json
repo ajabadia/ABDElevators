@@ -45,7 +45,11 @@
         "f3_title": "Privacidad & Desidentificación",
         "f3_desc": "Protección total de datos sensibles. Motor de enmascaramiento PII automático que protege correos, teléfonos y DNIs antes de cualquier procesamiento con IA.",
         "f4_title": "Navegación por Grafos",
-        "f4_desc": "Entiende las relaciones entre componentes y procedimientos. Infraestructura basada en Grafos de Conocimiento (Neo4j) para manuales complejos."
+        "f4_desc": "Entiende las relaciones entre componentes y procedimientos. Infraestructura basada en Grafos de Conocimiento (Neo4j) para manuales complejos.",
+        "f5_title": "Ingesta de Alta Performance",
+        "f5_desc": "Procesamiento asíncrono robusto con BullMQ. Sigue el progreso de análisis de documentos pesados en tiempo real con reintentos automáticos.",
+        "f6_title": "Observabilidad & Alerting",
+        "f6_desc": "Detección proactiva de anomalías en flujos de trabajo. Alertas automáticas por picos de error o latencia y exportación de informes técnicos en PDF."
     },
     "solutions": {
         "title": "Soluciones por Sector",
@@ -59,15 +63,15 @@
     },
     "enterprise": {
         "title": "Enterprise & Compliance",
-        "subtitle": "Seguridad y control para equipos profesionales.",
-        "f1_title": "Control de Acceso Granular",
-        "f1_desc": "RBAC por roles y permisos. SSO con Google/Microsoft próximamente. Gestión de usuarios y equipos desde el dashboard.",
-        "f2_title": "Cifrado de Grado Militar",
-        "f2_desc": "Datos cifrados en reposo (AES-256) y en tránsito (TLS 1.3). Cumplimiento SOC2 y preparación para ISO 27001.",
+        "subtitle": "Seguridad y control para equipos profesionales con gobernanza avanzada.",
+        "f1_title": "Gobernanza de Identidad (Guardian V2)",
+        "f1_desc": "Control dinámico RBAC/ABAC con overrides por usuario. Define políticas complejas por tenant y gestiona excepciones granulares con nuestra matriz de permisos.",
+        "f2_title": "Cifrado & Desempeño",
+        "f2_desc": "Cifrado AES-256-GCM y caché semántica de alta eficiencia. Reduce drásticamente los costes de IA y mejora la experiencia de usuario (latencias <2ms).",
         "f3_title": "Observabilidad & Calidad",
         "f3_desc": "Dashboard nativo de evaluación RAG con Juez LLM. Mide la fidelidad y relevancia de cada respuesta en tiempo real para máxima fiabilidad técnica.",
-        "f4_title": "Portabilidad Total",
-        "f4_desc": "Exporta tu conocimiento completo en ZIP firmado. Certificados de borrado GDPR. BYODB (tu propia base de datos) próximamente."
+        "f4_title": "Portabilidad & Compliance",
+        "f4_desc": "Exporta tu conocimiento en ZIP firmado. Certificados de borrado GDPR y auditoría completa de acciones (Audit Trail) integrada."
     },
     "pricing": {
         "title": "Planes pensados para equipos profesionales",
