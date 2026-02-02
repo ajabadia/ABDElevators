@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+
 import { AppError } from '@/lib/errors';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
 
@@ -7,6 +7,8 @@ import { GuardianEngine } from '@/core/guardian/GuardianEngine';
  * Throws AppError if unauthorized.
  */
 export async function enforcePermission(resource: string, action: string) {
+    // Dynamic import to avoid Next.js module issues in standalone scripts
+    const { auth } = await import('@/lib/auth');
     const session = await auth();
     if (!session?.user) {
         throw new AppError('UNAUTHORIZED', 401, 'Authentication required');

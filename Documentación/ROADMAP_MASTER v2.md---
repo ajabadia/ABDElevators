@@ -51,4 +51,13 @@ This document consolidates **all** roadmap information, implementation plans, an
   - [X] **Collaboration Service & Security AES-256-GCM**.
   - [X] **Workflow Automation Studio & Cross-Vertical Search & AI Governance**.
 
-*Finalized on 2026-01-29 by Antigravity (Skill: roadmap-manager v1.18)*
+#### 🚀 FASE 33: RAG COGNITIVE SCALING (EN PROGRESO 🛠️)
+
+- **Descripción**: Optimización de costes, seguridad y precisión estructural del motor RAG.
+- **Hitos de Arquitectura:**
+  - [ ] **Semantic Cache Integration**: Implementación de caché semántica con Upstash/Redis para reducir latencia y costes de Gemini.
+  - [ ] **PII Masking Engine**: Middleware de desidentificación de datos sensibles durante la ingesta.
+  - [ ] **Graph-Enhanced RAG**: Extracción de entidades y relaciones para navegación estructural en manuales complejos.
+  - [ ] **RAG Evaluation Dashboard**: Framework de observabilidad para medir fidelidad y relevancia (estilo Ragas).
+
+*Last updated on 2026-02-02 by Antigravity (Skill: roadmap-manager v1.18)*

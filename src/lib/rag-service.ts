@@ -8,6 +8,10 @@ import { DatabaseError, AppError } from "@/lib/errors";
 import { UsageService } from "@/lib/usage-service";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
+import { PromptService } from "@/lib/prompt-service";
+import { callGeminiMini } from "@/lib/llm";
+import { SemanticCache } from "./semantic-cache";
+
 const tracer = trace.getTracer('abd-rag-platform');
 
 
@@ -425,19 +429,44 @@ export async function hybridSearch(
     }, async (span) => {
         const inicio = Date.now();
         try {
-            const [geminiResults, bgeResults, keywordResults] = await Promise.all([
-                performTechnicalSearch(query, tenantId, correlationId, limit * 2, 'ELEVATORS', environment),
-                performMultilingualSearch(query, tenantId, correlationId, limit * 2, environment),
-                pureKeywordSearch(query, tenantId, correlationId, limit * 2, 'ELEVATORS', environment)
+            // 1. Intentar recuperación de caché (Fase 33)
+            const cachedResults = await SemanticCache.get(query, tenantId, environment, correlationId);
+            if (cachedResults) {
+                span.setAttribute('rag.cache_hit', true);
+                span.setStatus({ code: SpanStatusCode.OK });
+                return cachedResults;
+            }
+            span.setAttribute('rag.cache_hit', false);
+
+            const { GraphRetrievalService } = await import('@/services/graph-retrieval-service');
+
+            const [geminiResults, bgeResults, keywordResults, graphContext] = await Promise.all([
+                performTechnicalSearch(query, tenantId, correlationId, limit * 3, 'ELEVATORS', environment),
+                performMultilingualSearch(query, tenantId, correlationId, limit * 3, environment),
+                pureKeywordSearch(query, tenantId, correlationId, limit * 3, 'ELEVATORS', environment),
+                GraphRetrievalService.getGraphContext(query, tenantId, correlationId)
             ]);
+
+            // Query Expansion (Parallel) - Phase 56
+            let expandedResults: RagResult[] = [];
+            try {
+                const variations = await expandQuery(query, tenantId, correlationId);
+                const expansionPromises = variations.map(v =>
+                    performTechnicalSearch(v, tenantId, correlationId, limit, 'ELEVATORS', environment)
+                );
+                const expansionHits = await Promise.all(expansionPromises);
+                expandedResults = expansionHits.flat();
+            } catch (e) {
+                console.warn("[QUERY EXPANSION FAILED]", e);
+            }
 
             const map = new Map<string, RagResult & { rankScore: number }>();
 
             const addToMap = (results: RagResult[], weight: number) => {
                 results.forEach((res, index) => {
-                    const key = res.text.substring(0, 100);
+                    const key = res.text.substring(0, 150);
                     const existing = map.get(key);
-                    const score = weight * (1 / (index + 60)); // RRF estándar: 1 / (rank + k) con k=60
+                    const score = weight * (1 / (index + 60)); // RRF
 
                     if (existing) {
                         existing.rankScore += score;
@@ -450,35 +479,54 @@ export async function hybridSearch(
                 });
             };
 
-            addToMap(geminiResults, 1.0);
-            addToMap(bgeResults, 1.0);
-            addToMap(keywordResults, 1.5); // Priorizar términos técnicos exactos
+            addToMap(geminiResults, 1.2);
+            addToMap(bgeResults, 0.8);
+            addToMap(keywordResults, 1.5);
+            addToMap(expandedResults, 1.0);
 
-            const merged = Array.from(map.values())
+            const potentialWinners = Array.from(map.values())
                 .sort((a, b) => b.rankScore - a.rankScore)
-                .slice(0, limit);
+                .slice(0, 15); // Take top 15 for re-ranking
 
-            span.setAttribute('rag.merged_count', merged.length);
+            // 3. Inject Graph Context if available (Phase 61)
+            if (graphContext && graphContext.textSummary) {
+                potentialWinners.unshift({
+                    text: graphContext.textSummary,
+                    source: "KNOWLEDGE_GRAPH",
+                    score: 1.0,
+                    type: "GRAPH_CONTEXT",
+                    model: "NEO4J",
+                    rankScore: 999 // Ensure it stays relevant for re-ranking
+                });
+            }
+
+            // Gemini Re-ranking (Phase 56)
+            const finalMerged = await rerankResults(query, potentialWinners, tenantId, correlationId, limit);
+
+            span.setAttribute('rag.merged_count', finalMerged.length);
             span.setAttribute('rag.duration_ms', Date.now() - inicio);
 
             await logEvento({
                 level: 'INFO',
                 source: 'RAG_SERVICE',
                 action: 'HYBRID_SEARCH_SUCCESS',
-                message: `Búsqueda híbrida para "${query}"`,
+                message: `Búsqueda híbrida avanzada para "${query}"`,
                 correlationId,
                 tenantId,
                 details: {
-                    gemini_hits: geminiResults.length,
-                    bge_hits: bgeResults.length,
-                    keyword_hits: keywordResults.length,
-                    merged_hits: merged.length,
-                    durationMs: Date.now() - inicio
+                    merged_hits: finalMerged.length,
+                    durationMs: Date.now() - inicio,
+                    reranked: true
                 }
             });
 
             span.setStatus({ code: SpanStatusCode.OK });
-            return merged;
+
+            // Persistir en caché asíncronamente (Fase 33)
+            SemanticCache.set(query, finalMerged, tenantId, environment, correlationId)
+                .catch(e => console.error("[CACHE PERSIST ERROR]", e));
+
+            return finalMerged;
 
         } catch (error) {
             span.recordException(error as Error);
@@ -662,5 +710,60 @@ export async function getRelevantDocuments(
         }));
     } catch (error) {
         throw error instanceof AppError ? error : new DatabaseError('Error retrieving relevant documents', error as Error);
+    }
+}
+
+/**
+ * Expande una consulta técnica usando Gemini para mejorar el recall.
+ */
+async function expandQuery(query: string, tenantId: string, correlationId: string): Promise<string[]> {
+    const { text: prompt, model } = await PromptService.getRenderedPrompt('QUERY_EXPANDER', { query }, tenantId);
+    const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
+    return response.split('\n').map(v => v.trim()).filter(v => v.length > 0 && v !== query);
+}
+
+/**
+ * Re-ordena los resultados usando Gemini para máxima precisión técnica.
+ */
+async function rerankResults(
+    query: string,
+    results: RagResult[],
+    tenantId: string,
+    correlationId: string,
+    limit: number
+): Promise<RagResult[]> {
+    if (results.length <= 1) return results;
+
+    const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
+    const { text: prompt, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
+        query,
+        fragments,
+        count: results.length
+    }, tenantId);
+
+    try {
+        const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
+        const cleanResponse = response.replace(/```json|```/g, '').trim();
+        const ranking = JSON.parse(cleanResponse) as { index: number; score: number; reason: string }[];
+
+        // Unificar con los objetos originales y ordenar
+        const reranked = ranking
+            .map(rank => {
+                const original = results[rank.index];
+                if (!original) return null;
+                return {
+                    ...original,
+                    score: rank.score,
+                    rerankReason: rank.reason
+                } as RagResult & { rerankReason: string };
+            })
+            .filter((r): r is RagResult & { rerankReason: string } => r !== null)
+            .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+            .slice(0, limit);
+
+        return reranked as RagResult[];
+    } catch (e) {
+        console.error("[RERANKING ERROR]", e);
+        return results.slice(0, limit);
     }
 }

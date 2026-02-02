@@ -1,59 +1,40 @@
-import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
+import { RagEvaluationService } from '@/services/rag-evaluation-service';
+import { AppError, handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 
 /**
- * API para obtener métricas de calidad RAG (RAGAs)
+ * GET /api/admin/rag/evaluations
+ * Returns metrics and recent evaluations for the dashboard
  */
-export async function GET(req: Request) {
-    const session = await auth();
-    if (!session || !session.user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const tenantId = session.user.tenantId;
-
+export async function GET(req: NextRequest) {
+    const correlacion_id = crypto.randomUUID();
     try {
-        const db = await connectDB();
-        const collection = db.collection('rag_evaluations');
-
-        // Obtener las últimas 50 evaluaciones
-        const evals = await collection.find({ tenantId })
-            .sort({ timestamp: -1 })
-            .limit(50)
-            .toArray();
-
-        // Calcular promedios
-        const stats = {
-            faithfulness: 0,
-            answer_relevance: 0,
-            context_precision: 0,
-            count: evals.length
-        };
-
-        if (evals.length > 0) {
-            stats.faithfulness = evals.reduce((acc, curr) => acc + curr.metrics.faithfulness, 0) / evals.length;
-            stats.answer_relevance = evals.reduce((acc, curr) => acc + curr.metrics.answer_relevance, 0) / evals.length;
-            stats.context_precision = evals.reduce((acc, curr) => acc + curr.metrics.context_precision, 0) / evals.length;
+        const session = await auth();
+        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden ver evaluaciones RAG');
         }
+
+        const tenantId = (session.user as any).tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
+
+        const [metrics, recentEvaluations] = await Promise.all([
+            RagEvaluationService.getMetrics(tenantId),
+            RagEvaluationService.listEvaluations(tenantId, 50)
+        ]);
 
         return NextResponse.json({
             success: true,
-            stats,
-            evaluations: evals
+            metrics: metrics.summary,
+            trends: metrics.trends,
+            evaluations: recentEvaluations
         });
 
     } catch (error) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_EVALUATIONS',
-            action: 'FETCH_ERROR',
-            message: (error as Error).message,
-            tenantId,
-            correlationId: 'SYSTEM_FETCH'
-        });
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_RAG_EVAL_GET', correlacion_id);
     }
 }

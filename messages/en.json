@@ -36,10 +36,10 @@
         "f1_desc": "Combines advanced OCR with Gemini 2.0 to extract tables, diagrams, and technical specs with pinpoint accuracy.",
         "f2_title": "Hybrid Vector Search",
         "f2_desc": "Contextual semantic search that understands expert intent, not just keywords.",
-        "f3_title": "Audit-Trail Pro",
-        "f3_desc": "Full traceability: every generated paragraph includes a direct citation to the original source document.",
-        "f4_title": "Federated Intelligence",
-        "f4_desc": "Global knowledge network that detects anonymous patterns across tenants to optimize technical suggestions.",
+        "f3_title": "Privacy & PII Masking",
+        "f3_desc": "Automatic de-identification engine that protects emails, phones, and IDs before processing with AI. Data privacy by design.",
+        "f4_title": "Graph-Enhanced RAG",
+        "f4_desc": "Knowledge Graph (Neo4j) infrastructure to navigate complex technical relationships between components and procedures.",
         "f5_title": "Compliance ZIP & GDPR",
         "f5_desc": "Total portability: export your knowledge in signed ZIP packages and generate GDPR deletion certificates.",
         "f6_title": "Advanced PDF Bridge",
@@ -105,5 +105,45 @@
         "contact_desc": "Our legal team is available for clarification.",
         "contact_button": "Contact Legal",
         "privacy_button": "View Privacy Policy"
+    },
+    "ingest": {
+        "pii_label": "Data De-identification (PII)",
+        "pii_desc": "Protect sensitive data by removing it before processing.",
+        "pii_warning_title": "WARNING: Sensitive Data",
+        "pii_warning_desc": "You are about to upload a document without data protection. This will save emails, phones, and other sensitive data in the database. How do you want to proceed?",
+        "pii_opt_continue": "Continue without protection",
+        "pii_opt_cancel": "Cancel",
+        "pii_opt_enable": "Enable and continue"
+    },
+    "rag_eval": {
+        "title": "RAG Evaluation Dashboard",
+        "subtitle": "Observability and response quality (Faithfulness, Relevance, Precision)",
+        "judge_badge": "LLM Judge: Gemini 1.5 Pro",
+        "metrics": {
+            "faithfulness": "Faithfulness (Avg)",
+            "relevance": "Answer Relevance",
+            "precision": "Context Precision",
+            "queries": "Evaluated Queries",
+            "faithfulness_desc": "Answers based only on context",
+            "relevance_desc": "Answer pertinence",
+            "precision_desc": "Utility of retrieved context",
+            "queries_desc": "Total analyzed traces"
+        },
+        "tabs": {
+            "trends": "Quality Trends",
+            "history": "Trace History"
+        },
+        "chart": {
+            "title": "Metrics Evolution",
+            "desc": "Daily tracking of faithfulness and relevance of responses",
+            "faithfulness": "Faithfulness",
+            "relevance": "Relevance"
+        },
+        "table": {
+            "date": "Date",
+            "query": "Query",
+            "metrics": "Metrics (F|R|P)",
+            "feedback": "Judge Feedback"
+        }
     }
 }

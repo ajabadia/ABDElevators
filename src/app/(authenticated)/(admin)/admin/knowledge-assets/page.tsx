@@ -33,6 +33,12 @@ import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiOptimistic } from "@/hooks/useApiOptimistic";
 import { logClientEvent } from "@/lib/logger-client";
 
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
+import { MetricCard } from "@/components/ui/metric-card";
+import { Layers, Database, History } from "lucide-react";
+
 interface KnowledgeAsset {
     _id: string;
     filename: string;
@@ -128,20 +134,21 @@ export default function DocumentsPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-outfit">Gestión del Corpus Técnico</h2>
-                    <p className="text-slate-500 mt-1">Sube y gestiona los manuales que alimentan el sistema RAG.</p>
-                </div>
-                <Button
-                    onClick={() => setIsUploadOpen(true)}
-                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
-                >
-                    <Plus size={18} />
-                    Nuevo Documento
-                </Button>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Gestión del"
+                highlight="Corpus Técnico"
+                subtitle="Sube y gestiona los manuales que alimentan el sistema RAG."
+                actions={
+                    <Button
+                        onClick={() => setIsUploadOpen(true)}
+                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
+                    >
+                        <Plus size={18} />
+                        Nuevo Documento
+                    </Button>
+                }
+            />
 
             <DocumentUploadModal
                 isOpen={isUploadOpen}
@@ -152,45 +159,44 @@ export default function DocumentsPage() {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="border-none shadow-md bg-gradient-to-br from-teal-500 to-teal-600 text-white">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-teal-100 font-medium">Active Documents</CardDescription>
-                        <CardTitle className="text-4xl font-bold font-outfit">{stats.active}</CardTitle>
-                    </CardHeader>
-                </Card>
-                <Card className="border-none shadow-md bg-white">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-slate-500 font-medium">Indexed Chunks</CardDescription>
-                        <CardTitle className="text-4xl font-bold font-outfit text-slate-900">{stats.totalChunks.toLocaleString()}</CardTitle>
-                    </CardHeader>
-                </Card>
-                <Card className="border-none shadow-md bg-white">
-                    <CardHeader className="pb-2">
-                        <CardDescription className="text-slate-500 font-medium">Last Ingest</CardDescription>
-                        <CardTitle className="text-lg font-bold font-outfit text-slate-900">{stats.lastIngest}</CardTitle>
-                    </CardHeader>
-                </Card>
+                <MetricCard
+                    title="Active Documents"
+                    value={stats.active}
+                    icon={<Layers className="w-5 h-5" />}
+                    color="teal"
+                />
+                <MetricCard
+                    title="Indexed Chunks"
+                    value={stats.totalChunks}
+                    icon={<Database className="w-5 h-5" />}
+                    color="blue"
+                />
+                <MetricCard
+                    title="Last Ingest"
+                    value={stats.lastIngest}
+                    icon={<History className="w-5 h-5" />}
+                    color="slate"
+                />
             </div>
 
-            <Card className="border-none shadow-lg">
-                <CardHeader className="border-b border-slate-100 pb-4">
-                    <div className="flex items-center gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <Input
-                                placeholder="Buscar por nombre, componente o modelo..."
-                                className="pl-10 border-slate-200 focus:ring-teal-500/20"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <Button variant="outline" className="border-slate-200 text-slate-600 gap-2">
-                            <Filter size={18} />
-                            Filtros
-                        </Button>
+            <ContentCard>
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <Input
+                            placeholder="Buscar por nombre, componente o modelo..."
+                            className="pl-10 border-slate-200 focus:ring-teal-500/20"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                </CardHeader>
-                <CardContent className="p-0">
+                    <Button variant="outline" className="border-slate-200 text-slate-600 gap-2">
+                        <Filter size={18} />
+                        Filtros
+                    </Button>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 overflow-hidden">
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow>
@@ -215,108 +221,107 @@ export default function DocumentsPage() {
                                         No se encontraron documentos.
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredDocs.map((doc) => {
-                                return (
-                                    <TableRow key={doc._id} className="hover:bg-slate-50/50 transition-colors">
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-slate-100 rounded text-slate-500">
-                                                    <FileText size={18} />
-                                                </div>
-                                                <div className="max-w-[200px]">
-                                                    <p className="text-slate-900 font-semibold truncate" title={doc.filename}>
-                                                        {doc.filename}
-                                                    </p>
-                                                    <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">
-                                                        Uploaded: {new Date(doc.createdAt).toLocaleDateString()}
-                                                    </p>
-                                                </div>
+                            ) : filteredDocs.map((doc) => (
+                                <TableRow key={doc._id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-slate-100 rounded text-slate-500">
+                                                <FileText size={18} />
                                             </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="space-y-1">
-                                                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] uppercase">
-                                                    {doc.componentType}
-                                                </Badge>
-                                                <p className="text-xs font-bold text-slate-700">{doc.model}</p>
+                                            <div className="max-w-[200px]">
+                                                <p className="text-slate-900 font-semibold truncate" title={doc.filename}>
+                                                    {doc.filename}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">
+                                                    Uploaded: {new Date(doc.createdAt).toLocaleDateString()}
+                                                </p>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono text-xs text-slate-500">v{doc.version}</TableCell>
-                                        <TableCell>
-                                            {['vigente', 'active'].includes(doc.status) && (
-                                                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1 hover:bg-emerald-100">
-                                                    <CheckCircle2 size={12} /> Active
-                                                </Badge>
-                                            )}
-                                            {['obsoleto', 'obsolete'].includes(doc.status) && (
-                                                <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1 hover:bg-amber-100">
-                                                    <AlertCircle size={12} /> Obsolete
-                                                </Badge>
-                                            )}
-                                            {['archivado', 'archived'].includes(doc.status) && (
-                                                <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100">
-                                                    <Archive size={12} /> Archived
-                                                </Badge>
-                                            )}
-                                            {['borrador', 'draft'].includes(doc.status) && (
-                                                <Badge className="bg-blue-100 text-blue-700 border-blue-200 gap-1 hover:bg-blue-100">
-                                                    <Clock size={12} /> Draft
-                                                </Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-semibold text-slate-900">{doc.totalChunks}</span>
-                                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="bg-teal-500 h-full transition-all duration-1000"
-                                                        style={{ width: `${Math.min(100, (doc.totalChunks / 100) * 100)}%` }}
-                                                    ></div>
-                                                </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="space-y-1">
+                                            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] uppercase">
+                                                {doc.componentType}
+                                            </Badge>
+                                            <p className="text-xs font-bold text-slate-700">{doc.model}</p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="font-mono text-xs text-slate-500">v{doc.version}</TableCell>
+                                    <TableCell>
+                                        {['vigente', 'active'].includes(doc.status) && (
+                                            <Badge className="bg-emerald-100/50 text-emerald-700 border-emerald-200/50 gap-1 hover:bg-emerald-100/50 shadow-none">
+                                                <CheckCircle2 size={12} /> Active
+                                            </Badge>
+                                        )}
+                                        {['obsoleto', 'obsolete'].includes(doc.status) && (
+                                            <Badge className="bg-amber-100/50 text-amber-700 border-amber-200/50 gap-1 hover:bg-amber-100/50 shadow-none">
+                                                <AlertCircle size={12} /> Obsolete
+                                            </Badge>
+                                        )}
+                                        {['archivado', 'archived'].includes(doc.status) && (
+                                            <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100 shadow-none">
+                                                <Archive size={12} /> Archived
+                                            </Badge>
+                                        )}
+                                        {['borrador', 'draft'].includes(doc.status) && (
+                                            <Badge className="bg-blue-100/50 text-blue-700 border-blue-200/50 gap-1 hover:bg-blue-100/50 shadow-none">
+                                                <Clock size={12} /> Draft
+                                            </Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-semibold text-slate-900">{doc.totalChunks}</span>
+                                            <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="bg-teal-500 h-full transition-all duration-1000"
+                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 100) * 100)}%` }}
+                                                ></div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-48">
-                                                    <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                                    <DropdownMenuItem
-                                                        onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}
-                                                    >
-                                                        <Download className="mr-2 h-4 w-4" /> Ver / Descargar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuLabel className="text-[10px] text-slate-400">Cambiar Estado</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'vigente')}>
-                                                        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" /> Marcar Vigente
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
-                                                        <AlertCircle className="mr-2 h-4 w-4 text-amber-500" /> Marcar Obsoleto
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(doc._id, 'archivado')}>
-                                                        <Archive className="mr-2 h-4 w-4 text-slate-500" /> Archivar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleDelete(doc._id)}
-                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar Permanente
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100 text-slate-400">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-xl border-slate-100">
+                                                <DropdownMenuLabel className="text-xs text-slate-400">Acciones</DropdownMenuLabel>
+                                                <DropdownMenuItem
+                                                    className="rounded-lg gap-2 cursor-pointer"
+                                                    onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}
+                                                >
+                                                    <Download size={14} /> Ver / Descargar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator className="bg-slate-50" />
+                                                <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">Estado</DropdownMenuLabel>
+                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'vigente')}>
+                                                    <CheckCircle2 size={14} className="text-emerald-500" /> Marcar Vigente
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
+                                                    <AlertCircle size={14} className="text-amber-500" /> Marcar Obsoleto
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'archivado')}>
+                                                    <Archive size={14} className="text-slate-400" /> Archivar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator className="bg-slate-50" />
+                                                <DropdownMenuItem
+                                                    onClick={() => handleDelete(doc._id)}
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg gap-2 cursor-pointer"
+                                                >
+                                                    <Trash2 size={14} /> Eliminar Permanente
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </ContentCard>
+        </PageContainer>
     );
 }

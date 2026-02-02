@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
         // Environment detection: priority header > body > PRODUCTION
         const environment = req.headers.get('x-environment') || (formData.get('environment') as string) || 'PRODUCTION';
+        const maskPii = formData.get('maskPii') !== 'false'; // Default to true if not explicitly 'false'
 
         // DELEGATE TO SERVICE
         const result = await IngestService.processDocument({
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
             userEmail,
             ip,
             userAgent,
-            correlationId
+            correlationId,
+            maskPii
         });
 
         return NextResponse.json(result);

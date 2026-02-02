@@ -42,10 +42,10 @@
         "f1_desc": "Pregunta en lenguaje natural y obtén respuestas precisas en menos de 500ms, con cita exacta al documento fuente.",
         "f2_title": "Inteligencia Visual",
         "f2_desc": "Comprensión nativa de planos técnicos, esquemas eléctricos y diagramas complejos con Gemini 2.0/3. Identificación automática de componentes visuales.",
-        "f3_title": "Cumplimiento Automático",
-        "f3_desc": "Auditoría total: cada respuesta incluye referencia al documento original. Exportación ZIP firmada para cumplimiento GDPR.",
-        "f4_title": "Entornos & Sandboxing",
-        "f4_desc": "Aislamiento total de prompts, workflows y documentos por entorno (Staging/Producción) con flujos de promoción seguros."
+        "f3_title": "Privacidad & Desidentificación",
+        "f3_desc": "Protección total de datos sensibles. Motor de enmascaramiento PII automático que protege correos, teléfonos y DNIs antes de cualquier procesamiento con IA.",
+        "f4_title": "Navegación por Grafos",
+        "f4_desc": "Entiende las relaciones entre componentes y procedimientos. Infraestructura basada en Grafos de Conocimiento (Neo4j) para manuales complejos."
     },
     "solutions": {
         "title": "Soluciones por Sector",
@@ -64,8 +64,8 @@
         "f1_desc": "RBAC por roles y permisos. SSO con Google/Microsoft próximamente. Gestión de usuarios y equipos desde el dashboard.",
         "f2_title": "Cifrado de Grado Militar",
         "f2_desc": "Datos cifrados en reposo (AES-256) y en tránsito (TLS 1.3). Cumplimiento SOC2 y preparación para ISO 27001.",
-        "f3_title": "Auditoría y Trazabilidad",
-        "f3_desc": "Logs completos de acceso, búsquedas y modificaciones. Reportes de uso y compliance listos para auditorías externas.",
+        "f3_title": "Observabilidad & Calidad",
+        "f3_desc": "Dashboard nativo de evaluación RAG con Juez LLM. Mide la fidelidad y relevancia de cada respuesta en tiempo real para máxima fiabilidad técnica.",
         "f4_title": "Portabilidad Total",
         "f4_desc": "Exporta tu conocimiento completo en ZIP firmado. Certificados de borrado GDPR. BYODB (tu propia base de datos) próximamente."
     },
@@ -134,5 +134,45 @@
         "contact_desc": "Nuestro equipo legal está disponible para aclaraciones.",
         "contact_button": "Contactar Legal",
         "privacy_button": "Ver Privacy Policy"
+    },
+    "ingest": {
+        "pii_label": "Desidentificación de Datos (PII)",
+        "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
+        "pii_warning_title": "ADVERTENCIA: Datos Sensibles",
+        "pii_warning_desc": "Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos. ¿Cómo deseas proceder?",
+        "pii_opt_continue": "Continuar sin protección",
+        "pii_opt_cancel": "Cancelar",
+        "pii_opt_enable": "Activar y continuar"
+    },
+    "rag_eval": {
+        "title": "Dashboard de Evaluación RAG",
+        "subtitle": "Observabilidad y calidad de respuestas (Fidelidad, Relevancia, Precisión)",
+        "judge_badge": "Juez LLM: Gemini 1.5 Pro",
+        "metrics": {
+            "faithfulness": "Fidelidad (Avg)",
+            "relevance": "Relevancia de Respuesta",
+            "precision": "Precisión de Contexto",
+            "queries": "Consultas Evaluadas",
+            "faithfulness_desc": "Respuestas basadas solo en contexto",
+            "relevance_desc": "Pertinencia de la respuesta",
+            "precision_desc": "Utilidad del contexto recuperado",
+            "queries_desc": "Total de trazas analizadas"
+        },
+        "tabs": {
+            "trends": "Tendencias de Calidad",
+            "history": "Historial de Trazas"
+        },
+        "chart": {
+            "title": "Evolución de Métricas",
+            "desc": "Seguimiento diario de la fidelidad y relevancia de las respuestas",
+            "faithfulness": "Fidelidad",
+            "relevance": "Relevancia"
+        },
+        "table": {
+            "date": "Fecha",
+            "query": "Consulta",
+            "metrics": "Métricas (F|R|P)",
+            "feedback": "Feedback Juez"
+        }
     }
 }

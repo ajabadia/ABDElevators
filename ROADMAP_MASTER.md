@@ -44,7 +44,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ### 📊 Status & Metrics (v2.60)
 
-- **Global Progress:** 285% (Phase 52 Implementation - Visual Intelligence).
+- **Global Progress:** 286% (Phase 58 Refactoring - Dynamic Permissions).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
 - **Recent Ship:** Visual Intelligence (Gemini Native Multimodal PDF). Comprensión de esquemas técnicos, diagramas y planos directamente desde el RAG. Badges visuales en resultados y navegación por páginas (`approxPage`).
   - **Environment Isolation:** Segregación de datos en DB y filtros en RAG Service.
@@ -158,7 +158,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
 
 #### 👁️ FASE 52: VISUAL INTELLIGENCE (MULTI-MODAL RAG) (COMPLETADO ✅)
+
 - **Objetivo:** Ingesta y comprensión de diagramas técnicos (Esquemas eléctricos/mecánicos).
+
 - [X] **Multi-Modal Pipeline:** Integración nativa con Gemini 2.0/3 para PDFs.
 - [X] **Vision LLM:** Procesamiento de diagramas con descripciones técnicas automáticas.
 - [X] **Schema Navigation:** Identificación de página exacta (`approxPage`) para navegación técnica.
@@ -183,9 +185,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 - **Objetivo:** Cerrar brechas de seguridad y auditoría (Ref: ` /`documentación/13/00.md `, /`documentación/13/02.md`).
 
-- [x] **Rate Limiting:** Implementar `@upstash/ratelimit` en endpoints de Auth y Admin.
-- [x] **CSP Headers:** Configuración estricta de Content Security Policy en Middleware.
-- [x] **Sanitization:** Revisión de seguridad en queries regex de MongoDB ($regex unsafe).
+- [X] **Rate Limiting:** Implementar `@upstash/ratelimit` en endpoints de Auth y Admin.
+- [X] **CSP Headers:** Configuración estricta de Content Security Policy en Middleware.
+- [X] **Sanitization:** Revisión de seguridad en queries regex de MongoDB ($regex unsafe).
 
 #### 🧠 FASE 56: RAG EVOLUTION 3.0 (Advanced Retrieval)
 
@@ -203,15 +205,17 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **Business Rules:** Nodos de condición avanzada (ej: Monto > X, Cliente == Y).
 - [ ] **History Archiving:** Sistema de archivado de logs antiguos para evitar documentos gigantes.
 
-#### 👮 FASE 58: GUARDIAN V2 - ENTERPRISE GOVERNANCE (ABAC & CONSOLE) (COMPLETADO ✅)
+#### 👮 FASE 58: GUARDIAN V2 - ENTERPRISE GOVERNANCE (ABAC & CONSOLE) (EN PROGRESO 🛠️)
 
 - **Objetivo:** Implementar modelo de permisos granular e híbrido + Consola de Gestión (Ref: `documentación/13/02.md`, `documentación/13/1303.md`).
 
-- [X] **ABAC Engine:** Migrar de Roles estáticos a Políticas de Permisos granulares (Backend).
-- [X] **Guardian Console:** UI "Permission Matrix" para gestión visual de accesos (`/admin/permissions/matrix`).
-- [X] **Hierarchical Groups UI:** Visualización de árbol de grupos y herencia (`/admin/permissions/groups`).
-- [ ] **JIT Access & Dashboard:** Sistema "Break Glass" + Centro de Escalaciones (`/admin/permissions/escalations`).
-- [X] **Permission Simulator:** Herramienta "Ver como usuario" para depuración de reglas (`/admin/permissions/simulate`).
+- [X] **ABAC Engine:** Base implementation of the `GuardianEngine`.
+- [ ] **Dynamic Roles:** Reemplazar roles hardcodeados por Perfiles definidos por el Tenant.
+- [/] **Guardian Console:** UI "Permission Matrix" (Actualmente en modo mock, requiere integración API).
+- [X] **Hierarchical Groups UI:** Visualización básica implementada.
+- [ ] **User Overrides:** Implementar excepciones de permisos a nivel de usuario individual.
+- [ ] **JIT Access & Dashboard:** Sistema "Break Glass" + Centro de Escalaciones.
+- [X] **Permission Simulator:** Herramienta de depuración inicial.
 
 #### 🌐 FASE 59: ENVIRONMENTS (STAGING / USER SANDBOX) (COMPLETADO ✅)
 
@@ -224,11 +228,34 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [X] **Vercel Build Fix:** Optimización de tipos y null-checks para despliegues estables.
 
 #### 📨 FASE 60: ADVANCED INVITATION SYSTEM
+
 - **Objetivo:** Escalabilidad en onboarding y gestión de accesos temporales (Ref: User Request).
+
 - [ ] **Bulk Invites:** Carga masiva de usuarios vía CSV/Excel para grandes tenants.
 - [ ] **Invitation Management:** UI para reenviar, revocar y ver estado de invitaciones pendientes.
 - [ ] **Smart Onboarding:** Asignación automática de Grupos y Departamentos desde la invitación.
 - [ ] **Magic Links & TTL:** Links de un solo uso o con expiración personalizada (integrado con JIT).
+
+
+
+#### FASE 61: RAG COGNITIVE SCALING (EN PROGRESO 🛠️)
+
+- **Descripción**: Optimización de costes, seguridad y precisión estructural del motor RAG.
+- **Hitos de Arquitectura:**
+  - [X] **Semantic Cache Integration**: Implementación de caché semántica con Upstash/Redis para reducir latencia y costes de Gemini.
+  - [X] **PII Masking Engine**: Middleware de desidentificación de datos sensibles durante la ingesta.
+  - [X] **Graph-Enhanced RAG**: Extracción de entidades y relaciones para navegación estructural en manuales complejos.
+  - [X] **RAG Evaluation Dashboard**: Framework de observabilidad para medir fidelidad y relevancia (estilo Ragas).
+  - [/] **Optional PII Masking**: Permitir desactivar la desidentificación con flujo de advertencia UI.
+
+#### 🌐 FASE 62: i18n GOVERNANCE & MULTILANGUAGE MANAGER (FUTURO)
+
+- **Objetivo:** Empoderar al SuperAdmin para gestionar traducciones sin tocar código y asegurar cobertura total i18n.
+
+- [ ] **i18n Audit**: Revisión de todo el frontend para identificar textos hardcodeados.
+- [ ] **Translation Editor UI**: Panel en `/admin/settings/i18n` para editar `es.json`, `en.json` y añadir nuevos idiomas.
+- [ ] **Dynamic i18n Storage**: Migrar traducciones de archivos estáticos a MongoDB con capa de caché en Redis para rendimiento.
+- [ ] **AI-Assisted Translation**: Botón "Auto-traducir" usando Gemini para nuevos idiomas.
 
 ---
 

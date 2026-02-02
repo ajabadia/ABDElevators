@@ -25,6 +25,7 @@ export interface IngestOptions {
     ip?: string;
     userAgent?: string;
     correlationId?: string;
+    maskPii?: boolean;
 }
 
 export interface IngestResult {
@@ -189,10 +190,39 @@ export class IngestService {
         );
 
         // 2. Extract Text & Visuals in PARALLEL (Phase 52)
-        const [text, visualFindings] = await Promise.all([
+        const [rawText, visualFindings] = await Promise.all([
             extractTextAdvanced(buffer),
             analyzePDFVisuals(buffer, tenantId, correlationId)
         ]);
+
+        // 2.1 PII Masking (Phase 61)
+        let text = rawText;
+        const maskPii = options.maskPii !== false; // Default to true
+
+        if (maskPii) {
+            const { PIIMasker } = await import('@/lib/pii-masker');
+            const { maskedText, metadata: piiMetadata } = PIIMasker.mask(rawText, tenantId, correlationId);
+            text = maskedText;
+
+            if (piiMetadata.count > 0) {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_SERVICE',
+                    action: 'PII_DETECTION',
+                    message: `De-identified ${piiMetadata.count} PII items in ${file.name}`,
+                    correlationId,
+                    details: { piiCount: piiMetadata.count, piiTypes: piiMetadata.types }
+                });
+            }
+        } else {
+            await logEvento({
+                level: 'WARN',
+                source: 'INGEST_SERVICE',
+                action: 'PII_MASKING_DISABLED',
+                message: `PII Masking explicitly disabled for document: ${file.name}. Sensitive data may be stored.`,
+                correlationId
+            });
+        }
 
         // 2.1. Detect Language
         const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
@@ -231,6 +261,15 @@ export class IngestService {
         const validatedDocumentMetadata = KnowledgeAssetSchema.parse(documentMetadata);
         const insertResult = await knowledgeAssetsCollection.insertOne(validatedDocumentMetadata);
         const docId = insertResult.insertedId;
+
+        // 5.1.5. Graph Extraction (Phase 61)
+        const { GraphExtractionService } = await import('@/services/graph-extraction-service');
+        await GraphExtractionService.extractAndPersist(
+            text,
+            tenantId,
+            correlationId,
+            { sourceDoc: file.name }
+        ).catch(e => console.error("[GRAPH EXTRACTION ERROR]", e));
 
         // 5.2. Process ALL Chunks (Text + Visual)
         const { multilingualService } = await import('@/lib/multilingual-service');

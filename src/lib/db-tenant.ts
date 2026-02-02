@@ -13,7 +13,7 @@ import {
     ClientSession
 } from 'mongodb';
 import { connectDB, connectLogsDB, getMongoClient } from '@/lib/db';
-import { auth } from './auth';
+
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 
@@ -217,8 +217,9 @@ export async function getTenantCollection<T extends Document>(
 ): Promise<SecureCollection<T>> {
     let session = providedSession;
 
-    if (!session) {
+    if (!session && !process.env.SINGLE_TENANT_ID) {
         try {
+            const { auth } = await import('./auth');
             session = await auth();
         } catch (e) {
             console.warn('[db-tenant] Failed to retrieve session from auth()', e);
