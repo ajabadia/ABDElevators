@@ -1,46 +1,25 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Search, Send, Sparkles, Terminal, BookOpen, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import React from 'react';
+import { Search, Sparkles, Terminal, BookOpen, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { FederatedSuggestions } from "@/components/federated/FederatedSuggestions";
+import { useWorkspaceStore } from '@/store/workspace-store';
 
 export function AgenticSupportSearch() {
-    const [query, setQuery] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<{
-        answer: string;
-        documents: any[];
-        trace: string[];
-    } | null>(null);
-    const [showTrace, setShowTrace] = useState(false);
-
-    const handleSearch = async () => {
-        if (!query.trim()) return;
-
-        setLoading(true);
-        setResult(null);
-        try {
-            const res = await fetch('/api/tecnico/rag/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: query })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setResult(data);
-            }
-        } catch (err) {
-            console.error("Error in agentic search:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        searchQuery,
+        setSearchQuery,
+        isSearching,
+        searchResult,
+        performSearch,
+        showTrace,
+        toggleTrace
+    } = useWorkspaceStore();
 
     return (
         <div className="space-y-6">
@@ -64,23 +43,23 @@ export function AgenticSupportSearch() {
                         <Input
                             placeholder="Ej: ¿Protocolo de rescate en manual Otis 2000?"
                             className="bg-transparent border-none text-white placeholder:text-blue-200/50 focus-visible:ring-0 text-lg h-12"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && performSearch()}
                         />
                         <Button
-                            onClick={handleSearch}
-                            disabled={loading || !query}
+                            onClick={performSearch}
+                            disabled={isSearching || !searchQuery}
                             className="h-12 px-8 rounded-xl bg-white text-blue-600 hover:bg-blue-50 font-bold shadow-lg"
                         >
-                            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Search className="h-5 w-5 mr-2" />}
-                            {loading ? "Pensando..." : "Consultar"}
+                            {isSearching ? <Loader2 className="animate-spin h-5 w-5" /> : <Search className="h-5 w-5 mr-2" />}
+                            {isSearching ? "Pensando..." : "Consultar"}
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
-            {loading && (
+            {isSearching && (
                 <div className="py-12 text-center animate-pulse">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
@@ -90,7 +69,7 @@ export function AgenticSupportSearch() {
                 </div>
             )}
 
-            {result && (
+            {searchResult && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Respuesta Principal */}
                     <Card className="border-none shadow-lg bg-white overflow-hidden">
@@ -104,7 +83,7 @@ export function AgenticSupportSearch() {
                                     variant="ghost"
                                     size="sm"
                                     className="text-slate-400 hover:text-blue-600 text-xs font-bold gap-1"
-                                    onClick={() => setShowTrace(!showTrace)}
+                                    onClick={toggleTrace}
                                 >
                                     {showTrace ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                     {showTrace ? "Ocultar proceso" : "Ver razonamiento de la IA"}
@@ -114,7 +93,7 @@ export function AgenticSupportSearch() {
                         <CardContent className="space-y-6">
                             <div className="prose dark:prose-invert max-w-none">
                                 <p className="text-slate-800 leading-relaxed text-lg font-medium whitespace-pre-wrap">
-                                    {result.answer}
+                                    {searchResult.answer}
                                 </p>
                             </div>
 
@@ -125,7 +104,7 @@ export function AgenticSupportSearch() {
                                         <Terminal size={14} />
                                         <span className="font-bold uppercase tracking-tighter">Proceso de Pensamiento Agéntico</span>
                                     </div>
-                                    {result.trace.map((step, idx) => (
+                                    {searchResult.trace.map((step, idx) => (
                                         <div key={idx} className="flex gap-3">
                                             <span className="text-slate-600 shrink-0">[{idx + 1}]</span>
                                             <span className="leading-tight">{step}</span>
@@ -141,7 +120,7 @@ export function AgenticSupportSearch() {
                     </Card>
 
                     {/* Sugerencias de Inteligencia Colectiva (Federación) */}
-                    <FederatedSuggestions query={query} />
+                    <FederatedSuggestions query={searchQuery} />
 
                     {/* Documentos de Apoyo */}
                     <div className="space-y-4">
@@ -149,7 +128,7 @@ export function AgenticSupportSearch() {
                             <BookOpen size={16} /> Fuentes Técnicas Utilizadas
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {result.documents.map((doc, idx) => (
+                            {searchResult.documents.map((doc, idx) => (
                                 <Card key={idx} className="border-none shadow-sm bg-slate-50 hover:bg-slate-100 transition-colors">
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start mb-2">
@@ -169,29 +148,28 @@ export function AgenticSupportSearch() {
                 </div>
             )}
 
-            {!result && !loading && (
+            {!searchResult && !isSearching && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-8">
-                    <Card className="border-dashed border-slate-200 bg-white/50 cursor-pointer hover:bg-blue-50/50 transition-colors" onClick={() => setQuery("¿Cuál es el par de apriete para cables de tracción Otis?")}>
-                        <CardContent className="p-4 text-center space-y-2">
-                            <AlertCircle className="w-5 h-5 text-blue-400 mx-auto" />
-                            <p className="text-xs font-bold text-slate-600 uppercase">Consultar Torque</p>
-                            <p className="text-xs text-slate-400">Verificar valores oficiales de manuales.</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-dashed border-slate-200 bg-white/50 cursor-pointer hover:bg-blue-50/50 transition-colors" onClick={() => setQuery("Procedimiento de bypass puerta de foso Schindler")}>
-                        <CardContent className="p-4 text-center space-y-2">
-                            <AlertCircle className="w-5 h-5 text-blue-400 mx-auto" />
-                            <p className="text-xs font-bold text-slate-600 uppercase">Seguridad Foso</p>
-                            <p className="text-xs text-slate-400">Protocolos de seguridad críticos.</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-dashed border-slate-200 bg-white/50 cursor-pointer hover:bg-blue-50/50 transition-colors" onClick={() => setQuery("Configuración potenciómetro Quantum P1")}>
-                        <CardContent className="p-4 text-center space-y-2">
-                            <AlertCircle className="w-5 h-5 text-blue-400 mx-auto" />
-                            <p className="text-xs font-bold text-slate-600 uppercase">Puertas Quantum</p>
-                            <p className="text-xs text-slate-400">Ajustes precisos de componentes.</p>
-                        </CardContent>
-                    </Card>
+                    {[
+                        { title: "Consultar Torque", desc: "Verificar valores oficiales de manuales.", query: "¿Cuál es el par de apriete para cables de tracción Otis?" },
+                        { title: "Seguridad Foso", desc: "Protocolos de seguridad críticos.", query: "Procedimiento de bypass puerta de foso Schindler" },
+                        { title: "Puertas Quantum", desc: "Ajustes precisos de componentes.", query: "Configuración potenciómetro Quantum P1" }
+                    ].map((example, idx) => (
+                        <Card
+                            key={idx}
+                            className="border-dashed border-slate-200 bg-white/50 cursor-pointer hover:bg-blue-50/50 transition-colors"
+                            onClick={() => {
+                                setSearchQuery(example.query);
+                                performSearch();
+                            }}
+                        >
+                            <CardContent className="p-4 text-center space-y-2">
+                                <AlertCircle className="w-5 h-5 text-blue-400 mx-auto" />
+                                <p className="text-xs font-bold text-slate-600 uppercase">{example.title}</p>
+                                <p className="text-xs text-slate-400">{example.desc}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             )}
         </div>

@@ -14,7 +14,7 @@ export interface AICorrection {
 }
 
 /**
- * AgentEngine: Gestiona comportamientos autónomos y aprendizaje (Fase KIMI 7).
+ * AgentEngine: Gestiona comportamientos autónomos y aprendizaje (Fase 7).
  */
 export class AgentEngine {
     private static instance: AgentEngine;

@@ -18,10 +18,14 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
 
     if (keys.length === 0) {
         return (
-            <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
-                <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-300">No generated keys</h3>
-                <p className="text-slate-500">Create a new key to start integrating via API.</p>
+            <div className="text-center py-12">
+                <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-800">
+                    <Key className="w-8 h-8 text-slate-500" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-200">No active keys</h3>
+                <p className="text-slate-500 max-w-sm mx-auto mt-2">
+                    Create a new API Key to start integrating your external systems with our platform.
+                </p>
             </div>
         );
     }
@@ -40,7 +44,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
     return (
         <div className="space-y-4">
             {keys.map((key) => (
-                <div key={key._id} className={`p-4 rounded-xl border ${key.isActive ? 'border-white/10 bg-slate-900/50' : 'border-red-900/30 bg-red-950/10 opacity-60'} flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-white/20`}>
+                <div key={key._id} className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${key.isActive ? 'border-slate-800 bg-slate-900/50 hover:border-teal-900/50' : 'border-red-900/20 bg-red-950/5 opacity-70'}`}>
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
                             <h4 className="font-semibold text-white">{key.name}</h4>

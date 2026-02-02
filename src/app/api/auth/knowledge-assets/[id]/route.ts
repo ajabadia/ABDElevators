@@ -15,8 +15,8 @@ cloudinary.config({
 });
 
 /**
- * DELETE /api/auth/documentos/[id]
- * Elimina un documento personal del usuario.
+ * DELETE /api/auth/knowledge-assets/[id]
+ * Soft-Delete de un activo de conocimiento (Compliance).
  * SLA: P95 < 1000ms
  */
 export async function DELETE(
@@ -34,31 +34,45 @@ export async function DELETE(
 
         const { id } = await params;
 
+        // Session should have tenantId (from auth/next-auth logic)
+        // If not, we might need to fetch it.
+        // Assuming session.user has tenantId (as seen in other files)
+        const tenantId = (session.user as any).tenantId;
+
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ email: session.user.email });
+
         if (!user) throw new NotFoundError('Usuario no encontrado');
 
         const db = await connectDB();
-        const doc = await db.collection('documentos_usuarios').findOne({
-            _id: new ObjectId(id),
-            usuario_id: user._id.toString() // Seguridad: solo el dueño puede borrar
-        });
 
-        if (!doc) {
+        // 1. Soft Delete in User Documents (Corrected Collection)
+        const result = await db.collection('user_documents').findOneAndUpdate(
+            {
+                _id: new ObjectId(id),
+                userId: user._id.toString() // Security: Only owner
+            },
+            {
+                $set: {
+                    status: 'deleted',
+                    deletedAt: new Date(),
+                    deletedBy: session.user.email
+                }
+            }
+        );
+
+        if (!result) {
             throw new NotFoundError('Documento no encontrado o no autorizado');
         }
 
-        // Borrar de Cloudinary
-        await cloudinary.uploader.destroy(doc.cloudinary_public_id);
-
-        // Borrar de BD
-        await db.collection('documentos_usuarios').deleteOne({ _id: new ObjectId(id) });
+        // NOTE: Soft Delete (Compliance). Cleaning job required for hard delete.
 
         await logEvento({
             level: 'INFO',
-            source: 'API_DOCS_USUARIO',
-            action: 'DELETE_DOC',
-            message: `Documento borrado por ${user.email}: ${doc.nombre_original}`, correlationId: correlacion_id,
+            source: 'API_USER_DOCS',
+            action: 'SOFT_DELETE_DOC',
+            message: `Documento marcado como eliminado: ${id}`,
+            correlationId: correlacion_id,
             details: { docId: id }
         });
 

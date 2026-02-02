@@ -6,7 +6,7 @@ import { ChecklistConfig } from '@/lib/schemas';
 import { Plus, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useApiList } from '@/hooks/useApiList';
 import { useApiMutation } from '@/hooks/useApiMutation';
-import { DataTable } from '@/components/shared/DataTable';
+import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 

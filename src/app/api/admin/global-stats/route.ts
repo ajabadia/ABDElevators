@@ -30,15 +30,36 @@ export async function GET(req: NextRequest) {
         });
 
         // 3. Estimated MRR (Monthly Recurring Revenue)
-        const tenants = await authDb.collection('tenants').find({}).toArray();
-        let estimatedMRR = 0;
-        tenants.forEach((t: any) => {
-            if (t.subscription?.status === 'ACTIVE' || t.subscription?.status === 'active' || t.subscription?.status === 'trialing') {
-                const plan = t.subscription.tier || t.subscription.plan || 'FREE';
-                if (plan === 'PRO') estimatedMRR += 99;
-                if (plan === 'ENTERPRISE') estimatedMRR += 499;
+        // 3. Estimated MRR (Monthly Recurring Revenue) - Aggregation Optimized
+        const mrrStats = await authDb.collection('tenants').aggregate([
+            {
+                $match: {
+                    "subscription.status": { $in: ["ACTIVE", "active", "trialing"] }
+                }
+            },
+            {
+                $project: {
+                    tier: { $ifNull: ["$subscription.tier", "$subscription.plan"] }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalMRR: {
+                        $sum: {
+                            $switch: {
+                                branches: [
+                                    { case: { $eq: ["$tier", "PRO"] }, then: 99 },
+                                    { case: { $eq: ["$tier", "ENTERPRISE"] }, then: 499 }
+                                ],
+                                default: 0
+                            }
+                        }
+                    }
+                }
             }
-        });
+        ]).toArray();
+        const estimatedMRR = mrrStats[0]?.totalMRR || 0;
 
         // 4. Consumo global (Tokens, Storage)
         const usageStats = await db.collection('usage_logs').aggregate([
@@ -84,6 +105,15 @@ export async function GET(req: NextRequest) {
                 }
             }
         ]).toArray();
+
+
+        // 4. Recent Tenants (for list)
+        // Optimized: Only fetch what we need (name, tier, createdAt)
+        const tenants = await authDb.collection('tenants')
+            .find({}, { projection: { name: 1, 'subscription.tier': 1, createdAt: 1 } })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .toArray();
 
         return NextResponse.json({
             success: true,

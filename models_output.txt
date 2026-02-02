@@ -1,8 +1,0 @@
-🔍 Listing available models...
-❌ gemini-1.5-flash: Not Found (404)
-❌ gemini-1.5-flash-001: Not Found (404)
-❌ gemini-1.5-flash-002: Not Found (404)
-❌ gemini-1.5-flash-latest: Not Found (404)
-❌ gemini-1.5-pro: Not Found (404)
-❌ gemini-pro: Not Found (404)
-❌ gemini-1.0-pro: Not Found (404)

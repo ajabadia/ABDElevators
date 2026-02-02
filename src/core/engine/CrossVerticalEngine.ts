@@ -5,7 +5,7 @@ import { callGeminiMini } from '@/lib/llm';
 /**
  * CrossVerticalEngine: Permite la búsqueda semántica horizontal entre diferentes tenantes.
  * Mantiene el anonimato y la privacidad de los datos sensibles.
- * (Fase KIMI 11)
+ * (Fase 11)
  */
 export class CrossVerticalEngine {
     private static instance: CrossVerticalEngine;

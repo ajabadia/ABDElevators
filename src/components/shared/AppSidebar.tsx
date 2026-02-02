@@ -55,14 +55,14 @@ export function AppSidebar() {
     return (
         <aside
             className={cn(
-                "h-screen bg-slate-900 text-slate-100 flex flex-col border-r border-slate-800 transition-all duration-300 ease-in-out",
+                "h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border transition-all duration-300 ease-in-out",
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
             <Link
                 href="/"
                 className={cn(
-                    "p-6 border-b border-slate-800 flex items-center justify-between overflow-hidden whitespace-nowrap hover:bg-slate-800/50 transition-colors group",
+                    "p-6 border-b border-sidebar-border flex items-center justify-between overflow-hidden whitespace-nowrap hover:bg-sidebar-accent/50 transition-colors group",
                     isCollapsed && "px-4"
                 )}
             >
@@ -71,15 +71,15 @@ export function AppSidebar() {
                         {branding?.logo?.url ? (
                             <img src={branding.logo.url} alt="Logo" className="h-8 w-auto object-contain" />
                         ) : (
-                            <div className="h-8 w-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold shrink-0">
+                            <div className="h-8 w-8 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold shrink-0">
                                 {branding?.companyName?.[0] || 'A'}
                             </div>
                         )}
                         <div className="overflow-hidden">
-                            <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-teal-400 transition-colors truncate">
+                            <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground group-hover:text-sidebar-primary transition-colors truncate">
                                 {branding?.companyName || 'ABD RAG Platform'}
                             </h1>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Workspace</p>
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Workspace</p>
                         </div>
                     </div>
                 )}
@@ -88,7 +88,7 @@ export function AppSidebar() {
                         {branding?.logo?.url ? (
                             <img src={branding.logo.url} alt="Logo" className="h-8 w-8 object-contain" />
                         ) : (
-                            <div className="text-teal-400 font-bold text-xl group-hover:text-teal-300 transition-colors">
+                            <div className="text-sidebar-primary font-bold text-xl group-hover:text-sidebar-primary-foreground transition-colors">
                                 {branding?.companyName?.[0] || 'R'}
                             </div>
                         )}
@@ -100,9 +100,9 @@ export function AppSidebar() {
                 {filteredSections.map((section) => (
                     <div key={section.label} className="space-y-2">
                         {!isCollapsed && (
-                            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/70 mb-4 px-4 flex items-center justify-between">
+                            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 mb-4 px-4 flex items-center justify-between">
                                 {section.label}
-                                <span className="h-px bg-slate-800 flex-1 ml-4 opacity-50"></span>
+                                <span className="h-px bg-sidebar-border flex-1 ml-4 opacity-50"></span>
                             </h3>
                         )}
                         <div className="space-y-1">
@@ -116,8 +116,8 @@ export function AppSidebar() {
                                         className={cn(
                                             "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group",
                                             isActive
-                                                ? "bg-teal-600/10 text-teal-400 font-semibold"
-                                                : "hover:bg-slate-800 text-slate-400 hover:text-slate-100",
+                                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                                : "hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground",
                                             isCollapsed && "justify-center px-2"
                                         )}
                                     >
@@ -125,7 +125,7 @@ export function AppSidebar() {
                                             size={isCollapsed ? 22 : 18}
                                             className={cn(
                                                 "transition-colors shrink-0",
-                                                isActive ? "text-teal-400" : "text-slate-500 group-hover:text-teal-400"
+                                                isActive ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
                                             )}
                                         />
                                         {!isCollapsed && (
@@ -141,15 +141,15 @@ export function AppSidebar() {
                 ))}
             </nav>
 
-            <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+            <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/10">
                 <div className={cn(
                     "flex flex-col gap-2",
                     isCollapsed ? "items-center" : "items-start"
                 )}>
                     {!isCollapsed && (
                         <div className="px-4 flex items-center gap-2 mb-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
-                            <div className="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">
+                            <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary"></div>
+                            <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">
                                 {userRole || 'Loading...'}
                             </div>
                         </div>
@@ -157,7 +157,7 @@ export function AppSidebar() {
                     <button
                         onClick={handleLogout}
                         className={cn(
-                            "flex items-center gap-3 w-full px-4 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all group",
+                            "flex items-center gap-3 w-full px-4 py-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all group",
                             isCollapsed && "justify-center px-2"
                         )}
                     >

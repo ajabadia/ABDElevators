@@ -4,7 +4,7 @@ import { GovernancePolicy, AIDecisionAudit } from '@/types/governance';
 
 /**
  * GovernanceEngine: Supervisa y audita el comportamiento de los agentes de IA.
- * (Fase KIMI 12)
+ * (Fase 12)
  */
 export class GovernanceEngine {
     private static instance: GovernanceEngine;

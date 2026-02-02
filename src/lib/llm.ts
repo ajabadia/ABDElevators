@@ -349,7 +349,7 @@ export async function extractModelsWithGemini(text: string, tenantId: string, co
 }
 
 /**
- * Analiza una entidad usando prompts adaptativos de la ontología. (Fase KIMI 5)
+ * Analiza una entidad usando prompts adaptativos de la ontología. (Fase 5)
  */
 export async function analyzeEntityWithGemini(
     entitySlug: string,

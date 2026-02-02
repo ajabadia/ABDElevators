@@ -124,7 +124,7 @@ export function KnowledgeGraph() {
                     <div>
                         <CardTitle className="text-xl font-bold flex items-center gap-2">
                             <Share2 className="text-teal-600" size={20} />
-                            Mapa Semántico KIMI
+                            Mapa Semántico
                         </CardTitle>
                         <CardDescription>Explora las relaciones entre pedidos, modelos y normativas.</CardDescription>
                     </div>

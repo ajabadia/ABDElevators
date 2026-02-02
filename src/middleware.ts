@@ -14,16 +14,27 @@ export default auth(async function middleware(request: NextRequest) {
     const session = (request as any).auth;
 
     console.log(`🛡️ [MIDDLEWARE] Path: ${pathname}, Session: ${!!session}`);
+    try {
+        const { pathname } = request.nextUrl;
+        const session = (request as any).auth;
 
-    // Redirect to dashboard if logged in and trying to access login page
-    if (session && pathname === '/login') {
-        return NextResponse.redirect(new URL('/admin/knowledge-assets', request.url));
+        console.log(`🛡️ [MIDDLEWARE] Path: ${pathname}, Session: ${!!session}`);
+
+        // Redirect to dashboard if logged in and trying to access login page
+        if (session && pathname === '/login') {
+            return NextResponse.redirect(new URL('/admin/knowledge-assets', request.url));
+        }
+
+        // Protect admin routes
+        if (!session && pathname.startsWith('/admin')) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+
+        return NextResponse.next();
+    } catch (error) {
+        console.error('🔥 [MIDDLEWARE ERROR]', error);
+        // CRITICAL SECURITY FIX: Fail Closed, not Open.
+        // If middleware fails, deny access rather than allowing bypass.
+        return new NextResponse('Internal Server Error', { status: 500 });
     }
-
-    // Protect admin routes
-    if (!session && pathname.startsWith('/admin')) {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    return NextResponse.next();
 });

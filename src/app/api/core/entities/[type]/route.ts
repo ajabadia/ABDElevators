@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 /**
  * GET /api/core/entities/[type]
- * Lista universal de entidades vía KIMI Engine.
+ * Lista universal de entidades vía System Engine.
  */
 export async function GET(
     req: NextRequest,
@@ -53,7 +53,8 @@ export async function GET(
                 page,
                 limit,
                 pages: Math.ceil(total / limit)
-            }, correlationId: correlacion_id});
+            }, correlationId: correlacion_id
+        });
 
     } catch (error: any) {
         console.error(`[ENTITY_CORE_LIST] Error (${type}):`, error);

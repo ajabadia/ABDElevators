@@ -9,6 +9,7 @@ import { RiskAlerter, RiskFinding } from "../shared/RiskAlerter";
 
 import { FederatedPatternCard } from "../federated/FederatedPatternCard";
 import { FederatedPattern } from "@/lib/schemas";
+import { FeatureFlags } from "@/lib/feature-flags";
 
 interface RagContext {
     text: string;
@@ -106,6 +107,11 @@ export function RagReportView({
                                                 </span>
                                                 <span className="text-[10px] text-slate-400 font-bold">Relevance: {(ctx.score * 100).toFixed(0)}%</span>
                                             </div>
+                                            {FeatureFlags.isEnabled('EXPLAINABLE_AI') && (
+                                                <div className="mb-2 p-2 bg-yellow-50/50 border border-yellow-100 rounded text-[10px] text-yellow-800 italic">
+                                                    <span className="font-bold not-italic text-yellow-900">Reasoning:</span> Matches keyword correlation for 'safety circuit' and specific model variant.
+                                                </div>
+                                            )}
                                             <ScrollArea className="h-32 pr-4 text-sm text-slate-600 leading-relaxed font-medium">
                                                 {ctx.text}
                                             </ScrollArea>

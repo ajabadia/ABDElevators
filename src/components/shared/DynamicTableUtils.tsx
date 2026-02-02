@@ -1,6 +1,6 @@
 import React from 'react';
 import { EntityDefinition, EntityField } from '../../core/engine/EntityEngine';
-import { Column } from './DataTable';
+import { Column } from '@/components/ui/data-table';
 import { formatDateTime } from '@/lib/date-utils';
 
 /**

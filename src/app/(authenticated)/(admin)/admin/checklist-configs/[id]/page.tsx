@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { ConfiguratorFull } from '@/components/admin/configurator/ConfiguratorFull';
+import { ConfiguratorFull } from '@/verticals/elevators/components/configurator/ConfiguratorFull';
 import { Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { ChecklistConfig } from '@/lib/schemas';

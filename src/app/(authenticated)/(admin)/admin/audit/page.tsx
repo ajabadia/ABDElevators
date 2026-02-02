@@ -2,7 +2,7 @@
 
 import { useApiItem } from "@/hooks/useApiItem";
 import { useApiList } from "@/hooks/useApiList";
-import { DataTable, Column } from "@/components/shared/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";

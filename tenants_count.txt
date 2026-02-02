@@ -1,3 +1,0 @@
-Error: querySrv ENOTFOUND _mongodb._tcp.db-mongodb-fra1-40590-c246f667.mongo.ondigitalocean.com
-Stack: Error: querySrv ENOTFOUND _mongodb._tcp.db-mongodb-fra1-40590-c246f667.mongo.ondigitalocean.com
-    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:294:17)

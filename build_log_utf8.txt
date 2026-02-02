@@ -1,0 +1,3 @@
+src/app/api/admin/global-stats/route.ts(130,33): error TS2304: Cannot find name 'tenants'.
+src/services/ingest-service.ts(244,27): error TS2304: Cannot find name 'ExternalServiceError'.
+tests/integration/vector-search.test.ts(16,21): error TS2307: Cannot find module '../../src/app/api/pedidos/[id]/vector-search/route' or its corresponding type declarations.

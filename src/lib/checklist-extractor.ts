@@ -34,10 +34,26 @@ const ExtractChecklistInputSchema = z.object({
  * @throws {@link ValidationError} if input validation fails.
  * @throws {@link ExternalServiceError} if the LLM call fails.
  */
+/**
+ * Type definition for the LLM caller function to allow mocking.
+ */
+export type LLMCaller = (prompt: string, tenantId: string, options?: any) => Promise<string>;
+
+/**
+ * Extracts a list of checklist items from the provided documents.
+ *
+ * @param docs - Array of documents (id + raw text) that are relevant to the order.
+ * @param correlacion_id - UUID used for structured logging and tracing.
+ * @param llmCaller - Optional dependency injection for the LLM call (defaults to callGeminiMini).
+ * @returns Promise resolving to an array of {@link ChecklistItem} objects.
+ * @throws {@link ValidationError} if input validation fails.
+ * @throws {@link ExternalServiceError} if the LLM call fails.
+ */
 export async function extractChecklist(
     docs: { id: string; content: string }[],
     tenantId: string,
-    correlationId: string
+    correlationId: string,
+    llmCaller: LLMCaller = callGeminiMini
 ): Promise<ChecklistItem[]> {
     // -------------------
     // 1️⃣ Input validation (Zod First)
@@ -60,13 +76,23 @@ export async function extractChecklist(
         // -------------------
         // 3️⃣ Call the LLM (lightweight mini‑prompt)
         // -------------------
-        const rawResponse = await callGeminiMini(renderedPrompt, tenantId, { correlationId });
+        const rawResponse = await llmCaller(renderedPrompt, tenantId, { correlationId });
 
         // Assume the response is a JSON string representing ChecklistItem[]
         let items: unknown;
         try {
-            items = JSON.parse(rawResponse);
+            // Cleanup markdown code blocks if present (common LLM artifact)
+            const cleanJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            items = JSON.parse(cleanJson);
         } catch (e) {
+            await logEvento({
+                level: "ERROR",
+                source: "CHECKLIST_EXTRACTOR",
+                action: "EXTRACT_FORMAT_ERROR",
+                message: "Failed to parse LLM response as JSON",
+                correlationId,
+                details: { rawResponse: rawResponse.substring(0, 500) } // Capture snippet for debugging
+            });
             throw new ExternalServiceError("Failed to parse LLM response as JSON", e as Error);
         }
 
@@ -101,7 +127,7 @@ export async function extractChecklist(
         await logEvento({
             level: "ERROR",
             source: "CHECKLIST_EXTRACTOR",
-            action: "EXTRACT",
+            action: "EXTRACT_ERROR",
             message: "Error during checklist extraction", correlationId,
             details: { error: (error as Error).message },
             stack: (error as Error).stack

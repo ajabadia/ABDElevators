@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { KnowledgeGraph } from "@/components/shared/KnowledgeGraph";
 import { Info, HelpCircle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KimiInsights } from "@/components/shared/KimiInsights";
+import { InsightPanel } from "@/components/shared/InsightPanel";
 import { PredictiveMaintenance } from "@/components/shared/PredictiveMaintenance";
 
 export default function GrafosPage() {
@@ -14,7 +14,7 @@ export default function GrafosPage() {
             <PageHeader
                 title="Conocimiento Semántico"
                 highlight="Grafo"
-                subtitle="Visualiza la red de conexiones lógicas capturadas por el motor KIMI."
+                subtitle="Visualiza la red de conexiones lógicas capturadas por el motor inteligente."
             />
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
@@ -25,7 +25,7 @@ export default function GrafosPage() {
 
                 {/* Panel de Información Lateral */}
                 <div className="xl:col-span-1 space-y-6">
-                    <KimiInsights />
+                    <InsightPanel />
 
                     <Card className="border-none shadow-lg bg-teal-600 text-white overflow-hidden relative">
                         <div className="absolute top-0 right-0 p-4 opacity-10">

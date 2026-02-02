@@ -3,7 +3,8 @@ import { callGeminiMini } from '@/lib/llm';
 import { logEvento } from '@/lib/logger';
 import { WorkflowEngine } from './WorkflowEngine';
 
-export interface KimiInsight {
+
+export interface Insight {
     id: string;
     type: 'warning' | 'info' | 'success' | 'critical';
     title: string;
@@ -30,7 +31,7 @@ export class InsightEngine {
     /**
      * Genera insights basados en patrones del grafo para un tenant.
      */
-    public async generateInsights(tenantId: string, correlationId: string): Promise<KimiInsight[]> {
+    public async generateInsights(tenantId: string, correlationId: string): Promise<Insight[]> {
         try {
             // 1. Extraer patrones crudos del grafo (Neo4j)
             const patterns = await this.extractGraphPatterns(tenantId);
@@ -50,7 +51,7 @@ export class InsightEngine {
 
             // 2. Usar Gemini para interpretar estos patrones y darles sentido de negocio
             const prompt = `
-                Eres KIMI, el cerebro de inteligencia organizacional de ABDElevators.
+                Eres el cerebro de inteligencia organizacional de ABDElevators.
                 He analizado el Grafo de Conocimiento y he encontrado estos patrones técnicos crudos (en formato JSON):
                 ${JSON.stringify(patterns)}
 
@@ -72,9 +73,9 @@ export class InsightEngine {
             const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
             if (!jsonMatch) return [];
 
-            const insights: KimiInsight[] = JSON.parse(jsonMatch[0]);
+            const insights: Insight[] = JSON.parse(jsonMatch[0]);
 
-            // 3. Trigger Automated Workflows (KIMI Phase 10)
+            // 3. Trigger Automated Workflows (Phase 10)
             const workflow = WorkflowEngine.getInstance();
             for (const insight of insights) {
                 await workflow.processEvent('on_insight', insight, tenantId, correlationId);

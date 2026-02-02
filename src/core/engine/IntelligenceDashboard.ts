@@ -3,8 +3,8 @@ import { runCypher } from '@/lib/neo4j';
 import { IntelligenceMetrics } from '@/types/intelligence';
 
 /**
- * IntelligenceDashboard: Agrega métricas de rendimiento y aprendizaje de KIMI.
- * (Fase KIMI 9)
+ * IntelligenceDashboard: Agrega métricas de rendimiento y aprendizaje del Sistema.
+ * (Fase 9)
  */
 export class IntelligenceDashboard {
     private static instance: IntelligenceDashboard;

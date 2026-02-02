@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 /**
  * GET /api/core/predictive/maintenance
- * Obtiene el tablero de mantenimiento predictivo (Fase KIMI 8).
+ * Obtiene el tablero de mantenimiento predictivo (Fase 8).
  */
 export async function GET(req: NextRequest) {
     const session = await auth();
@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            predictions, correlationId: correlacion_id});
+            predictions, correlationId: correlacion_id
+        });
     } catch (error: any) {
         console.error('[CORE_PREDICTIVE] Error:', error);
         return NextResponse.json({

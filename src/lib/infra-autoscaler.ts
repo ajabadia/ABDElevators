@@ -2,7 +2,7 @@ import { logEvento } from '@/lib/logger';
 import { PerformanceGuard, StressTestResult } from './performance-guard';
 
 /**
- * InfrastructureAutoscaler: Ajusta dinámicamente recursos basados en métricas de KIMI.
+ * InfrastructureAutoscaler: Ajusta dinámicamente recursos basados en métricas del Sistema.
  * (Fase AI Infrastructure Scaling)
  */
 export class InfrastructureAutoscaler {
@@ -45,7 +45,7 @@ export class InfrastructureAutoscaler {
             level: 'WARN',
             source: 'INFRA_AUTOSCALER',
             action: 'SCALING_OPERATION',
-            message: `KIMI ha decidido escalar la infraestructura a level: ${tier}`, correlationId,
+            message: `El sistema ha decidido escalar la infraestructura a level: ${tier}`, correlationId,
             details: { previousTier: this.currentTier, newTier: tier }
         });
 

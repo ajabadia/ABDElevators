@@ -4,33 +4,31 @@ import { CreateApiKeyModal } from "@/components/admin/api-keys/CreateApiKeyModal
 import { ApiDocsSnippet } from "@/components/admin/api-keys/ApiDocsSnippet";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { ContentCard } from "@/components/ui/content-card";
+import { Key } from "lucide-react";
 
 export default async function ApiKeysPage() {
     const keys = await getApiKeys();
 
     return (
-        <div className="container mx-auto py-8 max-w-5xl">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-white mb-2">API Access Management</h1>
-                    <p className="text-slate-400">Manage API Keys for external integrations (ERP, CRM, IoT).</p>
-                </div>
-                <CreateApiKeyModal />
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="API Access Management"
+                subtitle="Manage API Keys for external integrations (ERP, CRM, IoT)."
+                actions={<CreateApiKeyModal />}
+            />
 
-            <div className="grid gap-8">
-                <section>
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                        Active Keys
-                    </h2>
-                    <Suspense fallback={<Skeleton className="h-32 w-full bg-slate-800" />}>
+            <div className="grid gap-6">
+                <ContentCard title="Active Keys" icon={<Key size={20} />}>
+                    <Suspense fallback={<Skeleton className="h-32 w-full" />}>
                         <ApiKeyList keys={keys as any[]} />
                     </Suspense>
-                </section>
+                </ContentCard>
 
                 <ApiDocsSnippet />
             </div>
-        </div>
+        </PageContainer>
     );
 }

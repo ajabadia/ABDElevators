@@ -13,7 +13,7 @@ jest.mock("@/lib/logger", () => ({
     logEvento: jest.fn().mockResolvedValue(undefined)
 }));
 
-import { GET } from "../../src/app/api/pedidos/[id]/vector-search/route";
+import { GET } from "../../src/app/api/entities/[id]/vector-search/route";
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { pureVectorSearch } from "@/lib/rag-service";
@@ -56,7 +56,7 @@ describe("Vector Search API Integration", () => {
     it("should return 401 if not authenticated", async () => {
         (auth as jest.Mock).mockResolvedValue(null);
 
-        const req = new NextRequest(`http://localhost/api/pedidos/${mockPedidoId}/vector-search?query=test`);
+        const req = new NextRequest(`http://localhost/api/entities/${mockPedidoId}/vector-search?query=test`);
         const response = await GET(req, { params: Promise.resolve({ id: mockPedidoId }) });
 
         expect(response.status).toBe(401);
@@ -65,7 +65,7 @@ describe("Vector Search API Integration", () => {
     it("should respect limit and min_score params", async () => {
         (pureVectorSearch as jest.Mock).mockResolvedValue([]);
 
-        const req = new NextRequest(`http://localhost/api/pedidos/${mockPedidoId}/vector-search?query=test&limit=10&min_score=0.8`);
+        const req = new NextRequest(`http://localhost/api/entities/${mockPedidoId}/vector-search?query=test&limit=10&min_score=0.8`);
         await GET(req, { params: Promise.resolve({ id: mockPedidoId }) });
 
         expect(pureVectorSearch).toHaveBeenCalledWith(

@@ -27,7 +27,7 @@ export default function EntitiesPage() {
     const { data: session } = useSession();
     const { toast } = useToast();
 
-    // 0. Get entity definition from "Cerebro" (KIMI Vision)
+    // 0. Get entity definition from "Cerebro" (Entity Vision)
     const entity = EntityEngine.getInstance().getEntity('pedido')!;
 
     const [isUploading, setIsUploading] = useState(false);
@@ -123,11 +123,11 @@ export default function EntitiesPage() {
             <PageHeader
                 title="Analysis"
                 highlight={`of ${entity.plural}`}
-                subtitle="Agentic processing and technical validation of specifications (KIMI Engine)."
+                subtitle="Agentic processing and technical validation of specifications (System Engine)."
                 actions={
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
                         <Zap size={14} className="text-amber-500" />
-                        Powered by Gemini 3 Flash
+                        Powered by AI Engine
                     </div>
                 }
             />

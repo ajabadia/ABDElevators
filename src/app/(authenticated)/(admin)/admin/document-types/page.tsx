@@ -17,7 +17,7 @@ import { Plus, CheckCircle2, XCircle, Pencil, Trash2, Loader2 } from 'lucide-rea
 import { useApiList } from '@/hooks/useApiList';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useFormModal } from '@/hooks/useFormModal';
-import { DataTable, Column } from '@/components/shared/DataTable';
+import { DataTable, Column } from "@/components/ui/data-table";
 
 interface DocumentType {
     _id: string;

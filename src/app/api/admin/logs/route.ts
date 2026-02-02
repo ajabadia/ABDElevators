@@ -25,6 +25,11 @@ export async function GET(req: NextRequest) {
         const tenantIdFilter = searchParams.get('tenantId');
         const userEmail = searchParams.get('userEmail');
 
+        // Helper to prevent ReDoS
+        const escapeRegExp = (string: string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        };
+
         // Contexto de base de datos de LOGS blindado
         // Use 'application_logs' to match logger.ts
         const logColl = await getTenantCollection('application_logs', session, 'LOGS');
@@ -41,15 +46,16 @@ export async function GET(req: NextRequest) {
         }
 
         if (level && level !== 'ALL') query.level = level;
-        if (source) query.source = { $regex: source, $options: 'i' };
-        if (userEmail) query.userEmail = { $regex: userEmail, $options: 'i' };
+        if (source) query.source = { $regex: escapeRegExp(source), $options: 'i' };
+        if (userEmail) query.userEmail = { $regex: escapeRegExp(userEmail), $options: 'i' };
 
         if (search) {
+            const sanitizedSearch = escapeRegExp(search);
             query.$or = [
-                { message: { $regex: search, $options: 'i' } },
-                { action: { $regex: search, $options: 'i' } },
-                { correlationId: { $regex: search, $options: 'i' } },
-                { userEmail: { $regex: search, $options: 'i' } }
+                { message: { $regex: sanitizedSearch, $options: 'i' } },
+                { action: { $regex: sanitizedSearch, $options: 'i' } },
+                { correlationId: { $regex: sanitizedSearch, $options: 'i' } },
+                { userEmail: { $regex: sanitizedSearch, $options: 'i' } }
             ];
         }
 

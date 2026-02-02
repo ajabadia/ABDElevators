@@ -1,46 +1,46 @@
 "use client";
 
-import React from 'react';
-import { CheckCircle2, AlertCircle, Clock, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
-import { ChecklistConfig, ChecklistItem, ChecklistCategory } from '@/lib/schemas';
+import React, { useEffect } from 'react';
+import { CheckCircle2, AlertCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChecklistConfig, ChecklistItem } from '@/lib/schemas';
+import { useWorkspaceStore } from '@/store/workspace-store';
+import { cn } from '@/lib/utils';
 
 interface DynamicChecklistProps {
     items: ChecklistItem[];
     config: ChecklistConfig;
-    onItemUpdate: (id: string, updates: { status: 'OK' | 'REVIEW' | 'PENDING'; notes?: string }) => void;
-    validationStates: Record<string, { status: 'OK' | 'REVIEW' | 'PENDING'; notes?: string }>;
 }
 
 export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
     items,
-    config,
-    onItemUpdate,
-    validationStates
+    config
 }) => {
-    const [expandedCategories, setExpandedCategories] = React.useState<string[]>(
-        config.categories.map(c => c.id)
-    );
+    const {
+        checklistExpandedCategories,
+        validationStates,
+        toggleChecklistCategory,
+        updateChecklistItem,
+        setInitialExpandedCategories
+    } = useWorkspaceStore();
 
-    const toggleCategory = (id: string) => {
-        setExpandedCategories(prev =>
-            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-        );
-    };
+    // Initialize expanded categories on mount
+    useEffect(() => {
+        setInitialExpandedCategories(config.categories.map(c => c.id));
+    }, [config.categories, setInitialExpandedCategories]);
 
-    // Agrupar ítems por categoría
+    // Group items by category
     const groupedItems = config.categories.reduce((acc, cat) => {
         acc[cat.id] = items.filter(item => item.categoryId === cat.id);
         return acc;
     }, {} as Record<string, ChecklistItem[]>);
 
-    // Ítems sin categoría asignada
     const uncategorizedItems = items.filter(item => !item.categoryId);
 
     const renderItem = (item: ChecklistItem) => {
         const state = validationStates[item.id] || { status: 'PENDING', notes: '' };
 
         return (
-            <div key={item.id} className="p-4 bg-white border border-slate-100 rounded-lg shadow-sm hover:border-slate-300 transition-all mb-3">
+            <div key={item.id} className="p-4 bg-white border border-slate-100 rounded-lg shadow-sm hover:border-slate-300 transition-all mb-3 animate-in fade-in duration-300">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-1">
                         <p className="text-slate-800 font-medium leading-relaxed">
@@ -59,21 +59,25 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
 
                     <div className="flex items-center gap-2 self-end md:self-start">
                         <button
-                            onClick={() => onItemUpdate(item.id, { ...state, status: 'OK' })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${state.status === 'OK'
-                                ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                                : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-300 hover:text-emerald-500'
-                                }`}
+                            onClick={() => updateChecklistItem(item.id, { status: 'OK' })}
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+                                state.status === 'OK'
+                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-300 hover:text-emerald-500'
+                            )}
                         >
                             <CheckCircle2 className="h-4 w-4" />
                             OK
                         </button>
                         <button
-                            onClick={() => onItemUpdate(item.id, { ...state, status: 'REVIEW' })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${state.status === 'REVIEW'
-                                ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                                : 'bg-white text-slate-400 border-slate-200 hover:border-amber-300 hover:text-amber-500'
-                                }`}
+                            onClick={() => updateChecklistItem(item.id, { status: 'REVIEW' })}
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+                                state.status === 'REVIEW'
+                                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:border-amber-300 hover:text-amber-500'
+                            )}
                         >
                             <AlertCircle className="h-4 w-4" />
                             REVIEW
@@ -81,17 +85,16 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                     </div>
                 </div>
 
-                {/* Notas de validación */}
+                {/* Validation Notes */}
                 <div className="mt-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Notas del Técnico</label>
                     </div>
                     <textarea
                         value={state.notes || ''}
-                        onChange={(e) => onItemUpdate(item.id, { ...state, notes: e.target.value })}
+                        onChange={(e) => updateChecklistItem(item.id, { notes: e.target.value })}
                         placeholder="Añade observaciones técnicas aquí..."
-                        className="w-full text-sm bg-slate-50 border border-slate-200 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
-                        rows={1}
+                        className="w-full text-sm bg-slate-50 border border-slate-200 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300 resize-none min-h-[60px]"
                     />
                 </div>
             </div>
@@ -104,24 +107,29 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                 const categoryItems = groupedItems[cat.id] || [];
                 if (categoryItems.length === 0) return null;
 
-                const isExpanded = expandedCategories.includes(cat.id);
+                const isExpanded = checklistExpandedCategories.includes(cat.id);
                 const completedCount = categoryItems.filter(i => validationStates[i.id]?.status !== 'PENDING').length;
 
                 return (
                     <div key={cat.id} className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50/50">
                         <button
-                            onClick={() => toggleCategory(cat.id)}
+                            onClick={() => toggleChecklistCategory(cat.id)}
                             className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
                                 <div
-                                    className="w-4 h-4 rounded-full"
+                                    className="w-4 h-4 rounded-full shadow-sm"
                                     style={{ backgroundColor: cat.color }}
                                 />
                                 <h3 className="font-bold text-slate-800 uppercase tracking-wide text-sm">
                                     {cat.name}
                                 </h3>
-                                <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                <span className={cn(
+                                    "text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                                    completedCount === categoryItems.length
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : "bg-slate-100 text-slate-500"
+                                )}>
                                     {completedCount} / {categoryItems.length}
                                 </span>
                             </div>
@@ -129,7 +137,7 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                         </button>
 
                         {isExpanded && (
-                            <div className="p-4">
+                            <div className="p-4 animate-in slide-in-from-top-2 duration-200">
                                 {categoryItems.map(renderItem)}
                             </div>
                         )}
@@ -140,7 +148,7 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
             {uncategorizedItems.length > 0 && (
                 <div className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50/50">
                     <button
-                        onClick={() => toggleCategory('uncategorized')}
+                        onClick={() => toggleChecklistCategory('uncategorized')}
                         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-slate-50 transition-colors"
                     >
                         <div className="flex items-center gap-3">
@@ -152,11 +160,11 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                                 {uncategorizedItems.length}
                             </span>
                         </div>
-                        {expandedCategories.includes('uncategorized') ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
+                        {checklistExpandedCategories.includes('uncategorized') ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                     </button>
 
-                    {expandedCategories.includes('uncategorized') && (
-                        <div className="p-4">
+                    {checklistExpandedCategories.includes('uncategorized') && (
+                        <div className="p-4 animate-in slide-in-from-top-2 duration-200">
                             {uncategorizedItems.map(renderItem)}
                         </div>
                     )}

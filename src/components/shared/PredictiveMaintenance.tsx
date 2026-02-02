@@ -38,7 +38,7 @@ export function PredictiveMaintenance() {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
                 <Activity className="animate-pulse text-teal-600" size={40} />
-                <p className="text-sm font-medium text-slate-500">KIMI calculando probabilidades de fallo...</p>
+                <p className="text-sm font-medium text-slate-500">Calculando probabilidades de fallo...</p>
             </div>
         );
     }
@@ -94,7 +94,7 @@ export function PredictiveMaintenance() {
 
                             <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                                 <p className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
-                                    <AlertCircle size={12} /> Predicción KIMI
+                                    <AlertCircle size={12} /> Predicción AI
                                 </p>
                                 <p className="text-sm text-slate-700 dark:text-slate-300 italic">
                                     "{pred.prediction}"

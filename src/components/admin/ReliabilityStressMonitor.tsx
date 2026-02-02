@@ -12,7 +12,8 @@ import {
     Server,
     Cpu
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ContentCard } from '@/components/ui/content-card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,7 +52,7 @@ export function ReliabilityStressMonitor() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
@@ -71,46 +72,42 @@ export function ReliabilityStressMonitor() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Global Distribution */}
-                <Card className="lg:col-span-2 border-none shadow-xl bg-white dark:bg-slate-950 rounded-3xl overflow-hidden">
-                    <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                            <Globe className="text-teal-500" size={16} />
-                            CDN de Conocimiento Global
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="space-y-6">
-                            {regions.map((region) => (
-                                <div key={region.id} className="flex items-center justify-between group">
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn(
-                                            "w-3 h-3 rounded-full animate-pulse",
-                                            region.status === 'online' ? "bg-emerald-500" : "bg-teal-500/50"
-                                        )} />
-                                        <div>
-                                            <p className="font-bold text-slate-800 dark:text-slate-200">{region.name}</p>
-                                            <p className="text-[10px] text-slate-400 uppercase font-black">{region.id}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right">
-                                            <p className="text-xs font-mono font-bold text-teal-600">{region.latency}ms</p>
-                                            <p className="text-[9px] text-slate-400 font-bold uppercase">Latencia</p>
-                                        </div>
-                                        <Badge variant="secondary" className="bg-slate-100 text-[10px] lowercase font-mono">
-                                            {region.status}
-                                        </Badge>
+                {/* Global Distribution - Standardizable */}
+                <ContentCard
+                    title="CDN de Conocimiento Global"
+                    icon={<Globe className="text-teal-500" size={16} />}
+                    className="lg:col-span-2"
+                >
+                    <div className="space-y-6">
+                        {regions.map((region) => (
+                            <div key={region.id} className="flex items-center justify-between group">
+                                <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                        "w-3 h-3 rounded-full animate-pulse",
+                                        region.status === 'online' ? "bg-emerald-500" : "bg-teal-500/50"
+                                    )} />
+                                    <div>
+                                        <p className="font-bold text-slate-800 dark:text-slate-200">{region.name}</p>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black">{region.id}</p>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                                <div className="flex items-center gap-6">
+                                    <div className="text-right">
+                                        <p className="text-xs font-mono font-bold text-teal-600">{region.latency}ms</p>
+                                        <p className="text-[9px] text-slate-400 font-bold uppercase">Latencia</p>
+                                    </div>
+                                    <Badge variant="secondary" className="bg-slate-100 text-[10px] lowercase font-mono">
+                                        {region.status}
+                                    </Badge>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </ContentCard>
 
-                {/* Stress Test Results */}
-                <Card className="border-none shadow-xl bg-slate-900 text-white rounded-3xl overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-6 opacity-10">
+                {/* Stress Test Results - Custom Hero Card */}
+                <Card className="border-none shadow-xl bg-slate-900 text-white rounded-xl overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
                         <Activity size={80} />
                     </div>
                     <CardHeader className="border-b border-white/10">
@@ -118,7 +115,7 @@ export function ReliabilityStressMonitor() {
                             Último Stress Test
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6 space-y-8">
+                    <CardContent className="p-6 space-y-8 relative z-10">
                         {testResult ? (
                             <>
                                 <div className="space-y-4">

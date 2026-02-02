@@ -9,7 +9,7 @@ import crypto from 'crypto';
 
 /**
  * GET | PATCH | DELETE /api/core/entities/[type]/[id]
- * Endpoint universal para gestión de entidades vía KIMI Engine.
+ * Endpoint universal para gestión de entidades vía System Engine.
  */
 export async function GET(
     req: NextRequest,
@@ -47,7 +47,8 @@ export async function GET(
 
         return NextResponse.json({
             success: true,
-            entity, correlationId: correlacion_id});
+            entity, correlationId: correlacion_id
+        });
 
     } catch (error: any) {
         console.error(`[ENTITY_CORE_GET] Error (${type}/${id}):`, error);
@@ -96,9 +97,10 @@ export async function PATCH(
             level: 'INFO',
             source: 'CORE_ENTITY_UPDATE',
             action: 'UPDATE',
-            message: `${entityDef.name} actualizado: ${id}`, correlationId: correlacion_id});
+            message: `${entityDef.name} actualizado: ${id}`, correlationId: correlacion_id
+        });
 
-        return NextResponse.json({ success: true, correlationId: correlacion_id});
+        return NextResponse.json({ success: true, correlationId: correlacion_id });
 
     } catch (error: any) {
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });

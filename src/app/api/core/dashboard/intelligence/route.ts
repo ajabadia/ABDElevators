@@ -5,7 +5,7 @@ import { logEvento } from "@/lib/logger";
 
 /**
  * GET /api/core/dashboard/intelligence
- * Obtiene métricas agregadas de inteligencia colectiva (Fase KIMI 9).
+ * Obtiene métricas agregadas de inteligencia colectiva (Fase 9).
  */
 export async function GET(req: NextRequest) {
     const session = await auth();

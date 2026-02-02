@@ -69,8 +69,8 @@ try {
         $status = "KO" # Default
         
         try {
-            # Read content
-            $content = Get-Content -Path $filePath -Raw
+            # Read content (Using .NET directly to avoid PowerShell version issues with -Raw)
+            $content = [System.IO.File]::ReadAllText($filePath)
             
             if ([string]::IsNullOrWhiteSpace($content)) {
                 $status = "EMPTY"

@@ -1,11 +1,12 @@
+
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { GovernanceEngine } from './GovernanceEngine';
 import { AIWorkflow, WorkflowAction, WorkflowTrigger } from '@/types/workflow';
 
 /**
- * WorkflowEngine: Automatiza acciones basadas en eventos detectados por KIMI.
- * (Fase KIMI 10)
+ * WorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
+ * (Fase 10)
  */
 export class WorkflowEngine {
     private static instance: WorkflowEngine;
@@ -72,12 +73,12 @@ export class WorkflowEngine {
             switch (action.type) {
                 case 'notify':
                     // Mock: En un sistema real, enviaría a un servicio de notificaciones/Pusher/Email
-                    console.log(`[WorkflowAction] NOTIFICACIÓN: ${action.params.message}`, data);
+                    console.log(`[WorkflowAction] NOTIFICACIÓN: ${action.params.message} `, data);
                     break;
                 case 'log':
                     await logEvento({
                         level: 'WARN',
-                        source: 'KIMI_AUTOMATION',
+                        source: 'AI_AUTOMATION',
                         action: 'AUTOMATED_ALERT',
                         message: action.params.message || 'Alerta automatizada detectada',
                         correlationId,

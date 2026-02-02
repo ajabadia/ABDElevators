@@ -15,8 +15,8 @@ def extract_text(file_path):
         return f"Error reading {file_path}: {str(e)}"
 
 if __name__ == "__main__":
-    file_path = r"d:\desarrollos\ABDElevators\Documentación\05\05 rag agentico.docx"
+    file_path = r"d:\desarrollos\ABDElevators\Documentación\11\11.docx"
     content = extract_text(file_path)
-    with open("extracted_content_rag_agentico.txt", "w", encoding="utf-8") as f:
+    with open("extracted_11.txt", "w", encoding="utf-8") as f:
         f.write(content)
     print("Extraction successful.")

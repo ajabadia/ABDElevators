@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 /**
  * GET /api/core/insights
- * Obtiene recomendaciones inteligentes generadas por KIMI basadas en el grafo.
+ * Obtiene recomendaciones inteligentes generadas por el Sistema basadas en el grafo.
  * SLA: P95 < 2000ms
  */
 export async function GET(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     try {
         const insights = await InsightEngine.getInstance().generateInsights(tenantId, correlacion_id);
 
-        // Obtener métrica de aprendizaje del Agente (KIMI Phase 7)
+        // Obtener métrica de aprendizaje del Agente (Phase 7)
         const agent = await getTenantCollection('ai_corrections', { user: { tenantId } });
         const learnedCount = await agent.countDocuments({});
 
@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            insights, correlationId: correlacion_id});
+            insights, correlationId: correlacion_id
+        });
     } catch (error: any) {
         console.error('[CORE_INSIGHTS] Error:', error);
         return NextResponse.json({

@@ -13,7 +13,7 @@ import { ContentCard } from "@/components/ui/content-card";
 // Nuevos componentes y hooks genéricos
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { DataTable, Column } from "@/components/shared/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { useFormModal } from "@/hooks/useFormModal";
 import { EntityEngine } from "@/core/engine/EntityEngine";
 import { generateColumnsFromEntity } from "@/components/shared/DynamicTableUtils";
@@ -158,7 +158,7 @@ export default function UsuariosPage() {
                 </CardContent>
             </ContentCard>
 
-            {/* CREACIÓN DINÁMICA (KIMI Engine) */}
+            {/* CREACIÓN DINÁMICA (System Engine) */}
             <DynamicFormModal
                 open={createModal.isOpen}
                 entitySlug="user"
@@ -170,7 +170,7 @@ export default function UsuariosPage() {
                 }}
             />
 
-            {/* EDICIÓN DINÁMICA (KIMI Engine) */}
+            {/* EDICIÓN DINÁMICA (System Engine) */}
             <DynamicFormModal
                 open={editModal.isOpen}
                 entitySlug="user"

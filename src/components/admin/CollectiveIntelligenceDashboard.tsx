@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { MetricCard } from "@/components/ui/metric-card";
+import { ContentCard } from "@/components/ui/content-card";
 import {
     BrainCircuit,
     TrendingUp,
@@ -54,98 +56,67 @@ export function CollectiveIntelligenceDashboard() {
             title: "Densidad Semántica",
             subtitle: "Nodos + Relaciones",
             value: metrics.semanticNodes + metrics.semanticRelationships,
-            icon: <Share2 className="text-blue-500" />,
-            trend: "+12% esta semana",
+            icon: <Share2 />,
+            trend: "+12%",
+            trendDirection: "up",
             color: "blue"
         },
         {
-            title: "Aprendizajes KIMI",
-            subtitle: "Correcciones aprendidas",
+            title: "Aprendizajes",
+            subtitle: "Correcciones",
             value: metrics.learnedCorrections,
-            icon: <BrainCircuit className="text-teal-500" />,
+            icon: <BrainCircuit />,
             trend: "94% Precisión",
+            trendDirection: "up",
             color: "teal"
         },
         {
-            title: "Tareas Automatizadas",
-            subtitle: "Análisis sin intervención",
+            title: "Tareas Auto",
+            subtitle: "Sin intervención",
             value: metrics.tasksAutomated,
-            icon: <Zap className="text-amber-500" />,
-            trend: "Ahorro: 15min/ped",
+            icon: <Zap />,
+            trend: "15min/ped",
+            trendDirection: "up",
             color: "amber"
         },
         {
-            title: "Ahorro Estimado",
-            subtitle: "ROI Acumulado",
+            title: "ROI Estimado",
+            subtitle: "Ahorro acumulado",
             value: `${Math.round(metrics.estimatedCostSaving)}€`,
-            icon: <Euro className="text-emerald-500" />,
-            trend: "Optimización continua",
+            icon: <Euro />,
+            trend: "Optimización",
+            trendDirection: "up",
             color: "emerald"
         }
     ];
 
     return (
-        <div className="space-y-6">
-            {/* Cabecera del Dashboard */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                        Dashboard <span className="text-teal-600">Inteligencia Colectiva</span>
-                    </h2>
-                    <p className="text-slate-500 text-sm">Rendimiento y evolución del cerebro agéntico en tiempo real.</p>
-                </div>
-                <button
-                    onClick={fetchMetrics}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
-                >
-                    <RefreshCw size={20} />
-                </button>
-            </div>
-
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Grid de Stats Rápidas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((card, idx) => (
-                    <Card key={idx} className="border-none shadow-xl hover:shadow-2xl transition-all duration-300">
-                        <CardContent className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className={cn(
-                                    "p-3 rounded-2xl",
-                                    card.color === 'blue' && "bg-blue-50 text-blue-600",
-                                    card.color === 'teal' && "bg-teal-50 text-teal-600",
-                                    card.color === 'amber' && "bg-amber-50 text-amber-600",
-                                    card.color === 'emerald' && "bg-emerald-50 text-emerald-600",
-                                )}>
-                                    {card.icon}
-                                </div>
-                                <Badge variant="secondary" className="text-[10px] font-bold">
-                                    LIVE
-                                </Badge>
-                            </div>
-                            <div>
-                                <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">
-                                    {card.title}
-                                </h3>
-                                <div className="text-3xl font-black text-slate-900 dark:text-white leading-none mb-2">
-                                    {card.value}
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                    <TrendingUp size={12} className="text-emerald-500" />
-                                    {card.trend}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <MetricCard
+                        key={idx}
+                        title={card.title}
+                        value={card.value}
+                        icon={card.icon}
+                        trend={card.trend}
+                        // @ts-ignore
+                        trendDirection={card.trendDirection}
+                        // @ts-ignore
+                        color={card.color}
+                    />
                 ))}
             </div>
 
             {/* Gráficos y Top Entities */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-none shadow-lg">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Evolución de Precisión (KIMI Agent)</CardTitle>
-                        <CardDescription>Aprendizaje continuo basado en feedback humano.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[200px] flex items-end gap-2 pb-8">
+                <ContentCard
+                    title="Evolución de Precisión (System Agent)"
+                    description="Aprendizaje continuo basado en feedback humano."
+                    className="lg:col-span-2"
+                >
+                    <div className="h-[200px] flex items-end gap-2 pb-8">
                         {metrics.accuracyTrend.map((point, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                                 <div
@@ -159,33 +130,31 @@ export function CollectiveIntelligenceDashboard() {
                                 <span className="text-[10px] text-slate-400 font-bold">V{i + 1}</span>
                             </div>
                         ))}
-                    </CardContent>
-                </Card>
+                    </div>
+                </ContentCard>
 
-                <Card className="border-none shadow-lg bg-slate-900 text-white">
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <BarChart3 className="text-teal-400" size={20} />
-                            Focos de Aprendizaje
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">Entidades con más correcciones.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                <ContentCard
+                    title="Focos de Aprendizaje"
+                    icon={<BarChart3 className="text-teal-400" size={20} />}
+                    description="Entidades con más correcciones."
+                    className="bg-slate-900 border-slate-800"
+                >
+                    <div className="space-y-4">
                         {metrics.topLearningEntities.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between group">
+                            <div key={idx} className="flex items-center justify-between group p-2 hover:bg-white/5 rounded-lg transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold text-teal-400">
                                         {idx + 1}
                                     </div>
-                                    <span className="font-bold text-sm capitalize">{item.entity}</span>
+                                    <span className="font-bold text-sm text-slate-200 capitalize">{item.entity}</span>
                                 </div>
                                 <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">
-                                    {item.count} Aprendizajes
+                                    {item.count}
                                 </Badge>
                             </div>
                         ))}
-                    </CardContent>
-                </Card>
+                    </div>
+                </ContentCard>
             </div>
         </div>
     );

@@ -15,7 +15,7 @@ export interface MaintenancePrediction {
 
 /**
  * PredictiveEngine: Anticipa fallos y necesidades de mantenimiento usando Grafos + IA.
- * (Fase KIMI 8)
+ * (Fase 8)
  */
 export class PredictiveEngine {
     private static instance: PredictiveEngine;
@@ -69,7 +69,7 @@ export class PredictiveEngine {
 
             const predictions: MaintenancePrediction[] = JSON.parse(jsonMatch[0]);
 
-            // 3. Trigger Automated Workflows (KIMI Phase 10)
+            // 3. Trigger Automated Workflows (Phase 10)
             const workflow = WorkflowEngine.getInstance();
             for (const pred of predictions) {
                 await workflow.processEvent('on_prediction', pred, tenantId, correlationId);

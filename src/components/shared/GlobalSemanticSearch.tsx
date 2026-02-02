@@ -11,7 +11,7 @@ import {
     Info,
     Shield
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ContentCard } from '@/components/ui/content-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,7 @@ export function GlobalSemanticSearch() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
             {/* Search Bar */}
             <div className="relative max-w-3xl mx-auto">
                 <form onSubmit={handleSearch} className="relative group">
@@ -84,32 +84,32 @@ export function GlobalSemanticSearch() {
                         <BrainCircuit className="h-16 w-16 text-teal-600 animate-bounce" />
                         <Sparkles className="absolute -top-2 -right-2 text-amber-500" />
                     </div>
-                    <p className="mt-4 text-slate-500 font-medium">KIMI sintetizando patrones globales...</p>
+                    <p className="mt-4 text-slate-500 font-medium">Sintetizando patrones globales...</p>
                 </div>
             ) : synthesis && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom-5 duration-700">
-                    <Card className="lg:col-span-2 border-none shadow-2xl bg-gradient-to-br from-slate-900 to-slate-950 text-white overflow-hidden relative">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <ContentCard className="lg:col-span-2 border-none shadow-2xl bg-gradient-to-br from-slate-900 to-slate-950 text-white overflow-hidden relative" noPadding>
                         <div className="absolute top-0 right-0 p-8 opacity-10 blur-xl bg-teal-500 w-40 h-40 rounded-full" />
-                        <CardContent className="p-8 space-y-6 relative z-10">
+                        <div className="p-8 space-y-6 relative z-10">
                             <div className="flex items-center gap-3">
                                 <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30 gap-1 pr-3">
-                                    <Sparkles size={12} /> KIMI Synthesis
+                                    <Sparkles size={12} /> AI Synthesis
                                 </Badge>
                                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Global Intelligence Insight</span>
                             </div>
                             <div className="text-lg text-slate-200 leading-relaxed font-medium italic border-l-4 border-teal-500 pl-6 py-2">
                                 {synthesis}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </ContentCard>
 
                     <div className="space-y-4">
                         <h4 className="text-xs font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
                             <Info size={14} className="text-teal-600" /> Fuentes de Referencia
                         </h4>
                         {results.map((res, i) => (
-                            <Card key={i} className="border-none shadow-lg bg-white dark:bg-slate-950 transition-all hover:translate-x-1">
-                                <CardContent className="p-4 space-y-2">
+                            <ContentCard key={i} className="shadow-lg hover:translate-x-1 transition-all" noPadding>
+                                <div className="p-4 space-y-2">
                                     <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3">
                                         "{res.text}"
                                     </p>
@@ -119,8 +119,8 @@ export function GlobalSemanticSearch() {
                                         </Badge>
                                         <ChevronRight size={14} className="text-slate-300" />
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </ContentCard>
                         ))}
                     </div>
                 </div>

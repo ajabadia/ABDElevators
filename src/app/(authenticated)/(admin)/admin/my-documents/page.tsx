@@ -16,7 +16,7 @@ import { ContentCard } from '@/components/ui/content-card';
 import { useApiList } from '@/hooks/useApiList';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useFormModal } from '@/hooks/useFormModal';
-import { DataTable, Column } from '@/components/shared/DataTable';
+import { DataTable, Column } from "@/components/ui/data-table";
 import { Loader2, Plus, FileText, Download, Shield } from 'lucide-react';
 import { OptimisticDelete } from '@/components/shared/OptimisticDelete';
 import { DataStateIndicator } from '@/components/shared/DataStateIndicator';

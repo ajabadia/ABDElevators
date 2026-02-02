@@ -38,32 +38,24 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 📊 Status & Metrics (v2.30)
+### 📊 Status & Metrics (v2.40)
 
-- **Global Progress:** 250% (Phase 38 Initiative - Sovereign Governance).
+- **Global Progress:** 265% (Phase 47 Initiative - Vertical Architecture Pivot).
 - **Core Status:** 100% (Core SaaS Overhaul Complete).
-- **Recent Ship:**
-  - **Sovereign Engine**: Worker autónomo de descubrimiento de patrones (`intelligence-worker`).
-  - **Federated Governance**: `/admin/intelligence/trends` Dashbaord y moderación.
-  - **Sovereign Intelligence**: `GlobalPatternsTable` y análisis de impacto ROI.
-  - **Hybrid Search (BM25)**: Integración formal de Lucene + RRF (rag-service.ts).
-- **Project Status:** **State-of-the-art Production System (v2.37 Sovereign Governance).**
+- **Recent Ship:** Architecture Pivot (Phase 47). Preparación del sistema para soporte multi-industria (Verticalización).
+  - **Core Separated:** `src/core` vs `src/verticals`.
+  - **Feature Flags:** Sistema de activación de verticales implementado.
+  - **Refactor:** Migración de componentes de elevadores a su propia carpeta vertical.
+- **Project Status:** **Multi-Vertical Architecture Ready (v2.50).**
 
 ---
 
 ### 📋 Upcoming, To‑Do & Planned (Consolidated View)
 
-#### Recently Completed (Vision 2027 Seeded)
-- [x] **Federated Knowledge Networks**: Implementado `FederatedKnowledgeService` y UI de sugerencias globales.
-- [x] **Compliance & Data Portability**: Sistema de backup ZIP y certificados GDPR.
-- [x] **Ephemeral Tenants**: Factoría de pruebas con limpieza TTL.
-
-#### Recently Completed (Stabilization Sprint)
-- [x] **Validación Avanzada (Prompts)**: Hard token limits.
-- [x] **Refactorización Facturación**: Migración a `useApiItem`.
-- [x] **LogExplorer Opt**: Unified filters.
-- [x] **UI Std**: `useFormModal` integration.
-- [x] **Unit Testing**: Increased coverage (80%+).
+#### Recently Completed (Architecture Pivot)
+- [x] **Vertical Structure**: Carpetas `src/verticals/elevators` creadas y pobladas.
+- [x] **Feature Flags**: Manager implementado para control de despliegue.
+- [x] **Admin Refactor**: Dashboard unificado visualmente (Phase 45).
 
 ---
 
@@ -99,7 +91,20 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [x] Smart Ingestion (MD5): Deduplicación.
 
 #### 🧾 FASE 27: ENTERPRISE INVOICE MANAGER (COMPLETADO ✅)
-- [x] Invoice Engine: Generación PDF + Self-Service portal.
+- [x] **Invoice Engine:** Generación PDF + Self-Service portal.
+
+#### 🔧 FASE 45: ADMIN DASHBOARD REFACTORING (COMPLETADO ✅)
+- **Objetivo:** Estandarización visual completa del panel de administración (`ui-styling`).
+- [x] **MetricCards:** Unificación de tarjetas de estadísticas.
+- [x] **ContentCards:** Contenedores estándar para tablas y gráficos.
+- [x] **Consistency:** Eliminación de estilos ad-hoc.
+
+#### 🏗️ FASE 47: ARCHITECTURE PIVOT PREP (COMPLETADO ✅)
+- **Objetivo:** Preparar el codebase para soportar múltiples industrias (Verticalización).
+- [x] **Core Separation:** `src/core` (Motores agnósticos) vs `src/verticals` (Lógica de negocio).
+- [x] **Feature Flags:** Sistema de control de activación de features (`lib/feature-flags.ts`).
+- [x] **Migration:** Movimiento de `configurator` y `checklists` a `src/verticals/elevators`.
+- [x] **UI Updates:** Selector de Industria (Mock) y RAG Reasoning.
 
 ---
 
@@ -218,6 +223,11 @@ This document consolidates **all** roadmap information, implementation plans, an
 ## 🗑️ DEPRECATED & ARCHIVED
 Listado de funcionalidades o planes que han sido descartados o sustituidos por cambio de visión.
 
+- ~~[FASE 46: CRITICAL REFACTORING]~~
+    - **Fecha:** 2026-02-02
+    - **Motivo:** Considerada redundante tras auditoría. El código ya implementa Aggregation Framework y las transacciones no se consideraron críticas para el estado actual. Sustituido por Fase 47 (Architecture Pivot).
+    - **Estado:** Skipped / Superseded.
+
 - ~~[Vision 2027: Autonomous Physical Intervention (IoT Integration)]~~
     - **Fecha:** 2026-01-31
     - **Motivo:** Pivot estratégico. El sistema se centrará 100% en inteligencia de software y análisis de conocimiento, delegando la intervención física a sistemas SCADA externos para mantener un perfil de seguridad "Air-Gapped" por diseño.
@@ -234,9 +244,30 @@ Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
 - [x] **Knowledge Package (.zip)**: Exportación completa de metadatos y activos.
 - [x] **Deletion Certificate**: Documento legal de destrucción de datos.
 
-#### 💅 Frontend Standardization (Ex-Phase 31)
-- [ ] **Component Library Strictness**: Migrar 100% de la UI a componentes de `src/components/ui` (eliminar estilos inline arbitrarios).
-- [ ] **Zustand Adoption**: Eliminar `useState` complejos en favor de stores globales para evitar prop-drilling.
+#### 💅 Frontend Standardization (Phase 39 Initiative)
+- [x] **Component Library Strictness**: Migrado Configurator; siguiendo con Workspace (eliminar estilos inline arbitrarios).
+- [x] **Zustand Adoption**: Migrado Configurator; siguiendo con Workspace.
+- [x] **Phase 39: Technical Workspace Overhaul**: Estandarizar el área de análisis agéntica y resultados RAG.
+
+#### 🧪 FASE 40: INTELLIGENT DATA SIMULATION & PIPELINE HARDENING (COMPLETADO)
+- **Objetivo:** Generar un universo de datos sintéticos coherentes para validar los Dashboards de Inteligencia y estresar el Extractor de Checklists.
+- [x] **Prompt History Simulation:** Script `make-fake-history.ts` para generar evolución temporal de prompts.
+- [x] **Checklist Extractor Hardening:** Mejoras en `checklist-extractor.ts` para robustez y mocks.
+- [x] **Ingest Pipeline Stress Test:** Validar `ingest/route.ts` con carga simulada (Completed).
+
+#### 🎨 FASE 41: GLOBAL PRIVATE WEB STANDARDIZATION (COMPLETADO ✅)
+- **Objetivo:** Estandarizar la UX/UI de toda la zona privada (`/dashboard`, `/inventory`, `/admin`), replicando los patrones de diseño del Configurator y Workspace.
+- [x] **Core Layout Upgrade:** Unificar Sidebar, Header y PageContainers.
+- [x] **Dashboard Home:** Migrar a Grid system + KPIs estandarizados.
+- [x] **Admin Panels:** Refactorizar tablas y formularios en `/admin` (Users, Prompts).
+- [x] **Standard Components:** `DataTable` centralizado en `src/components/ui`.
+- [x] **Intelligence Audit:** Verified `trends` compliance with `ui-styling`.
+
+#### 🧠 FASE 42: INTELLIGENCE ENGINE REFACTOR (COMPLETADO ✅)
+- **Objetivo:** Aplicar los nuevos estándares de UI (Grid, MetricCard, PageHeader) a los dashboards de inteligencia (`/admin/intelligence`).
+- [x] **Intelligence Dashboard:** Refactorizar `/admin/intelligence/trends` para usar `MetricCard` y Grid.
+- [x] **Pattern Governance:** Estandarizar `GlobalPatternsTable` con `DataTable` centralizado.
+- [x] **Impact Analytics:** Mejorar visualización de ROI con componentes estándar.
 
 ---
 
@@ -244,4 +275,4 @@ Items recuperados de la auditoría v1 que quedaron pendientes o despriorizados.
 - Treat this file as the **single source of truth**.
 - Update relevant sections when milestones are reached.
 
-*Updated and Audited on 2026-02-01 by Antigravity (Skill: roadmap-manager)*
+*Updated and Audited on 2026-02-02 by Antigravity (Skill: roadmap-manager)*

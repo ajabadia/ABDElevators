@@ -25,14 +25,14 @@ interface DynamicFormProps {
 
 /**
  * Componente Chameleon: Genera un formulario dinámico a partir de la ontología.
- * Fulfills KIMI Phase 4 requirement.
+ * Fulfills Phase 4 requirement.
  */
 export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: DynamicFormProps) {
     const entity = EntityEngine.getInstance().getEntity(entitySlug);
     const [formData, setFormData] = useState<any>(initialData || {});
     const isEdit = !!initialData?._id || !!initialData?.id;
 
-    // Mutación universal apuntando al Core de KIMI
+    // Mutación universal apuntando al Core del Sistema
     const { mutate, isLoading } = useApiMutation({
         endpoint: (vars) => isEdit
             ? `${entity?.api.mutate}/${initialData._id || initialData.id}`

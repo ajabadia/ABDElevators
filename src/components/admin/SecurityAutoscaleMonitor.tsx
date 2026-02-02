@@ -64,12 +64,12 @@ export function SecurityAutoscaleMonitor() {
                                 <ArrowUpCircle className="text-teal-400" />
                                 AI Infrastructure Scaling
                             </CardTitle>
-                            <CardDescription className="text-slate-400 font-medium">Auto-optimización de recursos dirigida por KIMI.</CardDescription>
+                            <CardDescription className="text-slate-400 font-medium">Auto-optimización de recursos dirigida por el Sistema.</CardDescription>
                         </div>
                         <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30 font-black">AI-MANAGED</Badge>
                     </div>
                 </CardHeader>
-                <CardContent className="p-8 space-y-8">
+                <CardContent className="p-8 space-y-8 relative z-10">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Estado Actual de Infraestructura</p>
@@ -93,7 +93,7 @@ export function SecurityAutoscaleMonitor() {
                         <Server className="text-teal-400" size={24} />
                         <div>
                             <p className="text-xs font-bold">Reserva Dinámica Activa</p>
-                            <p className="text-[10px] text-slate-400 leading-relaxed">KIMI está ajustando los nodos de red basándose en el tráfico semántico global.</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed">El sistema está ajustando los nodos de red basándose en el tráfico semántico global.</p>
                         </div>
                     </div>
                 </CardContent>
@@ -112,8 +112,8 @@ export function SecurityAutoscaleMonitor() {
                         </div>
                         {audit && (
                             <div className="text-right">
-                                <p className="text-4xl font-black text-emerald-600 leading-none">{audit.securityScore}%</p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Score</p>
+                                <p className="text-4xl leading-none font-black text-emerald-600">{audit.securityScore}%</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Health Score</p>
                             </div>
                         )}
                     </div>

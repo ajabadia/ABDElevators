@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ConfiguratorFull } from '@/components/admin/configurator/ConfiguratorFull';
+import { ConfiguratorFull } from '@/verticals/elevators/components/configurator/ConfiguratorFull';
 
 /**
  * Entry point for creating a new checklist configuration.
