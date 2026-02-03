@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         if (!tenantId) {
             return NextResponse.json({ error: 'Tenant ID no encontrado en la sesión' }, { status: 403 });
         }
-        const { question } = await req.json();
+        const { question, stream = false } = await req.json();
 
         if (!question) {
             return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 });
@@ -33,13 +33,44 @@ export async function POST(req: NextRequest) {
         await logEvento({
             level: 'INFO',
             source: 'TECHNICAL_RAG_CHAT_API',
-            action: 'QUERY_START',
+            action: stream ? 'QUERY_STREAM_START' : 'QUERY_START',
             message: `Agentic query started: ${question.substring(0, 50)}...`,
             tenantId,
             correlationId
         });
 
-        // Execute agentic RAG service
+        if (stream) {
+            const encoder = new TextEncoder();
+            const generator = AgenticRAGService.runStream(question, tenantId, correlationId);
+
+            const customStream = new ReadableStream({
+                async pull(controller) {
+                    try {
+                        const { value, done } = await generator.next();
+
+                        if (done) {
+                            controller.close();
+                            return;
+                        }
+
+                        // Enviamos el chunk como un evento JSON (formato SSE simplificado)
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(value)}\n\n`));
+                    } catch (err: any) {
+                        controller.error(err);
+                    }
+                }
+            });
+
+            return new Response(customStream, {
+                headers: {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                },
+            });
+        }
+
+        // Execute agentic RAG service (Non-streaming)
         const result = await AgenticRAGService.run(question, tenantId, correlationId);
 
         return NextResponse.json({

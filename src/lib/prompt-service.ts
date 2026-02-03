@@ -314,18 +314,46 @@ export class PromptService {
     /**
      * Lista todos los prompts (por tenant o global para SuperAdmins)
      */
-    static async listPrompts(tenantId?: string | null, activeOnly: boolean = true, environment: string = 'PRODUCTION'): Promise<Prompt[]> {
+    static async listPrompts(
+        optionsOrTenantId: { tenantId?: string | null, activeOnly?: boolean, environment?: string, limit?: number, after?: string | null } | string | null = null,
+        legacyActiveOnly: boolean = true,
+        legacyEnvironment: string = 'PRODUCTION'
+    ): Promise<Prompt[] & { nextCursor?: string | null }> {
+        let tenantId: string | null = null;
+        let activeOnly = legacyActiveOnly;
+        let environment = legacyEnvironment;
+        let limit = 100; // Default larger for legacy
+        let after: string | null = null;
+
+        if (typeof optionsOrTenantId === 'object' && optionsOrTenantId !== null && !Array.isArray(optionsOrTenantId)) {
+            const opts = optionsOrTenantId as any;
+            tenantId = opts.tenantId ?? null;
+            activeOnly = opts.activeOnly ?? true;
+            environment = opts.environment ?? 'PRODUCTION';
+            limit = opts.limit ?? 100;
+            after = opts.after ?? null;
+        } else {
+            tenantId = optionsOrTenantId as string | null;
+        }
+
         const collection = await getTenantCollection('prompts');
-        let filter: any = {};
+        const filter: any = { environment };
+
         if (activeOnly) {
             filter.$or = [{ active: true }, { active: { $exists: false } }];
         }
         if (tenantId) filter.tenantId = tenantId;
-        filter.environment = environment;
 
-        const prompts = await collection.find(filter, { sort: { tenantId: 1, category: 1, name: 1 } });
+        if (after) {
+            filter._id = { $gt: new ObjectId(after) };
+        }
 
-        return prompts.map(p => {
+        const prompts = await collection.find(filter, {
+            sort: { _id: 1 },
+            limit: limit + 1
+        });
+
+        const items: any = prompts.slice(0, limit).map(p => {
             const result = PromptSchema.safeParse(p);
             if (!result.success) {
                 console.error(`[PROMPT VALIDATION ERROR] ID: ${p._id}, Key: ${p.key}:`, result.error.format());
@@ -333,6 +361,11 @@ export class PromptService {
             }
             return result.data;
         });
+
+        const hasNextPage = prompts.length > limit;
+        items.nextCursor = hasNextPage ? (prompts[limit - 1]._id.toString()) : null;
+
+        return items;
     }
 
     /**

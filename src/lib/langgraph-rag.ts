@@ -1,7 +1,7 @@
 import { StateGraph, END } from "@langchain/langgraph";
 import { Annotation } from "@langchain/langgraph";
-import { RagResult, performTechnicalSearch, hybridSearch } from "./rag-service";
-import { callGeminiMini } from "./llm";
+import { RagResult, hybridSearch } from "./rag-service";
+import { callGeminiMini, callGeminiStream } from "./llm";
 import { PromptService } from "./prompt-service";
 import { logEvento } from "./logger";
 import { EvaluationService } from "./evaluation-service";
@@ -179,36 +179,14 @@ export class AgenticRAGService {
     }
 
     /**
-     * Ejecuta el flujo agéntico completo
+     * Compila e invoca el flujo agéntico devolviendo un flujo de eventos (docs, trace, generation stream)
      */
-    public static async run(question: string, tenantId: string, correlationId: string) {
-        const workflow = new StateGraph(GraphState)
-            .addNode("retrieve", this.retrieve.bind(this))
-            .addNode("grade_documents", this.gradeDocuments.bind(this))
-            .addNode("generate", this.generate.bind(this))
-            .addNode("transform_query", this.transformQuery.bind(this))
-            .addNode("grade_generation", this.gradeGenerationNode.bind(this))
-            .addNode("grade_answer", this.gradeAnswerNode.bind(this))
-
-            .addEdge("__start__", "retrieve")
-            .addEdge("retrieve", "grade_documents")
-            .addConditionalEdges("grade_documents", (state) => {
-                if (state.documents.length === 0 && (state.retry_count || 0) < 2) {
-                    return "transform_query";
-                }
-                return "generate";
-            })
-            .addEdge("transform_query", "retrieve")
-            .addEdge("generate", "grade_generation")
-            .addConditionalEdges("grade_generation", (state) => {
-                return state.is_grounded ? "grade_answer" : "generate";
-            })
-            .addConditionalEdges("grade_answer", (state) => {
-                return state.is_useful ? END : "transform_query";
-            });
-
+    public static async *runStream(question: string, tenantId: string, correlationId: string) {
+        const workflow = this.createWorkflow();
         const app = workflow.compile();
 
+        // 1. Ejecutar el grafo de forma atómica para resolver la lógica agéntica (CRAG/Self-RAG)
+        // En un futuro podríamos emitir eventos node-by-node usando app.stream()
         const result = await app.invoke({
             question,
             tenantId,
@@ -221,17 +199,74 @@ export class AgenticRAGService {
             trace: []
         });
 
-        // Evaluation Automática (Phase 26.2)
-        // La ejecutamos en background para no penalizar el SLA del usuario final
+        // 2. Emitir documentos y traza primero
+        yield { type: 'docs', data: result.documents };
+        yield { type: 'trace', data: result.trace };
+
+        // 3. Obtener el prompt de generación para hacer el streaming real de la respuesta
+        const context = result.documents.length > 0
+            ? result.documents.map((d: any) => d.text).join("\n\n---\n\n")
+            : "No relevant documents found.";
+
+        const { text: genPrompt, model } = await PromptService.getRenderedPrompt(
+            'RAG_GENERATOR',
+            { question, context, industry: 'ELEVATORS' },
+            tenantId
+        );
+
+        const stream = await callGeminiStream(genPrompt, tenantId, { correlationId, model });
+
+        // 4. Emitir tokens conforme llegan
+        for await (const chunk of stream) {
+            const text = chunk.text();
+            if (text) {
+                yield { type: 'token', data: text };
+            }
+        }
+    }
+
+    /**
+     * Ejecuta el flujo agéntico completo (Blocking)
+     */
+    public static async run(question: string, tenantId: string, correlationId: string) {
+        const workflow = this.createWorkflow();
+        const app = workflow.compile();
+
+        const result = await app.invoke({
+            question, tenantId, correlationId, retry_count: 0,
+            documents: [], generation: "", is_grounded: false, is_useful: false, trace: []
+        });
+
+        // Background evaluation
         EvaluationService.evaluateSession(
-            tenantId,
-            correlationId,
-            question,
-            result.generation,
-            result.documents.map((d: any) => d.text),
-            result.trace
+            tenantId, correlationId, question, result.generation,
+            result.documents.map((d: any) => d.text), result.trace
         ).catch(err => console.error("Error in background evaluation:", err));
 
         return result;
+    }
+
+    private static createWorkflow() {
+        return new StateGraph(GraphState)
+            .addNode("retrieve", this.retrieve.bind(this))
+            .addNode("grade_documents", this.gradeDocuments.bind(this))
+            .addNode("generate", this.generate.bind(this))
+            .addNode("transform_query", this.transformQuery.bind(this))
+            .addNode("grade_generation", this.gradeGenerationNode.bind(this))
+            .addNode("grade_answer", this.gradeAnswerNode.bind(this))
+            .addEdge("__start__", "retrieve")
+            .addEdge("retrieve", "grade_documents")
+            .addConditionalEdges("grade_documents", (state) => {
+                if (state.documents.length === 0 && (state.retry_count || 0) < 2) return "transform_query";
+                return "generate";
+            })
+            .addEdge("transform_query", "retrieve")
+            .addEdge("generate", "grade_generation")
+            .addConditionalEdges("grade_generation", (state) => {
+                return state.is_grounded ? "grade_answer" : "generate";
+            })
+            .addConditionalEdges("grade_answer", (state) => {
+                return state.is_useful ? END : "transform_query";
+            });
     }
 }

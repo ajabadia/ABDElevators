@@ -16,14 +16,17 @@ description: Evalúa si un archivo (API, Server Action o Componente) está corre
 
 ## Workflow
 
-### 1. Detección de Protección y RBAC (Phase 70)
+### 1. Detección de Protección y RBAC (Phase 70 & 72)
 1.  **RBAC Gatekeeping**: Verifica si el archivo utiliza el sistema de roles unificado:
     -   Uso de `requireRole([UserRole.ADMIN, ...])` para control de acceso rápido.
     -   Uso de `enforcePermission(resource, action)` para control granular (ABAC).
 2.  **Validación de Tipado (Crítico)**:
-    -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o comparaciones de strings.
-    -   ✅ **OBLIGATORIO**: `session.user.role === UserRole.ADMIN`.
-3.  Si el archivo es una API Route (`route.ts`) y no usa ni `requireRole` ni `enforcePermission` -> **RAISE ERROR (CRITICAL)**.
+    -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o `(session.user as any).role`.
+    -   ✅ **OBLIGATORIO**: Uso de interfaces extendidas de `NextAuth` y el Enum `UserRole`.
+3.  **Industrial DB Management (Fase 72)**:
+    -   Asegura que el archivo usa `connectDB()` de `@/lib/db`.
+    -   ❌ **PROHIBIDO**: Crear nuevos `MongoClient` o `mongoose.connect` fuera del singleton.
+4.  Si el archivo es una API Route (`route.ts`) y no usa ni `requireRole` ni `enforcePermission` -> **RAISE ERROR (CRITICAL)**.
 
 ### 2. Validación de Parámetros
 Analiza los argumentos de las funciones de protección:
@@ -31,9 +34,10 @@ Analiza los argumentos de las funciones de protección:
 - `action`: Debe ser una acción estándar (`CREATE`, `READ`, `UPDATE`, `DELETE`, `EXECUTE`).
 - **SuperAdmin Bypass**: Verifica que el bypass de Super Admin en archivos CORE (como `GuardianEngine.ts` o middlewares) use exclusivamente `UserRole.SUPER_ADMIN`.
 
-### 3. Verificación de Tenant Isolation
+### 3. Verificación de Tenant & Environment Isolation
 - Asegura que después de la validación de permisos, las queries a DB filtren explícitamente por `tenantId` extraído de la sesión validada.
-- **Punto Crítico**: No basta con tener permiso si luego se puede acceder a datos de otro tenant.
+- **Environment**: Verifica que las operaciones de escritura incluyan el campo `environment` (Phase 59/72).
+- **Punto Crítico**: No basta con tener permiso si luego se puede acceder a datos de otro tenant o entorno no autorizado.
 
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: Si detectas un endpoint sin protección de permisos que maneje datos sensibles o configuración -> **ERROR CRÍTICO**.

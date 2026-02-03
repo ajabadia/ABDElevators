@@ -26,8 +26,18 @@ export async function GET(req: NextRequest) {
         const environment = searchParams.get('environment') || 'PRODUCTION';
         const tenantId = session.user.tenantId;
 
-        const items = await WorkflowService.listDefinitions(tenantId, 'ENTITY', environment);
-        return NextResponse.json({ success: true, items });
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const after = searchParams.get('after');
+
+        const items = await WorkflowService.listDefinitions({
+            tenantId,
+            entityType: 'ENTITY',
+            environment,
+            limit,
+            after
+        });
+        const nextCursor = (items as any).nextCursor;
+        return NextResponse.json({ success: true, items, nextCursor });
     } catch (error) {
         return handleApiError(error, 'API_WORKFLOWS_GET', 'system');
     }

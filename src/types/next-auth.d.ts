@@ -1,4 +1,5 @@
-import { DefaultSession } from "next-auth";
+import { DefaultSession, DefaultUser } from "next-auth";
+import { JWT as DefaultJWT } from "next-auth/jwt";
 import { UserRole } from "./roles";
 
 export interface TenantAccess {
@@ -9,10 +10,9 @@ export interface TenantAccess {
 }
 
 declare module "next-auth" {
-    interface User {
-        id: string;
+    interface User extends DefaultUser {
         role: UserRole;
-        baseRole: string; // Original role from DB
+        baseRole: string;
         tenantId: string;
         industry: string;
         activeModules: string[];
@@ -37,7 +37,7 @@ declare module "next-auth" {
 }
 
 declare module "next-auth/jwt" {
-    interface JWT {
+    interface JWT extends DefaultJWT {
         id: string;
         role: UserRole;
         baseRole: string;

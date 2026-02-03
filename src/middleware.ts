@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
 import NextAuth from 'next-auth';
-import crypto from 'crypto';
 import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
 
@@ -15,9 +14,9 @@ export const config = {
     ],
 };
 
-export default auth(async function middleware(request: NextRequest) {
+export default auth(async function middleware(request: NextRequest & { auth?: any }) {
     const { pathname } = request.nextUrl;
-    const session = (request as any).auth;
+    const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
 
     console.log(`🛡️ [MIDDLEWARE] Path: ${pathname}, IP: ${ip}, Session: ${!!session}`);
@@ -52,7 +51,7 @@ export default auth(async function middleware(request: NextRequest) {
         }
 
         // 3. Security Headers (CSP, HSTS, etc)
-        const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+        const nonce = btoa(crypto.randomUUID());
         const response = NextResponse.next();
 
         // Pass nonce to headers so components can use it

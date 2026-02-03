@@ -1,0 +1,88 @@
+import { PromptService } from "@/lib/prompt-service";
+import { callGeminiMini } from "@/lib/llm";
+import { logEvento } from "@/lib/logger";
+import { trace } from '@opentelemetry/api';
+import { RagResult } from "./rag-service";
+
+const tracer = trace.getTracer('abd-rag-platform');
+
+export class RerankingService {
+    /**
+     * Re-ordena los resultados usando Gemini para máxima precisión técnica.
+     */
+    static async rerankResults(
+        query: string,
+        results: RagResult[],
+        tenantId: string,
+        correlationId: string,
+        limit: number
+    ): Promise<RagResult[]> {
+        return tracer.startActiveSpan('rag.reranking', {
+            attributes: {
+                'tenant.id': tenantId,
+                'correlation.id': correlationId,
+                'rag.results.initial_count': results.length,
+                'rag.limit': limit
+            }
+        }, async (span) => {
+            if (results.length <= 1) return results;
+
+            try {
+                const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
+                const { text: prompt, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
+                    query,
+                    fragments,
+                    count: results.length
+                }, tenantId);
+
+                const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
+                const cleanResponse = response.replace(/```json|```/g, '').trim();
+                const ranking = JSON.parse(cleanResponse) as { index: number; score: number; reason: string }[];
+
+                // Unificar con los objetos originales y ordenar
+                const reranked = ranking
+                    .map(rank => {
+                        const original = results[rank.index];
+                        if (!original) return null;
+                        return {
+                            ...original,
+                            score: rank.score,
+                            rerankReason: rank.reason
+                        } as RagResult & { rerankReason: string };
+                    })
+                    .filter((r): r is RagResult & { rerankReason: string } => r !== null)
+                    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                    .slice(0, limit);
+
+                span.setAttribute('rag.results.final_count', reranked.length);
+
+                await logEvento({
+                    level: 'DEBUG',
+                    source: 'RERANKING_SERVICE',
+                    action: 'RERANK_SUCCESS',
+                    message: `Re-ranking completado para ${reranked.length} resultados`,
+                    correlationId,
+                    tenantId
+                });
+
+                return reranked as RagResult[];
+            } catch (error) {
+                span.recordException(error as Error);
+                console.error("[RERANKING ERROR]", error);
+
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'RERANKING_SERVICE',
+                    action: 'RERANK_ERROR',
+                    message: (error as Error).message,
+                    correlationId,
+                    tenantId
+                });
+
+                return results.slice(0, limit); // Fallback to original top-K
+            } finally {
+                span.end();
+            }
+        });
+    }
+}

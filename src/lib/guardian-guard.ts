@@ -16,7 +16,7 @@ export async function enforcePermission(resource: string, action: string) {
 
     const engine = GuardianEngine.getInstance();
     const result = await engine.evaluate(
-        session.user as any,
+        session.user,
         resource,
         action
     );

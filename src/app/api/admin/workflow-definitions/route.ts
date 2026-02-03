@@ -24,8 +24,19 @@ export async function GET(request: Request) {
         else if (rawType === 'USUARIO') entityType = 'USER';
         else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
-        const definitions = await WorkflowService.listDefinitions(session.user.tenantId, entityType, environment);
-        return NextResponse.json({ definitions });
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const after = searchParams.get('after');
+
+        const definitions = await WorkflowService.listDefinitions({
+            tenantId: session.user.tenantId,
+            entityType,
+            environment,
+            limit,
+            after
+        });
+
+        const nextCursor = (definitions as any).nextCursor;
+        return NextResponse.json({ definitions, nextCursor });
 
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_WORKFLOW_LIST', correlationId);

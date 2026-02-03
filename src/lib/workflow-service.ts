@@ -56,9 +56,45 @@ export class WorkflowService {
     /**
      * Lista todas las definiciones para un tenant y tipo.
      */
-    static async listDefinitions(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION') {
+    static async listDefinitions(
+        optionsOrTenantId: { tenantId?: string, entityType?: 'ENTITY' | 'EQUIPMENT' | 'USER', environment?: string, limit?: number, after?: string | null } | string,
+        legacyEntityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY',
+        legacyEnvironment: string = 'PRODUCTION'
+    ): Promise<WorkflowDefinition[] & { nextCursor?: string | null }> {
+        let tenantId: string;
+        let entityType = legacyEntityType;
+        let environment = legacyEnvironment;
+        let limit = 100;
+        let after: string | null = null;
+
+        if (typeof optionsOrTenantId === 'object' && optionsOrTenantId !== null && !Array.isArray(optionsOrTenantId)) {
+            const opts = optionsOrTenantId as any;
+            tenantId = opts.tenantId;
+            entityType = opts.entityType ?? 'ENTITY';
+            environment = opts.environment ?? 'PRODUCTION';
+            limit = opts.limit ?? 100;
+            after = opts.after ?? null;
+        } else {
+            tenantId = optionsOrTenantId as string;
+        }
+
         const collection = await getTenantCollection('workflow_definitions');
-        return await collection.find({ tenantId, entityType, environment }, { sort: { updatedAt: -1 } }) as WorkflowDefinition[];
+        const filter: any = { tenantId, entityType, environment };
+
+        if (after) {
+            filter._id = { $lt: new ObjectId(after) };
+        }
+
+        const docs = await collection.find(filter, {
+            sort: { _id: -1 },
+            limit: limit + 1
+        });
+
+        const items = docs.slice(0, limit) as unknown as WorkflowDefinition[] & { nextCursor?: string | null };
+        const hasNextPage = docs.length > limit;
+        items.nextCursor = hasNextPage ? ((docs[limit - 1] as any)._id.toString()) : null;
+
+        return items;
     }
 
     /**

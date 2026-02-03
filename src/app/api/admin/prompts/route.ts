@@ -20,9 +20,19 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const environment = searchParams.get('environment') || 'PRODUCTION';
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const after = searchParams.get('after');
 
         // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
-        const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId, false, environment);
+        const prompts = await PromptService.listPrompts({
+            tenantId: isSuperAdmin ? null : tenantId,
+            activeOnly: false,
+            environment,
+            limit,
+            after
+        });
+
+        const nextCursor = (prompts as any).nextCursor;
 
         // Enriquecer con info del tenant (solo si es SuperAdmin)
         if (isSuperAdmin) {
@@ -38,10 +48,10 @@ export async function GET(req: NextRequest) {
                 }
             }));
 
-            return NextResponse.json({ success: true, prompts: enrichedPrompts });
+            return NextResponse.json({ success: true, prompts: enrichedPrompts, nextCursor });
         }
 
-        return NextResponse.json({ success: true, prompts });
+        return NextResponse.json({ success: true, prompts, nextCursor });
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_GET', correlacion_id);
     }

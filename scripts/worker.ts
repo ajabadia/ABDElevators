@@ -3,6 +3,7 @@ import { getRedisConnection } from '../src/lib/redis';
 import { logEvento } from '../src/lib/logger';
 import { JobPayload } from '../src/lib/queue-service';
 import { AsyncJobsLogic } from '../src/lib/async-jobs-logic';
+import { IngestService } from '../src/services/ingest-service';
 import { connectDB, connectAuthDB, connectLogsDB } from '../src/lib/db';
 import { initTracing } from '../src/lib/tracing';
 
@@ -36,11 +37,24 @@ async function startWorker() {
         'PDF_ANALYSIS',
         async (job: Job<JobPayload>) => {
             console.log(`[Worker] Procesando PDF Analysis Job ${job.id}`);
-            return await AsyncJobsLogic.processPdfAnalysis(
-                job.data,
-                job.id!,
-                (p) => job.updateProgress(p)
-            );
+
+            // Determinar qué lógica usar basado en la estructura de data
+            if (job.data.data && job.data.data.docId) {
+                // Nueva lógica: IngestService (RAG KBase)
+                const { docId, options } = job.data.data;
+                return await IngestService.executeAnalysis(docId, {
+                    ...options,
+                    correlationId: job.data.correlationId || job.id,
+                    job
+                });
+            } else {
+                // Lógica legacy: AsyncJobsLogic (Entities)
+                return await AsyncJobsLogic.processPdfAnalysis(
+                    job.data,
+                    job.id!,
+                    (p) => job.updateProgress(p)
+                );
+            }
         },
         {
             connection,

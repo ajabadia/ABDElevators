@@ -8,7 +8,7 @@ description: Ejecuta un ciclo completo de auditoría (UI/UX, i18n/a11y y Permiso
 ## Cuándo usar este skill
 - Cuando el usuario pida un "repaso completo" o "revisión general" de una nueva feature o página.
 - Antes de despliegues importantes a producción.
-- Para garantizar que una pantalla cumple con todos los estándares del proyecto (Estilo, Accesibilidad, Idioma y Seguridad).
+- Para garantizar que una pantalla cumple con todos los estándares del proyecto (Estilo, Accesibilidad, Idioma, Seguridad e Industrial Performance).
 
 ## Inputs necesarios
 - **Ruta del archivo o carpeta**: Lo que se quiere revisar.

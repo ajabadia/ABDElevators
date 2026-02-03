@@ -23,9 +23,8 @@ export const authConfig = {
     },
     callbacks: {
         async jwt({ token, user, trigger, session }) {
-            console.log("🧩 [JWT Callback] Triggered. User?", !!user, "Trigger:", trigger);
             if (user) {
-                token.id = user.id;
+                token.id = user.id!;
                 token.role = user.role;
                 token.baseRole = user.baseRole;
                 token.tenantId = user.tenantId;
@@ -40,29 +39,30 @@ export const authConfig = {
 
             // Manejar actualización de sesión (Visión 2.0)
             if (trigger === "update" && session?.user) {
-                console.log("🔄 [JWT Update] Session update requested");
-                if (session.user.image) token.image = session.user.image as string;
-                if (session.user.name) token.name = session.user.name as string;
-                if (session.user.tenantId) token.tenantId = session.user.tenantId as string;
-                if (session.user.role) token.role = session.user.role as string;
-                if (session.user.industry) token.industry = session.user.industry as string;
+                if (session.user.image) token.image = session.user.image;
+                if (session.user.name) token.name = session.user.name;
+                if (session.user.tenantId) token.tenantId = session.user.tenantId;
+                if (session.user.role) token.role = session.user.role;
+                if (session.user.industry) token.industry = session.user.industry;
             }
 
             return token;
         },
         async session({ session, token }) {
-            // console.log("📦 [Session Callback] Token ID:", token.id);
-            if (session.user) {
-                session.user.id = token.id as string;
-                session.user.role = token.role as string;
-                session.user.baseRole = token.baseRole as string;
-                session.user.tenantId = token.tenantId as string;
-                session.user.industry = token.industry as string;
-                session.user.activeModules = token.activeModules as string[];
-                session.user.image = token.image as string | null | undefined;
-                session.user.tenantAccess = token.tenantAccess as any;
-                session.user.permissionGroups = token.permissionGroups as string[];
-                session.user.permissionOverrides = token.permissionOverrides as string[];
+            // Sincronizar campos del token a la sesión (Auditoría P0: Higiene de tipos)
+            // Se usa cast local para asegurar que TS reconozca los campos extendidos en JWT
+            const t = token as any;
+            if (session.user && t) {
+                session.user.id = t.id;
+                session.user.role = t.role;
+                session.user.baseRole = t.baseRole;
+                session.user.tenantId = t.tenantId;
+                session.user.industry = t.industry;
+                session.user.activeModules = t.activeModules || [];
+                session.user.image = t.image;
+                session.user.tenantAccess = t.tenantAccess;
+                session.user.permissionGroups = t.permissionGroups || [];
+                session.user.permissionOverrides = t.permissionOverrides || [];
             }
             return session;
         },

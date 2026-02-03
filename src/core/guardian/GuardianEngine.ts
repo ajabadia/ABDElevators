@@ -9,6 +9,13 @@ interface EvaluationContext {
     // ... other context
 }
 
+export interface EvaluationUser {
+    role: UserRole;
+    tenantId: string;
+    permissionGroups?: string[];
+    permissionOverrides?: string[];
+}
+
 export class GuardianEngine {
     private static instance: GuardianEngine;
 
@@ -28,7 +35,7 @@ export class GuardianEngine {
      * Core Evaluation Logic (ABAC)
      */
     public async evaluate(
-        user: User,
+        user: EvaluationUser,
         resource: string, // e.g., 'workflow:create' or just 'workflow'
         action: string,   // e.g., 'write'
         context?: EvaluationContext
@@ -85,7 +92,7 @@ export class GuardianEngine {
     /**
      * Resolves all policies applicable to the user (Overrides + Groups + Hierarchy)
      */
-    private async getUserEffectivePolicies(user: User, tenantId: string): Promise<PermissionPolicy[]> {
+    private async getUserEffectivePolicies(user: EvaluationUser, tenantId: string): Promise<PermissionPolicy[]> {
         const groupsCollection = await getTenantCollection('permission_groups');
         const policiesCollection = await getTenantCollection('policies');
 

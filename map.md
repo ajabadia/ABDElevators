@@ -38,13 +38,13 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/workflows` | Editor visual de grafos para automatizar flujos RAG. | 2026-02-03 |
-| `/admin/workflows/active` | Monitor de ejecuciones en tiempo real. | 2026-02-03 |
+| `/admin/workflows` | Editor visual de grafos para automatizar flujos RAG. | 2026-02-03 23:45 |
+| `/admin/workflows/active` | Monitor de ejecuciones en tiempo real. | 2026-02-03 23:45 |
 
 ### 📊 Intelligence & Audit
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-03 |
+| `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-03 23:45 |
 | `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-04 10:15 |
 | `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-04 10:15 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-04 10:15 |
@@ -59,15 +59,16 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ## 🔌 Infraestructura (API Endpoints Clave)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
-| `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-04 10:15 |
-| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-04 10:15 |
+| `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-04 00:30 |
+| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-04 00:30 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
-| `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | - |
+| `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | 2026-02-04 00:30 |
 | `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-04 10:15 |
-| `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | - |
+| `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-04 00:30 |
 
 
 ---
-*Mapa generado y auditado por Antigravity v3.0*
+*Mapa generado y auditado por Antigravity v3.4.3*
+
