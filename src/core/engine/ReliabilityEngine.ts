@@ -1,5 +1,6 @@
 import { getNeo4jDriver, runCypher } from '@/lib/neo4j';
 import { logEvento } from '@/lib/logger';
+import { Driver } from 'neo4j-driver';
 
 /**
  * ReliabilityEngine: Gestiona la alta disponibilidad y redundancia del motor de inteligencia.
@@ -23,7 +24,7 @@ export class ReliabilityEngine {
     public async checkSystemHealth(): Promise<{ neo4j: boolean; mongodb: boolean }> {
         const status = { neo4j: false, mongodb: false };
         try {
-            const driver = await getNeo4jDriver();
+            const driver: Driver = await getNeo4jDriver();
             const session = driver.session();
             await session.run('RETURN 1');
             status.neo4j = true;
