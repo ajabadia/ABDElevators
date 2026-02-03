@@ -172,4 +172,20 @@ export class WorkflowAnalyticsService {
             kpis: kpis[0] || { totalExecutions: 0, avgGlobalDuration: 0, globalSuccessRate: 0 }
         };
     }
+
+    /**
+     * Gets detailed execution logs for a specific workflow.
+     */
+    static async getWorkflowLogs(workflowId: string, tenantId: string, limit: number = 50) {
+        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics');
+
+        return await collection.find({
+            workflowId,
+            tenantId
+        }, {
+            limit,
+            sort: { timestamp: -1 } as any
+        });
+    }
 }
+

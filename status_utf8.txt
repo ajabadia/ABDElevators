@@ -1,0 +1,41 @@
+﻿On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   ROADMAP_MASTER.md
+	deleted:    build_log.txt
+	deleted:    build_log_utf8.txt
+	deleted:    extracted_11.txt
+	modified:   src/app/api/admin/workflows/route.ts
+	modified:   src/components/shared/EnvironmentSwitcher.tsx
+	modified:   src/components/shared/Header.tsx
+	modified:   src/components/shared/UserNav.tsx
+	modified:   src/components/workflow-editor/CustomNodes/ActionNode.tsx
+	modified:   src/components/workflow-editor/NodeLibrary.tsx
+	modified:   src/components/workflow-editor/WorkflowCanvas.tsx
+	modified:   src/lib/schemas.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	cluster_out.txt
+	cluster_utf8.txt
+	diagnose_out.txt
+	diagnose_utf8.txt
+	hunt_2_utf8.txt
+	hunt_utf8.txt
+	log_utf8.txt
+	multi_hunt_utf8.txt
+	src/components/workflow-editor/CustomNodes/LoopNode.tsx
+	src/components/workflow-editor/CustomNodes/SwitchNode.tsx
+	src/components/workflow-editor/CustomNodes/WaitNode.tsx
+	src/components/workflow-editor/NodePropertiesEditor.tsx
+	src/scripts/diagnose-workflows.ts
+	src/scripts/hunt-workflows.ts
+	src/scripts/inspect-cluster.ts
+	src/scripts/test-write.ts
+	status_utf8.txt
+	test_write_utf8.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

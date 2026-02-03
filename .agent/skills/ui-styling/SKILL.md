@@ -149,7 +149,16 @@ Aplica siempre clases de entrada para suavizar la carga:
 ### 9. Breadcrumbs Dinámicos
 Usa siempre `<DynamicBreadcrumb />` en el `<Header />` para navegación automática basada en rutas.
 
+### 10. Compatibilidad con Modos (Light/Dark)
+Toda interfaz debe ser funcional y estética en ambos temas:
+- **Contraste**: Verifica que el texto sea legible (WCAG AA mínimo: 4.5:1 para texto normal, 3:1 para grande).
+- **Semántica de Colores**: Usa variables CSS como `text-foreground` y `bg-background` en lugar de clases rígidas como `text-slate-900`.
+- **Ajuste de Sombras**: En modo oscuro, las sombras deben ser más sutiles o reemplazarse por bordes (`border-slate-800`).
+- **Imágenes y Logos**: Asegura que el logo tenga variantes o sea visible sobre fondos claros y oscuros.
+- **Transiciones**: Añade transiciones suaves al cambiar de tema para evitar destellos (`transition-colors duration-300`).
+
 ## Output (formateo exacto)
 - **Estado**: "Migrada lógica de estado a Zustand Store ([store-name])".
 - **UI**: "Estandarizados componentes visuales ([PageContainer/Header/Card])".
 - **Limpieza**: "Eliminados estilos inline y ajustado branding a Teal-Identity".
+- **Modos**: "Verificada legibilidad y contraste en Modo Claro y Oscuro".

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
-import { AppError, ValidationError } from '@/lib/errors';
+import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 const CheckSchema = z.object({
     resource: z.string(),
@@ -15,21 +16,18 @@ export async function POST(req: Request) {
     const startTime = Date.now();
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Session required for permission check');
-        }
+        const user = await enforcePermission('permission:simulator', 'execute');
 
         const body = await req.json();
         const validated = CheckSchema.parse(body);
 
         const engine = GuardianEngine.getInstance();
         const result = await engine.evaluate(
-            session.user as any,
+            user as any,
             validated.resource,
             validated.action,
             {
-                ip: req.headers.get('x-forwarded-for') || 'unknown',
+                ip: body.context?.ip || req.headers.get('x-forwarded-for') || 'unknown',
                 userAgent: req.headers.get('user-agent') || 'unknown'
             }
         );
@@ -40,9 +38,9 @@ export async function POST(req: Request) {
                 level: 'WARN',
                 source: 'GUARDIAN',
                 action: 'ACCESS_DENIED',
-                message: `Access denied for ${session.user.email} on ${validated.resource}:${validated.action}. Reason: ${result.reason}`,
+                message: `Access denied for ${(user as any).email} on ${validated.resource}:${validated.action}. Reason: ${result.reason}`,
                 correlationId,
-                tenantId: session.user.tenantId
+                tenantId: (user as any).tenantId
             });
         }
 

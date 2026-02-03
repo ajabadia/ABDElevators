@@ -23,7 +23,7 @@ export class ReliabilityEngine {
     public async checkSystemHealth(): Promise<{ neo4j: boolean; mongodb: boolean }> {
         const status = { neo4j: false, mongodb: false };
         try {
-            const driver = getNeo4jDriver();
+            const driver = await getNeo4jDriver();
             const session = driver.session();
             await session.run('RETURN 1');
             status.neo4j = true;

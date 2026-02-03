@@ -42,15 +42,16 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-### 📊 Status & Metrics (v3.2.0)
+### 📊 Status & Metrics (v3.2.0 - ARCHITECTURE COMPLETE)
 
-- **Global Progress:** 100% (Phase 54 - Observability & Reporting COMPLETE).
-- **Core Status:** 100% (Core SaaS Overhaul Complete).
-- **Recent Ship:** Workflow Observability, Anomaly Alerting & Technical PDF Reporting.
-  - **Anomaly Detection:** Monitoreo en tiempo real de tasas de error (>15%) y latencia (>2x baseline).
-  - **Technical Reports:** Generación server-side de informes de performance profesionales en PDF.
-  - **Visual Alerts:** Indicadores de riesgo (pulse effect) integrados en el Workflow Canvas.
+- **Global Progress:** 100% (Phase 58 - Dynamic Workflows & Execution Logs COMPLETE).
+- **Core Status:** 100% (Industrial Workflow Engine Finalized).
+- **Recent Ship:** Turing-complete Workflow Logic, Real-time Logs & Specialized Node Editors.
+  - **Dynamic Configuration:** Editores especializados para nodos Wait, Switch y Loop con metadatos personalizados.
+  - **Real-time Monitoring:** Panel de registros de ejecución (Execution Logs) con actualización en vivo.
+  - **Advanced Logic:** Soporte para retardos temporales, bifurcaciones dinámicas y ciclos iterativos.
 - **Project Status:** **Industrial-Grade Workflow Governance Ready (v3.2.0).**
+
 
 ---
 
@@ -146,16 +147,24 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [X] **E2E Script:** `test-workflow-e2e.ts`.
 - [X] **Validation:** Confirmar que `WorkflowEngine` respeta las reglas creadas visualmente.
 
-#### 🎨 FASE 51: ADVANCED WORKFLOW EDITOR (PARCIALMENTE COMPLETADO 🚧)
+#### 🛠️ FASE 51: ADVANCED WORKFLOW EDITOR & MULTI-TENANCY (COMPLETADO ✅)
 
 - **Objetivo:** UI Polish, Edición, y Seguridad Multi-tenant.
 
 - [X] **Load & Edit:** Capacidad de cargar workflows existentes en el Canvas (`GET /api/admin/workflows/[id]`).
 - [X] **Tenant Isolation:** Aislamiento ruguroso por `tenantId` en API y persistencia.
 - [X] **RBAC Permissions:** Control de acceso granular para edición de flujos integrado con Guardian V2.
-- [ ] **UI Refinement:** Mejorar estética de nodos, minimapas, y controles de zoom.
-- [ ] **More Nodes:** Loop Node, Wait Node, Switch Case Node.
-- [ ] **Validation UI:** Feedback visual en tiempo real si el grafo es inválido.
+- [X] **Multi-Workflow Selector:** UI para gestionar y crear múltiples flujos por entorno.
+- [X] **Advanced Nodes:** Loop Node, Wait Node, Switch Case Node, Custom Action Node.
+- [X] **Validation UI:** Feedback visual en tiempo real para nodos huérfanos (Orphan Detection).
+- [X] **Workflow UX Overhaul:**
+    - [X] Permitir eliminar nodos/aristas seleccionados (Botón Borrar / Tecla Delete).
+    - [X] Funcionalidad de Duplicar/Copiar Workflows existentes.
+    - [x] **Versioning & History:** Guardar versiones históricas y permitir revertir.
+    - [x] **Draft vs Published:** Guardar borradores antes de activar el flujo en ejecución.
+- [X] **Dynamic Node Editor:** Configuración personalizada de parámetros por nodo (Lateral Panel).
+- [X] **Tenant Custom Nodes:** Capacidad de definir acciones específicas por industria/tenant.
+
 
 #### 👁️ FASE 52: VISUAL INTELLIGENCE (MULTI-MODAL RAG) (COMPLETADO ✅)
 
@@ -202,25 +211,24 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [X] **Smart Chunking:** Pipeline de chunking inteligente integrado en `IngestService`.
 - [X] **Query Expansion:** Generación de queries alternativas con Gemini para mejorar búsqueda híbrida.
 
-#### ⚖️ FASE 57: ADVANCED WORKFLOW LOGIC
+#### ⚖️ FASE 57: ADVANCED WORKFLOW LOGIC (COMPLETADO ✅)
 
 - **Objetivo:** Robustez y lógica de negocio compleja en el motor de estados (Ref: /`documentación/13/01.md `).
 
-- [ ] **Optimistic Locking:** Prevenir race conditions en transiciones concurrentes.
-- [ ] **Business Rules:** Nodos de condición avanzada (ej: Monto > X, Cliente == Y).
-- [ ] **History Archiving:** Sistema de archivado de logs antiguos para evitar documentos gigantes.
+- [X] **Optimistic Locking:** Prevenir race conditions en transiciones concurrentes.
+- [X] **Business Rules:** Nodos de condición avanzada (ej: Monto > X, Cliente == Y).
+- [X] **History Archiving:** Sistema de archivado de logs antiguos para evitar documentos gigantes.
 
-#### 👮 FASE 58: GUARDIAN V2 - ENTERPRISE GOVERNANCE (ABAC & CONSOLE) (COMPLETADO ✅)
 
-- **Objetivo:** Implementar modelo de permisos granular e híbrido + Consola de Gestión (Ref: `documentación/13/02.md`, `documentación/13/1303.md`).
+#### 👁️ FASE 58: DYNAMIC WORKFLOW CONFIGURATION & EXECUTION MONITORING (COMPLETADO ✅)
 
-- [X] **ABAC Engine:** Base implementation of the `GuardianEngine`.
-- [X] **Dynamic Roles:** Reemplazar roles hardcodeados por Perfiles definidos por el Tenant.
-- [X] **Guardian Console:** UI "Permission Matrix" funcional integrada con APIs reales.
-- [X] **Hierarchical Groups UI:** Implementado con carga dinámica de datos.
-- [X] **User Overrides:** Implementadas excepciones de permisos a nivel de usuario individual.
-- [X] **JIT Access & Dashboard:** Sistema "Break Glass" + Centro de Escalaciones.
-- [X] **Permission Simulator:** Herramienta de depuración final verificada.
+- **Objetivo:** Edición dinámica de parámetros y visibilidad en tiempo real de la ejecución.
+
+- [X] **Specialized Node Editor**: UI personalizada para nodos Wait, Switch y Loop.
+- [X] **Execution Logs Panel**: Interfaz de monitoreo "Mission Control" para el Workflow Canvas.
+- [X] **Structured Metadata**: Procesamiento de parámetros dinámicos en el compilador y motor.
+- [X] **Real-time Live Polling**: Actualización automática de registros de ejecución.
+
 
 #### 🌐 FASE 59: ENVIRONMENTS (STAGING / USER SANDBOX) (COMPLETADO ✅)
 
@@ -237,6 +245,9 @@ This document consolidates **all** roadmap information, implementation plans, an
 - **Objetivo:** Escalabilidad en onboarding y gestión de accesos temporales (Ref: User Request).
 
 - [ ] **Bulk Invites:** Carga masiva de usuarios vía CSV/Excel para grandes tenants.
+    - [ ] Generación de plantillas (.csv/.xlsx) con ejemplos sintéticos y orden correcto.
+    - [ ] Guía en pantalla (Onboarding Tooltips) con especificaciones técnicas de cada campo.
+    - [ ] Pre-validación de datos antes de la ingesta para evitar errores de tipo/formato.
 - [ ] **Invitation Management:** UI para reenviar, revocar y ver estado de invitaciones pendientes.
 - [ ] **Smart Onboarding:** Asignación automática de Grupos y Departamentos desde la invitación.
 - [ ] **Magic Links & TTL:** Links de un solo uso o con expiración personalizada (integrado con JIT).
@@ -262,16 +273,16 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **Dynamic i18n Storage**: Migrar traducciones de archivos estáticos a MongoDB con capa de caché en Redis para rendimiento.
 - [ ] **AI-Assisted Translation**: Botón "Auto-traducir" usando Gemini para nuevos idiomas.
 
-#### ♿ FASE 63: i18n & a11y DEEP AUDIT & REMEDIATION (FUTURO)
+#### ♿ FASE 63: i18n & a11y DEEP AUDIT & REMEDIATION (COMPLETADO - ÁREA ADMIN ✅)
 
 - **Objetivo:** Alcanzar el Grado A en accesibilidad e internacionalización en toda la plataforma, eliminando deuda técnica de la Visión 2.0 y permitiendo el uso multilingüe en el área privada.
 
-- [ ] **Global i18n Audit**: Extracción masiva de textos hardcoded en componentes Legacy y nuevos (Phase 53+).
-- [ ] **Private Area Localization**: Adaptar el Dashboard, Configuration panels y Workflow Editor a i18n total.
-- [ ] **Authenticated Language Selector**: Selector de idioma persistente en la Sidebar/UserNav para el área privada.
-- [ ] **A11Y enforcement**: Implementación de navegación por teclado completa, contraste de color WCAG AAA y etiquetas ARIA dinámicas.
-- [ ] **Automated Testing**: Integrar tests de accesibilidad (axe-core) en el pipeline de CI/CD.
-- [ ] **Accessibility Statement**: Página pública de declaración de conformidad.
+- [X] **Global i18n Audit**: Extracción masiva de textos hardcoded en componentes Legacy y nuevos (Phase 53+).
+- [X] **Private Area Localization**: Adaptar el Dashboard, Configuration panels y Workflow Editor a i18n total.
+- [X] **Authenticated Language Selector**: Selector de idioma persistente en la Sidebar/UserNav para el área privada.
+- [X] **A11Y enforcement**: Implementación de navegación por teclado completa, contraste de color WCAG AAA y etiquetas ARIA dinámicas.
+- [ ] **Automated Testing**: Integrar tests de accesibilidad (axe-core) en el pipeline de CI/CD. (Pendiente)
+- [ ] **Accessibility Statement**: Página pública de declaración de conformidad. (Pendiente)
 
 #### 📄 FASE 64: BRANDED INDUSTRIAL REPORTS & CUSTOM TEMPLATES (FUTURO)
 

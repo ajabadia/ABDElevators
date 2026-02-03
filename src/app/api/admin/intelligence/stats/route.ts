@@ -1,21 +1,30 @@
-
 import { NextResponse } from 'next/server';
 import { IntelligenceAnalyticsService } from '@/lib/intelligence-analytics';
-import { auth } from '@/lib/auth'; // Using your auth wrapper
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
+import crypto from 'crypto';
 
 export async function GET() {
+    const correlationId = crypto.randomUUID();
+    const startTime = Date.now();
+
     try {
-        const session = await auth();
-        // Strict Role Check: Only SUPER_ADMIN or ADMIN should see this
-        if (!session || !['SUPER_ADMIN', 'ADMIN'].includes(session.user.role)) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const user = await enforcePermission('intelligence:stats', 'read');
 
         const stats = await IntelligenceAnalyticsService.getStats();
 
-        // Optional log for viewing dashboard (can be noisy, maybe remove if too frequent)
-        // await logEvento({ ... });
+        const duration = Date.now() - startTime;
+        if (duration > 500) {
+            await logEvento({
+                level: 'WARN',
+                source: 'API_INTELLIGENCE',
+                action: 'STATS_LATENCY',
+                message: `Intelligence stats took ${duration}ms`,
+                correlationId,
+                tenantId: (user as any).tenantId,
+                details: { durationMs: duration }
+            });
+        }
 
         return NextResponse.json(stats);
     } catch (error) {

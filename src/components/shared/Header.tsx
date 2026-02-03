@@ -25,6 +25,8 @@ import { FeatureFlags } from "@/lib/feature-flags";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge"; // Not used in the provided snippet, but included in the instruction's imports
 
+import { LanguageSwitcher } from './LanguageSwitcher';
+
 export function Header() {
     const { toggleSidebar } = useSidebar();
     const { data: session } = useSession();
@@ -51,7 +53,7 @@ export function Header() {
                     {FeatureFlags.isEnabled('DEMO_MODE_UI') && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2 border-dashed h-8">
+                                <Button suppressHydrationWarning variant="outline" size="sm" className="gap-2 border-dashed h-8">
                                     {vertical === 'elevators' && <Building2 className="h-4 w-4 text-orange-500" />}
                                     {vertical === 'legal' && <Scale className="h-4 w-4 text-blue-500" />}
                                     {vertical === 'medical' && <Stethoscope className="h-4 w-4 text-green-500" />}
@@ -87,6 +89,7 @@ export function Header() {
                     <CommandMenu />
                 </div>
                 <EnvironmentSwitcher />
+                <LanguageSwitcher />
                 <ThemeToggle />
                 <NotificationBell />
                 <div className="h-6 w-px bg-border mx-1"></div>

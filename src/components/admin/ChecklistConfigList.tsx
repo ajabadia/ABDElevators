@@ -10,11 +10,15 @@ import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+import { useTranslations } from 'next-intl';
+
 /**
  * ChecklistConfigList – Dashboard para visualizar y gestionar las configuraciones
  * de checklists dinámicos.
  */
 export const ChecklistConfigList: React.FC = () => {
+    const t = useTranslations('admin.checklists');
+
     // 1. Carga de datos con hook genérico
     const { data: configs, isLoading, refresh } = useApiList<ChecklistConfig>({
         endpoint: '/api/admin/checklist-configs',
@@ -26,17 +30,17 @@ export const ChecklistConfigList: React.FC = () => {
         endpoint: (id: string) => `/api/admin/checklist-configs/${id}`,
         method: 'DELETE',
         confirmMessage: (id: string) => {
-            const config = configs.find(c => String(c._id) === id);
-            return `¿Estás seguro de que deseas eliminar la configuración "${config?.name || id}"?`;
+            const config = configs?.find(c => String(c._id) === id);
+            return t('mutation.confirm_delete', { name: config?.name || id });
         },
-        successMessage: 'Configuración eliminada correctamente.',
+        successMessage: t('mutation.delete_success'),
         onSuccess: () => refresh()
     });
 
     // 3. Definición de columnas
     const columns = [
         {
-            header: 'Nombre',
+            header: t('table.name'),
             cell: (config: ChecklistConfig) => (
                 <div>
                     <div className="font-bold text-slate-900 dark:text-white">{config.name}</div>
@@ -47,7 +51,7 @@ export const ChecklistConfigList: React.FC = () => {
             )
         },
         {
-            header: 'Categorías',
+            header: t('table.categories'),
             cell: (config: ChecklistConfig) => (
                 <div className="flex gap-1 flex-wrap max-w-xs">
                     {config.categories.slice(0, 3).map(cat => (
@@ -72,23 +76,23 @@ export const ChecklistConfigList: React.FC = () => {
             )
         },
         {
-            header: 'Estado',
+            header: t('table.status'),
             cell: (config: ChecklistConfig) => (
                 config.isActive ? (
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1.5 h-6">
                         <CheckCircle size={10} />
-                        ACTIVO
+                        {t('table.active')}
                     </Badge>
                 ) : (
                     <Badge variant="outline" className="text-slate-400 gap-1.5 h-6">
                         <XCircle size={10} />
-                        INACTIVO
+                        {t('table.inactive')}
                     </Badge>
                 )
             )
         },
         {
-            header: 'Acciones',
+            header: t('table.actions'),
             className: 'text-right',
             cell: (config: ChecklistConfig) => (
                 <div className="flex justify-end gap-1">
@@ -114,13 +118,13 @@ export const ChecklistConfigList: React.FC = () => {
         <div className="space-y-4">
             <div className="flex justify-between items-center mb-2">
                 <div>
-                    <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Checklists Disponibles</h2>
-                    <p className="text-xs text-slate-500 font-medium">Gestiona las reglas de clasificación y orden de tus checklists.</p>
+                    <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('title')}</h2>
+                    <p className="text-xs text-slate-500 font-medium">{t('subtitle')}</p>
                 </div>
                 <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20 rounded-xl">
                     <Link href="/admin/checklist-configs/new">
                         <Plus size={18} />
-                        Nueva Configuración
+                        {t('new_config')}
                     </Link>
                 </Button>
             </div>
@@ -129,7 +133,7 @@ export const ChecklistConfigList: React.FC = () => {
                 columns={columns}
                 data={configs}
                 isLoading={isLoading}
-                emptyMessage="No hay configuraciones de checklist creadas todavía."
+                emptyMessage={t('empty_message')}
                 className="shadow-xl shadow-slate-200/50"
             />
         </div>

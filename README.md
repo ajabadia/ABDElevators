@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 3.0 - EVOLUTION ERA)
+# ABD Multi-Industry RAG Platform (Vision 3.2 - EVOLUTION ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v3.0.0** marca la entrada en la "Era de Evolución + Gobernanza Avanzada", con capacidades de permisos dinámicos (Guardian V2), búsqueda híbrida potenciada por grafos, aislamiento de entornos y optimización de costes mediante caché semántica.
+Esta versión **v3.2.1** marca la consolidación de la "Era de Evolución + Gobernanza Avanzada", incorporando un motor de orquestación Turing-completo, monitoreo de ejecución en tiempo real, internacionalización total del área privada (Phase 63) y capacidades de permisos ABAC granulares.
 
 ## 🚀 Inicio Rápido
 
@@ -94,6 +94,9 @@ src/
 ```
 
 ## 📊 Características Clave
+  - ✅ **Turing-complete Workflow Logic**: Motor de estados avanzado con soporte para bifurcaciones (Switch), retardos (Wait) e iteraciones (Loop).
+  - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) incluyendo Dashboard, Workflow Editor y Log Explorer.
+  - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
   - ✅ **Hybrid Search Engine**: Fusión de **BM25 (Atlas Search)** + **Vector (Semantic)** + **Graph (Neo4j)** mediante RRF para precisión técnica absoluta.

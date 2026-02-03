@@ -46,17 +46,43 @@ export function compileGraphToLogic(
             const targetNode = nodes.find(n => n.id === edge.target);
             if (!targetNode) return;
 
-            // HANDLE CONDITION NODES (Refine the Trigger)
-            if (targetNode.type === 'condition') {
-                if (targetNode.data.label && typeof targetNode.data.label === 'string') {
-                    if (targetNode.data.label.includes('<')) {
-                        trigger.condition.operator = 'lt';
-                        trigger.condition.value = 50;
-                    } else {
-                        trigger.condition.operator = 'gt';
-                        trigger.condition.value = 50;
+            // HANDLE CONDITION/SWITCH NODES (Branching)
+            if (targetNode.type === 'condition' || targetNode.type === 'switch') {
+                actions.push({
+                    type: 'branch',
+                    nodeId: targetNode.id,
+                    params: {
+                        label: targetNode.data.label,
+                        // If it's a condition node, it might have internal criteria
+                        criteria: targetNode.data.criteria || {}
                     }
-                }
+                });
+                traverse(targetNode.id);
+            }
+
+            // HANDLE WAIT NODES (Delay)
+            if (targetNode.type === 'wait') {
+                actions.push({
+                    type: 'delay',
+                    nodeId: targetNode.id,
+                    params: {
+                        duration: targetNode.data.duration || 1000,
+                        unit: targetNode.data.unit || 'ms'
+                    }
+                });
+                traverse(targetNode.id);
+            }
+
+            // HANDLE LOOP NODES (Iteration)
+            if (targetNode.type === 'loop') {
+                actions.push({
+                    type: 'iterator',
+                    nodeId: targetNode.id,
+                    params: {
+                        source: targetNode.data.source || 'items',
+                        maxItems: targetNode.data.maxItems || 10
+                    }
+                });
                 traverse(targetNode.id);
             }
 

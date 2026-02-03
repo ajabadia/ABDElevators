@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionPolicySchema } from '@/lib/schemas';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
 /**
@@ -13,12 +13,8 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden gestionar políticas');
-        }
-
-        const policiesCollection = await getTenantCollection('policies', session);
+        const user = await enforcePermission('permission:policy', 'read');
+        const policiesCollection = await getTenantCollection('policies', user);
         const policies = await policiesCollection.find({});
 
         return NextResponse.json({ success: true, policies });
@@ -34,13 +30,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden crear políticas');
-        }
-
+        const user = await enforcePermission('permission:policy', 'write');
         const body = await req.json();
-        const tenantId = session.user.tenantId;
+        const tenantId = (user as any).tenantId;
 
         const policyData = {
             ...body,
@@ -51,7 +43,7 @@ export async function POST(req: NextRequest) {
         };
 
         const validated = PermissionPolicySchema.parse(policyData);
-        const policiesCollection = await getTenantCollection('policies', session);
+        const policiesCollection = await getTenantCollection('policies', user);
 
         const result = await policiesCollection.insertOne(validated as any);
 
@@ -62,7 +54,7 @@ export async function POST(req: NextRequest) {
             message: `Nueva política creada: ${validated.name}`,
             correlationId: correlacion_id,
             details: { policyId: result.insertedId, name: validated.name },
-            userEmail: session.user.email || undefined
+            userEmail: (user as any).email || undefined
         });
 
         return NextResponse.json({

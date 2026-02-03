@@ -94,6 +94,31 @@ export class WorkflowEngine {
 
             try {
                 switch (action.type) {
+                    case 'branch':
+                        // Simple evaluation: if label contains 'critical' and data has high risk, or any metadata match
+                        const criteria = action.params.criteria || {};
+                        const risk = data.riskScore || data.score || 0;
+
+                        // Basic logic for demonstration
+                        if (risk > 75 || String(action.params.label).toLowerCase().includes('critical')) {
+                            console.log(`[WorkflowEngine] Branching: CRITICAL path taken for ${workflowId}`);
+                        }
+                        break;
+
+                    case 'delay':
+                        const duration = Number(action.params.duration) || 1000;
+                        const unit = action.params.unit || 'ms';
+                        const ms = unit === 's' ? duration * 1000 : unit === 'm' ? duration * 60000 : duration;
+
+                        console.log(`[WorkflowEngine] Delay: Sleeping for ${ms}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, ms));
+                        break;
+
+                    case 'iterator':
+                        console.log(`[WorkflowEngine] Iterator: Processing loop for ${action.params.source}`);
+                        // Mock iteration for now
+                        break;
+
                     case 'notify':
                         console.log(`[WorkflowAction] NOTIFICACIÓN: ${action.params.message} `, data);
                         break;

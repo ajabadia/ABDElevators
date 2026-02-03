@@ -8,6 +8,8 @@ import { ConfiguratorToolbar } from './ConfiguratorToolbar';
 import { CategoriesSidebar } from './CategoriesSidebar';
 import { CategoryEditor } from './CategoryEditor';
 import { ConfiguratorPreview } from './ConfiguratorPreview';
+import { useTranslations } from 'next-intl';
+import { PageContainer } from '@/components/ui/page-container';
 
 interface ConfiguratorFullProps {
     initialConfig?: ChecklistConfig;
@@ -15,6 +17,7 @@ interface ConfiguratorFullProps {
 }
 
 export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorFullProps) {
+    const t = useTranslations('admin.configurator');
     const { init, activeTab } = useConfiguratorStore();
 
     useEffect(() => {
@@ -25,7 +28,7 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
             init({
                 _id: '',
                 tenantId: '',
-                name: 'Nueva Configuración',
+                name: t('new_title'),
                 categories: [],
                 items: [],
                 workflowOrder: [],
@@ -37,29 +40,31 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
     }, [initialConfig, isNew, init]);
 
     return (
-        <div className="fixed inset-0 bg-slate-950 flex flex-col z-50 overflow-hidden font-sans text-slate-200">
-            <ConfiguratorToolbar />
+        <PageContainer className="p-0 h-[calc(100vh-120px)]">
+            <div className="relative h-full flex flex-col bg-background rounded-3xl border border-border/50 shadow-2xl overflow-hidden font-sans text-foreground transition-colors duration-300">
+                <ConfiguratorToolbar />
 
-            <main className="flex-1 flex overflow-hidden">
-                <AnimatePresence mode="wait">
-                    {activeTab === 'editor' ? (
-                        <motion.div
-                            key="editor"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            className="flex-1 flex w-full h-full"
-                        >
-                            <CategoriesSidebar />
-                            <section className="flex-1 bg-slate-950 p-8 overflow-y-auto">
-                                <CategoryEditor />
-                            </section>
-                        </motion.div>
-                    ) : (
-                        <ConfiguratorPreview />
-                    )}
-                </AnimatePresence>
-            </main>
-        </div>
+                <main className="flex-1 flex overflow-hidden">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'editor' ? (
+                            <motion.div
+                                key="editor"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="flex-1 flex w-full h-full"
+                            >
+                                <CategoriesSidebar />
+                                <section className="flex-1 bg-background p-8 overflow-y-auto custom-scrollbar">
+                                    <CategoryEditor />
+                                </section>
+                            </motion.div>
+                        ) : (
+                            <ConfiguratorPreview />
+                        )}
+                    </AnimatePresence>
+                </main>
+            </div>
+        </PageContainer>
     );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { MetricCard } from "@/components/ui/metric-card";
 import { ContentCard } from "@/components/ui/content-card";
 import {
@@ -41,12 +42,29 @@ export function CollectiveIntelligenceDashboard() {
         fetchMetrics();
     }, []);
 
-    if (isLoading || !metrics) {
+    if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
                 {[1, 2, 3, 4].map(i => (
-                    <Card key={i} className="h-32 bg-slate-50 dark:bg-slate-900 border-none" />
+                    <Card key={i} className="h-32 bg-muted/50 border-none" />
                 ))}
+            </div>
+        );
+    }
+
+    if (!metrics) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-muted/30 rounded-3xl border-2 border-dashed border-border transition-colors duration-300">
+                <div className="w-16 h-16 bg-card rounded-2xl shadow-sm flex items-center justify-center text-muted-foreground/40">
+                    <BrainCircuit size={32} />
+                </div>
+                <div className="text-center space-y-1">
+                    <h4 className="font-bold text-foreground">Datos de Inteligencia no disponibles</h4>
+                    <p className="text-sm text-muted-foreground">Parece que aún no hay suficientes interacciones para generar métricas colectivas o hay un problema de conexión.</p>
+                </div>
+                <Button onClick={fetchMetrics} variant="outline" className="gap-2">
+                    <RefreshCw size={14} /> Reintentar Conexión
+                </Button>
             </div>
         );
     }
@@ -123,11 +141,11 @@ export function CollectiveIntelligenceDashboard() {
                                     className="w-full bg-teal-500/20 group-hover:bg-teal-500 transition-all duration-500 rounded-t-lg relative"
                                     style={{ height: `${point}%` }}
                                 >
-                                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-teal-600 dark:text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                         {point}%
                                     </span>
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-bold">V{i + 1}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold">V{i + 1}</span>
                             </div>
                         ))}
                     </div>
@@ -135,20 +153,20 @@ export function CollectiveIntelligenceDashboard() {
 
                 <ContentCard
                     title="Focos de Aprendizaje"
-                    icon={<BarChart3 className="text-teal-400" size={20} />}
+                    icon={<BarChart3 className="text-teal-500" size={20} />}
                     description="Entidades con más correcciones."
-                    className="bg-slate-900 border-slate-800"
+                    className="bg-card border-border"
                 >
                     <div className="space-y-4">
                         {metrics.topLearningEntities.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between group p-2 hover:bg-white/5 rounded-lg transition-colors">
+                            <div key={idx} className="flex items-center justify-between group p-2 hover:bg-accent rounded-lg transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold text-teal-400">
+                                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-bold text-teal-600 dark:text-teal-400">
                                         {idx + 1}
                                     </div>
-                                    <span className="font-bold text-sm text-slate-200 capitalize">{item.entity}</span>
+                                    <span className="font-bold text-sm text-foreground capitalize">{item.entity}</span>
                                 </div>
-                                <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">
+                                <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20">
                                     {item.count}
                                 </Badge>
                             </div>

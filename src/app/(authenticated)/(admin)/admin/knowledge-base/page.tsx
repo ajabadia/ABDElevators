@@ -2,20 +2,17 @@
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { KnowledgeExplorer } from "@/components/admin/knowledge/KnowledgeExplorer";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Knowledge Explorer | Admin",
-    description: "Explorador de base de conocimiento vectorial",
-};
+import { useTranslations } from "next-intl";
 
 export default function KnowledgeBasePage() {
+    const t = useTranslations('admin.knowledge');
+
     return (
         <PageContainer>
             <PageHeader
-                title="Explorador RAG"
-                highlight="RAG"
-                subtitle="Búsqueda y visualización de fragmentos vinculados en la base de conocimiento vectorial."
+                title={t('title')}
+                highlight={t('highlight')}
+                subtitle={t('subtitle')}
             />
             <KnowledgeExplorer />
         </PageContainer>

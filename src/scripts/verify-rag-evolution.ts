@@ -24,9 +24,8 @@ async function verifyRagEvolution() {
 
         console.log(`✅ Recuperados ${results.length} resultados relevantes.\n`);
 
-        results.forEach((res, i) => {
+        results.forEach((res: any, i: number) => {
             console.log(`[${i + 1}] Score: ${res.score?.toFixed(4)} | Origen: ${res.source}`);
-            // @ts-ignore - rerankReason is added by our new logic
             if (res.rerankReason) {
                 console.log(`   💡 Re-rank Reason: ${res.rerankReason}`);
             }

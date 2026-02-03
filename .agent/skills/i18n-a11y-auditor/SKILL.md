@@ -35,6 +35,8 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: No inventes traducciones si no estás seguro del contexto; usa marcadores si es necesario o pregunta al usuario.
+- **INTEGRIDAD JSON**: Verifica SIEMPRE que los archivos de traducción mantengan una estructura JSON válida después de editarlos. Un error de sintaxis (coma extra, backticks, llaves sin cerrar) romperá toda la aplicación.
+- **SINCRONIZACIÓN**: Si añades una clave en un idioma, DEBES añadirla en todos los idiomas soportados para evitar errores de `MISSING_MESSAGE` en runtime.
 - **JERARQUÍA**: Mantén una estructura lógica en el JSON de traducciones (ej: agrupar por página o componente).
 - **ARIA**: Prioriza el HTML semántico sobre los atributos `aria-*`. Usa `aria-label` solo cuando el elemento no tenga texto visible.
 

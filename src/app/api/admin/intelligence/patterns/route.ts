@@ -1,9 +1,9 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { IntelligenceAnalyticsService } from '@/lib/intelligence-analytics';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 // Schema for PATCH moderation
 const ModerateSchema = z.object({
@@ -16,11 +16,9 @@ const ModerateSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session || !['SUPER_ADMIN', 'ADMIN'].includes(session.user.role)) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const user = await enforcePermission('intelligence:patterns', 'read');
 
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get('page') || '1');
@@ -38,11 +36,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session || !['SUPER_ADMIN', 'ADMIN'].includes(session.user.role)) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const user = await enforcePermission('intelligence:patterns', 'update');
 
         const body = await req.json();
         const validated = ModerateSchema.safeParse(body);
@@ -59,9 +55,9 @@ export async function PATCH(req: NextRequest) {
             level: 'WARN',
             source: 'ADMIN_INTELLIGENCE',
             action: `PATTERN_${action}`,
-            message: `Admin ${session.user.email} moderated pattern ${patternId}`,
-            correlationId: 'admin-action',
-            tenantId: session.user.tenantId,
+            message: `Admin ${(user as any).email} moderated pattern ${patternId}`,
+            correlationId,
+            tenantId: (user as any).tenantId,
             details: { patternId, action, updates }
         });
 

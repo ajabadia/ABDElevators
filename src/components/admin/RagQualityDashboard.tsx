@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface RagMetricStats {
     faithfulness: number;
@@ -34,6 +35,9 @@ export default function RagQualityDashboard() {
     const [evaluations, setEvaluations] = useState<RagEvaluation[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedEval, setExpandedEval] = useState<string | null>(null);
+    const t = useTranslations('admin.rag_quality');
+    const locale = useLocale();
+    const dateLocale = locale === 'es' ? es : enUS;
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -54,7 +58,7 @@ export default function RagQualityDashboard() {
         fetchMetrics();
     }, []);
 
-    if (loading) return <div className="p-8 text-center">Cargando métricas de calidad...</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
 
     const getScoreColor = (score: number) => {
         if (score >= 0.9) return "text-emerald-500";
@@ -74,15 +78,15 @@ export default function RagQualityDashboard() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
                         <ShieldCheck className="w-8 h-8 text-indigo-500" />
-                        Observabilidad RAG (RAGAs)
+                        {t('dashboard_title')}
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Monitoreo de fidelidad, relevancia y precisión del motor agéntico.
+                        {t('dashboard_desc')}
                     </p>
                 </div>
                 <Badge variant="outline" className="px-3 py-1 text-sm font-medium border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:border-indigo-900 dark:text-indigo-300">
                     <Activity className="w-4 h-4 mr-2" />
-                    Basado en 50 últimas sesiones
+                    {t('latest_sessions', { count: evaluations.length })}
                 </Badge>
             </div>
 
@@ -93,7 +97,7 @@ export default function RagQualityDashboard() {
                     <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                                <ShieldCheck className="w-4 h-4" /> Faithfulness (Fidelidad)
+                                <ShieldCheck className="w-4 h-4" /> {t('metrics.faithfulness.label')}
                             </CardTitle>
                             <span className={`text-2xl font-bold ${getScoreColor(stats?.faithfulness || 0)}`}>
                                 {((stats?.faithfulness || 0) * 100).toFixed(0)}%
@@ -102,7 +106,7 @@ export default function RagQualityDashboard() {
                     </CardHeader>
                     <CardContent>
                         <Progress value={(stats?.faithfulness || 0) * 100} className="h-2 mb-2" indicatorClassName={getProgressColor(stats?.faithfulness || 0)} />
-                        <p className="text-xs text-slate-400">¿La respuesta está basada en los documentos? (Anti-Alucinación)</p>
+                        <p className="text-xs text-slate-400">{t('metrics.faithfulness.desc')}</p>
                     </CardContent>
                 </Card>
 
@@ -111,7 +115,7 @@ export default function RagQualityDashboard() {
                     <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                                <Target className="w-4 h-4" /> Answer Relevance
+                                <Target className="w-4 h-4" /> {t('metrics.relevance.label')}
                             </CardTitle>
                             <span className={`text-2xl font-bold ${getScoreColor(stats?.answer_relevance || 0)}`}>
                                 {((stats?.answer_relevance || 0) * 100).toFixed(0)}%
@@ -120,7 +124,7 @@ export default function RagQualityDashboard() {
                     </CardHeader>
                     <CardContent>
                         <Progress value={(stats?.answer_relevance || 0) * 100} className="h-2 mb-2" indicatorClassName={getProgressColor(stats?.answer_relevance || 0)} />
-                        <p className="text-xs text-slate-400">¿La respuesta resuelve realmente la duda del técnico?</p>
+                        <p className="text-xs text-slate-400">{t('metrics.relevance.desc')}</p>
                     </CardContent>
                 </Card>
 
@@ -129,7 +133,7 @@ export default function RagQualityDashboard() {
                     <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                                <Search className="w-4 h-4" /> Context Precision
+                                <Search className="w-4 h-4" /> {t('metrics.precision.label')}
                             </CardTitle>
                             <span className={`text-2xl font-bold ${getScoreColor(stats?.context_precision || 0)}`}>
                                 {((stats?.context_precision || 0) * 100).toFixed(0)}%
@@ -138,7 +142,7 @@ export default function RagQualityDashboard() {
                     </CardHeader>
                     <CardContent>
                         <Progress value={(stats?.context_precision || 0) * 100} className="h-2 mb-2" indicatorClassName={getProgressColor(stats?.context_precision || 0)} />
-                        <p className="text-xs text-slate-400">Calidad de los fragmentos recuperados por el motor vectorial.</p>
+                        <p className="text-xs text-slate-400">{t('metrics.precision.desc')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -148,16 +152,22 @@ export default function RagQualityDashboard() {
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <FileText className="w-5 h-5 text-slate-400" />
-                        Historial de Consultas Evaluadas
+                        {t('history.title')}
                     </CardTitle>
-                    <CardDescription>Auditoría de calidad y seguimiento del "pensamiento" (Trace) de la IA.</CardDescription>
+                    <CardDescription>{t('history.desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
                         {evaluations.map((ev) => (
                             <div key={ev._id} className="p-4 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 transition-all">
                                 <div className="flex flex-col md:flex-row justify-between gap-4 mb-3">
-                                    <div className="flex-1 cursor-pointer" onClick={() => setExpandedEval(expandedEval === ev._id ? null : ev._id)}>
+                                    <div
+                                        className="flex-1 cursor-pointer"
+                                        onClick={() => setExpandedEval(expandedEval === ev._id ? null : ev._id)}
+                                        role="button"
+                                        aria-expanded={expandedEval === ev._id}
+                                        aria-label={expandedEval === ev._id ? t('history.hide_trace') : t('history.show_trace')}
+                                    >
                                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1 flex items-center gap-2">
                                             Q: {ev.query}
                                             {ev.trace && ev.trace.length > 0 && <Badge variant="secondary" className="text-[10px] h-4">Trace</Badge>}
@@ -184,7 +194,7 @@ export default function RagQualityDashboard() {
                                 {expandedEval === ev._id && ev.trace && (
                                     <div className="mt-4 mb-2 p-3 bg-slate-900 rounded border border-slate-800 font-mono text-[11px] text-emerald-400/90 overflow-x-auto space-y-1 animate-in slide-in-from-top-2 duration-300">
                                         <div className="text-slate-500 mb-2 border-b border-slate-800 pb-1 flex justify-between">
-                                            <span>AGENT_TRACE_TERMINAL v2.0</span>
+                                            <span>{t('history.trace_terminal')}</span>
                                             <span>{ev.correlationId}</span>
                                         </div>
                                         {ev.trace.map((step, idx) => (
@@ -193,7 +203,7 @@ export default function RagQualityDashboard() {
                                                 <span>{step}</span>
                                             </div>
                                         ))}
-                                        <div className="text-slate-600 mt-2 italic pt-1 border-t border-slate-800">--- END OF TRACE ---</div>
+                                        <div className="text-slate-600 mt-2 italic pt-1 border-t border-slate-800">{t('history.trace_end')}</div>
                                     </div>
                                 )}
 
@@ -203,11 +213,12 @@ export default function RagQualityDashboard() {
                                         <button
                                             onClick={() => setExpandedEval(expandedEval === ev._id ? null : ev._id)}
                                             className="hover:text-indigo-500 font-medium"
+                                            aria-expanded={expandedEval === ev._id}
                                         >
-                                            {expandedEval === ev._id ? 'Ocultar Trace ↑' : 'Ver Pensamiento Agente (Trace) ↓'}
+                                            {expandedEval === ev._id ? t('history.hide_trace') : t('history.show_trace')}
                                         </button>
                                     </div>
-                                    <span>{format(new Date(ev.timestamp), "dd MMM yyyy HH:mm", { locale: es })}</span>
+                                    <span>{format(new Date(ev.timestamp), "dd MMM yyyy HH:mm", { locale: dateLocale })}</span>
                                 </div>
                             </div>
                         ))}
@@ -215,8 +226,8 @@ export default function RagQualityDashboard() {
                         {evaluations.length === 0 && (
                             <div className="text-center p-12 text-slate-400 space-y-2">
                                 <AlertCircle className="w-12 h-12 mx-auto opacity-20" />
-                                <p>No hay evaluaciones registradas aún.</p>
-                                <p className="text-xs">Usa el buscador RAG para generar datos de calidad.</p>
+                                <p>{t('history.empty')}</p>
+                                <p className="text-xs">{t('history.empty_desc')}</p>
                             </div>
                         )}
                     </div>

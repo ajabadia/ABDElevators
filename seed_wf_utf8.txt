@@ -1,0 +1,6 @@
+﻿[dotenv@17.2.3] injecting env (18) from .env.local -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+­ƒî▒ Seeding Professional Workflows...
+Ô£à Seeded: Elevator Incident Flow
+Ô£à Seeded: Mortgage Validation Flow
+Ô£à Seeded: Legal Compliance Audit
+­ƒÄë Done! Workflows should now be visible in the dropdown.

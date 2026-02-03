@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { ContentCard } from "@/components/ui/content-card";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -17,12 +18,33 @@ import {
     Plus,
     Loader2
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { AIWorkflow } from '@/types/workflow';
 
 export function AutomationStudio() {
+    const t = useTranslations('admin.automation');
+    const router = useRouter();
     const [workflows, setWorkflows] = useState<AIWorkflow[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const handleCreateNew = () => {
+        router.push('/admin/workflows');
+    };
+
+    const handleCreateExample = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/core/automation/workflows/seed', { method: 'POST' });
+            if (res.ok) {
+                await fetchWorkflows();
+            }
+        } catch (error) {
+            console.error("Error seeding workflow:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const fetchWorkflows = async () => {
         setIsLoading(true);
@@ -47,60 +69,69 @@ export function AutomationStudio() {
         return (
             <div className="flex flex-col items-center justify-center p-20 space-y-4">
                 <Loader2 className="animate-spin text-teal-600" size={40} />
-                <p className="text-sm font-medium text-slate-500">Automation Studio cargando...</p>
+                <p className="text-sm font-medium text-slate-500">{t('loading')}</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between transition-colors duration-300">
                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-2xl font-black text-foreground flex items-center gap-2">
                         <Zap className="text-amber-500 fill-amber-500" size={24} />
-                        Automation Studio
+                        {t('title')}
                     </h3>
-                    <p className="text-slate-500 text-sm">Orquestación de acciones autónomas basadas en IA y Grafos.</p>
+                    <p className="text-muted-foreground text-sm">{t('subtitle')}</p>
                 </div>
-                <Button className="bg-slate-900 border-none hover:bg-slate-800 gap-2">
-                    <Plus size={18} /> Nuevo Flujo Autónomo
+                <Button
+                    onClick={handleCreateNew}
+                    className="bg-primary hover:bg-primary/90 gap-2"
+                >
+                    <Plus size={18} /> {t('new_flow')}
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {workflows.length === 0 ? (
-                    <Card className="xl:col-span-2 border-dashed border-2 p-12 text-center bg-slate-50/50">
+                    <Card className="xl:col-span-2 border-dashed border-2 p-12 text-center bg-muted/20">
                         <div className="max-w-md mx-auto space-y-4">
-                            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto text-slate-300">
+                            <div className="w-16 h-16 bg-card rounded-2xl shadow-sm flex items-center justify-center mx-auto text-muted-foreground/30">
                                 <Zap size={32} />
                             </div>
-                            <h4 className="font-bold text-slate-900">No hay automatizaciones activas</h4>
-                            <p className="text-sm text-slate-500">Crea tu primer flujo para que el sistema empiece a gestionar alertas y actualizaciones de forma autónoma.</p>
-                            <Button variant="outline" className="border-slate-200">Crear Workflow de Ejemplo</Button>
+                            <h4 className="font-bold text-foreground">{t('empty_title')}</h4>
+                            <p className="text-sm text-muted-foreground">{t('empty_desc')}</p>
+                            <Button
+                                onClick={handleCreateExample}
+                                variant="outline"
+                                className="border-border"
+                            >
+                                {t('create_example')}
+                            </Button>
                         </div>
                     </Card>
                 ) : (
                     workflows.map((wf) => (
-                        <Card key={wf.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300 group">
-                            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 pb-4">
+                        <Card key={wf.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300 group bg-card">
+                            <CardHeader className="bg-muted/30 border-b border-border transition-colors duration-300 pb-4">
                                 <div className="flex justify-between items-center">
                                     <Badge
                                         variant="secondary"
                                         className={cn(
                                             "uppercase text-[10px] font-bold",
-                                            wf.active ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-500"
+                                            wf.active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900" : "bg-muted text-muted-foreground"
                                         )}
                                     >
-                                        {wf.active ? 'ACTIVO' : 'PAUSADO'}
+                                        {wf.active ? t('status_active') : t('status_paused')}
                                     </Badge>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 group-hover:text-slate-900">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground group-hover:text-foreground">
                                         <Settings size={16} />
                                     </Button>
                                 </div>
-                                <CardTitle className="mt-4 text-xl font-extrabold">{wf.name}</CardTitle>
+                                <CardTitle className="mt-4 text-xl font-extrabold text-foreground">{wf.name}</CardTitle>
                                 <CardDescription className="flex items-center gap-2 mt-1">
                                     <Badge variant="outline" className="text-[10px] font-mono">
-                                        ID: {wf.id}
+                                        {t('id')}: {wf.id}
                                     </Badge>
                                 </CardDescription>
                             </CardHeader>
@@ -111,18 +142,18 @@ export function AutomationStudio() {
                                         <Play size={18} />
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Disparador</p>
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-snug">
-                                            Cuando el sistema detecta
-                                            <span className="bg-slate-100 px-1.5 py-0.5 rounded ml-1 lowercase font-mono">{wf.trigger.type}</span>
-                                            <div className="text-xs font-medium text-slate-500 mt-1">
-                                                donde <span className="font-bold">{wf.trigger.condition.field}</span> {wf.trigger.condition.operator} {wf.trigger.condition.value}
+                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('trigger')}</p>
+                                        <div className="text-sm font-bold text-foreground leading-snug">
+                                            {t('when_detects')}
+                                            <span className="bg-muted px-1.5 py-0.5 rounded ml-1 lowercase font-mono">{wf.trigger.type}</span>
+                                            <div className="text-xs font-medium text-muted-foreground mt-1">
+                                                {t('where')} <span className="font-bold">{wf.trigger.condition.field}</span> {wf.trigger.condition.operator} {wf.trigger.condition.value}
                                             </div>
-                                        </p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="border-l-2 border-dashed border-slate-200 ml-5 py-2" />
+                                <div className="border-l-2 border-dashed border-border ml-5 py-2" />
 
                                 {/* Actions Section */}
                                 <div className="space-y-4">
@@ -134,11 +165,11 @@ export function AutomationStudio() {
                                                         <Code2 size={18} />}
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Acción {idx + 1}</p>
-                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-snug capitalize">
+                                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('action')} {idx + 1}</p>
+                                                <p className="text-sm font-bold text-foreground leading-snug capitalize">
                                                     {action.type.replace('_', ' ')}:
-                                                    <span className="text-slate-500 font-medium ml-1">
-                                                        {action.params.message || `Actualizar ${action.params.entitySlug}`}
+                                                    <span className="text-muted-foreground font-medium ml-1">
+                                                        {action.params.message || `${t('update')} ${action.params.entitySlug}`}
                                                     </span>
                                                 </p>
                                             </div>
@@ -152,25 +183,25 @@ export function AutomationStudio() {
             </div>
 
             {/* AI Agent Monitor Bar */}
-            <div className="bg-slate-900 text-white p-4 rounded-3xl flex items-center justify-between shadow-2xl mt-12 border-b-4 border-teal-500">
+            <div className="bg-primary text-primary-foreground p-4 rounded-3xl flex items-center justify-between shadow-2xl mt-12 border-b-4 border-teal-500 transition-colors duration-300">
                 <div className="flex items-center gap-4">
                     <div className="relative">
                         <BrainCircuit className="text-teal-400" size={24} />
                         <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
                     </div>
                     <div>
-                        <p className="text-xs font-bold text-teal-400 uppercase tracking-widest">Agent Monitor</p>
-                        <p className="text-[10px] text-slate-400">Motor de ejecución autónoma escuchando eventos de flujo...</p>
+                        <p className="text-xs font-bold text-teal-400 uppercase tracking-widest">{t('monitor_title')}</p>
+                        <p className="text-[10px] text-primary-foreground/70">{t('monitor_desc')}</p>
                     </div>
                 </div>
                 <div className="flex gap-8">
                     <div className="text-center">
                         <p className="text-lg font-black leading-none">{workflows.filter(w => w.active).length}</p>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase">Activos</p>
+                        <p className="text-[9px] font-bold text-muted-foreground dark:text-primary-foreground/50 uppercase">{t('active_count')}</p>
                     </div>
                     <div className="text-center">
                         <p className="text-lg font-black leading-none text-teal-400">0</p>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase">Ejecuciones hoy</p>
+                        <p className="text-[9px] font-bold text-muted-foreground dark:text-primary-foreground/50 uppercase">{t('executions_today')}</p>
                     </div>
                 </div>
             </div>

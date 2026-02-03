@@ -180,6 +180,13 @@ export const WorkflowDefinitionSchema = z.object({
     is_default: z.boolean().default(false),
     active: z.boolean().default(true),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
+    version: z.number().default(1), // Optimistic Locking
+    visual: z.object({
+        nodes: z.array(z.any()),
+        edges: z.array(z.any()),
+    }).optional(),
+    executable: z.any().optional(), // Compiled logic
+    compilationError: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });

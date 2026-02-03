@@ -24,29 +24,30 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 🧠 Knowledge & RAG
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | - |
+| `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | 2026-02-03 12:20 |
 | `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-03 00:18 |
-| `/admin/rag-quality` | Dashboard de evaluación (Ragas) y métricas de precisión. | - |
+| `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión. | 2026-02-03 12:35 |
 
 ### 👮 Guardian (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | - |
-| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | - |
-| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | - |
+| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-03 14:35 |
+| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-03 14:35 |
+| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-03 14:35 |
 
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/workflows` | Editor visual de grafos para automatizar flujos RAG. | 2026-02-03 00:30 |
-| `/admin/workflows/active` | Monitor de ejecuciones en tiempo real. | - |
+| `/admin/workflows` | Editor visual de grafos para automatizar flujos RAG. | 2026-02-03 |
+| `/admin/workflows/active` | Monitor de ejecuciones en tiempo real. | 2026-02-03 |
 
 ### 📊 Intelligence & Audit
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | - |
-| `/admin/audit` | Registro inmutable de acciones críticas (Governance). | - |
-| `/admin/logs` | Visor de sistema distribuido para depuración técnica. | - |
+| `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-03 |
+| `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-03 |
+| `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-03 |
+| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-03 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -60,11 +61,13 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |-----------|-----------|-----------------|
 | `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-03 00:30 |
 | `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-03 00:30 |
-| `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 00:30 |
-| `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-03 00:30 |
+| `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
+| `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-03 11:25 |
+| `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
 | `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | - |
-| `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | - |
+| `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-03 14:35 |
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | - |
+
 
 ---
 *Mapa generado y auditado por Antigravity v3.0*

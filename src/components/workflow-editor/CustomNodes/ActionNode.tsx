@@ -22,8 +22,15 @@ export const ActionNode = memo(({ data, selected }: { data: any, selected: boole
             "px-4 py-3 shadow-xl rounded-lg border-2 bg-white min-w-[200px] transition-all relative",
             selected ? "border-teal-500 ring-4 ring-teal-500/20" : "border-slate-200",
             hasData && "bg-teal-50/30",
-            isHighError && "ring-4 ring-red-500/30 animate-pulse border-red-500" // Anomaly Pulse
+            isHighError && "ring-4 ring-red-500/30 animate-pulse border-red-500", // Anomaly Pulse
+            data.isOrphan && "border-amber-400 border-dashed"
         )}>
+            {/* Orphan Warning */}
+            {data.isOrphan && (
+                <div className="absolute -top-7 right-0 bg-amber-500 text-[9px] text-white px-2 py-0.5 rounded-t-md font-black uppercase tracking-tighter">
+                    ⚠️ Desconectado
+                </div>
+            )}
             {/* Anomaly Label (Critical) */}
             {isHighError && (
                 <div className="absolute -top-7 left-0 bg-red-600 text-[9px] text-white px-2 py-0.5 rounded-t-md font-black uppercase tracking-tighter">

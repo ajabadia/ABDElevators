@@ -1,17 +1,24 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShieldAlert, Grid3X3, Users, PlayCircle, History } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function GuardianLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const t = useTranslations('admin.guardian');
+    const pathname = usePathname();
+
     const tabs = [
-        { name: 'Permission Matrix', href: '/admin/permissions', icon: Grid3X3 },
-        { name: 'Groups & Hierarchy', href: '/admin/permissions/groups', icon: Users },
-        { name: 'Simulator', href: '/admin/permissions/simulator', icon: PlayCircle },
-        { name: 'Access Logs', href: '/admin/permissions/audit', icon: History },
+        { name: t('tabs.matrix'), href: '/admin/permissions', icon: Grid3X3 },
+        { name: t('tabs.groups'), href: '/admin/permissions/groups', icon: Users },
+        { name: t('tabs.simulator'), href: '/admin/permissions/simulator', icon: PlayCircle },
+        { name: t('tabs.audit'), href: '/admin/permissions/audit', icon: History },
     ];
 
     return (
@@ -23,27 +30,34 @@ export default function GuardianLayout({
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <ShieldAlert className="w-5 h-5 text-primary" />
                         </div>
-                        <h1 className="text-2xl font-bold tracking-tight">Guardian Console</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{t('console')}</h1>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        Enterprise Governance: Gestiona políticas ABAC, jerarquía de grupos y simulaciones de seguridad.
+                        {t('governance_desc')}
                     </p>
                 </div>
             </div>
 
             {/* Sub-navigation Tabs */}
             <div className="border-b">
-                <nav className="flex space-x-8 px-2" aria-label="Tabs">
-                    {tabs.map((tab) => (
-                        <Link
-                            key={tab.name}
-                            href={tab.href}
-                            className="flex items-center gap-2 py-4 px-1 border-b-2 border-transparent text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all group"
-                        >
-                            <tab.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            {tab.name}
-                        </Link>
-                    ))}
+                <nav className="flex space-x-8 px-2" aria-label={t('console')}>
+                    {tabs.map((tab) => {
+                        const isActive = pathname === tab.href;
+                        return (
+                            <Link
+                                key={tab.name}
+                                href={tab.href}
+                                aria-current={isActive ? 'page' : undefined}
+                                className={`flex items-center gap-2 py-4 px-1 border-b-2 text-sm font-medium transition-all group ${isActive
+                                        ? 'border-primary text-foreground'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
+                                    }`}
+                            >
+                                <tab.icon className={`w-4 h-4 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                {tab.name}
+                            </Link>
+                        );
+                    })}
                 </nav>
             </div>
 

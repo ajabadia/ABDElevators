@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useTranslations } from 'next-intl';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 
@@ -39,6 +40,7 @@ interface RoiStats {
 }
 
 export function TenantROIStats() {
+    const t = useTranslations('admin.roi');
     const [stats, setStats] = useState<RoiStats | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -59,8 +61,8 @@ export function TenantROIStats() {
         } catch (err) {
             console.error(err);
             toast({
-                title: 'Info',
-                description: 'No hay datos de ROI disponibles para este periodo.',
+                title: t('info'),
+                description: t('no_data'),
                 variant: 'default'
             });
         } finally {
@@ -78,7 +80,7 @@ export function TenantROIStats() {
         return (
             <div className="flex items-center justify-center p-8 space-x-2 opacity-50">
                 <RefreshCw className="animate-spin h-5 w-5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-400">Calculando ahorros...</span>
+                <span className="text-xs font-medium text-slate-400">{t('calculating')}</span>
             </div>
         );
     }
@@ -91,12 +93,12 @@ export function TenantROIStats() {
                 <div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <TrendingUp className="text-teal-600 h-5 w-5" />
-                        Retorno de Inversión (ROI)
+                        {t('title')}
                     </h3>
-                    <p className="text-xs text-slate-500">Impacto operativo en los últimos 30 días</p>
+                    <p className="text-xs text-slate-500">{t('subtitle')}</p>
                 </div>
                 <Badge variant="outline" className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800">
-                    Efficiency Score: {stats.efficiencyScore}%
+                    {t('efficiency')}: {stats.efficiencyScore}%
                 </Badge>
             </div>
 
@@ -106,23 +108,23 @@ export function TenantROIStats() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
                     <CardHeader className="pb-2 relative z-10">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <Hourglass className="h-4 w-4" /> Tiempo Ahorrado
+                            <Hourglass className="h-4 w-4" /> {t('time_saved')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6 relative z-10">
                         <div className="flex items-baseline gap-2">
                             <span className="text-5xl font-black tracking-tighter">{stats.roi.totalSavedHours}</span>
-                            <span className="text-xl font-medium text-slate-400">horas</span>
+                            <span className="text-xl font-medium text-slate-400">{t('hours')}</span>
                         </div>
 
                         <div className="space-y-3">
                             <div className="flex justify-between text-xs font-medium text-slate-300">
-                                <span>Equivalente en Coste Operativo</span>
+                                <span>{t('cost_savings')}</span>
                                 <span className="text-white font-bold">{stats.roi.currency} ${stats.roi.estimatedCostSavings.toLocaleString()}</span>
                             </div>
                             <Progress value={Math.min(100, stats.efficiencyScore)} className="h-2 bg-slate-700" indicatorClassName="bg-teal-500" />
                             <p className="text-[10px] text-slate-400">
-                                *Basado en un coste promedio de $50/hora por técnico e ingeniero.
+                                {t('cost_basis')}
                             </p>
                         </div>
                     </CardContent>
@@ -132,7 +134,7 @@ export function TenantROIStats() {
                 <Card className="border-slate-200 dark:border-slate-800 shadow-sm md:col-span-2 lg:col-span-1">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <PieChart className="h-4 w-4" /> Desglose
+                            <PieChart className="h-4 w-4" /> {t('breakdown')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-4">
@@ -142,8 +144,8 @@ export function TenantROIStats() {
                                     <FileText size={16} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white">Análisis IA</p>
-                                    <p className="text-[10px] text-slate-500">{stats.metrics.analysisCount} docs</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white">{t('ai_analysis')}</p>
+                                    <p className="text-[10px] text-slate-500">{stats.metrics.analysisCount} {t('docs')}</p>
                                 </div>
                             </div>
                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
@@ -157,8 +159,8 @@ export function TenantROIStats() {
                                     <Search size={16} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white">Búsquedas</p>
-                                    <p className="text-[10px] text-slate-500">{stats.metrics.vectorSearches} ops</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white">{t('searches')}</p>
+                                    <p className="text-[10px] text-slate-500">{stats.metrics.vectorSearches} {t('ops')}</p>
                                 </div>
                             </div>
                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
@@ -172,8 +174,8 @@ export function TenantROIStats() {
                                     <Zap size={16} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white">Smart Dedup</p>
-                                    <p className="text-[10px] text-slate-500">{stats.metrics.dedupEvents} files</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white">{t('dedup')}</p>
+                                    <p className="text-[10px] text-slate-500">{stats.metrics.dedupEvents} {t('files')}</p>
                                 </div>
                             </div>
                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">

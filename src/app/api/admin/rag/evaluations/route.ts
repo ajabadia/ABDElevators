@@ -1,8 +1,7 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { RagEvaluationService } from '@/services/rag-evaluation-service';
 import { AppError, handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
 /**
@@ -12,12 +11,9 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden ver evaluaciones RAG');
-        }
+        const user = await enforcePermission('rag:evaluation', 'read');
+        const tenantId = (user as any).tenantId;
 
-        const tenantId = (session.user as any).tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }

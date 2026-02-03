@@ -89,7 +89,7 @@ export function UserNav() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-3 pl-2 cursor-pointer group transition-all duration-300 outline-none">
+                <div suppressHydrationWarning className="flex items-center gap-3 pl-2 cursor-pointer group transition-all duration-300 outline-none">
                     <div className="text-right hidden sm:block group-hover:opacity-80 transition-opacity">
                         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">{user.name}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-tighter flex items-center justify-end gap-1">

@@ -11,7 +11,9 @@ const WorkflowSchema = z.object({
     nodes: z.array(z.any()), // React Flow nodes
     edges: z.array(z.any()), // React Flow edges
     active: z.boolean().default(true),
-    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).optional()
+    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).optional(),
+    version: z.number().optional().default(1),
+    industry: z.string().optional().default('ELEVATORS')
 });
 
 export async function GET(req: NextRequest) {
@@ -19,6 +21,11 @@ export async function GET(req: NextRequest) {
         const session = await auth();
         if (!session?.user) {
             throw new AppError('UNAUTHORIZED', 401, 'No session');
+        }
+
+        // Security Hardening: Explicit Role Check
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+            throw new AppError('UNAUTHORIZED', 403, 'Insufficient permissions to list workflows');
         }
 
         const { searchParams } = new URL(req.url);
@@ -37,6 +44,11 @@ export async function POST(req: NextRequest) {
         const session = await auth();
         if (!session?.user?.email) {
             throw new AppError('UNAUTHORIZED', 401, 'No authorized session');
+        }
+
+        // Security Hardening: Explicit Role Check
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+            throw new AppError('UNAUTHORIZED', 403, 'Insufficient permissions to save workflows');
         }
 
         const body = await req.json();
@@ -64,19 +76,31 @@ export async function POST(req: NextRequest) {
             compilationError = e.message;
         }
 
+        // Optimized Update with Version Check (Optimistic Locking)
+        const query: any = { name: validated.name, tenantId, environment };
+
+        // If it's an update (not first creation), we check the version
+        if (validated.version > 1) {
+            query.version = validated.version;
+        }
+
         const result = await workflows.updateOne(
-            { name: validated.name, tenantId, environment },
+            query,
             {
                 $set: {
-                    ...validated,
+                    name: validated.name,
+                    active: validated.active,
                     tenantId,
                     environment,
+                    industry: validated.industry,
+                    entityType: 'ENTITY', // Default for now
                     visual: visibleGraph,
                     executable: executableLogic,
                     compilationError: compilationError,
                     updatedAt: new Date(),
                     updatedBy: session.user.email
                 },
+                $inc: { version: 1 },
                 $setOnInsert: {
                     createdAt: new Date(),
                     createdBy: session.user.email
@@ -84,6 +108,10 @@ export async function POST(req: NextRequest) {
             },
             { upsert: true }
         );
+
+        if (result.matchedCount === 0 && validated.version > 1) {
+            throw new AppError('CONFLICT', 409, 'Optimistic locking failure: The workflow has been modified by another user. Please refresh and try again.');
+        }
 
         return NextResponse.json({
             success: true,

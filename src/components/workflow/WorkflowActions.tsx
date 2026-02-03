@@ -14,6 +14,7 @@ import {
 import { WorkflowTransition, WorkflowState } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface WorkflowActionsProps {
     pedidoId: string;
@@ -34,6 +35,7 @@ export const WorkflowActions = ({
     userRole,
     onTransitionComplete
 }: WorkflowActionsProps) => {
+    const t = useTranslations('admin.workflows.actions');
     const [loading, setLoading] = useState<string | null>(null);
     const [comment, setComment] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export const WorkflowActions = ({
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Error al ejecutar la transición');
+                throw new Error(result.message || t('error_transition'));
             }
 
             // Éxito: Limpiar comentario y refrescar datos
@@ -82,7 +84,7 @@ export const WorkflowActions = ({
             <div className="p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-3 text-slate-400">
                     <Lock className="w-5 h-5" />
-                    <p className="text-sm font-medium">No hay acciones disponibles para tu rol en este estado.</p>
+                    <p className="text-sm font-medium">{t('no_actions')}</p>
                 </div>
             </div>
         );
@@ -98,7 +100,7 @@ export const WorkflowActions = ({
                 <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Añade un comentario (opcional)..."
+                    placeholder={t('comment_placeholder')}
                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none min-h-[80px]"
                 />
             </div>

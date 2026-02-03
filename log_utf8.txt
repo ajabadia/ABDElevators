@@ -1,0 +1,5 @@
+﻿2b97c23 fix(build): await params in route handlers for Next.js 15/16 compatibility
+03d5793 feat(workflow): phase 54 completed - anomaly detection, pdf reports and i18n fixes
+da34d82 feat: phase 61 63 implementation and phase 58 planning
+d1b06f5 docs: release technical v3.0 - Visual Intelligence & Environment Isolation completed
+3f370b9 Phase 59: Environments (Staging/Sandbox) Implementation + Vercel Fix + Roadmap Update

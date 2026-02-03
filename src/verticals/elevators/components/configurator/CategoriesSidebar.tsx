@@ -41,14 +41,14 @@ export function CategoriesSidebar() {
     };
 
     return (
-        <aside className="w-80 border-r border-slate-800 bg-slate-900/30 flex flex-col shrink-0">
-            <div className="p-4 flex items-center justify-between border-b border-slate-800">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+        <aside className="w-80 border-r border-border bg-muted/30 flex flex-col shrink-0 transition-colors duration-300">
+            <div className="p-4 flex items-center justify-between border-b border-border">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Layers size={14} /> Categorías
                 </h3>
                 <button
                     onClick={addCategory}
-                    className="p-1.5 bg-slate-800 hover:bg-teal-900/40 hover:text-teal-400 rounded-md transition-all border border-slate-700"
+                    className="p-1.5 bg-muted hover:bg-teal-900/40 hover:text-teal-400 rounded-md transition-all border border-border"
                 >
                     <Plus size={16} />
                 </button>
@@ -82,10 +82,10 @@ export function CategoriesSidebar() {
 
                 {config.categories.length === 0 && (
                     <div className="py-12 text-center">
-                        <div className="inline-flex p-4 rounded-full bg-slate-900 border border-slate-800 mb-4">
-                            <Sparkles className="text-slate-700" size={32} />
+                        <div className="inline-flex p-4 rounded-full bg-card border border-border mb-4">
+                            <Sparkles className="text-muted-foreground/50" size={32} />
                         </div>
-                        <p className="text-slate-500 text-sm">Empieza añadiendo una categoría</p>
+                        <p className="text-muted-foreground text-sm">Empieza añadiendo una categoría</p>
                     </div>
                 )}
             </div>

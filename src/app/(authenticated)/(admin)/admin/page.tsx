@@ -34,9 +34,11 @@ import { KnowledgeGovernance } from "@/components/admin/KnowledgeGovernance";
 import { ReliabilityStressMonitor } from "@/components/admin/ReliabilityStressMonitor";
 import { SecurityAutoscaleMonitor } from "@/components/admin/SecurityAutoscaleMonitor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslations } from "next-intl";
 
 
 export default function AdminDashboardPage() {
+    const t = useTranslations('admin.dashboard');
     const { data: session } = useSession();
     const isSuperAdmin = session?.user?.role === 'admin';
 
@@ -70,9 +72,9 @@ export default function AdminDashboardPage() {
     return (
         <PageContainer className={isCompact ? "max-w-[2400px] p-4" : ""}>
             <PageHeader
-                title={isSuperAdmin ? "Control Global" : "Dashboard"}
+                title={isSuperAdmin ? t('title') : "Dashboard"}
                 subtitle={!isCompact ? (isSuperAdmin
-                    ? "Visión consolidada de toda la infraestructura."
+                    ? t('subtitle')
                     : "Métricas de rendimiento y consumo de tu organización.") : undefined}
                 actions={
                     <div className="flex items-center gap-2">
@@ -94,25 +96,25 @@ export default function AdminDashboardPage() {
             <Tabs defaultValue="overview" className="space-y-6 mt-8">
                 <TabsList className="bg-muted p-1 rounded-2xl border border-border w-full flex justify-start overflow-x-auto">
                     <TabsTrigger value="overview" className="rounded-xl px-6">
-                        Vista General
+                        {t('tabs.overview')}
                     </TabsTrigger>
                     <TabsTrigger value="intelligence" className="rounded-xl px-6 gap-2">
-                        <BrainCircuit size={16} /> Inteligencia
+                        <BrainCircuit size={16} /> {t('tabs.intelligence')}
                     </TabsTrigger>
                     <TabsTrigger value="automation" className="rounded-xl px-6 gap-2">
-                        <Zap size={16} /> Automation
+                        <Zap size={16} /> {t('tabs.automation')}
                     </TabsTrigger>
                     <TabsTrigger value="governance" className="rounded-xl px-6 gap-2">
-                        <Scale size={16} /> Governance
+                        <Scale size={16} /> {t('tabs.governance')}
                     </TabsTrigger>
                     <TabsTrigger value="search" className="rounded-xl px-6 gap-2">
-                        <Globe2 size={16} /> Semantic
+                        <Globe2 size={16} /> {t('tabs.search')}
                     </TabsTrigger>
                     <TabsTrigger value="reliability" className="rounded-xl px-6 gap-2">
-                        <Server size={16} /> Resilience
+                        <Server size={16} /> {t('tabs.reliability')}
                     </TabsTrigger>
                     <TabsTrigger value="security_scale" className="rounded-xl px-6 gap-2">
-                        <ShieldCheck size={16} /> Security
+                        <ShieldCheck size={16} /> {t('tabs.security')}
                     </TabsTrigger>
                 </TabsList>
 

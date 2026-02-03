@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useApiList } from '@/hooks/useApiList';
 import { useFilterState } from '@/hooks/useFilterState';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useTranslations } from 'next-intl';
 
 // Definición de tipos para los logs
 interface LogEntry {
@@ -66,6 +67,7 @@ function getObjectDiff(prev: any, next: any): Record<string, { prev: any, next: 
 }
 
 export default function LogExplorer() {
+    const t = useTranslations('admin.logs');
     // 1. Filtros y Estados UI
     const [viewMode, setViewMode] = useState<'LOGS' | 'AUDIT'>('LOGS');
     const { filters, setFilter, clearFilters, activeFilters } = useFilterState({
@@ -145,12 +147,12 @@ export default function LogExplorer() {
     };
 
     const getAuditActionDetails = (action?: string) => {
-        if (!action) return { color: 'bg-slate-500', icon: <Activity size={10} />, label: 'Desconocido' };
-        if (action.includes('PROMPT')) return { color: 'bg-indigo-500', icon: <Bug size={10} />, label: 'Prompt Engine' };
-        if (action.includes('BILLING')) return { color: 'bg-emerald-500', icon: <CheckCircle size={10} />, label: 'Facturación' };
-        if (action.includes('STORAGE')) return { color: 'bg-sky-500', icon: <Server size={10} />, label: 'Almacenamiento' };
-        if (action.includes('INGEST')) return { color: 'bg-cyan-500', icon: <FileText size={10} />, label: 'Ingesta AI' };
-        return { color: 'bg-slate-500', icon: <Activity size={10} />, label: 'Configuración' };
+        if (!action) return { color: 'bg-slate-500', icon: <Activity size={10} />, label: t('badges.unknown') };
+        if (action.includes('PROMPT')) return { color: 'bg-indigo-500', icon: <Bug size={10} />, label: t('badges.prompt') };
+        if (action.includes('BILLING')) return { color: 'bg-emerald-500', icon: <CheckCircle size={10} />, label: t('badges.billing') };
+        if (action.includes('STORAGE')) return { color: 'bg-sky-500', icon: <Server size={10} />, label: t('badges.storage') };
+        if (action.includes('INGEST')) return { color: 'bg-cyan-500', icon: <FileText size={10} />, label: t('badges.ingest') };
+        return { color: 'bg-slate-500', icon: <Activity size={10} />, label: t('badges.config') };
     };
 
     const isLoading = viewMode === 'LOGS' ? loadingLogs : loadingAudit;
@@ -165,10 +167,10 @@ export default function LogExplorer() {
                         <Server className="w-5 h-5 text-slate-500" />
                     </div>
                     <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Eventos</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{t('stats.total')}</p>
                         <h3 className="text-xl font-black text-slate-900 dark:text-white">
                             {currentData?.length || 0}
-                            <span className="text-xs font-normal text-slate-400 ml-1">recientes</span>
+                            <span className="text-xs font-normal text-slate-400 ml-1">{t('stats.recent')}</span>
                         </h3>
                     </div>
                 </div>
@@ -177,7 +179,7 @@ export default function LogExplorer() {
                         <Bug className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                     </div>
                     <div>
-                        <p className="text-[10px] uppercase font-bold text-rose-400 tracking-wider">Errores Críticos</p>
+                        <p className="text-[10px] uppercase font-bold text-rose-400 tracking-wider">{t('stats.errors')}</p>
                         <h3 className="text-xl font-black text-rose-700 dark:text-rose-400">
                             {viewMode === 'LOGS' ? logs?.filter(l => l.level === 'ERROR').length : '0'}
                         </h3>
@@ -190,24 +192,24 @@ export default function LogExplorer() {
                             onClick={() => setViewMode('LOGS')}
                             className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", viewMode === 'LOGS' ? "bg-white dark:bg-slate-800 text-teal-600 shadow-sm" : "text-slate-500 opacity-60 hover:opacity-100")}
                         >
-                            Logs de Sistema
+                            {t('tabs.system')}
                         </button>
                         <button
                             onClick={() => setViewMode('AUDIT')}
                             className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", viewMode === 'AUDIT' ? "bg-white dark:bg-slate-800 text-teal-600 shadow-sm" : "text-slate-500 opacity-60 hover:opacity-100")}
                         >
-                            Auditoría (History)
+                            {t('tabs.audit')}
                         </button>
                     </div>
                     <Button variant="outline" onClick={() => handleExport('csv')} className="border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                        <Download className="w-4 h-4 mr-2" /> Exportar CSV
+                        <Download className="w-4 h-4 mr-2" /> {t('actions.export')}
                     </Button>
                     <Button
                         variant={autoRefresh ? "secondary" : "outline"}
                         onClick={() => setAutoRefresh(!autoRefresh)}
                         className={cn("border-slate-200 dark:border-slate-800", autoRefresh && "bg-teal-500/10 text-teal-600 border-teal-500/20 shadow-inner")}
                     >
-                        <RefreshCw className={cn("w-4 h-4 mr-2", autoRefresh && "animate-spin")} /> {autoRefresh ? 'Live' : 'Refrescar'}
+                        <RefreshCw className={cn("w-4 h-4 mr-2", autoRefresh && "animate-spin")} /> {autoRefresh ? t('actions.live') : t('actions.refresh')}
                     </Button>
                 </div>
             </div>
@@ -217,7 +219,7 @@ export default function LogExplorer() {
                 <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
-                        placeholder={viewMode === 'LOGS' ? "Buscar en logs..." : "Buscar en historial..."}
+                        placeholder={viewMode === 'LOGS' ? t('filters.search_logs') : t('filters.search_audit')}
                         value={filters.search}
                         onChange={(e) => setFilter('search', e.target.value)}
                         className="w-full bg-white dark:bg-slate-950 border-none rounded-lg text-xs py-2.5 pl-9 focus:ring-1 focus:ring-teal-500 outline-none"
@@ -228,7 +230,7 @@ export default function LogExplorer() {
                     onChange={(e) => setFilter('userEmail', e.target.value)}
                     className="w-48 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2.5 px-3 focus:ring-1 focus:ring-teal-500 outline-none appearance-none cursor-pointer"
                 >
-                    <option value="">Todos los Usuarios</option>
+                    <option value="">{t('filters.all_users')}</option>
                     {users?.map((u) => <option key={u._id} value={u.email}>{u.email}</option>)}
                 </select>
 
@@ -237,7 +239,7 @@ export default function LogExplorer() {
                     onChange={(e) => setFilter('tenantId', e.target.value)}
                     className="w-48 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-2.5 px-3 focus:ring-1 focus:ring-teal-500 outline-none appearance-none cursor-pointer"
                 >
-                    <option value="">Todos los Tenants</option>
+                    <option value="">{t('filters.all_tenants')}</option>
                     {tenants?.map((t) => <option key={t.tenantId} value={t.tenantId}>{t.name}</option>)}
                 </select>
 
@@ -263,30 +265,30 @@ export default function LogExplorer() {
             {/* Table Area */}
             <div className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden flex flex-col relative shadow-xl">
                 <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <div className="col-span-2">Timestamp</div>
+                    <div className="col-span-2">{t('table.timestamp')}</div>
                     {viewMode === 'LOGS' ? (
                         <>
-                            <div className="col-span-1">Nivel</div>
-                            <div className="col-span-2">Origen / Acción</div>
-                            <div className="col-span-5">Mensaje</div>
+                            <div className="col-span-1">{t('table.level')}</div>
+                            <div className="col-span-2">{t('table.source')}</div>
+                            <div className="col-span-5">{t('table.message')}</div>
                         </>
                     ) : (
                         <>
-                            <div className="col-span-2">Acción / Módulo</div>
-                            <div className="col-span-3">Entidad / Autor</div>
-                            <div className="col-span-3">Trazabilidad</div>
+                            <div className="col-span-2">{t('table.source')}</div>
+                            <div className="col-span-3">{t('table.entity')}</div>
+                            <div className="col-span-3">{t('table.trace')}</div>
                         </>
                     )}
-                    <div className="col-span-2 text-right">Contexto</div>
+                    <div className="col-span-2 text-right">{t('table.context')}</div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {isLoading && (!currentData || currentData.length === 0) ? (
-                        <div className="p-8 text-center text-slate-400 text-xs">Cargando datos...</div>
+                        <div className="p-8 text-center text-slate-400 text-xs">{t('status.loading')}</div>
                     ) : !currentData || currentData.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 opacity-50">
                             <Activity size={32} />
-                            <p className="text-xs font-medium">No hay resultados</p>
+                            <p className="text-xs font-medium">{t('status.no_results')}</p>
                         </div>
                     ) : viewMode === 'LOGS' ? (
                         (currentData as LogEntry[]).map((log) => (
@@ -350,7 +352,7 @@ export default function LogExplorer() {
                                     </div>
                                     <div className="col-span-2 text-right self-center">
                                         <Button variant="ghost" size="sm" className="h-7 text-[9px] uppercase font-black tracking-widest text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            Analizar Diff
+                                            {t('detail.analyze_diff')}
                                         </Button>
                                     </div>
                                 </div>
@@ -376,20 +378,20 @@ export default function LogExplorer() {
                                 <span className="text-xs font-mono text-slate-400">{selectedLog.correlationId || 'no-trace-id'}</span>
                             </div>
                             <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors group">
-                                <span className="sr-only">Cerrar</span>
+                                <span className="sr-only">{t('detail.close')}</span>
                                 <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
                         <div className="flex-1 overflow-auto p-6 space-y-4 font-mono text-xs">
                             <section>
-                                <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-1 border-b pb-1 flex items-center gap-2"><Activity size={10} /> Mensaje del Evento</h4>
+                                <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-1 border-b pb-1 flex items-center gap-2"><Activity size={10} /> {t('detail.message')}</h4>
                                 <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed py-2 font-sans text-sm">{selectedLog.message}</p>
                             </section>
 
                             {selectedLog.stack && (
                                 <section className="bg-rose-50 dark:bg-rose-950/20 p-4 rounded-xl border border-rose-100 dark:border-rose-900/30">
                                     <h4 className="text-[10px] uppercase font-bold text-rose-400 mb-2 flex items-center gap-2">
-                                        <Bug size={12} /> Traza de Error (Stack)
+                                        <Bug size={12} /> {t('detail.stack')}
                                     </h4>
                                     <pre className="text-rose-700 dark:text-rose-300 overflow-x-auto whitespace-pre leading-tight">{selectedLog.stack}</pre>
                                 </section>
@@ -397,7 +399,7 @@ export default function LogExplorer() {
 
                             {selectedLog.details && (
                                 <section>
-                                    <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-2 border-b pb-1">Contexto Estructurado (JSON)</h4>
+                                    <h4 className="text-[10px] uppercase font-bold text-slate-400 mb-2 border-b pb-1">{t('detail.json')}</h4>
                                     <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                                         <pre className="text-slate-600 dark:text-slate-400 overflow-x-auto scrollbar-thin">
                                             {JSON.stringify(selectedLog.details, null, 2)}
@@ -423,7 +425,7 @@ export default function LogExplorer() {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <Badge className={cn("text-[9px]", getAuditActionDetails(selectedAudit.action).color)}>AUDIT LOG</Badge>
-                                    <h3 className="font-black text-sm uppercase tracking-tight text-slate-900 dark:text-white">Análisis de Integridad de Datos</h3>
+                                    <h3 className="font-black text-sm uppercase tracking-tight text-slate-900 dark:text-white">{t('detail.integrity')}</h3>
                                 </div>
                                 <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedAudit._id}</p>
                             </div>
@@ -459,25 +461,25 @@ export default function LogExplorer() {
 
                             {/* Comparison / Diff Section */}
                             <section className="space-y-4">
-                                <h4 className="text-[11px] uppercase font-black text-slate-900 dark:text-white border-l-4 border-teal-500 pl-3">Diferencial de Cambios (BEFORE vs AFTER)</h4>
+                                <h4 className="text-[11px] uppercase font-black text-slate-900 dark:text-white border-l-4 border-teal-500 pl-3">{t('detail.diff_title')}</h4>
 
                                 {selectedAudit.previousState ? (
                                     <div className="space-y-2">
                                         {Object.entries(getObjectDiff(selectedAudit.previousState, selectedAudit.newState)).map(([key, value]) => (
                                             <div key={key} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                                                 <div className="bg-slate-100 dark:bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-slate-500 flex justify-between border-b">
-                                                    <span>Propiedad: <span className="text-teal-600">{key}</span></span>
+                                                    <span>{t('detail.property')}: <span className="text-teal-600">{key}</span></span>
                                                     <Badge variant="outline" className="text-[8px] h-4">MODIFIED</Badge>
                                                 </div>
                                                 <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-800">
                                                     <div className="p-3 bg-rose-50/20 dark:bg-rose-950/5">
-                                                        <p className="text-[8px] uppercase font-bold text-rose-400 mb-1">Anterior</p>
+                                                        <p className="text-[8px] uppercase font-bold text-rose-400 mb-1">{t('detail.previous')}</p>
                                                         <pre className="text-[10px] text-rose-700 dark:text-rose-400 whitespace-pre-wrap font-mono">
                                                             {typeof value.prev === 'object' ? JSON.stringify(value.prev, null, 1) : String(value.prev)}
                                                         </pre>
                                                     </div>
                                                     <div className="p-3 bg-emerald-50/20 dark:bg-emerald-950/5">
-                                                        <p className="text-[8px] uppercase font-bold text-emerald-600 mb-1">Nuevo</p>
+                                                        <p className="text-[8px] uppercase font-bold text-emerald-600 mb-1">{t('detail.next')}</p>
                                                         <pre className="text-[10px] text-emerald-700 dark:text-emerald-400 whitespace-pre-wrap font-mono">
                                                             {typeof value.next === 'object' ? JSON.stringify(value.next, null, 1) : String(value.next)}
                                                         </pre>
@@ -491,15 +493,15 @@ export default function LogExplorer() {
                                         <div className="p-3 bg-emerald-500/10 w-fit mx-auto rounded-full mb-3 italic">
                                             <CheckCircle className="text-emerald-500" size={24} />
                                         </div>
-                                        <h5 className="font-bold text-slate-900 dark:text-white">Operación de Creación Inicial</h5>
-                                        <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">No existe estado previo para esta entidad. Se han registrado todas las propiedades como inserciones iniciales seguras.</p>
+                                        <h5 className="font-bold text-slate-900 dark:text-white">{t('detail.initial_creation')}</h5>
+                                        <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">{t('detail.initial_desc')}</p>
                                     </div>
                                 )}
                             </section>
 
                             {/* Raw Full Snapshot */}
                             <section>
-                                <h4 className="text-[11px] uppercase font-black text-slate-400 mb-4 border-b pb-2">Full Audit Snapshot (Inmutable)</h4>
+                                <h4 className="text-[11px] uppercase font-black text-slate-400 mb-4 border-b pb-2">{t('detail.snapshot')}</h4>
                                 <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-2xl relative">
                                     <div className="absolute top-4 right-4 text-[10px] text-slate-600 font-mono tracking-tighter">BSON_BLOB_STORAGE</div>
                                     <pre className="text-[10px] font-mono leading-relaxed text-blue-400 max-h-[300px] overflow-auto scrollbar-thin scrollbar-thumb-blue-900/50">

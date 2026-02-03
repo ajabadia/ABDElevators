@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionGroupSchema } from '@/lib/schemas';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
 /**
@@ -13,16 +13,9 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden gestionar roles');
-        }
-
-        const groupsCollection = await getTenantCollection('permission_groups', session);
+        const user = await enforcePermission('permission:role', 'read');
+        const groupsCollection = await getTenantCollection('permission_groups', user);
         const roles = await groupsCollection.find({});
-
-        // Enriquecer con conteo de miembros (opcional, para la UI)
-        // Podríamos hacer un aggregation si fuera necesario.
 
         return NextResponse.json({ success: true, roles });
     } catch (error) {
@@ -37,13 +30,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden crear roles');
-        }
-
+        const user = await enforcePermission('permission:role', 'write');
         const body = await req.json();
-        const tenantId = session.user.tenantId;
+        const tenantId = (user as any).tenantId;
 
         const roleData = {
             ...body,
@@ -55,7 +44,7 @@ export async function POST(req: NextRequest) {
         };
 
         const validated = PermissionGroupSchema.parse(roleData);
-        const groupsCollection = await getTenantCollection('permission_groups', session);
+        const groupsCollection = await getTenantCollection('permission_groups', user);
 
         const result = await groupsCollection.insertOne(validated as any);
 
@@ -66,7 +55,7 @@ export async function POST(req: NextRequest) {
             message: `Nuevo rol creado: ${validated.name}`,
             correlationId: correlacion_id,
             details: { roleId: result.insertedId, name: validated.name },
-            userEmail: session.user.email || undefined
+            userEmail: (user as any).email || undefined
         });
 
         return NextResponse.json({

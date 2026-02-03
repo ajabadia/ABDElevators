@@ -52,6 +52,7 @@ export function EnvironmentSwitcher() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button
+                    suppressHydrationWarning
                     variant="ghost"
                     size="sm"
                     className={cn(

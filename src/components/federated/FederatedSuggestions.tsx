@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Loader2 } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 interface FederatedSuggestionsProps {
     query: string;
@@ -12,6 +13,7 @@ interface FederatedSuggestionsProps {
 export function FederatedSuggestions({ query }: FederatedSuggestionsProps) {
     const [patterns, setPatterns] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const t = useTranslations('admin.knowledge.federated');
 
     useEffect(() => {
         const fetchPatterns = async () => {
@@ -45,13 +47,13 @@ export function FederatedSuggestions({ query }: FederatedSuggestionsProps) {
         <div className="mt-6 space-y-4">
             <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
                 <Globe className="w-4 h-4 animate-pulse" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Collective Intelligence (Federated)</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">{t('title')}</h3>
             </div>
 
             <div className="grid gap-3">
                 {loading && (
                     <div className="flex items-center gap-2 text-slate-400 text-[10px] italic">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Investigating global patterns...
+                        <Loader2 className="w-3 h-3 animate-spin" /> {t('investigating')}
                     </div>
                 )}
 
@@ -63,7 +65,7 @@ export function FederatedSuggestions({ query }: FederatedSuggestionsProps) {
                                     {pattern.problemVector}
                                 </CardTitle>
                                 <Badge variant="outline" className="border-teal-500/30 text-teal-600 dark:text-teal-400 text-[9px] font-black">
-                                    {Math.round(pattern.similarity * 100)}% MATCH
+                                    {Math.round(pattern.similarity * 100)}% {t('match')}
                                 </Badge>
                             </div>
                         </CardHeader>

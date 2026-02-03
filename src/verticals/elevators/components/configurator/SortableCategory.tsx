@@ -39,15 +39,15 @@ export function SortableCategory({ category, isActive, onClick, onDelete }: Sort
             className={`
                 group relative flex items-center gap-3 p-3 rounded-xl transition-all border
                 ${isActive
-                    ? 'bg-teal-900/20 border-teal-500/50 text-teal-100 shadow-lg shadow-teal-950/40'
-                    : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:bg-slate-800 hover:border-slate-700'
+                    ? 'bg-teal-500/10 border-teal-500/50 text-teal-700 dark:text-teal-100 shadow-md'
+                    : 'bg-card/50 border-border text-muted-foreground hover:bg-accent hover:border-border'
                 }
             `}
         >
             <div
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing text-slate-600 group-hover:text-slate-400 transition-colors"
+                className="cursor-grab active:cursor-grabbing text-muted-foreground/30 group-hover:text-muted-foreground transition-colors"
             >
                 <GripVertical size={16} />
             </div>
@@ -68,7 +68,7 @@ export function SortableCategory({ category, isActive, onClick, onDelete }: Sort
                     e.stopPropagation();
                     onDelete();
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-900/30 hover:text-red-400 rounded-md transition-all"
+                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-all"
             >
                 <Trash2 size={14} />
             </button>
