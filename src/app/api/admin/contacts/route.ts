@@ -2,22 +2,19 @@ import { NextResponse } from 'next/server';
 import { ContactService } from '@/lib/contact-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
 
 /**
- * Endpoint Admin para gestionar solicitudes de contacto.
+ * Endpoint Admin para gestionar solicitudes de contacto (Phase 70 compliance).
  * Fase 10: Platform Governance.
  */
 export async function GET() {
     const correlacion_id = uuidv4();
     try {
-        const session = await auth();
-        // Solo ADMIN o SUPER_ADMIN pueden ver todas las solicitudes
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'No autorizado para gestionar soportes');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
-        const requests = await ContactService.listAll(session.user.role === 'SUPER_ADMIN' ? undefined : session.user.tenantId);
+        const requests = await ContactService.listAll(session.user.role === UserRole.SUPER_ADMIN ? undefined : session.user.tenantId);
         return NextResponse.json({ requests });
 
     } catch (error) {
@@ -28,10 +25,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
     const correlacion_id = uuidv4();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'No autorizado');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const body = await request.json();
         const { id, respuesta } = body;

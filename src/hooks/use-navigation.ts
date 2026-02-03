@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { menuSections } from '@/config/navigation';
+import { UserRole } from '@/types/roles';
 
 export function useNavigation() {
     const { data: session } = useSession();
-    const userRole = session?.user?.role;
+    const userRole = session?.user?.role as UserRole | undefined;
     const activeModules = (session?.user as any)?.activeModules || [];
 
     const filteredSections = useMemo(() => {
@@ -13,8 +14,8 @@ export function useNavigation() {
             items: section.items.map(item => {
                 // Resolver href dinámico para Dashboard
                 if (item.name === 'Dashboard') {
-                    const dynamicHref = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? '/admin' :
-                        (userRole === 'ENGINEERING' ? '/admin/knowledge-assets' : '/entities');
+                    const dynamicHref = (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) ? '/admin' :
+                        (userRole === UserRole.ENGINEERING ? '/admin/knowledge-assets' : '/entities');
                     return { ...item, href: dynamicHref };
                 }
                 return item;

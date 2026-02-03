@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/logs
@@ -12,10 +13,8 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'No autorizado para ver logs');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');
@@ -37,11 +36,11 @@ export async function GET(req: NextRequest) {
         const query: any = {};
 
         // Si el usuario es SuperAdmin y quiere filtrar por un tenant específico
-        if (session.user.role === 'SUPER_ADMIN' && tenantIdFilter) {
+        if (session.user.role === UserRole.SUPER_ADMIN && tenantIdFilter) {
             query.tenantId = tenantIdFilter;
         }
         // Si el usuario es ADMIN y quiere filtrar dentro de sus propios tenants
-        else if (session.user.role === 'ADMIN' && tenantIdFilter) {
+        else if (session.user.role === UserRole.ADMIN && tenantIdFilter) {
             query.tenantId = tenantIdFilter;
         }
 

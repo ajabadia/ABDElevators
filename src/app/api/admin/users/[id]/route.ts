@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { auth, requireRole } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AdminUpdateUserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * PATCH /api/admin/users/[id]
@@ -20,13 +21,9 @@ export async function PATCH(
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const isAdmin = session?.user?.role === 'ADMIN';
-        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-        if (!isAdmin && !isSuperAdmin) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
         const body = await req.json();
@@ -42,14 +39,14 @@ export async function PATCH(
             if (!userToEdit) {
                 throw new NotFoundError('User not found');
             }
-            if (userToEdit.tenantId !== session?.user?.tenantId) {
+            if (userToEdit.tenantId !== session.user.tenantId) {
                 await logEvento({
                     level: 'WARN',
                     source: 'API_ADMIN_USERS',
                     action: 'CROSS_TENANT_ACCESS_ATTEMPT',
-                    message: `Admin ${session?.user?.email} attempted to modify user from another tenant: ${id}`,
+                    message: `Admin ${session.user.email} attempted to modify user from another tenant: ${id}`,
                     correlationId,
-                    details: { targetUserId: id, adminTenant: session?.user?.tenantId, userTenant: userToEdit.tenantId }
+                    details: { targetUserId: id, adminTenant: session.user.tenantId, userTenant: userToEdit.tenantId }
                 });
                 throw new AppError('FORBIDDEN', 403, 'You do not have permission to modify users from other organizations');
             }
@@ -131,13 +128,9 @@ export async function GET(
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const isAdmin = session?.user?.role === 'ADMIN';
-        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-        if (!isAdmin && !isSuperAdmin) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
         const db = await connectAuthDB();
@@ -148,7 +141,7 @@ export async function GET(
         }
 
         // Isolation: If Admin, verify tenantId
-        if (isAdmin && user.tenantId !== session?.user?.tenantId) {
+        if (isAdmin && user.tenantId !== session.user.tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Not authorized to view this user');
         }
 

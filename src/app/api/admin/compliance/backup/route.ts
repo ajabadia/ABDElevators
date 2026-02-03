@@ -1,18 +1,17 @@
-
 import { NextResponse, NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { BackupService } from '@/lib/services/backup-compliance-service';
-import { AppError } from '@/lib/errors';
+import { UserRole } from '@/types/roles';
 
+/**
+ * GET /api/admin/compliance/backup
+ * Crea y descarga paquete de conocimiento (Phase 70 compliance)
+ */
 export async function GET(req: NextRequest) {
     try {
-        const session = await auth();
-        // Strict Role Check - Only Admin/SuperAdmin
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const tenantId = session.user.tenantId;
 
-        const tenantId = (session.user as any).tenantId;
         if (!tenantId) {
             return NextResponse.json({ error: 'No tenant ID' }, { status: 400 });
         }

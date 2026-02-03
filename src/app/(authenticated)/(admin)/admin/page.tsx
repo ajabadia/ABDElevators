@@ -35,12 +35,13 @@ import { ReliabilityStressMonitor } from "@/components/admin/ReliabilityStressMo
 import { SecurityAutoscaleMonitor } from "@/components/admin/SecurityAutoscaleMonitor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
+import { UserRole } from "@/types/roles";
 
 
 export default function AdminDashboardPage() {
     const t = useTranslations('admin.dashboard');
     const { data: session } = useSession();
-    const isSuperAdmin = session?.user?.role === 'admin';
+    const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     const { data: stats, isLoading, error } = useApiItem<any>({
         endpoint: '/api/admin/global-stats',

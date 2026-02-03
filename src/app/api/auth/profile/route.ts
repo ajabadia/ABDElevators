@@ -5,6 +5,7 @@ import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/auth/profile
@@ -87,7 +88,7 @@ export async function PATCH(req: NextRequest) {
             throw new AppError('NOT_FOUND', 404, 'User not found');
         }
 
-        const isPrivileged = ['ADMIN', 'SUPER_ADMIN'].includes(currentUser.role);
+        const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(currentUser.role as UserRole);
         const identityFields = ['firstName', 'lastName', 'jobTitle'];
         const isAttemptingIdentityChange = identityFields.some(field => body[field] !== undefined);
 

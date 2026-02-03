@@ -1,37 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
 import { PromptSchema } from '@/lib/schemas';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts
- * Lista todos los prompts del tenant
+ * Lista todos los prompts del tenant (Phase 70 compliance)
  */
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden gestionar prompts');
-        }
-
-        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+        const tenantId = session.user.tenantId;
 
         const { searchParams } = new URL(req.url);
         const environment = searchParams.get('environment') || 'PRODUCTION';
 
         // Si es SUPER_ADMIN, listamos TODO. Si no, solo su tenant.
-        // False = incluir inactivos (para que los admins puedan verlos y reactivarlos)
         const prompts = await PromptService.listPrompts(isSuperAdmin ? null : tenantId, false, environment);
 
-        // Enriquecer con info del tenant (solo si es SuperAdmin para que sepa de quién es cada uno)
+        // Enriquecer con info del tenant (solo si es SuperAdmin)
         if (isSuperAdmin) {
             const { TenantService } = await import('@/lib/tenant-service');
             const tenants = await TenantService.getAllTenants();
@@ -56,26 +49,17 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/admin/prompts
- * Crea un nuevo prompt
+ * Crea un nuevo prompt (Phase 70 compliance)
  */
 export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        // Allow ADMIN or SUPER_ADMIN
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden crear prompts');
-        }
-
-        const tenantId = (session.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const tenantId = session.user.tenantId;
 
         const body = await req.json();
 
         // 🛡️ SECURITY: Prevent Parameter Pollution
-        // Explicitly pick allowed fields to avoid prototype pollution or overriding protected fields like tenantId
         const promptData = {
             key: body.key,
             name: body.name,
@@ -89,7 +73,7 @@ export async function POST(req: NextRequest) {
 
             // Protected/System fields
             tenantId,
-            version: 1, // Start at version 1
+            version: 1,
             createdBy: session.user.email || undefined,
             updatedBy: session.user.email || undefined,
             createdAt: new Date(),
@@ -121,7 +105,7 @@ export async function POST(req: NextRequest) {
             message: `Nuevo prompt creado: ${validated.key}`,
             correlationId: correlacion_id,
             details: { promptKey: validated.key, category: validated.category },
-            userEmail: session.user.email || undefined // Auto-hashed by logger now
+            userEmail: session.user.email || undefined
         });
 
         return NextResponse.json({ success: true, prompt: validated });

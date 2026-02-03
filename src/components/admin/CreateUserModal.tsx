@@ -24,6 +24,7 @@ import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSession } from "next-auth/react";
+import { UserRole } from "@/types/roles";
 
 interface CreateUserModalProps {
     open: boolean;
@@ -33,7 +34,7 @@ interface CreateUserModalProps {
 
 export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalProps) {
     const { data: session } = useSession();
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+    const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     const [loading, setLoading] = useState(false);
     const [tempPassword, setTempPassword] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         firstName: "",
         lastName: "",
         jobTitle: "",
-        role: "TECHNICAL" as "SUPER_ADMIN" | "ADMIN" | "TECHNICAL" | "ENGINEERING",
+        role: UserRole.TECHNICAL as UserRole,
         tenantId: "", // Solo para SuperAdmins
         activeModules: ["TECHNICAL", "RAG"] as string[],
     });
@@ -95,7 +96,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             firstName: "",
             lastName: "",
             jobTitle: "",
-            role: "TECHNICAL",
+            role: UserRole.TECHNICAL,
             tenantId: "",
             activeModules: ["TECHNICAL", "RAG"],
         });
@@ -203,10 +204,10 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {isSuperAdmin && <SelectItem value="SUPER_ADMIN">Super Administrador</SelectItem>}
-                                    <SelectItem value="ADMIN">Administrador</SelectItem>
-                                    <SelectItem value="TECHNICAL">Técnico</SelectItem>
-                                    <SelectItem value="ENGINEERING">Ingeniería</SelectItem>
+                                    {isSuperAdmin && <SelectItem value={UserRole.SUPER_ADMIN}>Super Administrador</SelectItem>}
+                                    <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
+                                    <SelectItem value={UserRole.TECHNICAL}>Técnico</SelectItem>
+                                    <SelectItem value={UserRole.ENGINEERING}>Ingeniería</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

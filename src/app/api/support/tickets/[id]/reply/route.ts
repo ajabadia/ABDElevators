@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TicketService } from '@/lib/ticket-service';
@@ -6,10 +5,11 @@ import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
+import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/support/tickets/[id]/reply
- * Adds a message to an existing ticket.
+ * Adds a message to an existing ticket (Phase 70 compliance).
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             throw new NotFoundError('Ticket no encontrado');
         }
 
-        const isSupport = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role);
+        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(session.user.role as UserRole);
 
         if (isInternal && !isSupport) {
             throw new AppError('FORBIDDEN', 403, 'Solo soporte puede añadir notas internas');
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         const message = await TicketService.addMessage(id, {
             content,
-            author: authorType,
+            author: authorType as any,
             authorName: authorName as string,
             isInternal: !!isInternal
         });

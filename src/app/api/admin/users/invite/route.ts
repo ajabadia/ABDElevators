@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { auth, requireRole } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { UserInviteSchema } from '@/lib/schemas';
 import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
 import { sendInvitationEmail } from '@/lib/email-service';
 import { z } from 'zod';
+import { UserRole } from '@/types/roles';
 
 const InviteRequestSchema = z.object({
     email: z.string().email('Invalid email'),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'TECHNICAL', 'ENGINEERING']),
+    role: z.nativeEnum(UserRole), // Use the Enum directly in Zod
     tenantId: z.string().optional(),
 });
 
@@ -24,13 +25,9 @@ export async function POST(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const isAdmin = session?.user?.role === 'ADMIN';
-        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-        if (!isAdmin && !isSuperAdmin) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();
         const validated = InviteRequestSchema.parse(body);
@@ -50,7 +47,7 @@ export async function POST(req: NextRequest) {
         // 2. Determine Tenant
         const tenantId = isSuperAdmin && validated.tenantId
             ? validated.tenantId
-            : (session?.user as any).tenantId;
+            : session.user.tenantId;
 
         if (!tenantId) {
             throw new ValidationError('Tenant ID is required');

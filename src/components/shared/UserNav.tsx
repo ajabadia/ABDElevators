@@ -4,12 +4,9 @@ import React, { useState, useEffect } from "react";
 import {
     LogOut,
     User,
-    Settings,
     Building2,
     Shield,
-    Briefcase,
     Check,
-    ChevronRight,
     HelpCircle
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -26,6 +23,7 @@ import {
     DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserRole } from "@/types/roles";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -80,8 +78,6 @@ export function UserNav() {
 
     // Determinar si hay múltiples opciones
     const hasMultipleTenants = (user.tenantAccess?.length || 0) > 1;
-    // const isSuperAdmin = user.role === 'SUPER_ADMIN'; // Unused
-    // const industries = ['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']; // Unused
 
     // Encontrar el nombre del tenant actual desde tenantAccess si existe
     const currentTenantName = user.tenantAccess?.find(t => t.tenantId === user.tenantId)?.name || user.tenantId;
@@ -190,10 +186,10 @@ export function UserNav() {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-56 p-2 ml-1 rounded-xl">
                             <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 font-bold mb-2 px-2">Permisos Activos</DropdownMenuLabel>
-                            {['SUPER_ADMIN', 'ADMIN', 'TECNICO', 'INGENIERIA'].map((role) => {
-                                const isRealSuperAdmin = user.baseRole === 'SUPER_ADMIN';
-                                const isRealAdmin = user.baseRole === 'ADMIN';
-                                const canSwitch = isRealSuperAdmin || (isRealAdmin && role !== 'SUPER_ADMIN') || (user.role === role);
+                            {[UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TECHNICAL, UserRole.ENGINEERING].map((role) => {
+                                const isRealSuperAdmin = user.baseRole === UserRole.SUPER_ADMIN;
+                                const isRealAdmin = user.baseRole === UserRole.ADMIN;
+                                const canSwitch = isRealSuperAdmin || (isRealAdmin && role !== UserRole.SUPER_ADMIN) || (user.role === role);
 
                                 return (
                                     <DropdownMenuItem
@@ -208,7 +204,7 @@ export function UserNav() {
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm">{role}</span>
-                                            {user.baseRole === role && (
+                                            {session?.user?.role === UserRole.SUPER_ADMIN && (
                                                 <span className="text-[8px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded uppercase font-bold">Base</span>
                                             )}
                                         </div>

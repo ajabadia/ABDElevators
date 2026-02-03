@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Shield } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useApiMutation } from "@/hooks/useApiMutation";
+import { UserRole } from "@/types/roles";
 
 interface InviteUserModalProps {
     open: boolean;
@@ -32,14 +33,14 @@ interface InviteUserModalProps {
 
 export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalProps) {
     const { data: session } = useSession();
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+    const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     const [invited, setInvited] = useState(false);
     const { toast } = useToast();
 
     const [formData, setFormData] = useState({
         email: "",
-        rol: "TECNICO" as "SUPER_ADMIN" | "ADMIN" | "TECNICO" | "INGENIERIA",
+        rol: UserRole.TECHNICAL as UserRole,
         tenantId: "", // Solo para SuperAdmins
     });
 
@@ -66,7 +67,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
         }
         setFormData({
             email: "",
-            rol: "TECNICO",
+            rol: UserRole.TECHNICAL,
             tenantId: "",
         });
         setInvited(false);
@@ -135,10 +136,10 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {isSuperAdmin && <SelectItem value="SUPER_ADMIN">Super Administrador</SelectItem>}
-                                        <SelectItem value="ADMIN">Administrador de Organización</SelectItem>
-                                        <SelectItem value="TECNICO">Técnico Operativo</SelectItem>
-                                        <SelectItem value="INGENIERIA">Ingeniería de Proyectos</SelectItem>
+                                        {isSuperAdmin && <SelectItem value={UserRole.SUPER_ADMIN}>Super Administrador</SelectItem>}
+                                        <SelectItem value={UserRole.ADMIN}>Administrador de Organización</SelectItem>
+                                        <SelectItem value={UserRole.TECHNICAL}>Técnico Operativo</SelectItem>
+                                        <SelectItem value={UserRole.ENGINEERING}>Ingeniería de Proyectos</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

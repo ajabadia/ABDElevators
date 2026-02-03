@@ -16,9 +16,21 @@ let ioredis: IORedis;
 
 export function getRedisConnection() {
     if (!ioredis) {
-        // We assume generic MONGODB_URI-like naming or specific REDIS_URL
-        const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL?.replace('https://', 'rediss://');
-        ioredis = new IORedis(redisUrl!, {
+        // We ensure password is included for Upstash Socket protocol (Auditoría 015)
+        let redisUrl = process.env.REDIS_URL;
+
+        if (!redisUrl && process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+            const host = process.env.UPSTASH_REDIS_REST_URL.replace('https://', '');
+            const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+            // Format: rediss://:PASSWORD@HOST:PORT
+            redisUrl = `rediss://:${token}@${host}:6379`;
+        }
+
+        if (!redisUrl) {
+            throw new Error('REDIS_ERROR: REDIS_URL o UPSTASH_REDIS no configurados para el Worker');
+        }
+
+        ioredis = new IORedis(redisUrl, {
             maxRetriesPerRequest: null,
         });
     }

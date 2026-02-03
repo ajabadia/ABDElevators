@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
+import { UserRole } from '@/types/roles';
 
 export function useGuardian() {
     const { data: session } = useSession();
@@ -12,7 +13,7 @@ export function useGuardian() {
         if (!session?.user) return false;
 
         // Super Admin Bypass
-        if (session.user.role === 'SUPER_ADMIN') return true;
+        if (session.user.role === UserRole.SUPER_ADMIN) return true;
 
         try {
             // We call a lightweight API to evaluate the ABAC policy server-side

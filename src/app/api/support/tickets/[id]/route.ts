@@ -1,10 +1,10 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, requireRole } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/support/tickets/[id]
@@ -28,19 +28,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             throw new NotFoundError('Ticket no encontrado');
         }
 
-        // Multi-Tenant Security:
-        // - ADMIN/SUPER_ADMIN: Check that ticket belongs to a tenant they have access to
-        // - USER: Check that they are the ticket creator
-
-        const isSupport = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role);
+        // Multi-Tenant Security (Phase 70 RBAC)
+        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(session.user.role as UserRole);
 
         if (isSupport) {
             // Admin must have access to the ticket's tenant
-            const allowedTenants = session.user.role === 'SUPER_ADMIN'
+            const allowedTenants = session.user.role === UserRole.SUPER_ADMIN
                 ? null // SuperAdmin sees everything
                 : [
-                    (session.user as any).tenantId,
-                    ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+                    session.user.tenantId,
+                    ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
                 ].filter(Boolean);
 
             if (allowedTenants && !allowedTenants.includes(ticket.tenantId)) {

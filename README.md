@@ -2,7 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v3.2.1** marca la consolidación de la "Era de Evolución + Gobernanza Avanzada", incorporando un motor de orquestación Turing-completo, monitoreo de ejecución en tiempo real, internacionalización total del área privada (Phase 63) y capacidades de permisos ABAC granulares.
+Esta versión **v3.2.2** marca el cierre de la "Fase 70: Estabilización & Seguridad Bank-Grade", consolidando patrones de acceso deterministas, protección avanzada CSP y deduplicación atómica de alta integridad.
 
 ## 🚀 Inicio Rápido
 
@@ -109,13 +109,10 @@ src/
   - ✅ **Environment Sandboxing**: Aislamiento total entre entornos (Staging / Producción) con flujos de promoción atómicos.
   - ✅ **Shadow Prompts**: A/B Testing asíncrono de prompts en producción sin impacto en latencia.
   - ✅ **Universal Ontology**: Sistema agéntico que mapea y evoluciona entidades automáticamente.
-  - ✅ **Enterprise Hardening**: Protección contra Inyecciones, Rate Limiting atómico y PII Obfuscation.
-  - ✅ **Guardian V2 (ABAC)**: Sistema de permisos granular basado en atributos y políticas dinámicas.
-  - ✅ **Compliance & Portability**: Backup encriptado (.zip) y generación de Certificados GDPR.
-  - ✅ **Sovereign Engine**: Worker autónomo que descubre patrones técnicos en logs históricos (`intelligence-worker`).
-  - ✅ **Admin Intelligence Dashboard**: Visualización estratégica de tendencias y ROI con gobernanza de patrones.
-  - ✅ **Federated Intelligence**: Red de conocimiento global con validación cruzada y búsqueda vectorial nativa.
-  - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria.
+  - ✅ **Bank-Grade Hardening (RBAC)**: Unificación total del modelo de permisos mediante Enum `UserRole` y helper `requireRole()`, eliminando ambigüedades en APIs y UI.
+  - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
+  - ✅ **Dynamic CSP (Nonces)**: Implementación de Content Security Policy dinámica basada en nonces para una protección XSS de vanguardia.
+  - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria garantizado por índices compuestos.
 
 ## 🔧 Scripts Disponibles
 

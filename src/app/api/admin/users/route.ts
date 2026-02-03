@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { auth, requireRole } from '@/lib/auth';
+import { UserRole } from "@/types/roles";
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { CreateUserSchema, UserSchema } from '@/lib/schemas';
@@ -17,13 +18,8 @@ export async function GET(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const isAdmin = session?.user?.role === 'ADMIN';
-        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-        if (!isAdmin && !isSuperAdmin) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const db = await connectAuthDB();
 
@@ -46,9 +42,7 @@ export async function GET(req: NextRequest) {
             {
                 $lookup: {
                     from: 'mfa_configs',
-                    localField: '_id', // Assuming _id is stored as string in mfa_configs.userId or need conversion?
-                    // Actually mfa_configs.userId is typically string. _id is ObjectId.
-                    // Let's assume userId in mfa_configs is string representation of ObjectId.
+                    localField: '_id',
                     let: { userId: { $toString: "$_id" } },
                     pipeline: [
                         { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
@@ -107,13 +101,8 @@ export async function POST(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await auth();
-        const isAdmin = session?.user?.role === 'ADMIN';
-        const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
-
-        if (!isAdmin && !isSuperAdmin) {
-            throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();
 

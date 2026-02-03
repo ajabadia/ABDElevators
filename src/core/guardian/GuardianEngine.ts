@@ -1,6 +1,7 @@
 import { PermissionPolicy, PermissionGroup, User } from '@/lib/schemas';
 import { getTenantCollection } from '@/lib/db-tenant'; // Assuming this exists or similar db util
 import { ObjectId } from 'mongodb';
+import { UserRole } from '@/types/roles';
 
 interface EvaluationContext {
     ip?: string;
@@ -34,7 +35,7 @@ export class GuardianEngine {
     ): Promise<{ allowed: boolean; reason: string }> {
 
         // 1. Super Admin Bypass (God Mode)
-        if (user.role === 'SUPER_ADMIN') {
+        if (user.role === UserRole.SUPER_ADMIN) {
             return { allowed: true, reason: 'SUPER_ADMIN bypass' };
         }
 

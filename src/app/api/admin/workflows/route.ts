@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { WorkflowService } from '@/lib/workflow-service';
+import { UserRole } from '@/types/roles';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),
@@ -18,19 +19,12 @@ const WorkflowSchema = z.object({
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No session');
-        }
-
-        // Security Hardening: Explicit Role Check
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Insufficient permissions to list workflows');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(req.url);
         const environment = searchParams.get('environment') || 'PRODUCTION';
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const items = await WorkflowService.listDefinitions(tenantId, 'ENTITY', environment);
         return NextResponse.json({ success: true, items });
@@ -41,21 +35,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No authorized session');
-        }
-
-        // Security Hardening: Explicit Role Check
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Insufficient permissions to save workflows');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const body = await req.json();
         const environment = body.environment || 'PRODUCTION';
 
         const validated = WorkflowSchema.parse(body);
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const db = await connectDB();
         const workflows = db.collection('workflow_definitions');

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, requireAuth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { TenantService } from '@/lib/tenant-service';
-import { AppError, handleApiError, ValidationError } from '@/lib/errors';
+import { handleApiError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/tenants
@@ -11,21 +12,17 @@ import crypto from 'crypto';
 export async function GET() {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await requireAuth();
-
-        // ADMIN or SUPER_ADMIN
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Requires Admin privileges');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         let tenants = [];
-        if (session.user.role === 'SUPER_ADMIN') {
+        if (session.user.role === UserRole.SUPER_ADMIN) {
             tenants = await TenantService.getAllTenants();
         } else {
             // ADMIN normal: solo su tenant y los delegados
             const allowedIds = [
-                (session.user as any).tenantId,
-                ...((session.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+                session.user.tenantId,
+                ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
             ].filter(Boolean);
 
             const all = await TenantService.getAllTenants();
@@ -45,11 +42,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await requireAuth();
-
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Requires Admin privileges');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const body = await req.json();
         const { tenantId, ...config } = body;

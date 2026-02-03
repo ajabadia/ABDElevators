@@ -16,15 +16,20 @@ description: Evalúa si un archivo (API, Server Action o Componente) está corre
 
 ## Workflow
 
-### 1. Detección de Protección
-1. Verifica si el archivo utiliza `enforcePermission` (para API Routes/Actions) o `GuardianGuard` (para componentes UI).
-2. Si el archivo es una API Route (`route.ts`) y no tiene `enforcePermission` en las primeras líneas de ejecución -> **RAISE ERROR (CRITICAL)**.
+### 1. Detección de Protección y RBAC (Phase 70)
+1.  **RBAC Gatekeeping**: Verifica si el archivo utiliza el sistema de roles unificado:
+    -   Uso de `requireRole([UserRole.ADMIN, ...])` para control de acceso rápido.
+    -   Uso de `enforcePermission(resource, action)` para control granular (ABAC).
+2.  **Validación de Tipado (Crítico)**:
+    -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o comparaciones de strings.
+    -   ✅ **OBLIGATORIO**: `session.user.role === UserRole.ADMIN`.
+3.  Si el archivo es una API Route (`route.ts`) y no usa ni `requireRole` ni `enforcePermission` -> **RAISE ERROR (CRITICAL)**.
 
 ### 2. Validación de Parámetros
-Analiza los argumentos de `enforcePermission(resource, action)`:
+Analiza los argumentos de las funciones de protección:
 - `resource`: Debe ser un slug válido (ej: `ROLES`, `PII_CONFIG`, `ANALYTICS`).
 - `action`: Debe ser una acción estándar (`CREATE`, `READ`, `UPDATE`, `DELETE`, `EXECUTE`).
-- Verifica que el recurso sea coherente con la funcionalidad del archivo.
+- **SuperAdmin Bypass**: Verifica que el bypass de Super Admin en archivos CORE (como `GuardianEngine.ts` o middlewares) use exclusivamente `UserRole.SUPER_ADMIN`.
 
 ### 3. Verificación de Tenant Isolation
 - Asegura que después de la validación de permisos, las queries a DB filtren explícitamente por `tenantId` extraído de la sesión validada.
@@ -32,13 +37,15 @@ Analiza los argumentos de `enforcePermission(resource, action)`:
 
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: Si detectas un endpoint sin protección de permisos que maneje datos sensibles o configuración -> **ERROR CRÍTICO**.
+- **ELIMINAR LITERALES**: Toda mención a roles en código debe ser vía el Enum `UserRole`. No aceptes PRs con strings como "SUPER_ADMIN" o "TECNICO".
 - **DENY-FIRST**: Recuerda que en Guardian V2, la ausencia de permiso = Denegado. No asumas permisos implícitos.
 - **SLA**: Las auditorías de seguridad deben ser precisas y no dejar lugar a ambigüedad.
 
 ## Output (formato exacto)
 1. **Status de Seguridad**: `[PROTEGIDO | VULNERABLE | PARCIAL]`.
-2. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/Tenant Isolation)" y "Gravedad".
-3. **Corrección Sugerida**: Código necesario para cerrar la brecha detectada.
+2. **Cumplimiento Fase 70**: `[SI | NO]` (¿Usa UserRole enum y requireRole?).
+3. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/RBAC/Tenant)" y "Gravedad".
+4. **Corrección Sugerida**: Código necesario para cerrar la brecha detectada siguiendo los patrones de Phase 70.
 
 ## Manejo de Errores
 - Si el archivo no es una API o componente sensible, informa al usuario que la auditoría no aplica.

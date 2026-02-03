@@ -1,21 +1,19 @@
 import { NextResponse } from 'next/server';
 import { WorkflowService } from '@/lib/workflow-service';
-import { auth } from '@/lib/auth';
-import { AppError, handleApiError } from '@/lib/errors';
-import { WorkflowDefinitionSchema } from '@/lib/schemas';
+import { requireRole } from '@/lib/auth';
+import { handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from '@/types/roles';
 
 /**
- * API para gestionar definiciones de workflow.
+ * API para gestionar definiciones de workflow (Phase 70 compliance).
  * Fase 7.2: Motor de Workflows Multinivel.
  */
 export async function GET(request: Request) {
     const correlationId = uuidv4();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'No autorizado');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(request.url);
         const environment = searchParams.get('environment') || 'PRODUCTION';
@@ -37,10 +35,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const correlationId = uuidv4();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'No autorizado');
-        }
+        // Phase 70: Centralized typed role check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const body = await request.json();
 

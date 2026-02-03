@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import NextAuth from 'next-auth';
+import crypto from 'crypto';
 import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
 
@@ -51,7 +52,11 @@ export default auth(async function middleware(request: NextRequest) {
         }
 
         // 3. Security Headers (CSP, HSTS, etc)
+        const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
         const response = NextResponse.next();
+
+        // Pass nonce to headers so components can use it
+        response.headers.set('x-nonce', nonce);
 
         response.headers.set("X-Content-Type-Options", "nosniff");
         response.headers.set("X-Frame-Options", "DENY");
@@ -59,18 +64,20 @@ export default auth(async function middleware(request: NextRequest) {
         response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
         response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
 
-        // Strictly define allowed sources
-        response.headers.set("Content-Security-Policy",
-            "default-src 'self'; " +
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "img-src 'self' data: https://res.cloudinary.com blob:; " +
-            "font-src 'self'; " +
-            "connect-src 'self' https://*.upstash.io; " +
-            "frame-ancestors 'none'; " +
-            "object-src 'none'; " +
-            "base-uri 'self';"
-        );
+        // Strictly define allowed sources with Nonce (Phase 70)
+        const cspHeader = `
+            default-src 'self';
+            script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http:;
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data: https://res.cloudinary.com blob:;
+            font-src 'self' data:;
+            connect-src 'self' https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com;
+            frame-ancestors 'none';
+            object-src 'none';
+            base-uri 'self';
+        `.replace(/\s{2,}/g, ' ').trim();
+
+        response.headers.set("Content-Security-Policy", cspHeader);
 
         return response;
 

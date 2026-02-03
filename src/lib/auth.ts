@@ -10,6 +10,7 @@ import { MfaService } from "./mfa-service";
 import { headers } from "next/headers";
 import { authConfig } from "./auth.config";
 import { AppError } from "@/lib/errors";
+import { UserRole } from "@/types/roles";
 
 // Esquema de validación para login
 const LoginSchema = z.object({
@@ -60,7 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             id: 'debug-id',
                             email: credentials.email as string,
                             name: 'Debug User',
-                            role: 'ADMIN',
+                            role: UserRole.ADMIN,
                             baseRole: 'ADMIN',
                             tenantId: 'default_tenant',
                             industry: 'ELEVATORS',
@@ -88,11 +89,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     }
 
                     console.log("✅ [AUTH ATTEMPT] SUCCESS for:", user.email);
+
+                    // Normalización de roles (Auditoría 015)
+                    let normalizedRole = UserRole.USER;
+                    const dbRole = (user.role || '').toUpperCase();
+                    if (dbRole === 'SUPER_ADMIN' || dbRole === 'ADMIN' && user.email.includes('ajabadia')) {
+                        normalizedRole = UserRole.SUPER_ADMIN;
+                    } else if (dbRole === 'ADMIN') {
+                        normalizedRole = UserRole.ADMIN;
+                    }
+
                     return {
                         id: user._id.toString(),
                         email: user.email,
                         name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-                        role: user.role,
+                        role: normalizedRole,
                         baseRole: user.role,
                         tenantId: user.tenantId || 'default_tenant',
                         industry: user.industry || 'ELEVATORS',
@@ -133,9 +144,18 @@ export async function requireAuth() {
     return session;
 }
 
-export async function requireSuperAdmin() {
+/**
+ * Helper unificado para requerir roles específicos (Auditoría 015)
+ */
+export async function requireRole(allowedRoles: UserRole[]) {
     const session = await auth();
     if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
-    if (session.user.role !== 'SUPER_ADMIN') throw new AppError('FORBIDDEN', 403, 'Permission Denied');
+    if (!allowedRoles.includes(session.user.role as UserRole)) {
+        throw new AppError('FORBIDDEN', 403, `Permission Denied. Required: ${allowedRoles.join(', ')}`);
+    }
     return session;
+}
+
+export async function requireSuperAdmin() {
+    return requireRole([UserRole.SUPER_ADMIN]);
 }

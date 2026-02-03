@@ -106,13 +106,31 @@ export class IngestService {
         };
 
         const validatedDoc = KnowledgeAssetSchema.parse(docMetadata);
-        const result = await knowledgeAssetsCollection.insertOne(validatedDoc);
 
-        return {
-            docId: result.insertedId.toString(),
-            status: 'PENDING',
-            correlationId
-        };
+        try {
+            const result = await knowledgeAssetsCollection.insertOne(validatedDoc);
+            return {
+                docId: result.insertedId.toString(),
+                status: 'PENDING',
+                correlationId
+            };
+        } catch (error: any) {
+            // Manejo de condición de carrera: Si el índice único salta justo ahora
+            if (error.code === 11000 || error.message?.includes('E11000')) {
+                const existing = await knowledgeAssetsCollection.findOne({
+                    fileMd5: fileHash,
+                    tenantId,
+                    environment
+                });
+                return {
+                    docId: existing?._id.toString() || 'unknown',
+                    status: 'DUPLICATE',
+                    correlationId,
+                    isDuplicate: true
+                };
+            }
+            throw error;
+        }
     }
 
     /**

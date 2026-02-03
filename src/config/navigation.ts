@@ -24,12 +24,13 @@ import {
     BrainCircuit,
     ShieldAlert
 } from 'lucide-react';
+import { UserRole } from '@/types/roles';
 
 export interface MenuItem {
     name: string;
     href: string;
     icon: any;
-    roles?: string[];
+    roles?: UserRole[];
     module?: string;
 }
 
@@ -56,7 +57,7 @@ export const menuSections: MenuSection[] = [
                 name: 'Technical Support',
                 href: '/admin/support',
                 icon: LifeBuoy,
-                roles: ['TECHNICAL', 'ENGINEERING']
+                roles: [UserRole.TECHNICAL, UserRole.ENGINEERING]
             }
         ]
     },
@@ -67,28 +68,28 @@ export const menuSections: MenuSection[] = [
                 name: `Technical Entities`,
                 href: '/entities',
                 icon: Zap,
-                roles: ['ADMIN', 'TECHNICAL'],
+                roles: [UserRole.ADMIN, UserRole.TECHNICAL],
                 module: 'TECHNICAL'
             },
             {
                 name: 'Knowledge Assets',
                 href: '/admin/knowledge-assets',
                 icon: FileText,
-                roles: ['ADMIN', 'ENGINEERING'],
+                roles: [UserRole.ADMIN, UserRole.ENGINEERING],
                 module: 'RAG'
             },
             {
                 name: 'Search Explorer',
                 href: '/admin/knowledge-base',
                 icon: Search,
-                roles: ['ADMIN', 'SUPER_ADMIN'],
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
                 module: 'RAG'
             },
             {
                 name: 'Semantic Map',
                 href: '/graphs',
                 icon: Share2,
-                roles: ['ADMIN', 'TECHNICAL'],
+                roles: [UserRole.ADMIN, UserRole.TECHNICAL],
                 module: 'TECHNICAL'
             }
         ]
@@ -100,25 +101,25 @@ export const menuSections: MenuSection[] = [
                 name: 'Workflows',
                 href: '/admin/workflows',
                 icon: GitBranch,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Checklist Configs',
                 href: '/admin/checklist-configs',
                 icon: CheckSquare,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Prompts',
                 href: '/admin/prompts',
                 icon: Terminal,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Document Types',
                 href: '/admin/document-types',
                 icon: Settings,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             }
         ]
     },
@@ -129,25 +130,25 @@ export const menuSections: MenuSection[] = [
                 name: 'Organizations',
                 href: '/admin/organizations',
                 icon: Building,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Users',
                 href: '/admin/users',
                 icon: Users,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Billing',
                 href: '/admin/billing',
                 icon: CreditCard,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'API Keys',
                 href: '/admin/api-keys',
                 icon: Key,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             }
         ]
     },
@@ -158,45 +159,45 @@ export const menuSections: MenuSection[] = [
                 name: 'Audit Trail',
                 href: '/admin/audit',
                 icon: History,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Compliance',
                 href: '/admin/compliance',
                 icon: Scale,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'System Logs',
                 href: '/admin/logs',
                 icon: Activity,
-                roles: ['SUPER_ADMIN']
+                roles: [UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Global Analytics',
                 href: '/admin/analytics',
                 icon: TrendingUp,
-                roles: ['SUPER_ADMIN']
+                roles: [UserRole.SUPER_ADMIN]
             },
             {
                 name: 'RAG Quality',
                 href: '/admin/rag-quality',
                 icon: ShieldCheck,
-                roles: ['SUPER_ADMIN'],
+                roles: [UserRole.SUPER_ADMIN],
                 module: 'RAG'
             },
             {
                 name: 'Active Intelligence',
                 href: '/admin/intelligence/trends',
                 icon: BrainCircuit,
-                roles: ['SUPER_ADMIN', 'ADMIN'],
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
                 module: 'RAG'
             },
             {
                 name: 'Guardian Console',
                 href: '/admin/permissions',
                 icon: ShieldAlert,
-                roles: ['SUPER_ADMIN', 'ADMIN']
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
             }
         ]
     },
@@ -207,13 +208,13 @@ export const menuSections: MenuSection[] = [
                 name: 'Notifications',
                 href: '/admin/notifications',
                 icon: Bell,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Support',
                 href: '/admin/support',
                 icon: LifeBuoy,
-                roles: ['ADMIN', 'SUPER_ADMIN']
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
                 name: 'Profile',

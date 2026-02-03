@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { BillingService } from '@/lib/billing-service';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
+/**
+ * GET /api/admin/billing/invoice-preview
+ * Genera preview de factura (Phase 70 compliance)
+ */
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN', 'ADMINISTRATIVO'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Acceso denegado a facturación');
-        }
+        // Enforce specific roles for billing
+        const session = await requireRole([
+            UserRole.ADMIN,
+            UserRole.SUPER_ADMIN,
+            UserRole.ADMINISTRATIVO
+        ]);
 
-        const tenantId = (session.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const tenantId = session.user.tenantId;
         const date = new Date();
 
         // Generar factura preview del mes actual

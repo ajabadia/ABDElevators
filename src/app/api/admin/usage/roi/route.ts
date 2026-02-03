@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { UsageService } from '@/lib/usage-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from '@/types/roles';
 
 /**
- * Endpoint para obtener métricas de ROI y Ahorro del Tenant.
+ * Endpoint para obtener métricas de ROI y Ahorro del Tenant (Phase 70 compliance).
  * - Accesible para ADMIN (su propio tenant) y SUPER_ADMIN (cualquier tenant).
- * - Fase 24.2b
  */
 export async function GET(request: Request) {
     const correlacion_id = uuidv4();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(request.url);
         const requestedTenantId = searchParams.get('tenantId');
@@ -23,19 +20,16 @@ export async function GET(request: Request) {
         let targetTenantId = session.user.tenantId;
 
         // Lógica de permisos de visualización
-        if (session.user.role === 'SUPER_ADMIN') {
-            // SuperAdmin puede ver cualquiera, si no especifica, ve el suyo (o el default)
+        if (session.user.role === UserRole.SUPER_ADMIN) {
+            // SuperAdmin puede ver cualquiera, si no especifica, ve el suyo
             if (requestedTenantId) {
                 targetTenantId = requestedTenantId;
             }
-        } else if (session.user.role === 'ADMIN') {
-            // Admin solo puede ver el suyo. Si intenta pedir otro, se ignora o se da error.
+        } else {
+            // Admin solo puede ver el suyo (requireRole ya filtró otros roles)
             if (requestedTenantId && requestedTenantId !== session.user.tenantId) {
                 throw new AppError('FORBIDDEN', 403, 'No tienes permiso para ver métricas de otro tenant');
             }
-        } else {
-            // Otros roles (TECNICO, INGENIERIA) no tienen acceso a datos de ROI/Billing
-            throw new AppError('FORBIDDEN', 403, 'Acceso restringido a Administradores');
         }
 
         if (!targetTenantId) {

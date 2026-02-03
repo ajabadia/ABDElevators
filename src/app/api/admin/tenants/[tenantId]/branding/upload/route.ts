@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { uploadBrandingAsset, deleteFromCloudinary } from '@/lib/cloudinary';
 import { TenantService } from '@/lib/tenant-service';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/admin/tenants/[tenantId]/branding/upload
- * Sube un logo o favicon para el branding del tenant.
+ * Sube un logo o favicon para el branding del tenant (Phase 70 compliance).
  */
 export async function POST(
     req: NextRequest,
@@ -15,16 +16,12 @@ export async function POST(
 ) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
         const { tenantId } = await params;
 
         // El ADMIN solo puede subir a su propio tenant. 
         // El SUPER_ADMIN puede subir a cualquiera.
-        if (session.user.role === 'ADMIN' && session.user.tenantId !== tenantId) {
+        if (session.user.role === UserRole.ADMIN && session.user.tenantId !== tenantId) {
             throw new AppError('FORBIDDEN', 403, 'No tienes permiso para modificar este tenant');
         }
 
@@ -75,13 +72,6 @@ export async function POST(
         });
 
     } catch (error: any) {
-        console.error(`[BrandingUpload ERROR] ${error.message}`);
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        return NextResponse.json(
-            { success: false, message: 'Internal Server Error', correlationId: correlacion_id},
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_ADMIN_BRANDING_UPLOAD', correlacion_id);
     }
 }

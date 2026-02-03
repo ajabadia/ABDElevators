@@ -31,9 +31,9 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 👮 Guardian (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-03 14:35 |
-| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-03 14:35 |
-| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-03 14:35 |
+| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-04 10:15 |
+| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-04 10:15 |
+| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-04 10:15 |
 
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
@@ -45,9 +45,9 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-03 |
-| `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-03 |
-| `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-03 |
-| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-03 |
+| `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-04 10:15 |
+| `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-04 10:15 |
+| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-04 10:15 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -59,13 +59,13 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ## 🔌 Infraestructura (API Endpoints Clave)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
-| `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-03 00:30 |
-| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-03 00:30 |
+| `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-04 10:15 |
+| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-04 10:15 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
 | `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | - |
-| `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-03 14:35 |
+| `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-04 10:15 |
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | - |
 
 

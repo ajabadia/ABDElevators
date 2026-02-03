@@ -1,19 +1,17 @@
-
 import { NextResponse, NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { ComplianceService } from '@/lib/services/backup-compliance-service';
-import { AppError } from '@/lib/errors';
+import { UserRole } from '@/types/roles';
 
-// POST implies "Generate and Download Certificate"
+/**
+ * POST /api/admin/compliance/certificate
+ * Genera y descarga certificado de destrucción de datos (Phase 70 compliance)
+ */
 export async function POST(req: NextRequest) {
     try {
-        const session = await auth();
-        // Strict Role Check - Only Admin/SuperAdmin
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const tenantId = session.user.tenantId;
 
-        const tenantId = (session.user as any).tenantId;
         const body = await req.json();
         const reason = body.reason || "GDPR User Request";
 

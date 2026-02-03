@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { EnvironmentService } from '@/lib/environment-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/admin/environments/promote
- * Promueve una entidad de STAGING a PRODUCTION
+ * Promueve una entidad de STAGING a PRODUCTION (Phase 70 compliance)
  */
 export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            throw new AppError('UNAUTHORIZED', 403, 'Solo administradores pueden promover cambios');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const tenantId = session.user.tenantId;
 
-        const tenantId = (session.user as any).tenantId;
         const body = await req.json();
         const { type, id } = body;
 

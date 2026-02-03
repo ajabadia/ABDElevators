@@ -1,35 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/logs/export
- * Exporta logs masivamente para auditoría (CSV).
- * Enfoque Enterprise: Sin paginación agresiva, streaming (simulado aquí con buffer) para compliance.
+ * Exporta logs masivamente para auditoría (CSV) (Phase 70 compliance).
  */
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        // Security Check: Solo Admin/SuperAdmin
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-            return new NextResponse('Unauthorized', { status: 403 });
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(req.url);
-        const format = searchParams.get('format') || 'csv';
         const nivel = searchParams.get('nivel');
         const search = searchParams.get('search');
-        const tenantId = session.user.role === 'SUPER_ADMIN'
+        const tenantId = session.user.role === UserRole.SUPER_ADMIN
             ? searchParams.get('tenantId')
-            : (session.user as any).tenantId;
+            : session.user.tenantId;
 
         const db = await connectLogsDB();
         const collection = db.collection('logs_aplicacion');
 
-        // Construir Query idéntica al Explorer pero sin límite pequeño
+        // Construir Query
         const query: any = {};
         if (tenantId) query.tenantId = tenantId;
         if (nivel && nivel !== 'ALL') query.nivel = nivel;
@@ -41,8 +36,6 @@ export async function GET(req: NextRequest) {
             ];
         }
 
-        // Hard Limit Enterprise: 5000 registros para proteger memoria del serverless
-        // En un sistema real de banco, esto se haría con un Job en background + Email.
         const logs = await collection
             .find(query)
             .sort({ timestamp: -1 })

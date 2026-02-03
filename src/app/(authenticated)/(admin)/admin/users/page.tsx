@@ -18,6 +18,7 @@ import { useFormModal } from "@/hooks/useFormModal";
 import { EntityEngine } from "@/core/engine/EntityEngine";
 import { generateColumnsFromEntity } from "@/components/shared/DynamicTableUtils";
 import { DynamicFormModal } from "@/components/shared/DynamicFormModal";
+import { UserRole } from "@/types/roles";
 
 interface User {
     _id: string;
@@ -25,7 +26,7 @@ interface User {
     firstName: string;
     lastName: string;
     jobTitle?: string;
-    role: 'SUPER_ADMIN' | 'ADMIN' | 'TECHNICAL' | 'ENGINEERING';
+    role: UserRole;
     tenantId?: string;
     isActive: boolean;
     createdAt: string;
@@ -34,7 +35,7 @@ interface User {
 
 export default function UsuariosPage() {
     const { data: session } = useSession();
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+    const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
     const [isMounted, setIsMounted] = useState(false);
 
     // 0. Obtener definición de la entidad desde el "Cerebro"

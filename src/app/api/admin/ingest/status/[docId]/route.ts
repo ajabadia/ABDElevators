@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
-import { auth } from '@/lib/auth';
+import { auth, requireRole } from "@/lib/auth";
+import { UserRole } from "@/types/roles";
 import { AppError } from '@/lib/errors';
 
 /**
@@ -13,10 +14,7 @@ export async function GET(
     { params }: { params: Promise<{ docId: string }> }
 ) {
     try {
-        const session = await auth();
-        if (!session || session.user?.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { docId } = await params;
         if (!docId) {

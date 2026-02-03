@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
+import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts/[id]/versions
- * Obtiene el historial de versiones de un prompt
+ * Obtiene el historial de versiones de un prompt (Phase 70 compliance)
  */
 export async function GET(
     req: NextRequest,
@@ -16,33 +17,21 @@ export async function GET(
     const { id } = await context.params;
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+        const tenantId = session.user.tenantId;
 
-        const isSuperAdmin = session.user?.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
         const versions = await PromptService.getVersionHistory(id, isSuperAdmin ? undefined : tenantId);
 
         return NextResponse.json({ success: true, versions });
     } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_ADMIN_PROMPTS_VERSIONS_GET', correlacion_id);
     }
 }
 
 /**
  * POST /api/admin/prompts/[id]/versions
- * Rollback a una versión específica
+ * Rollback a una versión específica (Phase 70 compliance)
  */
 export async function POST(
     req: NextRequest,
@@ -51,19 +40,15 @@ export async function POST(
     const { id } = await context.params;
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        // Double defense: Role check + Guardian Permission check
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
-        // FASE 58: Enforce Guardian V2 ABAC
+        // FASE 58 & 70: Enforce Guardian V2 ABAC
         await enforcePermission('developer-tools:prompts', 'manage');
 
-        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
-        const tenantId = (session.user as any).tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+        const tenantId = session.user.tenantId;
+
         const { targetVersion } = await req.json();
 
         if (!targetVersion) {
@@ -79,12 +64,6 @@ export async function POST(
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_ADMIN_PROMPTS_ROLLBACK', correlacion_id);
     }
 }

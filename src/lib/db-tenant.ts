@@ -16,6 +16,7 @@ import { connectDB, connectLogsDB, getMongoClient } from '@/lib/db';
 
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { UserRole } from '@/types/roles';
 
 /**
  * Interface para el contexto de sesión necesario para el aislamiento.
@@ -52,7 +53,7 @@ export class SecureCollection<T extends Document> {
     constructor(collection: Collection<T>, session: any, options: { softDeletes?: boolean } = {}) {
         this.collection = collection;
         this.primaryTenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID || 'unknown';
-        this.isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+        this.isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
         this.useSoftDeletes = options.softDeletes ?? true; // Por defecto usamos soft deletes para seguridad de datos
 
         const accessList = (session?.user?.tenantAccess || []).map((a: any) => a.tenantId);

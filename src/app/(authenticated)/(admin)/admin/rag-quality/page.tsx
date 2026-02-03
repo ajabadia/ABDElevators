@@ -5,12 +5,13 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { getTranslations } from "next-intl/server";
+import { UserRole } from "@/types/roles";
 
 export default async function RagQualityPage() {
     const session = await auth();
     const t = await getTranslations('admin.rag_quality');
 
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    if (!session || ![UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(session.user.role as UserRole)) {
         redirect("/pedidos");
     }
 
