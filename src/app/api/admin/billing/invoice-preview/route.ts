@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         const session = await requireRole([
             UserRole.ADMIN,
             UserRole.SUPER_ADMIN,
-            UserRole.ADMINISTRATIVO
+            UserRole.ADMINISTRATIVE
         ]);
 
         const tenantId = session.user.tenantId;

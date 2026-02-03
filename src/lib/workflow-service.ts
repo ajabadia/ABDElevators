@@ -119,13 +119,13 @@ export class WorkflowService {
             environment: 'PRODUCTION', // Default for seeding
             initial_state: 'ingresado',
             states: [
-                { id: 'ingresado', label: 'Ingresado', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECNICO', 'INGENIERIA'] },
-                { id: 'analizando', label: 'Analizando', color: '#0d9488', icon: 'Search', can_edit: true, is_initial: false, is_final: false, requires_validation: false, roles_allowed: ['TECNICO', 'INGENIERIA'] },
-                { id: 'revision', label: 'En Revisión', color: '#d97706', icon: 'Eye', can_edit: false, is_initial: false, is_final: false, requires_validation: true, roles_allowed: ['ADMIN', 'INGENIERIA'] },
-                { id: 'completado', label: 'Completado', color: '#16a34a', icon: 'CheckCircle', can_edit: false, is_initial: false, is_final: true, requires_validation: false, roles_allowed: ['ADMIN', 'TECNICO', 'INGENIERIA'] }
+                { id: 'ingresado', label: 'Ingresado', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] },
+                { id: 'analizando', label: 'Analizando', color: '#0d9488', icon: 'Search', can_edit: true, is_initial: false, is_final: false, requires_validation: false, roles_allowed: ['TECHNICAL', 'ENGINEERING'] },
+                { id: 'revision', label: 'En Revisión', color: '#d97706', icon: 'Eye', can_edit: false, is_initial: false, is_final: false, requires_validation: true, roles_allowed: ['ADMIN', 'ENGINEERING'] },
+                { id: 'completado', label: 'Completado', color: '#16a34a', icon: 'CheckCircle', can_edit: false, is_initial: false, is_final: true, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] }
             ],
             transitions: [
-                { from: 'ingresado', to: 'analizando', label: 'Iniciar Análisis', required_role: ['TECNICO', 'INGENIERIA'] },
+                { from: 'ingresado', to: 'analizando', label: 'Iniciar Análisis', required_role: ['TECHNICAL', 'ENGINEERING'] },
                 { from: 'analizando', to: 'revision', label: 'Enviar a Revisión', conditions: { checklist_complete: true, min_documents: 0, require_signature: false, require_comment: false } },
                 { from: 'revision', to: 'completado', label: 'Aprobar Informe', required_role: ['ADMIN'], conditions: { checklist_complete: false, min_documents: 0, require_signature: true, require_comment: true } },
                 { from: 'revision', to: 'analizando', label: 'Solicitar Correcciones', action: 'REJECT' }

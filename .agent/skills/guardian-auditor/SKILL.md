@@ -42,6 +42,7 @@ Analiza los argumentos de las funciones de protección:
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: Si detectas un endpoint sin protección de permisos que maneje datos sensibles o configuración -> **ERROR CRÍTICO**.
 - **ELIMINAR LITERALES**: Toda mención a roles en código debe ser vía el Enum `UserRole`. No aceptes PRs con strings como "SUPER_ADMIN" o "TECNICO".
+- **AUDITORÍA DE IDIOMA**: Los roles en español (`TECNICO`, `ADMINISTRATIVO`, `INGENIERIA`) están PROHIBIDOS. Solo se permiten los valores del Enum `UserRole` en inglés.
 - **DENY-FIRST**: Recuerda que en Guardian V2, la ausencia de permiso = Denegado. No asumas permisos implícitos.
 - **SLA**: Las auditorías de seguridad deben ser precisas y no dejar lugar a ambigüedad.
 

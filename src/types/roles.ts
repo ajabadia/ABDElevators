@@ -3,7 +3,8 @@ export enum UserRole {
     ADMIN = 'ADMIN',
     SUPER_ADMIN = 'SUPER_ADMIN',
     TECHNICAL = 'TECHNICAL',
-    ENGINEERING = 'ENGINEERING'
+    ENGINEERING = 'ENGINEERING',
+    ADMINISTRATIVE = 'ADMINISTRATIVE'
 }
 
 export const USER_ROLES = Object.values(UserRole);

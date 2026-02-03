@@ -149,8 +149,8 @@
                     "options": [
                         "SUPER_ADMIN",
                         "ADMIN",
-                        "TECNICO",
-                        "INGENIERIA"
+                        "TECHNICAL",
+                        "ENGINEERING"
                     ],
                     "ui": {
                         "order": 6

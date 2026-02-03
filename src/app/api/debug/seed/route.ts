@@ -65,7 +65,7 @@ export async function GET(request: Request) {
                 firstName: 'Tech',
                 lastName: 'Field',
                 position: 'Field Technician',
-                role: 'TECNICO',
+                role: 'TECHNICAL',
                 tenantId: 'default_tenant',
                 industry: 'ELEVATORS',
                 activeModules: ['TECHNICAL', 'RAG'],

@@ -277,8 +277,9 @@ export async function sendInvitationEmail(params: {
     const roleNames = {
         SUPER_ADMIN: 'Super Administrador Global',
         ADMIN: 'Administrador de Organización',
-        TECNICO: 'Técnico Especialista',
-        INGENIERIA: 'Ingeniero de Proyectos',
+        TECHNICAL: 'Técnico Especialista',
+        ENGINEERING: 'Ingeniero de Proyectos',
+        ADMINISTRATIVE: 'Personal Administrativo',
     };
 
     const friendlyRole = roleNames[role as keyof typeof roleNames] || role;
