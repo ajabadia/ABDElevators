@@ -101,7 +101,7 @@ Si la información no es suficiente para responder con seguridad, indícalo.`
 
         // TRACK USAGE
         await UsageService.trackUsage(tenantId, {
-            type: "VECTORSEARCH",
+            type: "VECTOR_SEARCH",
             value: 1,
             metadata: { queryLength: validated.query.length, resultsCount: ragResults.length }
         })

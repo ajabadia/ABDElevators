@@ -122,6 +122,24 @@ export class UsageService {
     }
 
     /**
+     * Método genérico para registrar uso (Fase 97 - Fix).
+     */
+    static async trackUsage(tenantId: string, data: {
+        type: 'LLM_TOKENS' | 'STORAGE_BYTES' | 'VECTOR_SEARCH' | 'API_REQUEST' | 'SAVINGS_TOKENS' | 'EMBEDDING_OPS' | 'REPORTS_GENERATED' | 'RAG_PRECISION',
+        value: number,
+        resource?: string,
+        description?: string,
+        correlationId?: string,
+        metadata?: Record<string, any>
+    }) {
+        return this.logUsage({
+            tenantId,
+            resource: 'system', // Default resource
+            ...data
+        });
+    }
+
+    /**
      * Método interno para persistir el log de uso.
      */
     private static async logUsage(data: any) {

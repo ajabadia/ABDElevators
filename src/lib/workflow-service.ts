@@ -127,8 +127,8 @@ export class WorkflowService {
             transitions: [
                 { from: 'ingresado', to: 'analizando', label: 'Iniciar Análisis', required_role: ['TECHNICAL', 'ENGINEERING'] },
                 { from: 'analizando', to: 'revision', label: 'Enviar a Revisión', conditions: { checklist_complete: true, min_documents: 0, require_signature: false, require_comment: false } },
-                { from: 'revision', to: 'completado', label: 'Aprobar Informe', required_role: ['ADMIN'], conditions: { checklist_complete: false, min_documents: 0, require_signature: true, require_comment: true } },
-                { from: 'revision', to: 'analizando', label: 'Solicitar Correcciones', action: 'REJECT' }
+                { from: 'revision', to: 'completado', label: 'Aprobar Informe', required_role: ['ADMIN', 'REVIEWER'], conditions: { checklist_complete: false, min_documents: 0, require_signature: true, require_comment: true } },
+                { from: 'revision', to: 'analizando', label: 'Solicitar Correcciones', action: 'REJECT', required_role: ['COMPLIANCE'] }
             ]
         };
 

@@ -538,11 +538,11 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [ ] **Conversational Search UI**: Crear interfaz de chat estilo "técnico-a-técnico" en `/buscar`. <!-- ref: 1701.md:233 -->
 - [ ] **Contextual Help Layer**: Desplegar `HelpButton` e `InlineHelpPanel` en todas las pantallas críticas. <!-- ref: 1701.md:291 -->
 
-#### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE
+#### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE (EN CURSO 🔄)
 **Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.
 
-- [ ] **Guardian V3 Expansion**: Implementar jerarquía de roles industriales (Compliance, Reviewer, Technician). <!-- ref: 08-workflow-engine.md:38 -->
-- [ ] **Workflow State Machine**: Desplegar `WorkflowEngine` service para gestión de transiciones y estados. <!-- ref: 08-workflow-engine.md:213 -->
+- [X] **Guardian V3 Expansion**: Implementar jerarquía de roles industriales (Compliance, Reviewer, Technician). <!-- ref: 08-workflow-engine.md:38 -->
+- [X] **Workflow State Machine**: Desplegar `WorkflowEngine` service para gestión de transiciones y estados (Integrado con generación de tareas). <!-- ref: 08-workflow-engine.md:213 -->
 - [ ] **Rag-Driven Transitions**: Integrar validación automática de scores RAG en el flujo de aprobación humano. <!-- ref: 1701.md:281 -->
 - [ ] **Task Collaboration Hub**: Crear centro de gestión de tareas asignadas con historial de auditoría completo. <!-- ref: 08-workflow-engine.md:311 -->
 

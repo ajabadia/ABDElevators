@@ -117,7 +117,33 @@ export class WorkflowEngine {
             } as any
         );
 
-        // 6. Disparar Acciones Automáticas (Placeholder para lógica futura)
+        // 6. Generar Tareas Automáticas (WorkflowTasks) basadas en el estado
+        if (nextState?.requires_validation) {
+            const tasksCollection = await getTenantCollection('workflow_tasks');
+            await tasksCollection.insertOne({
+                tenantId,
+                caseId: String(caso._id),
+                type: 'DOCUMENT_REVIEW',
+                title: `Revisión requerida para estado: ${nextState.label}`,
+                description: `El caso ha avanzado a ${nextState.label} y requiere validación formal.`,
+                assignedRole: nextState.roles_allowed.includes('COMPLIANCE') ? 'COMPLIANCE' : 'REVIEWER',
+                status: 'PENDING',
+                priority: 'MEDIUM',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            await logEvento({
+                level: 'INFO',
+                source: 'WORKFLOW_ENGINE',
+                action: 'TASK_GENERATED',
+                message: `WorkflowTask generated for ${caseId} in state ${toState}`,
+                correlationId,
+                details: { caseId, assignedRole: nextState.roles_allowed[0] }
+            });
+        }
+
+        // 7. Disparar Acciones Automáticas (Secondary Actions)
         if (transition.actions && transition.actions.length > 0) {
             await this.handleActions(transition.actions, caso, correlationId);
         }
