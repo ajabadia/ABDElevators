@@ -116,7 +116,7 @@ export const UserInviteSchema = z.object({
     email: z.string().email(),
     tenantId: z.string(),
     industry: IndustryTypeSchema.default('ELEVATORS'),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     token: z.string(),
     invitedBy: z.string(),
     status: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED']), // 'PENDIENTE' legacy
@@ -137,6 +137,22 @@ export const AcceptInviteSchema = z.object({
 });
 
 export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
+
+/**
+ * Esquema para Petición de Invitación Masiva
+ */
+export const BulkInviteItemSchema = z.object({
+    email: z.string().email('Email inválido'),
+    role: z.enum(['ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']).default('TECHNICAL'),
+    tenantId: z.string().optional(),
+});
+
+export const BulkInviteRequestSchema = z.object({
+    invitations: z.array(BulkInviteItemSchema).min(1, 'Se requiere al menos una invitación'),
+});
+
+export type BulkInviteItem = z.infer<typeof BulkInviteItemSchema>;
+export type BulkInviteRequest = z.infer<typeof BulkInviteRequestSchema>;
 
 /**
  * Esquemas para el Motor de Workflows (Visión 2.0 - Fase 7.2)
@@ -361,7 +377,7 @@ export const DocumentTypeSchema = z.object({
 export const TenantAccessSchema = z.object({
     tenantId: z.string(),
     name: z.string(),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     industry: IndustryTypeSchema.default('ELEVATORS'),
 });
 
@@ -386,7 +402,7 @@ export const UserSchema = z.object({
     jobTitle: z.string().optional(),
     photoUrl: z.string().url().optional(),
     photoCloudinaryId: z.string().optional(),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']), // Role principal/default
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']), // Role principal/default
     tenantId: z.string(), // Tenant actual/default
     industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
@@ -437,7 +453,7 @@ export const CreateUserSchema = z.object({
     firstName: z.string().min(2, 'Nombre requerido'),
     lastName: z.string().min(2, 'Apellidos requeridos'),
     jobTitle: z.string().optional(),
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']),
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 });
 
@@ -445,7 +461,7 @@ export const CreateUserSchema = z.object({
  * Esquema para Actualización de Usuario (Admin)
  */
 export const AdminUpdateUserSchema = UpdateProfileSchema.extend({
-    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']).optional(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'USER', 'ADMINISTRATIVE', 'TECHNICAL', 'ENGINEERING']).optional(),
     activeModules: z.array(z.string()).optional(),
     isActive: z.boolean().optional(),
     permissionGroups: z.array(z.string()).optional(),

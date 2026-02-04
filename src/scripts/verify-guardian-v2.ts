@@ -1,5 +1,6 @@
 import { GuardianEngine } from '../core/guardian/GuardianEngine';
 import { User, PermissionPolicy, PermissionGroup } from '../lib/schemas';
+import { UserRole } from '../types/roles';
 import { ObjectId } from 'mongodb';
 import { connectAuthDB } from '../lib/db';
 import { getTenantCollection } from '../lib/db-tenant';
@@ -14,7 +15,7 @@ async function verifyGuardianV2() {
     console.log('🛡️  Starting Guardian V2 Logic Verification...');
 
     const tenantId = 'test_guardian_v2';
-    const mockSession = { user: { tenantId, role: 'TECHNICAL' } };
+    const mockSession = { user: { tenantId, role: UserRole.TECHNICAL } };
 
     const db = await connectAuthDB();
     const policiesColl = await getTenantCollection('policies', mockSession);
@@ -71,7 +72,7 @@ async function verifyGuardianV2() {
             email: 'carlos_verify@test.com',
             firstName: 'Carlos',
             lastName: 'Verify',
-            role: 'TECHNICAL',
+            role: UserRole.TECHNICAL,
             tenantId,
             permissionGroups: [g1.insertedId.toString()],
             permissionOverrides: [p2.insertedId.toString()],
