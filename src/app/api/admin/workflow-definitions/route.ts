@@ -19,6 +19,7 @@ export async function GET(request: Request) {
         const environment = searchParams.get('environment') || 'PRODUCTION';
         const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
         let entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY';
+
         if (rawType === 'PEDIDO') entityType = 'ENTITY';
         else if (rawType === 'EQUIPO') entityType = 'EQUIPMENT';
         else if (rawType === 'USUARIO') entityType = 'USER';

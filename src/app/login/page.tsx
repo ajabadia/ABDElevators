@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
+    const t = useTranslations('login');
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -37,154 +39,195 @@ export default function LoginPage() {
                     setRequiresMfa(true);
                     setError("");
                 } else if (result.error.includes("INVALID_MFA_CODE")) {
-                    setError("Código MFA incorrecto");
+                    setError(t('error_mfa'));
                 } else {
-                    setError("Credenciales inválidas");
+                    setError(t('error_invalid'));
                 }
             } else {
-                // FIXED: Redirect to valid admin page
                 router.push("/admin/knowledge-assets");
                 router.refresh();
             }
         } catch (err) {
-            setError("Error al iniciar sesión");
+            setError(t('error_generic'));
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-            <Card className="w-full max-w-md border-none shadow-2xl">
-                <CardHeader className="text-center pb-8">
-                    <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-                        <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-600/20">
-                            <Lock className="text-white" size={32} />
-                        </div>
-                        <CardTitle className="text-3xl font-extrabold text-slate-900 font-outfit">
-                            ABD<span className="text-teal-600"> RAG Plataform</span>
-                        </CardTitle>
-                    </Link>
-                    <CardDescription className="text-base mt-2">
-                        {requiresMfa ? "Verificación de Seguridad" : "Sistema RAG de Análisis Técnico"}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {!requiresMfa ? (
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="text-sm font-bold text-slate-700 mb-2 block">
-                                    Email
-                                </label>
-                                <Input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="usuario@abd.com"
-                                    className="h-12"
-                                    required
-                                />
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden p-4 font-outfit">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md relative z-10"
+            >
+                <div className="bg-slate-900/50 backdrop-blur-2xl p-8 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden group">
+                    {/* Animated accent line */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500 to-transparent opacity-50" />
+
+                    <div className="text-center mb-8">
+                        <Link href="/" className="inline-block group/logo transition-transform hover:scale-105">
+                            <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-teal-500/20 group-hover/logo:rotate-3 transition-all">
+                                <Lock className="text-white" size={32} />
                             </div>
-                            <div>
-                                <label className="text-sm font-bold text-slate-700 mb-2 block">
-                                    Contraseña
-                                </label>
-                                <div className="relative">
-                                    <Input
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="h-12 pr-12"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm transition-all duration-300">
-                                    {error}
-                                </div>
-                            )}
-
-                            <Button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Verificando...
-                                    </>
-                                ) : (
-                                    "Iniciar Sesión"
-                                )}
-                            </Button>
-                        </form>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="text-center space-y-2">
-                                <p className="text-sm text-slate-600">
-                                    Introduce el código de 6 dígitos de tu aplicación de autenticador.
-                                </p>
-                            </div>
-
-                            <Input
-                                type="text"
-                                value={mfaCode}
-                                onChange={(e) => setMfaCode(e.target.value)}
-                                placeholder="000 000"
-                                className="h-14 text-center text-2xl font-mono tracking-[0.5em] focus:ring-teal-500"
-                                maxLength={6}
-                                autoFocus
-                                required
-                            />
-
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                    {error}
-                                </div>
-                            )}
-
-                            <Button
-                                type="submit"
-                                disabled={isLoading || mfaCode.length < 6}
-                                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg"
-                            >
-                                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Verificar y Entrar"}
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                type="button"
-                                className="w-full text-slate-500"
-                                onClick={() => {
-                                    setRequiresMfa(false);
-                                    setMfaCode("");
-                                    setError("");
-                                }}
-                            >
-                                Volver al login
-                            </Button>
-                        </form>
-                    )}
-
-                    <div className="mt-6 text-center text-sm text-slate-500">
-                        <p>Usuarios de prueba:</p>
-                        <p className="font-mono text-xs mt-2">
-                            admin@abd.com / tecnico@abd.com
+                            <h1 className="text-3xl font-black text-white tracking-tight">
+                                ABD<span className="text-teal-500"> RAG</span>
+                            </h1>
+                        </Link>
+                        <p className="text-slate-400 mt-2 font-medium">
+                            {requiresMfa ? t('mfa_title') : t('subtitle')}
                         </p>
                     </div>
-                </CardContent>
-            </Card>
+
+                    <AnimatePresence mode="wait">
+                        {!requiresMfa ? (
+                            <motion.form
+                                key="login"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                onSubmit={handleSubmit}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                        {t('email_label')}
+                                    </label>
+                                    <Input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder={t('email_placeholder')}
+                                        className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all rounded-xl"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                        {t('password_label')}
+                                    </label>
+                                    <div className="relative">
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder={t('password_placeholder')}
+                                            className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
+                                    >
+                                        {error}
+                                    </motion.div>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full h-12 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all active:scale-[0.98]"
+                                >
+                                    {isLoading ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                            {t('verifying')}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            {t('button')}
+                                            <ArrowRight size={20} />
+                                        </div>
+                                    )}
+                                </Button>
+                            </motion.form>
+                        ) : (
+                            <motion.form
+                                key="mfa"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handleSubmit}
+                                className="space-y-6"
+                            >
+                                <p className="text-sm text-slate-400 text-center leading-relaxed">
+                                    {t('mfa_desc')}
+                                </p>
+
+                                <Input
+                                    type="text"
+                                    value={mfaCode}
+                                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="000000"
+                                    className="h-14 text-center text-3xl font-mono tracking-[0.3em] bg-slate-800/50 border-slate-700 text-white focus:border-teal-500/50 rounded-xl"
+                                    maxLength={6}
+                                    autoFocus
+                                    required
+                                />
+
+                                {error && (
+                                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    disabled={isLoading || mfaCode.length < 6}
+                                    className="w-full h-12 bg-teal-600 hover:bg-teal-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all"
+                                >
+                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : t('mfa_button')}
+                                </Button>
+
+                                <button
+                                    type="button"
+                                    className="w-full text-sm text-slate-500 hover:text-teal-400 transition-colors font-medium"
+                                    onClick={() => {
+                                        setRequiresMfa(false);
+                                        setMfaCode("");
+                                        setError("");
+                                    }}
+                                >
+                                    ← {t('mfa_back')}
+                                </button>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="mt-10 pt-6 border-t border-slate-800/50 text-center">
+                        <div className="inline-block px-4 py-2 bg-slate-800/30 rounded-full border border-slate-800">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[2px]">
+                                {t('test_users')}
+                            </p>
+                            <p className="font-mono text-[11px] text-teal-500/70 mt-1">
+                                admin@abd.com / tecnico@abd.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 text-center text-slate-600 text-xs font-medium tracking-widest uppercase">
+                    {t('footer_text')}
+                </div>
+            </motion.div>
         </div>
     );
 }

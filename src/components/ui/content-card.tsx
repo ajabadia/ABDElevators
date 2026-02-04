@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface ContentCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ContentCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
     children: React.ReactNode;
-    title?: string;
+    title?: React.ReactNode;
     description?: string;
     icon?: React.ReactNode;
     noPadding?: boolean;

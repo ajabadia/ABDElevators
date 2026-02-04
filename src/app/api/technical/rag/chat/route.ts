@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
         if (!tenantId) {
             return NextResponse.json({ error: 'Tenant ID no encontrado en la sesión' }, { status: 403 });
         }

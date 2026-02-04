@@ -1,6 +1,5 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Scale, FileText, AlertTriangle, CheckCircle, XCircle, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,16 @@ import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
 import { SectionHeading } from "@/components/landing/SectionHeading";
 
-export default function TermsOfService() {
-    const t = useTranslations('terms');
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations('terms');
+    return {
+        title: `${t('title')} | ABD Elevators`,
+        description: t('subtitle'),
+    };
+}
+
+export default async function TermsOfService() {
+    const t = await getTranslations('terms');
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
@@ -44,32 +51,22 @@ export default function TermsOfService() {
                             icon={<FileText className="text-teal-400" size={24} />}
                             title={t('s1_title')}
                         >
-                            <p className="mb-4">Al acceder y utilizar ABD RAG Platform ("el Servicio"), aceptas estar legalmente vinculado por estos Términos de Servicio. Si no estás de acuerdo con alguna parte de estos términos, no podrás acceder al Servicio.</p>
-                            <p className="text-slate-400">Estos términos se aplican a todos los usuarios, incluyendo pero no limitado a: visitantes, clientes de prueba, suscriptores de pago y administradores de cuenta.</p>
+                            <p className="mb-4">{t('s1_p1')}</p>
+                            <p className="text-slate-400">{t('s1_p2')}</p>
                         </TermItem>
 
                         <TermItem
                             icon={<CheckCircle className="text-emerald-400" size={24} />}
                             title={t('s2_title')}
                         >
-                            <p className="mb-4">Puedes utilizar ABD RAG Platform para:</p>
+                            <p className="mb-4">{t('s2_intro')}</p>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-400">
-                                <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Análisis de documentos técnicos
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Búsqueda semántica empresarial
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Informes con trazabilidad IA
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Integración vía API Enterprise
-                                </li>
+                                {[1, 2, 3, 4].map((i) => (
+                                    <li key={i} className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        {t(`s2_f${i}` as any)}
+                                    </li>
+                                ))}
                             </ul>
                         </TermItem>
 
@@ -78,22 +75,15 @@ export default function TermsOfService() {
                             title={t('s3_title')}
                         >
                             <ul className="space-y-4 text-slate-400">
-                                <li className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
-                                    <strong className="text-red-300">Ingeniería inversa:</strong> Intentar descifrar, descompilar o extraer el código fuente.
-                                </li>
-                                <li className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
-                                    <strong className="text-red-300">Reventa:</strong> Comercializar el acceso al Servicio sin autorización escrita.
-                                </li>
-                                <li className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
-                                    <strong className="text-red-300">Abuso de recursos:</strong> Realizar scraping masivo o ataques DDoS.
-                                </li>
-                                <li className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
-                                    <strong className="text-red-300">Contenido ilegal:</strong> Subir documentos que infrinjan derechos de autor.
-                                </li>
+                                {[1, 2, 3, 4].map((i) => (
+                                    <li key={i} className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                                        <strong className="text-red-300">{t(`s3_f${i}_head` as any)}</strong> {t(`s3_f${i}_body` as any)}
+                                    </li>
+                                ))}
                             </ul>
                             <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-start gap-3">
                                 <AlertTriangle size={20} className="shrink-0 mt-0.5" />
-                                <p className="text-sm font-medium">La violación de estas prohibiciones resultará en la <strong>suspensión inmediata</strong> de tu cuenta sin reembolso.</p>
+                                <p className="text-sm font-medium">{t('s3_warning')}</p>
                             </div>
                         </TermItem>
 
@@ -102,14 +92,12 @@ export default function TermsOfService() {
                             title={t('s4_title')}
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                                    <h4 className="text-white font-bold mb-2">Tus Datos</h4>
-                                    <p className="text-sm text-slate-400 leading-relaxed">Conservas todos los derechos sobre los documentos que subes. ABD RAG Platform no reclama propiedad sobre tu contenido.</p>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                                    <h4 className="text-white font-bold mb-2">Nuestro Software</h4>
-                                    <p className="text-sm text-slate-400 leading-relaxed">El Servicio es propiedad exclusiva de ABD Technologies S.L. y está protegido por leyes internacionales de propiedad intelectual.</p>
-                                </div>
+                                {[1, 2].map((i) => (
+                                    <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                        <h4 className="text-white font-bold mb-2">{t(`s4_c${i}_title` as any)}</h4>
+                                        <p className="text-sm text-slate-400 leading-relaxed">{t(`s4_c${i}_desc` as any)}</p>
+                                    </div>
+                                ))}
                             </div>
                         </TermItem>
 
@@ -123,8 +111,8 @@ export default function TermsOfService() {
                                         <ShieldCheck size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold">Planes de Pago</h4>
-                                        <p className="text-slate-400 text-sm">Cargos mensuales o anuales. Precios modificables con 30 días de aviso previo.</p>
+                                        <h4 className="text-white font-bold">{t('s5_c1_title')}</h4>
+                                        <p className="text-slate-400 text-sm">{t('s5_c1_desc')}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4 items-start">
@@ -132,8 +120,8 @@ export default function TermsOfService() {
                                         <CheckCircle size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold">Cancelación Flexible</h4>
-                                        <p className="text-slate-400 text-sm">Cancela cuando quieras. El acceso continúa hasta el final del periodo pagado.</p>
+                                        <h4 className="text-white font-bold">{t('s5_c2_title')}</h4>
+                                        <p className="text-slate-400 text-sm">{t('s5_c2_desc')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -143,9 +131,9 @@ export default function TermsOfService() {
                             icon={<AlertTriangle className="text-amber-500" size={24} />}
                             title={t('s6_title')}
                         >
-                            <p className="mb-4 text-slate-300">ABD RAG Platform se proporciona "tal cual". Nuestro compromiso de Uptime mensual es del <strong>99.9%</strong>.</p>
+                            <p className="mb-4 text-slate-300">{t('s6_p1')}</p>
                             <div className="p-6 rounded-2xl bg-slate-900 border border-white/5 italic text-slate-400 text-sm">
-                                "Nuestra responsabilidad máxima por cualquier reclamación está limitada al monto pagado por el Servicio en los últimos 12 meses."
+                                {t('s6_quote')}
                             </div>
                         </TermItem>
                     </div>

@@ -77,7 +77,7 @@ export default async function RootLayout({
             <SessionProvider session={session}>
               <BrandingProvider>
                 <SidebarProvider>
-                  <Toaster position="top-right" richColors />
+                  <Toaster position="top-right" richColors closeButton expand={false} />
                   {children}
                 </SidebarProvider>
               </BrandingProvider>

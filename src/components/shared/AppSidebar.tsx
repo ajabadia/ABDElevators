@@ -34,12 +34,12 @@ import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSession, signOut } from 'next-auth/react';
-import { useLabels } from '@/hooks/use-labels';
 import { useBranding } from '@/context/BrandingContext';
 import { useNavigation } from '@/hooks/use-navigation';
+import { useTranslations } from 'next-intl';
 
 export function AppSidebar() {
-    const labels = useLabels();
+    const t = useTranslations("common.navigation");
     const { branding } = useBranding();
     const { isCollapsed, toggleSidebar } = useSidebar();
     const pathname = usePathname();
@@ -59,15 +59,14 @@ export function AppSidebar() {
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
-            <Link
-                href="/"
+            <div
                 className={cn(
-                    "p-6 border-b border-sidebar-border flex items-center justify-between overflow-hidden whitespace-nowrap hover:bg-sidebar-accent/50 transition-colors group",
-                    isCollapsed && "px-4"
+                    "p-6 border-b border-sidebar-border flex items-center h-16 transition-all duration-300",
+                    isCollapsed ? "justify-center px-4" : "justify-between"
                 )}
             >
-                {!isCollapsed && (
-                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
+                {!isCollapsed ? (
+                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500 overflow-hidden">
                         {branding?.logo?.url ? (
                             <img src={branding.logo.url} alt="Logo" className="h-8 w-auto object-contain" />
                         ) : (
@@ -75,67 +74,60 @@ export function AppSidebar() {
                                 {branding?.companyName?.[0] || 'A'}
                             </div>
                         )}
-                        <div className="overflow-hidden">
-                            <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground group-hover:text-sidebar-primary transition-colors truncate">
-                                {branding?.companyName || 'ABD RAG Platform'}
-                            </h1>
-                            <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">Workspace</p>
-                        </div>
+                        <span className="font-bold text-lg tracking-tight text-foreground truncate">
+                            {branding?.companyName || 'ABD RAG'}
+                        </span>
                     </div>
-                )}
-                {isCollapsed && (
-                    <div className="mx-auto flex items-center justify-center">
+                ) : (
+                    <div className="flex items-center justify-center">
                         {branding?.logo?.url ? (
                             <img src={branding.logo.url} alt="Logo" className="h-8 w-8 object-contain" />
                         ) : (
-                            <div className="text-sidebar-primary font-bold text-xl group-hover:text-sidebar-primary-foreground transition-colors">
-                                {branding?.companyName?.[0] || 'R'}
+                            <div className="h-8 w-8 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold shrink-0">
+                                {branding?.companyName?.[0] || 'A'}
                             </div>
                         )}
                     </div>
                 )}
-            </Link>
+            </div>
 
             <nav className="flex-1 p-4 py-6 space-y-8 overflow-y-auto custom-scrollbar">
                 {filteredSections.map((section) => (
-                    <div key={section.label} className="space-y-2">
+                    <div key={section.labelKey} className="space-y-2">
                         {!isCollapsed && (
-                            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 mb-4 px-4 flex items-center justify-between">
-                                {section.label}
+                            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 mb-4 flex items-center justify-between">
+                                {t(section.labelKey)}
                                 <span className="h-px bg-sidebar-border flex-1 ml-4 opacity-50"></span>
                             </h3>
                         )}
                         <div className="space-y-1">
-                            {section.items.map((item) => {
-                                const isActive = pathname === item.href;
-                                return (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        title={isCollapsed ? item.name : ""}
+                            {section.items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    title={isCollapsed ? t(item.nameKey) : ""}
+                                    className={cn(
+                                        "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group relative",
+                                        pathname === item.href
+                                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                            : "hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground",
+                                        isCollapsed && "justify-center px-2"
+                                    )}
+                                >
+                                    <item.icon
+                                        size={20}
                                         className={cn(
-                                            "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group",
-                                            isActive
-                                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                                                : "hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground",
-                                            isCollapsed && "justify-center px-2"
+                                            "transition-colors shrink-0",
+                                            pathname === item.href ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
                                         )}
-                                    >
-                                        <item.icon
-                                            size={isCollapsed ? 22 : 18}
-                                            className={cn(
-                                                "transition-colors shrink-0",
-                                                isActive ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
-                                            )}
-                                        />
-                                        {!isCollapsed && (
-                                            <span className="text-sm animate-in fade-in slide-in-from-left-2 duration-300">
-                                                {item.name}
-                                            </span>
-                                        )}
-                                    </Link>
-                                );
-                            })}
+                                    />
+                                    {!isCollapsed && (
+                                        <span className="text-sm animate-in fade-in slide-in-from-left-2 duration-300 truncate">
+                                            {t(item.nameKey)}
+                                        </span>
+                                    )}
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 ))}
@@ -149,7 +141,7 @@ export function AppSidebar() {
                     {!isCollapsed && (
                         <div className="px-4 flex items-center gap-2 mb-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary"></div>
-                            <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">
+                            <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter truncate">
                                 {userRole || 'Loading...'}
                             </div>
                         </div>

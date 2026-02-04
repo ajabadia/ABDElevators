@@ -22,7 +22,7 @@ export async function GET(
         }
 
         const { getTenantCollection } = await import('@/lib/db-tenant');
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
         }

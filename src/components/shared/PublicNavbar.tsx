@@ -47,6 +47,15 @@ export function PublicNavbar() {
                         isActive('/about') && "text-teal-500 border-b-2 border-teal-500 pb-1"
                     )}
                 >
+                    {navT('about')}
+                </Link>
+                <Link
+                    href="/contact"
+                    className={cn(
+                        "hover:text-teal-400 transition-colors",
+                        isActive('/contact') && "text-teal-500 border-b-2 border-teal-500 pb-1"
+                    )}
+                >
                     {navT('contact')}
                 </Link>
             </div>

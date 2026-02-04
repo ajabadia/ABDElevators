@@ -1,6 +1,7 @@
 import { DefaultSession, DefaultUser } from "next-auth";
 import { JWT as DefaultJWT } from "next-auth/jwt";
 import { UserRole } from "./roles";
+import { IndustryType } from "@/lib/schemas";
 
 export interface TenantAccess {
     tenantId: string;
@@ -11,23 +12,24 @@ export interface TenantAccess {
 
 declare module "next-auth" {
     interface User extends DefaultUser {
+        id: string;
         role: UserRole;
         baseRole: string;
         tenantId: string;
-        industry: string;
+        industry: IndustryType;
         activeModules: string[];
         tenantAccess?: TenantAccess[];
         permissionGroups?: string[];
         permissionOverrides?: string[];
     }
 
-    interface Session {
+    interface Session extends DefaultSession {
         user: {
             id: string;
             role: UserRole;
             baseRole: string;
             tenantId: string;
-            industry: string;
+            industry: IndustryType;
             activeModules: string[];
             tenantAccess?: TenantAccess[];
             permissionGroups?: string[];
@@ -42,7 +44,7 @@ declare module "next-auth/jwt" {
         role: UserRole;
         baseRole: string;
         tenantId: string;
-        industry: string;
+        industry: IndustryType;
         activeModules: string[];
         tenantAccess?: TenantAccess[];
         permissionGroups?: string[];

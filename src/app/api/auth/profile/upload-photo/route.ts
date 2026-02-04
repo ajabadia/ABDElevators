@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = usuario.tenantId || (session.user as any).tenantId;
+        const tenantId = usuario.tenantId || session.user.tenantId;
 
         if (!tenantId) {
             throw new AppError('TENANT_CONFIG_ERROR', 500, 'El usuario no tiene un tenantId asociado');

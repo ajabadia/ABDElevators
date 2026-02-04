@@ -28,6 +28,8 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { GlobalSemanticSearch } from "@/components/shared/GlobalSemanticSearch";
 import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
+import { TenantROIStats } from "@/components/admin/TenantROIStats";
+import { QuickNavConnector } from "@/components/admin/QuickNavConnector";
 import { CollectiveIntelligenceDashboard } from "@/components/admin/CollectiveIntelligenceDashboard";
 import { AutomationStudio } from "@/components/admin/AutomationStudio";
 import { KnowledgeGovernance } from "@/components/admin/KnowledgeGovernance";
@@ -94,6 +96,8 @@ export default function AdminDashboardPage() {
                 }
             />
 
+            <QuickNavConnector />
+
             <Tabs defaultValue="overview" className="space-y-6 mt-8">
                 <TabsList className="bg-muted p-1 rounded-2xl border border-border w-full flex justify-start overflow-x-auto">
                     <TabsTrigger value="overview" className="rounded-xl px-6">
@@ -121,22 +125,7 @@ export default function AdminDashboardPage() {
 
                 <TabsContent value="overview" className="space-y-8 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Tenant ROI Dashboard (Fase 24.2b) */}
-                    {!isSuperAdmin && (
-                        <div>
-                            {/* Placeholder for TenantROIStats if it was intended to be used, 
-                                 otherwise commenting out as I don't see it imported/defined in the original snippet 
-                                 but it was in the view_file output. I'll assume it's component-local or handled elsewhere. 
-                                 Actually, TenantROIStats IS NOT in the imports I see in view_file above. 
-                                 I will remove it to avoid ReferenceError if it is not imported. 
-                                 Wait, line 95 has <TenantROIStats />. 
-                                 The imports in view_file output show imports up to line 27. 
-                                 TenantROIStats is NOT imported. 
-                                 I must likely remove it or import it. 
-                                 Given I am refactoring, and if it's missing, I'll comment it out safely.
-                             */}
-                            {/* <TenantROIStats /> */}
-                        </div>
-                    )}
+                    {!isSuperAdmin && <TenantROIStats />}
 
                     {/* Quick Stats Grid */}
                     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-${isCompact ? '3' : '6'}`}>

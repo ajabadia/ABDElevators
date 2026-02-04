@@ -1,28 +1,41 @@
-"use client";
-
 import { ShieldCheck, FileText, Link2, CheckCircle, AlertTriangle, Lock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
+import { getTranslations } from "next-intl/server";
+import { Metadata } from "next";
 
-export default function AuditTrailPage() {
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations("feature_pages.audit_trail");
+    return {
+        title: `${t("title")} | ABD Elevators`,
+        description: t("subtitle"),
+    };
+}
+
+export default async function AuditTrailPage() {
+    const t = await getTranslations("feature_pages.audit_trail");
+
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
             <PublicNavbar />
 
             {/* Hero */}
-            <section className="pt-32 pb-20 px-6">
-                <div className="container mx-auto max-w-6xl">
+            <section className="pt-32 pb-20 px-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+                <div className="container mx-auto max-w-6xl relative z-10">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                             <ShieldCheck className="text-emerald-400" size={24} />
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-black text-white font-outfit">Audit-Trail Pro</h1>
+                        <h1 className="text-5xl md:text-7xl font-black text-white font-outfit tracking-tight">
+                            {t("title")}
+                        </h1>
                     </div>
-                    <p className="text-slate-400 text-xl mb-8 max-w-3xl">
-                        Trazabilidad total: cada párrafo generado incluye una cita directa al documento fuente original. Cumplimiento normativo garantizado.
+                    <p className="text-slate-400 text-xl mb-8 max-w-3xl leading-relaxed">
+                        {t("subtitle")}
                     </p>
                 </div>
             </section>
@@ -30,165 +43,159 @@ export default function AuditTrailPage() {
             {/* Feature Image */}
             <section className="pb-20 px-6">
                 <div className="container mx-auto max-w-6xl">
-                    <div className="relative rounded-3xl overflow-hidden border border-white/10 mb-20">
+                    <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 mb-24 shadow-2xl group shadow-emerald-500/5">
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-40 z-10" />
                         <Image
                             src="/feature-audit-trail.png"
                             alt="Audit Trail Dashboard"
                             width={1200}
                             height={675}
-                            className="w-full h-auto"
+                            className="w-full h-auto transition-transform duration-1000 group-hover:scale-105"
                         />
                     </div>
 
                     {/* Why it Matters */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-                        <div className="p-8 bg-red-500/5 border border-red-500/20 rounded-3xl">
-                            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                                <AlertTriangle className="text-red-400" size={24} />
-                                Sin Trazabilidad
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24">
+                        <div className="p-10 bg-red-500/5 border border-red-500/10 rounded-[2rem] backdrop-blur-sm">
+                            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3 font-outfit uppercase tracking-tighter">
+                                <AlertTriangle className="text-red-400" size={32} />
+                                {t("negative_title")}
                             </h2>
-                            <ul className="space-y-3 text-slate-300">
-                                <li className="flex items-start gap-2">
-                                    <span className="text-red-400 mt-1">✗</span>
-                                    <span><strong>Riesgo legal:</strong> Imposible demostrar origen de la información</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-red-400 mt-1">✗</span>
-                                    <span><strong>Alucinaciones no detectables:</strong> La IA puede inventar datos sin que lo notes</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-red-400 mt-1">✗</span>
-                                    <span><strong>Auditorías imposibles:</strong> No cumples ISO 9001, SOC2, GDPR</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-red-400 mt-1">✗</span>
-                                    <span><strong>Pérdida de confianza:</strong> Los técnicos no confían en respuestas sin fuente</span>
-                                </li>
+                            <ul className="space-y-6 text-slate-300">
+                                {(t.raw("negative_items") as string[]).map((item, i) => (
+                                    <li key={i} className="flex items-start gap-4 text-lg">
+                                        <span className="text-red-400 font-bold text-2xl leading-none mt-1">×</span>
+                                        <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>') }} />
+                                    </li>
+                                ))}
                             </ul>
                         </div>
 
-                        <div className="p-8 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl">
-                            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                                <CheckCircle className="text-emerald-400" size={24} />
-                                Con Audit-Trail Pro
+                        <div className="p-10 bg-emerald-500/5 border border-emerald-500/10 rounded-[2rem] backdrop-blur-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[80px] -mr-16 -mt-16" />
+                            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3 font-outfit uppercase tracking-tighter">
+                                <CheckCircle className="text-emerald-400" size={32} />
+                                {t("positive_title")}
                             </h2>
-                            <ul className="space-y-3 text-slate-300">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="text-emerald-400 mt-1 flex-shrink-0" size={20} />
-                                    <span><strong>Cita exacta:</strong> Cada afirmación enlaza al documento y página fuente</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="text-emerald-400 mt-1 flex-shrink-0" size={20} />
-                                    <span><strong>Verificación instantánea:</strong> Click en la cita → PDF original resaltado</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="text-emerald-400 mt-1 flex-shrink-0" size={20} />
-                                    <span><strong>Cumplimiento automático:</strong> Logs inmutables para auditorías</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="text-emerald-400 mt-1 flex-shrink-0" size={20} />
-                                    <span><strong>Confianza total:</strong> Los técnicos pueden verificar cada dato</span>
-                                </li>
+                            <ul className="space-y-6 text-slate-300">
+                                {(t.raw("positive_items") as string[]).map((item, i) => (
+                                    <li key={i} className="flex items-start gap-4 text-lg">
+                                        <CheckCircle className="text-emerald-400 mt-1.5 flex-shrink-0" size={20} />
+                                        <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>') }} />
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                     </div>
 
                     {/* How it Works */}
-                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 mb-20">
-                        <h2 className="text-3xl font-bold text-white mb-8 font-outfit">Cómo Funciona</h2>
-                        <div className="space-y-8">
+                    <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-[3rem] p-10 md:p-16 mb-24">
+                        <h2 className="text-4xl font-bold text-white mb-16 font-outfit tracking-tighter text-center uppercase">{t("how_it_works")}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <AuditStep
                                 number="1"
-                                title="Chunking con Metadatos"
-                                description="Cada chunk de texto indexado incluye metadatos completos: name del documento, página, párrafo, fecha de revisión, versión."
-                                icon={<FileText size={20} />}
+                                title={t("steps.1.title")}
+                                description={t("steps.1.desc")}
+                                icon={<FileText size={24} />}
                             />
                             <AuditStep
                                 number="2"
-                                title="Tracking de Fuentes"
-                                description="Durante la generación RAG, se registra qué chunks fueron usados para generar cada parte de la respuesta."
-                                icon={<Link2 size={20} />}
+                                title={t("steps.2.title")}
+                                description={t("steps.2.desc")}
+                                icon={<Link2 size={24} />}
                             />
                             <AuditStep
                                 number="3"
-                                title="Citación Automática"
-                                description="La respuesta final incluye referencias numeradas [1], [2], [3] que enlazan a los documentos fuente específicos."
-                                icon={<ShieldCheck size={20} />}
+                                title={t("steps.3.title")}
+                                description={t("steps.3.desc")}
+                                icon={<ShieldCheck size={24} />}
                             />
                             <AuditStep
                                 number="4"
-                                title="Logs Inmutables"
-                                description="Cada consulta se registra en MongoDB con timestamp, usuario, query, respuesta, y fuentes usadas. Logs encriptados y no modificables."
-                                icon={<Lock size={20} />}
+                                title={t("steps.4.title")}
+                                description={t("steps.4.desc")}
+                                icon={<Lock size={24} />}
                             />
                         </div>
                     </div>
 
                     {/* Example Output */}
-                    <div className="mb-20">
-                        <h2 className="text-3xl font-bold text-white mb-8 font-outfit">Ejemplo de Respuesta con Trazabilidad</h2>
-                        <div className="p-8 bg-slate-900 border border-emerald-500/30 rounded-3xl">
-                            <div className="mb-6">
-                                <p className="text-slate-400 text-xs uppercase tracking-wider mb-2">Query del Usuario:</p>
-                                <p className="text-white font-medium">"¿Qué cable se especifica para el pedido P-2024-0156?"</p>
-                            </div>
-                            <div className="mb-6">
-                                <p className="text-slate-400 text-xs uppercase tracking-wider mb-3">Respuesta Generada:</p>
-                                <div className="p-6 bg-slate-950 rounded-xl border border-white/10">
-                                    <p className="text-slate-200 leading-relaxed mb-4">
-                                        Para el pedido P-2024-0156 se especifica un <strong>cable de acero 8x19 Seale IWRC</strong> con las siguientes características<sup className="text-emerald-400">[1]</sup>:
+                    <div className="mb-24">
+                        <h2 className="text-4xl font-bold text-white mb-12 font-outfit tracking-tighter text-center uppercase">{t("example_title")}</h2>
+                        <div className="p-1 md:p-1.5 bg-gradient-to-br from-emerald-500/30 via-emerald-500/5 to-slate-900 rounded-[3rem] shadow-2xl">
+                            <div className="p-8 md:p-12 bg-slate-950 rounded-[2.8rem] space-y-12">
+                                <div className="space-y-4">
+                                    <p className="text-emerald-400/60 text-xs font-mono uppercase tracking-[0.2em]">{t("example_query_label")}</p>
+                                    <p className="text-2xl md:text-3xl font-medium text-white tracking-tight italic">
+                                        "{t("example_query")}"
                                     </p>
-                                    <ul className="space-y-2 text-slate-300 ml-4">
-                                        <li>• Diámetro: 10mm</li>
-                                        <li>• Carga de rotura mínima: 6370 kgf<sup className="text-emerald-400">[1]</sup></li>
-                                        <li>• Longitud: 45 metros<sup className="text-emerald-400">[2]</sup></li>
-                                        <li>• Cumple normativa EN 12385-5<sup className="text-emerald-400">[3]</sup></li>
-                                    </ul>
                                 </div>
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-xs uppercase tracking-wider mb-3">Referencias:</p>
-                                <div className="space-y-2">
-                                    <Reference
-                                        number="1"
-                                        document="Pedido_P-2024-0156_Rev2.pdf"
-                                        page="3"
-                                        excerpt="Cable de tracción: 8x19 Seale IWRC, Ø10mm, carga rotura 6370 kgf"
-                                    />
-                                    <Reference
-                                        number="2"
-                                        document="Pedido_P-2024-0156_Rev2.pdf"
-                                        page="5"
-                                        excerpt="Longitud total cable: 45m (incluye reserva 3m)"
-                                    />
-                                    <Reference
-                                        number="3"
-                                        document="Normativa_EN_12385-5_2021.pdf"
-                                        page="12"
-                                        excerpt="Requisitos para cables de acero en ascensores - Clasificación 8x19"
-                                    />
+
+                                <div className="space-y-6">
+                                    <p className="text-emerald-400/60 text-xs font-mono uppercase tracking-[0.2em]">{t("example_resp_label")}</p>
+                                    <div className="p-8 bg-slate-900/40 backdrop-blur-sm rounded-[2.5rem] border border-white/5 space-y-6">
+                                        <p className="text-slate-200 text-xl leading-relaxed">
+                                            {t("example_resp_text")}<sup className="text-emerald-400 font-bold ml-1">[1]</sup>
+                                        </p>
+                                        <ul className="space-y-4 text-slate-300 pl-4">
+                                            {(t.raw("example_resp_items") as string[]).map((item, i) => (
+                                                <li key={i} className="flex items-center gap-3 text-lg">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                                    <span>{item}</span>
+                                                    {i === 1 && <sup className="text-emerald-400 font-bold ml-0.5">[1]</sup>}
+                                                    {i === 2 && <sup className="text-emerald-400 font-bold ml-0.5">[2]</sup>}
+                                                    {i === 3 && <sup className="text-emerald-400 font-bold ml-0.5">[3]</sup>}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <p className="text-emerald-400/60 text-xs font-mono uppercase tracking-[0.2em]">{t("example_ref_label")}</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <Reference
+                                            number="1"
+                                            document={t("example_ref_1.doc")}
+                                            page={t("example_ref_1.page")}
+                                            excerpt={t("example_ref_1.excerpt")}
+                                        />
+                                        <Reference
+                                            number="2"
+                                            document={t("example_ref_2.doc")}
+                                            page={t("example_ref_2.page")}
+                                            excerpt={t("example_ref_2.excerpt")}
+                                        />
+                                        <Reference
+                                            number="3"
+                                            document={t("example_ref_3.doc")}
+                                            page={t("example_ref_3.page")}
+                                            excerpt={t("example_ref_3.excerpt")}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Compliance Badges */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
-                        <ComplianceBadge name="ISO 9001" description="Gestión de Calidad" />
-                        <ComplianceBadge name="SOC 2 Type II" description="Seguridad de Datos" />
-                        <ComplianceBadge name="GDPR" description="Protección de Datos" />
-                        <ComplianceBadge name="EN 81-20" description="Normativa Ascensores" />
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+                        <ComplianceBadge name={t("badges.iso")} description="ISO 9001" />
+                        <ComplianceBadge name={t("badges.soc2")} description="SOC 2 Type II" />
+                        <ComplianceBadge name={t("badges.gdpr")} description="GDPR Ready" />
+                        <ComplianceBadge name={t("badges.en81")} description="EN 81-20" />
                     </div>
 
                     {/* CTA */}
-                    <div className="p-8 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 border border-emerald-500/30 rounded-3xl text-center">
-                        <h3 className="text-3xl font-bold text-white mb-4">Garantiza la Trazabilidad de tus Análisis</h3>
-                        <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-                            Cumple con auditorías y normativas desde el primer día. Cada respuesta es verificable.
+                    <div className="p-16 bg-gradient-to-br from-emerald-900/40 via-slate-900 to-transparent border border-emerald-500/20 rounded-[4rem] text-center shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_rgba(16,185,129,0.1),transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                        <h3 className="text-4xl md:text-5xl font-black text-white mb-8 font-outfit tracking-tighter uppercase whitespace-pre-line">{t("cta_title")}</h3>
+                        <p className="text-slate-300 text-xl mb-12 max-w-2xl mx-auto font-medium">
+                            {t("cta_desc")}
                         </p>
                         <Link href="/login">
-                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg px-8 py-6">
-                                Activar Audit-Trail
+                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-2xl px-16 py-10 rounded-[2rem] shadow-[0_15px_50px_rgba(16,185,129,0.3)] transition-all hover:scale-105 active:scale-95">
+                                {t("cta_btn")}
                             </Button>
                         </Link>
                     </div>
@@ -202,16 +209,16 @@ export default function AuditTrailPage() {
 
 function AuditStep({ number, title, description, icon }: { number: string; title: string; description: string; icon: React.ReactNode }) {
     return (
-        <div className="flex gap-4 group">
-            <div className="flex-shrink-0 w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 font-bold border border-emerald-500/30 group-hover:scale-110 transition-transform">
+        <div className="flex gap-6 group p-8 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/[0.08] transition-all duration-300">
+            <div className="flex-shrink-0 w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 text-2xl font-black border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
                 {number}
             </div>
             <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="text-emerald-400">{icon}</div>
-                    <h4 className="text-lg font-bold text-white">{title}</h4>
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="text-emerald-400 group-hover:scale-110 transition-transform">{icon}</div>
+                    <h4 className="text-2xl font-bold text-white font-outfit tracking-tight">{title}</h4>
                 </div>
-                <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
+                <p className="text-slate-400 text-lg leading-relaxed">{description}</p>
             </div>
         </div>
     );
@@ -219,17 +226,19 @@ function AuditStep({ number, title, description, icon }: { number: string; title
 
 function Reference({ number, document, page, excerpt }: { number: string; document: string; page: string; excerpt: string }) {
     return (
-        <div className="flex gap-3 p-4 bg-slate-950 rounded-lg border border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer group">
-            <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm font-bold">
-                {number}
-            </div>
-            <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                    <FileText size={14} className="text-emerald-400" />
-                    <p className="text-white text-sm font-bold">{document}</p>
-                    <span className="text-slate-500 text-xs">• Pág. {page}</span>
+        <div className="flex flex-col gap-4 p-6 bg-slate-900 border border-white/5 rounded-2xl hover:border-emerald-500/30 transition-all cursor-pointer group hover:-translate-y-1">
+            <div className="flex items-center justify-between font-mono">
+                <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400 text-sm font-bold border border-emerald-500/20">
+                    {number}
                 </div>
-                <p className="text-slate-400 text-xs italic">"{excerpt}"</p>
+                <span className="text-slate-500 text-[10px] tracking-widest uppercase">Page {page}</span>
+            </div>
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-emerald-400" />
+                    <p className="text-white text-sm font-bold truncate">{document}</p>
+                </div>
+                <p className="text-slate-400 text-xs italic leading-relaxed">"{excerpt}"</p>
             </div>
         </div>
     );
@@ -237,12 +246,12 @@ function Reference({ number, document, page, excerpt }: { number: string; docume
 
 function ComplianceBadge({ name, description }: { name: string; description: string }) {
     return (
-        <div className="p-6 bg-white/5 border border-white/10 rounded-2xl text-center hover:border-emerald-500/30 transition-all">
-            <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <ShieldCheck className="text-emerald-400" size={24} />
+        <div className="p-8 bg-slate-900/40 backdrop-blur-sm border border-white/5 rounded-3xl text-center hover:border-emerald-500/20 transition-all duration-300 hover:bg-slate-900/60 group">
+            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform border border-emerald-500/10">
+                <ShieldCheck className="text-emerald-400" size={32} />
             </div>
-            <p className="text-white font-bold mb-1">{name}</p>
-            <p className="text-slate-500 text-xs">{description}</p>
+            <p className="text-white font-black text-xl mb-2 font-outfit uppercase tracking-tighter">{name}</p>
+            <p className="text-slate-500 text-sm font-medium">{description}</p>
         </div>
     );
 }

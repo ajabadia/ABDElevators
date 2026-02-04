@@ -27,6 +27,7 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 2. **Interactividad**: Asegurar que botones (`<button>`) y enlaces (`<a>`) tengan etiquetas descriptivas o `aria-label` si solo tienen iconos.
 3. **Imágenes**: Verificar que toda etiqueta `<img>` o componente `Image` de Next.js tenga un `alt` descriptivo.
 4. **Formularios**: Asegurar que cada `Input` tenga un `Label` asociado correctamente.
+5. **SEO (Páginas Públicas)**: Verificar `metadata` (Title tag único, Meta description optimizada, OpenGraph tags).
 
 ### Fase 3: Ejecución de Mejoras
 1. **Inyección de i18n**: Sustituir textos hardcodeados por `t('clave')`.

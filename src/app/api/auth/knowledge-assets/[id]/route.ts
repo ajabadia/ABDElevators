@@ -37,7 +37,7 @@ export async function DELETE(
         // Session should have tenantId (from auth/next-auth logic)
         // If not, we might need to fetch it.
         // Assuming session.user has tenantId (as seen in other files)
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const authDb = await connectAuthDB();
         const user = await authDb.collection('users').findOne({ email: session.user.email });

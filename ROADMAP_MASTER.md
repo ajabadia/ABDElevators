@@ -37,21 +37,21 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 - [X] **FASE 17: AI Infrastructure Autoscaling** - Implementation of the `InfrastructureAutoscaler`.
 - [X] **FASE 18: Universal Security Audit** - Implementation of the `SecurityAuditEngine`.
-- [X] **FASE 19: INTERNACIONALIZACIÓN COMPLETA** (ES/EN/FR/DE).
+- [X] **FASE 19: INTERNACIONALIZACIÓN COMPLETA** (ES/EN - Optimized & Resilient).
 - [X] **FASE 20: SISTEMA DE TICKETING EMPRESARIAL**.
 
 ---
 
-### 📊 Status & Metrics (v3.3.0 - RESILIENT)
+### 📊 Status & Metrics (v3.8.0 - EVOLUTION)
 
-- **Global Progress:** 100% (Architecture Pivot & Security Hardening COMPLETE).
-- **Industrialization Progress:** 57% (Phase 71 & 72 COMPLETE - 4 of 7 industrial phases).
+- **Global Progress:** 100% (Architecture Pivot complete).
+- **Industrialization Progress:** 78% (Phase 95 COMPLETE - 6 of 7 industrial phases).
 - **Core Status:** 100% (High-Availability Industrial Grade).
-- **Recent Ship:** Industrial Performance (RAG Streaming, DB Singleton & Type Hygiene).
-  - **RAG Streaming:** TTFT reducido mediante streaming real de tokens desde Gemini/LangGraph.
-  - **DB Singleton:** Protección contra socket leaks mediante patrón singleton unificado por URI.
-  - **Type Hygiene:** Eliminación de deuda técnica en la capa de Auth (NextAuth Type Safety).
-- **Project Status:** **High-Performance Industrial Platform (v3.4.0).**
+- **Recent Ship:** i18n Synchronization & Application Stability.
+    - **i18n Core:** Unified translation logic for Sidebar, Header, and Search Page.
+    - **Stability Fix:** Industrial-grade locale validation with safe fallback to `es`.
+    - **Global Search:** Smart semantic search for all document entities.
+- **Project Status:** **High-Performance Industrial Platform (v3.8.x).**
 
 
 ---
@@ -274,7 +274,7 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [ ] **Dynamic i18n Storage**: Migrar traducciones de archivos estáticos a MongoDB con capa de caché en Redis para rendimiento.
 - [ ] **AI-Assisted Translation**: Botón "Auto-traducir" usando Gemini para nuevos idiomas.
 
-#### ♿ FASE 63: i18n & a11y DEEP AUDIT & REMEDIATION (COMPLETADO - ÁREA ADMIN ✅)
+#### ♿ FASE 63: i18n & a11y DEEP AUDIT & REMEDIATION (COMPLETADO ✅)
 
 - **Objetivo:** Alcanzar el Grado A en accesibilidad e internacionalización en toda la plataforma, eliminando deuda técnica de la Visión 2.0 y permitiendo el uso multilingüe en el área privada.
 
@@ -282,8 +282,8 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [X] **Private Area Localization**: Adaptar el Dashboard, Configuration panels y Workflow Editor a i18n total.
 - [X] **Authenticated Language Selector**: Selector de idioma persistente en la Sidebar/UserNav para el área privada.
 - [X] **A11Y enforcement**: Implementación de navegación por teclado completa, contraste de color WCAG AAA y etiquetas ARIA dinámicas.
-- [ ] **Automated Testing**: Integrar tests de accesibilidad (axe-core) en el pipeline de CI/CD. (Pendiente)
-- [ ] **Accessibility Statement**: Página pública de declaración de conformidad. (Pendiente)
+- [X] **Automated Testing**: Integrar tests de accesibilidad (axe-core) en el pipeline de CI/CD.
+- [X] **Accessibility Statement**: Página pública de declaración de conformidad.
 
 #### 📄 FASE 64: BRANDED INDUSTRIAL REPORTS & CUSTOM TEMPLATES (FUTURO)
 
@@ -396,8 +396,15 @@ Listado de funcionalidades o planes que han sido descartados o sustituidos por c
 
 Basado en la Auditoría Profesional del Bloque 015 (`1501.md`, `1502.md`, `1510.md`).
 
-#### 🛡️ FASE 70: ESTABILIZACIÓN & SEGURIDAD BANK-GRADE (P0 - CRÍTICO)
-**Objetivo:** Eliminar deuda técnica de seguridad y unificar patrones de acceso (Ref: `1510.md:227-252`).
+#### 👥 FASE 60: BULK INVITATION SYSTEM (COMPLETADO ✅)
+**Objetivo:** Permitir el onboarding masivo de usuarios técnicos e ingenieros de forma eficiente.
+
+- [X] **API Batch Processing**: Endpoint `/api/admin/users/invite/bulk` con validación atómica.
+- [X] **UI de Importación**: Modal de alta fidelidad con soporte para Drag & Drop (CSV/XLSX).
+- [X] **Plantillas Dinámicas**: Generación de archivos de ejemplo sintéticos para el cliente.
+- [X] **Internacionalización**: Refactorización total de la interfaz administrativa a ES/EN.
+
+#### 💂 FASE 70: GUARDIAN V2 & SECURITY HARDENING (COMPLETADO ✅)
 
 - [X] **Unificación de RBAC**: Implementar Enum `UserRole` estricto y helper `requireRole()` centralizado. Corregir inconsistencias 'admin' vs 'SUPER_ADMIN'.
 - [X] **Endurecimiento de CSP**: Eliminar `unsafe-inline` / `unsafe-eval` mediante nonces y migración total a Tailwind. 
@@ -430,6 +437,124 @@ Basado en la Auditoría Profesional del Bloque 015 (`1501.md`, `1502.md`, `1510.
 
 ---
 
+### 🚀 ESTRATEGIA ENTERPRISE 2026 (INGESTIÓN DE REQUERIMIENTOS)
+
+Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roadmap-architect-analyst`).
+
+#### 💰 FASE 80: CONVERSIÓN & ONBOARDING (QUICK WINS)
+**Objetivo:** Reducir fricción de entrada y demostrar valor inmediato (ROI).
+
+- [ ] **ROI Calculator**: Implementar calculadora interactiva en Landing Page. <!-- ref: Documentación/09/gaps funcionales.md:5 -->
+- [ ] **Interactive Sandbox Demo**: Simulador "Sube tu PDF" limitado para usuarios no registrados. <!-- ref: Documentación/09/gaps funcionales.md:4 -->
+- [ ] **Magic Links (Passwordless)**: Opción de login sin contraseña vía email. <!-- ref: Documentación/09/gaps funcionales.md:13 -->
+- [ ] **Post-Invite Onboarding Wizard**: Flujo guiado de 3 pasos tras el primer login. <!-- ref: Documentación/09/gaps funcionales.md:11 -->
+
+#### 💂 FASE 81: SEGURIDAD ENTERPRISE & GOVERNANCE PRO
+**Objetivo:** Cumplir con estándares bancarios e industriales de alta seguridad.
+
+- [ ] **2FA (Two-Factor Authentication)**: Implementación de TOTP (Authenticator) / SMS backup. <!-- ref: Documentación/07/roadmap-detallado.md:108 -->
+- [ ] **Swagger/OpenAPI Portal**: Interfaz interactiva para desarrolladores en `/admin/api-docs`. <!-- ref: Documentación/07/mejoras-tecnicas.md:269 -->
+- [ ] **Document Relationships**: Motor de vinculación lógica ("A anula B", "X es compatible con Y"). <!-- ref: Documentación/09/gaps funcionales.md:27 -->
+- [ ] **Inline PDF Secure Preview**: Visualización in-browser sin descarga temporal. <!-- ref: Documentación/09/gaps funcionales.md:30 -->
+- [ ] **Scheduled Review Dates**: Fechas de caducidad y alertas de revisión para manuales técnicos. <!-- ref: Documentación/09/gaps funcionales.md:28 -->
+
+#### 📊 FASE 82: COLABORACIÓN & DASHBOARD PROACTIVO
+**Objetivo:** Transformar el análisis individual en un proceso de equipo dinámico.
+
+- [ ] **Proactive System Alerts**: Notificaciones de umbrales (80% tokens), caducidades y pedidos estancados. <!-- ref: Documentación/09/gaps funcionales.md:18 -->
+- [ ] **Interactive Analysis Checklist**: Feedback loop donde el técnico puede validar/corregir detecciones de la IA. <!-- ref: Documentación/09/gaps funcionales.md:42 -->
+- [ ] **Collaboration Threads**: Sistema de comentarios y hilos tipo Google Docs dentro del análisis RAG. <!-- ref: Documentación/09/gaps funcionales.md:43 -->
+- [ ] **Confidence Score Visualization**: Tags visuales (Alta/Media/Baja) por cada entidad detectada por IA. <!-- ref: Documentación/09/gaps funcionales.md:44 -->
+
+#### 🧪 FASE 83: BACKEND REFINEMENT & SIMULATION TOOLS
+**Objetivo:** Mejorar herramientas administrativas y precisión del motor de prompts.
+
+- [ ] **Upgrade/Downgrade Price Simulator**: Cálculo exacto de pro-rata antes de cambiar suscripción. <!-- ref: Documentación/09/gaps funcionales.md:66 -->
+- [ ] **A/B Prompt Testing Engine**: Herramienta para comparar performance de diferentes system prompts en un set de control. <!-- ref: Documentación/09/gaps funcionales.md:84 -->
+- [ ] **Admin Session Simulator (Impersonation)**: Capacidad de SuperAdmin para ver la interfaz como un usuario específico (sin contraseña). <!-- ref: Documentación/09/gaps funcionales.md:53 -->
+- [ ] **Dry-run Test Button**: Probar cambios en prompts sobre documentos reales sin guardar resultados permanentes. <!-- ref: Documentación/09/gaps funcionales.md:88 -->
+
+---
+
+### 🛡️ ESTRATEGIA ENTERPRISE & INDUSTRIAL VERTICALS (Source: Folder 15)
+
+#### 🛠️ FASE 84: ENTERPRISE STABILIZATION (REFINEMENTS)
+**Objetivo:** Completar la excelencia operativa detectada en la Auditoría 15.
+
+- [ ] **Prompt Rollback System**: Endpoint y UI para restaurar versiones anteriores de prompts. <!-- ref: 1510.md:1145 -->
+- [ ] **SSE Heartbeat & Connection Recovery**: Monitor de salud para streams RAG de larga duración. <!-- ref: 1510.md:1209 -->
+- [ ] **Transactional Webhooks (Stripe)**: Asegurar integridad atómica en el proceso de suscripción tras el pago. <!-- ref: 1510.md:1149 -->
+- [ ] **Universal API Export (CSV/JSON)**: Paginación y exportación de logs y auditorías para legal discovery. <!-- ref: 1510.md:1257 -->
+
+#### 🏛️ FASE 85: INDUSTRIAL VERTICALS (LEGAL, BANKING, INSURANCE)
+**Objetivo:** Desplegar arquitecturas especializadas por sector.
+
+- [ ] **Legal: Contract Intelligence Engine**: Comparativa automática de cláusulas contra estándar de la firma. <!-- ref: 1511.txt:23 -->
+- [ ] **Banking: Perpetual KYC (pKYC)**: Motor de debida diligencia continua sobre corpus documental. <!-- ref: 1511.txt:35 -->
+- [ ] **Insurance: Claims Automation Proxy**: Triaje automático de siniestros basado en evidencia documental técnica. <!-- ref: 1511.txt:48 -->
+- [ ] **Real Estate: Property Twin Integration**: Relación entre planos 3D y especificaciones de mantenimiento. <!-- ref: 1511.txt:55 -->
+
+#### 🔮 FASE 86: ADVANCED AGENTIC REASONING (2026+)
+**Objetivo:** Evolucionar hacia la autonomía total del análisis.
+
+- [ ] **LangGraph Multi-Agent Workflows**: Orquestación de agentes con estados persistentes y "Human-in-the-loop". <!-- ref: 1501.md:547 -->
+- [ ] **Causal AI Impact Assessment**: Análisis de "Qué pasaría si..." basado en relaciones causa-efecto. <!-- ref: 1502.md:468 -->
+- [ ] **Swarm Intelligence for Investigator Swarms**: Enjambres de agentes para e-discovery en litigios masivos. <!-- ref: 1502.md:368 -->
+- [ ] **BGE-M3 Multilingual Embedding Logic**: Optimización para recuperación cross-language avanzada. <!-- ref: 1510.md:542 -->
+
+---
+
+### 🌌 ESTRATEGIA DISRUPTIVA (VISION 2027+)
+
+#### FASE 90: QUANTUM & NEUROMORPHIC EDGE (NEXT-GEN)
+- [ ] **Quantum-Classical Hybrid Optimization**: Algoritmos QAOA para riesgo y colateral bancario. <!-- ref: 1502.md:145 -->
+- [ ] **Neuromorphic Edge Deployment**: Inferencia ultra-rápida en sensores locales (Fraude ATM / IoT Industrial). <!-- ref: 1502.md:74 -->
+- [ ] **Brain-Computer Interface (BCI) Auth**: I+D para autenticación por biometría neural en operaciones de alto riesgo. <!-- ref: 1502.md:565 -->
+- [ ] **Self-Healing Knowledge Assets**: Auditoría automática y corrección de obsolescencia documental mediante IA. <!-- ref: 1510.md:637 -->
+
+---
+
+### 🟢 MADUREZ DE PRODUCTO & CONECTIVIDAD (Source: Folder 16)
+
+#### 🛠️ FASE 95: PRODUCT READINESS & FINAL CONNECTIVITY (COMPLETADO ✅)
+**Objetivo:** Eliminar "Dead Ends" y asegurar la estabilidad core para despliegue industrial.
+
+- [X] **Unified Auth & Guardian Middleware**: Crear `authorizeRequest` para validación atómica en todas las APIs. <!-- ref: 1601.md:75 -->
+- [X] **Critical Bugfix: Workflow API**: Corregir sintaxis truncada en `workflow-definitions/route.ts`. <!-- ref: 1602.md:25 -->
+- [X] **Dashboard Stability**: Implementar/Importar `TenantROIStats` en `admin/page.tsx`. <!-- ref: 1602.md:151 -->
+- [X] **Integrated i18n Expansion**: Migrar strings hardcodeados a namespaces `knowledge_assets` y `entities`. <!-- ref: 1602.md:190 -->
+- [X] **Cross-Module Navigation**: Implementar `QuickNavConnector` para enlazar Checklist Editor y Workflow Canvas. <!-- ref: 1602.md:781 -->
+- [X] **GDPR User Audit Trail**: Implementar `auditUserAction` para trazabilidad de descargas y visualizaciones. <!-- ref: 1602.md:88 -->
+
+---
+
+### 🧥 ESTRATEGIA SaaS & EXPERIENCIA DE USUARIO (Source: Folder 17)
+
+#### 🎨 FASE 96: BUSINESS-READY UX TRANSFORMATION
+**Objetivo:** Eliminar la barrera técnica y orientar la plataforma a resultados de negocio.
+
+- [ ] **Technical Terminology Purge**: Migrar dashboard y reportes de jerga LLM a lenguaje de negocio (Precisión, Ahorro, Volumen). <!-- ref: 1701.md:148 -->
+- [ ] **Intelligent Onboarding System**: Implementar `useOnboarding` y `OnboardingOverlay` para tours guiados de primer login. <!-- ref: 1701.md:213 -->
+- [ ] **Conversational Search UI**: Crear interfaz de chat estilo "técnico-a-técnico" en `/buscar`. <!-- ref: 1701.md:233 -->
+- [ ] **Contextual Help Layer**: Desplegar `HelpButton` e `InlineHelpPanel` en todas las pantallas críticas. <!-- ref: 1701.md:291 -->
+
+#### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE
+**Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.
+
+- [ ] **Guardian V3 Expansion**: Implementar jerarquía de roles industriales (Compliance, Reviewer, Technician). <!-- ref: 08-workflow-engine.md:38 -->
+- [ ] **Workflow State Machine**: Desplegar `WorkflowEngine` service para gestión de transiciones y estados. <!-- ref: 08-workflow-engine.md:213 -->
+- [ ] **Rag-Driven Transitions**: Integrar validación automática de scores RAG en el flujo de aprobación humano. <!-- ref: 1701.md:281 -->
+- [ ] **Task Collaboration Hub**: Crear centro de gestión de tareas asignadas con historial de auditoría completo. <!-- ref: 08-workflow-engine.md:311 -->
+
+#### 🏢 FASE 98: VERTICAL INDUSTRY PACKS
+**Objetivo:** Especialización "out-of-the-box" para nichos de mercado.
+
+- [ ] **Industry UI Adapter**: Implementar `useVerticalConfig` para inyección dinámica de terminología. <!-- ref: 07_arquitectura_multivertical.md:508 -->
+- [ ] **Legal/Banking/Insurance Templates**: Crear configuraciones base de workflows y assets para cada vertical. <!-- ref: 07_arquitectura_multivertical.md:32 -->
+- [ ] **Vertical Pricing Engine**: Adaptar lógica de suscripción para add-ons verticales y consumo por usuario/storage. <!-- ref: 07_arquitectura_multivertical.md:47 -->
+
+---
+
 ### 📉 BACKLOG & GAP ANALYSIS (vs v1.0)
 
 #### ✅ Data Portability & GDPR (Completado)
@@ -444,9 +569,9 @@ Basado en la Auditoría Profesional del Bloque 015 (`1501.md`, `1502.md`, `1510.
 
 - Treat this file as the **single source of truth**.
 
-- [X] [v3.4.3] Limpieza Industrial (Phase 72 Cleanup)
-    - [x] Modularización de `RAGService` (>700 líneas).
-    - [x] Modularización de `llm.ts` (>600 líneas).
-    - [x] Optimización de performance `tsc` (tsconfig tuning).
+- [X] [v3.4.4] Fase 60: Bulk Invitation System
+    - [x] Implementación de API Batch y UI de Importación.
+    - [x] Auditoría completa i18n/a11y/Seguridad (app-full-reviewer).
+    - [x] Documentación de importación integrada en `/docs`.
 
 *Updated and Audited on 2026-02-04 by Antigravity (Skill: roadmap-manager)*

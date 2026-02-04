@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
         // 1. Extract text from entity
         const textBuffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         }
 
         const entityText = await extractTextFromPDF(textBuffer);
-        const industry = (session.user as any).industry || 'ELEVATORS';
+        const industry = session.user.industry || 'ELEVATORS';
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
         if (ingestOnly) {

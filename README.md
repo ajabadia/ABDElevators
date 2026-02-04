@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 3.2 - EVOLUTION ERA)
+# ABD Multi-Industry RAG Platform (Vision 3.8.0 - EVOLUTION ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v3.2.2** marca el cierre de la "Fase 70: Estabilización & Seguridad Bank-Grade", consolidando patrones de acceso deterministas, protección avanzada CSP y deduplicación atómica de alta integridad.
+Esta versión **v3.8.0** marca el cierre de la "Fase 95: Product Readiness & Stabilization", consolidando el Dashboard de ROI, Navegación Inteligente y Resiliencia de UI.
 
 ## 🚀 Inicio Rápido
 
@@ -95,7 +95,7 @@ src/
 
 ## 📊 Características Clave
   - ✅ **Turing-complete Workflow Logic**: Motor de estados avanzado con soporte para bifurcaciones (Switch), retardos (Wait) e iteraciones (Loop).
-  - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) incluyendo Dashboard, Workflow Editor y Log Explorer.
+  - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) con validación industrial y fallback seguro contra fallos de carga.
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
   - ✅ **Technical Performance Reporting**: Generación automatizada de informes industriales en PDF para auditoría de procesos.
@@ -113,6 +113,7 @@ src/
   - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
   - ✅ **Dynamic CSP (Nonces)**: Implementación de Content Security Policy dinámica basada en nonces para una protección XSS de vanguardia.
   - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria garantizado por índices compuestos.
+  - ✅ **Accessibility Compliance (WCAG 2.1 AA)**: Declaración oficial de accesibilidad y tests automatizados de grado industrial integrados en el pipeline de desarrollo.
 
 ## 🔧 Scripts Disponibles
 

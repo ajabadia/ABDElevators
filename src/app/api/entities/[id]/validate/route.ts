@@ -31,7 +31,7 @@ export async function POST(
         const validated = ValidationSchema.parse({
             ...body,
             entityId,
-            tenantId: (session.user as any).tenantId,
+            tenantId: session.user.tenantId,
             validatedBy: session.user.id,
             technicianName: session.user.name,
         });
@@ -137,7 +137,7 @@ export async function GET(
         }
 
         const { id: entityId } = await params;
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const db = await connectDB();
 

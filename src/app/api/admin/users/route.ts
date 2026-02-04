@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
             filter = {};
         } else {
             const allowedIds = [
-                (session?.user as any).tenantId,
-                ...((session?.user as any).tenantAccess || []).map((t: any) => t.tenantId)
+                session.user.tenantId,
+                ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
             ].filter(Boolean);
 
             filter = { tenantId: { $in: allowedIds } };
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
         // If Admin, force their tenantId. If SuperAdmin, potentially from body
         const tenantId = isSuperAdmin && body.tenantId
             ? body.tenantId
-            : (session?.user as any).tenantId;
+            : session.user.tenantId;
 
         const newUser = {
             email: validated.email.toLowerCase().trim(),
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
             role: validated.role,
             activeModules: validated.activeModules || ['TECHNICAL', 'RAG'],
             tenantId: tenantId || process.env.SINGLE_TENANT_ID,
-            industry: body.industry || (session?.user as any).industry || 'ELEVATORS',
+            industry: body.industry || session.user.industry || 'ELEVATORS',
             active: true,
             createdAt: new Date(),
             updatedAt: new Date(),

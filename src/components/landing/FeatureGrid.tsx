@@ -67,7 +67,7 @@ export function FeatureGrid() {
                                 </p>
 
                                 <div className="flex items-center text-white font-bold text-sm group-hover:translate-x-2 transition-transform cursor-pointer">
-                                    Saber más <ArrowRight className="w-4 h-4 ml-2" />
+                                    {t('learn_more')} <ArrowRight className="w-4 h-4 ml-2" />
                                 </div>
                             </div>
                         </div>

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
         if (!query) return NextResponse.json({ error: "Query required" }, { status: 400 });
 
-        const tenantId = (session.user as any).tenantId || 'GLOBAL';
+        const tenantId = session.user.tenantId || 'GLOBAL';
         const correlationId = crypto.randomUUID();
 
         const results = await FederatedKnowledgeService.searchGlobalPatterns(query, tenantId, correlationId, limit || 3);

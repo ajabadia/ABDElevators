@@ -38,7 +38,7 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         // 2. Auth Logic
         // Redirect to dashboard if logged in and trying to access login page
         if (session && pathname === '/login') {
-            return NextResponse.redirect(new URL('/admin/knowledge-assets', request.url));
+            return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
         // Protect admin routes

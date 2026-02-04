@@ -1,0 +1,492 @@
+📊 ANÁLISIS: Workflow Actual vs Workflow Engine Necesario
+✅ LO QUE YA TIENES (de los 6 archivos MD)
+1. Sistema de Roles Básico (Guardian V2)
+
+typescript
+// Actual en tu código
+ROLES = {
+  SUPERADMIN,
+  ADMIN,
+  GESTOR,
+  USUARIO
+}
+✅ Sirve como base pero necesita extenderse con roles verticales
+
+2. Sistema de Permisos
+
+typescript
+enforcePermission(session, "SEARCH_DOCUMENTS")
+enforcePermission(session, "UPLOAD_DOCUMENTS")
+✅ Funciona bien para permisos estáticos, pero no para workflows dinámicos
+
+3. Multi-tenant con tenantId
+
+typescript
+db.collection("searches").find({ tenantId: session.user.tenantId })
+✅ Perfecto - ya tienes aislamiento
+
+❌ LO QUE FALTA PARA WORKFLOW ENGINE
+Componente	Estado Actual	Lo que Necesitas
+Definición de Workflows	❌ No existe	Colección workflows con estados/transiciones configurables
+Instancias de Tareas	❌ No existe	Colección tasks que sigue un workflow específico
+Motor de Transiciones	❌ No existe	Service que valida y ejecuta cambios de estado
+Sistema de Asignaciones	❌ No existe	Lógica para asignar tareas a usuarios/roles
+Trazabilidad de Cambios	❌ No existe	History log de cada transición
+Validaciones Automáticas	❌ No existe	RAG validation antes de avanzar estado
+Notificaciones	❌ No existe	Email/in-app cuando cambia estado
+UI de Gestión de Tareas	❌ No existe	Pantalla de "Mis tareas asignadas"
+Roles Verticales	❌ Solo 4 roles básicos	Necesitas 12+ roles especializados
+🔧 ESTRATEGIA: Evolucionar sin Romper
+Opción A: Evolución Gradual (RECOMENDADO)
+Mantener lo que tienes funcionando y añadir workflow engine como capa adicional.
+
+Paso 1: Extender Roles sin Romper (Semana 1-2)
+typescript
+// src/lib/schemas/roles.ts - NUEVO ARCHIVO
+
+// ✅ Mantener roles actuales
+export const LEGACY_ROLES = {
+  SUPERADMIN: "SUPERADMIN",
+  ADMIN: "ADMIN", 
+  GESTOR: "GESTOR",
+  USUARIO: "USUARIO"
+} as const
+
+// ✅ Añadir nuevos roles (backward compatible)
+export const WORKFLOW_ROLES = {
+  // Administrativos
+  TENANT_ADMIN: "TENANT_ADMIN",
+  ADMIN_FINANCE: "ADMIN_FINANCE",
+  ADMIN_COMPLIANCE: "ADMIN_COMPLIANCE",
+  ADMIN_CONTENT: "ADMIN_CONTENT",
+  
+  // Operativos
+  MANAGER: "MANAGER",
+  REVIEWER: "REVIEWER",
+  OPERATOR: "OPERATOR",
+  USER_BASIC: "USER_BASIC",
+  
+  // Verticales
+  TECHNICIAN: "TECHNICIAN",
+  LAWYER_SENIOR: "LAWYER_SENIOR",
+  LAWYER_JUNIOR: "LAWYER_JUNIOR",
+  CLAIMS_MANAGER: "CLAIMS_MANAGER",
+  DOCTOR: "DOCTOR"
+} as const
+
+// ✅ Unificar (para nuevas features)
+export const ROLES = {
+  ...LEGACY_ROLES,
+  ...WORKFLOW_ROLES
+} as const
+
+// ✅ Mapeo de compatibilidad
+export const ROLE_MAPPING = {
+  "ADMIN": "TENANT_ADMIN",      // ADMIN antiguo → TENANT_ADMIN nuevo
+  "GESTOR": "MANAGER",           // GESTOR antiguo → MANAGER nuevo
+  "USUARIO": "USER_BASIC"        // USUARIO antiguo → USER_BASIC nuevo
+}
+
+export type Role = typeof ROLES[keyof typeof ROLES]
+Migración de usuarios existentes:
+
+typescript
+// Script one-time
+async function migrateRoles() {
+  const users = await db.collection("users").find({}).toArray()
+  
+  for (const user of users) {
+    const newRole = ROLE_MAPPING[user.role] || user.role
+    await db.collection("users").updateOne(
+      { _id: user._id },
+      { $set: { role: newRole, legacyRole: user.role } }
+    )
+  }
+}
+Paso 2: Crear Colecciones Workflow (Semana 3-4)
+typescript
+// src/lib/schemas/workflow.ts - NUEVO ARCHIVO
+
+interface WorkflowDefinition {
+  _id: ObjectId
+  tenantId: string
+  vertical: string
+  name: string
+  version: number
+  states: WorkflowState[]
+  transitions: WorkflowTransition[]
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface TaskInstance {
+  _id: ObjectId
+  tenantId: string
+  workflowId: string
+  currentStateId: string
+  title: string
+  data: Record<string, any>
+  ragResults?: {
+    score: number
+    answer: string
+    sources: any[]
+  }
+  assignedTo?: string
+  assignedRole?: Role
+  history: TaskHistoryEntry[]
+  createdBy: string
+  createdAt: Date
+  updatedAt: Date
+}
+Crear índices:
+
+typescript
+// MongoDB indexes
+db.workflows.createIndex({ tenantId: 1, vertical: 1 })
+db.workflows.createIndex({ tenantId: 1, isActive: 1 })
+db.tasks.createIndex({ tenantId: 1, currentStateId: 1 })
+db.tasks.createIndex({ tenantId: 1, assignedTo: 1 })
+db.tasks.createIndex({ tenantId: 1, workflowId: 1 })
+Paso 3: WorkflowEngine Service (Semana 5-6)
+typescript
+// src/services/workflow-engine.ts - NUEVO ARCHIVO
+
+export class WorkflowEngine {
+  
+  // Ejecutar transición con validaciones
+  async executeTransition(params: {
+    taskId: string
+    transitionId: string
+    performedBy: string
+    comment?: string
+    tenantId: string
+  }) {
+    const { taskId, transitionId, performedBy, comment, tenantId } = params
+    
+    // 1. Cargar tarea actual
+    const task = await db.collection("tasks").findOne({ 
+      _id: new ObjectId(taskId), 
+      tenantId 
+    })
+    if (!task) throw new AppError("TASK_NOT_FOUND", "Tarea no encontrada")
+    
+    // 2. Cargar workflow
+    const workflow = await db.collection("workflows").findOne({ 
+      _id: new ObjectId(task.workflowId), 
+      tenantId 
+    })
+    if (!workflow) throw new AppError("WORKFLOW_NOT_FOUND", "Workflow no encontrado")
+    
+    // 3. Validar transición existe
+    const transition = workflow.transitions.find(t => 
+      t.id === transitionId && 
+      t.fromStateId === task.currentStateId
+    )
+    if (!transition) throw new AppError("INVALID_TRANSITION", "Transición inválida")
+    
+    // 4. Validar permisos del usuario
+    const user = await db.collection("users").findOne({ 
+      _id: new ObjectId(performedBy), 
+      tenantId 
+    })
+    if (!transition.allowedRoles.includes(user.role)) {
+      throw new AppError("UNAUTHORIZED", "No autorizado para esta transición")
+    }
+    
+    // 5. Validar condiciones (ej: RAG score mínimo)
+    if (transition.conditions) {
+      for (const condition of transition.conditions) {
+        await this.validateCondition(condition, task)
+      }
+    }
+    
+    // 6. Ejecutar acciones (ej: notificar)
+    if (transition.actions) {
+      for (const action of transition.actions) {
+        await this.executeAction(action, task, workflow)
+      }
+    }
+    
+    // 7. Actualizar estado de la tarea
+    const historyEntry: TaskHistoryEntry = {
+      timestamp: new Date(),
+      fromStateId: task.currentStateId,
+      toStateId: transition.toStateId,
+      performedBy: performedBy,
+      performedByRole: user.role,
+      comment: comment || null
+    }
+    
+    await db.collection("tasks").updateOne(
+      { _id: new ObjectId(taskId), tenantId },
+      { 
+        $set: { 
+          currentStateId: transition.toStateId,
+          updatedAt: new Date()
+        },
+        $push: { history: historyEntry }
+      }
+    )
+    
+    // 8. Log para auditoría
+    await logEvento({
+      tipoEvento: "WORKFLOW_TRANSITION",
+      nivel: "INFO",
+      tenantId,
+      userId: performedBy,
+      metadata: {
+        taskId,
+        transitionId,
+        fromState: task.currentStateId,
+        toState: transition.toStateId
+      }
+    })
+    
+    return { success: true, newState: transition.toStateId }
+  }
+  
+  // Validar condición (ej: RAG score > 0.7)
+  private async validateCondition(
+    condition: TransitionCondition, 
+    task: TaskInstance
+  ) {
+    switch (condition.type) {
+      case "rag_score":
+        if (!task.ragResults || task.ragResults.score < condition.config.minScore) {
+          throw new AppError(
+            "CONDITION_NOT_MET", 
+            `RAG score debe ser >= ${condition.config.minScore}`
+          )
+        }
+        break
+      case "field_required":
+        if (!task.data[condition.config.fieldName]) {
+          throw new AppError(
+            "CONDITION_NOT_MET", 
+            `Campo ${condition.config.fieldName} es requerido`
+          )
+        }
+        break
+      default:
+        throw new AppError("UNKNOWN_CONDITION", `Condición desconocida: ${condition.type}`)
+    }
+  }
+  
+  // Ejecutar acción (ej: notificar a rol)
+  private async executeAction(
+    action: TransitionAction, 
+    task: TaskInstance,
+    workflow: WorkflowDefinition
+  ) {
+    switch (action.type) {
+      case "notify_role":
+        await this.notifyRole(action.config.role, action.config.message, task)
+        break
+      case "trigger_webhook":
+        await fetch(action.config.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taskId: task._id, workflowId: workflow._id })
+        })
+        break
+      // ... más acciones
+    }
+  }
+}
+Paso 4: APIs de Workflow (Semana 7-8)
+typescript
+// src/app/api/admin/workflows/route.ts - NUEVO
+
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  enforcePermission(session, "VIEW_WORKFLOWS")
+  
+  const workflows = await db.collection("workflows").find({ 
+    tenantId: session.user.tenantId,
+    isActive: true 
+  }).toArray()
+  
+  return NextResponse.json({ workflows })
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  enforcePermission(session, "CREATE_WORKFLOW")
+  
+  const body = await req.json()
+  
+  // Validar schema
+  const workflowSchema = z.object({
+    name: z.string(),
+    vertical: z.enum(["industry", "legal", "insurance", "banking", "healthcare"]),
+    states: z.array(z.any()),
+    transitions: z.array(z.any())
+  })
+  
+  const validated = workflowSchema.parse(body)
+  
+  const workflow: WorkflowDefinition = {
+    _id: new ObjectId(),
+    tenantId: session.user.tenantId,
+    vertical: validated.vertical,
+    name: validated.name,
+    version: 1,
+    states: validated.states,
+    transitions: validated.transitions,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+  
+  await db.collection("workflows").insertOne(workflow)
+  
+  return NextResponse.json({ workflow }, { status: 201 })
+}
+typescript
+// src/app/api/tasks/[taskId]/transition/route.ts - NUEVO
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { taskId: string } }
+) {
+  const session = await getServerSession(authOptions)
+  if (!session) throw new AppError("UNAUTHORIZED", "No autorizado")
+  
+  const body = await req.json()
+  
+  const engine = new WorkflowEngine()
+  const result = await engine.executeTransition({
+    taskId: params.taskId,
+    transitionId: body.transitionId,
+    performedBy: session.user.id,
+    comment: body.comment,
+    tenantId: session.user.tenantId
+  })
+  
+  return NextResponse.json(result)
+}
+Paso 5: UI de Tareas (Semana 9-10)
+typescript
+// src/app/authenticated/tareas/page.tsx - NUEVO
+
+export default async function TasksPage() {
+  const session = await getServerSession(authOptions)
+  
+  // Obtener tareas asignadas al usuario
+  const response = await fetch(`/api/tasks?assignedTo=${session.user.id}`)
+  const { tasks } = await response.json()
+  
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Mis Tareas</h1>
+      
+      <div className="grid gap-4">
+        {tasks.map(task => (
+          <TaskCard key={task._id} task={task} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TaskCard({ task }: { task: TaskInstance }) {
+  const { t } = useVerticalConfig()
+  
+  // Obtener workflow para saber transiciones disponibles
+  const { data: workflow } = useSWR(`/api/workflows/${task.workflowId}`)
+  
+  // Obtener estado actual
+  const currentState = workflow?.states.find(s => s.id === task.currentStateId)
+  
+  // Obtener transiciones disponibles desde estado actual
+  const availableTransitions = workflow?.transitions.filter(
+    t => t.fromStateId === task.currentStateId
+  ) || []
+  
+  const handleTransition = async (transitionId: string) => {
+    const comment = prompt("Comentario (opcional):")
+    
+    await fetch(`/api/tasks/${task._id}/transition`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transitionId, comment })
+    })
+    
+    mutate(`/api/tasks?assignedTo=${session.user.id}`)
+  }
+  
+  return (
+    <div className="card">
+      <div className="card__body">
+        <h3 className="text-xl font-semibold">{task.title}</h3>
+        <p className="text-sm text-gray-500">Estado: {currentState?.label}</p>
+        
+        {task.ragResults && (
+          <div className="mt-2">
+            <p className="text-sm">Score RAG: {task.ragResults.score.toFixed(2)}</p>
+            <p className="text-sm">{task.ragResults.answer}</p>
+          </div>
+        )}
+        
+        <div className="mt-4 flex gap-2">
+          {availableTransitions.map(transition => (
+            <button
+              key={transition.id}
+              className="btn btn--primary"
+              onClick={() => handleTransition(transition.id)}
+            >
+              {transition.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+📊 COMPARATIVA: Antes vs Después
+Aspecto	Antes (Actual)	Después (con Workflow Engine)
+Roles	4 roles fijos	12+ roles configurables por vertical
+Permisos	Estáticos en código	Dinámicos por workflow + rol
+Flujo de trabajo	Implícito en código	Explícito y configurable
+Asignaciones	Manual/ad-hoc	Automáticas por workflow
+Validaciones	En cada endpoint	Centralizadas en WorkflowEngine
+Trazabilidad	Logs básicos	History completo de cada transición
+Notificaciones	No existe	Email + in-app automáticas
+Customización	Requiere código	UI drag-and-drop (fase futura)
+✅ RESPUESTA DIRECTA A TU PREGUNTA
+¿Puedes configurar todo con lo actual?
+❌ NO - El sistema actual no tiene workflow engine
+
+¿Hay que crecerlo o cambiarlo?
+✅ CRECER (no cambiar) - La arquitectura actual es sólida y sirve como base
+
+¿Qué tan grande es el salto?
+📊 Esfuerzo estimado: 8-10 semanas para Workflow Engine básico:
+
+Semana 1-2: Extender roles + migraciones
+
+Semana 3-4: Colecciones + schemas
+
+Semana 5-6: WorkflowEngine service
+
+Semana 7-8: APIs de workflows + tasks
+
+Semana 9-10: UI de gestión de tareas
+
+🎯 RECOMENDACIÓN FINAL
+Implementa Workflow Engine como Fase 2 (próximos 2-3 meses):
+
+✅ Mantén lo actual funcionando (RAG + búsqueda directa)
+
+✅ Añade workflows gradualmente (colecciones + service + APIs)
+
+✅ Convierte tareas comunes en workflows (validación de pedidos, revisión de contratos, etc.)
+
+✅ Ofrece ambos modos al principio:
+
+"Búsqueda directa RAG" (actual)
+
+"Gestión de tareas con workflow" (nuevo)
+
+Una vez tengas Workflow Engine → Puedes escalar a múltiples verticales fácilmente.

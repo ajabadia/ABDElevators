@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
         // Restricción de tenant para no-superadmin
         if (session.user.role !== 'SUPER_ADMIN') {
-            const userTenant = (session.user as any).tenantId;
+            const userTenant = session.user.tenantId;
             if (userTenant) {
                 filter.tenantId = userTenant;
             }

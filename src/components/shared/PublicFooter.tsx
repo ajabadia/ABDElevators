@@ -33,8 +33,9 @@ export function PublicFooter() {
                     <h4 className="text-white font-bold uppercase tracking-widest text-xs">Empresa</h4>
                     <ul className="text-slate-500 text-sm space-y-2">
                         <li className="text-slate-600 cursor-not-allowed">Sobre Nosotros</li>
-                        <li><Link href="/contacto" className="hover:text-teal-400 transition-colors cursor-pointer">{navT('contact')}</Link></li>
+                        <li><Link href="/contact" className="hover:text-teal-400 transition-colors cursor-pointer">{navT('contact')}</Link></li>
                         <li><Link href="/terms" className="hover:text-teal-400 transition-colors cursor-pointer">Legal</Link></li>
+                        <li><Link href="/accessibility" className="hover:text-teal-400 transition-colors cursor-pointer">Accesibilidad</Link></li>
                     </ul>
                 </div>
                 <div className="space-y-4">

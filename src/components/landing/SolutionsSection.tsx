@@ -22,16 +22,19 @@ export function SolutionsSection() {
                         title={solT('s1_title')}
                         description={solT('s1_desc')}
                         image="/solutions-industrial.png"
+                        exploreLabel={solT('explore')}
                     />
                     <SolutionCard
                         title={solT('s2_title')}
                         description={solT('s2_desc')}
                         image="/solutions-legal.png"
+                        exploreLabel={solT('explore')}
                     />
                     <SolutionCard
                         title={solT('s3_title')}
                         description={solT('s3_desc')}
                         image="/solutions-it.png"
+                        exploreLabel={solT('explore')}
                     />
                 </div>
             </div>
@@ -39,7 +42,12 @@ export function SolutionsSection() {
     );
 }
 
-function SolutionCard({ title, description, image }: { title: string; description: string; image: string }) {
+function SolutionCard({ title, description, image, exploreLabel }: {
+    title: string;
+    description: string;
+    image: string;
+    exploreLabel: string;
+}) {
     return (
         <div className="group relative rounded-[2rem] overflow-hidden border border-white/5 bg-slate-900/50 hover:border-teal-500/30 transition-all duration-500">
             <div className="aspect-[16/10] overflow-hidden relative">
@@ -55,7 +63,7 @@ function SolutionCard({ title, description, image }: { title: string; descriptio
                 <h3 className="text-2xl font-bold text-white mb-3 font-outfit">{title}</h3>
                 <p className="text-slate-400 text-sm mb-6 leading-relaxed">{description}</p>
                 <Button variant="ghost" className="p-0 h-auto text-teal-400 hover:text-white hover:bg-transparent font-bold flex items-center gap-2 group/btn">
-                    Explorar Solución <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                    {exploreLabel} <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
             </div>
         </div>

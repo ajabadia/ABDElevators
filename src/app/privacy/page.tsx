@@ -1,150 +1,144 @@
-"use client";
-
-import { Shield, Lock, Database, Eye, FileText, AlertCircle } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
+import { SectionHeading } from "@/components/landing/SectionHeading";
+import { Shield, Lock, Eye, Clock, UserCheck, Mail } from "lucide-react";
 
-export default function PrivacyPolicy() {
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations('privacy');
+    return {
+        title: `${t('title')} | ABD Elevators`,
+        description: t('s1_intro'),
+    };
+}
+
+export default async function PrivacyPolicy() {
+    const t = await getTranslations('privacy');
+
     return (
         <div className="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-200">
             <PublicNavbar />
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-20 px-6">
-                <div className="container mx-auto max-w-4xl">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center">
-                            <Shield className="text-teal-400" size={24} />
+            {/* Background effects */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/5 blur-[120px] rounded-full" />
+            </div>
+
+            <main className="relative z-10 pt-32 pb-24 px-6">
+                <div className="container mx-auto max-w-5xl">
+                    <SectionHeading
+                        badge="Privacy"
+                        title={t('title')}
+                        subtitle={t('updated')}
+                        align="left"
+                    />
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-16">
+                        {/* Summary Sidebar */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/10 backdrop-blur-xl">
+                                <h3 className="text-xl font-bold text-white mb-6 font-outfit">Compromiso Core</h3>
+                                <ul className="space-y-4">
+                                    <li className="flex items-center gap-3 text-slate-400 text-sm">
+                                        <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-400">
+                                            <Lock size={16} />
+                                        </div>
+                                        Cifrado AES-256 en reposo
+                                    </li>
+                                    <li className="flex items-center gap-3 text-slate-400 text-sm">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                            <Shield size={16} />
+                                        </div>
+                                        Aislamiento Multi-tenant
+                                    </li>
+                                    <li className="flex items-center gap-3 text-slate-400 text-sm">
+                                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                            <UserCheck size={16} />
+                                        </div>
+                                        Control Total GDPR
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <h1 className="text-5xl md:text-6xl font-black text-white font-outfit">Privacy Policy</h1>
-                    </div>
-                    <p className="text-slate-400 text-lg mb-8">Última actualización: 23 de enero de 2026</p>
-                    <div className="h-1 w-24 bg-gradient-to-r from-teal-500 to-blue-500 rounded-full"></div>
-                </div>
-            </section>
 
-            {/* Content */}
-            <section className="pb-20 px-6">
-                <div className="container mx-auto max-w-4xl space-y-12">
-
-                    <PolicySection
-                        icon={<Eye size={20} />}
-                        title="1. Información que Recopilamos"
-                        content={
-                            <>
-                                <p className="mb-4">En ABD RAG Platform, recopilamos únicamente la información necesaria para proporcionar nuestros servicios de inteligencia documental:</p>
-                                <ul className="list-disc list-inside space-y-2 text-slate-400">
-                                    <li><strong>Datos de cuenta:</strong> Email, nombre, empresa, rol dentro de la organización</li>
-                                    <li><strong>Documentos técnicos:</strong> PDFs y archivos que subes para análisis RAG</li>
-                                    <li><strong>Metadatos de uso:</strong> Logs de acceso, consultas realizadas, tiempos de respuesta</li>
-                                    <li><strong>Datos de facturación:</strong> Información de pago procesada por terceros certificados (Stripe)</li>
+                        {/* Main Content */}
+                        <div className="lg:col-span-8 space-y-12">
+                            <PolicySection
+                                icon={<Eye className="text-teal-400" />}
+                                title={t('s1_title')}
+                            >
+                                <p className="mb-6">{t('s1_intro')}</p>
+                                <ul className="space-y-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <li key={i} className="flex gap-4">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-2 shrink-0" />
+                                            <div>
+                                                <strong className="text-white block">{t(`s1_f${i}_head` as any)}</strong>
+                                                <span className="text-sm text-slate-400">{t(`s1_f${i}_body` as any)}</span>
+                                            </div>
+                                        </li>
+                                    ))}
                                 </ul>
-                            </>
-                        }
-                    />
+                            </PolicySection>
 
-                    <PolicySection
-                        icon={<Lock size={20} />}
-                        title="2. Cómo Protegemos tus Datos"
-                        content={
-                            <>
-                                <p className="mb-4">Implementamos medidas de seguridad de nivel enterprise:</p>
-                                <ul className="list-disc list-inside space-y-2 text-slate-400">
-                                    <li><strong>Cifrado AES-256:</strong> Todos los documentos se cifran en reposo</li>
-                                    <li><strong>TLS 1.3:</strong> Comunicaciones cifradas de extremo a extremo</li>
-                                    <li><strong>Aislamiento multi-tenant:</strong> Tus datos están físicamente separados de otros clientes</li>
-                                    <li><strong>Auditorías SOC2:</strong> Cumplimiento verificado por terceros independientes</li>
-                                    <li><strong>Backups automáticos:</strong> Replicación geográfica con cifrado</li>
-                                </ul>
-                            </>
-                        }
-                    />
+                            <PolicySection
+                                icon={<Lock className="text-blue-400" />}
+                                title={t('s2_title')}
+                            >
+                                <p className="mb-6">{t('s2_intro')}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-sm">
+                                            {t(`s2_f${i}` as any)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </PolicySection>
 
-                    <PolicySection
-                        icon={<Database size={20} />}
-                        title="3. Uso de tus Datos"
-                        content={
-                            <>
-                                <p className="mb-4">Utilizamos tu información exclusivamente para:</p>
-                                <ul className="list-disc list-inside space-y-2 text-slate-400">
-                                    <li>Proporcionar servicios de análisis RAG y búsqueda semántica</li>
-                                    <li>Mejorar la precisión de nuestros modelos de IA (solo con tu consentimiento explícito)</li>
-                                    <li>Enviar notificaciones críticas sobre el servicio</li>
-                                    <li>Cumplir con obligaciones legales y regulatorias</li>
-                                </ul>
-                                <p className="mt-4 text-amber-400 flex items-start gap-2">
-                                    <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
-                                    <span><strong>Nunca</strong> vendemos, alquilamos o compartimos tus datos con terceros para marketing.</span>
-                                </p>
-                            </>
-                        }
-                    />
-
-                    <PolicySection
-                        icon={<FileText size={20} />}
-                        title="4. Retención de Datos"
-                        content={
-                            <>
-                                <p className="mb-4">Conservamos tus datos según las siguientes políticas:</p>
-                                <ul className="list-disc list-inside space-y-2 text-slate-400">
-                                    <li><strong>Documentos activos:</strong> Mientras tu cuenta esté activa</li>
-                                    <li><strong>Logs de auditoría:</strong> 7 años (cumplimiento normativo)</li>
-                                    <li><strong>Datos de facturación:</strong> 10 años (requisitos fiscales)</li>
-                                    <li><strong>Tras cancelación:</strong> 30 días de gracia, luego eliminación permanente</li>
-                                </ul>
-                                <p className="mt-4 text-slate-400">Puedes solicitar la eliminación inmediata de tus datos en cualquier momento contactando a <a href="mailto:privacy@abdrag.com" className="text-teal-400 hover:underline">privacy@abdrag.com</a></p>
-                            </>
-                        }
-                    />
-
-                    <PolicySection
-                        icon={<Shield size={20} />}
-                        title="5. Tus Derechos (GDPR)"
-                        content={
-                            <>
-                                <p className="mb-4">Bajo el GDPR y normativas similares, tienes derecho a:</p>
-                                <ul className="list-disc list-inside space-y-2 text-slate-400">
-                                    <li><strong>Acceso:</strong> Solicitar una copia de todos tus datos</li>
-                                    <li><strong>Rectificación:</strong> Corregir información incorrecta</li>
-                                    <li><strong>Eliminación:</strong> Solicitar el borrado completo ("derecho al olvido")</li>
-                                    <li><strong>Portabilidad:</strong> Exportar tus datos en formato estructurado</li>
-                                    <li><strong>Oposición:</strong> Rechazar ciertos usos de tus datos</li>
-                                </ul>
-                                <p className="mt-4 text-slate-400">Para ejercer estos derechos, contacta a nuestro DPO: <a href="mailto:dpo@abdrag.com" className="text-teal-400 hover:underline">dpo@abdrag.com</a></p>
-                            </>
-                        }
-                    />
-
-                    {/* Contact CTA */}
-                    <div className="mt-16 p-8 bg-white/5 border border-white/10 rounded-3xl">
-                        <h3 className="text-2xl font-bold text-white mb-4">¿Tienes preguntas sobre privacidad?</h3>
-                        <p className="text-slate-400 mb-6">Nuestro equipo de seguridad está disponible para resolver cualquier duda.</p>
-                        <Button className="bg-teal-600 hover:bg-teal-500 text-white font-bold">
-                            Contactar con Seguridad
-                        </Button>
+                            <PolicySection
+                                icon={<Clock className="text-amber-400" />}
+                                title={t('s4_title')}
+                            >
+                                <p className="mb-6">{t('s4_intro')}</p>
+                                <div className="space-y-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="flex justify-between items-center p-4 rounded-xl bg-slate-900 border border-white/5">
+                                            <span className="text-white font-medium">{t(`s4_f${i}_head` as any)}</span>
+                                            <span className="text-xs text-slate-500 uppercase tracking-widest">{t(`s4_f${i}_body` as any)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 p-6 rounded-2xl bg-teal-500/5 border border-teal-500/10 flex gap-4 items-center">
+                                    <Mail className="text-teal-400" />
+                                    <p className="text-sm text-slate-400">
+                                        {t('s4_contact')} <span className="text-white font-bold">dpo@abdelevators.com</span>
+                                    </p>
+                                </div>
+                            </PolicySection>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </main>
 
             <PublicFooter />
         </div>
     );
 }
 
-function PolicySection({ icon, title, content }: { icon: React.ReactNode; title: string; content: React.ReactNode }) {
+function PolicySection({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
     return (
-        <div className="group">
-            <div className="flex items-start gap-4 mb-4">
-                <div className="mt-1 p-2 bg-teal-500/10 rounded-lg text-teal-400 group-hover:scale-110 transition-transform">
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-lg">
                     {icon}
                 </div>
-                <h2 className="text-2xl font-bold text-white">{title}</h2>
+                <h2 className="text-3xl font-bold text-white font-outfit tracking-tight">{title}</h2>
             </div>
-            <div className="pl-14 text-slate-300 leading-relaxed">
-                {content}
+            <div className="text-slate-400 leading-relaxed pl-1">
+                {children}
             </div>
-        </div>
+        </section>
     );
 }

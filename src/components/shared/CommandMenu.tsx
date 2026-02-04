@@ -52,6 +52,7 @@ export function CommandMenu() {
         <>
             <button
                 onClick={() => setOpen(true)}
+                data-tour="global-search"
                 className="hidden lg:flex items-center gap-2 px-3 py-2 min-w-[300px] text-sm text-slate-500 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-teal-500/50 hover:bg-white dark:hover:bg-slate-800 transition-all group shadow-sm"
             >
                 <Search size={16} className="text-slate-400 group-hover:text-teal-500 transition-colors" />

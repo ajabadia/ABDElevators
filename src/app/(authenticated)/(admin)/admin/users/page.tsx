@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserCog, KeyRound, Mail, Plus, Shield } from "lucide-react";
+import { Plus, Mail, Shield, UserCog, KeyRound, Upload } from "lucide-react";
 import { InviteUserModal } from "@/components/admin/InviteUserModal";
+import { BulkInviteModal } from "@/components/admin/BulkInviteModal";
 import { useSession } from "next-auth/react";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
+import { useTranslations } from "next-intl";
 
 // Nuevos componentes y hooks genéricos
 import { useApiList } from "@/hooks/useApiList";
@@ -34,6 +36,7 @@ interface User {
 }
 
 export default function UsuariosPage() {
+    const t = useTranslations("admin.users");
     const { data: session } = useSession();
     const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
     const [isMounted, setIsMounted] = useState(false);
@@ -58,6 +61,7 @@ export default function UsuariosPage() {
     // 2. Modales con hook genérico
     const createModal = useFormModal();
     const inviteModal = useFormModal();
+    const bulkInviteModal = useFormModal();
     const editModal = useFormModal<User>();
 
     useEffect(() => {
@@ -74,24 +78,24 @@ export default function UsuariosPage() {
             return true;
         }),
         {
-            header: "Seguridad",
+            header: t("table.security"),
             accessorKey: "mfaEnabled", // Para sort
             cell: (u: User) => (
                 <div className="flex items-center gap-2">
                     {u.mfaEnabled ? (
                         <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full text-xs font-medium border border-emerald-100">
-                            <Shield className="w-3 h-3" /> MFA Activo
+                            <Shield className="w-3 h-3" /> {t("table.mfa_active")}
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-1 rounded-full text-xs font-medium border border-slate-100">
-                            <Shield className="w-3 h-3 grayscale opacity-50" /> Sin MFA
+                            <Shield className="w-3 h-3 grayscale opacity-50" /> {t("table.no_mfa")}
                         </div>
                     )}
                 </div>
             )
         },
         {
-            header: "Acciones",
+            header: t("table.actions"),
             cell: (u: User) => (
                 <div className="flex items-center gap-1">
                     <Button
@@ -118,9 +122,9 @@ export default function UsuariosPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Gestión de Usuarios"
-                highlight="Usuarios"
-                subtitle={`Administra usuarios y permisos ${isSuperAdmin ? 'globales' : 'de tu organización'}`}
+                title={t("title")}
+                highlight={t("highlight")}
+                subtitle={isSuperAdmin ? t("subtitle_global") : t("subtitle_org")}
                 actions={isMounted && (
                     <>
                         <Button
@@ -129,14 +133,22 @@ export default function UsuariosPage() {
                             className="border-teal-200 text-teal-700 hover:bg-teal-50"
                         >
                             <Mail className="mr-2 h-4 w-4" />
-                            Invitar Usuario
+                            {t("invite")}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => bulkInviteModal.openCreate()}
+                            className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            {t("bulk_invite")}
                         </Button>
                         <Button
                             onClick={() => createModal.openCreate()}
                             className="bg-teal-600 hover:bg-teal-700"
                         >
                             <Plus className="mr-2 h-4 w-4" />
-                            Crear Manualmente
+                            {t("create_manual")}
                         </Button>
                     </>
                 )}
@@ -144,9 +156,11 @@ export default function UsuariosPage() {
 
             <ContentCard noPadding={true}>
                 <CardHeader className="border-b border-slate-100 dark:border-slate-800">
-                    <CardTitle>Usuarios Registrados</CardTitle>
+                    <CardTitle>{t("registered_title")}</CardTitle>
                     <CardDescription>
-                        {users?.length || 0} usuario{(users?.length || 0) !== 1 ? 's' : ''} {isSuperAdmin ? 'accesibles' : 'en tu entidad'}
+                        {isSuperAdmin
+                            ? t("registered_desc_global", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })
+                            : t("registered_desc", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -154,7 +168,7 @@ export default function UsuariosPage() {
                         data={users || []}
                         columns={columns}
                         isLoading={isLoading}
-                        emptyMessage="No se encontraron usuarios registrados."
+                        emptyMessage={t("empty_message")}
                     />
                 </CardContent>
             </ContentCard>
@@ -190,6 +204,15 @@ export default function UsuariosPage() {
                 onSuccess={() => {
                     refresh();
                     inviteModal.close();
+                }}
+            />
+
+            <BulkInviteModal
+                open={bulkInviteModal.isOpen}
+                onClose={() => bulkInviteModal.close()}
+                onSuccess={() => {
+                    refresh();
+                    bulkInviteModal.close();
                 }}
             />
         </PageContainer>

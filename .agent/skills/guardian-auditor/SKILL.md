@@ -39,6 +39,12 @@ Analiza los argumentos de las funciones de protección:
 - **Environment**: Verifica que las operaciones de escritura incluyan el campo `environment` (Phase 59/72).
 - **Punto Crítico**: No basta con tener permiso si luego se puede acceder a datos de otro tenant o entorno no autorizado.
 
+### 4. Integración con Rutas Públicas (Bypass)
+Si el archivo es una ruta de marketing o pública (ej: `/terms`, `/privacy`):
+1. **Validación de Datos**: Asegura que el archivo NO importe modelos de DB sensibles o realice queries sin filtrar.
+2. **API Safety**: Verifica que no llame a Server Actions administrativas sin protección.
+3. **Status**: El status debe ser `[PUBLIC_BYPASS]` si es seguro, o `[VULNERABLE]` si expone lógica interna.
+
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: Si detectas un endpoint sin protección de permisos que maneje datos sensibles o configuración -> **ERROR CRÍTICO**.
 - **ELIMINAR LITERALES**: Toda mención a roles en código debe ser vía el Enum `UserRole`. No aceptes PRs con strings como "SUPER_ADMIN" o "TECNICO".
@@ -47,9 +53,9 @@ Analiza los argumentos de las funciones de protección:
 - **SLA**: Las auditorías de seguridad deben ser precisas y no dejar lugar a ambigüedad.
 
 ## Output (formato exacto)
-1. **Status de Seguridad**: `[PROTEGIDO | VULNERABLE | PARCIAL]`.
-2. **Cumplimiento Fase 70**: `[SI | NO]` (¿Usa UserRole enum y requireRole?).
-3. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/RBAC/Tenant)" y "Gravedad".
+1. **Status de Seguridad**: `[PROTEGIDO | VULNERABLE | PARCIAL | PUBLIC_BYPASS]`.
+2. **Cumplimiento Fase 70**: `[SI | NO | N/A]`.
+3. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/RBAC/Tenant/PublicLeak)" y "Gravedad".
 4. **Corrección Sugerida**: Código necesario para cerrar la brecha detectada siguiendo los patrones de Phase 70.
 
 ## Manejo de Errores

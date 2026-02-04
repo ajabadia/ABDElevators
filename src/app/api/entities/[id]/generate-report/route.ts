@@ -29,7 +29,7 @@ export async function POST(
         }
 
         const { id: entityId } = await params;
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const db = await connectDB();
 
@@ -203,7 +203,7 @@ export async function GET(
         }
 
         const { id: entityId } = await params;
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
 
         const db = await connectDB();
 

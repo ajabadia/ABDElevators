@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, Zap, Rocket, Building2, ArrowRight, Loader2 } from 'lucide-react';
 import { PLANS, PlanTier } from '@/lib/plans';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 export default function UpgradePage() {
+    const t = useTranslations('upgrade');
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
     const [loading, setLoading] = useState<string | null>(null);
     const { toast } = useToast();
@@ -15,8 +17,8 @@ export default function UpgradePage() {
     const handleUpgrade = async (tier: PlanTier) => {
         if (tier === 'FREE') {
             toast({
-                title: 'Ya estás en el plan Free',
-                description: 'Selecciona Pro o Enterprise para actualizar.',
+                title: t('toast_current'),
+                description: t('toast_current_desc'),
                 variant: 'default',
             });
             return;
@@ -35,7 +37,7 @@ export default function UpgradePage() {
                     : process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_YEARLY;
 
             if (!priceId) {
-                throw new Error('Price ID not configured');
+                throw new Error(t('error_price_missing'));
             }
 
             const res = await fetch('/api/billing/create-checkout', {
@@ -47,15 +49,15 @@ export default function UpgradePage() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.message || 'Error al crear sesión de pago');
+                throw new Error(data.message || t('error_checkout'));
             }
 
             // Redirigir a Stripe Checkout
             window.location.href = data.checkoutUrl;
         } catch (error: any) {
             toast({
-                title: 'Error',
-                description: error.message || 'No se pudo iniciar el proceso de pago.',
+                title: t('error_title'),
+                description: error.message || t('error_checkout'),
                 variant: 'destructive',
             });
             setLoading(null);
@@ -85,15 +87,15 @@ export default function UpgradePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-20 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-20 px-4 font-outfit">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-16">
                     <h1 className="text-5xl font-black text-white mb-4 tracking-tight">
-                        Elige tu <span className="text-teal-500">Plan</span>
+                        {t('title')} <span className="text-teal-500">{t('title_accent')}</span>
                     </h1>
                     <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                        Escala tu plataforma RAG con los recursos que necesitas. Sin compromisos, cancela cuando quieras.
+                        {t('subtitle')}
                     </p>
 
                     {/* Billing Period Toggle */}
@@ -101,22 +103,22 @@ export default function UpgradePage() {
                         <button
                             onClick={() => setBillingPeriod('monthly')}
                             className={`px-6 py-2 rounded-lg font-semibold transition-all ${billingPeriod === 'monthly'
-                                    ? 'bg-teal-600 text-white shadow-lg'
-                                    : 'text-slate-400 hover:text-white'
+                                ? 'bg-teal-600 text-white shadow-lg'
+                                : 'text-slate-400 hover:text-white'
                                 }`}
                         >
-                            Mensual
+                            {t('monthly')}
                         </button>
                         <button
                             onClick={() => setBillingPeriod('yearly')}
                             className={`px-6 py-2 rounded-lg font-semibold transition-all relative ${billingPeriod === 'yearly'
-                                    ? 'bg-teal-600 text-white shadow-lg'
-                                    : 'text-slate-400 hover:text-white'
+                                ? 'bg-teal-600 text-white shadow-lg'
+                                : 'text-slate-400 hover:text-white'
                                 }`}
                         >
-                            Anual
+                            {t('yearly')}
                             <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                                -17%
+                                {t('discount')}
                             </span>
                         </button>
                     </div>
@@ -138,7 +140,7 @@ export default function UpgradePage() {
                             >
                                 {isPopular && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-teal-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                                        Más Popular
+                                        {t('popular')}
                                     </div>
                                 )}
 
@@ -153,16 +155,16 @@ export default function UpgradePage() {
                                 {/* Price */}
                                 <div className="mb-6">
                                     {price === 0 ? (
-                                        <div className="text-4xl font-black text-white">Gratis</div>
+                                        <div className="text-4xl font-black text-white">{t('free_plan')}</div>
                                     ) : (
                                         <>
                                             <div className="text-4xl font-black text-white">
                                                 ${pricePerMonth.toFixed(0)}
-                                                <span className="text-lg font-normal text-slate-400">/mes</span>
+                                                <span className="text-lg font-normal text-slate-400">{t('per_month')}</span>
                                             </div>
                                             {billingPeriod === 'yearly' && (
                                                 <div className="text-sm text-slate-500 mt-1">
-                                                    Facturado ${price}/año
+                                                    {t('billed_yearly', { price })}
                                                 </div>
                                             )}
                                         </>
@@ -173,7 +175,7 @@ export default function UpgradePage() {
                                 <ul className="space-y-3 mb-8">
                                     {plan.features.map((feature, idx) => (
                                         <li key={idx} className="flex items-start gap-3 text-slate-300">
-                                            <Check className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                                            <Check className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
                                             <span className="text-sm">{feature}</span>
                                         </li>
                                     ))}
@@ -188,7 +190,7 @@ export default function UpgradePage() {
                                                     ? '∞'
                                                     : `${(plan.limits.llm_tokens_per_month / 1000).toLocaleString()}k`}
                                             </strong>{' '}
-                                            tokens/mes
+                                            {t('tokens')}
                                         </div>
                                         <div>
                                             <strong className="text-white">
@@ -196,7 +198,7 @@ export default function UpgradePage() {
                                                     ? '∞'
                                                     : `${Math.round(plan.limits.storage_bytes / (1024 * 1024 * 1024))}GB`}
                                             </strong>{' '}
-                                            storage
+                                            {t('storage')}
                                         </div>
                                         <div>
                                             <strong className="text-white">
@@ -204,7 +206,7 @@ export default function UpgradePage() {
                                                     ? '∞'
                                                     : plan.limits.vector_searches_per_month.toLocaleString()}
                                             </strong>{' '}
-                                            búsquedas/mes
+                                            {t('searches')}
                                         </div>
                                     </div>
                                 </div>
@@ -214,22 +216,22 @@ export default function UpgradePage() {
                                     onClick={() => handleUpgrade(tier)}
                                     disabled={loading === tier || tier === 'FREE'}
                                     className={`w-full py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${tier === 'FREE'
-                                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                                            : isPopular
-                                                ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:shadow-lg hover:shadow-teal-500/50'
-                                                : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
+                                        ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                        : isPopular
+                                            ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:shadow-lg hover:shadow-teal-500/50'
+                                            : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
                                         }`}
                                 >
                                     {loading === tier ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Procesando...
+                                            {t('updating')}
                                         </>
                                     ) : tier === 'FREE' ? (
-                                        'Plan Actual'
+                                        t('current_plan')
                                     ) : (
                                         <>
-                                            Actualizar a {plan.name}
+                                            {t('upgrade_btn', { name: plan.name })}
                                             <ArrowRight className="w-5 h-5" />
                                         </>
                                     )}
@@ -241,18 +243,19 @@ export default function UpgradePage() {
 
                 {/* FAQ Section */}
                 <div className="mt-20 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">¿Tienes preguntas?</h2>
+                    <h2 className="text-3xl font-bold text-white mb-4">{t('faq_title')}</h2>
                     <p className="text-slate-400 mb-8">
-                        Contáctanos en{' '}
+                        {t('faq_desc')}{' '}
                         <a href="mailto:support@abdrag.com" className="text-teal-500 hover:underline">
                             support@abdrag.com
                         </a>
                     </p>
                     <button
                         onClick={() => router.push('/admin/billing')}
-                        className="text-slate-400 hover:text-white transition-colors"
+                        className="text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto"
                     >
-                        ← Volver al Dashboard
+                        <ArrowRight className="w-4 h-4 rotate-180" />
+                        {t('back_dashboard')}
                     </button>
                 </div>
             </div>

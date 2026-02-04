@@ -13,7 +13,7 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
         return { success: false, error: 'Unauthorized' };
     }
 
-    const tenantId = (session.user as any).tenantId;
+    const tenantId = session.user.tenantId;
 
     try {
         const result = await ApiKeyService.createApiKey(
@@ -38,7 +38,7 @@ export async function revokeApiKey(keyId: string) {
         return { success: false, error: 'Unauthorized' };
     }
 
-    const tenantId = (session.user as any).tenantId;
+    const tenantId = session.user.tenantId;
 
     try {
         await ApiKeyService.revokeApiKey(keyId, tenantId);
@@ -55,7 +55,7 @@ export async function getApiKeys() {
         throw new Error('Unauthorized');
     }
 
-    const tenantId = (session.user as any).tenantId;
+    const tenantId = session.user.tenantId;
     const db = await connectDB();
 
     const keys = await db.collection('api_keys')

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenantId = (session.user as any).tenantId;
+        const tenantId = session.user.tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }

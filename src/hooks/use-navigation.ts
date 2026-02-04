@@ -14,9 +14,7 @@ export function useNavigation() {
             items: section.items.map(item => {
                 // Resolver href dinámico para Dashboard
                 if (item.name === 'Dashboard') {
-                    const dynamicHref = (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) ? '/admin' :
-                        (userRole === UserRole.ENGINEERING ? '/admin/knowledge-assets' : '/entities');
-                    return { ...item, href: dynamicHref };
+                    return { ...item, href: '/dashboard' };
                 }
                 return item;
             }).filter(item => {
