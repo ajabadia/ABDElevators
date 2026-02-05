@@ -95,14 +95,50 @@ export class WorkflowEngine {
             try {
                 switch (action.type) {
                     case 'branch':
-                        // Simple evaluation: if label contains 'critical' and data has high risk, or any metadata match
                         const criteria = action.params.criteria || {};
                         const risk = data.riskScore || data.score || 0;
+                        const confidence = data.confidenceScore || 1;
 
-                        // Basic logic for demonstration
-                        if (risk > 75 || String(action.params.label).toLowerCase().includes('critical')) {
+                        // RAG-Driven: evaluate confidence if present
+                        const threshold = criteria.confidenceThreshold || 0.7;
+
+                        if (confidence < threshold) {
+                            console.log(`[WorkflowEngine] Branching: LOW CONFIDENCE path detected (${confidence} < ${threshold})`);
+                        } else if (risk > 75 || String(action.params.label).toLowerCase().includes('critical')) {
                             console.log(`[WorkflowEngine] Branching: CRITICAL path taken for ${workflowId}`);
                         }
+                        break;
+
+                    case 'human_task':
+                        const taskCollection = await getTenantCollection('workflow_tasks', { user: { tenantId } });
+                        const taskPayload = {
+                            tenantId,
+                            caseId: data._id || data.id || data.caseId || 'unlinked-case',
+                            type: action.params.taskType || 'DOCUMENT_REVIEW',
+                            title: action.params.title || 'Validación requerida por Workflow',
+                            description: action.params.description || `Se requiere revisión humana para el flujo ${workflowId}. Motivo: ${data.reason || 'Análisis RAG crítico'}`,
+                            assignedRole: action.params.assignedRole || 'ADMIN',
+                            status: 'PENDING',
+                            priority: action.params.priority || 'MEDIUM',
+                            metadata: {
+                                correlationId,
+                                workflowId,
+                                triggerData: data,
+                                nodeLabel: action.params.label,
+                                checklistConfigId: action.params.checklistConfigId // New: Link to business rules
+                            },
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        };
+                        await taskCollection.insertOne(taskPayload);
+                        await logEvento({
+                            level: 'INFO',
+                            source: 'WORKFLOW_ENGINE',
+                            action: 'HUMAN_TASK_CREATED',
+                            message: `Manual task generated for case ${taskPayload.caseId}`,
+                            correlationId,
+                            details: { workflowId, taskId: taskPayload.caseId }
+                        });
                         break;
 
                     case 'delay':

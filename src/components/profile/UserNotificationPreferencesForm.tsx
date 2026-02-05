@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Mail, Bell, Save, ShieldAlert, FileText, CheckCircle, CreditCard, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface UserPreference {
     type: string;
@@ -15,12 +16,12 @@ interface UserPreference {
     inApp: boolean;
 }
 
-const EVENT_LABELS: Record<string, { label: string, icon: any }> = {
-    SYSTEM: { label: 'Mensajes del Sistema', icon: FileText },
-    ANALYSIS_COMPLETE: { label: 'Análisis Finalizados', icon: CheckCircle },
-    RISK_ALERT: { label: 'Alertas de Riesgo', icon: ShieldAlert },
-    BILLING_EVENT: { label: 'Facturación y Cuotas', icon: CreditCard },
-    SECURITY_ALERT: { label: 'Seguridad y Accesos', icon: Lock }
+const EVENT_LABELS: Record<string, { labelKey: string, icon: any }> = {
+    SYSTEM: { labelKey: 'events.system', icon: FileText },
+    ANALYSIS_COMPLETE: { labelKey: 'events.analysisComplete', icon: CheckCircle },
+    RISK_ALERT: { labelKey: 'events.riskAlert', icon: ShieldAlert },
+    BILLING_EVENT: { labelKey: 'events.billingEvent', icon: CreditCard },
+    SECURITY_ALERT: { labelKey: 'events.securityAlert', icon: Lock }
 };
 
 interface UserData {
@@ -28,6 +29,8 @@ interface UserData {
 }
 
 export function UserNotificationPreferencesForm() {
+    const t = useTranslations('profile.notifications');
+    const tCommon = useTranslations('common');
     const { toast } = useToast();
     const [preferences, setPreferences] = useState<UserPreference[]>([]);
     const [loading, setLoading] = useState(true);
@@ -67,21 +70,21 @@ export function UserNotificationPreferencesForm() {
 
             if (res.ok) {
                 toast({
-                    title: "Preferencias actualizadas",
-                    description: "Tus ajustes de comunicación se han guardado correctamente.",
+                    title: t('successTitle'),
+                    description: t('successDescription'),
                 });
             } else {
                 toast({
                     variant: "destructive",
-                    title: "Error",
-                    description: "No se pudieron guardar tus preferencias.",
+                    title: tCommon('error'),
+                    description: t('errorSave'),
                 });
             }
         } catch (e) {
             toast({
                 variant: "destructive",
-                title: "Error de conexión",
-                description: "Ocurrió un problema al conectar con el servidor.",
+                title: tCommon('connectionError'),
+                description: t('errorConnection'),
             });
         } finally {
             setSaving(false);
@@ -96,15 +99,15 @@ export function UserNotificationPreferencesForm() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                            <TableHead className="w-[40%]">Tipo de Evento</TableHead>
+                            <TableHead className="w-[40%]">{t('eventType')}</TableHead>
                             <TableHead className="text-center">
                                 <span className="flex items-center justify-center gap-2">
-                                    <Mail size={14} className="text-slate-400" /> Correo
+                                    <Mail size={14} className="text-slate-400" /> {t('email')}
                                 </span>
                             </TableHead>
                             <TableHead className="text-center">
                                 <span className="flex items-center justify-center gap-2">
-                                    <Bell size={14} className="text-slate-400" /> App
+                                    <Bell size={14} className="text-slate-400" /> {t('inApp')}
                                 </span>
                             </TableHead>
                         </TableRow>
@@ -121,7 +124,9 @@ export function UserNotificationPreferencesForm() {
                                                 <Icon size={16} className="text-slate-500" />
                                             </div>
                                             <div>
-                                                <p className="font-medium text-sm text-slate-900 dark:text-white">{info.label}</p>
+                                                <p className="font-medium text-sm text-slate-900 dark:text-white">
+                                                    {t(info.labelKey)}
+                                                </p>
                                                 <p className="text-[10px] text-slate-400 uppercase tracking-wider">{p.type}</p>
                                             </div>
                                         </div>
@@ -149,7 +154,7 @@ export function UserNotificationPreferencesForm() {
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                     <Button onClick={handleSave} disabled={saving} className="gap-2 bg-teal-600 hover:bg-teal-700 text-white">
                         <Save size={16} />
-                        {saving ? 'Guardando...' : 'Guardar Preferencias'}
+                        {saving ? tCommon('saving') : t('saveBtn')}
                     </Button>
                 </div>
             </CardContent>

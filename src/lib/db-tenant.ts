@@ -59,7 +59,9 @@ export class SecureCollection<T extends Document> {
         const accessList = (session?.user?.tenantAccess || []).map((a: any) => a.tenantId);
         this.allowedTenants = Array.from(new Set([this.primaryTenantId, ...accessList])).filter(Boolean);
 
-        if (this.isSuperAdmin && !session?.user?.tenantId) {
+        // Si es SuperAdmin y no tiene un tenant fijo asignado, permitimos acceso global "platform_master"
+        // Si tiene uno (ej: aprovisionado), mantendremos isSuperAdmin=true para que el filtro lo libere después.
+        if (this.isSuperAdmin && (!session?.user?.tenantId || session?.user?.tenantId === 'unknown')) {
             this.primaryTenantId = 'platform_master';
         }
     }
@@ -71,7 +73,8 @@ export class SecureCollection<T extends Document> {
         let baseFilter: Filter<T> = { ...filter };
 
         // 1. Aislamiento Multi-tenant
-        if (!(this.isSuperAdmin && this.primaryTenantId === 'platform_master')) {
+        // El SuperAdmin (Auditoría 015) bypassea el filtro de tenant para gestión global
+        if (!this.isSuperAdmin) {
             if (this.allowedTenants.length > 1) {
                 baseFilter = { ...baseFilter, tenantId: { $in: this.allowedTenants } } as any;
             } else {
@@ -151,6 +154,13 @@ export class SecureCollection<T extends Document> {
 
     async findOneAndUpdate(filter: Filter<T>, update: UpdateFilter<T>, options: FindOneAndUpdateOptions = {}) {
         return this.collection.findOneAndUpdate(this.applyTenantFilter(filter), update, options);
+    }
+
+    async bulkWrite(operations: any[], options?: BulkWriteOptions) {
+        // Warning: this doesn't automatically apply tenantId to inserts in bulkWrite
+        // unless they are explicitly part of the operations. 
+        // For i18n sync, we handle this in the service.
+        return this.collection.bulkWrite(operations, options);
     }
 
     // --- DELETE OPERATIONS (SOFT BY DEFAULT) ---
@@ -239,7 +249,7 @@ export async function getTenantCollection<T extends Document>(
     }
 
     // Attempted access without valid session
-    const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado (User: ${!!session?.user})`;
+    const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado (User: ${!!session?.user}, SINGLE_TENANT_ID: ${process.env.SINGLE_TENANT_ID || 'missing'})`;
     console.error(`[SECURITY ALERT] ${errorMsg}`);
     throw new AppError('UNAUTHORIZED', 401, errorMsg);
 }

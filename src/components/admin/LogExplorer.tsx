@@ -139,10 +139,10 @@ export default function LogExplorer() {
 
     const getLevelBadge = (level: string) => {
         switch (level) {
-            case 'ERROR': return <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20 gap-1"><AlertCircle size={10} /> ERROR</Badge>;
-            case 'WARN': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 gap-1"><AlertTriangle size={10} /> WARN</Badge>;
-            case 'INFO': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20 gap-1"><Info size={10} /> INFO</Badge>;
-            default: return <Badge variant="outline" className="text-slate-500"><Activity size={10} className="mr-1" /> DEBUG</Badge>;
+            case 'ERROR': return <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20 gap-1"><AlertCircle size={10} /> {t('levels.error')}</Badge>;
+            case 'WARN': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 gap-1"><AlertTriangle size={10} /> {t('levels.warn')}</Badge>;
+            case 'INFO': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20 gap-1"><Info size={10} /> {t('levels.info')}</Badge>;
+            default: return <Badge variant="outline" className="text-slate-500"><Activity size={10} className="mr-1" /> {t('levels.debug')}</Badge>;
         }
     };
 
@@ -256,7 +256,7 @@ export default function LogExplorer() {
                                 viewMode === 'AUDIT' && "opacity-30 cursor-not-allowed"
                             )}
                         >
-                            {l}
+                            {l === 'ALL' ? t('levels.all') : l}
                         </button>
                     ))}
                 </div>
@@ -315,7 +315,7 @@ export default function LogExplorer() {
                                 </div>
                                 <div className="col-span-2 text-right">
                                     <Badge variant="outline" className="text-[9px] h-5 border-slate-200 dark:border-slate-800 text-slate-400 font-mono">
-                                        {(log.tenantId || 'SYSTEM').substring(0, 12)}
+                                        {(log.tenantId || t('table.system')).substring(0, 12)}
                                     </Badge>
                                 </div>
                             </div>
@@ -344,7 +344,7 @@ export default function LogExplorer() {
                                     </div>
                                     <div className="col-span-3 flex flex-col">
                                         <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{audit.promptName || `ID: ${audit.tenantId}`}</span>
-                                        <span className="text-[10px] text-teal-600 font-medium truncate italic">{audit.performedBy || 'Sistema'}</span>
+                                        <span className="text-[10px] text-teal-600 font-medium truncate italic">{audit.performedBy || t('table.system')}</span>
                                     </div>
                                     <div className="col-span-3 text-slate-400 text-[10px] flex flex-col gap-0.5">
                                         <div className="flex items-center gap-1"><Server size={8} /> IP: <span className="font-mono">{audit.ip || '0.0.0.0'}</span></div>
@@ -424,7 +424,7 @@ export default function LogExplorer() {
                         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <Badge className={cn("text-[9px]", getAuditActionDetails(selectedAudit.action).color)}>AUDIT LOG</Badge>
+                                    <Badge className={cn("text-[9px]", getAuditActionDetails(selectedAudit.action).color)}>{t('badges.audit_log')}</Badge>
                                     <h3 className="font-black text-sm uppercase tracking-tight text-slate-900 dark:text-white">{t('detail.integrity')}</h3>
                                 </div>
                                 <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedAudit._id}</p>
@@ -438,24 +438,24 @@ export default function LogExplorer() {
                             {/* Extended Metadata Grid */}
                             <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
                                 <div className="space-y-1">
-                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Calendar size={10} /> Timestamp</p>
+                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Calendar size={10} /> {t('table.timestamp')}</p>
                                     <p className="text-xs font-bold leading-none">{new Date(selectedAudit.timestamp).toLocaleTimeString()}</p>
                                     <p className="text-[10px] text-slate-400">{new Date(selectedAudit.timestamp).toLocaleDateString()}</p>
                                 </div>
                                 <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
-                                    <p className="text-[9px] uppercase font-black text-teal-600 flex items-center gap-1"><Info size={10} /> Responsable</p>
-                                    <p className="text-xs font-bold truncate" title={selectedAudit.performedBy}>{selectedAudit.performedBy || 'Sistema'}</p>
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Admin Auth</p>
+                                    <p className="text-[9px] uppercase font-black text-teal-600 flex items-center gap-1"><Info size={10} /> {t('detail.responsable')}</p>
+                                    <p className="text-xs font-bold truncate" title={selectedAudit.performedBy}>{selectedAudit.performedBy || t('table.system')}</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">{t('detail.admin_auth')}</p>
                                 </div>
                                 <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
-                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Server size={10} /> IP Origen</p>
+                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Server size={10} /> {t('detail.ip_origin')}</p>
                                     <p className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">{selectedAudit.ip || '0.0.0.0'}</p>
-                                    <p className="text-[9px] text-teal-500 font-bold">SECURE_AGENT</p>
+                                    <p className="text-[9px] text-teal-500 font-bold">{t('detail.secure_agent')}</p>
                                 </div>
                                 <div className="space-y-1 border-l pl-4 border-slate-200 dark:border-slate-800">
-                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Activity size={10} /> Correlación</p>
+                                    <p className="text-[9px] uppercase font-black text-slate-400 flex items-center gap-1"><Activity size={10} /> {t('detail.correlation')}</p>
                                     <p className="text-xs font-mono truncate text-slate-500" title={selectedAudit.correlationId}>{selectedAudit.correlationId?.substring(0, 16) || 'N/A'}</p>
-                                    <button className="text-[9px] text-blue-500 font-bold hover:underline">Ver Trace</button>
+                                    <button className="text-[9px] text-blue-500 font-bold hover:underline">{t('detail.view_trace')}</button>
                                 </div>
                             </div>
 
@@ -469,7 +469,7 @@ export default function LogExplorer() {
                                             <div key={key} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                                                 <div className="bg-slate-100 dark:bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-slate-500 flex justify-between border-b">
                                                     <span>{t('detail.property')}: <span className="text-teal-600">{key}</span></span>
-                                                    <Badge variant="outline" className="text-[8px] h-4">MODIFIED</Badge>
+                                                    <Badge variant="outline" className="text-[8px] h-4">{t('badges.modified')}</Badge>
                                                 </div>
                                                 <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-800">
                                                     <div className="p-3 bg-rose-50/20 dark:bg-rose-950/5">
@@ -503,7 +503,7 @@ export default function LogExplorer() {
                             <section>
                                 <h4 className="text-[11px] uppercase font-black text-slate-400 mb-4 border-b pb-2">{t('detail.snapshot')}</h4>
                                 <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-2xl relative">
-                                    <div className="absolute top-4 right-4 text-[10px] text-slate-600 font-mono tracking-tighter">BSON_BLOB_STORAGE</div>
+                                    <div className="absolute top-4 right-4 text-[10px] text-slate-600 font-mono tracking-tighter">{t('detail.secure_agent')}</div>
                                     <pre className="text-[10px] font-mono leading-relaxed text-blue-400 max-h-[300px] overflow-auto scrollbar-thin scrollbar-thumb-blue-900/50">
                                         {JSON.stringify(selectedAudit.newState, null, 2)}
                                     </pre>
@@ -514,7 +514,7 @@ export default function LogExplorer() {
                                 <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-start gap-3">
                                     <Info className="text-amber-500 mt-0.5" size={14} />
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-amber-600/70">User Agent Context</p>
+                                        <p className="text-[10px] font-black uppercase text-amber-600/70">{t('detail.user_agent')}</p>
                                         <p className="text-[9px] text-slate-500 leading-tight italic font-sans">{selectedAudit.userAgent}</p>
                                     </div>
                                 </div>

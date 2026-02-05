@@ -1,63 +1,61 @@
 ---
 name: guardian-auditor
-description: Evalúa si un archivo (API, Server Action o Componente) está correctamente integrado con el sistema de permisos Guardian V2.
+description: Evalúa si un archivo (API, Server Action o Componente) está correctamente integrado con el sistema de permisos Guardian V3 (Phase 97+ Compatible).
 ---
 
-# Guardian V2 Auditor Skill
+# Guardian V3 Auditor Skill
 
 ## Cuándo usar este skill
 - Cuando el usuario pida revisar la seguridad de un endpoint o funcionalidad.
-- Antes de dar por finalizada la creación de una nueva API administrativa o técnica.
-- Para asegurar que se respeta el aislamiento por tenant y la lógica "Deny-First".
+- Antes de dar por finalizada la creación de una nueva API administrativa, de cumplimiento o técnica.
+- Para asegurar que se respeta el aislamiento por tenant, el sistema de tareas delegadas y la lógica "Deny-First".
 
 ## Inputs necesarios
 - **Ruta del archivo**: El archivo `.ts` o `.tsx` a auditar.
-- **Contexto de Guardian**: Conocimiento de los recursos definidos en el sistema (ej: `PROMPTS`, `WORKFLOWS`, `USERS`).
+- **Contexto de Guardian V3**: Conocimiento de los roles (`COMPLIANCE`, `REVIEWER`, `TECHNICAL`) y recursos (`workflow-task`, `compliance-audit`).
 
 ## Workflow
 
-### 1. Detección de Protección y RBAC (Phase 70 & 72)
-1.  **RBAC Gatekeeping**: Verifica si el archivo utiliza el sistema de roles unificado:
-    -   Uso de `requireRole([UserRole.ADMIN, ...])` para control de acceso rápido.
-    -   Uso de `enforcePermission(resource, action)` para control granular (ABAC).
+### 1. Detección de Protección y RBAC (Guardian V3)
+1.  **Industrial Role Gatekeeping**: Verifica si el archivo utiliza los nuevos roles industriales:
+    -   Uso de `requireRole([UserRole.COMPLIANCE, UserRole.REVIEWER, ...])` para flujos de validación.
+    -   Uso de `enforcePermission(resource, action)` para control granular sobre recursos críticos.
 2.  **Validación de Tipado (Crítico)**:
-    -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o `(session.user as any).role`.
-    -   ✅ **OBLIGATORIO**: Uso de interfaces extendidas de `NextAuth` y el Enum `UserRole`.
-3.  **Industrial DB Management (Fase 72)**:
-    -   Asegura que el archivo usa `connectDB()` de `@/lib/db`.
-    -   ❌ **PROHIBIDO**: Crear nuevos `MongoClient` o `mongoose.connect` fuera del singleton.
-4.  Si el archivo es una API Route (`route.ts`) y no usa ni `requireRole` ni `enforcePermission` -> **RAISE ERROR (CRITICAL)**.
+    -   ❌ **PROHIBIDO**: `session.user.role === 'admin'` o casts a `any`.
+    -   ✅ **OBLIGATORIO**: Uso de `UserRole` enum y tipos de sesión extendidos.
+3.  **Industrial DB Management**:
+    -   Asegura el uso de `getTenantCollection(collectionName)` para aislamiento multi-tenant.
+    -   ❌ **PROHIBIDO**: Acceso directo a base de datos sin contexto de tenant o sesión.
+4.  Si el archivo maneja `WorkflowTasks` y no verifica la propiedad o el rol asignado -> **RAISE ERROR (CRITICAL)**.
 
-### 2. Validación de Parámetros
+### 2. Validación de Recursos V3
 Analiza los argumentos de las funciones de protección:
-- `resource`: Debe ser un slug válido (ej: `ROLES`, `PII_CONFIG`, `ANALYTICS`).
-- `action`: Debe ser una acción estándar (`CREATE`, `READ`, `UPDATE`, `DELETE`, `EXECUTE`).
-- **SuperAdmin Bypass**: Verifica que el bypass de Super Admin en archivos CORE (como `GuardianEngine.ts` o middlewares) use exclusivamente `UserRole.SUPER_ADMIN`.
+- `resource`: Debe incluir los nuevos recursos V3: `workflow-task`, `compliance-audit`.
+- `action`: Debe usar acciones estándar (`read`, `write`, `approve`, `reject`).
+- **Workflow Integrity**: Verifica que las transiciones de estado solo sean ejecutadas por roles permitidos según el `WorkflowDefinition`.
 
 ### 3. Verificación de Tenant & Environment Isolation
-- Asegura que después de la validación de permisos, las queries a DB filtren explícitamente por `tenantId` extraído de la sesión validada.
-- **Environment**: Verifica que las operaciones de escritura incluyan el campo `environment` (Phase 59/72).
-- **Punto Crítico**: No basta con tener permiso si luego se puede acceder a datos de otro tenant o entorno no autorizado.
+- Asegura que las queries utilicen el `tenantId` de la sesión.
+- **Audit Logging**: Verifica que todas las acciones protegidas llamen a `logEvento` con el `correlationId` para trazabilidad.
+- **Task Delegation**: En flujos de `WorkflowTask`, asegura que el usuario que completa la tarea tiene el `assignedRole` correcto.
 
 ### 4. Integración con Rutas Públicas (Bypass)
-Si el archivo es una ruta de marketing o pública (ej: `/terms`, `/privacy`):
-1. **Validación de Datos**: Asegura que el archivo NO importe modelos de DB sensibles o realice queries sin filtrar.
-2. **API Safety**: Verifica que no llame a Server Actions administrativas sin protección.
-3. **Status**: El status debe ser `[PUBLIC_BYPASS]` si es seguro, o `[VULNERABLE]` si expone lógica interna.
+Si el archivo es una ruta pública:
+1. **No Sensitive Data**: Asegura que NO realice queries a colecciones protegidas como `usage_logs`, `workflow_tasks` o `compliance_audits`.
+2. **Status**: El status debe ser `[PUBLIC_BYPASS]` si es seguro, o `[VULNERABLE]` si expone lógica interna.
 
 ## Instrucciones y Reglas
-- **REGLA DE ORO**: Si detectas un endpoint sin protección de permisos que maneje datos sensibles o configuración -> **ERROR CRÍTICO**.
-- **ELIMINAR LITERALES**: Toda mención a roles en código debe ser vía el Enum `UserRole`. No aceptes PRs con strings como "SUPER_ADMIN" o "TECNICO".
-- **AUDITORÍA DE IDIOMA**: Los roles en español (`TECNICO`, `ADMINISTRATIVO`, `INGENIERIA`) están PROHIBIDOS. Solo se permiten los valores del Enum `UserRole` en inglés.
-- **DENY-FIRST**: Recuerda que en Guardian V2, la ausencia de permiso = Denegado. No asumas permisos implícitos.
-- **SLA**: Las auditorías de seguridad deben ser precisas y no dejar lugar a ambigüedad.
+- **REGLA DE ORO**: La ausencia de chequeo explícito en un flujo de cumplimiento o técnico es un **FALLO DE SEGURIDAD**.
+- **ROLES V3**: Mantén el rigor con los roles en inglés. `COMPLIANCE` y `REVIEWER` son prioritarios para auditorías de procesos.
+- **DENY-FIRST**: Guardian V3 es más estricto. Si no hay una política que permita explícitamente la acción sobre el recurso, se deniega.
+- **TASK ISOLATION**: Los usuarios no deben poder ver o modificar tareas (`workflow-task`) que no les corresponden por rol o tenant.
 
 ## Output (formato exacto)
 1. **Status de Seguridad**: `[PROTEGIDO | VULNERABLE | PARCIAL | PUBLIC_BYPASS]`.
-2. **Cumplimiento Fase 70**: `[SI | NO | N/A]`.
-3. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/RBAC/Tenant/PublicLeak)" y "Gravedad".
-4. **Corrección Sugerida**: Código necesario para cerrar la brecha detectada siguiendo los patrones de Phase 70.
+2. **Cumplimiento Guardian V3**: `[SI | NO | N/A]`.
+3. **Hallazgos**: Tabla con "Localización (Línea)", "Tipo (Permisos/RBAC/Tenant/TaskIsolation)" y "Gravedad".
+4. **Corrección Sugerida**: Código necesario para cerrar la brecha detectada siguiendo los patrones de Guardian V3.
 
 ## Manejo de Errores
-- Si el archivo no es una API o componente sensible, informa al usuario que la auditoría no aplica.
-- Si faltan constantes de recursos, sugiere su creación en `lib/schemas.ts`.
+- Si faltan constantes de recursos, sugiere su actualización en `lib/schemas.ts`.
+- Si se detecta un bypass manual de seguridad, márcalo como `[CRITICAL_VULNERABILITY]`.

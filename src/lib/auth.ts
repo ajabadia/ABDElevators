@@ -93,11 +93,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     // Normalización de roles (Auditoría 015)
                     let normalizedRole = UserRole.USER;
                     const dbRole = (user.role || '').toUpperCase();
-                    if (dbRole === 'SUPER_ADMIN' || dbRole === 'ADMIN' && user.email.includes('ajabadia')) {
+                    if (dbRole === 'SUPER_ADMIN' || (dbRole === 'ADMIN' && user.email.includes('ajabadia'))) {
                         normalizedRole = UserRole.SUPER_ADMIN;
                     } else if (dbRole === 'ADMIN') {
                         normalizedRole = UserRole.ADMIN;
                     }
+
+                    console.log(`🔑 [AUTH] Login: ${user.email}, DB Role: ${user.role}, Normalized: ${normalizedRole}, Tenant: ${user.tenantId}`);
 
                     return {
                         id: user._id.toString(),
@@ -105,9 +107,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
                         role: normalizedRole,
                         baseRole: user.role,
-                        tenantId: user.tenantId || 'default_tenant',
-                        industry: user.industry || 'ELEVATORS',
-                        activeModules: user.activeModules || ['TECHNICAL'],
+                        tenantId: user.tenantId, // 🛡️ CRITICAL: Added missing tenantId
+                        image: user.image,
+                        industry: user.industry,
+                        activeModules: user.activeModules || [],
                         tenantAccess: user.tenantAccess || [],
                         permissionGroups: user.permissionGroups || [],
                         permissionOverrides: user.permissionOverrides || []

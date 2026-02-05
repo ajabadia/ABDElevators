@@ -100,6 +100,15 @@ export function compileGraphToLogic(
                     actionType = 'log';
                 } else if (label.includes('update')) {
                     actionType = 'update_entity';
+                } else if (label.includes('task') || label.includes('validar') || label.includes('human')) {
+                    actionType = 'human_task';
+                    params = {
+                        title: targetNode.data.label,
+                        taskType: 'TECHNICAL_VALIDATION',
+                        assignedRole: 'REVIEWER',
+                        priority: 'MEDIUM',
+                        checklistConfigId: targetNode.data.checklistConfigId // New: support for dynamic checklists
+                    };
                 }
 
                 actions.push({

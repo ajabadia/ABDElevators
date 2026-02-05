@@ -30,9 +30,9 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 
 ### 2. Stack Tecnológico & Arquitectura
 - **Core:** Next.js 15 + MongoDB Atlas + TypeScript Strict.
-- **Auth:** NextAuth (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING).
+- **Auth:** NextAuth (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING > COMPLIANCE > REVIEWER > TECHNICAL).
 - **RAG:** Ingesta PDF -> Text Extraction -> Chunking -> Vector Search -> Gemini.
-- **Workflow:** Máquina de estados (FSM) con transiciones visuales y lógica compilada.
+- **Workflow:** Máquina de estados (FSM) con transiciones visuales, lógica compilada y Generación de Tareas Automáticas (WorkflowTasks).
 
 ### 3. Patrones de Frontend
 - **Data Fetching:** NO usar `useEffect` directo. Usar `useApiList`, `useApiItem`.

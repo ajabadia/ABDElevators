@@ -1,8 +1,8 @@
-
 import { PromptService } from '@/lib/prompt-service';
 import { callGeminiMini } from '@/lib/llm';
 import { runQuery } from '@/lib/neo4j';
 import { logEvento } from '@/lib/logger';
+import { PROMPTS } from '@/lib/prompts';
 
 interface GraphData {
     entities: Array<{ id: string; type: string; name: string }>;
@@ -20,12 +20,22 @@ export class GraphExtractionService {
         metadata: { sourceDoc: string; chunkId?: string }
     ): Promise<void> {
         try {
-            // 1. Get Prompt
-            const { text: prompt, model } = await PromptService.getRenderedPrompt(
-                'GRAPH_EXTRACTOR',
-                { text: text.substring(0, 10000) }, // Limit for extraction context
-                tenantId
-            );
+            // 1. Get Prompt with Fallback
+            let prompt: string;
+            let model: string = 'gemini-1.5-flash';
+
+            try {
+                const rendered = await PromptService.getRenderedPrompt(
+                    'GRAPH_EXTRACTOR',
+                    { text: text.substring(0, 10000) }, // Limit for extraction context
+                    tenantId
+                );
+                prompt = rendered.text;
+                model = rendered.model;
+            } catch (err) {
+                console.warn(`[GRAPH_EXTRACTOR] ⚠️ Fallback to master prompt:`, err);
+                prompt = PROMPTS.GRAPH_EXTRACTOR.replace('{{text}}', text.substring(0, 10000));
+            }
 
             // 2. Call LLM
             const response = await callGeminiMini(prompt, tenantId, { correlationId, model });

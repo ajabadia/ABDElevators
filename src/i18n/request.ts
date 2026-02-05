@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
+import { TranslationService } from '../lib/translation-service';
 
 export default getRequestConfig(async () => {
     // Intentar leer el locale de las cookies o usar 'es' por defecto
@@ -10,8 +11,11 @@ export default getRequestConfig(async () => {
     const supportedLocales = ['es', 'en'];
     const locale = (supportedLocales.includes(requestedLocale) ? requestedLocale : 'es') as 'es' | 'en';
 
+    // Carga dinámica desde TranslationService (Fase 62)
+    const messages = await TranslationService.getMessages(locale);
+
     return {
         locale,
-        messages: (await import(`../../messages/${locale}.json`)).default
+        messages
     };
 });

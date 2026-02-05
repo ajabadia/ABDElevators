@@ -3,8 +3,10 @@
         "loading": "Cargando...",
         "error": "Error",
         "save": "Guardar",
+        "saving": "Guardando...",
         "cancel": "Cancelar",
         "delete": "Eliminar",
+        "connectionError": "Error de conexión",
         "actions": "Acciones",
         "notifications": {
             "success": {
@@ -31,7 +33,7 @@
             "sections": {
                 "core": "Core",
                 "inventory": "Inventario Técnico",
-                "studio": "Engineering Studio",
+                "studio": "Automation Studio",
                 "corporate": "Corporativo & Admin",
                 "governance": "Gobernanza & Sistemas",
                 "preference": "Preferencias"
@@ -45,7 +47,7 @@
                 "assets": "Activos de Conocimiento",
                 "explorer": "Explorador RAG",
                 "graph": "Mapa Semántico",
-                "workflows": "Flujos de Trabajo",
+                "workflows": "Editor de Workflows",
                 "checklists": "Config. Checklists",
                 "prompts": "Prompts",
                 "docTypes": "Tipos de Documento",
@@ -60,8 +62,10 @@
                 "quality": "Calidad RAG",
                 "intelligence": "Inteligencia Activa",
                 "governance_console": "Consola Guardian",
+                "workflow_tasks": "Tareas de Workflow",
                 "notifications": "Notificaciones",
-                "profile": "Perfil"
+                "profile": "Perfil",
+                "i18n": "Gobernanza i18n"
             }
         },
         "verticals": {
@@ -118,6 +122,12 @@
         "f7_desc": "Crea flujos de trabajo complejos con nodos de decisión (Switch/Case), retardos (Wait) e iteraciones (Loop) mediante un editor visual intuitivo.",
         "f8_title": "Monitoreo en Tiempo Real",
         "f8_desc": "Panel de registros de ejecución 'Mission Control' para seguir cada paso de tus automatizaciones en vivo, con métricas de performance detalladas.",
+        "f9_title": "Centro de Tareas Colaborativo",
+        "f9_desc": "Gobernanza con validación humana. Gestiona derivaciones críticas de los flujos automáticos con trazabilidad industrial y auditoría.",
+        "f10_title": "Inteligencia Multi-Sectorial",
+        "f10_desc": "Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis.",
+        "f11_title": "Memoria Infinita",
+        "f11_desc": "Ingesta en streaming y deduplicación inteligente para gestionar bibliotecas técnicas de tamaño ilimitado sin sobrecostes.",
         "learn_more": "Saber más"
     },
     "solutions": {
@@ -173,12 +183,6 @@
         "a3": "Sí, nuestro motor utiliza Gemini 2.0/3 con visión artificial avanzada para interpretar diagramas, planos técnicos y tablas complejas con alta fidelidad.",
         "q4": "¿Qué niveles de soporte ofrecéis?",
         "a4": "Ofrecemos desde soporte vía ticket estándar hasta soporte prioritario 24/7 y Account Managers dedicados para clientes Enterprise."
-    },
-    "cta": {
-        "title": "¿Listo para el siguiente nivel de eficiencia?",
-        "subtitle": "Únete a las empresas que ya están reduciendo sus tiempos de respuesta técnica en un 85%.",
-        "demo": "Solicitar Demo Custom",
-        "sales": "Hablar con Ventas"
     },
     "about": {
         "title": "Nuestra Visión",
@@ -317,6 +321,14 @@
         "contact_button": "Informar Barrera",
         "resource_title": "Recursos Adicionales"
     },
+    "cta": {
+        "title": "¿Listo para transformar tu operativa técnica?",
+        "subtitle": "Únete a decenas de empresas que ya están optimizando su gestión documental con ABD RAG.",
+        "demo": "Solicitar Demo",
+        "sales": "Contactar Ventas",
+        "cta_main": "Prueba gratuita",
+        "cta_sec": "Hablar con ventas"
+    },
     "ingest": {
         "pii_label": "Desidentificación de Datos (PII)",
         "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
@@ -386,6 +398,38 @@
                 "search": "Semantic",
                 "reliability": "Resilience",
                 "security": "Security"
+            },
+            "userDashboardTitle": "Dashboard",
+            "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",
+            "warRoomToggle": "Toggle War Room Mode",
+            "liveFeed": "Live Feed",
+            "metrics": {
+                "tenants": "Total Tenants",
+                "activeUsers": "Usuarios Activos",
+                "documents": "Documentos",
+                "cases": "Pedidos / Casos",
+                "iaSearches": "IA Searches"
+            },
+            "charts": {
+                "consumptionTitle": "Consumo de IA y Almacenamiento",
+                "labels": {
+                    "tokens": "Tokens Gemini (Input/Output)",
+                    "storage": "Espacio en Disco (Cloudinary/S3)",
+                    "searches": "Búsquedas Vectoriales"
+                }
+            },
+            "distribution": {
+                "title": "Distribución por Sector"
+            },
+            "plan": {
+                "title": "Estado del Plan",
+                "active": "ACTIVE",
+                "renewal": "Renovación automática",
+                "manageBtn": "Gestionar Suscripción"
+            },
+            "activity": {
+                "title": "Actividad Reciente del Sistema",
+                "empty": "No hay actividad reciente registrada."
             }
         },
         "roi": {
@@ -545,60 +589,81 @@
         "logs": {
             "title": "Explorador de Logs y Auditoría",
             "stats": {
-                "total": "Total Eventos",
-                "recent": "recientes",
+                "total": "Total Registros",
+                "recent": "últimos 100",
                 "errors": "Errores Críticos"
             },
             "tabs": {
                 "system": "Logs de Sistema",
-                "audit": "Auditoría (History)"
+                "audit": "Pista de Auditoría"
             },
             "actions": {
-                "export": "Exportar CSV",
-                "live": "Live",
+                "export": "Exportar",
+                "live": "En Vivo",
                 "refresh": "Refrescar"
             },
             "filters": {
-                "search_logs": "Buscar en logs...",
-                "search_audit": "Buscar en historial...",
+                "search_logs": "Buscar en logs (mensaje, origen...)",
+                "search_audit": "Buscar en auditoría (usuario, acción...)",
                 "all_users": "Todos los Usuarios",
-                "all_tenants": "Todos los Tenants"
+                "all_tenants": "Todas las Organizaciones"
             },
             "table": {
-                "timestamp": "Timestamp",
+                "timestamp": "Fecha/Hora",
                 "level": "Nivel",
-                "source": "Origen / Acción",
+                "source": "Origen",
                 "message": "Mensaje",
-                "entity": "Entidad / Autor",
-                "trace": "Trazabilidad",
-                "context": "Contexto"
+                "entity": "Entidad/Usuario",
+                "trace": "Traza de Correlación",
+                "context": "Contexto",
+                "system": "SISTEMA"
             },
             "badges": {
                 "unknown": "Desconocido",
-                "prompt": "Prompt Engine",
+                "prompt": "Prompt AI",
                 "billing": "Facturación",
                 "storage": "Almacenamiento",
-                "ingest": "Ingesta AI",
-                "config": "Configuración"
+                "ingest": "Ingesta",
+                "config": "Configuración",
+                "audit_log": "LOG DE AUDITORÍA",
+                "modified": "MODIFICADO"
             },
             "status": {
-                "loading": "Cargando datos...",
-                "no_results": "No hay resultados"
+                "loading": "Cargando registros...",
+                "no_results": "No se encontraron registros con los filtros actuales."
             },
             "detail": {
-                "close": "Cerrar",
-                "message": "Mensaje del Evento",
-                "stack": "Traza de Error (Stack)",
-                "json": "Contexto Estructurado (JSON)",
-                "integrity": "Análisis de Integridad de Datos",
-                "diff_title": "Diferencial de Cambios (BEFORE vs AFTER)",
-                "property": "Propiedad",
-                "previous": "Anterior",
-                "next": "Nuevo",
-                "initial_creation": "Operación de Creación Inicial",
-                "initial_desc": "No existe estado previo para esta entidad. Se han registrado todas las propiedades como inserciones iniciales seguras.",
                 "analyze_diff": "Analizar Diff",
-                "snapshot": "Full Audit Snapshot (Inmutable)"
+                "close": "Cerrar",
+                "message": "Mensaje Detallado",
+                "stack": "Stack Trace (Error)",
+                "json": "Detalles Técnicos (JSON)",
+                "integrity": "Verificación de Integridad",
+                "diff_title": "Cambios en la Entidad",
+                "property": "Propiedad",
+                "previous": "Estado Anterior",
+                "next": "Estado Nuevo",
+                "initial_creation": "Creación Inicial",
+                "initial_desc": "Esta entrada representa la creación del objeto. No hay estado previo.",
+                "snapshot": "Snapshot Completo del Objeto",
+                "responsable": "Responsable",
+                "ip_origin": "IP Origen",
+                "correlation": "Correlación",
+                "view_trace": "Ver Trace",
+                "user_agent": "Contexto User Agent",
+                "admin_auth": "Autoridad Admin",
+                "secure_agent": "AGENTE SEGURO"
+            },
+            "page": {
+                "title": "Registros del Sistema",
+                "subtitle": "Supervisa la salud del sistema y auditoría de cumplimiento."
+            },
+            "levels": {
+                "all": "TODOS",
+                "error": "ERROR",
+                "warn": "WARN",
+                "info": "INFO",
+                "debug": "DEBUG"
             }
         },
         "workflows": {
@@ -850,58 +915,62 @@
                 "audit": "Logs de Acceso"
             },
             "matrix": {
-                "title": "Matriz de",
-                "highlight": "Permisos",
-                "subtitle": "Gestiona políticas granulares de acceso basadas en atributos (ABAC).",
+                "title": "Matriz de Permisos",
+                "highlight": "Guardian V3",
+                "subtitle": "Gestión centralizada de políticas de acceso y control de seguridad.",
                 "new_policy": "Nueva Política",
                 "stats": {
                     "total": "Total Políticas",
-                    "total_desc": "Políticas activas en el tenant",
-                    "active": "Guardias Activos",
-                    "deny": "Reglas de Denegación",
-                    "global": "Alcance Global"
+                    "total_desc": "Políticas activas en el sistema",
+                    "active": "Activas",
+                    "deny": "Denegaciones",
+                    "global": "Acceso Global"
                 },
                 "search_placeholder": "Buscar políticas por nombre o recurso...",
                 "table": {
-                    "title": "Lista de Guardianes",
-                    "desc": "Listado de todas las reglas de acceso configuradas.",
-                    "name": "Nombre de Política",
+                    "title": "Políticas de Seguridad",
+                    "desc": "Listado detallado de reglas de acceso definidas.",
+                    "name": "Nombre / ID",
                     "resources": "Recursos",
                     "actions": "Acciones",
                     "effect": "Efecto",
                     "status": "Estado",
+                    "loading": "Cargando matriz de seguridad...",
                     "empty": "No se encontraron políticas.",
-                    "loading": "Cargando políticas...",
-                    "active": "Activo",
-                    "inactive": "Inactivo"
+                    "active": "ACTIVA",
+                    "inactive": "INACTIVA",
+                    "loading_error": "Error al cargar la matriz de permisos",
+                    "network_error": "Error de red al conectar con el servicio Guardian"
                 }
             },
             "groups": {
-                "title": "Grupos y",
-                "highlight": "Jerarquía",
-                "subtitle": "Define la estructura organizacional y las reglas de herencia de permisos.",
-                "new_root": "Crear Grupo Raíz",
+                "title": "Jerarquía de Grupos",
+                "highlight": "Estructura Org.",
+                "subtitle": "Organiza usuarios en roles y grupos con herencia de permisos.",
+                "new_root": "Nuevo Grupo Raíz",
                 "stats": {
                     "total": "Total Grupos",
-                    "depth": "Profundidad Media",
-                    "depth_desc": "Niveles de herencia actuales",
-                    "orphan": "Usuarios Huérfanos",
-                    "orphan_desc": "Sin pertenencia a ningún grupo"
+                    "depth": "Profundidad Máxima",
+                    "depth_desc": "Niveles de herencia activos",
+                    "orphan": "Grupos Huérfanos",
+                    "orphan_desc": "Sin conexión a la raíz"
                 },
                 "tree": {
-                    "title": "Árbol Organizacional",
-                    "loading": "Cargando roles...",
-                    "empty": "No hay grupos definidos para este tenant.",
-                    "policies": "{count} Políticas"
+                    "title": "Árbol de Herencia",
+                    "loading": "Cargando estructura de grupos...",
+                    "empty": "No hay grupos definidos.",
+                    "policies": "{count} políticas asociadas",
+                    "loading_error": "Error al cargar la jerarquía de grupos",
+                    "network_error": "Error de red al conectar con el servicio de Identidad"
                 },
                 "sidebar": {
-                    "engine_title": "Motor de Políticas",
-                    "effective_title": "Políticas Efectivas",
-                    "effective_desc": "Los cambios en grupos superiores se propagan instantáneamente a todos sus descendientes.",
+                    "engine_title": "Motor de Herencia",
+                    "effective_title": "Permisos Efectivos",
+                    "effective_desc": "Calcula los permisos finales sumando todos los grupos del usuario.",
                     "bulk_assign": "Asignación Masiva",
-                    "health_title": "Salud de Seguridad",
-                    "circular_title": "Dependencia Circular",
-                    "circular_desc": "No se han detectado bucles de herencia en la estructura actual."
+                    "health_title": "Salud de la Estructura",
+                    "circular_title": "Detección Circular",
+                    "circular_desc": "No se han detectado ciclos infinitos en la herencia."
                 }
             },
             "simulator": {
@@ -1035,6 +1104,37 @@
                     "missing_email": "Falta email",
                     "invalid_email": "Email inválido"
                 }
+            }
+        },
+        "i18n": {
+            "page": {
+                "title": "Gobernanza i18n",
+                "highlight": "Idiomas",
+                "subtitle": "Gestiona la voz de la plataforma en múltiples idiomas con asistencia de IA.",
+                "syncBtn": "Sincronizar L4 → DB",
+                "newKeyBtn": "Nueva Llave",
+                "searchPlaceholder": "Buscar por llave o contenido..."
+            },
+            "languages": {
+                "es": "Español (ES)",
+                "en": "English (EN)"
+            },
+            "table": {
+                "keyHeader": "Llave (i18n ID)",
+                "primaryLabel": "Primario",
+                "secondaryLabel": "Secundario",
+                "autoTranslateBtn": "AUTOTRADUCIR FALTANTES",
+                "save": "Guardar",
+                "cancel": "Cancelar",
+                "empty": "Vacío",
+                "missing": "Faltante",
+                "noResults": "No se encontraron llaves de traducción"
+            },
+            "notifications": {
+                "aiSuccessTitle": "IA: Traducción completada",
+                "aiSuccessDesc": "Se han generado las traducciones faltantes.",
+                "upToDateTitle": "Todo al día",
+                "upToDateDesc": "No hay llaves faltantes en este idioma."
             }
         }
     },
@@ -1369,6 +1469,113 @@
             "cta_title": "Experimenta la Búsqueda Semántica",
             "cta_desc": "Prueba consultas en lenguaje natural y descubre información que las búsquedas tradicionales no encuentran.",
             "cta_btn": "Probar Ahora"
+        }
+    },
+    "profile": {
+        "form": {
+            "firstName": "Nombre",
+            "lastName": "Apellidos",
+            "role": "Puesto / Especialidad",
+            "readOnly": "Solo lectura",
+            "successTitle": "Perfil actualizado",
+            "successDescription": "Tus datos personales se han guardado correctamente.",
+            "errorUpdate": "Error de actualización",
+            "errorDescription": "No se han podido guardar los cambios en tu perfil.",
+            "note": "Nota",
+            "unprivilegedNotice": "No tienes permisos de administrador para editar estos campos. Contacta con soporte para realizar cambios."
+        },
+        "notifications": {
+            "successTitle": "Preferencias actualizadas",
+            "successDescription": "Tus ajustes de comunicación se han guardado correctamente.",
+            "errorSave": "No se pudieron guardar tus preferencias.",
+            "errorConnection": "Ocurrió un problema al conectar con el servidor.",
+            "eventType": "Tipo de Evento",
+            "email": "Correo",
+            "inApp": "App",
+            "saveBtn": "Guardar Preferencias",
+            "events": {
+                "system": "Mensajes del Sistema",
+                "analysisComplete": "Análisis Finalizados",
+                "riskAlert": "Alertas de Riesgo",
+                "billingEvent": "Facturación y Cuotas",
+                "securityAlert": "Seguridad y Accesos"
+            }
+        },
+        "page": {
+            "title": "Configuración de Cuenta",
+            "subtitle": "Gestiona tu identidad digital, preferencias y seguridad de acceso.",
+            "role": "Rol",
+            "memberSince": "Miembro desde",
+            "personalInfo": "Información Personal",
+            "personalInfoSubtitle": "Actualiza tus datos de contacto básicos",
+            "notificationPrefs": "Preferencias de Notificación",
+            "notificationPrefsSubtitle": "Define qué alertas quieres recibir y por qué canal",
+            "securityCenter": "Centro de Seguridad",
+            "securityCenterSubtitle": "Contraseña, MFA y Sesiones Activas",
+            "password": "Contraseña",
+            "mfa": "Autenticación Multifactor"
+        },
+        "security": {
+            "password": {
+                "title": "Seguridad",
+                "currentLabel": "Contraseña Actual",
+                "newLabel": "Nueva Contraseña",
+                "confirmLabel": "Confirmar Nueva Contraseña",
+                "submitBtn": "Actualizar Contraseña",
+                "matchError": "Las contraseñas no coinciden.",
+                "successTitle": "Contraseña actualizada",
+                "successDesc": "Tu contraseña se ha cambiado correctamente.",
+                "updateError": "Error al cambiar contraseña"
+            },
+            "mfa": {
+                "title": "Autenticación de Doble Factor (MFA)",
+                "description": "Añade una capa extra de seguridad a tu cuenta usando una App de autenticador.",
+                "statusEnabled": "Activado",
+                "statusDisabled": "Desactivado",
+                "infoEnabled": "Tu cuenta está protegida. Al iniciar sesión se te pedirá un código generado por tu aplicación (Google Authenticator, Authy, Microsoft Authenticator, etc).",
+                "infoDisabled": "Actualmente tu cuenta solo está protegida por tu contraseña. Te recomendamos activar el doble factor para evitar accesos no autorizados.",
+                "disableBtn": "Desactivar Doble Factor",
+                "setupBtn": "Configurar Doble Factor",
+                "disableConfirm": "¿Estás seguro de que quieres desactivar la protección de doble factor? Tu cuenta será menos segura.",
+                "setupStep1": "Escanea el código QR",
+                "setupStep1Desc": "Abre tu aplicación de autenticador (Google Authenticator, Authy, etc) y escanea el código de la izquierda.",
+                "manualKey": "O introduce la clave manualmente:",
+                "setupStep2": "Introduce el código de 6 dígitos",
+                "activateBtn": "Activar",
+                "verifying": "Verificando...",
+                "successTitle": "MFA Activado",
+                "successDesc": "Tu cuenta ahora está más segura.",
+                "invalidCode": "Código inválido",
+                "recoveryTitle": "¡Doble Factor Activado!",
+                "recoveryDesc": "Tu cuenta está ahora protegida con seguridad de grado bancario.",
+                "recoveryCodesTitle": "Códigos de Recuperación",
+                "recoveryCodesWarning": "Si pierdes el acceso a tu aplicación de autenticador, estos códigos son la UNICA forma de recuperar tu cuenta. Guárdalos en un lugar seguro (ej: un gestor de contraseñas).",
+                "copyCodes": "Copiar todos los códigos",
+                "doneBtn": "Entendido"
+            },
+            "sessions": {
+                "title": "Sesiones Activas",
+                "description": "Dispositivos que tienen acceso actualmente a tu cuenta.",
+                "revokeOthersBtn": "Cerrar todas las demás",
+                "revokeConfirmOthers": "¿Estás seguro de que quieres cerrar sesión en todos los demás dispositivos?",
+                "currentBadge": "Sesión Actual",
+                "unknownBrowser": "Navegador desconocido",
+                "unknownOs": "OS desconocido",
+                "revokeSuccess": "Sesión cerrada",
+                "revokeDesc": "El dispositivo ha sido desconectado.",
+                "revokeError": "No se pudo cerrar la sesión.",
+                "cleanupSuccess": "Limpieza completada",
+                "cleanupDesc": "Se han cerrado todas las sesiones excepto la actual."
+            }
+        },
+        "photo": {
+            "title": "Foto de Perfil",
+            "subtitle": "PNG, JPG o GIF hasta 5MB",
+            "uploadError": "No se pudo subir la imagen.",
+            "sizeError": "La imagen es demasiado grande (máximo 5MB).",
+            "typeError": "Por favor selecciona un archivo de imagen.",
+            "successTitle": "Foto actualizada",
+            "successDesc": "Tu foto de perfil se ha actualizado correctamente."
         }
     }
 }

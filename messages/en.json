@@ -3,8 +3,10 @@
         "loading": "Loading...",
         "error": "Error",
         "save": "Save",
+        "saving": "Saving...",
         "cancel": "Cancel",
         "delete": "Delete",
+        "connectionError": "Connection Error",
         "actions": "Actions",
         "notifications": {
             "success": {
@@ -31,7 +33,7 @@
             "sections": {
                 "core": "Core",
                 "inventory": "Technical Inventory",
-                "studio": "Engineering Studio",
+                "studio": "Automation Studio",
                 "corporate": "Corporate & Admin",
                 "governance": "Governance & Systems",
                 "preference": "Preference"
@@ -45,7 +47,7 @@
                 "assets": "Knowledge Assets",
                 "explorer": "Search Explorer",
                 "graph": "Semantic Map",
-                "workflows": "Workflows",
+                "workflows": "Workflow Editor",
                 "checklists": "Checklist Configs",
                 "prompts": "Prompts",
                 "docTypes": "Document Types",
@@ -60,8 +62,10 @@
                 "quality": "RAG Quality",
                 "intelligence": "Active Intelligence",
                 "governance_console": "Guardian Console",
+                "workflow_tasks": "Workflow Tasks",
                 "notifications": "Notifications",
-                "profile": "Profile"
+                "profile": "Profile",
+                "i18n": "i18n Governance"
             }
         },
         "verticals": {
@@ -102,26 +106,28 @@
     "features": {
         "title": "Elite Knowledge Engineering",
         "subtitle": "Designed for sectors where misinterpretation is not an option.",
-        "f1_title": "Dual-Engine Extraction",
-        "f1_desc": "Combines advanced OCR with Gemini 2.0 to extract tables, diagrams, and technical specs with pinpoint accuracy.",
-        "f2_title": "Hybrid Vector Search",
-        "f2_desc": "Contextual semantic search that understands expert intent, not just keywords.",
+        "f1_title": "Instant Semantic Search",
+        "f1_desc": "Ask in natural language and get precise answers in less than 500ms, with exact citations to the source document.",
+        "f2_title": "Visual Technical Intelligence",
+        "f2_desc": "Native understanding of blueprints, electrical schemes, and complex diagrams with Gemini 2.0/3. Automatic component identification.",
         "f3_title": "Privacy & PII Masking",
         "f3_desc": "Automatic de-identification engine that protects emails, phones, and IDs before processing with AI. Data privacy by design.",
         "f4_title": "Graph-Enhanced RAG",
         "f4_desc": "Knowledge Graph (Neo4j) infrastructure to navigate complex technical relationships between components and procedures.",
-        "f5_title": "Compliance ZIP & GDPR",
-        "f5_desc": "Total portability: export your knowledge in signed ZIP packages and generate GDPR deletion certificates.",
-        "f6_title": "Advanced PDF Bridge",
-        "f6_desc": "Hybrid Python/Node engine (PyMuPDF) that processes complex blueprints and layouts with absolute fidelity.",
-        "f7_title": "High-Performance Ingestion",
-        "f7_desc": "Robust asynchronous processing via BullMQ. Track heavy document analysis progress in real-time with automatic self-healing retries.",
-        "f8_title": "Observability & Alerting",
-        "f8_desc": "Proactive detection of workflow anomalies. Automatic alerts for error or latency spikes and server-side PDF technical reporting.",
-        "f9_title": "Logical Workflow Design",
-        "f9_desc": "Create complex workflows with decision nodes (Switch/Case), delays (Wait), and iterations (Loop) through an intuitive visual editor.",
-        "f10_title": "Real-time Execution Tracking",
-        "f10_desc": "'Mission Control' execution logs panel to follow every step of your automations live, with detailed performance metrics.",
+        "f5_title": "High-Performance Ingestion",
+        "f5_desc": "Robust asynchronous processing via BullMQ. Track heavy document analysis progress in real-time with automatic self-healing retries.",
+        "f6_title": "Observability & Alerting",
+        "f6_desc": "Proactive detection of workflow anomalies. Automatic alerts for error or latency spikes and server-side PDF technical reporting.",
+        "f7_title": "Logical Workflow Design",
+        "f7_desc": "Create complex workflows with decision nodes (Switch/Case), delays (Wait), and iterations (Loop) through an intuitive visual editor.",
+        "f8_title": "Real-time Execution Tracking",
+        "f8_desc": "'Mission Control' execution logs panel to follow every step of your automations live, with detailed performance metrics.",
+        "f9_title": "Task Collaboration Hub",
+        "f9_desc": "Governance with human validation. Manage critical workflow escalations with industrial-grade audit traceability.",
+        "f10_title": "Multi-Vertical Intelligence",
+        "f10_desc": "Automatic domain detection (Legal, Insurance, Healthcare) with dynamic analysis logic adaptation.",
+        "f11_title": "Infinite Memory",
+        "f11_desc": "Streaming ingestion and intelligent deduplication to manage unlimited technical libraries without overhead.",
         "learn_more": "Learn more"
     },
     "solutions": {
@@ -324,8 +330,10 @@
         "resource_title": "Additional Resources"
     },
     "cta": {
-        "title": "Ready to transform your document management?",
-        "subtitle": "Join companies that already trust ABD RAG to manage their critical knowledge.",
+        "title": "Ready to transform your technical operations?",
+        "subtitle": "Join dozens of companies that are already optimizing their document management with ABD RAG.",
+        "demo": "Request Demo",
+        "sales": "Contact Sales",
         "cta_main": "Start free trial",
         "cta_sec": "Talk to sales"
     },
@@ -398,6 +406,38 @@
                 "search": "Semantic",
                 "reliability": "Resilience",
                 "security": "Security"
+            },
+            "userDashboardTitle": "Dashboard",
+            "userDashboardSubtitle": "Performance and consumption metrics of your organization.",
+            "warRoomToggle": "Toggle War Room Mode",
+            "liveFeed": "Live Feed",
+            "metrics": {
+                "tenants": "Total Tenants",
+                "activeUsers": "Active Users",
+                "documents": "Documents",
+                "cases": "Orders / Cases",
+                "iaSearches": "AI Searches"
+            },
+            "charts": {
+                "consumptionTitle": "AI Consumption & Storage",
+                "labels": {
+                    "tokens": "Gemini Tokens (Input/Output)",
+                    "storage": "Disk Space (Cloudinary/S3)",
+                    "searches": "Vector Searches"
+                }
+            },
+            "distribution": {
+                "title": "Industry Distribution"
+            },
+            "plan": {
+                "title": "Plan Status",
+                "active": "ACTIVE",
+                "renewal": "Automatic renewal",
+                "manageBtn": "Manage Subscription"
+            },
+            "activity": {
+                "title": "Recent System Activity",
+                "empty": "No recent activity recorded."
             }
         },
         "roi": {
@@ -557,60 +597,81 @@
         "logs": {
             "title": "Logs & Audit Explorer",
             "stats": {
-                "total": "Total Events",
-                "recent": "recent",
+                "total": "Total Logs",
+                "recent": "last 100",
                 "errors": "Critical Errors"
             },
             "tabs": {
                 "system": "System Logs",
-                "audit": "Audit (History)"
+                "audit": "Audit Trail"
             },
             "actions": {
-                "export": "Export CSV",
+                "export": "Export",
                 "live": "Live",
                 "refresh": "Refresh"
             },
             "filters": {
-                "search_logs": "Search logs...",
-                "search_audit": "Search history...",
+                "search_logs": "Search logs (message, source...)",
+                "search_audit": "Search audit (user, action...)",
                 "all_users": "All Users",
-                "all_tenants": "All Tenants"
+                "all_tenants": "All Organizations"
             },
             "table": {
                 "timestamp": "Timestamp",
                 "level": "Level",
-                "source": "Source / Action",
+                "source": "Source",
                 "message": "Message",
-                "entity": "Entity / Author",
-                "trace": "Traceability",
-                "context": "Context"
+                "entity": "Entity/User",
+                "trace": "Correlation Trace",
+                "context": "Context",
+                "system": "SYSTEM"
             },
             "badges": {
                 "unknown": "Unknown",
-                "prompt": "Prompt Engine",
+                "prompt": "AI Prompt",
                 "billing": "Billing",
                 "storage": "Storage",
-                "ingest": "AI Ingestion",
-                "config": "Configuration"
+                "ingest": "Ingestion",
+                "config": "Configuration",
+                "audit_log": "AUDIT LOG",
+                "modified": "MODIFIED"
             },
             "status": {
-                "loading": "Loading data...",
-                "no_results": "No results found"
+                "loading": "Loading logs...",
+                "no_results": "No logs found with current filters."
             },
             "detail": {
-                "close": "Close",
-                "message": "Event Message",
-                "stack": "Error Trace (Stack)",
-                "json": "Structured Context (JSON)",
-                "integrity": "Data Integrity Analysis",
-                "diff_title": "Change Differential (BEFORE vs AFTER)",
-                "property": "Property",
-                "previous": "Previous",
-                "next": "New",
-                "initial_creation": "Initial Creation Operation",
-                "initial_desc": "No previous state exists for this entity. All properties were recorded as safe initial insertions.",
                 "analyze_diff": "Analyze Diff",
-                "snapshot": "Full Audit Snapshot (Immutable)"
+                "close": "Close",
+                "message": "Detailed Message",
+                "stack": "Stack Trace (Error)",
+                "json": "Technical Details (JSON)",
+                "integrity": "Integrity Verification",
+                "diff_title": "Entity Changes",
+                "property": "Property",
+                "previous": "Previous State",
+                "next": "New State",
+                "initial_creation": "Initial Creation",
+                "initial_desc": "This entry represents the creation of the object. No previous state.",
+                "snapshot": "Full Object Snapshot",
+                "responsable": "Responsible",
+                "ip_origin": "Origin IP",
+                "correlation": "Correlation",
+                "view_trace": "View Trace",
+                "user_agent": "User Agent Context",
+                "admin_auth": "Admin Authority",
+                "secure_agent": "SECURE AGENT"
+            },
+            "page": {
+                "title": "System Logs",
+                "subtitle": "Monitor system health and compliance audit trail."
+            },
+            "levels": {
+                "all": "ALL",
+                "error": "ERROR",
+                "warn": "WARN",
+                "info": "INFO",
+                "debug": "DEBUG"
             }
         },
         "workflows": {
@@ -862,58 +923,62 @@
                 "audit": "Access Logs"
             },
             "matrix": {
-                "title": "Permission",
-                "highlight": "Matrix",
-                "subtitle": "Manage granular access policies based on attributes (ABAC).",
+                "title": "Permission Matrix",
+                "highlight": "Guardian V3",
+                "subtitle": "Centralized management of access policies and security control.",
                 "new_policy": "New Policy",
                 "stats": {
                     "total": "Total Policies",
-                    "total_desc": "Active policies in the tenant",
-                    "active": "Active Guards",
-                    "deny": "Deny Rules",
-                    "global": "Global Scope"
+                    "total_desc": "Active policies in the system",
+                    "active": "Active",
+                    "deny": "Denials",
+                    "global": "Global Access"
                 },
                 "search_placeholder": "Search policies by name or resource...",
                 "table": {
-                    "title": "Guardians List",
-                    "desc": "List of all configured access rules.",
-                    "name": "Policy Name",
+                    "title": "Security Policies",
+                    "desc": "Detailed list of defined access rules.",
+                    "name": "Name / ID",
                     "resources": "Resources",
                     "actions": "Actions",
                     "effect": "Effect",
                     "status": "Status",
+                    "loading": "Loading security matrix...",
                     "empty": "No policies found.",
-                    "loading": "Loading policies...",
-                    "active": "Active",
-                    "inactive": "Inactive"
+                    "active": "ACTIVE",
+                    "inactive": "INACTIVE",
+                    "loading_error": "Error loading permission matrix",
+                    "network_error": "Network error connecting to Guardian service"
                 }
             },
             "groups": {
-                "title": "Groups &",
-                "highlight": "Hierarchy",
-                "subtitle": "Define organizational structure and permission inheritance rules.",
-                "new_root": "Create Root Group",
+                "title": "Group Hierarchy",
+                "highlight": "Org. Structure",
+                "subtitle": "Organize users into roles and groups with permission inheritance.",
+                "new_root": "New Root Group",
                 "stats": {
                     "total": "Total Groups",
-                    "depth": "Avg Depth",
-                    "depth_desc": "Current inheritance levels",
-                    "orphan": "Orphan Users",
-                    "orphan_desc": "No group membership"
+                    "depth": "Max Depth",
+                    "depth_desc": "Active inheritance levels",
+                    "orphan": "Orphan Groups",
+                    "orphan_desc": "No connection to root"
                 },
                 "tree": {
-                    "title": "Organization Tree",
-                    "loading": "Loading roles...",
-                    "empty": "No groups defined for this tenant.",
-                    "policies": "{count} Policies"
+                    "title": "Inheritance Tree",
+                    "loading": "Loading group structure...",
+                    "empty": "No groups defined.",
+                    "policies": "{count} associated policies",
+                    "loading_error": "Error loading group hierarchy",
+                    "network_error": "Network error connecting to Identity service"
                 },
                 "sidebar": {
-                    "engine_title": "Policy Engine",
-                    "effective_title": "Effective Policies",
-                    "effective_desc": "Changes in parent groups propagate instantly to all descendants.",
-                    "bulk_assign": "Bulk Assign",
-                    "health_title": "Security Health",
-                    "circular_title": "Circular Dependency",
-                    "circular_desc": "No inheritance loops detected in the current structure."
+                    "engine_title": "Inheritance Engine",
+                    "effective_title": "Effective Permissions",
+                    "effective_desc": "Calculates final permissions by summing all user groups.",
+                    "bulk_assign": "Bulk Assignment",
+                    "health_title": "Structure Health",
+                    "circular_title": "Circular Detection",
+                    "circular_desc": "No infinite inheritance loops detected."
                 }
             },
             "simulator": {
@@ -1047,6 +1112,37 @@
                     "missing_email": "Missing email",
                     "invalid_email": "Invalid email"
                 }
+            }
+        },
+        "i18n": {
+            "page": {
+                "title": "i18n Governance",
+                "highlight": "Languages",
+                "subtitle": "Manage the platform's voice across multiple languages with AI assistance.",
+                "syncBtn": "Sync L4 → DB",
+                "newKeyBtn": "New Key",
+                "searchPlaceholder": "Search by key or content..."
+            },
+            "languages": {
+                "es": "Spanish (ES)",
+                "en": "English (EN)"
+            },
+            "table": {
+                "keyHeader": "Key (i18n ID)",
+                "primaryLabel": "Primary",
+                "secondaryLabel": "Secondary",
+                "autoTranslateBtn": "AUTO-TRANSLATE MISSING",
+                "save": "Save",
+                "cancel": "Cancel",
+                "empty": "Empty",
+                "missing": "Missing",
+                "noResults": "No translation keys found"
+            },
+            "notifications": {
+                "aiSuccessTitle": "AI: Translation completed",
+                "aiSuccessDesc": "Missing translations have been generated.",
+                "upToDateTitle": "Up to date",
+                "upToDateDesc": "No missing keys in this language."
             }
         }
     },
@@ -1381,6 +1477,113 @@
             "cta_title": "Experience Semantic Search",
             "cta_desc": "Try natural language queries and discover information traditional search misses.",
             "cta_btn": "Try Now"
+        }
+    },
+    "profile": {
+        "form": {
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "role": "Role / Specialty",
+            "readOnly": "Read-only",
+            "successTitle": "Profile updated",
+            "successDescription": "Your personal data has been saved correctly.",
+            "errorUpdate": "Update error",
+            "errorDescription": "Your profile changes could not be saved.",
+            "note": "Note",
+            "unprivilegedNotice": "You do not have administrative permissions to edit these fields. Contact support for changes."
+        },
+        "notifications": {
+            "successTitle": "Preferences updated",
+            "successDescription": "Your communication settings have been saved successfully.",
+            "errorSave": "Could not save your preferences.",
+            "errorConnection": "A problem occurred connecting to the server.",
+            "eventType": "Event Type",
+            "email": "Email",
+            "inApp": "App",
+            "saveBtn": "Save Preferences",
+            "events": {
+                "system": "System Messages",
+                "analysisComplete": "Analysis Completed",
+                "riskAlert": "Risk Alerts",
+                "billingEvent": "Billing & Fees",
+                "securityAlert": "Security & Access"
+            }
+        },
+        "page": {
+            "title": "Account Settings",
+            "subtitle": "Manage your digital identity, preferences and access security.",
+            "role": "Role",
+            "memberSince": "Member since",
+            "personalInfo": "Personal Information",
+            "personalInfoSubtitle": "Update your basic contact details",
+            "notificationPrefs": "Notification Preferences",
+            "notificationPrefsSubtitle": "Define which alerts you want to receive and through which channel",
+            "securityCenter": "Security Center",
+            "securityCenterSubtitle": "Password, MFA, and Active Sessions",
+            "password": "Password",
+            "mfa": "Multi-Factor Authentication"
+        },
+        "security": {
+            "password": {
+                "title": "Security",
+                "currentLabel": "Current Password",
+                "newLabel": "New Password",
+                "confirmLabel": "Confirm New Password",
+                "submitBtn": "Update Password",
+                "matchError": "Passwords do not match.",
+                "successTitle": "Password updated",
+                "successDesc": "Your password has been changed successfully.",
+                "updateError": "Error changing password"
+            },
+            "mfa": {
+                "title": "Two-Factor Authentication (MFA)",
+                "description": "Add an extra layer of security to your account using an authenticator app.",
+                "statusEnabled": "Enabled",
+                "statusDisabled": "Disabled",
+                "infoEnabled": "Your account is protected. When logging in, you will be asked for a code generated by your app (Google Authenticator, Authy, Microsoft Authenticator, etc).",
+                "infoDisabled": "Your account is currently only protected by your password. We recommend enabling two-factor to prevent unauthorized access.",
+                "disableBtn": "Disable Two-Factor",
+                "setupBtn": "Configure Two-Factor",
+                "disableConfirm": "Are you sure you want to disable two-factor protection? Your account will be less secure.",
+                "setupStep1": "Scan the QR code",
+                "setupStep1Desc": "Open your authenticator app (Google Authenticator, Authy, etc.) and scan the QR code on the left.",
+                "manualKey": "Or enter the key manually:",
+                "setupStep2": "Enter the 6-digit code",
+                "activateBtn": "Activate",
+                "verifying": "Verifying...",
+                "successTitle": "MFA Enabled",
+                "successDesc": "Your account is now more secure.",
+                "invalidCode": "Invalid code",
+                "recoveryTitle": "Two-Factor Enabled!",
+                "recoveryDesc": "Your account is now protected with bank-grade security.",
+                "recoveryCodesTitle": "Recovery Codes",
+                "recoveryCodesWarning": "If you lose access to your authenticator app, these codes are the ONLY way to recover your account. Keep them in a safe place (e.g., a password manager).",
+                "copyCodes": "Copy all codes",
+                "doneBtn": "Understood"
+            },
+            "sessions": {
+                "title": "Active Sessions",
+                "description": "Devices currently having access to your account.",
+                "revokeOthersBtn": "Close all others",
+                "revokeConfirmOthers": "Are you sure you want to log out from all other devices?",
+                "currentBadge": "Current Session",
+                "unknownBrowser": "Unknown browser",
+                "unknownOs": "Unknown OS",
+                "revokeSuccess": "Session closed",
+                "revokeDesc": "The device has been disconnected.",
+                "revokeError": "Could not close the session.",
+                "cleanupSuccess": "Cleanup completed",
+                "cleanupDesc": "All sessions except the current one have been closed."
+            }
+        },
+        "photo": {
+            "title": "Profile Photo",
+            "subtitle": "PNG, JPG or GIF up to 5MB",
+            "uploadError": "Could not upload image.",
+            "sizeError": "The image is too large (maximum 5MB).",
+            "typeError": "Please select an image file.",
+            "successTitle": "Photo updated",
+            "successDesc": "Your profile photo has been updated successfully."
         }
     }
 }

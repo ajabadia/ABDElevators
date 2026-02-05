@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Key } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function PasswordForm() {
+    const t = useTranslations('profile.security.password');
+    const tCommon = useTranslations('common');
     const [saving, setSaving] = useState(false);
     const { toast } = useToast();
 
@@ -22,8 +25,8 @@ export function PasswordForm() {
 
         if (newPassword !== confirmPassword) {
             toast({
-                title: 'Error',
-                description: 'Las contraseñas no coinciden.',
+                title: tCommon('error'),
+                description: t('matchError'),
                 variant: 'destructive',
             });
             setSaving(false);
@@ -39,17 +42,17 @@ export function PasswordForm() {
 
             if (res.ok) {
                 toast({
-                    title: 'Contraseña actualizada',
-                    description: 'Tu contraseña se ha cambiado correctamente.',
+                    title: t('successTitle'),
+                    description: t('successDesc'),
                 });
                 (e.target as HTMLFormElement).reset();
             } else {
                 const data = await res.json();
-                throw new Error(data.error || 'Error al cambiar contraseña');
+                throw new Error(data.error || t('updateError'));
             }
         } catch (error: any) {
             toast({
-                title: 'Error',
+                title: tCommon('error'),
                 description: error.message,
                 variant: 'destructive',
             });
@@ -62,20 +65,20 @@ export function PasswordForm() {
         <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
             <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Key className="text-teal-600" size={20} />
-                Seguridad
+                {t('title')}
             </h3>
 
             <div className="space-y-4 max-w-md">
                 <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Contraseña Actual</Label>
+                    <Label htmlFor="currentPassword">{t('currentLabel')}</Label>
                     <Input id="currentPassword" name="currentPassword" type="password" required />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="newPassword">Nueva Contraseña</Label>
+                    <Label htmlFor="newPassword">{t('newLabel')}</Label>
                     <Input id="newPassword" name="newPassword" type="password" required minLength={8} />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmar Nueva Contraseña</Label>
+                    <Label htmlFor="confirmPassword">{t('confirmLabel')}</Label>
                     <Input id="confirmPassword" name="confirmPassword" type="password" required minLength={8} />
                 </div>
             </div>
@@ -83,7 +86,7 @@ export function PasswordForm() {
             <div className="flex justify-end">
                 <Button type="submit" disabled={saving} variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20">
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Actualizar Contraseña
+                    {t('submitBtn')}
                 </Button>
             </div>
         </form>

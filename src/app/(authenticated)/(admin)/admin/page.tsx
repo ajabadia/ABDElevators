@@ -75,22 +75,22 @@ export default function AdminDashboardPage() {
     return (
         <PageContainer className={isCompact ? "max-w-[2400px] p-4" : ""}>
             <PageHeader
-                title={isSuperAdmin ? t('title') : "Dashboard"}
+                title={isSuperAdmin ? t('title') : t('userDashboardTitle')}
                 subtitle={!isCompact ? (isSuperAdmin
                     ? t('subtitle')
-                    : "Métricas de rendimiento y consumo de tu organización.") : undefined}
+                    : t('userDashboardSubtitle')) : undefined}
                 actions={
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsCompact(!isCompact)}
                             className={`p-2 rounded-lg transition-colors ${isCompact ? 'bg-teal-500/10 text-teal-500' : 'hover:bg-muted text-muted-foreground'}`}
-                            title="Toggle War Room Mode"
+                            title={t('warRoomToggle')}
                         >
                             {isCompact ? <Monitor size={20} /> : <LayoutGrid size={20} />}
                         </button>
                         <Badge variant="outline" className="gap-2 px-4 py-2 bg-background border-border text-teal-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
                             <Activity size={14} className="animate-pulse text-teal-500" />
-                            Live Feed
+                            {t('liveFeed')}
                         </Badge>
                     </div>
                 }
@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
                     {/* Quick Stats Grid */}
                     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-${isCompact ? '3' : '6'}`}>
                         <MetricCard
-                            title={isSuperAdmin ? "Total Tenants" : "Usuarios Activos"}
+                            title={isSuperAdmin ? t('metrics.tenants') : t('metrics.activeUsers')}
                             value={isSuperAdmin ? stats.totalTenants : (stats as any).totalUsers || 0}
                             icon={<Building2 />}
                             trend="+12%"
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
                             className={isCompact ? "p-4" : ""}
                         />
                         <MetricCard
-                            title="Documentos"
+                            title={t('metrics.documents')}
                             value={stats.totalFiles}
                             icon={<FileText />}
                             trend="+5.4%"
@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
                             className={isCompact ? "p-4" : ""}
                         />
                         <MetricCard
-                            title="Pedidos / Casos"
+                            title={t('metrics.cases')}
                             value={stats.totalCases}
                             icon={<ShieldCheck />}
                             trend="+18%"
@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
                             className={isCompact ? "p-4" : ""}
                         />
                         <MetricCard
-                            title="IA Searches"
+                            title={t('metrics.iaSearches')}
                             value={stats.usage.searches}
                             icon={<Search />}
                             trend="+24%"
@@ -171,27 +171,27 @@ export default function AdminDashboardPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Usage Chart */}
                         <ContentCard
-                            title="Consumo de IA y Almacenamiento"
+                            title={t('charts.consumptionTitle')}
                             icon={<Zap className="text-teal-500" size={18} />}
                             className="lg:col-span-2 shadow-xl shadow-slate-200/50 dark:shadow-none"
                         >
                             <div className="space-y-8 p-2">
                                 <UsageBar
-                                    label="Tokens Gemini (Input/Output)"
+                                    label={t('charts.labels.tokens')}
                                     value={stats.usage.tokens}
                                     max={isSuperAdmin ? 10_000_000 : stats.limits?.tokens || 1_000_000}
                                     format="tokens"
                                     color="teal"
                                 />
                                 <UsageBar
-                                    label="Espacio en Disco (Cloudinary/S3)"
+                                    label={t('charts.labels.storage')}
                                     value={stats.usage.storage}
                                     max={isSuperAdmin ? 100 * 1024 * 1024 * 1024 : stats.limits?.storage || 5 * 1024 * 1024 * 1024}
                                     format="bytes"
                                     color="blue"
                                 />
                                 <UsageBar
-                                    label="Búsquedas Vectoriales"
+                                    label={t('charts.labels.searches')}
                                     value={stats.usage.searches}
                                     max={isSuperAdmin ? 50_000 : stats.limits?.searches || 5_000}
                                     format="count"
@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
 
                         {/* Industries or Plan Info */}
                         <ContentCard
-                            title={isSuperAdmin ? "Distribución por Sector" : "Estado del Plan"}
+                            title={isSuperAdmin ? t('distribution.title') : t('plan.title')}
                             icon={<TrendingUp className="text-teal-500" size={18} />}
                             className="shadow-xl shadow-slate-200/50 dark:shadow-none"
                         >
@@ -222,16 +222,16 @@ export default function AdminDashboardPage() {
                                 <div className="text-center py-6 space-y-6">
                                     <div className="relative inline-block px-10 py-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-[2rem] font-black text-2xl shadow-2xl border border-slate-700">
                                         <div className="absolute -top-1 -right-1">
-                                            <Badge className="bg-teal-500 text-white border-none text-[8px] font-black">ACTIVE</Badge>
+                                            <Badge className="bg-teal-500 text-white border-none text-[8px] font-black">{t('plan.active')}</Badge>
                                         </div>
                                         {stats.tier || 'FREE'}
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Renovación automática</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{t('plan.renewal')}</p>
                                         <p className="text-xs text-foreground font-bold mt-1">12 de Febrero, 2026</p>
                                     </div>
                                     <button className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 transition-all active:scale-95">
-                                        Gestionar Suscripción
+                                        {t('plan.manageBtn')}
                                     </button>
                                 </div>
                             )}
@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
                     {/* Recent Activity */}
                     <div className="mt-8">
                         <ContentCard
-                            title="Actividad Reciente del Sistema"
+                            title={t('activity.title')}
                             icon={<Activity className="text-teal-500" size={18} />}
                             noPadding
                             className="shadow-xl shadow-slate-200/50 dark:shadow-none"
@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
                                 ) : (
                                     <div className="p-20 text-center flex flex-col items-center gap-4 text-muted-foreground">
                                         <ShieldCheck size={48} className="opacity-10" />
-                                        <p className="text-sm font-bold tracking-tight opacity-50 uppercase tracking-[0.2em]">No hay actividad reciente registrada.</p>
+                                        <p className="text-sm font-bold tracking-tight opacity-50 uppercase tracking-[0.2em]">{t('activity.empty')}</p>
                                     </div>
                                 )}
                             </div>

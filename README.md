@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 3.8.0 - EVOLUTION ERA)
+# ABD Multi-Industry RAG Platform (Vision 3.9.1 - EVOLUTION ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v3.8.0** marca el cierre de la "Fase 95: Product Readiness & Stabilization", consolidando el Dashboard de ROI, Navegación Inteligente y Resiliencia de UI.
+Esta versión **v3.9.1** despliega la visión de "Inteligencia Multi-Sectorial" (1801.txt) y garantiza estabilidad total en infraestructuras de Vercel Serverless.
 
 ## 🚀 Inicio Rápido
 
@@ -72,12 +72,27 @@ npm run ensure-indexes       # Verifica índices críticos en DB
 
 ## 👥 Usuarios de Prueba
 
-| Email | Password | Rol | Permisos |
-|-------|----------|-----|----------|
-| **superadmin@abd.com** | `super123` | SUPER_ADMIN | **Acceso Total:** Gobierno global y multinivel |
-| **admin@abd.com** | `super123` | ADMIN | **Tenant Admin:** Gestión de usuarios y documentos |
-| **tecnico@abd.com** | `tecnico123` | TECNICO | **Técnico:** Portal de validación y workflow |
-| **ingenieria@abd.com** | `ingenieria123` | INGENIERIA | **Consulta:** Solo lectura documentos técnicos |
+Todos los usuarios comparten el patrón de contraseña indicado (`super123`, `tecnico123`, etc).
+
+### 🏆 Master / Global Governance (ABD Global)
+| Email | Password | Rol | Propósito |
+|-------|----------|-----|-----------|
+| **superadmin@abd.com** | `super123` | SUPER_ADMIN | **Acceso Total:** Control global sin restricciones. |
+| **admin@abd.com** | `super123` | ADMIN | **Global Admin:** Gestión de la plataforma completa. |
+
+### 🏗️ Sector Elevadores (Elevadores México)
+| Email | Password | Rol | Propósito |
+|-------|----------|-----|-----------|
+| **admin@elevadores.mx** | `super123` | ADMIN | Administrador del Tenant Elevadores. |
+| **tecnico@elevadores.mx** | `tecnico123` | TECHNICAL | Validador de checklists e informes técnicos. |
+| **ingenieria@elevadores.mx** | `ingenieria123` | ENGINEERING | Consulta técnica y análisis documental. |
+
+### ⚖️ Sector Legal (Legal & Compliance Corp)
+| Email | Password | Rol | Propósito |
+|-------|----------|-----|-----------|
+| **admin@legal.com** | `super123` | ADMIN | Administrador del Tenant Legal. |
+| **tecnico@legal.com** | `tecnico123` | TECHNICAL | Auditor de cumplimiento y flujos legales. |
+| **ingenieria@legal.com** | `ingenieria123` | ENGINEERING | Revisión de contratos y normativa. |
 
 ## 📁 Estructura del Core (v2.36)
 
@@ -94,6 +109,11 @@ src/
 ```
 
 ## 📊 Características Clave
+  - ✅ **Multi-Vertical Intelligence**: Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis (Vision 2026).
+  - ✅ **Infinite Memory & Streaming**: Ingesta en streaming y de-duplicación inteligente para gestionar bibliotecas técnicas ilimitadas.
+  - ✅ **Vercel Serverless Stability Path**: Polyfill de DOMMatrix y workers agnósticos al entorno para evitar crashes en despliegues cloud.
+  - ✅ **Task Collaboration Hub**: Centro de gestión de tareas y validación humana integrada en el flujo de trabajo con trazabilidad total.
+  - ✅ **Automation Studio (Visual Workflow Editor)**: Editor canvas infinito para diseñar flujos agénticos complejos con nodos de decisión, loops y esperas.
   - ✅ **Turing-complete Workflow Logic**: Motor de estados avanzado con soporte para bifurcaciones (Switch), retardos (Wait) e iteraciones (Loop).
   - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) con validación industrial y fallback seguro contra fallos de carga.
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.

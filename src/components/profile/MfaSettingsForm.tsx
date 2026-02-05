@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, ShieldAlert, Key, QrCode, ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 export function MfaSettingsForm() {
+    const t = useTranslations('profile.security.mfa');
+    const tCommon = useTranslations('common');
     const { toast } = useToast();
     const [enabled, setEnabled] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
@@ -48,7 +51,7 @@ export function MfaSettingsForm() {
             setSetupData(data);
             setStep('SETUP');
         } catch (e) {
-            toast({ variant: "destructive", title: "Error", description: "No se pudo iniciar el setup." });
+            toast({ variant: "destructive", title: tCommon('error'), description: t('updateError') || "Error" });
         } finally {
             setLoading(false);
         }
@@ -69,19 +72,19 @@ export function MfaSettingsForm() {
                 setEnabled(true);
                 setRecoveryCodes(data.recoveryCodes);
                 setStep('RECOVERY');
-                toast({ title: "MFA Activado", description: "Tu cuenta ahora está más segura." });
+                toast({ title: t('successTitle'), description: t('successDesc') });
             } else {
-                toast({ variant: "destructive", title: "Código inválido", description: data.error });
+                toast({ variant: "destructive", title: t('invalidCode'), description: data.error });
             }
         } catch (e) {
-            toast({ variant: "destructive", title: "Error de servidor" });
+            toast({ variant: "destructive", title: tCommon('error') });
         } finally {
             setVerifying(false);
         }
     };
 
     const disableMfa = async () => {
-        if (!confirm('¿Estás seguro de que quieres desactivar la protección de doble factor? Tu cuenta será menos segura.')) return;
+        if (!confirm(t('disableConfirm'))) return;
         setLoading(true);
         try {
             const res = await fetch('/api/auth/mfa/config', {
@@ -92,10 +95,10 @@ export function MfaSettingsForm() {
             if (res.ok) {
                 setEnabled(false);
                 setStep('IDLE');
-                toast({ title: "MFA Desactivado" });
+                toast({ title: t('statusDisabled') });
             }
         } catch (e) {
-            toast({ variant: "destructive", title: "Error" });
+            toast({ variant: "destructive", title: tCommon('error') });
         } finally {
             setLoading(false);
         }
@@ -110,14 +113,14 @@ export function MfaSettingsForm() {
                     <div>
                         <CardTitle className="text-sm font-bold flex items-center gap-2">
                             <Key size={16} className="text-teal-600" />
-                            Autenticación de Doble Factor (MFA)
+                            {t('title')}
                         </CardTitle>
                         <CardDescription className="text-xs">
-                            Añade una capa extra de seguridad a tu cuenta usando una App de autenticador.
+                            {t('description')}
                         </CardDescription>
                     </div>
                     <Badge variant={enabled ? "default" : "secondary"} className={enabled ? "bg-teal-500" : ""}>
-                        {enabled ? "Activado" : "Desactivado"}
+                        {enabled ? t('statusEnabled') : t('statusDisabled')}
                     </Badge>
                 </div>
             </CardHeader>
@@ -130,19 +133,16 @@ export function MfaSettingsForm() {
                         </div>
                         <div className="flex-1 space-y-4 text-center md:text-left">
                             <p className="text-sm text-slate-600 dark:text-slate-400">
-                                {enabled
-                                    ? "Tu cuenta está protegida. Al iniciar sesión se te pedirá un código generado por tu aplicación (Google Authenticator, Authy, Microsoft Authenticator, etc)."
-                                    : "Actualmente tu cuenta solo está protegida por tu contraseña. Te recomendamos activar el doble factor para evitar accesos no autorizados."
-                                }
+                                {enabled ? t('infoEnabled') : t('infoDisabled')}
                             </p>
                             {enabled ? (
                                 <Button variant="outline" className="text-red-500 hover:text-red-700 h-9" onClick={disableMfa}>
-                                    Desactivar Doble Factor
+                                    {t('disableBtn')}
                                 </Button>
                             ) : (
                                 <Button className="bg-teal-600 hover:bg-teal-700 text-white h-9 gap-2" onClick={startSetup}>
                                     <QrCode size={16} />
-                                    Configurar Doble Factor
+                                    {t('setupBtn')}
                                 </Button>
                             )}
                         </div>
@@ -158,18 +158,18 @@ export function MfaSettingsForm() {
                             <div className="flex-1 space-y-4">
                                 <h3 className="font-bold text-slate-900 group flex items-center gap-2">
                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-600 text-white text-xs">1</span>
-                                    Escanea el código QR
+                                    {t('setupStep1')}
                                 </h3>
                                 <p className="text-xs text-slate-500">
-                                    Abre tu aplicación de autenticador (Google Authenticator, Authy, etc) y escanea el código de la izquierda.
+                                    {t('setupStep1Desc')}
                                 </p>
                                 <div className="p-3 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">O introduce la clave manualmente:</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">{t('manualKey')}</p>
                                     <code className="text-xs font-mono text-teal-700 select-all">{setupData.secret}</code>
                                 </div>
                                 <h3 className="font-bold text-slate-900 flex items-center gap-2 pt-2">
                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-600 text-white text-xs">2</span>
-                                    Introduce el código de 6 dígitos
+                                    {t('setupStep2')}
                                 </h3>
                                 <div className="flex gap-2">
                                     <Input
@@ -185,9 +185,9 @@ export function MfaSettingsForm() {
                                         disabled={verifying || token.length < 6}
                                         className="bg-teal-600 hover:bg-teal-700 text-white"
                                     >
-                                        {verifying ? 'Verificando...' : 'Activar'}
+                                        {verifying ? t('verifying') : t('activateBtn')}
                                     </Button>
-                                    <Button variant="ghost" onClick={() => setStep('IDLE')}>Cancelar</Button>
+                                    <Button variant="ghost" onClick={() => setStep('IDLE')}>{tCommon('cancel')}</Button>
                                 </div>
                             </div>
                         </div>
@@ -199,18 +199,18 @@ export function MfaSettingsForm() {
                         <div className="bg-teal-50 border border-teal-100 p-4 rounded-xl flex items-start gap-3">
                             <CheckCircle2 className="text-teal-600 mt-1" size={20} />
                             <div>
-                                <h3 className="font-bold text-teal-900">¡Doble Factor Activado!</h3>
-                                <p className="text-xs text-teal-700">Tu cuenta está ahora protegida con seguridad de grado bancario.</p>
+                                <h3 className="font-bold text-teal-900">{t('recoveryTitle')}</h3>
+                                <p className="text-xs text-teal-700">{t('recoveryDesc')}</p>
                             </div>
                         </div>
 
                         <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl space-y-3">
                             <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
                                 <AlertTriangle size={16} />
-                                Códigos de Recuperación
+                                {t('recoveryCodesTitle')}
                             </div>
                             <p className="text-[11px] text-amber-700">
-                                Si pierdes el acceso a tu aplicación de autenticador, estos códigos son la <strong>ÚNICA</strong> forma de recuperar tu cuenta. Guárdalos en un lugar seguro (ej: un gestor de contraseñas).
+                                {t('recoveryCodesWarning')}
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                                 {recoveryCodes.map(code => (
@@ -221,14 +221,14 @@ export function MfaSettingsForm() {
                             </div>
                             <Button variant="outline" className="w-full h-8 text-xs gap-2 border-amber-200 text-amber-800 hover:bg-amber-100" onClick={() => {
                                 navigator.clipboard.writeText(recoveryCodes.join('\n'));
-                                toast({ title: "Copiado", description: "Códigos copiados al portapapeles." });
+                                toast({ title: tCommon('notifications.success.title'), description: t('copyCodes') });
                             }}>
                                 <ClipboardCheck size={14} />
-                                Copiar todos los códigos
+                                {t('copyCodes')}
                             </Button>
                         </div>
                         <div className="flex justify-end">
-                            <Button onClick={() => setStep('IDLE')} className="bg-teal-600">Entendido</Button>
+                            <Button onClick={() => setStep('IDLE')} className="bg-teal-600">{t('doneBtn')}</Button>
                         </div>
                     </div>
                 )}

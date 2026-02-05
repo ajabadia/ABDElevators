@@ -22,7 +22,8 @@ import {
     Bell,
     UserCircle,
     BrainCircuit,
-    ShieldAlert
+    ShieldAlert,
+    Languages
 } from 'lucide-react';
 import { UserRole } from '@/types/roles';
 
@@ -112,7 +113,7 @@ export const menuSections: MenuSection[] = [
         ]
     },
     {
-        label: 'Engineering Studio',
+        label: 'Automation Studio',
         labelKey: 'sections.studio',
         items: [
             {
@@ -142,6 +143,13 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/document-types',
                 icon: Settings,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            },
+            {
+                name: 'i18n Governance',
+                nameKey: 'items.i18n',
+                href: '/admin/settings/i18n',
+                icon: Languages,
+                roles: [UserRole.SUPER_ADMIN]
             }
         ]
     },
@@ -226,6 +234,13 @@ export const menuSections: MenuSection[] = [
                 icon: BrainCircuit,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
                 module: 'RAG'
+            },
+            {
+                name: 'Workflow Tasks',
+                nameKey: 'items.workflow_tasks',
+                href: '/admin/workflow-tasks',
+                icon: CheckSquare,
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER]
             },
             {
                 name: 'Guardian Console',

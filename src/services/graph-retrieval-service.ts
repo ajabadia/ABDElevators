@@ -1,8 +1,8 @@
-
 import { PromptService } from '@/lib/prompt-service';
 import { callGeminiMini } from '@/lib/llm';
 import { runQuery } from '@/lib/neo4j';
 import { logEvento } from '@/lib/logger';
+import { PROMPTS } from '@/lib/prompts';
 
 export interface GraphContext {
     nodes: Array<{ label: string; name: string; type: string }>;
@@ -20,12 +20,22 @@ export class GraphRetrievalService {
         correlationId: string
     ): Promise<GraphContext | null> {
         try {
-            // 1. Extract potential entity names from query
-            const { text: prompt, model } = await PromptService.getRenderedPrompt(
-                'QUERY_ENTITY_EXTRACTOR',
-                { query },
-                tenantId
-            );
+            // 1. Extract potential entity names from query with fallback
+            let prompt: string;
+            let model: string = 'gemini-1.5-flash';
+
+            try {
+                const rendered = await PromptService.getRenderedPrompt(
+                    'QUERY_ENTITY_EXTRACTOR',
+                    { query },
+                    tenantId
+                );
+                prompt = rendered.text;
+                model = rendered.model;
+            } catch (err) {
+                console.warn(`[QUERY_ENTITY_EXTRACTOR] ⚠️ Fallback to master prompt:`, err);
+                prompt = PROMPTS.QUERY_ENTITY_EXTRACTOR.replace('{{query}}', query);
+            }
 
             const entityCsv = await callGeminiMini(prompt, tenantId, { correlationId, model });
 

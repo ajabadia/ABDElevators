@@ -14,4 +14,78 @@ export const PROMPTS = {
 
     RESUMIR_CONTEXTO: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
     Enfócate en advertencias de seguridad, voltajes y pasos críticos de montaje.`,
+
+    I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector ascensores y RAG).
+    Traduce las siguientes llaves de i18n del idioma '{{sourceLocale}}' al '{{targetLocale}}'.
+    
+    REGLAS:
+    1. Mantén los placeholders como {name}, {count}, {{variable}}.
+    2. Usa terminología técnica precisa para el sector de ascensores/mantenimiento.
+    3. Responde ÚNICAMENTE con un objeto JSON válido.
+    
+    LLAVES A TRADUCIR:
+    {{translationsToProcess}}`,
+
+    GRAPH_EXTRACTOR: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
+    Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
+    
+    ENTIDADES permitidas:
+    - Component (Pieza física, placa, motor, etc.)
+    - Procedure (Paso de mantenimiento, calibración, montaje)
+    - Error (Código de error o descripción de fallo)
+    - Model (Modelo de ascensor específico como ARCA II, Evolve, etc.)
+    
+    RELACIONES permitidas:
+    - REQUIRES (P.ej: Procedimiento REQUIRES Componente)
+    - PART_OF (P.ej: Componente PART_OF Modelo)
+    - RESOLVES (P.ej: Procedimiento RESOLVES Error)
+    - DESCRIBES (P.ej: Manual DESCRIBES Modelo)
+    
+    FORMATO DE SALIDA (JSON estrictamente):
+    {
+      "entities": [
+        { "id": "nombre_id_normalizado", "type": "Component|Procedure|Error|Model", "name": "Nombre Legible" }
+      ],
+      "relations": [
+        { "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino" }
+      ]
+    }
+    
+    IMPORTANTE: El ID debe ser descriptivo pero sin espacios (ej: "motherboard_arca_2"). Si no hay entidades claras, devuelve arrays vacíos.
+    
+    TEXTO A ANALIZAR:
+    {{text}}`,
+
+    QUERY_ENTITY_EXTRACTOR: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
+    Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
+    No devuelvas explicaciones, solo los nombres.
+    
+    EJEMPLO:
+    Consulta: "¿Cómo calibro la placa ARCA II?"
+    Salida: arca_ii, placa
+    
+    CONSULTA: {{query}}`,
+
+    RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema RAG técnico para la industria de los ascensores.
+    Tu objetivo es puntuar la respuesta basada en la pregunta del usuario y el contexto recuperado de los manuales.
+    
+    DATOS A EVALUAR:
+    - Pregunta del usuario: {{query}}
+    - Contexto recuperado: {{context}}
+    - Respuesta generada: {{response}}
+    
+    CRITERIOS DE MANTENIMIENTO (Puntúa de 0.0 a 1.0):
+    1. **Faithfulness** (Fidelidad): ¿La respuesta contiene SOLO información presente en el contexto? (0 si inventa datos o usa conocimiento general externo no citado).
+    2. **Answer Relevance** (Relevancia): ¿La respuesta resuelve directamente la duda del usuario de forma pertinente?
+    3. **Context Precision** (Precisión del Contexto): ¿Qué proporción de los fragmentos de contexto proporcionados son realmente útiles para responder a la pregunta?
+    
+    FORMATO DE SALIDA (JSON estrictamente):
+    {
+      "faithfulness": 0.0,
+      "answer_relevance": 0.0,
+      "context_precision": 0.0,
+      "reasoning": "Breve explicación de las puntuaciones"
+    }
+    
+    Responde SOLO con el objeto JSON.`
 };

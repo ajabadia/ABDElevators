@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Save, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export function ProfileForm() {
+    const t = useTranslations('profile.form');
+    const tCommon = useTranslations('common');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -52,17 +55,17 @@ export function ProfileForm() {
 
             if (res.ok) {
                 toast({
-                    title: 'Perfil actualizado',
-                    description: 'Tus datos se han guardado correctamente.',
+                    title: t('successTitle'),
+                    description: t('successDescription'),
                 });
                 fetchProfile();
             } else {
-                throw new Error('Error al actualizar');
+                throw new Error(t('errorUpdate'));
             }
         } catch (error) {
             toast({
-                title: 'Error',
-                description: 'No se pudo actualizar el perfil.',
+                title: tCommon('error'),
+                description: t('errorDescription'),
                 variant: 'destructive',
             });
         } finally {
@@ -85,8 +88,8 @@ export function ProfileForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="nombre" className="flex items-center justify-between">
-                        Nombre
-                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                        {t('firstName')}
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">{t('readOnly')}</span>}
                     </Label>
                     <Input
                         id="nombre"
@@ -100,8 +103,8 @@ export function ProfileForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="apellidos" className="flex items-center justify-between">
-                        Apellidos
-                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                        {t('lastName')}
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">{t('readOnly')}</span>}
                     </Label>
                     <Input
                         id="apellidos"
@@ -119,8 +122,8 @@ export function ProfileForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="puesto" className="flex items-center justify-between">
-                        Puesto / Cargo
-                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">Solo lectura</span>}
+                        {t('role')}
+                        {!isPrivileged && <span className="text-[10px] text-slate-400 font-normal italic">{t('readOnly')}</span>}
                     </Label>
                     <Input
                         id="puesto"
@@ -136,14 +139,14 @@ export function ProfileForm() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
                 {!isPrivileged && (
                     <p className="text-xs text-slate-500 max-w-md">
-                        <span className="font-bold text-teal-600 mr-1">Nota:</span>
-                        Como usuario de la plataforma, tus datos de identidad están gestionados por la administración. Si necesitas actualizarlos, contacta con soporte.
+                        <span className="font-bold text-teal-600 mr-1">{t('note')}:</span>
+                        {t('unprivilegedNotice')}
                     </p>
                 )}
                 <div className="flex-1" />
                 <Button type="submit" disabled={saving} className="bg-teal-600 hover:bg-teal-700 transition-all font-bold">
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Guardar Cambios
+                    {tCommon('save')}
                 </Button>
             </div>
         </form>

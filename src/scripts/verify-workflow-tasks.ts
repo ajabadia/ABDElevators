@@ -73,12 +73,37 @@ async function verify() {
         if (task) {
             console.log('✅ Task Generated Successfully:', task.title);
             console.log('Target Role:', task.assignedRole);
+
+            // --- NEW: Test WorkflowTaskService ---
+            console.log('\n🧪 Testing WorkflowTaskService...');
+            const { WorkflowTaskService } = await import('../lib/workflow-task-service');
+
+            // List tasks
+            const tasks = await WorkflowTaskService.listTasks(tenantId, { caseId: mockCaseId.toString() });
+            console.log(`✅ Service listTasks found ${tasks.length} tasks`);
+
+            // Update status
+            console.log('🔄 Updating task status via Service...');
+            const updateResult = await WorkflowTaskService.updateStatus({
+                id: task._id.toString(),
+                tenantId,
+                userId: 'tester_001',
+                userName: 'Admin Tester',
+                status: 'IN_PROGRESS',
+                correlationId: 'v3-verify-update'
+            });
+            console.log('✅ Update Status Result:', updateResult);
+
+            const updatedTask = await WorkflowTaskService.getTaskById(task._id.toString(), tenantId);
+            console.log('✅ Verifying status is now:', updatedTask.status);
+
         } else {
             throw new Error('Task was not generated');
         }
 
         // Cleanup
         await casesColl.deleteOne({ _id: mockCaseId });
+        await tasksColl.deleteMany({ caseId: mockCaseId.toString() });
         console.log('🧹 Cleanup done.');
 
     } catch (e: any) {

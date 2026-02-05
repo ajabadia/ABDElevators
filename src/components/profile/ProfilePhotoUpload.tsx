@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, Loader2, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 
 interface ProfilePhotoUploadProps {
     currentPhotoUrl?: string;
@@ -13,6 +14,8 @@ interface ProfilePhotoUploadProps {
 }
 
 export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl = '/api/auth/perfil/upload-photo' }: ProfilePhotoUploadProps) {
+    const t = useTranslations('profile.photo');
+    const tCommon = useTranslations('common');
     const [uploading, setUploading] = useState(false);
     const [fotoUrl, setFotoUrl] = useState<string | undefined>(currentPhotoUrl);
     const { toast } = useToast();
@@ -30,8 +33,8 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl
         // Validar tipo
         if (!file.type.startsWith('image/')) {
             toast({
-                title: 'Error',
-                description: 'Por favor selecciona un archivo de imagen.',
+                title: tCommon('error'),
+                description: t('typeError'),
                 variant: 'destructive',
             });
             return;
@@ -40,8 +43,8 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl
         // Validar tamaño (5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast({
-                title: 'Error',
-                description: 'La imagen es demasiado grande (máximo 5MB).',
+                title: tCommon('error'),
+                description: t('sizeError'),
                 variant: 'destructive',
             });
             return;
@@ -73,17 +76,17 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl
 
                 onUploadSuccess?.(data.url, data.public_id);
                 toast({
-                    title: 'Foto actualizada',
-                    description: 'Tu foto de perfil se ha actualizado correctamente.',
+                    title: t('successTitle'),
+                    description: t('successDesc'),
                 });
             } else {
                 const errorData = await res.json();
-                throw new Error(errorData.message || 'Error al subir imagen');
+                throw new Error(errorData.message || t('uploadError'));
             }
         } catch (error: any) {
             toast({
-                title: 'Error',
-                description: error.message || 'No se pudo subir la imagen.',
+                title: tCommon('error'),
+                description: error.message || t('uploadError'),
                 variant: 'destructive',
             });
         } finally {
@@ -98,7 +101,7 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl
                     {fotoUrl ? (
                         <Image
                             src={fotoUrl}
-                            alt="Foto de perfil"
+                            alt={t('title')}
                             fill
                             className="object-cover"
                         />
@@ -125,8 +128,8 @@ export function ProfilePhotoUpload({ currentPhotoUrl, onUploadSuccess, uploadUrl
                 </label>
             </div>
             <div className="text-center">
-                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Foto de Perfil</h4>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider">PNG, JPG o GIF hasta 5MB</p>
+                <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('title')}</h4>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('subtitle')}</p>
             </div>
         </div>
     );

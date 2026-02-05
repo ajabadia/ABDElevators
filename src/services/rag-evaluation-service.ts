@@ -1,10 +1,10 @@
-
 import { connectDB } from '@/lib/db';
 import { PromptService } from '@/lib/prompt-service';
 import { callGeminiMini } from '@/lib/llm';
 import { RagEvaluationSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
+import { PROMPTS } from '@/lib/prompts';
 
 export class RagEvaluationService {
     /**
@@ -20,17 +20,30 @@ export class RagEvaluationService {
         try {
             const contextText = contexts.join('\n\n---\n\n');
 
-            // 1. Get Judge Prompt
-            const { text: prompt, model } = await PromptService.getRenderedPrompt(
-                'RAG_JUDGE',
-                { query, context: contextText, response },
-                tenantId
-            );
+            // 1. Get Judge Prompt with Fallback
+            let prompt: string;
+            let model: string = 'gemini-1.5-pro'; // Default for evaluation
 
-            // 2. Call LLM Judge (Pro version for high fidelity)
+            try {
+                const rendered = await PromptService.getRenderedPrompt(
+                    'RAG_JUDGE',
+                    { query, context: contextText, response },
+                    tenantId
+                );
+                prompt = rendered.text;
+                model = rendered.model;
+            } catch (err) {
+                console.warn(`[RAG_JUDGE] ⚠️ Fallback to master prompt:`, err);
+                prompt = PROMPTS.RAG_JUDGE
+                    .replace('{{query}}', query)
+                    .replace('{{context}}', contextText)
+                    .replace('{{response}}', response);
+            }
+
+            // 2. Call LLM Judge
             const judgeResponse = await callGeminiMini(prompt, tenantId, {
                 correlationId,
-                model: 'gemini-1.5-pro' // Force Pro for better metrics
+                model
             });
 
             // 3. Parse Metrics

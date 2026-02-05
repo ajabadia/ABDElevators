@@ -1,6 +1,6 @@
 ---
 name: app-full-reviewer
-description: Ejecuta un ciclo completo de auditoría (UI/UX, i18n/a11y y Permisos/Seguridad) sobre una parte específica de la aplicación.
+description: Ejecuta un ciclo completo de auditoría (UI/UX, i18n/a11y, Permisos y Seguridad Técnica) sobre una parte específica de la aplicación.
 ---
 
 # App Full Reviewer Skill (Meta-Auditor)
@@ -27,27 +27,39 @@ Antes de iniciar, determina si el archivo pertenece a **Área Pública (Marketin
 2. Revisa semántica HTML, ARIA labels y compatibilidad con lectores de pantalla.
 3. **Público Solo**: Verifica metadatos SEO (Title, Description).
 
-### Fase 3: Auditoría de Seguridad y Permisos (Skill: guardian-auditor)
-- **Área Privada**: Verifica `enforcePermission`, `requireRole` y aislamiento de tenant.
-- **Área Pública**: Verifica que NO haya exposición de datos internos, APIs administrativas o PII (Bypass autorizado).
+### Fase 3: Auditoría de Seguridad Integral
+Combina la lógica de permisos con la robustez técnica:
+1. **Permisos (Skill: guardian-auditor)**:
+   - **Área Privada**: Verifica `enforcePermission`, `requireRole` (incluyendo nuevos roles V3) y aislamiento de tenant.
+2. **Seguridad Técnica (Skill: security-auditor)**:
+   - **Inyecciones**: Verifica validación Zod en todos los inputs.
+   - **Privacidad**: Verifica encriptación de campos sensibles y máscara de PII.
+   - **Infra**: Verifica rate limiting y headers de seguridad (CSP).
+3. **Área Pública**: Verifica que NO haya exposición de datos internos, APIs administrativas o PII (Bypass autorizado).
 
-### Fase 4: Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
+### Fase 4: Gobernanza de Prompts (Skill: prompt-governance) [CONDICIONAL]
+**Solo si el archivo usa IA (importa `PromptService`, `callGemini`, etc.):**
+1. Verifica el uso de la arquitectura de dos capas (DB + Master Fallback).
+2. Asegura que los prompts sigan la Regla de Oro #4 (Trazabilidad con `correlationId`).
+3. Valida que el prompt esté centralizado y no hardcodeado.
+
+### Fase 5: Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
 1. Escanea patrones de error recurrentes.
 2. Aplica refactorizaciones automáticas.
 
-### Fase 5: Sincronización con el Mapa de Aplicación (map.md)
+### Fase 6: Sincronización con el Mapa de Aplicación (map.md)
 1. Comprueba si la ruta o funcionalidad revisada está presente en `map.md`.
 2. Si **no está** y es una ruta pública, autenticada, administrativa o de API, debes **agregarla** siguiendo el formato de la tabla correspondiente.
-3. Actualiza (o agrega) la columna **Última Revisión** con la fecha y hora actual de la ejecución de esta skill (Ej: `2026-02-03 10:15`).
+3. Actualiza (o agrega) la columna **Última Revisión** con la fecha y hora actual de la ejecución de esta skill.
 
 ## Registro de Ejecución (Checklist)
 - [ ] Identificada Área (Pública vs Privada)
 - [ ] Ejecutada Auditoría UI/Styling (ui-styling O marketing-styling)
 - [ ] Ejecutada Auditoría i18n/a11y (+ SEO si es público)
-- [ ] Ejecutada Auditoría Guardian V2 (Protección O Bypass Público)
+- [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
+- [ ] Ejecutada Auditoría de Prompts (Solo si aplica)
 - [ ] Ejecutada Auditoría de Higiene (Technical Debt)
 - [ ] Sincronizado map.md (Agregado/Actualizado con timestamp)
-- [ ] Sincronizados resultados de todas las fases
 
 ## Output (formato exacto)
 Presenta un **Dashboard de Calidad** consolidado:
@@ -58,15 +70,16 @@ Presenta un **Dashboard de Calidad** consolidado:
 | UI / UX   | A-F          | [X]                |
 | i18n/a11y | A-F          | [X]                |
 | Seguridad | A-F          | [X]                |
+| Prompts   | A-F / N/A    | [X]                |
 | Higiene   | A-F          | [X]                |
 
 ### 📝 Plan de Acción Integrado
-Lista priorizada de cambios necesarios mezclando las tres disciplinas.
+Lista priorizada de cambios necesarios mezclando las disciplinas.
 
 ### 🛠️ Aplicación de Cambios
 Propuesta de refactorización final que resuelva todos los puntos detectados.
 
 ## Instrucciones y Reglas
-- **ORQUESTACIÓN**: Debes llamar mentalmente o explícitamente a las instrucciones de las otras tres skills.
-- **PRIORIDAD**: La seguridad (`guardian-auditor`) siempre tiene prioridad máxima si se detecta una vulnerabilidad.
+- **ORQUESTACIÓN**: Debes llamar mentalmente o explícitamente a las instrucciones de las otras skills (`ui-styling/marketing-styling`, `i18n-a11y`, `guardian+security`, `prompt-governance`, `hygiene`).
+- **PRIORIDAD**: La seguridad siempre tiene prioridad máxima si se detecta una vulnerabilidad.
 - **COHERENCIA**: Asegura que una mejora de UI no rompa la accesibilidad.

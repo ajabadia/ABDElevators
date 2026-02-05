@@ -1,14 +1,18 @@
 import { ExternalServiceError } from '@/lib/errors';
-import { PDFParse } from 'pdf-parse';
+// Eliminamos import estático para evitar ReferenceError en inicialización de Vercel
+// import { PDFParse } from 'pdf-parse';
 
 /**
  * Extrae texto de un buffer PDF usando pdf-parse v2 (Legacy/Stable)
  * Regla de Oro #3: AppError para manejo de errores
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-    let pdf: PDFParse | null = null;
+    let pdf: any = null;
     try {
-        pdf = new PDFParse({ data: buffer });
+        // Importación dinámica (Lazy Loading) para evitar problemas en Serverless
+        const PDFParse = (await import('pdf-parse')).default;
+        // @ts-ignore - Depende del tipo de export de la librería
+        pdf = new (PDFParse as any)({ data: buffer });
         const result = await pdf.getText();
         return cleanPDFText(result.text);
     } catch (error: any) {

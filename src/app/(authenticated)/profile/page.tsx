@@ -9,12 +9,16 @@ import { UserNotificationPreferencesForm } from '@/components/profile/UserNotifi
 import { ActiveSessionsForm } from '@/components/profile/ActiveSessionsForm';
 import { MfaSettingsForm } from '@/components/profile/MfaSettingsForm';
 import { UserEfficiencyStats } from '@/components/profile/UserEfficiencyStats';
+import { getTranslations } from 'next-intl/server';
 
 /**
  * Página de Perfil de Usuario
  * Permite gestionar datos personales, foto y seguridad.
  */
 export default async function PerfilPage() {
+    const t = await getTranslations('profile.page');
+    const tCommon = await getTranslations('common');
+
     const session = await auth();
     if (!session?.user?.email) {
         redirect('/login');
@@ -33,10 +37,10 @@ export default async function PerfilPage() {
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Configuración <span className="text-teal-600">de Cuenta</span>
+                        {t('title')}
                     </h1>
                     <p className="text-slate-500 mt-1">
-                        Gestiona tu identidad digital, preferencias y seguridad de acceso.
+                        {t('subtitle')}
                     </p>
                 </div>
             </div>
@@ -54,7 +58,7 @@ export default async function PerfilPage() {
                         </div>
 
                         <div className="mt-4 relative z-10">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{user.name || 'Usuario'}</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{user.name || tCommon('user')}</h2>
                             <p className="text-sm text-slate-500">{user.email}</p>
                         </div>
 
@@ -62,7 +66,7 @@ export default async function PerfilPage() {
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                                 <div className="flex items-center gap-2">
                                     <Shield size={16} className="text-teal-600" />
-                                    <span className="text-xs font-bold uppercase text-slate-500">Rol</span>
+                                    <span className="text-xs font-bold uppercase text-slate-500">{t('role')}</span>
                                 </div>
                                 <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm">
                                     {user.rol}
@@ -71,7 +75,7 @@ export default async function PerfilPage() {
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                                 <div className="flex items-center gap-2">
                                     <UserIcon size={16} className="text-teal-600" />
-                                    <span className="text-xs font-bold uppercase text-slate-500">Miembro desde</span>
+                                    <span className="text-xs font-bold uppercase text-slate-500">{t('memberSince')}</span>
                                 </div>
                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
                                     {new Date(user.creado || Date.now()).toLocaleDateString()}
@@ -98,8 +102,8 @@ export default async function PerfilPage() {
                                 <UserIcon size={20} className="text-slate-600 dark:text-slate-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Información Personal</h2>
-                                <p className="text-xs text-slate-500">Actualiza tus datos de contacto básicos</p>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('personalInfo')}</h2>
+                                <p className="text-xs text-slate-500">{t('personalInfoSubtitle')}</p>
                             </div>
                         </div>
                         <div className="p-6">
@@ -114,8 +118,8 @@ export default async function PerfilPage() {
                                 <Bell size={20} className="text-slate-600 dark:text-slate-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Preferencias de Notificación</h2>
-                                <p className="text-xs text-slate-500">Define qué alertas quieres recibir y por qué canal</p>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('notificationPrefs')}</h2>
+                                <p className="text-xs text-slate-500">{t('notificationPrefsSubtitle')}</p>
                             </div>
                         </div>
                         <div className="p-6">
@@ -130,18 +134,18 @@ export default async function PerfilPage() {
                                 <Key size={20} className="text-slate-600 dark:text-slate-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Centro de Seguridad</h2>
-                                <p className="text-xs text-slate-500">Contraseña, MFA y Sesiones Activas</p>
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('securityCenter')}</h2>
+                                <p className="text-xs text-slate-500">{t('securityCenterSubtitle')}</p>
                             </div>
                         </div>
                         <div className="p-6 space-y-8">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">Contraseña</h3>
+                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('password')}</h3>
                                     <PasswordForm />
                                 </div>
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">Autenticación Multifactor</h3>
+                                    <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4 border-b border-slate-100 pb-2">{t('mfa')}</h3>
                                     <MfaSettingsForm />
                                 </div>
                             </div>

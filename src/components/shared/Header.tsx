@@ -19,7 +19,7 @@ import {
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { FeatureFlags } from "@/lib/feature-flags";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from './LanguageSelector';
 
@@ -27,6 +27,11 @@ export function Header() {
     const t = useTranslations("common");
     const { data: session } = useSession();
     const { toggleSidebar } = useSidebar();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Vertical local state for demo purposes as found in previous versions
     const [vertical, setVertical] = useState<'elevators' | 'legal' | 'medical'>('elevators');
@@ -59,7 +64,7 @@ export function Header() {
                         {t(verticalTitleKey)}
                     </h2>
 
-                    {FeatureFlags.isEnabled('DEMO_MODE_UI') && (
+                    {mounted && FeatureFlags.isEnabled('DEMO_MODE_UI') && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold border border-dashed border-primary/20 hover:border-primary/40 text-primary/70">

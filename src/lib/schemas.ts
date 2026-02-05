@@ -208,6 +208,33 @@ export const WorkflowDefinitionSchema = z.object({
     updatedAt: z.date().default(() => new Date()),
 });
 
+/**
+ * Esquemas para i18n Governance & Multilanguage Manager (Fase 62)
+ */
+export const TranslationSchema = z.object({
+    _id: z.any().optional(),
+    key: z.string(),                  // ej: 'nav.dashboard'
+    value: z.string(),                // ej: 'Dashboard'
+    locale: z.string(),               // ej: 'es', 'en'
+    namespace: z.string().default('common'), // ej: 'admin', 'errors'
+    isObsolete: z.boolean().default(false),
+    lastUpdated: z.date().default(() => new Date()),
+    updatedBy: z.string().optional(),
+});
+
+export type Translation = z.infer<typeof TranslationSchema>;
+
+export const AppLocaleSchema = z.object({
+    _id: z.any().optional(),
+    code: z.string(),                 // ej: 'es', 'en', 'fr'
+    name: z.string(),                 // ej: 'Español', 'English'
+    isDefault: z.boolean().default(false),
+    isActive: z.boolean().default(true),
+    createdAt: z.date().default(() => new Date()),
+});
+
+export type AppLocale = z.infer<typeof AppLocaleSchema>;
+
 export type WorkflowState = z.infer<typeof WorkflowStateSchema>;
 export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
 export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;

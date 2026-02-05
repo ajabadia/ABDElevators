@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Monitor, Smartphone, Tablet, XCircle, LogOut, ShieldCheck, Clock, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface Session {
     _id: string;
@@ -28,6 +29,11 @@ interface Session {
 }
 
 export function ActiveSessionsForm() {
+    const t = useTranslations('profile.security.sessions');
+    const tCommon = useTranslations('common');
+    const locale = useLocale();
+    const dateLocale = locale === 'es' ? es : enUS;
+
     const { toast } = useToast();
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
@@ -54,26 +60,26 @@ export function ActiveSessionsForm() {
         try {
             const res = await fetch(`/api/auth/perfil/sesiones?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
-                toast({ title: "Sesión cerrada", description: "El dispositivo ha sido desconectado." });
+                toast({ title: t('revokeSuccess'), description: t('revokeDesc') });
                 setSessions(prev => prev.filter(s => s._id !== id));
             }
         } catch (e) {
-            toast({ variant: "destructive", title: "Error", description: "No se pudo cerrar la sesión." });
+            toast({ variant: "destructive", title: tCommon('error'), description: t('revokeError') });
         } finally {
             setRevokingId(null);
         }
     };
 
     const handleRevokeOthers = async () => {
-        if (!confirm('¿Estás seguro de que quieres cerrar sesión en todos los demás dispositivos?')) return;
+        if (!confirm(t('revokeConfirmOthers'))) return;
         try {
             const res = await fetch('/api/auth/perfil/sesiones?all=true', { method: 'DELETE' });
             if (res.ok) {
-                toast({ title: "Limpieza completada", description: "Se han cerrado todas las sesiones excepto la actual." });
+                toast({ title: t('cleanupSuccess'), description: t('cleanupDesc') });
                 setSessions(prev => prev.filter(s => s.isCurrent));
             }
         } catch (e) {
-            toast({ variant: "destructive", title: "Error" });
+            toast({ variant: "destructive", title: tCommon('error') });
         }
     };
 
@@ -93,15 +99,15 @@ export function ActiveSessionsForm() {
                 <div>
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                         <ShieldCheck size={16} className="text-teal-600" />
-                        Sesiones Activas
+                        {t('title')}
                     </CardTitle>
                     <CardDescription className="text-xs">
-                        Dispositivos que tienen acceso actualmente a tu cuenta.
+                        {t('description')}
                     </CardDescription>
                 </div>
                 {sessions.length > 1 && (
                     <Button variant="outline" size="sm" className="text-xs h-8 text-red-500 hover:text-red-600" onClick={handleRevokeOthers}>
-                        Cerrar todas las demás
+                        {t('revokeOthersBtn')}
                     </Button>
                 )}
             </CardHeader>
@@ -116,11 +122,11 @@ export function ActiveSessionsForm() {
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
                                         <p className="font-semibold text-sm">
-                                            {session.device.browser || 'Navegador desconocido'} en {session.device.os || 'OS desconocido'}
+                                            {session.device.browser || t('unknownBrowser')} en {session.device.os || t('unknownOs')}
                                         </p>
                                         {session.isCurrent && (
                                             <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-[9px] h-4">
-                                                Sesión Actual
+                                                {t('currentBadge')}
                                             </Badge>
                                         )}
                                     </div>
@@ -129,7 +135,7 @@ export function ActiveSessionsForm() {
                                             <MapPin size={12} /> {session.ip}
                                         </span>
                                         <span className="flex items-center gap-1">
-                                            <Clock size={12} /> {formatDistanceToNow(new Date(session.lastActive), { addSuffix: true, locale: es })}
+                                            <Clock size={12} /> {formatDistanceToNow(new Date(session.lastActive), { addSuffix: true, locale: dateLocale })}
                                         </span>
                                     </div>
                                 </div>

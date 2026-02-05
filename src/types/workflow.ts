@@ -9,7 +9,7 @@ export interface WorkflowTrigger {
 }
 
 export interface WorkflowAction {
-    type: 'notify' | 'log' | 'update_entity' | 'external_webhook' | 'branch' | 'delay' | 'iterator';
+    type: 'notify' | 'log' | 'update_entity' | 'external_webhook' | 'branch' | 'delay' | 'iterator' | 'human_task';
     nodeId?: string; // Links back to React Flow node
     params: Record<string, any>;
     outputPath?: string; // For branching: 'true', 'false', 'default' or case value

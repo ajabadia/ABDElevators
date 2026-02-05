@@ -93,8 +93,8 @@
         },
         {
             "name": "usuario",
-            "plural": "usuarios",
-            "slug": "usuarios",
+            "plural": "users",
+            "slug": "users",
             "icon": "Users",
             "fields": [
                 {
