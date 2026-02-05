@@ -139,7 +139,8 @@ export async function POST(req: NextRequest) {
             action: 'PROCESS_BATCH',
             message: `Processed bulk invite: ${results.success} success, ${results.failed} failed`,
             correlationId,
-            details: { ...results, tenantId: session.user.tenantId }
+            details: { ...results, tenantId: session.user.tenantId },
+            userEmail: session.user.email ?? undefined
         });
 
         return NextResponse.json({
