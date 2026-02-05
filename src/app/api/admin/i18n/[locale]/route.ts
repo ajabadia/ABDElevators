@@ -32,7 +32,7 @@ export async function PATCH(
                 key,
                 value: translations[key],
                 locale,
-                userId: session.user.email
+                userId: session.user.email ?? undefined
             });
         }
 
