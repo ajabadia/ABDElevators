@@ -7,7 +7,7 @@ import { AppError } from '@/lib/errors';
 export const PromptTestSchema = z.object({
     promptId: z.string().optional(),
     template: z.string().min(1),
-    variables: z.record(z.any()),
+    variables: z.record(z.string(), z.any()),
     tenantId: z.string(),
     industry: z.string(),
     model: z.enum(['gemini-1.5-flash', 'gemini-1.5-pro']).default('gemini-1.5-flash'),
