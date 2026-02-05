@@ -45,7 +45,9 @@ export class DomainRouterService {
             TEXTO:
             ${text.substring(0, 3000)}`;
 
-            const response = await callGeminiMini(prompt, tenantId, { correlationId });
+            const response = await callGeminiMini(prompt, tenantId, {
+                correlationId: correlationId || 'domain-router-system'
+            });
             const detected = response.trim().toUpperCase();
 
             const validIndustries: IndustryType[] = ['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC'];

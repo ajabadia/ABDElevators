@@ -3,7 +3,7 @@ import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, IngestAuditSchema, KnowledgeAssetSchema } from '@/lib/schemas';
 import { AppError, DatabaseError, ValidationError, ExternalServiceError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { generateEmbedding, extractModelsWithGemini, callGeminiMini, analyzePDFVisuals } from '@/lib/llm';
+import { extractModelsWithGemini, callGeminiMini, analyzePDFVisuals, generateEmbedding } from '@/lib/llm';
 import { extractTextAdvanced } from '@/lib/pdf-utils';
 import { chunkText } from '@/lib/chunk-utils';
 import { uploadRAGDocument } from '@/lib/cloudinary';
@@ -229,6 +229,15 @@ export class IngestService {
 
             await updateProgress(60); // Metadata complete
 
+            // 3.5 Cognitive Context Generation (Phase 102)
+            const { CognitiveRetrievalService } = await import('@/services/cognitive-retrieval-service');
+            const documentContext = await CognitiveRetrievalService.generateDocumentContext(
+                text,
+                detectedIndustry,
+                asset.tenantId,
+                correlationId
+            );
+
             // 4. Chunking
             const textChunks = await chunkText(text);
 
@@ -278,7 +287,9 @@ export class IngestService {
                         revisionDate: asset.revisionDate,
                         language: chunkData.type === 'VISUAL' ? 'es' : detectedLang,
                         chunkType: chunkData.type,
-                        chunkText: chunkData.text,
+                        chunkText: `[CONTEXTO: ${documentContext}]\n\n${chunkData.text}`,
+                        originalSnippet: chunkData.text,
+                        contextHeader: documentContext,
                         approxPage: chunkData.page,
                         embedding: embeddingGemini,
                         embedding_multilingual: embeddingBGE,
