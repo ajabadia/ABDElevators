@@ -12,3 +12,10 @@ export function cn(...inputs: ClassValue[]) {
 export function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+/**
+ * Generates a standard UUID v4.
+ */
+export function generateUUID() {
+  return crypto.randomUUID();
+}

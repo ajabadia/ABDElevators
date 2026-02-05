@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { callGeminiMini, callGeminiPro } from './llm';
+import { callGeminiMini, callGeminiPro } from '@/lib/llm';
 import { PromptService } from '@/lib/prompt-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
@@ -81,7 +81,7 @@ export class PromptTesterService {
                 tenantId,
                 stack: error.stack
             });
-            throw new AppError('PROMPT_TEST_FAILED', 500, error.message);
+            throw new AppError('INTERNAL_ERROR', 500, error.message);
         }
     }
 }
