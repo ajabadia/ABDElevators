@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         const { action } = await req.json();
 
         if (action === 'SETUP') {
-            const { secret, qrCode } = await MfaService.setup(session.user.id, session.user.email!);
+            const { secret, qrCode } = await MfaService.setup(session.user.id, session.user.email || '');
             return NextResponse.json({ secret, qrCode });
         }
 
@@ -69,8 +69,8 @@ export async function PUT(req: NextRequest) {
 
         // Enviar email de confirmación (background)
         sendMfaEnabledEmail({
-            to: session.user.email!,
-            userName: session.user.name || session.user.email!
+            to: session.user.email || '',
+            userName: session.user.name || session.user.email || 'User'
         }).catch(err => console.error('Error enviando email MFA:', err));
 
         return NextResponse.json({

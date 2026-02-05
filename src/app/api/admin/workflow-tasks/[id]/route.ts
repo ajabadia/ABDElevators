@@ -33,7 +33,7 @@ export async function PATCH(
             id,
             tenantId: session.user.tenantId,
             userId: session.user.id,
-            userName: session.user.name || session.user.email,
+            userName: session.user.name || session.user.email || 'Unknown User',
             status: validated.status,
             notes: validated.notes,
             correlationId
