@@ -160,6 +160,20 @@ export async function callGeminiMini(
 }
 
 /**
+ * Genera contenido usando el modelo Pro (Gemini 1.5 Pro).
+ */
+export async function callGeminiPro(
+    prompt: string,
+    tenantId: string,
+    options: { correlationId: string; temperature?: number; model?: string }
+): Promise<string> {
+    return callGemini(prompt, tenantId, options.correlationId, {
+        ...options,
+        model: options.model || 'gemini-1.5-pro'
+    });
+}
+
+/**
  * Genera contenido de forma progresiva (Streaming)
  */
 export async function callGeminiStream(

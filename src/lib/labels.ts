@@ -21,6 +21,22 @@ export const INDUSTRY_LABELS: Record<IndustryType, any> = {
         placeholder: 'Referencia del expediente...',
         recent_title: 'Expedientes Revisados',
     },
+    BANKING: {
+        singular: 'Operación',
+        plural: 'Operaciones',
+        action: 'Analizar Riesgo',
+        description: 'Sube un informe financiero o KYC para validación de cumplimiento y riesgo.',
+        placeholder: 'ID de operación...',
+        recent_title: 'Análisis de Riesgo',
+    },
+    INSURANCE: {
+        singular: 'Siniestro',
+        plural: 'Siniestros',
+        action: 'Analizar Cobertura',
+        description: 'Sube una póliza o parte de siniestro para verificar coberturas y fraude.',
+        placeholder: 'Número de siniestro...',
+        recent_title: 'Siniestros Auditados',
+    },
     IT: {
         singular: 'Ticket',
         plural: 'Tickets',

@@ -79,12 +79,15 @@ export const PROMPTS = {
     2. **Answer Relevance** (Relevancia): ¿La respuesta resuelve directamente la duda del usuario de forma pertinente?
     3. **Context Precision** (Precisión del Contexto): ¿Qué proporción de los fragmentos de contexto proporcionados son realmente útiles para responder a la pregunta?
     
+    ANÁLISIS CAUSAL (Fase 86):
+    Si alguna puntuación es < 0.8, identifica la causa raíz (ej: "Falta especificación técnica X en el contexto", "La pregunta es ambigua", "El modelo ignoró la restricción Y").
+    
     FORMATO DE SALIDA (JSON estrictamente):
     {
       "faithfulness": 0.0,
       "answer_relevance": 0.0,
       "context_precision": 0.0,
-      "reasoning": "Breve explicación de las puntuaciones"
+      "reasoning": "Breve explicación detallada incluyendo el análisis causal si aplica"
     }
     
     Responde SOLO con el objeto JSON.`,

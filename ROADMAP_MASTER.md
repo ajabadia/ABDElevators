@@ -271,8 +271,8 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 - **Objetivo:** Empoderar al SuperAdmin para gestionar traducciones sin tocar código y asegurar cobertura total i18n.
 
-- [ ] **i18n Audit**: Revisión de todo el frontend para identificar textos hardcodeados.
-- [ ] **Translation Editor UI**: Panel en `/admin/settings/i18n` para editar `es.json`, `en.json` y añadir nuevos idiomas.
+- [x] **i18n Audit**: Revisión de todo el frontend para identificar textos hardcodeados.
+- [x] **Translation Editor UI**: Panel en `/admin/settings/i18n` para editar `es.json`, `en.json` (Phase 62 Core ✅).
 - [ ] **Dynamic i18n Storage**: Migrar traducciones de archivos estáticos a MongoDB con capa de caché en Redis para rendimiento.
 - [ ] **AI-Assisted Translation**: Botón "Auto-traducir" usando Gemini para nuevos idiomas.
 
@@ -472,9 +472,9 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 **Objetivo:** Mejorar herramientas administrativas y precisión del motor de prompts.
 
 - [ ] **Upgrade/Downgrade Price Simulator**: Cálculo exacto de pro-rata antes de cambiar suscripción. <!-- ref: Documentación/09/gaps funcionales.md:66 -->
-- [ ] **A/B Prompt Testing Engine**: Herramienta para comparar performance de diferentes system prompts en un set de control. <!-- ref: Documentación/09/gaps funcionales.md:84 -->
+- [ ] **A/B Prompt Testing Engine**: Herramienta para comparar performance de diferentes system prompts en un set de control. (Phase 83 - Core Started ✅)
 - [ ] **Admin Session Simulator (Impersonation)**: Capacidad de SuperAdmin para ver la interfaz como un usuario específico (sin contraseña). <!-- ref: Documentación/09/gaps funcionales.md:53 -->
-- [ ] **Dry-run Test Button**: Probar cambios en prompts sobre documentos reales sin guardar resultados permanentes. <!-- ref: Documentación/09/gaps funcionales.md:88 -->
+- [x] **Dry-run Test Button**: Probar cambios en prompts sobre documentos reales sin guardar resultados permanentes. (Phase 83 - API Ready ✅)
 
 ---
 
@@ -499,8 +499,8 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 #### 🔮 FASE 86: ADVANCED AGENTIC REASONING (2026+)
 **Objetivo:** Evolucionar hacia la autonomía total del análisis.
 
-- [ ] **LangGraph Multi-Agent Workflows**: Orquestación de agentes con estados persistentes y "Human-in-the-loop". <!-- ref: 1501.md:547 -->
-- [ ] **Causal AI Impact Assessment**: Análisis de "Qué pasaría si..." basado en relaciones causa-efecto. <!-- ref: 1502.md:468 -->
+- [x] **LangGraph Multi-Agent Workflows**: Orquestación de agentes con estados persistentes y "Human-in-the-loop". (Phase 104 Judge RAG ✅)
+- [ ] **Causal AI Impact Assessment**: Análisis de "Qué pasaría si..." basado en relaciones causa-efecto. (Phase 86 - Prompt Engaged ✅)
 - [ ] **Swarm Intelligence for Investigator Swarms**: Enjambres de agentes para e-discovery en litigios masivos. <!-- ref: 1502.md:368 -->
 - [ ] **BGE-M3 Multilingual Embedding Logic**: Optimización para recuperación cross-language avanzada. <!-- ref: 1510.md:542 -->
 
@@ -509,26 +509,26 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 ### 🚀 ESTRATEGIA DE EVOLUCIÓN AVANZADA (VISION 2026-2027)
 *Basado en el Análisis Estratégico `1801.txt`*
 
-#### 🏗️ FASE 100: RAG INFRASTRUCTURE SCALING
+#### 🧠 FASE 100: RAG INFRASTRUCTURE SCALING (COMPLETADO ✅)
 **Objetivo:** Preparar el motor para ingesta masiva y abstracción de proveedores.
 
-- [ ] **Streaming Ingestion**: Procesamiento incremental para documentos ultra-grandes (>500MB).
-- [ ] **Vector Store Abstraction**: Interfaz agnóstica para soportar Pinecone/Milvus junto a MongoDB Atlas.
-- [ ] **MD5 Chunk Guard**: Optimización de costes evitando re-embedding de fragmentos no modificados en actualizaciones de documentos.
+- [X] **Streaming Ingestion**: Procesamiento incremental para documentos ultra-grandes (>500MB).
+- [X] **Vector Store Abstraction**: Interfaz agnóstica para soportar Pinecone/Milvus junto a MongoDB Atlas.
+- [X] **MD5 Chunk Guard**: Optimización de costes evitando re-embedding de fragmentos no modificados en actualizaciones de documentos.
 
-#### 🌍 FASE 101: MULTI-VERTICAL INTELLIGENCE
+#### 🌍 FASE 101: MULTI-VERTICAL INTELLIGENCE (COMPLETADO ✅)
 **Objetivo:** Especialización dinámica por dominio de negocio.
 
-- [ ] **Domain Router**: Clasificación automática (Legal/Insurance/Healthcare/Banking/Elevators) mediante embeddings de dominio.
-- [ ] **Specialized Prompt Contexts**: Inyección de glosarios técnicos y marcos regulatorios específicos por vertical.
-- [ ] **Vertical Compliance Graders**: Validadores de fidelidad especializados para sectores altamente regulados (ej: HIPAA, Solvency II).
+- [X] **Domain Router**: Clasificación automática (Legal/Insurance/Healthcare/Banking/Elevators) mediante embeddings de dominio.
+- [X] **Specialized Prompt Contexts**: Inyección de glosarios técnicos y marcos regulatorios específicos por vertical.
+- [X] **Vertical Compliance Graders**: Validadores de fidelidad especializados para sectores altamente regulados (ej: HIPAA, Solvency II).
 
-#### 🧠 FASE 102: COGNITIVE RETRIEVAL ENHANCEMENTS
+#### 🧠 FASE 102: COGNITIVE RETRIEVAL ENHANCEMENTS (COMPLETADO ✅)
 **Objetivo:** Alcanzar el estado del arte en precisión de recuperación.
 
-- [ ] **Contextual Retrieval (Anthropic style)**: Enriquecimiento de cada chunk con un resumen ejecutivo del documento padre.
-- [ ] **Hierarchical Chunking**: Estructura de navegación Padre-Hijo para conservar la jerarquía documental (Secciones/Párrafos).
-- [ ] **Advanced Reranking (Cross-Encoder)**: Pipeline de expansión de consultas + Reranking Top-20 con modelos especializados.
+- [X] **Contextual Retrieval (Anthropic style)**: Enriquecimiento de cada chunk con un resumen ejecutivo del documento padre.
+- [X] **Hierarchical Chunking**: Estructura de navegación Padre-Hijo para conservar la jerarquía documental (Secciones/Párrafos).
+- [X] **Advanced Reranking (Cross-Encoder)**: Pipeline de expansión de consultas + Reranking Top-20 con modelos especializados.
 
 ---
 

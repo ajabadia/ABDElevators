@@ -38,7 +38,7 @@ export class CognitiveRetrievalService {
                 source: 'COGNITIVE_RETRIEVAL',
                 action: 'PROMPT_FALLBACK',
                 message: 'Usando prompt maestro por error en BD',
-                correlationId,
+                correlationId: correlationId || 'cognitive-retrieval-fallback',
                 tenantId
             });
             renderedPrompt = PROMPTS.COGNITIVE_CONTEXT

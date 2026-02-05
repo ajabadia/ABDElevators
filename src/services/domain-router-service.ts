@@ -59,7 +59,7 @@ export class DomainRouterService {
                 source: 'DOMAIN_ROUTER',
                 action: 'PROMPT_FALLBACK',
                 message: 'Usando prompt maestro por error en BD',
-                correlationId,
+                correlationId: correlationId || 'domain-router-fallback',
                 tenantId
             });
             renderedPrompt = PROMPTS.DOMAIN_DETECTOR.replace('{{text}}', text.substring(0, 3000));
