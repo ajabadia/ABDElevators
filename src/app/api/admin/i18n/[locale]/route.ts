@@ -12,10 +12,10 @@ import crypto from 'crypto';
  */
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { locale: string } }
+    { params }: { params: Promise<{ locale: string }> }
 ) {
     const correlationId = crypto.randomUUID();
-    const { locale } = params;
+    const { locale } = await params;
 
     try {
         const session = await requireRole([UserRole.SUPER_ADMIN]);
