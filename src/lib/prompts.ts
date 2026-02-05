@@ -87,5 +87,31 @@ export const PROMPTS = {
       "reasoning": "Breve explicación de las puntuaciones"
     }
     
-    Responde SOLO con el objeto JSON.`
+    Responde SOLO con el objeto JSON.`,
+
+  DOMAIN_DETECTOR: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
+    Responde SOLO con el nombre del sector en mayúsculas.
+    
+    TEXTO:
+    {{text}}`,
+
+  COGNITIVE_CONTEXT: `Analiza este documento del sector "{{industry}}" y genera un resumen ejecutivo de máximo 150 palabras.
+    Tu objetivo es proporcionar el CONTEXTO GLOBAL que un fragmento pequeño de este documento necesitaría para ser entendido por sí solo.
+    No empieces con "Este documento...", ve directo al grano.
+    ENFOQUE: Objetivo del documento, productos/modelos mencionados y propósito técnico.
+    
+    TEXTO:
+    {{text}}`,
+
+  RAG_RERANKER: `Eres un experto auditor técnico especializado en el sector "{{industry}}". 
+    Evalúa los siguientes fragmentos de documentación del vertical "{{industry}}" según su capacidad para responder con precisión quirúrgica a la consulta.
+    
+    Consulta: "{{query}}"
+    
+    Fragmentos:
+    {{fragments}}
+    
+    Ordena los fragmentos del 1 al {{count}} de mayor a menor relevancia técnica considerando el contexto de "{{industry}}". 
+    Para cada fragmento, indica si resuelve el problema (SÍ/NO/PARCIAL).
+    Devuelve el resultado en formato JSON: [{"index": n, "score": 0.0-1.0, "reason": "breve explicación"}]`
 };

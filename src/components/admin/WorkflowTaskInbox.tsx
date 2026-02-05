@@ -24,7 +24,7 @@ export function WorkflowTaskInbox() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const { data: tasks, isLoading, refresh } = useApiList<WorkflowTask>({
-        url: '/api/admin/workflow-tasks',
+        endpoint: '/api/admin/workflow-tasks',
         filters: {
             status: statusFilter === 'ALL' ? undefined : statusFilter,
             q: searchQuery

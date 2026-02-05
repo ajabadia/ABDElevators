@@ -2,6 +2,7 @@ import { PromptService } from "@/lib/prompt-service";
 import { callGeminiMini } from "@/lib/llm";
 import { logEvento } from "@/lib/logger";
 import { trace } from '@opentelemetry/api';
+import { PROMPTS } from "./prompts";
 import { RagResult } from "./rag-service";
 
 const tracer = trace.getTracer('abd-rag-platform');
@@ -29,16 +30,39 @@ export class RerankingService {
         }, async (span) => {
             if (results.length <= 1) return results;
 
+            let renderedPrompt: string;
+            let modelName = 'gemini-1.5-flash';
+
             try {
                 const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
-                const { text: prompt, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
+                const { text: promptText, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
                     query,
                     fragments,
                     count: results.length,
                     industry
                 }, tenantId);
+                renderedPrompt = promptText;
+                modelName = model;
+            } catch (error) {
+                console.warn(`[RERANKING_SERVICE] ⚠️ Fallback to Master Prompt:`, error);
+                await logEvento({
+                    level: 'WARN',
+                    source: 'RERANKING_SERVICE',
+                    action: 'PROMPT_FALLBACK',
+                    message: 'Usando prompt maestro por error en BD',
+                    correlationId,
+                    tenantId
+                });
+                const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
+                renderedPrompt = PROMPTS.RAG_RERANKER
+                    .replace('{{query}}', query)
+                    .replace('{{fragments}}', fragments)
+                    .replace('{{count}}', String(results.length))
+                    .replace(new RegExp('{{industry}}', 'g'), industry);
+            }
 
-                const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
+            try {
+                const response = await callGeminiMini(renderedPrompt, tenantId, { correlationId, model: modelName });
                 const cleanResponse = response.replace(/```json|```/g, '').trim();
                 const ranking = JSON.parse(cleanResponse) as { index: number; score: number; reason: string }[];
 

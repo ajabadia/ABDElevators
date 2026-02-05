@@ -1,5 +1,7 @@
 import { callGeminiMini } from '@/lib/llm';
-import { AppError } from '@/lib/errors';
+import { PromptService } from '@/lib/prompt-service';
+import { PROMPTS } from '@/lib/prompts';
+import { logEvento } from '@/lib/logger';
 
 /**
  * 🧠 Cognitive Retrieval Service (Phase 102)
@@ -15,20 +17,39 @@ export class CognitiveRetrievalService {
         tenantId: string,
         correlationId?: string
     ): Promise<string> {
-        try {
-            const prompt = `Analiza este documento del sector "${industry.toLowerCase()}" y genera un resumen ejecutivo de máximo 150 palabras.
-            
-            Tu objetivo es proporcionar el CONTEXTO GLOBAL que un fragmento pequeño de este documento necesitaría para ser entendido por sí solo.
-            No empieces con "Este documento...", ve directo al grano.
-            
-            ENFOQUE: Objetivo del documento, productos/modelos mencionados y propósito técnico.
-            
-            TEXTO:
-            ${text.substring(0, 5000)}`;
+        let renderedPrompt: string;
+        let modelName = 'gemini-1.5-flash';
 
-            const response = await callGeminiMini(prompt, tenantId, {
+        try {
+            const { text: promptText, model } = await PromptService.getRenderedPrompt(
+                'COGNITIVE_CONTEXT',
+                {
+                    text: text.substring(0, 5000),
+                    industry: industry.toLowerCase()
+                },
+                tenantId
+            );
+            renderedPrompt = promptText;
+            modelName = model;
+        } catch (error) {
+            console.warn(`[COGNITIVE_RETRIEVAL] ⚠️ Fallback to Master Prompt:`, error);
+            await logEvento({
+                level: 'WARN',
+                source: 'COGNITIVE_RETRIEVAL',
+                action: 'PROMPT_FALLBACK',
+                message: 'Usando prompt maestro por error en BD',
+                correlationId,
+                tenantId
+            });
+            renderedPrompt = PROMPTS.COGNITIVE_CONTEXT
+                .replace('{{text}}', text.substring(0, 5000))
+                .replace('{{industry}}', industry.toLowerCase());
+        }
+
+        try {
+            const response = await callGeminiMini(renderedPrompt, tenantId, {
                 correlationId: correlationId || 'cognitive-router',
-                model: 'gemini-1.5-flash'
+                model: modelName
             });
 
             return response.trim();

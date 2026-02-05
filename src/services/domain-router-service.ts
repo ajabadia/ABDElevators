@@ -1,5 +1,8 @@
 import { callGeminiMini } from '@/lib/llm';
 import { IndustryType } from '@/lib/schemas';
+import { PromptService } from '@/lib/prompt-service';
+import { PROMPTS } from '@/lib/prompts';
+import { logEvento } from '@/lib/logger';
 
 /**
  * 🛰️ Domain Router Service (Phase 101)
@@ -37,16 +40,35 @@ export class DomainRouterService {
             return bestHeuristic[0] as IndustryType;
         }
 
-        // 2. AI Fallback (If ambiguous)
-        try {
-            const prompt = `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
-            Responde SOLO con el nombre del sector en mayúsculas.
-            
-            TEXTO:
-            ${text.substring(0, 3000)}`;
+        // 2. AI Fallback (If ambiguous) - Phase 105: Prompt Governance
+        let renderedPrompt: string;
+        let modelName = 'gemini-1.5-flash';
 
-            const response = await callGeminiMini(prompt, tenantId, {
-                correlationId: correlationId || 'domain-router-system'
+        try {
+            const { text: promptText, model } = await PromptService.getRenderedPrompt(
+                'DOMAIN_DETECTOR',
+                { text: text.substring(0, 3000) },
+                tenantId
+            );
+            renderedPrompt = promptText;
+            modelName = model;
+        } catch (error) {
+            console.warn(`[DOMAIN_ROUTER] ⚠️ Fallback to Master Prompt:`, error);
+            await logEvento({
+                level: 'WARN',
+                source: 'DOMAIN_ROUTER',
+                action: 'PROMPT_FALLBACK',
+                message: 'Usando prompt maestro por error en BD',
+                correlationId,
+                tenantId
+            });
+            renderedPrompt = PROMPTS.DOMAIN_DETECTOR.replace('{{text}}', text.substring(0, 3000));
+        }
+
+        try {
+            const response = await callGeminiMini(renderedPrompt, tenantId, {
+                correlationId: correlationId || 'domain-router-system',
+                model: modelName
             });
             const detected = response.trim().toUpperCase();
 
