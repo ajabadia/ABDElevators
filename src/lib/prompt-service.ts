@@ -136,7 +136,11 @@ export class PromptService {
             );
         }
 
-        const allVariables = { ...variables, tenantId };
+        const allVariables = {
+            ...variables,
+            tenantId,
+            vertical: (variables.industry || 'ELEVATORS').toLowerCase()
+        };
         let rendered = prompt.template;
         for (const [varName, varValue] of Object.entries(allVariables)) {
             const placeholder = `{{${varName}}}`;

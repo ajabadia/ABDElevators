@@ -4,29 +4,29 @@
  */
 
 export const PROMPTS = {
-    EXTRAER_MODELOS: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
+  EXTRAER_MODELOS: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
     Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
     Solo devuelve el JSON, sin explicaciones.`,
 
-    ANALIZAR_CHUNK: `Analiza este fragmento de documentación técnica de ascensores y devuelve un JSON con: 
+  ANALIZAR_CHUNK: `Analiza este fragmento de documentación técnica de ascensores y devuelve un JSON con: 
     { "tipo_componente": string, "modelos": string[] }. 
     Si no hay un componente o modelo claro, devuelve null.`,
 
-    RESUMIR_CONTEXTO: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
+  RESUMIR_CONTEXTO: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
     Enfócate en advertencias de seguridad, voltajes y pasos críticos de montaje.`,
 
-    I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector ascensores y RAG).
+  I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} y RAG).
     Traduce las siguientes llaves de i18n del idioma '{{sourceLocale}}' al '{{targetLocale}}'.
     
     REGLAS:
     1. Mantén los placeholders como {name}, {count}, {{variable}}.
-    2. Usa terminología técnica precisa para el sector de ascensores/mantenimiento.
+    2. Usa terminología técnica precisa para el sector de {{vertical}}.
     3. Responde ÚNICAMENTE con un objeto JSON válido.
     
     LLAVES A TRADUCIR:
     {{translationsToProcess}}`,
 
-    GRAPH_EXTRACTOR: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
+  GRAPH_EXTRACTOR: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
     Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
     
     ENTIDADES permitidas:
@@ -56,7 +56,7 @@ export const PROMPTS = {
     TEXTO A ANALIZAR:
     {{text}}`,
 
-    QUERY_ENTITY_EXTRACTOR: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
+  QUERY_ENTITY_EXTRACTOR: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
     Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
     No devuelvas explicaciones, solo los nombres.
     
@@ -66,7 +66,7 @@ export const PROMPTS = {
     
     CONSULTA: {{query}}`,
 
-    RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema RAG técnico para la industria de los ascensores.
+  RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema RAG técnico para la industria de {{vertical}}.
     Tu objetivo es puntuar la respuesta basada en la pregunta del usuario y el contexto recuperado de los manuales.
     
     DATOS A EVALUAR:

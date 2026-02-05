@@ -155,6 +155,7 @@ export class IngestService {
         }
 
         const currentAttempts = (asset.attempts || 0) + 1;
+        const industry = asset.industry || 'ELEVATORS'; // Baseline vertical
 
         await knowledgeAssetsCollection.updateOne(
             { _id: assetId },
@@ -192,6 +193,18 @@ export class IngestService {
             ]);
 
             await updateProgress(40); // Analysis complete
+
+            // 1.5 Domain Routing (Phase 101)
+            let detectedIndustry = industry;
+            if (industry === 'GENERIC' || industry === 'ELEVATORS') {
+                const { DomainRouterService } = await import('@/services/domain-router-service');
+                detectedIndustry = await DomainRouterService.detectIndustry(rawText, asset.tenantId, correlationId);
+
+                await knowledgeAssetsCollection.updateOne(
+                    { _id: assetId },
+                    { $set: { industry: detectedIndustry, updatedAt: new Date() } }
+                );
+            }
 
             // 2. PII Masking
             let text = rawText;
@@ -257,7 +270,7 @@ export class IngestService {
                     const documentChunk = DocumentChunkSchema.parse({
                         _id: chunkId,
                         tenantId: asset.tenantId,
-                        industry: "ELEVATORS",
+                        industry: detectedIndustry,
                         componentType: asset.componentType,
                         model: primaryModel,
                         sourceDoc: asset.filename,

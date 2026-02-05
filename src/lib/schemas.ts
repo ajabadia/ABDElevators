@@ -4,7 +4,7 @@ import { UserRole } from '@/types/roles';
 /**
  * Esquemas para la Visión 2.0 (Generalización)
  */
-export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'IT', 'GENERIC']);
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC']);
 export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
 export const AppEnvironmentEnum = z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']);
@@ -368,6 +368,7 @@ export const ApplicationLogSchema = z.object({
 export const KnowledgeAssetSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
+    industry: IndustryTypeSchema.default('ELEVATORS'),
     filename: z.string(),
     componentType: z.string(),
     model: z.string(),
