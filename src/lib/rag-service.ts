@@ -163,7 +163,8 @@ export async function hybridSearch(
     tenantId: string,
     correlationId: string,
     limit = 5,
-    environment: string = 'PRODUCTION'
+    environment: string = 'PRODUCTION',
+    industry: string = 'ELEVATORS'
 ): Promise<RagResult[]> {
     return tracer.startActiveSpan('rag.hybrid_search', {
         attributes: {
@@ -182,9 +183,9 @@ export async function hybridSearch(
             const { GraphRetrievalService } = await import('@/services/graph-retrieval-service');
 
             const [geminiResults, bgeResults, keywordResults, graphContext] = await Promise.all([
-                performTechnicalSearch(query, tenantId, correlationId, limit * 3, 'ELEVATORS', environment),
+                performTechnicalSearch(query, tenantId, correlationId, limit * 3, industry, environment),
                 MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit * 3, environment),
-                KeywordSearchService.pureKeywordSearch(query, tenantId, correlationId, limit * 3, 'ELEVATORS', environment),
+                KeywordSearchService.pureKeywordSearch(query, tenantId, correlationId, limit * 3, industry, environment),
                 GraphRetrievalService.getGraphContext(query, tenantId, correlationId)
             ]);
 
@@ -192,7 +193,7 @@ export async function hybridSearch(
             try {
                 const variations = await QueryExpansionService.expandQuery(query, tenantId, correlationId);
                 const expansionPromises = variations.map((v: string) =>
-                    performTechnicalSearch(v, tenantId, correlationId, limit, 'ELEVATORS', environment)
+                    performTechnicalSearch(v, tenantId, correlationId, limit, industry, environment)
                 );
                 const expansionHits = await Promise.all(expansionPromises);
                 expandedResults = expansionHits.flat();
@@ -234,7 +235,7 @@ export async function hybridSearch(
                 });
             }
 
-            const finalMerged = await RerankingService.rerankResults(query, potentialWinners, tenantId, correlationId, limit);
+            const finalMerged = await RerankingService.rerankResults(query, potentialWinners, tenantId, correlationId, limit, industry);
 
             span.setAttribute('rag.duration_ms', Date.now() - inicio);
             span.setStatus({ code: SpanStatusCode.OK });

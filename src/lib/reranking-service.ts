@@ -15,14 +15,16 @@ export class RerankingService {
         results: RagResult[],
         tenantId: string,
         correlationId: string,
-        limit: number
+        limit: number,
+        industry: string = 'ELEVATORS'
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.reranking', {
             attributes: {
                 'tenant.id': tenantId,
                 'correlation.id': correlationId,
                 'rag.results.initial_count': results.length,
-                'rag.limit': limit
+                'rag.limit': limit,
+                'rag.industry': industry
             }
         }, async (span) => {
             if (results.length <= 1) return results;
@@ -32,7 +34,8 @@ export class RerankingService {
                 const { text: prompt, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
                     query,
                     fragments,
-                    count: results.length
+                    count: results.length,
+                    industry
                 }, tenantId);
 
                 const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
