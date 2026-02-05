@@ -107,16 +107,31 @@ export async function performTechnicalSearch(
                 filter: filter as any
             });
 
-            const ragResults = results.map((doc) => ({
-                text: doc.pageContent,
-                source: doc.metadata.sourceDoc,
-                score: (doc.metadata as any).score || 0.85,
-                type: doc.metadata.componentType,
-                model: doc.metadata.model,
-                cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
-                chunkType: doc.metadata.chunkType,
-                approxPage: doc.metadata.approxPage
-            }));
+            // 🧥 Contextual Enrichment Join (Phase 102)
+            const sourceDocNames = Array.from(new Set(results.map(d => d.metadata.sourceDoc)));
+            const assetsCollection = db.collection('knowledge_assets');
+            const assets = await assetsCollection.find({
+                filename: { $in: sourceDocNames },
+                tenantId: { $in: ['global', tenantId] }
+            }).toArray();
+
+            const contextMap = new Map(assets.map(a => [a.filename, a.contextHeader]));
+
+            const ragResults = results.map((doc) => {
+                const header = contextMap.get(doc.metadata.sourceDoc);
+                const enrichedText = header ? `[CONTEXTO: ${header}]\n\n${doc.pageContent}` : doc.pageContent;
+
+                return {
+                    text: enrichedText,
+                    source: doc.metadata.sourceDoc,
+                    score: (doc.metadata as any).score || 0.85,
+                    type: doc.metadata.componentType,
+                    model: doc.metadata.model,
+                    cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
+                    chunkType: doc.metadata.chunkType,
+                    approxPage: doc.metadata.approxPage
+                };
+            });
 
             const duracionTotal = Date.now() - inicio;
             span.setAttribute('rag.duration_ms', duracionTotal);

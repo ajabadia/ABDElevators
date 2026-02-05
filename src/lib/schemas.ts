@@ -40,7 +40,6 @@ export const DocumentChunkSchema = z.object({
     originalLang: z.string().optional(),
     refChunkId: z.any().optional(),
     cloudinaryUrl: z.string().optional(),
-    contextHeader: z.string().optional(), // Global document context (Phase 102)
     originalSnippet: z.string().optional(), // Original chunk text before contextualization
 
     createdAt: z.date().default(() => new Date()),

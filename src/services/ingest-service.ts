@@ -229,13 +229,18 @@ export class IngestService {
 
             await updateProgress(60); // Metadata complete
 
-            // 3.5 Cognitive Context Generation (Phase 102)
             const { CognitiveRetrievalService } = await import('@/services/cognitive-retrieval-service');
             const documentContext = await CognitiveRetrievalService.generateDocumentContext(
                 text,
                 detectedIndustry,
                 asset.tenantId,
                 correlationId
+            );
+
+            // Persistir contexto en el Asset (Phase 102 Optimized)
+            await knowledgeAssetsCollection.updateOne(
+                { _id: assetId },
+                { $set: { contextHeader: documentContext, updatedAt: new Date() } }
             );
 
             // 4. Chunking
@@ -270,9 +275,12 @@ export class IngestService {
             for (let i = 0; i < totalChunks; i += BATCH_SIZE) {
                 const batch = allChunksToProcess.slice(i, i + BATCH_SIZE);
                 const results = await Promise.allSettled(batch.map(async (chunkData) => {
+                    // Embedding usa contexto + fragmento para máxima calidad semántica
+                    const contextualizedText = `[CONTEXT: ${documentContext}]\n\n${chunkData.text}`;
+
                     const [embeddingGemini, embeddingBGE] = await Promise.all([
-                        generateEmbedding(chunkData.text, asset.tenantId, correlationId),
-                        multilingualService.generateEmbedding(chunkData.text)
+                        generateEmbedding(contextualizedText, asset.tenantId, correlationId),
+                        multilingualService.generateEmbedding(contextualizedText)
                     ]);
 
                     const chunkId = new ObjectId();
@@ -287,9 +295,8 @@ export class IngestService {
                         revisionDate: asset.revisionDate,
                         language: chunkData.type === 'VISUAL' ? 'es' : detectedLang,
                         chunkType: chunkData.type,
-                        chunkText: `[CONTEXTO: ${documentContext}]\n\n${chunkData.text}`,
+                        chunkText: chunkData.text, // Guardamos SOLO el original (Phase 102 Optimized)
                         originalSnippet: chunkData.text,
-                        contextHeader: documentContext,
                         approxPage: chunkData.page,
                         embedding: embeddingGemini,
                         embedding_multilingual: embeddingBGE,
