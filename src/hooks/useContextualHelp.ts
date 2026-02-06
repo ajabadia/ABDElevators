@@ -136,6 +136,19 @@ const HELP_CONTEXT: HelpContext = {
             "Adjunta screenshots si es posible",
             "Respuesta típica en <2 horas"
         ]
+    },
+
+    "audit-logs": {
+        id: "audit-logs",
+        title: "Monitor de Auditoría Industrial",
+        content: "Este registro captura cada acción técnica y de negocio realizada en la plataforma para asegurar trazabilidad total y cumplimiento normativo.",
+        example: "• ERROR: Fallo crítico en API o base de datos\n• WARN: Latencia alta o reintentos automáticos\n• INFO: Acceso de usuario o generación de informes\n• DEBUG: Trazas internas de procesamiento RAG",
+        tips: [
+            "Filtra por 'ERROR' para identificar problemas inmediatos",
+            "Usa el correlationId para rastrear una operación en todos los servicios",
+            "El origen indica qué módulo (API, RAG, AUTH) generó el evento",
+            "El sistema aplica 'Lazy Loading': los datos se cargan solo cuando aplicas filtros o seleccionas 'TODOS'"
+        ]
     }
 }
 

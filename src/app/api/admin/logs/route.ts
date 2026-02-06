@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
         // Contexto de base de datos de LOGS blindado
         // Use 'application_logs' to match logger.ts
-        const logColl = await getTenantCollection('application_logs', session, 'LOGS');
+        const logColl = await getTenantCollection('application_logs', session, 'LOGS', { softDeletes: false });
 
         const query: any = {};
 

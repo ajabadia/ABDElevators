@@ -15,10 +15,12 @@ export async function GET(req: NextRequest) {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         // Contexto de base de datos de LOGS
-        const logColl = await getTenantCollection('application_logs', session, 'LOGS');
+        // Al ser logs, desactivamos softDeletes para evitar filtros innecesarios
+        const logColl = await getTenantCollection('application_logs', session, 'LOGS', { softDeletes: false });
 
         // Pipeline de agregación para obtener niveles y fuentes
-        const [stats] = await logColl.aggregate([
+        // SecureCollection.aggregate ya devuelve un array, por lo que llamamos directamente.
+        const statsResults = await logColl.aggregate([
             {
                 $facet: {
                     levels: [
@@ -34,7 +36,9 @@ export async function GET(req: NextRequest) {
                     ]
                 }
             }
-        ]).toArray();
+        ]);
+
+        const stats = statsResults[0] || { levels: [], sources: [], total: [] };
 
         // Formatear resultados
         const levelCounts: Record<string, number> = {};

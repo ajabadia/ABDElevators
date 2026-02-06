@@ -23,8 +23,10 @@ import {
     Hash,
     Database,
     Cpu,
-    Webhook
+    Webhook,
+    HelpCircle
 } from "lucide-react";
+import { InlineHelpPanel } from "@/components/ui/inline-help-panel";
 
 interface GlobalStats {
     totalTenants: number;
@@ -74,6 +76,7 @@ export default function AuditoriaPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
+    const [showHelp, setShowHelp] = useState(false);
 
     // 🛡️ Pattern: __ALL__ logic
     const hasActiveFilters = Boolean(levelFilter || sourceFilter || searchQuery);
@@ -167,11 +170,29 @@ export default function AuditoriaPage() {
                 highlight="Auditoría"
                 subtitle="Monitoreo de actividad, seguridad y validación de reglas de negocio en tiempo real."
                 actions={
-                    <Button variant="outline" className="border-slate-200 dark:border-slate-800">
-                        <Download className="mr-2 h-4 w-4" /> Exportar Logs
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowHelp(!showHelp)}
+                            className={showHelp ? "text-blue-600 bg-blue-50" : "text-slate-400"}
+                        >
+                            <HelpCircle className="h-5 w-5" />
+                        </Button>
+                        <Button variant="outline" className="border-slate-200 dark:border-slate-800">
+                            <Download className="mr-2 h-4 w-4" /> Exportar Logs
+                        </Button>
+                    </div>
                 }
             />
+
+            {showHelp && (
+                <InlineHelpPanel
+                    contextIds={["audit-logs"]}
+                    variant="full"
+                    dismissible={true}
+                />
+            )}
 
             {/* Metrics Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

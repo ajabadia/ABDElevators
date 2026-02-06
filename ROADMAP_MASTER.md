@@ -567,7 +567,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [ ] **Technical Terminology Purge**: Migrar dashboard y reportes de jerga LLM a lenguaje de negocio (Precisión, Ahorro, Volumen). <!-- ref: 1701.md:148 -->
 - [ ] **Intelligent Onboarding System**: Implementar `useOnboarding` y `OnboardingOverlay` para tours guiados de primer login. <!-- ref: 1701.md:213 -->
 - [ ] **Conversational Search UI**: Crear interfaz de chat estilo "técnico-a-técnico" en `/buscar`. <!-- ref: 1701.md:233 -->
-- [ ] **Contextual Help Layer**: Desplegar `HelpButton` e `InlineHelpPanel` en todas las pantallas críticas. <!-- ref: 1701.md:291 -->
+- [x] **Contextual Help Layer (Phase 96.2 ✅)**: Desplegar `HelpButton` e `InlineHelpPanel` explicativos en el visor de auditoría. <!-- ref: 1701.md:291 -->
 
 #### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE (COMPLETADO ✅)
 **Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.
