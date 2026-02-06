@@ -23,8 +23,18 @@ export async function GET(req: NextRequest) {
         const search = searchParams.get('search');
         const tenantIdFilter = searchParams.get('tenantId');
         const userEmail = searchParams.get('userEmail');
+        const loadAll = searchParams.get('all') === 'true';
 
-        // Helper to prevent ReDoS
+        // 🛡️ Lazy Loading Guard: Si no hay filtros activos Y no se solicita "todos", retornar vacío
+        const hasActiveFilters = level || source || search || userEmail || tenantIdFilter || loadAll;
+        if (!hasActiveFilters) {
+            return NextResponse.json({
+                success: true,
+                logs: [],
+                meta: { errorCount: 0, warnCount: 0 },
+                info: 'No filters applied. Use search, level, or source parameters to load logs.'
+            });
+        }
         const escapeRegExp = (string: string) => {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         };

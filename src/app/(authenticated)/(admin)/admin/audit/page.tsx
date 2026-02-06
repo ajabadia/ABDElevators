@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useMemo } from "react";
 import { useApiItem } from "@/hooks/useApiItem";
 import { useApiList } from "@/hooks/useApiList";
 import { DataTable, Column } from "@/components/ui/data-table";
@@ -10,13 +11,19 @@ import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
+import { Input } from "@/components/ui/input";
 import {
     Activity,
     FileText,
     Zap,
     Download,
     Search,
-    ShieldAlert
+    ShieldAlert,
+    Filter,
+    Hash,
+    Database,
+    Cpu,
+    Webhook
 } from "lucide-react";
 
 interface GlobalStats {
@@ -41,6 +48,12 @@ interface GlobalStats {
     };
 }
 
+interface LogStats {
+    total: number;
+    levels: Record<string, number>;
+    sources: Record<string, number>;
+}
+
 interface LogEntry {
     _id: string;
     level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
@@ -54,24 +67,40 @@ interface LogEntry {
 }
 
 /**
- * AuditoriaPage: Logs & Métricas Reales
- * Fase 7.5: Sistema de Auditoría Avanzado.
+ * AuditoriaPage: Registro Industrial & Monitoreo (Fase 96.1)
+ * Implementa patrón de Lazy Loading con filtros y búsqueda avanzada.
  */
 export default function AuditoriaPage() {
-    // 1. Carga de Métricas Globales
-    const { data: stats, isLoading: loadingStats } = useApiItem<GlobalStats>({
+    const [searchQuery, setSearchQuery] = useState('');
+    const [levelFilter, setLevelFilter] = useState('');
+    const [sourceFilter, setSourceFilter] = useState('');
+
+    // 🛡️ Pattern: __ALL__ logic
+    const hasActiveFilters = Boolean(levelFilter || sourceFilter || searchQuery);
+    const actualLevel = levelFilter === '__ALL__' ? '' : levelFilter;
+    const actualSource = sourceFilter === '__ALL__' ? '' : sourceFilter;
+    const allParam = (levelFilter === '__ALL__' || sourceFilter === '__ALL__') ? '&all=true' : '';
+
+    // 1. Carga de Métricas Globales (Dashboard)
+    const { data: globalStats, isLoading: loadingGlobal } = useApiItem<GlobalStats>({
         endpoint: '/api/admin/global-stats',
         dataKey: 'global'
     });
 
-    // 2. Carga de Logs Recientes
-    const { data: logs, isLoading: loadingLogs } = useApiList<LogEntry>({
-        endpoint: '/api/admin/logs',
-        dataKey: 'logs',
-        filters: { limit: '50' }
+    // 2. Carga de Estadísticas de Logs (Filtros)
+    const { data: logStats, isLoading: loadingStats } = useApiItem<LogStats>({
+        endpoint: '/api/admin/logs/stats',
+        autoFetch: true
     });
 
-    // 3. Definición de Columnas para DataTable
+    // 3. Carga de Logs (Lazy Loading)
+    const { data: logs, isLoading: loadingLogs, refetch: refetchLogs } = useApiList<LogEntry>({
+        endpoint: `/api/admin/logs?limit=50&level=${actualLevel}&source=${actualSource}&search=${searchQuery}${allParam}`,
+        dataKey: 'logs',
+        autoFetch: hasActiveFilters
+    });
+
+    // 4. Definición de Columnas
     const columns: Column<LogEntry>[] = [
         {
             header: "Timestamp",
@@ -124,6 +153,13 @@ export default function AuditoriaPage() {
         }
     ];
 
+    const sources = useMemo(() => {
+        if (!logStats?.sources) return [];
+        return Object.keys(logStats.sources);
+    }, [logStats]);
+
+    const levels = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
+
     return (
         <PageContainer>
             <PageHeader
@@ -137,8 +173,8 @@ export default function AuditoriaPage() {
                 }
             />
 
-            {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Metrics Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <ContentCard className="p-4" noPadding={true}>
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pedidos (Total)</div>
@@ -146,7 +182,7 @@ export default function AuditoriaPage() {
                     </div>
                     <div className="p-4 pt-0">
                         <div className="text-2xl font-black font-outfit text-slate-900 dark:text-white">
-                            {loadingStats ? "..." : stats?.totalCases || 0}
+                            {loadingGlobal ? "..." : globalStats?.totalCases || 0}
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold mt-1">Acumulados en plataforma</p>
                     </div>
@@ -158,8 +194,8 @@ export default function AuditoriaPage() {
                         <ShieldAlert className="h-4 w-4 text-rose-400" />
                     </div>
                     <div className="p-4 pt-0">
-                        <div className={`text-2xl font-black font-outfit ${stats?.performance?.sla_violations_30d ? 'text-rose-600' : 'text-slate-900 dark:text-white'}`}>
-                            {loadingStats ? "..." : stats?.performance?.sla_violations_30d || 0}
+                        <div className={`text-2xl font-black font-outfit ${globalStats?.performance?.sla_violations_30d ? 'text-rose-600' : 'text-slate-900 dark:text-white'}`}>
+                            {loadingGlobal ? "..." : globalStats?.performance?.sla_violations_30d || 0}
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold mt-1">Últimos 30 días</p>
                     </div>
@@ -172,7 +208,7 @@ export default function AuditoriaPage() {
                     </div>
                     <div className="p-4 pt-0">
                         <div className="text-2xl font-black font-outfit text-slate-900 dark:text-white">
-                            {loadingStats ? "..." : `${Math.round((stats?.usage?.tokens || 0) / 1000)}k`}
+                            {loadingGlobal ? "..." : `${Math.round((globalStats?.usage?.tokens || 0) / 1000)}k`}
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold mt-1">Inferencia LLM Activa</p>
                     </div>
@@ -185,34 +221,129 @@ export default function AuditoriaPage() {
                     </div>
                     <div className="p-4 pt-0">
                         <div className="text-2xl font-black font-outfit text-teal-600">
-                            {loadingStats ? "..." : stats?.performance?.rag_quality_avg ? `${(stats.performance.rag_quality_avg.avgFaithfulness * 100).toFixed(0)}%` : "N/A"}
+                            {loadingGlobal ? "..." : globalStats?.performance?.rag_quality_avg ? `${(globalStats.performance.rag_quality_avg.avgFaithfulness * 100).toFixed(0)}%` : "N/A"}
                         </div>
                         <p className="text-[10px] text-slate-500 font-bold mt-1">Score de Alucinaciones</p>
                     </div>
                 </ContentCard>
             </div>
 
+            {/* Búsqueda y Filtros */}
+            <div className="space-y-4 mb-6">
+                <ContentCard className="p-2 border-slate-200 dark:border-slate-800 shadow-sm" noPadding>
+                    <div className="flex items-center px-4 py-2 gap-4">
+                        <Search className="w-5 h-5 text-slate-300" />
+                        <Input
+                            placeholder="Busca por mensaje, acción, correlationId o email de usuario..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="border-none shadow-none focus-visible:ring-0 text-sm font-medium p-0 h-10 placeholder:text-slate-400"
+                        />
+                    </div>
+                </ContentCard>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        onClick={() => {
+                            setLevelFilter('__ALL__');
+                            setSourceFilter('');
+                        }}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${levelFilter === '__ALL__'
+                            ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
+                            : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
+                            }`}
+                    >
+                        <Activity className="w-3 h-3" />
+                        TODOS ({logStats?.total || 0})
+                    </button>
+
+                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />
+
+                    {levels.map(lvl => (
+                        <button
+                            key={lvl}
+                            onClick={() => setLevelFilter(lvl)}
+                            className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${levelFilter === lvl
+                                ? "bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-400"
+                                }`}
+                        >
+                            {lvl}
+                            <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${levelFilter === lvl ? "bg-white/20 text-white dark:bg-slate-200 dark:text-slate-600" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                }`}>
+                                {logStats?.levels[lvl] || 0}
+                            </span>
+                        </button>
+                    ))}
+
+                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />
+
+                    {sources.map(src => (
+                        <button
+                            key={src}
+                            onClick={() => setSourceFilter(src)}
+                            className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${sourceFilter === src
+                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-blue-500/50"
+                                }`}
+                        >
+                            {src.toUpperCase()}
+                            <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${sourceFilter === src ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                }`}>
+                                {logStats?.sources[src] || 0}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* Logs Table */}
-            <ContentCard noPadding={true}>
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <ContentCard noPadding={true} className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
                     <div>
                         <h3 className="font-black text-lg flex items-center gap-2 tracking-tight">
-                            <Search className="w-5 h-5 text-slate-300" />
-                            Eventos Recientes
+                            <Filter className="w-5 h-5 text-teal-500" />
+                            Eventos de Auditoría
                         </h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Últimas 50 operaciones del sistema técnico</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feed industrial de operaciones y seguridad</p>
                     </div>
-                    <Badge variant="outline" className="bg-slate-50 text-slate-400 border-slate-200">
-                        LIVE FEED
-                    </Badge>
                 </div>
 
-                <DataTable
-                    columns={columns}
-                    data={logs || []}
-                    isLoading={loadingLogs}
-                    emptyMessage="No se han registrado eventos recientes."
-                />
+                {!hasActiveFilters ? (
+                    <div className="p-20 text-center">
+                        <div className="bg-slate-50 dark:bg-slate-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Activity size={32} className="text-slate-300" />
+                        </div>
+                        <h3 className="text-lg font-black text-slate-700 dark:text-slate-300 mb-2 font-outfit">
+                            Activa el monitor de auditoría
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-8 font-medium">
+                            Usa los filtros de nivel, origen o la barra de búsqueda para cargar los registros. Elige "TODOS" para ver la actividad general reciente.
+                        </p>
+                        <div className="flex justify-center gap-3">
+                            <Button
+                                onClick={() => setLevelFilter('__ALL__')}
+                                className="bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl"
+                            >
+                                <Activity className="w-4 h-4 mr-2" /> Cargar Todos
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setLevelFilter('ERROR')}
+                                className="border-slate-200 dark:border-slate-800 font-bold rounded-xl"
+                            >
+                                <ShieldAlert className="w-4 h-4 mr-2 text-rose-500" /> Solo Errores
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <DataTable
+                        columns={columns}
+                        data={logs || []}
+                        isLoading={loadingLogs}
+                        emptyMessage="No se han registrado eventos que coincidan con los filtros."
+                    />
+                )}
             </ContentCard>
         </PageContainer>
     );
