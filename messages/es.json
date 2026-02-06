@@ -73,6 +73,10 @@
             "elevators": "Inteligencia de Ascensores",
             "legal": "Mente Legal",
             "clinical": "Córtex Clínico"
+        },
+        "help": {
+            "title": "Centro de Ayuda Contextual",
+            "subtitle": "Información técnica y consejos de uso para esta sección."
         }
     },
     "nav": {

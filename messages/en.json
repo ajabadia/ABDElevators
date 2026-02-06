@@ -73,6 +73,10 @@
             "elevators": "Elevator Intelligence",
             "legal": "Legal Mind",
             "clinical": "Clinical Cortex"
+        },
+        "help": {
+            "title": "Contextual Help Center",
+            "subtitle": "Technical information and usage tips for this section."
         }
     },
     "nav": {

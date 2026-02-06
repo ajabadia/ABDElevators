@@ -97,7 +97,7 @@ export default function AuditoriaPage() {
     });
 
     // 3. Carga de Logs (Lazy Loading)
-    const { data: logs, isLoading: loadingLogs, refetch: refetchLogs } = useApiList<LogEntry>({
+    const { data: logs, isLoading: loadingLogs, refresh: refreshLogs } = useApiList<LogEntry>({
         endpoint: `/api/admin/logs?limit=50&level=${actualLevel}&source=${actualSource}&search=${searchQuery}${allParam}`,
         dataKey: 'logs',
         autoFetch: hasActiveFilters
