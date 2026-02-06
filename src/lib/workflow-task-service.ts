@@ -29,7 +29,7 @@ export class WorkflowTaskService {
         if (filters.assignedUserId) query.assignedUserId = filters.assignedUserId;
         if (filters.caseId) query.caseId = filters.caseId;
 
-        return collection.find(query).sort({ priority: -1, createdAt: -1 }).toArray();
+        return await (collection as any).find(query).sort({ priority: -1, createdAt: -1 }).toArray();
     }
 
     /**

@@ -16,8 +16,9 @@ Este documento es tu **prompt de sistema** para pasar a Cursor, Antigrávity, o 
 **Proyecto:** Sistema RAG para análisis de especificaciones de pedidos de ascensores.
 
 **Stack:**
-- Frontend: Next.js 15 + React 19 + TypeScript strict
-- Backend: Next.js API Routes
+- Frontend: Next.js 16 + React 19 + TypeScript strict
+- Backend: Next.js API Routes (Route Handlers)
+- Tooling: Turbopack (Build & Dev)
 - DB: MongoDB Atlas
 - AI/ML: Gemini API (LLM + embeddings)
 - Hosting: Vercel
@@ -92,27 +93,27 @@ catch (error) {
 SI ROMPES: Rechazamos tu PR sin piedad.
 ```
 
-### 4. Logging Estructurado
+### 4. Structured Logging
 
 ```
-REGLA: Todo evento importante se loguea con estructura consistente.
+RULE: Every significant event must be logged with a consistent structure.
 
-OBLIGATORIO:
-- await logEvento({ nivel, origen, accion, mensaje, correlacion_id, detalles })
-- correlacion_id = UUID único por request
-- nivel = DEBUG | INFO | WARN | ERROR
-- origen = nombre del módulo (API_PEDIDOS, RAG, PDF, etc)
-- detalles = objetos relevantes (tiempos, modelos, bytes, etc)
+MANDATORY:
+- await logEvento({ level, source, action, message, correlationId, details })
+- correlationId = Unique UUID per request
+- level = DEBUG | INFO | WARN | ERROR
+- source = module name (API_PEDIDOS, RAG, PDF, etc)
+- details = relevant objects (timing, models, bytes, etc)
 
-PATRÓN:
-const correlacion_id = generateUUID()
-await logEvento({ nivel: 'INFO', origen: 'API_PEDIDOS', ... , correlacion_id })
+PATTERN:
+const correlationId = generateUUID()
+await logEvento({ level: 'INFO', source: 'API_PEDIDOS', ... , correlationId })
 try { ... }
 catch (error) {
-  await logEvento({ nivel: 'ERROR', ... , correlacion_id, stack: error.stack })
+  await logEvento({ level: 'ERROR', ... , correlationId, stack: error.stack })
 }
 
-SI ROMPES: Rechazamos tu PR sin piedad.
+IF BROKEN: Your PR will be rejected.
 ```
 
 ### 5. NO Browser Storage APIs
@@ -170,27 +171,27 @@ await session.withTransaction(async () => {
 SI ROMPES: Rechazamos tu PR sin piedad.
 ```
 
-### 8. Performance Medible
+### 8. Measurable Performance
 
 ```
-REGLA: Medir tiempo en endpoints. Loguear si excede SLA.
+RULE: Measure time in endpoints. Log if it exceeds SLA.
 
 SLAs:
 - /api/pedidos/analyze: P95 < 500ms, MAX 2000ms
 - /api/pedidos/[id]/informe: P95 < 300ms, MAX 1000ms
 - /api/admin/logs: P95 < 200ms, MAX 500ms
 
-PATRÓN:
-const inicio = Date.now()
+PATTERN:
+const start = Date.now()
 try { ... }
 finally {
-  const duracion = Date.now() - inicio
-  if (duracion > THRESHOLD) {
-    await logEvento({ nivel: 'WARN', detalles: { duracion_ms } })
+  const duration = Date.now() - start
+  if (duration > THRESHOLD) {
+    await logEvento({ level: 'WARN', details: { duration_ms: duration } })
   }
 }
 
-SI ROMPES: Rechazamos tu PR sin piedad.
+IF BROKEN: Your PR will be rejected.
 ```
 
 ### 9. Security Headers
@@ -209,21 +210,34 @@ OBLIGATORIO (en middleware.ts):
 SI ROMPES: Rechazamos tu PR sin piedad.
 ```
 
-### 10. NO Secrets en Código
+### 11. Multi-tenant Harmony (Regla de Oro #9)
 
 ```
-REGLA: Nunca hardcodear API keys, tokens, URLs. Variables de entorno SIEMPRE.
+REGLA: Toda operación de DB debe realizarse a través de SecureCollection para garantizar aislamiento.
 
-VARIABLES:
-❌ const GEMINI_API_KEY = "AIzaSyXxxx"
-✅ const apiKey = process.env.GEMINI_API_KEY
-✅ const publicUrl = process.env.NEXT_PUBLIC_APP_URL (para frontend)
+PATRÓN:
+const collection = await getTenantCollection('nombre_colección', session);
+// El filtro de tenantId y Soft Delete se aplica automáticamente.
 
-ALMACENAMIENTO:
-- Local: .env.local (en .gitignore)
-- Producción: Vercel dashboard (no en código)
+VALIDACIÓN:
+❌ db.collection('pedidos').find({ ... })
+✅ const collection = await getTenantCollection('pedidos', session);
+   await collection.find({ ... });
 
-SI ROMPES: Rechazamos tu PR sin piedad.
+SI ROMPES: Riesgo de filtración de datos entre clientes. Rechazo inmediato.
+```
+
+### 12. Prompt Governance (Regla de Oro #4)
+
+```
+REGLA: Todo prompt maestro debe residir en la DB para trazabilidad y edición dinámica.
+
+PATRÓN:
+1. Definir fallback en src/lib/prompts.ts.
+2. Consumir vía PromptService.getPrompt(key, tenantId).
+3. Sincronizar fallbacks a DB mediante sync script si no existen.
+
+SI ROMPES: Perdemos capacidad de ajuste en caliente.
 ```
 
 ---
@@ -411,24 +425,24 @@ REQUIREMENTS:
 3. Si PDF: extraer texto con extractTextFromPDF()
 4. Analizar modelos con extractModelsWithGemini()
 5. Guardarlo en MongoDB (tabla 'pedidos', atómico)
-6. Loguear con logEvento() (origen: API_PEDIDOS, accion: ANALIZAR_PEDIDO)
-7. Devolver { success: true, pedido_id, numero_pedido, modelos_detectados }
-8. Si error: throw AppError correspondiente
+6. Log with logEvento() (source: API_PEDIDOS, action: ANALYZE_PEDIDO)
+7. Return { success: true, pedido_id, numero_pedido, detectados }
+8. If error: throw corresponding AppError
 
-REGLAS A SEGUIR:
+RULES TO FOLLOW:
 - TypeScript STRICT
 - Zod validation FIRST
-- AppError en catches
-- logEvento con correlacion_id
-- Performance: loguear si > 2000ms
-- No secrets, variables de entorno
+- AppError in catches
+- logEvento with correlationId
+- Performance: log if > 2000ms
+- No secrets, environment variables
 
-REFERENCIAS:
-- lib/db.ts para connectDB()
-- lib/llm.ts para extractModelsWithGemini()
-- lib/pdf-utils.ts para extractTextFromPDF()
-- lib/logger.ts para logEvento()
-- lib/errors.ts para AppError, ValidationError, DatabaseError
+REFERENCES:
+- lib/db.ts for connectDB()
+- lib/llm.ts for extractModelsWithGemini()
+- lib/pdf-utils.ts for extractTextFromPDF()
+- lib/logger.ts for logEvento()
+- lib/errors.ts for AppError, ValidationError, DatabaseError
 ```
 
 ---

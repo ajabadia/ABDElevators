@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             message: 'Evaluación de respuesta RAG procesada',
             correlationId,
             tenantId,
-            detalles: { duracion_ms: duracion, query: query.substring(0, 50) }
+            details: { duracion_ms: duracion, query: query.substring(0, 50) }
         });
 
         return NextResponse.json({
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         });
     } catch (error: any) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: error.errors }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: (error as any).errors }, { status: 400 });
         }
         console.error('[API JUDGE ERROR]', error);
         return NextResponse.json({ success: false, error: 'INTERNAL_ERROR', message: error.message }, { status: 500 });

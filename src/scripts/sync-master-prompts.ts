@@ -7,7 +7,7 @@ import { PromptSchema } from '../lib/schemas';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function syncMasterPrompts() {
-    console.log('🔄 Iniciando sincronización de Prompts Maestros (Fase 70)...');
+    console.log('🔄 Iniciando sincronización FORZADA de Prompts Maestros (Fase 70)...');
 
     const uri = process.env.MONGODB_URI;
     if (!uri) {
@@ -20,13 +20,41 @@ async function syncMasterPrompts() {
         await client.connect();
         const db = client.db('ABDElevators');
         const promptsCollection = db.collection('prompts');
+        const tenantsCollection = db.collection('tenants');
 
+        const targetTenantId = process.env.SINGLE_TENANT_ID || 'default_tenant';
+        console.log(`🎯 Target Tenant ID: ${targetTenantId}`);
+
+        // 1. Asegurar que el tenant existe con el nombre correcto
+        const existingTenant = await tenantsCollection.findOne({ tenantId: targetTenantId });
+        if (!existingTenant) {
+            await tenantsCollection.insertOne({
+                tenantId: targetTenantId,
+                name: 'Cliente por Defecto (ABD)',
+                active: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+            console.log(`✅ Tenant "${targetTenantId}" creado.`);
+        } else {
+            await tenantsCollection.updateOne(
+                { tenantId: targetTenantId },
+                { $set: { name: 'Cliente por Defecto (ABD)' } }
+            );
+            console.log(`✅ Nombre del tenant "${targetTenantId}" actualizado.`);
+        }
+
+        // 2. Sincronizar prompts forzando PRODUCTION
         for (const [key, template] of Object.entries(PROMPTS)) {
-            // Intentar encontrar el prompt existente por key
-            const existing = await promptsCollection.findOne({ key, tenantId: 'global' });
+            // Intentar encontrar el prompt existente por key, tenant y entorno
+            const existing = await promptsCollection.findOne({
+                key,
+                tenantId: targetTenantId,
+                environment: 'PRODUCTION'
+            });
 
             if (existing) {
-                console.log(`- [SKIP] Prompt "${key}" ya existe en DB. Respetando persistencia.`);
+                console.log(`- [SKIP] Prompt "${key}" ya existe para tenant "${targetTenantId}" en PRODUCTION.`);
                 continue;
             }
 
@@ -37,9 +65,9 @@ async function syncMasterPrompts() {
                 description: `Prompt maestro sincronizado: ${key}`,
                 category: 'SYSTEM',
                 template,
-                variables: [], // Se pueden inferir o añadir manualmente después
+                variables: [],
                 model: key.includes('JUDGE') ? 'gemini-1.5-pro' : 'gemini-1.5-flash',
-                tenantId: 'global',
+                tenantId: targetTenantId,
                 active: true,
                 version: 1,
                 environment: 'PRODUCTION',
@@ -50,11 +78,15 @@ async function syncMasterPrompts() {
             try {
                 const validated = PromptSchema.parse(newPrompt);
                 await promptsCollection.insertOne(validated);
-                console.log(`+ [SYNC] Prompt "${key}" insertado con éxito.`);
+                console.log(`+ [SYNC] Prompt "${key}" insertado en "${targetTenantId}" (PRODUCTION).`);
             } catch (err: any) {
                 console.error(`❌ Error validando/insertando prompt "${key}":`, err.message);
             }
         }
+
+        // 3. Limpieza de posibles duplicados en 'global'
+        const result = await promptsCollection.deleteMany({ tenantId: 'global' });
+        console.log(`🗑️ Borrados ${result.deletedCount} prompts globales obsoletos.`);
 
         console.log('\n✅ Sincronización completada.');
     } catch (error) {

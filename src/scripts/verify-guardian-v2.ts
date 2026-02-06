@@ -72,7 +72,7 @@ async function verifyGuardianV2() {
             email: 'carlos_verify@test.com',
             firstName: 'Carlos',
             lastName: 'Verify',
-            role: UserRole.TECHNICAL,
+            role: UserRole.TECHNICAL as UserRole,
             tenantId,
             permissionGroups: [g1.insertedId.toString()],
             permissionOverrides: [p2.insertedId.toString()],

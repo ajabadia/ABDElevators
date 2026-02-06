@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { connectDB } from "@/lib/db"
+import { connectDB, connectLogsDB } from "@/lib/db"
 import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
 
@@ -44,8 +44,8 @@ export async function GET(req: NextRequest) {
             : 94
 
         // 4. Obtener actividad reciente desde logs de aplicación
-        const logsCollection = db.collection("logs_aplicacion")
-        const recentLogs = await logsCollection
+        const logsDb = await connectLogsDB()
+        const recentLogs = await logsDb.collection("application_logs")
             .find({
                 tenantId,
                 source: { $in: ["API_USER_SEARCH", "API_INGEST"] }
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
                 id: log._id.toString(),
                 type,
                 title: `${iconClass} ${title}`,
-                description: log.mensaje || log.message || "Actividad del sistema",
+                description: log.message || "Actividad del sistema",
                 timestamp: new Date(log.timestamp).toLocaleString("es-ES")
             }
         })

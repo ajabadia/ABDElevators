@@ -341,7 +341,14 @@ export class PromptService {
         }
 
         const collection = await getTenantCollection('prompts');
-        const filter: any = { environment };
+        const filter: any = {};
+
+        // Robust environment filtering (Phase 87.2)
+        if (environment === 'PRODUCTION') {
+            filter.environment = { $in: ['PRODUCTION', null, undefined] };
+        } else {
+            filter.environment = environment;
+        }
 
         if (activeOnly) {
             filter.$or = [{ active: true }, { active: { $exists: false } }];

@@ -22,9 +22,9 @@ export async function PATCH(req: NextRequest) {
         const body = await req.json();
         const { preferences } = UserPreferencesSchema.parse(body);
 
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ email: session.user.email }); // Added this line
-        await db.collection('users').updateOne(
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email }); // Added this line
+        await authDb.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {

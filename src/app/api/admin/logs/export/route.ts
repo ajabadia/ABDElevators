@@ -15,19 +15,19 @@ export async function GET(req: NextRequest) {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
         const { searchParams } = new URL(req.url);
-        const nivel = searchParams.get('nivel');
+        const level = searchParams.get('level') || searchParams.get('nivel');
         const search = searchParams.get('search');
         const tenantId = session.user.role === UserRole.SUPER_ADMIN
             ? searchParams.get('tenantId')
             : session.user.tenantId;
 
         const db = await connectLogsDB();
-        const collection = db.collection('logs_aplicacion');
+        const collection = db.collection('application_logs');
 
         // Construir Query
         const query: any = {};
         if (tenantId) query.tenantId = tenantId;
-        if (nivel && nivel !== 'ALL') query.nivel = nivel;
+        if (level && level !== 'ALL') query.level = level;
         if (search) {
             query.$or = [
                 { message: { $regex: search, $options: 'i' } },
@@ -43,18 +43,18 @@ export async function GET(req: NextRequest) {
             .toArray();
 
         // Convertir a CSV
-        const header = ['Timestamp', 'Nivel', 'Origen', 'Accion', 'Mensaje', 'TenantID', 'CorrelacionID', 'Stack'];
+        const header = ['Timestamp', 'Level', 'Source', 'Action', 'Message', 'TenantID', 'CorrelationID', 'Stack'];
         const csvRows = [header.join(',')];
 
         for (const log of logs) {
             const row = [
                 new Date(log.timestamp).toISOString(),
-                log.nivel,
-                log.origen,
-                log.accion,
-                `"${(log.mensaje || '').replace(/"/g, '""')}"`, // Escape quotes
+                log.level,
+                log.source,
+                log.action,
+                `"${(log.message || '').replace(/"/g, '""')}"`, // Escape quotes
                 log.tenantId || '',
-                log.correlacion_id || '',
+                log.correlationId || '',
                 `"${(log.stack || '').replace(/"/g, '""').replace(/\n/g, ' ')}"` // Escape quotes & newlines
             ];
             csvRows.push(row.join(','));

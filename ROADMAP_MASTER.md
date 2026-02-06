@@ -598,9 +598,10 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 - Treat this file as the **single source of truth**.
 
-- [X] [v3.4.4] Fase 60: Bulk Invitation System
-    - [x] Implementación de API Batch y UI de Importación.
-    - [x] Auditoría completa i18n/a11y/Seguridad (app-full-reviewer).
-    - [x] Documentación de importación integrada en `/docs`.
+- [X] [v3.9.2] **Industrialization & Agentic Evolution**
+    - [x] **Phase 86 (Causal AI)**: Implementation of agentic auto-correction loop and formal causal impact assessment.
+    - [x] **Phase 87 (Data Centralization)**: Complete migration of Auth and Logs to dedicated clusters.
+    - [x] **Phase 89 (UI Consistency)**: Standardization of the Prompt Editor (Dark/Light mode).
+    - [x] **Skill: DB Consistency Auditor**: Automated enforcement of collection routing to correct clusters.
 
-*Updated and Audited on 2026-02-05 by Antigravity (Skill: roadmap-manager)*
+*Updated and Audited on 2026-02-06 by Antigravity (Skill: roadmap-manager)*

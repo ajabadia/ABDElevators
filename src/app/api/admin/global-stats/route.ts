@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth';
-import { connectDB, connectAuthDB } from '@/lib/db';
+import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
         // 1. Totales básicos
         const totalTenants = await authDb.collection('tenants').countDocuments();
         const totalUsers = await authDb.collection('users').countDocuments();
-        const totalFiles = await db.collection('documentos_tecnicos').countDocuments();
+        const totalFiles = await db.collection('knowledge_assets').countDocuments();
         const totalCases = await db.collection('pedidos').countDocuments();
 
         // 2. MAU (Monthly Active Users) - Usuarios con login o actividad en los últimos 30 días
@@ -72,12 +72,13 @@ export async function GET(req: NextRequest) {
         ]).toArray();
 
         // 5. Performance Metrics (SLA Violations)
-        const slaViolations = await db.collection('logs_aplicacion').countDocuments({
+        const logsDb = await connectLogsDB();
+        const slaViolations = await logsDb.collection('application_logs').countDocuments({
             action: 'SLA_VIOLATION',
             timestamp: { $gte: thirtyDaysAgo }
         });
 
-        const recentErrors = await db.collection('logs_aplicacion').countDocuments({
+        const recentErrors = await logsDb.collection('application_logs').countDocuments({
             level: 'ERROR',
             timestamp: { $gte: thirtyDaysAgo }
         });

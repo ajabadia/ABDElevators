@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { PromptSchema, Prompt } from '@/lib/schemas';
-import { z } from 'zod';
-import { Code, Info, AlertCircle, Save, X, History } from 'lucide-react';
+import { Code, Info, AlertCircle, Save, X, History, Play, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { z } from 'zod';
+import { Prompt, PromptSchema } from '@/lib/schemas';
 
 // Sub-componentes Refactorizados (Phase 72: Maintainability)
 import { SYSTEM_VARIABLES_DOC, CATEGORY_EXAMPLES } from './prompts/constants';
@@ -16,6 +17,7 @@ import { VariableManager } from './prompts/VariableManager';
 import { HistorySidebar } from './prompts/HistorySidebar';
 import { PromptTemplateEditor } from './prompts/PromptTemplateEditor';
 import { PromptSystemGuide } from './prompts/PromptSystemGuide';
+import { PromptVisualTester } from './PromptVisualTester';
 
 interface PromptEditorProps {
     initialPrompt?: Prompt;
@@ -209,48 +211,73 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8 relative">
-                {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-2xl flex items-center gap-3 text-sm"><AlertCircle size={18} />{error}</div>}
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+                <Tabs defaultValue="config" className="w-full h-full flex flex-col">
+                    <div className="px-8 pt-4 shrink-0">
+                        <TabsList className="bg-slate-950 border border-slate-800 p-1 rounded-2xl">
+                            <TabsTrigger
+                                value="config"
+                                className="rounded-xl px-6 text-slate-400 data-[state=active]:bg-teal-600 data-[state=active]:text-white hover:text-white transition-colors gap-2"
+                            >
+                                <Settings size={14} /> Configuración
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="simulation"
+                                className="rounded-xl px-6 text-slate-400 data-[state=active]:bg-teal-600 data-[state=active]:text-white hover:text-white transition-colors gap-2"
+                            >
+                                <Play size={14} /> Simulación
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <HistorySidebar isOpen={showHistory} onClose={() => setShowHistory(false)} loading={loadingVersions} versions={versions} onRollback={handleRollback} />
+                    <TabsContent value="config" className="flex-1 p-8 space-y-8 mt-0 border-0 outline-none">
+                        {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-2xl flex items-center gap-3 text-sm"><AlertCircle size={18} />{error}</div>}
 
-                    {/* Metadata Section */}
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2"><Info size={12} /> Metadatos</h3>
-                            <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs">Clave</Label>
-                                <Input value={formData.key} onChange={e => setFormData(prev => ({ ...prev, key: e.target.value.toUpperCase() }))} disabled={isEdit} className="bg-slate-950 border-slate-800 text-teal-400 font-mono rounded-xl h-11" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs">Nombre</Label>
-                                <Input value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} className="bg-slate-950 border-slate-800 text-white rounded-xl h-11" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs">Categoría</Label>
-                                    <select value={formData.category} onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as any }))} className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                        <option value="EXTRACTION">Extracción</option><option value="ANALYSIS">Análisis</option><option value="RISK">Riesgos</option><option value="CHECKLIST">Checklist</option><option value="GENERAL">General</option>
-                                    </select>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <HistorySidebar isOpen={showHistory} onClose={() => setShowHistory(false)} loading={loadingVersions} versions={versions} onRollback={handleRollback} />
+
+                            {/* Metadata Section */}
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2"><Info size={12} /> Metadatos</h3>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-400 text-xs">Clave</Label>
+                                        <Input value={formData.key} onChange={e => setFormData(prev => ({ ...prev, key: e.target.value.toUpperCase() }))} disabled={isEdit} className="bg-slate-950 border-slate-800 text-teal-400 font-mono rounded-xl h-11" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-400 text-xs">Nombre</Label>
+                                        <Input value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} className="bg-slate-950 border-slate-800 text-white rounded-xl h-11" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-400 text-xs">Categoría</Label>
+                                            <select value={formData.category} onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as any }))} className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
+                                                <option value="EXTRACTION">Extracción</option><option value="ANALYSIS">Análisis</option><option value="RISK">Riesgos</option><option value="CHECKLIST">Checklist</option><option value="GENERAL">General</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-400 text-xs">Modelo</Label>
+                                            <select value={formData.model || 'gemini-1.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
+                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs">Modelo</Label>
-                                    <select value={formData.model || 'gemini-1.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
-                                    </select>
-                                </div>
+                                <VariableManager variables={formData.variables} onAdd={addVariable} onUpdate={updateVariable} onRemove={removeVariable} />
+                            </div>
+
+                            {/* Editor Section */}
+                            <div className="flex flex-col h-full space-y-4">
+                                <PromptTemplateEditor template={formData.template} maxLength={formData.maxLength} isEdit={isEdit} onLoadExample={loadExample} onChange={(v) => setFormData(prev => ({ ...prev, template: v }))} />
+                                <PromptSystemGuide promptKey={formData.key} />
                             </div>
                         </div>
-                        <VariableManager variables={formData.variables} onAdd={addVariable} onUpdate={updateVariable} onRemove={removeVariable} />
-                    </div>
+                    </TabsContent>
 
-                    {/* Editor Section */}
-                    <div className="flex flex-col h-full space-y-4">
-                        <PromptTemplateEditor template={formData.template} maxLength={formData.maxLength} isEdit={isEdit} onLoadExample={loadExample} onChange={(v) => setFormData(prev => ({ ...prev, template: v }))} />
-                        <PromptSystemGuide promptKey={formData.key} />
-                    </div>
-                </div>
+                    <TabsContent value="simulation" className="flex-1 p-8 mt-0 border-0 outline-none">
+                        <PromptVisualTester template={formData.template} variables={formData.variables} />
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <style jsx global>{`

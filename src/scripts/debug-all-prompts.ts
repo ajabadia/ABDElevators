@@ -8,7 +8,7 @@ async function debugAllPrompts() {
 
     try {
         const collection = await getTenantCollection('prompts');
-        const allPrompts = await collection.find({}).toArray();
+        const allPrompts = await (collection as any).find({}).toArray();
 
         console.log(`\n📊 Total de prompts encontrados: ${allPrompts.length}`);
         console.log('--------------------------------------------------');

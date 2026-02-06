@@ -65,7 +65,8 @@ export async function connectAuthDB(): Promise<Db> {
 
     // Optimización: Reutilizar conexión principal si las URIs son idénticas
     if (authUri === process.env.MONGODB_URI) {
-        return (await connectDB()).client.db('ABDElevators-Auth');
+        const client = await getConnectedClient(process.env.MONGODB_URI as string, '_mainPromise');
+        return client.db('ABDElevators-Auth');
     }
 
     try {

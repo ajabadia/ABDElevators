@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { connectLogsDB } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -9,10 +9,10 @@ import { NotificationTypeSchema } from '@/lib/schemas';
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationTemplatesPage() {
-    const db = await connectDB();
+    const db = await connectLogsDB();
 
     // 1. Obtener templates existentes
-    const templates = await db.collection('system_email_templates')
+    const templates = await db.collection('notification_templates')
         .find({})
         .sort({ type: 1 })
         .toArray();

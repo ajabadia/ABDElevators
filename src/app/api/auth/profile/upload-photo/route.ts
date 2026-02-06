@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
         }
 
         const db = await connectAuthDB();
-        const usuario = await db.collection('users').findOne({ email: session.user.email });
+        const authDb = await connectAuthDB();
+        const usuario = await authDb.collection('users').findOne({ email: session.user.email });
 
         if (!usuario) {
             throw new NotFoundError('Usuario no encontrado');
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, usuario._id.toString());
 
         // Actualizar el documento del usuario en la base de datos
-        await db.collection('users').updateOne(
+        await authDb.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {

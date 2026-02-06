@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 
 interface TemplateEditorProps {
     type: string;
-    initialData: any; // SystemEmailTemplate | null
+    initialData: any; // NotificationTemplate | null
 }
 
 export function TemplateEditor({ type, initialData }: TemplateEditorProps) {

@@ -1,26 +1,33 @@
 import { callGeminiPro } from '@/lib/llm';
 import { PromptService } from '@/lib/prompt-service';
-import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@/lib/logger';
 
-export interface RagEvaluation {
-    faithfulness: number;
-    answer_relevance: number;
-    context_precision: number;
-    reasoning: string;
+// Interface matching the schema for internal service use
+export interface RagEvaluationResult {
+    tenantId: string;
+    correlationId: string;
+    query: string;
+    generation: string;
+    context_chunks: string[];
+    metrics: {
+        faithfulness: number;
+        answer_relevance: number;
+        context_precision: number;
+    };
+    judge_model: string;
+    feedback?: string;
+    causal_analysis?: {
+        cause_id: string;
+        fix_strategy: string;
+    };
+    self_corrected?: boolean;
+    original_evaluation?: any;
+    timestamp: Date;
 }
 
-/**
- * ⚖️ Rag Judge Service (Phase 104)
- * Evaluates RAG response quality using a superior model.
- */
 export class RagJudgeService {
     /**
-     * Evaluates a RAG response.
-     * @param query - The user's query
-     * @param context - The retrieved chunks used for the answer
-     * @param response - The generated RAG response to judge
-     * @param industry - Target industry for domain-specific judgment
+     * Evalúa una respuesta RAG usando el Auditor LLM (Fase 86)
      */
     static async evaluateResponse(
         query: string,
@@ -29,38 +36,31 @@ export class RagJudgeService {
         industry: string,
         tenantId: string,
         correlationId?: string
-    ): Promise<RagEvaluation> {
-        let renderedPrompt: string;
-        let modelName = 'gemini-1.5-pro'; // Judge demands high reasoning
+    ): Promise<RagEvaluationResult> {
+        let modelName = 'gemini-1.5-pro';
+        let renderedPrompt = '';
 
         try {
-            const { text: promptText, model } = await PromptService.getRenderedPrompt(
+            const promptData = await PromptService.getRenderedPrompt(
                 'RAG_JUDGE',
-                {
-                    query,
-                    context,
-                    response,
-                    vertical: industry.toLowerCase()
-                },
+                { query, context, response, vertical: industry },
                 tenantId
             );
-            renderedPrompt = promptText;
-            modelName = model || 'gemini-1.5-pro';
-        } catch (error) {
-            console.warn(`[RAG_JUDGE_SERVICE] ⚠️ Fallback to Master Prompt:`, error);
-            await logEvento({
-                level: 'WARN',
-                source: 'RAG_JUDGE',
-                action: 'PROMPT_FALLBACK',
-                message: 'Usando prompt maestro por error en BD',
+            renderedPrompt = promptData.text;
+            modelName = promptData.model || modelName;
+        } catch (error: any) {
+            console.error('❌ [RAG JUDGE] Error rendering prompt:', error.message);
+            return {
+                tenantId,
                 correlationId: correlationId || 'rag-judge',
-                tenantId
-            });
-            renderedPrompt = PROMPTS.RAG_JUDGE
-                .replace('{{query}}', query)
-                .replace('{{context}}', context)
-                .replace('{{response}}', response)
-                .replace('{{vertical}}', industry.toLowerCase());
+                query,
+                generation: response,
+                context_chunks: [context],
+                metrics: { faithfulness: 0, answer_relevance: 0, context_precision: 0 },
+                judge_model: 'fallback',
+                feedback: 'Error rendering judge prompt',
+                timestamp: new Date()
+            };
         }
 
         try {
@@ -70,27 +70,86 @@ export class RagJudgeService {
             });
 
             const cleanText = responseText.replace(/```json|```/g, '').trim();
-            const evaluation = JSON.parse(cleanText) as RagEvaluation;
+            const metrics = JSON.parse(cleanText);
 
-            await logEvento({
-                level: 'INFO',
-                source: 'RAG_JUDGE',
-                action: 'EVALUATE_SUCCESS',
-                message: `Evaluación RAG completada para query: ${query.substring(0, 30)}...`,
-                correlationId: correlationId || 'rag-judge',
+            return {
                 tenantId,
-                details: { evaluation }
+                correlationId: correlationId || 'rag-judge',
+                query,
+                generation: response,
+                context_chunks: [context],
+                metrics: {
+                    faithfulness: metrics.faithfulness,
+                    answer_relevance: metrics.answer_relevance,
+                    context_precision: metrics.context_precision
+                },
+                judge_model: modelName,
+                feedback: metrics.reasoning,
+                causal_analysis: metrics.causal_analysis,
+                timestamp: new Date()
+            };
+        } catch (error: any) {
+            console.error('❌ [RAG JUDGE ERROR]', error);
+            return {
+                tenantId,
+                correlationId: correlationId || 'rag-judge',
+                query,
+                generation: response,
+                context_chunks: [context],
+                metrics: { faithfulness: 0, answer_relevance: 0, context_precision: 0 },
+                judge_model: modelName,
+                feedback: `Error en la evaluación: ${error.message}`,
+                timestamp: new Date()
+            };
+        }
+    }
+
+    /**
+     * Attempts to self-correct a RAG response based on causal feedback.
+     */
+    static async selfCorrect(
+        query: string,
+        context: string,
+        badResponse: string,
+        evaluation: any, // Use any to avoid direct circular ref issues in typing if needed
+        tenantId: string,
+        correlationId?: string
+    ): Promise<{ improvedResponse: string, newEvaluation: RagEvaluationResult } | null> {
+        if (!evaluation.causal_analysis?.fix_strategy) return null;
+
+        try {
+            const { text: promptText } = await PromptService.getRenderedPrompt(
+                'RAG_SELF_CORRECT',
+                {
+                    query,
+                    context,
+                    response: badResponse,
+                    cause_id: evaluation.causal_analysis.cause_id,
+                    fix_strategy: evaluation.causal_analysis.fix_strategy
+                },
+                tenantId
+            );
+
+            // Execute correction
+            const improvedResponse = await callGeminiPro(promptText, tenantId, {
+                correlationId: `${correlationId}-retry`,
+                model: 'gemini-1.5-pro'
             });
 
-            return evaluation;
+            // Re-evaluate
+            const newEvaluation = await this.evaluateResponse(
+                query,
+                context,
+                improvedResponse,
+                'GENERIC',
+                tenantId,
+                `${correlationId}-retry`
+            );
+
+            return { improvedResponse, newEvaluation };
         } catch (error: any) {
-            console.error('[RAG JUDGE ERROR]', error);
-            return {
-                faithfulness: 0,
-                answer_relevance: 0,
-                context_precision: 0,
-                reasoning: `Error en la evaluación: ${error.message}`
-            };
+            console.error('[SELF-CORRECT ERROR]', error);
+            return null;
         }
     }
 }

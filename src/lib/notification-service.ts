@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import { connectDB, connectLogsDB } from "@/lib/db";
 import {
     Notification,
     NotificationTenantConfigSchema,
@@ -128,7 +128,7 @@ export class NotificationService {
     // --- Public Queries ---
 
     static async listUnread(userId: string, limit = 20): Promise<any[]> {
-        const db = await connectDB();
+        const db = await connectLogsDB();
         return await db.collection('notifications')
             .find({
                 userId,
@@ -143,7 +143,7 @@ export class NotificationService {
     static async markAsRead(notificationIds: string[]): Promise<void> {
         if (!notificationIds.length) return;
 
-        const db = await connectDB();
+        const db = await connectLogsDB();
         await db.collection('notifications').updateMany(
             { _id: { $in: notificationIds.map(id => new ObjectId(id)) } },
             { $set: { read: true, readAt: new Date() } }
@@ -198,7 +198,7 @@ export class NotificationService {
     }
 
     private static async persistNotification(payload: NotificationPayload, mainRecipient?: string): Promise<string> {
-        const db = await connectDB();
+        const db = await connectLogsDB();
         const notification = {
             tenantId: payload.tenantId,
             userId: payload.userId, // Puede ser null
@@ -219,7 +219,7 @@ export class NotificationService {
     }
 
     private static async markAsSent(notifId: string, recipient: string) {
-        const db = await connectDB();
+        const db = await connectLogsDB();
         await db.collection('notifications').updateOne(
             { _id: new ObjectId(notifId) },
             { $set: { emailSent: true, emailSentAt: new Date(), emailRecipient: recipient } }
@@ -282,8 +282,8 @@ export class NotificationService {
     }
 
     private static async getSystemTemplate(type: string): Promise<any> {
-        const db = await connectDB();
+        const db = await connectLogsDB();
         // Buscar template activo para este tipo
-        return await db.collection('system_email_templates').findOne({ type, active: true });
+        return await db.collection('notification_templates').findOne({ type, active: true });
     }
 }

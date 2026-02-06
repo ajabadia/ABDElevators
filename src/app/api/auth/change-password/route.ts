@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
         // REGLA #2: Zod Validation BEFORE Processing
         const validated = ChangePasswordSchema.parse(body);
 
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ email: session.user.email });
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
 
         if (!user) {
             throw new NotFoundError('Usuario no encontrado');
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         // Hashear nueva contraseña
         const hashedPassword = await bcrypt.hash(validated.newPassword, 10);
 
-        await db.collection('users').updateOne(
+        await authDb.collection('users').updateOne(
             { email: session.user.email },
             {
                 $set: {
@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
             level: 'INFO',
             source: 'API_PERFIL',
             action: 'CHANGE_PASSWORD',
-            message: `Contraseña cambiada para ${session.user.email}`, correlationId: correlacion_id});
+            message: `Contraseña cambiada para ${session.user.email}`, correlationId: correlacion_id
+        });
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

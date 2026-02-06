@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
             // Protected/System fields
             tenantId,
             version: 1,
-            createdBy: session.user.email ?? undefined,
-            updatedBy: session.user.email ?? undefined,
+            createdBy: session.user.email || 'system',
+            updatedBy: session.user.email || 'system',
             createdAt: new Date(),
             updatedAt: new Date(),
             environment: body.environment || 'PRODUCTION'
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
             message: `Nuevo prompt creado: ${validated.key}`,
             correlationId: correlacion_id,
             details: { promptKey: validated.key, category: validated.category },
-            userEmail: session.user.email ?? undefined
+            userEmail: session.user.email || 'system'
         });
 
         return NextResponse.json({ success: true, prompt: validated });

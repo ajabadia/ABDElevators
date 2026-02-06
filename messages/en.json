@@ -128,6 +128,10 @@
         "f10_desc": "Automatic domain detection (Legal, Insurance, Healthcare) with dynamic analysis logic adaptation.",
         "f11_title": "Infinite Memory",
         "f11_desc": "Streaming ingestion and intelligent deduplication to manage unlimited technical libraries without overhead.",
+        "f12_title": "Causal Auto-Correction (AI)",
+        "f12_desc": "Agentic loop that assesses juror feedback to refine hallucinated or incomplete responses with causal reasoning.",
+        "f13_title": "DB Consistency Auditor",
+        "f13_desc": "Structural compliance guaranteed. Automated multi-cluster routing (AUTH, LOGS, MAIN) to prevent cross-tenant leaks.",
         "learn_more": "Learn more"
     },
     "solutions": {

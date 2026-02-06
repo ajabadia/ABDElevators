@@ -35,7 +35,8 @@ export async function PATCH(
 
         // Isolation: If Admin, verify that the user to edit belongs to their tenant
         if (isAdmin) {
-            const userToEdit = await db.collection('users').findOne({ _id: new ObjectId(id) });
+            const authDb = await connectAuthDB();
+            const userToEdit = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
             if (!userToEdit) {
                 throw new NotFoundError('User not found');
             }
@@ -57,7 +58,8 @@ export async function PATCH(
             updatedAt: new Date()
         };
 
-        const result = await db.collection('users').updateOne(
+        const authDb = await connectAuthDB();
+        const result = await authDb.collection('users').updateOne(
             { _id: new ObjectId(id) },
             { $set: updateData }
         );
@@ -133,19 +135,19 @@ export async function GET(
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
+        const authDb = await connectAuthDB();
+        const userToEdit = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
 
-        if (!user) {
+        if (!userToEdit) {
             throw new NotFoundError('User not found');
         }
 
         // Isolation: If Admin, verify tenantId
-        if (isAdmin && user.tenantId !== session.user.tenantId) {
+        if (isAdmin && userToEdit.tenantId !== session.user.tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Not authorized to view this user');
         }
 
-        const { password, ...safeUser } = user;
+        const { password, ...safeUser } = userToEdit;
         return NextResponse.json(safeUser);
     } catch (error: any) {
         if (error instanceof AppError) {

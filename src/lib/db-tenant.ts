@@ -12,7 +12,7 @@ import {
     FindOneAndUpdateOptions,
     ClientSession
 } from 'mongodb';
-import { connectDB, connectLogsDB, getMongoClient } from '@/lib/db';
+import { connectDB, connectLogsDB, connectAuthDB, getMongoClient } from '@/lib/db';
 
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -215,7 +215,7 @@ export async function withTransaction<R>(fn: (session: ClientSession) => Promise
     }
 }
 
-export type DatabaseType = 'MAIN' | 'LOGS';
+export type DatabaseType = 'MAIN' | 'LOGS' | 'AUTH';
 
 /**
  * Obtiene una colección protegida por el contexto de sesión.
@@ -228,7 +228,7 @@ export async function getTenantCollection<T extends Document>(
 ): Promise<SecureCollection<T>> {
     let session = providedSession;
 
-    if (!session && !process.env.SINGLE_TENANT_ID) {
+    if (!session) {
         try {
             const { auth } = await import('./auth');
             session = await auth();
@@ -241,9 +241,35 @@ export async function getTenantCollection<T extends Document>(
     const hasValidSession = session && session.user && session.user.tenantId;
     const isSingleTenantMode = !!process.env.SINGLE_TENANT_ID;
 
+    // Redirección Automática para Identidades y Logs (Phase 87)
+    let effectiveDbType = dbType;
+    if (collectionName === 'users' || collectionName === 'v2_users' || collectionName === 'tenants' || collectionName === 'permission_groups') {
+        effectiveDbType = 'AUTH';
+    } else if (
+        collectionName === 'application_logs' ||
+        collectionName === 'usage_logs' ||
+        collectionName === 'notification_templates' ||
+        collectionName === 'notifications' ||
+        collectionName === 'notification_configs'
+    ) {
+        effectiveDbType = 'LOGS';
+    } else if (collectionName === 'knowledge_assets' || collectionName === 'user_documents') {
+        // Redirigir a MAIN explícitamente si queremos asegurar que no se pierdan, 
+        // pero estas suelen estar en MAIN. La regla es que 'users' y 'permission_groups' VAN A AUTH.
+        effectiveDbType = 'MAIN';
+    }
+
     if (hasValidSession || isSingleTenantMode) {
         // Safe to proceed
-        const db = dbType === 'LOGS' ? await connectLogsDB() : await connectDB();
+        let db;
+        if (effectiveDbType === 'LOGS') {
+            db = await connectLogsDB();
+        } else if (effectiveDbType === 'AUTH') {
+            db = await connectAuthDB();
+        } else {
+            db = await connectDB();
+        }
+
         const rawCollection = db.collection<T>(collectionName);
         return new SecureCollection<T>(rawCollection, session, options);
     }

@@ -133,6 +133,8 @@ src/
   - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
   - ✅ **Dynamic CSP (Nonces)**: Implementación de Content Security Policy dinámica basada en nonces para una protección XSS de vanguardia.
   - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria garantizado por índices compuestos.
+  - ✅ **Causal AI Auto-Correction**: Agentic loop that assesses juror feedback to refine hallucinated or incomplete responses with causal reasoning (Phase 86).
+  - ✅ **DB Consistency Auditor**: Automated enforcement of multi-cluster routing (`AUTH`, `LOGS`, `MAIN`) to prevent cross-tenant data leaks and ensure structural integrity.
   - ✅ **Accessibility Compliance (WCAG 2.1 AA)**: Declaración oficial de accesibilidad y tests automatizados de grado industrial integrados en el pipeline de desarrollo.
 
 ## 🔧 Scripts Disponibles

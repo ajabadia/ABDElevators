@@ -1,0 +1,112 @@
+[{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9c3"
+  },
+  "email": "superadmin@abd.com",
+  "active": true,
+  "firstName": "Super",
+  "lastName": "Admin",
+  "role": "SUPER_ADMIN",
+  "tenantId": "abd_global",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.045Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9c4"
+  },
+  "email": "admin@abd.com",
+  "active": true,
+  "firstName": "Admin",
+  "lastName": "Global",
+  "role": "ADMIN",
+  "tenantId": "abd_global",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.154Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9c6"
+  },
+  "email": "admin@elevadores.mx",
+  "active": true,
+  "firstName": "Admin",
+  "lastName": "elevadores.mx",
+  "role": "ADMIN",
+  "tenantId": "elevadores_mx",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.200Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9c8"
+  },
+  "email": "tecnico@elevadores.mx",
+  "active": true,
+  "firstName": "Tecnico",
+  "lastName": "elevadores.mx",
+  "role": "TECHNICAL",
+  "tenantId": "elevadores_mx",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.311Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9ca"
+  },
+  "email": "ingenieria@elevadores.mx",
+  "active": true,
+  "firstName": "Ingeniero",
+  "lastName": "elevadores.mx",
+  "role": "ENGINEERING",
+  "tenantId": "elevadores_mx",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.437Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9cc"
+  },
+  "email": "admin@legal.com",
+  "active": true,
+  "firstName": "Admin",
+  "lastName": "legal.com",
+  "role": "ADMIN",
+  "tenantId": "legal_docs",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.544Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9ce"
+  },
+  "email": "tecnico@legal.com",
+  "active": true,
+  "firstName": "Tecnico",
+  "lastName": "legal.com",
+  "role": "TECHNICAL",
+  "tenantId": "legal_docs",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.641Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69846720c2a8880b74eae9d0"
+  },
+  "email": "ingenieria@legal.com",
+  "active": true,
+  "firstName": "Ingeniero",
+  "lastName": "legal.com",
+  "role": "ENGINEERING",
+  "tenantId": "legal_docs",
+  "updatedAt": {
+    "$date": "2026-02-05T09:47:10.742Z"
+  }
+}]

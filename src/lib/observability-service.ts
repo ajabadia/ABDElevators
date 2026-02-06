@@ -1,4 +1,4 @@
-import { connectDB, connectAuthDB } from '@/lib/db';
+import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { NotificationService } from './notification-service';
 
@@ -76,16 +76,16 @@ export class ObservabilityService {
      * Reporte de Salud del Sistema (Snapshot)
      */
     static async getSystemHealth() {
-        const db = await connectDB();
+        const db = await connectLogsDB();
         const oneHourAgo = new Date();
         oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
-        const recentErrors = await db.collection('logs_aplicacion').countDocuments({
+        const recentErrors = await db.collection('application_logs').countDocuments({
             level: 'ERROR',
             timestamp: { $gte: oneHourAgo }
         });
 
-        const recentSLA = await db.collection('logs_aplicacion').countDocuments({
+        const recentSLA = await db.collection('application_logs').countDocuments({
             action: 'SLA_VIOLATION',
             timestamp: { $gte: oneHourAgo }
         });

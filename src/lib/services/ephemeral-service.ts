@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { connectDB, connectAuthDB } from '@/lib/db';
 import { TenantConfigSchema, UserSchema } from '@/lib/schemas';
 import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
@@ -60,7 +60,8 @@ export class EphemeralTenantService {
             updatedAt: new Date()
         };
 
-        await db.collection('users').insertOne(user);
+        const authDb = await connectAuthDB();
+        await authDb.collection('users').insertOne(user);
 
         // 3. Seed Demo Data (Optional - simplified for V1)
         // await DataSeeder.seedBasicDocs(tenantId); 

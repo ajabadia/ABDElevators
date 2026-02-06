@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { connectLogsDB } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
@@ -9,10 +9,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function TemplateEditPage({ params }: { params: Promise<{ type: string }> }) {
     const { type } = await params;
-    const db = await connectDB();
+    const db = await connectLogsDB();
 
     // Buscar template actual
-    const template = await db.collection('system_email_templates').findOne({ type });
+    const template = await db.collection('notification_templates').findOne({ type });
 
     // Si no existe, pasamos null al editor para que sepa que es una creación inicial (seeding)
     // Opcionalmente podríamos tener una lógica de "defaults" aquí.

@@ -37,8 +37,9 @@ export async function POST(req: NextRequest) {
             throw new AppError('INVITE_EXPIRED', 400, 'La invitación ha expirado');
         }
 
-        // 2. Check if user registered in the meantime
-        const existingUser = await db.collection('users').findOne({ email: invite.email });
+        // 2. Check if user registered
+        const authDb = await connectAuthDB();
+        const existingUser = await authDb.collection('users').findOne({ email: invite.email });
         if (existingUser) {
             throw new ValidationError('El email asignado a esta invitación ya está registrado');
         }
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
         try {
             await session.withTransaction(async () => {
                 // A. Create user
-                await db.collection('users').insertOne(validatedUser, { session });
+                await authDb.collection('users').insertOne(validatedUser, { session });
 
                 // B. Mark invitation as used
                 await db.collection('invitations').updateOne(

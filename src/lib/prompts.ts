@@ -80,17 +80,43 @@ export const PROMPTS = {
     3. **Context Precision** (Precisión del Contexto): ¿Qué proporción de los fragmentos de contexto proporcionados son realmente útiles para responder a la pregunta?
     
     ANÁLISIS CAUSAL (Fase 86):
-    Si alguna puntuación es < 0.8, identifica la causa raíz (ej: "Falta especificación técnica X en el contexto", "La pregunta es ambigua", "El modelo ignoró la restricción Y").
+    Si alguna puntuación es < 0.8, identifica:
+    - cause_id: Uno de [MISSING_CONTEXT, MODEL_HALLUCINATION, AMBIGUOUS_QUERY, INSTRUCTIONS_IGNORED, POOR_REASONING]
+    - fix_strategy: Instrucción concisa para que el generador corrija el error (ej: "No menciones el voltaje si no está en el contexto", "Sé más específico con el modelo ARCA II").
     
     FORMATO DE SALIDA (JSON estrictamente):
     {
       "faithfulness": 0.0,
       "answer_relevance": 0.0,
       "context_precision": 0.0,
-      "reasoning": "Breve explicación detallada incluyendo el análisis causal si aplica"
+      "reasoning": "Explicación detallada",
+      "causal_analysis": {
+        "cause_id": "string",
+        "fix_strategy": "string"
+      }
     }
     
     Responde SOLO con el objeto JSON.`,
+
+  RAG_SELF_CORRECT: `Eres un experto técnico que debe corregir una respuesta RAG previa basándose en el feedback de un auditor.
+    
+    TU OBJETIVO: Generar una nueva respuesta que resuelva los errores detectados.
+    
+    CONTEXTO ORIGINAL:
+    {{context}}
+    
+    PREGUNTA DEL USUARIO:
+    {{query}}
+    
+    RESPUESTA ANTERIOR (CON ERRORES):
+    {{response}}
+    
+    FEEDBACK DEL AUDITOR (ANÁLISIS CAUSAL):
+    - Causa del Fallo: {{cause_id}}
+    - Instrucción de Mejora: {{fix_strategy}}
+    
+    REGLA DE ORO: No repitas los mismos errores. Sé preciso, técnico y fiel al contexto.
+    Responde directamente con la versión corregida.`,
 
   DOMAIN_DETECTOR: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
     Responde SOLO con el nombre del sector en mayúsculas.

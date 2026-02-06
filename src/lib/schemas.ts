@@ -343,6 +343,15 @@ export const RagEvaluationSchema = z.object({
     judge_model: z.string(),
     trace: z.array(z.string()).optional(),
     feedback: z.string().optional(),
+
+    // Causal AI (Phase 86)
+    causal_analysis: z.object({
+        cause_id: z.string(),
+        fix_strategy: z.string(),
+    }).optional(),
+    self_corrected: z.boolean().default(false),
+    original_evaluation: z.any().optional(), // Evaluation of the first attempt
+
     timestamp: z.date().default(() => new Date()),
 });
 
@@ -845,10 +854,10 @@ export const NotificationStatsSchema = z.object({
 });
 
 /**
- * Plantillas Globales del Sistema (Solo SuperAdmin)
- * Define el HTML base y la lógica Handlebars maestra.
+ * Plantillas de Notificación (Email/In-App/Push)
+ * Define el HTML base y la lógica Handlebars maestra. (Phase 87 - LOGS Cluster)
  */
-export const SystemEmailTemplateSchema = z.object({
+export const NotificationTemplateSchema = z.object({
     _id: z.any().optional(),
     type: NotificationTypeSchema, // Unique index
     name: z.string(), // "System Default - Billing Alert"
@@ -957,9 +966,9 @@ export type PermissionPolicy = z.infer<typeof PermissionPolicySchema>;
 export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
 export type AccessLog = z.infer<typeof AccessLogSchema>;
 
-export const SystemEmailTemplateHistorySchema = z.object({
+export const NotificationTemplateHistorySchema = z.object({
     _id: z.any().optional(),
-    originalTemplateId: z.any(), // Link al documento padre en 'system_email_templates'
+    originalTemplateId: z.any(), // Link al documento padre en 'notification_templates'
     type: NotificationTypeSchema,
     version: z.number(),
 
@@ -1021,8 +1030,8 @@ export const TenantConfigHistorySchema = z.object({
 export type NotificationType = z.infer<typeof NotificationTypeSchema>;
 export type NotificationTenantConfig = z.infer<typeof NotificationTenantConfigSchema>;
 export type Notification = z.infer<typeof NotificationSchema>;
-export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
-export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
+export type NotificationTemplate = z.infer<typeof NotificationTemplateSchema>;
+export type NotificationTemplateHistory = z.infer<typeof NotificationTemplateHistorySchema>;
 export type NotificationTenantConfigHistory = z.infer<typeof NotificationTenantConfigHistorySchema>;
 export type TenantConfigHistory = z.infer<typeof TenantConfigHistorySchema>;
 export type NotificationStats = z.infer<typeof NotificationStatsSchema>;
@@ -1309,3 +1318,38 @@ export const WorkflowTaskSchema = z.object({
 });
 
 export type WorkflowTask = z.infer<typeof WorkflowTaskSchema>;
+
+/**
+ * 🔔 FASE 62: System Email Templates
+ */
+export const SystemEmailTemplateSchema = z.object({
+    _id: z.any().optional(),
+    type: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    subjectTemplates: z.record(z.string(), z.string()), // { es: '...', en: '...' }
+    bodyHtmlTemplates: z.record(z.string(), z.string()),
+    availableVariables: z.array(z.string()).default([]),
+    version: z.number().default(1),
+    active: z.boolean().default(true),
+    updatedAt: z.date().default(() => new Date()),
+    updatedBy: z.string().optional()
+});
+
+export const SystemEmailTemplateHistorySchema = z.object({
+    _id: z.any().optional(),
+    originalTemplateId: z.any(),
+    type: z.string(),
+    version: z.number(),
+    subjectTemplates: z.record(z.string(), z.string()),
+    bodyHtmlTemplates: z.record(z.string(), z.string()),
+    action: z.enum(['CREATE', 'UPDATE', 'DELETE']),
+    performedBy: z.string(),
+    reason: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+    validFrom: z.date(),
+    validTo: z.date().optional()
+});
+
+export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
+export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;

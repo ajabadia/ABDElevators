@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectLogsDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
@@ -26,8 +26,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
             throw new AppError('FORBIDDEN', 403, 'Acceso denegado');
         }
 
-        const db = await connectDB();
-        const template = await db.collection('system_email_templates').findOne({ type });
+        const db = await connectLogsDB();
+        const template = await db.collection('notification_templates').findOne({ type });
 
         if (!template) {
             return NextResponse.json({ found: false, type });
@@ -58,9 +58,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ type
         const body = await req.json();
         const validated = UpdateTemplateBodySchema.parse(body);
 
-        const db = await connectDB();
-        const collection = db.collection('system_email_templates');
-        const historyCollection = db.collection('system_email_templates_history');
+        const db = await connectLogsDB();
+        const collection = db.collection('notification_templates');
+        const historyCollection = db.collection('notification_templates_history');
 
         // 1. Buscar estado actual
         const currentTemplate = await collection.findOne({ type });

@@ -1,0 +1,98 @@
+[{
+  "_id": {
+    "$oid": "697f33e20db781c139e27314"
+  },
+  "email": "admin@abd.com",
+  "password": "$2b$10$xF6lpWprL2KcAvZ27nJipeAue789U2YaQXCSvadp79WjpeRBFz9J.",
+  "firstName": "Admin",
+  "lastName": "System",
+  "position": "Administrator",
+  "role": "ADMIN",
+  "tenantId": "default_tenant",
+  "industry": "ELEVATORS",
+  "activeModules": [
+    "TECHNICAL",
+    "RAG"
+  ],
+  "active": true,
+  "createdAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "tenantAccess": []
+},
+{
+  "_id": {
+    "$oid": "697f33e20db781c139e27313"
+  },
+  "email": "superadmin@abd.com",
+  "password": "$2b$10$xF6lpWprL2KcAvZ27nJipeAue789U2YaQXCSvadp79WjpeRBFz9J.",
+  "firstName": "Super",
+  "lastName": "Admin",
+  "position": "System Administrator",
+  "role": "SUPER_ADMIN",
+  "tenantId": "default_tenant",
+  "industry": "ELEVATORS",
+  "activeModules": [
+    "TECHNICAL",
+    "RAG",
+    "ADMIN"
+  ],
+  "active": true,
+  "createdAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "tenantAccess": []
+},
+{
+  "_id": {
+    "$oid": "697f33e20db781c139e27315"
+  },
+  "email": "tecnico@abd.com",
+  "password": "$2b$10$GpuwAFtmQyrFfRxDEIlU9u8lZdtDOPqmMlycFREkk2F37Ai5yJtH2",
+  "firstName": "Tech",
+  "lastName": "Field",
+  "position": "Field Technician",
+  "role": "TECNICO",
+  "tenantId": "default_tenant",
+  "industry": "ELEVATORS",
+  "activeModules": [
+    "TECHNICAL",
+    "RAG"
+  ],
+  "active": true,
+  "createdAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-01T11:07:14.990Z"
+  },
+  "tenantAccess": []
+},
+{
+  "_id": {
+    "$oid": "69811e41aff2536b6b7f87ad"
+  },
+  "email": "carlos_verify@test.com",
+  "firstName": "Carlos",
+  "lastName": "Verify",
+  "role": "TECHNICAL",
+  "tenantId": "test_guardian_v2",
+  "permissionGroups": [
+    "69811e41aff2536b6b7f87ac"
+  ],
+  "permissionOverrides": [
+    "69811e41aff2536b6b7f87ab"
+  ],
+  "isActive": true,
+  "password": "hashed_dummy",
+  "industry": "ELEVATORS",
+  "activeModules": [
+    "TECHNICAL"
+  ]
+}]

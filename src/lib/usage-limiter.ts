@@ -37,15 +37,13 @@ async function sendLimitNotificationIfNeeded(
     try {
         // Obtener email del admin del tenant
         const authDb = await connectAuthDB();
-        const tenant = await authDb.collection('tenants').findOne({ tenantId });
-
-        if (!tenant) return;
-
         // Buscar admin del tenant
         const admin = await authDb.collection('users').findOne({
             tenantId,
             role: 'ADMIN'
         });
+
+        const tenant = await authDb.collection('tenants').findOne({ tenantId });
 
         if (!admin?.email) return;
 
@@ -62,7 +60,7 @@ async function sendLimitNotificationIfNeeded(
         // Enviar email
         await sendLimitAlert({
             to: admin.email,
-            tenantName: tenant.name || 'Tu Organización',
+            tenantName: tenant?.name || 'Tu Organización',
             resourceType,
             currentUsage,
             limit,

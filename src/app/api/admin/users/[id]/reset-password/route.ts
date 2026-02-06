@@ -28,7 +28,8 @@ export async function POST(
         const { id } = await params;
         const db = await connectAuthDB();
 
-        const usuario = await db.collection('users').findOne({
+        const authDb = await connectAuthDB();
+        const usuario = await authDb.collection('users').findOne({
             _id: new ObjectId(id)
         });
 
@@ -40,7 +41,7 @@ export async function POST(
         const tempPassword = `temp${Math.random().toString(36).slice(-8)}`;
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        await db.collection('users').updateOne(
+        await authDb.collection('users').updateOne(
             { _id: new ObjectId(id) },
             {
                 $set: {

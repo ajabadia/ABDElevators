@@ -33,8 +33,8 @@ export async function POST(
             throw new ValidationError('No se subió ningún archivo');
         }
 
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
 
         if (!user) {
             throw new NotFoundError('Usuario no encontrado');
@@ -48,7 +48,7 @@ export async function POST(
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
 
         // Actualizar el documento del usuario en la base de datos de identidad
-        await db.collection('users').updateOne(
+        await authDb.collection('users').updateOne(
             { _id: new ObjectId(id) },
             {
                 $set: {

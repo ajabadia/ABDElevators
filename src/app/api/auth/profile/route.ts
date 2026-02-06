@@ -22,8 +22,8 @@ export async function GET() {
             throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
         }
 
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ email: session.user.email });
+        const authDb = await connectAuthDB();
+        const user = await authDb.collection('users').findOne({ email: session.user.email });
 
         if (!user) {
             throw new NotFoundError('User not found');

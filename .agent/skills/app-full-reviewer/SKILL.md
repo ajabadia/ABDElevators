@@ -37,6 +37,12 @@ Combina la lógica de permisos con la robustez técnica:
    - **Infra**: Verifica rate limiting y headers de seguridad (CSP).
 3. **Área Pública**: Verifica que NO haya exposición de datos internos, APIs administrativas o PII (Bypass autorizado).
 
+### Fase 3.5: Auditoría de Consistencia de Base de Datos (Skill: db-consistency-auditor) [CONDICIONAL]
+**Solo si el archivo realiza consultas a base de datos (importa `connectDB`, `getTenantCollection`, etc.):**
+1. Verifica que las colecciones de identidad (`users`, `tenants`) apanten a `AUTH`.
+2. Verifica que los logs (`usage_logs`) apunten a `LOGS`.
+3. Valida que no haya fugas de datos entre clústeres.
+
 ### Fase 4: Gobernanza de Prompts (Skill: prompt-governance) [CONDICIONAL]
 **Solo si el archivo usa IA (importa `PromptService`, `callGemini`, etc.):**
 1. Verifica el uso de la arquitectura de dos capas (DB + Master Fallback).
@@ -58,6 +64,7 @@ Combina la lógica de permisos con la robustez técnica:
 - [ ] Ejecutada Auditoría i18n/a11y (+ SEO si es público)
 - [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
 - [ ] Ejecutada Auditoría de Prompts (Solo si aplica)
+- [ ] Ejecutada Auditoría de Consistencia DB (Solo si aplica)
 - [ ] Ejecutada Auditoría de Higiene (Technical Debt)
 - [ ] Sincronizado map.md (Agregado/Actualizado con timestamp)
 
@@ -71,6 +78,7 @@ Presenta un **Dashboard de Calidad** consolidado:
 | i18n/a11y | A-F          | [X]                |
 | Seguridad | A-F          | [X]                |
 | Prompts   | A-F / N/A    | [X]                |
+| DB Cluster | A-F / N/A    | [X]                |
 | Higiene   | A-F          | [X]                |
 
 ### 📝 Plan de Acción Integrado

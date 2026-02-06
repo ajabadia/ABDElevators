@@ -14,7 +14,8 @@ import {
     Plus,
     Sparkles,
     Trash2,
-    Rocket
+    Rocket,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
@@ -43,9 +44,13 @@ export default function AdminPromptsPage() {
     const modal = useFormModal<any>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory, setShowGlobalHistory] = useState(false);
     const { environment } = useEnvironmentStore();
+
+    // Categorías disponibles
+    const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL'];
 
     // 1. Gestión de datos con hook genérico
     const {
@@ -54,7 +59,7 @@ export default function AdminPromptsPage() {
         refresh: fetchPrompts
     } = useApiList<any>({
         endpoint: '/api/admin/prompts',
-        filters: { environment }, // useApiList will append this to the URL automatically
+        filters: { environment },
         autoFetch: true,
         dataKey: 'prompts',
         onSuccess: (data) => {
@@ -69,17 +74,30 @@ export default function AdminPromptsPage() {
         }
     });
 
-    useEffect(() => {
-        // Inicialización ya manejada por useApiList autoFetch por defecto si no se especifica?
-        // useApiList tiene autoFetch: true por defecto si no se pasa.
-    }, []);
+    // 2. Lógica de Filtrado y Contadores
+    const categoryCounts = prompts.reduce((acc: any, p: any) => {
+        const cat = p.category || 'GENERAL';
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+    }, {});
 
     const filteredPrompts = prompts.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.key.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch =
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
         const matchesTenant = tenantFilter === 'all' || p.tenantId === tenantFilter;
-        return matchesSearch && matchesTenant;
+        const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+
+        return matchesSearch && matchesTenant && matchesCategory;
     });
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setTenantFilter('all');
+        setCategoryFilter('all');
+    };
 
     const handleSaved = () => {
         modal.close();
@@ -149,15 +167,62 @@ export default function AdminPromptsPage() {
                 {/* List Sidebar */}
                 <div className="lg:col-span-12 xl:col-span-4 flex flex-col gap-6">
                     <ContentCard noPadding={true} className="flex flex-col h-full flex-grow bg-white dark:bg-slate-950 rounded-2xl">
-                        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-3">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    placeholder="Filtrar ingenierías..."
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
-                                />
+                        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        placeholder="Buscar por nombre, clave o descripción..."
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
+                                    />
+                                </div>
+                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all') && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={clearFilters}
+                                        className="rounded-xl text-slate-400 hover:text-rose-500"
+                                        title="Limpiar filtros"
+                                    >
+                                        <X size={18} />
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                <button
+                                    onClick={() => setCategoryFilter('all')}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border",
+                                        categoryFilter === 'all'
+                                            ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
+                                            : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
+                                    )}
+                                >
+                                    TODOS ({prompts.length})
+                                </button>
+                                {CATEGORIES.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setCategoryFilter(cat)}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2",
+                                            categoryFilter === cat
+                                                ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
+                                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
+                                        )}
+                                    >
+                                        {cat}
+                                        <span className={cn(
+                                            "px-1.5 py-0.5 rounded-md text-[9px]",
+                                            categoryFilter === cat ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                        )}>
+                                            {categoryCounts[cat] || 0}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
 
                             {uniqueTenants.length > 1 && (

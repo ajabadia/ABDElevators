@@ -135,9 +135,9 @@ export class MfaService {
      * Desactiva el MFA.
      */
     static async disable(userId: string): Promise<void> {
-        const db = await connectAuthDB();
-        await db.collection('mfa_configs').deleteOne({ userId });
-        await db.collection('users').updateOne(
+        const authDb = await connectAuthDB();
+        await authDb.collection('mfa_configs').deleteOne({ userId });
+        await authDb.collection('users').updateOne(
             { _id: new ObjectId(userId) },
             { $set: { mfaEnabled: false } }
         );

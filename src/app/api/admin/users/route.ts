@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
             filter = { tenantId: { $in: allowedIds } };
         }
 
-        const users = await db.collection('users').aggregate([
+        const authDb = await connectAuthDB();
+        const users = await authDb.collection('users').aggregate([
             { $match: filter },
             { $sort: { createdAt: -1 } },
             {
@@ -109,10 +110,10 @@ export async function POST(req: NextRequest) {
         // RULE #2: Zod Validation BEFORE Processing
         const validated = CreateUserSchema.parse(body);
 
-        const db = await connectAuthDB();
+        const authDb = await connectAuthDB();
 
         // Check if email already exists
-        const existingUser = await db.collection('users').findOne({
+        const existingUser = await authDb.collection('users').findOne({
             email: validated.email.toLowerCase().trim()
         });
 
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
 
         // Validate against master DB schema
         const validatedUser = UserSchema.parse(newUser);
-        const result = await db.collection('users').insertOne(validatedUser);
+        const result = await authDb.collection('users').insertOne(validatedUser);
 
         if (!result.insertedId) {
             throw new DatabaseError('Failed to insert user');

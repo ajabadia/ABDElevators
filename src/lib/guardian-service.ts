@@ -87,13 +87,13 @@ export class GuardianService {
     // --- GROUPS ---
 
     static async listGroups(tenantId: string): Promise<PermissionGroup[]> {
-        const collection = await getTenantCollection('permission_groups');
+        const collection = await getTenantCollection('permission_groups', undefined, 'AUTH');
         const docs = await collection.find({ tenantId });
         return docs as unknown as PermissionGroup[];
     }
 
     static async createGroup(tenantId: string, data: Omit<PermissionGroup, '_id' | 'tenantId' | 'createdAt' | 'updatedAt'>, userId: string): Promise<string> {
-        const collection = await getTenantCollection('permission_groups');
+        const collection = await getTenantCollection('permission_groups', undefined, 'AUTH');
 
         const newGroup = {
             ...data,
@@ -117,7 +117,7 @@ export class GuardianService {
     }
 
     static async updateGroup(tenantId: string, groupId: string, updates: Partial<PermissionGroup>, userId: string): Promise<void> {
-        const collection = await getTenantCollection('permission_groups');
+        const collection = await getTenantCollection('permission_groups', undefined, 'AUTH');
 
         await collection.updateOne(
             { _id: new ObjectId(groupId), tenantId },
@@ -143,7 +143,7 @@ export class GuardianService {
     // We can add those helpers here.
 
     static async addUserToGroup(tenantId: string, userId: string, groupId: string, actorId: string): Promise<void> {
-        const users = await getTenantCollection('users');
+        const users = await getTenantCollection('users', undefined);
 
         await users.updateOne(
             { _id: new ObjectId(userId), tenantId },
@@ -161,7 +161,7 @@ export class GuardianService {
     }
 
     static async removeUserFromGroup(tenantId: string, userId: string, groupId: string, actorId: string): Promise<void> {
-        const users = await getTenantCollection('users');
+        const users = await getTenantCollection('users', undefined);
 
         await users.updateOne(
             { _id: new ObjectId(userId), tenantId },

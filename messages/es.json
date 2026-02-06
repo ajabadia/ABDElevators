@@ -128,6 +128,10 @@
         "f10_desc": "Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis.",
         "f11_title": "Memoria Infinita",
         "f11_desc": "Ingesta en streaming y deduplicación inteligente para gestionar bibliotecas técnicas de tamaño ilimitado sin sobrecostes.",
+        "f12_title": "Auto-Corrección Causal (IA)",
+        "f12_desc": "Bucle agéntico que evalúa el feedback de los jurados para refinar respuestas alucinadas o incompletas con razonamiento causal.",
+        "f13_title": "Auditoría de Consistencia DB",
+        "f13_desc": "Cumplimiento estructural garantizado. Automatización del enrutamiento multi-cluster (AUTH, LOGS, MAIN) para evitar fugas de datos.",
         "learn_more": "Saber más"
     },
     "solutions": {

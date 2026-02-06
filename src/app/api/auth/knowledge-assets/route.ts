@@ -27,11 +27,42 @@ export async function GET() {
         if (!user) throw new NotFoundError('User not found');
 
         const db = await connectDB();
-        // Support legacy collection 'documentos_usuarios' if migration not done, but prefer 'user_documents'
-        const documents = await db.collection('user_documents')
+
+        // 1. Fetch personal documents
+        const personalDocs = await db.collection('user_documents')
             .find({ userId: user._id.toString() })
             .sort({ createdAt: -1 })
             .toArray();
+
+        // 2. For Admin/Engineering, also include technical assets
+        let knowledgeAssets: any[] = [];
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'ENGINEERING'].includes(session.user.role || '');
+
+        if (isAdmin) {
+            const assets = await db.collection('knowledge_assets')
+                .find({ status: 'active' })
+                .sort({ createdAt: -1 })
+                .toArray();
+
+            knowledgeAssets = assets.map(asset => ({
+                _id: asset._id.toString(),
+                userId: 'system',
+                originalName: asset.filename,
+                savedName: asset.filename,
+                cloudinaryUrl: asset.cloudinaryUrl,
+                cloudinaryPublicId: asset.cloudinaryPublicId || '',
+                mimeType: 'application/pdf',
+                sizeBytes: 0,
+                description: `[CORPUS] ${asset.componentType} - ${asset.model}`,
+                createdAt: asset.createdAt || asset.revisionDate || new Date(),
+                isGlobal: true
+            }));
+        }
+
+        // Merge and sort
+        const documents = [...personalDocs, ...knowledgeAssets].sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
         return NextResponse.json(documents);
     } catch (error: any) {

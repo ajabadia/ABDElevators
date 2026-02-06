@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectLogsDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
             throw new AppError('FORBIDDEN', 403, 'Solo SuperAdmin puede gestionar plantillas globales');
         }
 
-        const db = await connectDB();
+        const db = await connectLogsDB();
 
         // Obtener todas las plantillas
-        const templates = await db.collection('system_email_templates')
+        const templates = await db.collection('notification_templates')
             .find({})
             .sort({ type: 1 })
             .toArray();
