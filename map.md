@@ -32,13 +32,14 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-03 00:18 |
 | `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión. | 2026-02-03 12:35 |
 
-### 👮 Guardian (Gobierno & Permisos)
+### 👮 Guardian & Governance (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-06 10:15 |
 | `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-06 10:15 |
 | `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-06 10:15 |
 | `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-06 07:45 |
+| `/admin/settings/i18n` | Gobernanza i18n: Editor de traducciones con asistencia de IA. | 2026-02-06 12:00 |
 
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
@@ -75,6 +76,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-06 00:30 |
 | `/api/admin/users/invite/bulk` | Ingesta masiva de invitaciones (Batch Processing). | 2026-02-06 07:45 |
 | `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-06 00:00 |
+| `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 12:00 |
 
 
 ---
