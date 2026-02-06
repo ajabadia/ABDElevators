@@ -56,29 +56,21 @@ export async function GET(req: NextRequest) {
 
         const activities = recentLogs.map((log: any) => {
             let type: "upload" | "search" | "success" = "search"
-            let title = ""
-            let iconClass = "📄"
 
             if (log.source === "API_INGEST") {
                 type = "upload"
-                title = "Documento procesado"
-                iconClass = "📄"
             } else if (log.source === "API_USER_SEARCH") {
                 type = "search"
-                title = "Búsqueda realizada"
-                iconClass = "🔍"
                 if (log.details?.resultsCount > 0) {
                     type = "success"
-                    iconClass = "✅"
                 }
             }
 
             return {
                 id: log._id.toString(),
                 type,
-                title: `${iconClass} ${title}`,
-                description: log.message || "Actividad del sistema",
-                timestamp: new Date(log.timestamp).toLocaleString("es-ES")
+                message: log.message, // Mantener mensaje original del log
+                timestamp: log.timestamp // Pasar timestamp original para formateo en cliente
             }
         })
 

@@ -43,6 +43,14 @@ Combina la lógica de permisos con la robustez técnica:
 2. Verifica que los logs (`usage_logs`) apunten a `LOGS`.
 3. Valida que no haya fugas de datos entre clústeres.
 
+### Fase 3.6: Auditoría de Lazy Loading en Listas (Skill: lazy-loading-list-auditor) [CONDICIONAL]
+**Solo si el archivo contiene listas que cargan datos de base de datos (usa `useApiList`, `useApiItem` con datasets grandes):**
+1. Verifica si la lista carga > 50 items inicialmente sin filtros.
+2. Evalúa si implementa lazy loading con estado vacío inicial.
+3. Valida que existan filtros apropiados (categoría, namespace, tipo, etc.).
+4. Confirma que `autoFetch` esté condicionado a filtros activos.
+5. Verifica que haya empty state guidance para el usuario.
+
 ### Fase 4: Gobernanza de Prompts (Skill: prompt-governance) [CONDICIONAL]
 **Solo si el archivo usa IA (importa `PromptService`, `callGemini`, etc.):**
 1. Verifica el uso de la arquitectura de dos capas (DB + Master Fallback).
@@ -65,6 +73,7 @@ Combina la lógica de permisos con la robustez técnica:
 - [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
 - [ ] Ejecutada Auditoría de Prompts (Solo si aplica)
 - [ ] Ejecutada Auditoría de Consistencia DB (Solo si aplica)
+- [ ] Ejecutada Auditoría de Lazy Loading (Solo si hay listas grandes)
 - [ ] Ejecutada Auditoría de Higiene (Technical Debt)
 - [ ] Sincronizado map.md (Agregado/Actualizado con timestamp)
 

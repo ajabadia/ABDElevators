@@ -10,7 +10,8 @@ import { z } from 'zod';
 
 /**
  * GET /api/admin/i18n
- * Lista todas las traducciones del sistema.
+ * Lista traducciones del sistema con soporte para filtros (lazy loading).
+ * Query params: locale, namespace, search
  */
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
@@ -19,18 +20,111 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const locale = z.string().min(2).max(5).parse(searchParams.get('locale') || 'es');
+        const namespace = searchParams.get('namespace') || '';
+        const search = searchParams.get('search') || '';
+        const loadAll = searchParams.get('all') === 'true';
 
-        // Cargamos los mensajes estructurados
-        const messages = await TranslationService.getMessages(locale);
+        // Lazy Loading: Si no hay filtros activos Y no se solicita "todos", retornar objeto vacío
+        const hasActiveFilters = namespace || search || loadAll;
+        if (!hasActiveFilters) {
+            return NextResponse.json({
+                success: true,
+                locale,
+                messages: {},
+                info: 'No filters applied. Use namespace or search parameters to load data.'
+            });
+        }
+
+        // Cargar mensajes estructurados
+        const allMessages = await TranslationService.getMessages(locale);
+
+        // Aplicar filtros
+        let filteredMessages = allMessages;
+
+        if (namespace) {
+            // Filtrar por namespace (e.g., "common" filtra "common.*")
+            filteredMessages = filterByNamespace(allMessages, namespace);
+        }
+
+        if (search) {
+            // Filtrar por búsqueda en claves y valores
+            filteredMessages = filterBySearch(filteredMessages, search);
+        }
 
         return NextResponse.json({
             success: true,
             locale,
-            messages
+            messages: filteredMessages,
+            filters: { namespace, search }
         });
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_I18N_GET', correlationId);
     }
+}
+
+// Helper: Filtrar por namespace
+function filterByNamespace(messages: any, namespace: string): any {
+    if (namespace === 'all' || !namespace) return messages;
+
+    const result: any = {};
+    const flatMessages = nestToFlat(messages);
+
+    for (const [key, value] of Object.entries(flatMessages)) {
+        if (key.startsWith(`${namespace}.`)) {
+            result[key] = value;
+        }
+    }
+
+    return flatToNest(result);
+}
+
+// Helper: Filtrar por búsqueda
+function filterBySearch(messages: any, search: string): any {
+    const result: any = {};
+    const flatMessages = nestToFlat(messages);
+    const lowerSearch = search.toLowerCase();
+
+    for (const [key, value] of Object.entries(flatMessages)) {
+        if (
+            key.toLowerCase().includes(lowerSearch) ||
+            String(value).toLowerCase().includes(lowerSearch)
+        ) {
+            result[key] = value;
+        }
+    }
+
+    return flatToNest(result);
+}
+
+// Helper: Aplanar objeto anidado
+function nestToFlat(obj: any, prefix = ''): Record<string, string> {
+    const result: Record<string, string> = {};
+    if (!obj) return result;
+    for (const key in obj) {
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            Object.assign(result, nestToFlat(value, newKey));
+        } else {
+            result[newKey] = String(value);
+        }
+    }
+    return result;
+}
+
+// Helper: Convertir flat a nested
+function flatToNest(flat: Record<string, string>): any {
+    const result: any = {};
+    for (const [key, value] of Object.entries(flat)) {
+        const parts = key.split('.');
+        let current = result;
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (!current[parts[i]]) current[parts[i]] = {};
+            current = current[parts[i]];
+        }
+        current[parts[parts.length - 1]] = value;
+    }
+    return result;
 }
 
 /**

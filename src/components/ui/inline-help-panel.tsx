@@ -4,6 +4,7 @@ import React from "react"
 import { Lightbulb, ExternalLink, X } from "lucide-react"
 import { useContextualHelp } from "@/hooks/useContextualHelp"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface InlineHelpPanelProps {
     contextIds: string[]
@@ -16,6 +17,7 @@ export function InlineHelpPanel({
     variant = "compact",
     dismissible = true
 }: InlineHelpPanelProps) {
+    const t = useTranslations("common.help")
     const { getHelp } = useContextualHelp()
     const [isDismissed, setIsDismissed] = React.useState(false)
 
@@ -34,10 +36,10 @@ export function InlineHelpPanel({
                     </div>
                     <div>
                         <p className="font-bold text-sm text-blue-900 dark:text-blue-300">
-                            💡 Ayuda Rápida
+                            {t("title")}
                         </p>
                         <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
-                            Consejos útiles sobre esta sección
+                            {t("subtitle")}
                         </p>
                     </div>
                 </div>

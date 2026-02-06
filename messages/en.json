@@ -44,8 +44,8 @@
                 "documents": "My Documents",
                 "support": "Technical Support",
                 "entities": "Technical Entities",
-                "assets": "Knowledge Assets",
-                "explorer": "Search Explorer",
+                "assets": "Document Library",
+                "explorer": "Semantic Search",
                 "graph": "Semantic Map",
                 "workflows": "Workflow Editor",
                 "checklists": "Checklist Configs",
@@ -59,12 +59,13 @@
                 "compliance": "Compliance",
                 "logs": "System Logs",
                 "analytics": "Global Analytics",
-                "quality": "RAG Quality",
+                "quality": "Quality Control",
                 "intelligence": "Active Intelligence",
                 "governance_console": "Guardian Console",
                 "workflow_tasks": "Workflow Tasks",
                 "notifications": "Notifications",
                 "profile": "Profile",
+                "settings": "Settings",
                 "i18n": "i18n Governance"
             }
         },
@@ -794,11 +795,11 @@
             }
         },
         "knowledge": {
-            "title": "RAG Explorer",
-            "highlight": "RAG",
-            "subtitle": "Search and visualization of linked chunks in the vectorial knowledge base.",
-            "explorer_h2": "Knowledge Base",
-            "explorer_subtitle": "Explore vectorial chunks or query the agentic AI.",
+            "title": "Knowledge Search",
+            "highlight": "Intelligence",
+            "subtitle": "Inquiry and visualization of technical data linked in the document library.",
+            "explorer_h2": "Technical Documentation",
+            "explorer_subtitle": "Explore the document library or perform queries to the Artificial Intelligence.",
             "tabs": {
                 "explorer": "Explorer",
                 "ai": "AI Query"
@@ -816,8 +817,8 @@
                 "synced": "Synced with Atlas"
             },
             "simulator": {
-                "title": "RAG Simulator / Debugger",
-                "subtitle": "Simulate a real query to see which chunks the hybrid engine (Gemini + BGE-M3) would retrieve and with what relevance score.",
+                "title": "Analysis Simulator / Debugger",
+                "subtitle": "Simulate a real query to see what information the hybrid engine would retrieve and with what degree of relevance.",
                 "placeholder": "Type a technical query (e.g., 'safety circuit failure A3')..."
             },
             "filters": {
@@ -846,8 +847,8 @@
                 "next": "Next"
             },
             "brain": {
-                "title": "Agentic Brain RAG",
-                "description": "Perform complex technical queries. Our AI will search manuals, verify hallucinations and give you a high-fidelity response.",
+                "title": "Technical Intelligence Assistant",
+                "description": "Perform complex technical queries. Our AI will search manuals, verify the accuracy of the information and give you a high-fidelity response.",
                 "placeholder": "e.g., Rescue protocol in Otis 2000 manual?",
                 "thinking": "Thinking...",
                 "submit": "Query",
@@ -886,10 +887,10 @@
             }
         },
         "rag_quality": {
-            "title": "RAG Quality",
+            "title": "Quality Control",
             "subtitle": "IA engine evaluation and continuous improvement center.",
-            "dashboard_title": "RAG Observability (RAGAs)",
-            "dashboard_desc": "Monitoring faithfulness, relevance and precision of the agentic engine.",
+            "dashboard_title": "Analysis Quality Dashboard",
+            "dashboard_desc": "Supervision of the reliability, relevance, and precision of generated responses.",
             "latest_sessions": "Based on last {count} sessions",
             "loading": "Loading quality metrics...",
             "metrics": {
@@ -915,6 +916,54 @@
                 "hide_trace": "Hide Trace ↑",
                 "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
                 "trace_end": "--- END OF TRACE ---"
+            }
+        },
+        "user_dashboard": {
+            "welcome": "Welcome, {name}",
+            "subtitle": "What would you like to do today?",
+            "stats": {
+                "documents": "Uploaded Documents",
+                "queries": "Queries Performed",
+                "accuracy": "Precise Answers",
+                "time": "Average Time",
+                "change_week": "+{count} this week",
+                "change_today": "+{count} today",
+                "change_month": "+{percent}% vs. last month",
+                "change_faster": "-{time} faster"
+            },
+            "actions": {
+                "upload": {
+                    "title": "Upload Technical Manual",
+                    "desc": "Add PDFs, diagrams, or maintenance documents"
+                },
+                "search": {
+                    "title": "Search Information",
+                    "desc": "Ask about procedures, error codes, or specifications"
+                },
+                "history": {
+                    "title": "Inquiry History",
+                    "desc": "Review your previous searches and saved answers"
+                }
+            },
+            "sections": {
+                "activity": "Recent Activity",
+                "help": "Help Center",
+                "view_all": "View all history",
+                "contact": "Contact Support"
+            },
+            "empty": {
+                "title": "No activity yet",
+                "desc": "Upload your first document or perform a query to get started."
+            },
+            "help": {
+                "upload": {
+                    "title": "How do I upload documents?",
+                    "desc": "Step-by-step guide to uploading PDFs"
+                },
+                "search": {
+                    "title": "Asking better questions",
+                    "desc": "Tips for more accurate queries"
+                }
             }
         },
         "guardian": {

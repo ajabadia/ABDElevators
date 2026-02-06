@@ -14,7 +14,7 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 ## Inputs necesarios
 - **Ruta del archivo**: El archivo `.tsx` a auditar.
 - **Diccionarios**: Acceso a `messages/es.json` y `messages/en.json` (L4 fallback).
-- **Contexto de Dominio**: Recordar que operamos en el sector de **Mantenimiento de Ascensores y RAG**.
+- **Contexto de Dominio**: Recordar que operamos en el sector de **Mantenimiento de Ascensores e Inteligencia Técnica**.
 
 ## Workflow
 
@@ -24,7 +24,11 @@ description: Audita y corrige la implementación de internacionalización (i18n)
    - No usar llaves planas. Usar jerarquía: `[namespace].[component/page].[key]`.
    - Ejemplo: `admin.logs.table.timestamp`.
 3. **Verificación de hook**: Asegurar uso de `useTranslations('namespace')` para scoping correcto.
-4. **Terminología Crítica**: Asegurar que términos como "Hoistway", "Pit", "Sling", "Buffer", "RAG", "Embeddings" se traduzcan con precisión técnica según el glosario del sector.
+4. **Terminología Profesional**: 
+   - **CRÍTICO**: Asegurar que NO se usen términos técnicos de desarrollo como "RAG", "Vector", "Explorer", "Agentic", "Simulator".
+   - **Usar en su lugar**: "Inteligencia Técnica", "Búsqueda Semántica", "Buscador", "Inteligente", "Simulador de Análisis".
+   - **Términos del sector ascensores**: Mantener precisión técnica para "Hoistway", "Pit", "Sling", "Buffer", etc.
+   - **Referencia**: Ver `messages/es.json` y `messages/en.json` secciones `user_dashboard`, `common.help`, `common.activities` para ejemplos de terminología aprobada.
 
 ### Fase 2: Auditoría de Accesibilidad (a11y)
 1. **Semántica HTML**: Verificar uso de `<main>`, `<section>`, `<nav>`, `<header>`, `<h1>-<h6>`.
@@ -37,14 +41,21 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 1. **Inyección de i18n**: Sustituir textos hardcodeados por `t('clave')`.
 2. **Actualización de Diccionarios**: 
    - Añadir claves a `messages/es.json` y `messages/en.json`.
-   - **IMPORTANTE**: En este proyecto, los JSONs son el Fallback L4. El sistema sincronizará estos cambios a MongoDB/Redis automáticamente al detectar nuevos despliegues o mediante la consola de "Gobernanza i18n".
+   - **IMPORTANTE**: En este proyecto, los JSONs son el Fallback L4. El sistema sincronizará estos cambios a MongoDB/Redis automáticamente.
+   - **Gobernanza DB**: Para sincronizar manualmente nuevas claves a la base de datos, ejecutar: `npx tsx src/scripts/sync-db-translations-simple.ts`
+   - **Prompts Dinámicos**: Si se detectan términos técnicos en prompts de IA, reportar para auditoría con `audit-db-prompts-simple.ts`
 3. **Refactorización a11y**: Añadir atributos ARIA missing y corregir jerarquía de etiquetas.
 
 ## Instrucciones y Reglas
-- **REGLA DE ORO**: No inventes traducciones. Si el término es muy técnico del sector ascensores, mantén el término en inglés si es el estándar industrial o pregunta al usuario.
+- **REGLA DE ORO #1**: No inventes traducciones. Si el término es muy técnico del sector ascensores, mantén el término en inglés si es el estándar industrial o pregunta al usuario.
+- **REGLA DE ORO #2 (TERMINOLOGÍA PROFESIONAL)**: 
+  - ❌ NUNCA usar: "RAG", "Vector Search", "Explorer", "Agentic", "Simulator" en UI visible al usuario.
+  - ✅ SIEMPRE usar: "Inteligencia Técnica", "Búsqueda Semántica", "Buscador", "Inteligente", "Simulador de Análisis".
+  - 📋 Referencia: `messages/es.json` y `messages/en.json` (secciones `user_dashboard`, `common`).
 - **INTEGRIDAD JSON**: Verifica la sintaxis JSON. Un error romperá el fallback local.
 - **SINCRONIZACIÓN**: Si añades una clave en un idioma, DEBES añadirla en todos los soportados para evitar `MISSING_MESSAGE`.
 - **JERARQUÍA**: Mantén el JSON agrupado por módulos (admin, common, public, profile, etc.).
+- **GOBERNANZA DB**: Después de actualizar JSONs, considerar ejecutar `sync-db-translations-simple.ts` para propagar a MongoDB.
 
 ## Output (formato exacto)
 1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y)" y "Gravedad".

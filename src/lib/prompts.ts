@@ -15,7 +15,7 @@ export const PROMPTS = {
   RESUMIR_CONTEXTO: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
     Enfócate en advertencias de seguridad, voltajes y pasos críticos de montaje.`,
 
-  I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} y RAG).
+  I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} e Inteligencia Técnica).
     Traduce las siguientes llaves de i18n del idioma '{{sourceLocale}}' al '{{targetLocale}}'.
     
     REGLAS:
@@ -66,7 +66,7 @@ export const PROMPTS = {
     
     CONSULTA: {{query}}`,
 
-  RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema RAG técnico para la industria de {{vertical}}.
+  RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema de Inteligencia Técnica para la industria de {{vertical}}.
     Tu objetivo es puntuar la respuesta basada en la pregunta del usuario y el contexto recuperado de los manuales.
     
     DATOS A EVALUAR:
@@ -98,7 +98,7 @@ export const PROMPTS = {
     
     Responde SOLO con el objeto JSON.`,
 
-  RAG_SELF_CORRECT: `Eres un experto técnico que debe corregir una respuesta RAG previa basándose en el feedback de un auditor.
+  RAG_SELF_CORRECT: `Eres un experto técnico que debe corregir una respuesta de Inteligencia previa basándose en el feedback de un auditor.
     
     TU OBJETIVO: Generar una nueva respuesta que resuelva los errores detectados.
     

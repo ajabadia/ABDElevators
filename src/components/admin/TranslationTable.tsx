@@ -8,7 +8,8 @@ import {
     CheckCircle2,
     AlertTriangle,
     Edit3,
-    Hash
+    Hash,
+    Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentCard } from "@/components/ui/content-card";
@@ -27,6 +28,7 @@ interface TranslationTableProps {
     secondaryMessages: Record<string, any>;
     searchQuery: string;
     loading: boolean;
+    hasActiveFilters: boolean;
     onRefresh: () => void;
 }
 
@@ -37,6 +39,7 @@ export function TranslationTable({
     secondaryMessages,
     searchQuery,
     loading,
+    hasActiveFilters,
     onRefresh
 }: TranslationTableProps) {
     const tTable = useTranslations('admin.i18n.table');
@@ -229,14 +232,26 @@ export function TranslationTable({
                                     </td>
                                 </tr>
                             ))
-                        ) : (
+                        ) : filteredKeys.length === 0 && !hasActiveFilters ? (
+                            <tr>
+                                <td colSpan={3} className="p-20 text-center">
+                                    <Search size={48} className="mx-auto mb-4 text-slate-300" />
+                                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                        Busca o filtra para comenzar
+                                    </h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        Usa los filtros de namespace o la barra de búsqueda para cargar traducciones
+                                    </p>
+                                </td>
+                            </tr>
+                        ) : filteredKeys.length === 0 ? (
                             <tr>
                                 <td colSpan={3} className="p-20 text-center opacity-40">
                                     <Hash size={40} className="mx-auto mb-4" />
                                     <p className="text-sm font-bold">{tTable('noResults')}</p>
                                 </td>
                             </tr>
-                        )}
+                        ) : null}
                     </tbody>
                 </table>
             </div>

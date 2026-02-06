@@ -248,6 +248,7 @@ export async function getTenantCollection<T extends Document>(
     } else if (
         collectionName === 'application_logs' ||
         collectionName === 'usage_logs' ||
+        collectionName === 'audit_trails' ||
         collectionName === 'notification_templates' ||
         collectionName === 'notifications' ||
         collectionName === 'notification_configs'
@@ -257,9 +258,12 @@ export async function getTenantCollection<T extends Document>(
         // Redirigir a MAIN explícitamente si queremos asegurar que no se pierdan, 
         // pero estas suelen estar en MAIN. La regla es que 'users' y 'permission_groups' VAN A AUTH.
         effectiveDbType = 'MAIN';
+    } else if (collectionName === 'translations') {
+        // i18n Governance Phase: Allow platform_master access if no session
+        effectiveDbType = 'MAIN';
     }
 
-    if (hasValidSession || isSingleTenantMode) {
+    if (hasValidSession || isSingleTenantMode || collectionName === 'translations') {
         // Safe to proceed
         let db;
         if (effectiveDbType === 'LOGS') {
@@ -271,7 +275,11 @@ export async function getTenantCollection<T extends Document>(
         }
 
         const rawCollection = db.collection<T>(collectionName);
-        return new SecureCollection<T>(rawCollection, session, options);
+
+        // Ensure that if there's no session, we use platform_master context
+        const effectiveSession = session || { user: { tenantId: 'platform_master', role: 'GUEST' } };
+
+        return new SecureCollection<T>(rawCollection, effectiveSession, options);
     }
 
     // Attempted access without valid session

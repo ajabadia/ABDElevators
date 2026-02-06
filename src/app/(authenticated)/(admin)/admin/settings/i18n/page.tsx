@@ -36,16 +36,38 @@ export default function AdminI18nPage() {
     const [primaryLocale, setPrimaryLocale] = useState('es');
     const [secondaryLocale, setSecondaryLocale] = useState('en');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [namespaceFilter, setNamespaceFilter] = useState('');
 
-    // 1. Cargar mensajes del idioma primario
+    // Determinar si hay filtros activos (para lazy loading)
+    // '__ALL__' es un valor especial que significa "cargar todos"
+    const hasActiveFilters = Boolean(namespaceFilter || searchQuery);
+
+    // Cargar estadísticas de namespaces
+    const {
+        data: stats,
+        isLoading: loadingStats
+    } = useApiItem<any>({
+        endpoint: `/api/admin/i18n/stats?locale=${primaryLocale}`,
+        autoFetch: true
+    });
+
+    const totalCount = stats?.total || 0;
+    const namespaceCounts = stats?.namespaces || {};
+    const namespaces = Object.keys(namespaceCounts).sort();
+
+    // 1. Cargar mensajes del idioma primario (con filtros)
+    // Si namespaceFilter es '__ALL__', enviar all=true para cargar todos
+    const actualNamespace = namespaceFilter === '__ALL__' ? '' : namespaceFilter;
+    const allParam = namespaceFilter === '__ALL__' ? '&all=true' : '';
+
     const {
         data: messagesPrimary,
         isLoading: loadingPrimary,
         refresh: refetchPrimary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${primaryLocale}`,
+        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}`,
         dataKey: 'messages',
-        autoFetch: true
+        autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
     });
 
     // 2. Cargar mensajes del idioma secundario (Comparación)
@@ -54,9 +76,9 @@ export default function AdminI18nPage() {
         isLoading: loadingSecondary,
         refresh: refetchSecondary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${secondaryLocale}`,
+        endpoint: `/api/admin/i18n?locale=${secondaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}`,
         dataKey: 'messages',
-        autoFetch: true
+        autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
     });
 
     const syncMutation = useApiMutation({
@@ -104,15 +126,45 @@ export default function AdminI18nPage() {
             <div className="grid grid-cols-1 gap-6">
                 {/* Panel de Control y Filtros */}
                 <ContentCard className="bg-white dark:bg-slate-950 border-slate-200/60 shadow-xl shadow-slate-200/10">
-                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="relative flex-1 w-full">
+                    <div className="flex flex-col gap-4">
+                        {/* Search Bar - Full Width Row */}
+                        <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                                 placeholder={t('page.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 h-11 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-teal-500/50"
+                                className="pl-10 h-11 bg-slate-50 border-none rounded-2xl ring-1 ring-slate-200 dark:ring-slate-800 focus:ring-teal-500/50 w-full"
                             />
+                        </div>
+
+                        {/* Namespace Filters - Separate Row */}
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setNamespaceFilter('__ALL__')}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${namespaceFilter === '__ALL__'
+                                    ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
+                                    : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
+                                    }`}
+                            >
+                                TODOS ({totalCount})
+                            </button>
+                            {namespaces.map(ns => (
+                                <button
+                                    key={ns}
+                                    onClick={() => setNamespaceFilter(ns)}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${namespaceFilter === ns
+                                        ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
+                                        : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
+                                        }`}
+                                >
+                                    {ns.toUpperCase()}
+                                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${namespaceFilter === ns ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                        }`}>
+                                        {namespaceCounts[ns] || 0}
+                                    </span>
+                                </button>
+                            ))}
                         </div>
 
                         <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -147,6 +199,7 @@ export default function AdminI18nPage() {
                     secondaryMessages={safeMessagesSecondary}
                     searchQuery={searchQuery}
                     loading={loadingPrimary || loadingSecondary}
+                    hasActiveFilters={hasActiveFilters}
                     onRefresh={() => {
                         refetchPrimary();
                         refetchSecondary();

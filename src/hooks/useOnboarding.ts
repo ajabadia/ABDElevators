@@ -1,7 +1,5 @@
-"use client";
-
 import { useState, useCallback, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { toast } from 'sonner';
 
 export interface OnboardingStep {
     id: string;
@@ -13,9 +11,10 @@ export interface OnboardingStep {
 }
 
 export function useOnboarding() {
-    const [currentStep, setCurrentStep] = useLocalStorage<number>('onboarding-step', 0);
-    const [isCompleted, setIsCompleted] = useLocalStorage<boolean>('onboarding-completed', false);
+    const [currentStep, setCurrentStepState] = useState(0);
+    const [isCompleted, setIsCompletedState] = useState(true); // Default to true until checked
     const [isVisible, setIsVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const steps: OnboardingStep[] = [
         {
@@ -54,45 +53,79 @@ export function useOnboarding() {
         }
     ];
 
+    // Fetch preferences on mount
+    useEffect(() => {
+        const fetchPrefs = async () => {
+            try {
+                const res = await fetch('/api/user/preferences');
+                const data = await res.json();
+                if (data.success && data.preferences?.onboarding) {
+                    setCurrentStepState(data.preferences.onboarding.currentStep || 0);
+                    setIsCompletedState(data.preferences.onboarding.completed);
+                }
+            } catch (error) {
+                console.error('Failed to fetch onboarding state:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchPrefs();
+    }, []);
+
     useEffect(() => {
         // Show onboarding if not completed and after a small delay to ensure UI is ready
-        if (!isCompleted) {
+        if (!isLoading && !isCompleted) {
             const timer = setTimeout(() => setIsVisible(true), 1500);
             return () => clearTimeout(timer);
         }
-    }, [isCompleted]);
+    }, [isCompleted, isLoading]);
 
-    const nextStep = useCallback(() => {
+    const syncWithServer = async (newState: { completed?: boolean, currentStep?: number }) => {
+        try {
+            await fetch('/api/user/preferences', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ onboarding: newState })
+            });
+        } catch (error) {
+            console.error('Failed to sync onboarding state:', error);
+        }
+    };
+
+    const nextStep = useCallback(async () => {
         if (currentStep < steps.length - 1) {
-            setCurrentStep(currentStep + 1);
+            const next = currentStep + 1;
+            setCurrentStepState(next);
+            await syncWithServer({ currentStep: next });
         } else {
-            setIsCompleted(true);
+            setIsCompletedState(true);
             setIsVisible(false);
+            await syncWithServer({ completed: true });
+            toast.success('¡Tour completado!');
         }
-    }, [currentStep, steps.length, setCurrentStep, setIsCompleted]);
+    }, [currentStep, steps.length]);
 
-    const prevStep = useCallback(() => {
+    const prevStep = useCallback(async () => {
         if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
+            const prev = currentStep - 1;
+            setCurrentStepState(prev);
+            await syncWithServer({ currentStep: prev });
         }
-    }, [currentStep, setCurrentStep]);
+    }, [currentStep]);
 
-    const goToStep = useCallback((step: number) => {
-        if (step >= 0 && step < steps.length) {
-            setCurrentStep(step);
-        }
-    }, [steps.length, setCurrentStep]);
-
-    const skipOnboarding = useCallback(() => {
-        setIsCompleted(true);
+    const skipOnboarding = useCallback(async () => {
+        setIsCompletedState(true);
         setIsVisible(false);
-    }, [setIsCompleted]);
+        await syncWithServer({ completed: true });
+    }, []);
 
-    const resetOnboarding = useCallback(() => {
-        setIsCompleted(false);
-        setCurrentStep(0);
+    const resetOnboarding = useCallback(async () => {
+        setIsCompletedState(false);
+        setCurrentStepState(0);
         setIsVisible(true);
-    }, [setIsCompleted, setCurrentStep]);
+        await syncWithServer({ completed: false, currentStep: 0 });
+        toast.info('Tour reiniciado');
+    }, []);
 
     const progress = Math.round(((currentStep + 1) / steps.length) * 100);
 
@@ -101,9 +134,9 @@ export function useOnboarding() {
         currentStep,
         isVisible,
         isCompleted,
+        isLoading,
         nextStep,
         prevStep,
-        goToStep,
         skipOnboarding,
         resetOnboarding,
         progress,

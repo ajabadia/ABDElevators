@@ -456,6 +456,27 @@ export const UserSchema = z.object({
     permissionGroups: z.array(z.string()).default([]), // IDs de PermissionGroup
     permissionOverrides: z.array(z.string()).default([]), // IDs de PermissionPolicy (excepciones directas)
 
+    // Preferencias y Onboarding (Fase 96)
+    preferences: z.object({
+        onboarding: z.object({
+            completed: z.boolean().default(false),
+            currentStep: z.number().default(0),
+            lastResetAt: z.date().optional()
+        }).default({
+            completed: false,
+            currentStep: 0
+        }),
+        theme: z.enum(['light', 'dark', 'system']).default('system').optional(),
+        language: z.string().default('es').optional(),
+    }).default({
+        onboarding: {
+            completed: false,
+            currentStep: 0
+        },
+        theme: 'system',
+        language: 'es'
+    }),
+
     isActive: z.boolean().default(true),
     createdAt: z.date(),
     updatedAt: z.date(),
@@ -1026,6 +1047,29 @@ export const TenantConfigHistorySchema = z.object({
 
     timestamp: z.date().default(() => new Date()),
 });
+
+/**
+ * 🛡️ Auditoría General de Estado (Banking-Grade Audit Trail - Fase 96)
+ * Registra cambios en cualquier entidad con trazabilidad completa.
+ */
+export const AuditTrailSchema = z.object({
+    _id: z.any().optional(),
+    userId: z.string(),
+    tenantId: z.string(),
+    action: z.string(), // e.g., "RESET_ONBOARDING", "UPDATE_SETTING"
+    entityType: z.enum(['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT']),
+    entityId: z.string(),
+    changes: z.object({
+        before: z.any().nullable(),
+        after: z.any().nullable()
+    }),
+    correlationId: z.string(),
+    ip: z.string().optional(),
+    userAgent: z.string().optional(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+export type AuditTrail = z.infer<typeof AuditTrailSchema>;
 
 export type NotificationType = z.infer<typeof NotificationTypeSchema>;
 export type NotificationTenantConfig = z.infer<typeof NotificationTenantConfigSchema>;

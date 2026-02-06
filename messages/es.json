@@ -44,8 +44,8 @@
                 "documents": "Mis Documentos",
                 "support": "Soporte Técnico",
                 "entities": "Entidades Técnicas",
-                "assets": "Activos de Conocimiento",
-                "explorer": "Explorador RAG",
+                "assets": "Biblioteca de Documentos",
+                "explorer": "Buscador Semántico",
                 "graph": "Mapa Semántico",
                 "workflows": "Editor de Workflows",
                 "checklists": "Config. Checklists",
@@ -59,12 +59,13 @@
                 "compliance": "Cumplimiento",
                 "logs": "Logs de Sistema",
                 "analytics": "Analítica Global",
-                "quality": "Calidad RAG",
+                "quality": "Control de Calidad",
                 "intelligence": "Inteligencia Activa",
                 "governance_console": "Consola Guardian",
                 "workflow_tasks": "Tareas de Workflow",
                 "notifications": "Notificaciones",
                 "profile": "Perfil",
+                "settings": "Configuración",
                 "i18n": "Gobernanza i18n"
             }
         },
@@ -786,11 +787,11 @@
             }
         },
         "knowledge": {
-            "title": "Explorador RAG",
-            "highlight": "RAG",
-            "subtitle": "Búsqueda y visualización de fragmentos vinculados en la base de conocimiento vectorial.",
-            "explorer_h2": "Base de Conocimiento",
-            "explorer_subtitle": "Explora fragmentos vectoriales o consulta a la IA agéntica.",
+            "title": "Buscador de Conocimiento",
+            "highlight": "Inteligencia",
+            "subtitle": "Consulta y visualización de datos técnicos vinculados en la biblioteca de documentos.",
+            "explorer_h2": "Documentación Técnica",
+            "explorer_subtitle": "Explora la biblioteca de documentos o realiza consultas a la Inteligencia Artificial.",
             "tabs": {
                 "explorer": "Explorador",
                 "ai": "Consulta IA"
@@ -808,8 +809,8 @@
                 "synced": "Sincronizado con Atlas"
             },
             "simulator": {
-                "title": "RAG Simulator / Debugger",
-                "subtitle": "Simula una consulta real para ver qué chunks recuperaría el motor híbrido (Gemini + BGE-M3) y con qué score de relevancia.",
+                "title": "Simulador de Análisis / Depurador",
+                "subtitle": "Simula una consulta real para ver qué información recuperaría el motor híbrido y con qué grado de relevancia.",
                 "placeholder": "Escribe una consulta técnica (ej: 'fallo en circuito de seguridad A3')..."
             },
             "filters": {
@@ -838,8 +839,8 @@
                 "next": "Siguiente"
             },
             "brain": {
-                "title": "Cerebro Agéntico RAG",
-                "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará alucinaciones y te dará una respuesta de alta fidelidad.",
+                "title": "Asistente de Inteligencia Técnica",
+                "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad.",
                 "placeholder": "Ej: ¿Protocolo de rescate en manual Otis 2000?",
                 "thinking": "Pensando...",
                 "submit": "Consultar",
@@ -878,10 +879,10 @@
             }
         },
         "rag_quality": {
-            "title": "Calidad RAG",
+            "title": "Control de Calidad",
             "subtitle": "Centro de evaluación y mejora continua del motor de IA.",
-            "dashboard_title": "Observabilidad RAG (RAGAs)",
-            "dashboard_desc": "Monitoreo de fidelidad, relevancia y precisión del motor agéntico.",
+            "dashboard_title": "Panel de Calidad del Análisis",
+            "dashboard_desc": "Supervisión de la fiabilidad, relevancia y precisión de las respuestas generadas.",
             "latest_sessions": "Basado en {count} últimas sesiones",
             "loading": "Cargando métricas de calidad...",
             "metrics": {
@@ -907,6 +908,54 @@
                 "hide_trace": "Ocultar Trace ↑",
                 "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
                 "trace_end": "--- FIN DEL TRACE ---"
+            }
+        },
+        "user_dashboard": {
+            "welcome": "Bienvenido, {name}",
+            "subtitle": "¿Qué te gustaría hacer hoy?",
+            "stats": {
+                "documents": "Documentos Subizados",
+                "queries": "Consultas Realizadas",
+                "accuracy": "Respuestas Precisas",
+                "time": "Tiempo Promedio",
+                "change_week": "+{count} esta semana",
+                "change_today": "+{count} hoy",
+                "change_month": "+{percent}% vs. mes pasado",
+                "change_faster": "-{time} más rápido"
+            },
+            "actions": {
+                "upload": {
+                    "title": "Subir Manual Técnico",
+                    "desc": "Añade PDFs, esquemas o documentos de mantenimiento"
+                },
+                "search": {
+                    "title": "Buscar Información",
+                    "desc": "Pregunta sobre procedimientos, códigos de error o especificaciones"
+                },
+                "history": {
+                    "title": "Historial de Consultas",
+                    "desc": "Revisa tus búsquedas anteriores y respuestas guardadas"
+                }
+            },
+            "sections": {
+                "activity": "Actividad Reciente",
+                "help": "Centro de Ayuda",
+                "view_all": "Ver todo el historial",
+                "contact": "Contactar Soporte"
+            },
+            "empty": {
+                "title": "Aún no hay actividad",
+                "desc": "Sube tu primer documento o haz una consulta para empezar."
+            },
+            "help": {
+                "upload": {
+                    "title": "¿Cómo subo documentos?",
+                    "desc": "Guía paso a paso para cargar PDFs"
+                },
+                "search": {
+                    "title": "Hacer mejores preguntas",
+                    "desc": "Tips para consultas más precisas"
+                }
             }
         },
         "guardian": {

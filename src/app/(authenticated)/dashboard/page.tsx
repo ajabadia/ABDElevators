@@ -25,6 +25,7 @@ import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 interface QuickStat {
     label: string
@@ -37,13 +38,15 @@ interface QuickStat {
 interface RecentActivity {
     id: string
     type: "upload" | "search" | "success"
-    title: string
-    description: string
+    title?: string
+    description?: string
+    message?: string // De la nueva API
     timestamp: string
     icon?: React.ReactNode
 }
 
 export default function UserDashboard() {
+    const t = useTranslations("dashboard")
     const { data: session } = useSession()
     const [stats, setStats] = useState<QuickStat[]>([])
     const [activities, setActivities] = useState<RecentActivity[]>([])
@@ -61,30 +64,30 @@ export default function UserDashboard() {
             if (data.success) {
                 setStats([
                     {
-                        label: "Documentos Subidos",
+                        label: t("stats.documents"),
                         value: data.stats.totalDocuments || 0,
-                        change: "+2 esta semana",
+                        change: t("stats.change_week", { count: 2 }),
                         icon: <FileText className="w-5 h-5" />,
                         color: "text-blue-600"
                     },
                     {
-                        label: "Consultas Realizadas",
+                        label: t("stats.queries"),
                         value: data.stats.totalQueries || 0,
-                        change: "+5 hoy",
+                        change: t("stats.change_today", { count: 5 }),
                         icon: <Search className="w-5 h-5" />,
                         color: "text-teal-600"
                     },
                     {
-                        label: "Respuestas Precisas",
+                        label: t("stats.accuracy"),
                         value: `${data.stats.accuracyRate || 94}%`,
-                        change: "+2% vs. mes pasado",
+                        change: t("stats.change_month", { percent: 2 }),
                         icon: <CheckCircle2 className="w-5 h-5" />,
                         color: "text-emerald-600"
                     },
                     {
-                        label: "Tiempo Promedio",
+                        label: t("stats.time"),
                         value: `${data.stats.avgResponseTime || 2.3}s`,
-                        change: "-0.5s más rápido",
+                        change: t("stats.change_faster", { time: 0.5 }),
                         icon: <Zap className="w-5 h-5" />,
                         color: "text-amber-600"
                     }
@@ -103,8 +106,8 @@ export default function UserDashboard() {
     return (
         <PageContainer>
             <PageHeader
-                title={`Bienvenido, ${session?.user?.name?.split(' ')[0] || "Usuario"}`}
-                subtitle="¿Qué te gustaría hacer hoy?"
+                title={t("welcome", { name: session?.user?.name?.split(' ')[0] || "Usuario" })}
+                subtitle={t("subtitle")}
             />
 
             <InlineHelpPanel
@@ -120,8 +123,8 @@ export default function UserDashboard() {
                 <ActionCard
                     data-tour="upload-action"
                     icon={<Upload className="w-8 h-8" />}
-                    title="Subir Manual Técnico"
-                    description="Añade PDFs, esquemas o documentos de mantenimiento"
+                    title={t("actions.upload.title")}
+                    description={t("actions.upload.desc")}
                     href="/admin/knowledge-assets"
                     color="bg-gradient-to-br from-blue-500 to-blue-600"
                     accentColor="bg-blue-50 dark:bg-blue-900/20"
@@ -131,8 +134,8 @@ export default function UserDashboard() {
                 <ActionCard
                     data-tour="search-action"
                     icon={<Search className="w-8 h-8" />}
-                    title="Buscar Información"
-                    description="Pregunta sobre procedimientos, códigos de error o especificaciones"
+                    title={t("actions.search.title")}
+                    description={t("actions.search.desc")}
                     href="/search"
                     color="bg-gradient-to-br from-teal-500 to-teal-600"
                     accentColor="bg-teal-50 dark:bg-teal-900/20"
@@ -143,8 +146,8 @@ export default function UserDashboard() {
                 <ActionCard
                     data-tour="history-action"
                     icon={<History className="w-8 h-8" />}
-                    title="Historial de Consultas"
-                    description="Revisa tus búsquedas anteriores y respuestas guardadas"
+                    title={t("actions.history.title")}
+                    description={t("actions.history.desc")}
                     href="/admin/audit"
                     color="bg-gradient-to-br from-purple-500 to-purple-600"
                     accentColor="bg-purple-50 dark:bg-purple-900/20"
@@ -189,7 +192,7 @@ export default function UserDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <ContentCard
-                    title="Actividad Reciente"
+                    title={t("sections.activity")}
                     icon={<Clock className="w-5 h-5" />}
                     className="lg:col-span-2"
                 >
@@ -197,8 +200,8 @@ export default function UserDashboard() {
                         {activities.length === 0 ? (
                             <EmptyState
                                 icon={<Sparkles className="w-12 h-12 text-slate-300" />}
-                                title="Aún no hay actividad"
-                                description="Sube tu primer documento o haz una consulta para empezar."
+                                title={t("empty.title")}
+                                description={t("empty.desc")}
                             />
                         ) : (
                             activities.slice(0, 5).map((activity) => (
@@ -209,7 +212,7 @@ export default function UserDashboard() {
                     {activities.length > 0 && (
                         <Link href="/admin/audit" className="block mt-4">
                             <Button variant="ghost" className="w-full">
-                                Ver todo el historial
+                                {t("sections.view_all")}
                                 <ArrowRight className="ml-2 w-4 h-4" />
                             </Button>
                         </Link>
@@ -219,7 +222,7 @@ export default function UserDashboard() {
                 <ContentCard
                     title={
                         <div className="flex items-center gap-2">
-                            <span>Centro de Ayuda</span>
+                            <span>{t("sections.help")}</span>
                             <HelpButton
                                 contextId="contact-support"
                                 size="sm"
@@ -231,21 +234,21 @@ export default function UserDashboard() {
                 >
                     <div className="space-y-3">
                         <HelpLink
-                            title="¿Cómo subo documentos?"
-                            description="Guía paso a paso para cargar PDFs"
+                            title={t("help.upload.title")}
+                            description={t("help.upload.desc")}
                             href="/admin/knowledge-assets"
                             helpContext="upload-documents"
                         />
                         <HelpLink
-                            title="Hacer mejores preguntas"
-                            description="Tips para consultas más precisas"
+                            title={t("help.search.title")}
+                            description={t("help.search.desc")}
                             href="/search"
                             helpContext="search-query"
                         />
                     </div>
                     <Link href="/admin/support" className="block mt-6">
                         <Button variant="outline" className="w-full">
-                            Contactar Soporte
+                            {t("sections.contact")}
                         </Button>
                     </Link>
                 </ContentCard>
@@ -337,27 +340,36 @@ function ActionCard({
 }
 
 function ActivityItem({ activity }: { activity: RecentActivity }) {
-    const iconColors = {
-        upload: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
-        search: "text-teal-600 bg-teal-50 dark:bg-teal-900/20",
-        success: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
+    const t = useTranslations("common.activities")
+    const icons = {
+        upload: <FileText className="w-4 h-4 text-blue-500" />,
+        search: <Search className="w-4 h-4 text-teal-500" />,
+        success: <CheckCircle2 className="w-4 h-4 text-emerald-500" />
     }
 
+    const title = activity.type ? t(`${activity.type}.title`) : t("system")
+    const description = activity.message || (activity.type ? t(`${activity.type}.desc`) : t("system"))
+
     return (
-        <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-            <div className={cn("p-2 rounded-xl shrink-0 text-xl", iconColors[activity.type])}>
-                {activity.type === 'upload' ? '📄' : activity.type === 'search' ? '🔍' : '✅'}
+        <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <div className="mt-0.5">
+                {icons[activity.type] || <Clock className="w-4 h-4 text-slate-400" />}
             </div>
             <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground truncate">
-                    {activity.title}
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                    {title}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                    {activity.description}
+                <p className="text-xs text-slate-500 truncate">
+                    {description}
                 </p>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-2">
-                    {activity.timestamp}
-                </p>
+            </div>
+            <div className="text-[10px] text-slate-400 whitespace-nowrap pt-1">
+                {new Date(activity.timestamp).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}
             </div>
         </div>
     )

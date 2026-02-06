@@ -103,70 +103,87 @@ export class TranslationService {
     /**
      * Fuerza la sincronización desde el archivo JSON local hacia la DB.
      */
-    static async forceSyncFromLocal(locale: string): Promise<Record<string, any>> {
-        console.log(`[i18n-sync] 🔄 Iniciando forceSyncFromLocal para locale: '${locale}'`);
+    static async forceSyncFromLocal(locale: string, tenantId = 'platform_master'): Promise<Record<string, any>> {
+        console.log(`[i18n-sync] 🔄 Iniciando forceSyncFromLocal para locale: '${locale}' (Tenant: ${tenantId})`);
         const messages = await this.loadFromLocalFile(locale);
         const keyCount = Object.keys(messages).length;
-        console.log(`[i18n-sync] 📂 Cargados ${keyCount} mensajes desde JSON local para '${locale}'`);
 
         if (keyCount > 0) {
-            await this.syncToDb(locale, messages);
-            console.log(`[i18n-sync] ✅ Sincronizados ${keyCount} mensajes a MongoDB para '${locale}'`);
-            // Invalidar caché
-            await redis.del(`i18n:${locale}`);
-            console.log(`[i18n-sync] 🧹 Caché Redis invalidada para '${locale}'`);
-        } else {
-            console.warn(`[i18n-sync] ⚠️ No se encontraron mensajes en JSON local para '${locale}'`);
+            await this.syncToDb(locale, messages, tenantId);
+
+            // Invalidar caché (Usamos la misma lógica que updateTranslation para coherencia)
+            if (tenantId === 'platform_master') {
+                const keys = await redis.keys(`i18n:*:${locale}`);
+                if (keys.length > 0) await redis.del(...keys);
+                console.log(`[i18n-sync] 🧹 Global cache invalidated for ${locale}`);
+            } else {
+                await redis.del(`i18n:${tenantId}:${locale}`);
+            }
         }
         return messages;
     }
 
     /**
      * Obtiene todos los mensajes para un idioma.
-     * Estrategia Read-through: Redis -> MongoDB -> JSON Local
+     * Estrategia de Capas (Phase 63): Tenant Overrides > Platform Master > JSON Local
      */
-    static async getMessages(locale: string): Promise<Record<string, any>> {
-        const cacheKey = `i18n:${locale}`;
+    static async getMessages(locale: string, tenantId?: string): Promise<Record<string, any>> {
+        // 1. Identificar Tenant Context
+        let effectiveTenantId = tenantId;
+        if (!effectiveTenantId) {
+            try {
+                const { auth } = await import('./auth');
+                const session = await auth();
+                effectiveTenantId = session?.user?.tenantId || 'platform_master';
+            } catch {
+                effectiveTenantId = 'platform_master';
+            }
+        }
+
+        const cacheKey = `i18n:${effectiveTenantId}:${locale}`;
 
         try {
-            // 1. Intentar L2: Redis
+            // 2. Intentar Cache (Redis)
             const cached = await redis.get<Record<string, any>>(cacheKey);
-            if (cached) {
-                console.log(`[i18n] 🚀 Cache HIT (Redis) para '${locale}'`);
-                return cached;
-            }
+            if (cached) return cached;
 
-            // 2. Intentar L3: MongoDB
-            const collection = await getTenantCollection(this.COLLECTION, null, 'MAIN', { softDeletes: false });
-            const docs = await collection.find({ locale, isObsolete: false });
+            // 3. Cargar MASTER (Platform Master)
+            const masterCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+            const masterDocs = await masterCollection.find({ locale, isObsolete: false });
+            let masterMessages = this.flatToNested(masterDocs);
 
-            let messages: Record<string, any> = {};
-
-            if (docs.length > 0) {
-                console.log(`[i18n] 📦 Database HIT (MongoDB) para '${locale}': ${docs.length} registros`);
-                messages = this.flatToNested(docs);
-            } else {
-                // 3. Fallback L4: JSON Local
-                console.log(`[i18n] 💾 Fallback to Local JSON para '${locale}'`);
-                messages = await this.loadFromLocalFile(locale);
-
-                // Si cargamos de local, sincronizamos a DB en segundo plano para el futuro
-                if (Object.keys(messages).length > 0) {
-                    console.log(`[i18n] 🔄 Iniciando background sync para '${locale}'`);
-                    this.syncToDb(locale, messages).catch(err =>
-                        console.error(`[TranslationService] Error background sync ${locale}:`, err)
-                    );
+            // Si no hay nada en DB para Master, cargar de JSON
+            if (Object.keys(masterMessages).length === 0) {
+                masterMessages = await this.loadFromLocalFile(locale);
+                // Background sync si cargamos de local
+                if (Object.keys(masterMessages).length > 0) {
+                    this.syncToDb(locale, masterMessages, 'platform_master').catch(() => { });
                 }
             }
 
-            // Guardar en Redis para futuras peticiones
-            if (Object.keys(messages).length > 0) {
-                await redis.set(cacheKey, messages, { ex: this.CACHE_TTL });
+            let finalMessages = masterMessages;
+
+            // 4. Cargar TENANT OVERRIDES (Si aplica)
+            if (effectiveTenantId !== 'platform_master') {
+                const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: effectiveTenantId } });
+                const tenantDocs = await tenantCollection.find({ locale, isObsolete: false });
+
+                if (tenantDocs.length > 0) {
+                    const tenantMessages = this.flatToNested(tenantDocs);
+                    // Merge profundo (Tenant sobreescribe Master)
+                    finalMessages = this.deepMerge(masterMessages, tenantMessages);
+                    console.log(`[i18n] 🧬 Merged ${tenantDocs.length} overrides for tenant ${effectiveTenantId}`);
+                }
             }
 
-            return messages;
+            // 5. Guardar en Redis
+            if (Object.keys(finalMessages).length > 0) {
+                await redis.set(cacheKey, finalMessages, { ex: this.CACHE_TTL });
+            }
+
+            return finalMessages;
         } catch (error) {
-            console.error(`[TranslationService] Critical failure loading ${locale}, falling back to static:`, error);
+            console.error(`[TranslationService] Failure loading i18n for ${effectiveTenantId}/${locale}:`, error);
             return this.loadFromLocalFile(locale);
         }
     }
@@ -180,11 +197,15 @@ export class TranslationService {
         locale: string;
         namespace?: string;
         userId?: string;
+        tenantId?: string;
     }) {
-        const { key, value, locale, namespace = 'common', userId } = params;
-        const collection = await getTenantCollection(this.COLLECTION);
+        const { key, value, locale, namespace = 'common', userId, tenantId } = params;
 
-        await collection.updateMany(
+        // 🛠️ Auditoría 015: Uso de SecureCollection para aislamiento
+        const collection = await getTenantCollection(this.COLLECTION, null, 'MAIN', { softDeletes: false });
+        const effectiveTenantId = tenantId || collection.tenantId;
+
+        await collection.updateOne(
             { key, locale },
             {
                 $set: {
@@ -192,14 +213,26 @@ export class TranslationService {
                     namespace,
                     isObsolete: false,
                     lastUpdated: new Date(),
-                    updatedBy: userId
+                    updatedBy: userId,
+                    tenantId: effectiveTenantId
                 }
             },
             { upsert: true }
         );
 
         // Invalidar caché en Redis
-        await redis.del(`i18n:${locale}`);
+        if (effectiveTenantId === 'platform_master') {
+            // Si es global, invalidamos para todos (estrategia conservadora)
+            const keys = await redis.keys(`i18n:*:${locale}`);
+            if (keys.length > 0) {
+                await redis.del(...keys);
+            }
+            console.log(`[i18n] 🧹 Validated GLOBAL cache for ${locale} (${keys.length} keys)`);
+        } else {
+            // Si es de tenant, solo invalidamos ese tenant
+            await redis.del(`i18n:${effectiveTenantId}:${locale}`);
+            console.log(`[i18n] 🧹 Validated TENANT cache for ${effectiveTenantId}:${locale}`);
+        }
 
         await logEvento({
             level: 'INFO',
@@ -260,9 +293,9 @@ export class TranslationService {
     /**
      * Sincroniza recursivamente un objeto anidado a la base de datos (Bulk operation).
      */
-    private static async syncToDb(locale: string, messages: Record<string, any>) {
+    private static async syncToDb(locale: string, messages: Record<string, any>, tenantId = 'platform_master') {
         const flat = this.nestToFlat(messages);
-        const collection = await getTenantCollection(this.COLLECTION);
+        const collection = await getTenantCollection(this.COLLECTION, { user: { tenantId } });
 
         const operations = Object.entries(flat).map(([key, value]) => {
             if (!key || key === '') return null;
@@ -306,5 +339,23 @@ export class TranslationService {
             }
         }
         return result;
+    }
+
+    private static deepMerge(target: any, source: any): any {
+        const output = { ...target };
+        if (typeof target === 'object' && target !== null && typeof source === 'object' && source !== null) {
+            Object.keys(source).forEach(key => {
+                if (typeof source[key] === 'object' && source[key] !== null) {
+                    if (!(key in target)) {
+                        Object.assign(output, { [key]: source[key] });
+                    } else {
+                        output[key] = this.deepMerge(target[key], source[key]);
+                    }
+                } else {
+                    Object.assign(output, { [key]: source[key] });
+                }
+            });
+        }
+        return output;
     }
 }

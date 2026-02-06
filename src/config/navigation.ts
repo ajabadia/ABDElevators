@@ -274,6 +274,12 @@ export const menuSections: MenuSection[] = [
                 nameKey: 'items.profile',
                 href: '/admin/profile',
                 icon: UserCircle
+            },
+            {
+                name: 'Settings',
+                nameKey: 'items.settings',
+                href: '/settings',
+                icon: Settings
             }
         ]
     }
