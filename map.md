@@ -19,7 +19,7 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 |------|---------------|-----------------|
 | `/profile` | Dashboard personal, estadísticas de uso y avatar. | - |
 | `/my-documents` | Repositorio personal de archivos analizados. | - |
-| `/search` | Búsqueda Inteligente Global sobre todo el conocimiento. | 2026-02-06 18:45 |
+| `/search` | Búsqueda Inteligente Conversacional sobre manuales técnicos. | 2026-02-08 |
 | `/support` | Sistema de tickets y centro de ayuda empresarial. | - |
 
 ## 🛡️ Panel de Administración (Control Center)
@@ -29,7 +29,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | 2026-02-03 12:20 |
-| `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-03 00:18 |
+| `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-08 02:00 |
 | `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión. | 2026-02-03 12:35 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
@@ -54,31 +54,36 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-03 23:45 |
 | `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-06 10:15 |
 | `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-06 10:15 |
+| `/admin/profile` | Gestión de identidad, seguridad y preferencias del usuario. | 2026-02-07 14:30 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
+| `/admin/organizations` | Gestión de tenants: Branding, Storage Isolation y Billing. | 2026-02-07 15:45 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/graphs` | Explorador de Grafo de Conocimiento (Neo4j Visualizer). | - |
-| `/entities` | Dashboard de validación de entidades extraídas. | - |
-| `/architecture` | Diagramas de sistema y documentación viva. | - |
+| `/entities` | Dashboard de validación de entidades extraídas. | 2026-02-06 |
+| `/architecture` | Diagramas de sistema y documentación viva. | 2026-02-06 |
+| `/admin/api-docs` | Portal Interactivo Swagger (OAS 3.0). | 2026-02-08 |
 
 ## 🔌 Infraestructura (API Endpoints Clave)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
-| `/api/admin/ingest` | Pipeline de procesamiento Multi-modal. | 2026-02-06 00:30 |
-| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos de ingesta. | 2026-02-06 00:30 |
+| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase). | 2026-02-08 02:00 |
+| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos (ExecuteIngestionAnalysis). | 2026-02-08 02:00 |
+| `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-08 02:00 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
-| `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-03 11:25 |
+| `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-06 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
 | `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | 2026-02-06 00:30 |
 | `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-06 10:15 |
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-06 00:30 |
 | `/api/admin/users/invite/bulk` | Ingesta masiva de invitaciones (Batch Processing). | 2026-02-06 07:45 |
 | `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-06 00:00 |
-| `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 12:00 |
+| `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 |
+| `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
 
 
 ---
-*Mapa generado y auditado por Antigravity v3.9.2*
+*Mapa actualizado por Antigravity v3.9.5 (Architecture Hardening) - 2026-02-08*
 

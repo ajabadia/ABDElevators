@@ -27,7 +27,11 @@
             "dismiss": "Cerrar",
             "upload_success": "El archivo se ha subido e indexado correctamente en la bóveda.",
             "search_complete": "Análisis semántico completado con éxito.",
-            "workflow_saved": "Estructura del flujo de trabajo persistida atómicamente."
+            "workflow_saved": "Estructura del flujo de trabajo persistida atómicamente.",
+            "empty_title": "Todo al día",
+            "empty_desc": "No tienes notificaciones pendientes.",
+            "mark_all": "Marcar todas como leídas",
+            "close": "Cerrar panel"
         },
         "navigation": {
             "sections": {
@@ -67,6 +71,38 @@
                 "profile": "Perfil",
                 "settings": "Configuración",
                 "i18n": "Gobernanza i18n"
+            },
+            "search": {
+                "title": "Asistente Técnico",
+                "subtitle": "Conectado a manuales de ingeniería",
+                "placeholder": "Escribe tu consulta técnica aqui...",
+                "welcome_title": "¿En qué puedo ayudarte hoy?",
+                "welcome_desc": "Tengo acceso a toda la documentación técnica, esquemas y procedimientos de mantenimiento.",
+                "sources_label": "Fuentes consultadas",
+                "analyzing": "Analizando documentación...",
+                "error_connection": "Tuve un problema de conexión. Por favor intenta de nuevo.",
+                "error_message": "Disculpa, he perdido la conexión con la base de conocimiento. ¿Podrías intentar preguntarme de nuevo?",
+                "disclaimer": "La IA puede cometer errores. Verifica la información crítica en los manuales originales.",
+                "suggested": {
+                    "q1": "Error E45 en maniobra Arca II",
+                    "q2": "Procedimiento de rescate manual",
+                    "q3": "Esquema de series de seguridad",
+                    "q4": "Pares de apriete motor gearless"
+                }
+            },
+            "onboarding": {
+                "step_counter": "Paso {current} de {total}",
+                "skip": "Saltar tour",
+                "next": "Siguiente",
+                "finish": "Finalizar",
+                "steps": {
+                    "search_title": "Asistente Técnico",
+                    "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+                    "input_title": "Búsqueda Inteligente",
+                    "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+                    "actions_title": "Acciones Rápidas",
+                    "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets."
+                }
             }
         },
         "verticals": {
@@ -77,6 +113,18 @@
         "help": {
             "title": "Centro de Ayuda Contextual",
             "subtitle": "Información técnica y consejos de uso para esta sección."
+        },
+        "reports": {
+            "title": "Análisis Técnico Avanzado",
+            "subtitle": "Documento de Evaluación Técnica Asistida",
+            "details": "Detalles del Informe",
+            "technician": "Técnico Responsable",
+            "compatibility": "Índice de Compatibilidad",
+            "protocol": "Protocolo de Verificación",
+            "date": "Fecha de Generación",
+            "client": "Cliente",
+            "page": "Página {current} de {total}",
+            "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
         }
     },
     "nav": {
@@ -88,6 +136,25 @@
         "demo": "Demo Gratis",
         "security": "Seguridad",
         "about": "Sobre Nosotros"
+    },
+    "login": {
+        "title": "Iniciar Sesión",
+        "subtitle": "Accede a tu cuenta segura",
+        "email_label": "EMAIL CORPORATIVO",
+        "email_placeholder": "nombre@empresa.com",
+        "password_label": "CONTRASEÑA",
+        "password_placeholder": "Ingresa tu contraseña",
+        "button": "Iniciar Sesión",
+        "verifying": "Verificando credenciales...",
+        "error_generic": "Error de conexión. Intenta nuevamente.",
+        "error_invalid": "Credenciales incorrectas. Verifica tu email y contraseña.",
+        "error_mfa": "Código MFA incorrecto o expirado.",
+        "mfa_title": "Autenticación Reforzada",
+        "mfa_desc": "Por seguridad, introduce el código de verificación para continuar.",
+        "mfa_button": "Verificar Identidad",
+        "mfa_back": "Regresar",
+        "test_users": "ACCESO DEMO (SOLO PRUEBAS)",
+        "footer_text": "SEGURIDAD INDUSTRIAL • ENCRIPTACIÓN AES-256 • SOC2 COMPLIANT"
     },
     "hero": {
         "badge": "Gestión Documental Inteligente",
@@ -111,8 +178,8 @@
     "features": {
         "title": "Todo lo que necesitas para gestionar conocimiento técnico",
         "subtitle": "Diseñado para equipos que no pueden permitirse errores de interpretación.",
-        "f1_title": "Búsqueda Instantánea",
-        "f1_desc": "Pregunta en lenguaje natural y obtén respuestas precisas en menos de 500ms, con cita exacta al documento fuente.",
+        "f1_title": "Búsqueda Conversacional",
+        "f1_desc": "Interactúa con tus manuales en lenguaje natural. Obtén respuestas expertas y precisas con referencias directas al documento original.",
         "f2_title": "Inteligencia Visual",
         "f2_desc": "Comprensión nativa de planos técnicos, esquemas eléctricos y diagramas complejos con Gemini 2.0/3. Identificación automática de componentes visuales.",
         "f3_title": "Privacidad & Desidentificación",
@@ -137,6 +204,10 @@
         "f12_desc": "Bucle agéntico que evalúa el feedback de los jurados para refinar respuestas alucinadas o incompletas con razonamiento causal.",
         "f13_title": "Auditoría de Consistencia DB",
         "f13_desc": "Cumplimiento estructural garantizado. Automatización del enrutamiento multi-cluster (AUTH, LOGS, MAIN) para evitar fugas de datos.",
+        "f14_title": "Informes Industriales PDF",
+        "f14_desc": "Generación dinámica de informes con trazabilidad completa, multi-idioma (ES/EN) y terminología profesional adaptada a negocio.",
+        "f15_title": "Resiliencia de Facturación",
+        "f15_desc": "Circuito de protección que garantiza la disponibilidad del sistema incluso ante fallos críticos de pasarelas de pago o servicios externos.",
         "learn_more": "Saber más"
     },
     "solutions": {
@@ -278,6 +349,7 @@
         "s2_f3": "Aislamiento multi-tenant: Tus datos están físicamente separados de otros clientes",
         "s2_f4": "Auditorías SOC2: Cumplimiento verificado por terceros independientes",
         "s2_f5": "Backups automáticos: Replicación geográfica con cifrado",
+        "s2_f6": "Autenticación 2FA: Seguridad de nivel bancario para tu cuenta",
         "s3_title": "3. Uso de tus Datos",
         "s3_intro": "Utilizamos tu información exclusivamente para:",
         "s3_f1": "Proporcionar servicios de análisis RAG y búsqueda semántica",
@@ -339,13 +411,41 @@
         "cta_sec": "Hablar con ventas"
     },
     "ingest": {
+        "title": "Subir Documentación Técnica",
+        "description": "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",
+        "dropzone": {
+            "active": "Suelta el archivo aquí...",
+            "idle": "Arrastra un manual PDF aquí o haz clic para seleccionar",
+            "format": "Solo archivos PDF (Max 50MB)",
+            "selected": "Archivo seleccionado"
+        },
+        "fields": {
+            "type": "Tipo de Componente",
+            "version": "Versión Doc.",
+            "scope": "Alcance del Conocimiento",
+            "industry": "Industria / Sector",
+            "placeholder": "Seleccionar..."
+        },
         "pii_label": "Desidentificación de Datos (PII)",
         "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
         "pii_warning_title": "ADVERTENCIA: Datos Sensibles",
         "pii_warning_desc": "Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos. ¿Cómo deseas proceder?",
         "pii_opt_continue": "Continuar sin protección",
         "pii_opt_cancel": "Cancelar",
-        "pii_opt_enable": "Activar y continuar"
+        "pii_opt_enable": "Activar y continuar",
+        "status": {
+            "uploading": "IA Procesando...",
+            "processing_note": "Este proceso puede tardar 1-2 min.",
+            "success": "¡Documento Recibido!",
+            "success_desc": "Procesando e indexando fragmentos...",
+            "duplicate": "¡Ya Existía!",
+            "duplicate_desc": "Procesado instantáneamente (Smart Ingest).",
+            "error": "Error de Ingesta"
+        },
+        "actions": {
+            "cancel": "Cancelar",
+            "submit": "Subir e Indexar"
+        }
     },
     "rag_eval": {
         "title": "Dashboard de Evaluación RAG",
@@ -378,7 +478,62 @@
             "feedback": "Feedback Juez"
         }
     },
+    "dashboard": {
+        "welcome": "Hola, {name}",
+        "subtitle": "¿Qué te gustaría hacer hoy?",
+        "stats": {
+            "documents": "Documentos Subizados",
+            "queries": "Consultas Realizadas",
+            "accuracy": "Respuestas Precisas",
+            "time": "Tiempo Promedio",
+            "change_week": "+{count} esta semana",
+            "change_today": "+{count} hoy",
+            "change_month": "+{percent}% vs. mes pasado",
+            "change_faster": "-{time} más rápido"
+        },
+        "actions": {
+            "upload": {
+                "title": "Subir Manual Técnico",
+                "desc": "Añade PDFs, esquemas o documentos de mantenimiento"
+            },
+            "search": {
+                "title": "Buscar Información",
+                "desc": "Consulta sobre procedimientos, códigos de error o especificaciones"
+            },
+            "history": {
+                "title": "Historial de Consultas",
+                "desc": "Revisa tus búsquedas anteriores y respuestas guardadas"
+            }
+        },
+        "sections": {
+            "activity": "Actividad Reciente",
+            "help": "Centro de Ayuda",
+            "view_all": "Ver todo el historial",
+            "contact": "Contactar Soporte"
+        },
+        "empty": {
+            "title": "Sin actividad aún",
+            "desc": "Sube tu primer documento o realiza una consulta para empezar."
+        },
+        "help": {
+            "upload": {
+                "title": "¿Cómo subo documentos?",
+                "desc": "Guía paso a paso para la carga de PDFs"
+            },
+            "search": {
+                "title": "Haciendo mejores preguntas",
+                "desc": "Consejos para obtener respuestas más precisas"
+            }
+        }
+    },
     "admin": {
+        "api_docs": {
+            "title": "Portal de Documentación API",
+            "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
+            "card_title": "Especificación de Plataforma RAG ABD",
+            "loading": "Iniciando Portal Técnico...",
+            "error_loading": "No se pudo cargar la definición de la API."
+        },
         "configurator": {
             "new_title": "Nueva Configuración",
             "editor_tab": "Editor",
@@ -675,6 +830,40 @@
                 "debug": "DEBUG"
             }
         },
+        "knowledge": {
+            "title": "Gestión del",
+            "highlight": "Corpus Técnico",
+            "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
+            "tabs": {
+                "assets": "Gestión de Activos",
+                "explorer": "Explorador Semántico",
+                "audit": "Auditoría de Ingesta"
+            },
+            "actions": {
+                "upload": "Ingestar Documento",
+                "refresh": "Refrescar Corpus"
+            },
+            "assets": {
+                "table": {
+                    "file": "Documento",
+                    "type": "Tipo / Industria",
+                    "status": "Estado Ingesta",
+                    "date": "Fecha",
+                    "actions": "Acciones"
+                },
+                "status": {
+                    "pending": "Pendiente",
+                    "processing": "Procesando",
+                    "completed": "Completado",
+                    "failed": "Fallido"
+                },
+                "actions": {
+                    "retry": "Reintentar Ingesta",
+                    "delete": "Eliminar Activo",
+                    "view_chunks": "Ver Fragmentos"
+                }
+            }
+        },
         "workflows": {
             "title": "Editor de Workflows",
             "canvas": {
@@ -790,98 +979,6 @@
                 "comment_placeholder": "Añade un comentario (opcional)..."
             }
         },
-        "knowledge": {
-            "title": "Buscador de Conocimiento",
-            "highlight": "Inteligencia",
-            "subtitle": "Consulta y visualización de datos técnicos vinculados en la biblioteca de documentos.",
-            "explorer_h2": "Documentación Técnica",
-            "explorer_subtitle": "Explora la biblioteca de documentos o realiza consultas a la Inteligencia Artificial.",
-            "tabs": {
-                "explorer": "Explorador",
-                "ai": "Consulta IA"
-            },
-            "actions": {
-                "export": "Exportar Chunks",
-                "refresh": "Actualizar",
-                "sim_btn": "Simular Búsqueda"
-            },
-            "stats": {
-                "total": "Total Chunks",
-                "arch": "Arquitectura",
-                "langs": "Idiomas Indexados",
-                "backend": "Estado Backend",
-                "synced": "Sincronizado con Atlas"
-            },
-            "simulator": {
-                "title": "Simulador de Análisis / Depurador",
-                "subtitle": "Simula una consulta real para ver qué información recuperaría el motor híbrido y con qué grado de relevancia.",
-                "placeholder": "Escribe una consulta técnica (ej: 'fallo en circuito de seguridad A3')..."
-            },
-            "filters": {
-                "title": "Filtros de Exploración",
-                "query_placeholder": "Buscar texto, modelo o archivo...",
-                "lang_label": "Idioma",
-                "lang_all": "Todos los idiomas",
-                "type_label": "Tipo de Indexación",
-                "type_all": "Todo el contenido",
-                "type_original": "Originales",
-                "type_shadow": "Shadow Chunks (Traducciones)"
-            },
-            "view": {
-                "showing": "Mostrando {count} de {total} fragmentos encontrados",
-                "loading": "Cargando vectores...",
-                "empty_title": "No se encontraron fragmentos",
-                "empty_subtitle": "Intenta ajustar los filtros de búsqueda.",
-                "chunk_shadow": "Shadow",
-                "chunk_original": "Original",
-                "chunk_model": "Modelo",
-                "chunk_type": "Tipo",
-                "auto_trans": "Traducción Automática",
-                "dual_mechanism": "Mecanismo Dual-Index",
-                "dual_desc": "Este fragmento permite encontrar el documento original buscando en Español, aunque el manual sea Alemán/Inglés.",
-                "prev": "Anterior",
-                "next": "Siguiente"
-            },
-            "brain": {
-                "title": "Asistente de Inteligencia Técnica",
-                "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad.",
-                "placeholder": "Ej: ¿Protocolo de rescate en manual Otis 2000?",
-                "thinking": "Pensando...",
-                "submit": "Consultar",
-                "investigating": "El agente está investigando...",
-                "investigating_desc": "Recuperando documentos, validando contra alucinaciones y redactando solución.",
-                "verified_badge": "Respuesta Verificada",
-                "hide_trace": "Ocultar proceso",
-                "show_trace": "Ver razonamiento de la IA",
-                "trace_title": "Proceso de Pensamiento Agéntico",
-                "trace_footer": "Conclusión generada tras verificación multietapa.",
-                "sources_title": "Fuentes Técnicas Utilizadas",
-                "manual_label": "Manual Técnico",
-                "score_label": "Puntuación",
-                "examples": {
-                    "torque": {
-                        "title": "Consultar Torque",
-                        "desc": "Verificar valores oficiales de manuales.",
-                        "query": "¿Cuál es el par de apriete para cables de tracción Otis?"
-                    },
-                    "safety": {
-                        "title": "Seguridad Foso",
-                        "desc": "Protocolos de seguridad críticos.",
-                        "query": "Procedimiento de bypass puerta de foso Schindler"
-                    },
-                    "quantum": {
-                        "title": "Puertas Quantum",
-                        "desc": "Ajustes precisos de componentes.",
-                        "query": "Configuración potenciómetro Quantum P1"
-                    }
-                }
-            },
-            "brain_federated": {
-                "title": "Inteligencia Colectiva (Federada)",
-                "investigating": "Investigando patrones globales...",
-                "match": "COINCIDENCIA"
-            }
-        },
         "rag_quality": {
             "title": "Control de Calidad",
             "subtitle": "Centro de evaluación y mejora continua del motor de IA.",
@@ -912,54 +1009,6 @@
                 "hide_trace": "Ocultar Trace ↑",
                 "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
                 "trace_end": "--- FIN DEL TRACE ---"
-            }
-        },
-        "user_dashboard": {
-            "welcome": "Bienvenido, {name}",
-            "subtitle": "¿Qué te gustaría hacer hoy?",
-            "stats": {
-                "documents": "Documentos Subizados",
-                "queries": "Consultas Realizadas",
-                "accuracy": "Respuestas Precisas",
-                "time": "Tiempo Promedio",
-                "change_week": "+{count} esta semana",
-                "change_today": "+{count} hoy",
-                "change_month": "+{percent}% vs. mes pasado",
-                "change_faster": "-{time} más rápido"
-            },
-            "actions": {
-                "upload": {
-                    "title": "Subir Manual Técnico",
-                    "desc": "Añade PDFs, esquemas o documentos de mantenimiento"
-                },
-                "search": {
-                    "title": "Buscar Información",
-                    "desc": "Pregunta sobre procedimientos, códigos de error o especificaciones"
-                },
-                "history": {
-                    "title": "Historial de Consultas",
-                    "desc": "Revisa tus búsquedas anteriores y respuestas guardadas"
-                }
-            },
-            "sections": {
-                "activity": "Actividad Reciente",
-                "help": "Centro de Ayuda",
-                "view_all": "Ver todo el historial",
-                "contact": "Contactar Soporte"
-            },
-            "empty": {
-                "title": "Aún no hay actividad",
-                "desc": "Sube tu primer documento o haz una consulta para empezar."
-            },
-            "help": {
-                "upload": {
-                    "title": "¿Cómo subo documentos?",
-                    "desc": "Guía paso a paso para cargar PDFs"
-                },
-                "search": {
-                    "title": "Hacer mejores preguntas",
-                    "desc": "Tips para consultas más precisas"
-                }
             }
         },
         "guardian": {
@@ -1539,7 +1588,8 @@
             "errorUpdate": "Error de actualización",
             "errorDescription": "No se han podido guardar los cambios en tu perfil.",
             "note": "Nota",
-            "unprivilegedNotice": "No tienes permisos de administrador para editar estos campos. Contacta con soporte para realizar cambios."
+            "unprivilegedNotice": "No tienes permisos de administrador para editar estos campos. Contacta con soporte para realizar cambios.",
+            "saveBtn": "Guardar Perfil"
         },
         "notifications": {
             "successTitle": "Preferencias actualizadas",
@@ -1564,7 +1614,12 @@
             "role": "Rol",
             "memberSince": "Miembro desde",
             "personalInfo": "Información Personal",
-            "personalInfoSubtitle": "Actualiza tus datos de contacto básicos",
+            "personalInfoSubtitle": "Actualiza tus datos de contacto básicos y puesto.",
+            "avatar": "Foto de Perfil",
+            "security": "Seguridad",
+            "securitySubtitle": "Acciones de protección de cuenta",
+            "notifications": "Notificaciones",
+            "sessions": "Sesiones Activas",
             "notificationPrefs": "Preferencias de Notificación",
             "notificationPrefsSubtitle": "Define qué alertas quieres recibir y por qué canal",
             "securityCenter": "Centro de Seguridad",
@@ -1633,6 +1688,40 @@
             "typeError": "Por favor selecciona un archivo de imagen.",
             "successTitle": "Foto actualizada",
             "successDesc": "Tu foto de perfil se ha actualizado correctamente."
+        },
+        "i18n": {
+            "page": {
+                "title": "Gobernanza i18n",
+                "highlight": "Internacionalización",
+                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+                "syncBtn": "Sincronizar DB",
+                "newKeyBtn": "Nueva Llave",
+                "searchPlaceholder": "Busca por llave o texto..."
+            },
+            "languages": {
+                "es": "Español",
+                "en": "Inglés"
+            },
+            "table": {
+                "keyHeader": "LLAVE TÉCNICA",
+                "primaryLabel": "PRINCIPAL",
+                "secondaryLabel": "COMPARACIÓN",
+                "autoTranslateBtn": "AUTO-TRADUCIR",
+                "save": "Guardar",
+                "cancel": "Cancelar",
+                "empty": "Vacío",
+                "missing": "Faltante",
+                "noResults": "No se encontraron traducciones para los filtros aplicados."
+            },
+            "notifications": {
+                "aiSuccessTitle": "IA: Traducción Completada",
+                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
+                "upToDateTitle": "Todo al día",
+                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
+                "syncSuccessTitle": "Sincronización Exitosa",
+                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+                "saveSuccess": "Traducción actualizada correctamente."
+            }
         }
     }
 }

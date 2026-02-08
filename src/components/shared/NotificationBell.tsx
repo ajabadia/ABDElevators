@@ -10,7 +10,10 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+import { useTranslations } from "next-intl"
+
 export function NotificationBell() {
+    const t = useTranslations("common.notifications");
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);

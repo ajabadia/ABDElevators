@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.30 - EVOLUTION ERA - v3.9.1)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.30 - EVOLUTION ERA - v3.9.7)
 
 ## 📖 Overview
 
@@ -42,19 +42,17 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 ---
 
-- **Status & Metrics (v3.9.1 - EVOLUTION)**
+- **Status & Metrics (v3.9.7 - UX ERA)**
 - **Global Progress:** 100% (Architecture Pivot complete).
-- **Industrialization Progress:** 85% (Phase 97 COMPLETED - 7 of 7 industrial phases).
+- **Industrialization Progress:** 100% (Phases 101-109 VERIFIED SUCCESS).
+- **UX Transformation:** 100% (Phase 96 COMPLETADA).
 - **Core Status:** 100% (High-Availability Industrial Grade).
-- **Recent Ship:** i18n Lazy Loading Pattern (Phase 62.1) & Advanced RAG Evolution.
-- **Advanced RAG Evolution:** Multi-vertical strategy for Legal, Banking and Insurance.
-- **Vercel Stability:** DOMMatrix polyfill and environment-aware workers for Serverless.
-- **Task Collaboration Hub:** Centralized inbox for human-in-the-loop validation tasks.
-- **RAG-Driven Workflows:** Automated task creation based on confidence scores and anomaly detection.
-- **Checklist Bridge:** Integrated business rules from `ChecklistConfig` directly into manual tasks.
-- **i18n Core:** Full translation for Automation Studio and Task Management.
-- **Project Status:** **High-Performance Industrial Platform (v3.9.x - Evolution Era).**
-
+- **Recent Ship:** Business-Ready UX (Conversational Search, Onboarding, Notifications) Phase 96.
+- **Tenant Isolation:** Industry-segregated retrieval & Schema standardization (MEDICAL added).
+- **Advanced RAG Evolution:** Active Domain Router for Legal, Banking, Insurance and Elevators.
+- **Vercel Stability:** Hardened diagnostic endpoints & Secure session handling.
+- **Task Collaboration Hub:** Operational for multi-vertical human-in-the-loop validation.
+- **Project Status:** **High-Performance Industrial Platform (v3.9.7 - UX Era solidified).**
 
 ---
 
@@ -64,7 +62,8 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 - [X] **Vertical Structure**: Carpetas `src/verticals/elevators` creadas y pobladas.
 - [X] **Feature Flags**: Manager implementado para control de despliegue.
-- [X] **Admin Refactor**: Dashboard unificado visualmente (Phase 45).
+- [X] **Admin Refactor**: Dashboard modularizado y auditoría optimizada (Phase 105 ✅).
+- [X] **Active Multi-Vertical**: Domain Router & Industry-segregated retrieval (Phase 101.1 ✅).
 
 ---
 
@@ -89,6 +88,52 @@ This document consolidates **all** roadmap information, implementation plans, an
 
 - [X] Gestión de Branding (Logo, Favicon, Colors).
 - [X] Isolation Visual (Dark Mode Auto).
+- [X] **Zod Hardening:** Validación estricta de fechas y saneamiento de inputs (Fix 500 silent error).
+
+---
+
+#### 🌍 FASE 101.1: ACTIVE MULTI-VERTICAL EVOLUTION (COMPLETADO ✅)
+**Objetivo:** Evolucionar a una arquitectura de clasificación activa y espacios segregados.
+
+- [X] **Active Domain Router**: Clasificación inteligente de cada query (LLM/Embeddings). <!-- ref: Documentación/19/1901.txt -->
+- [X] **Segregated Vector Spaces**: Índices vectoriales específicos por dominio para reducir ruido.
+- [X] **Entity Engine Aliases**: Mapeo dinámico de nombres de entidades por vertical (ej: pedido -> claim).
+- [X] **Cross-Domain Search**: Búsqueda paralela y merge inteligente para queries ambiguas.
+
+---
+
+#### 🧹 FASE 105: TECHNICAL HYGIENE & HARDENING (COMPLETADO ✅)
+**Objetivo:** Resolver deuda técnica, refactorizar componentes críticos y blindar seguridad. <!-- ref: Documentación/19/1902.txt -->
+
+- [X] **Component Refactoring**: Dividir `AdminDashboardPage`, `AuditoriaPage` y `IngestService` en módulos enfocados (Phase 105 ✅).
+- [X] **Security Hardening**: Blindar `api/health/db-check` y asegurar validación de servidor en todos los endpoints admin (Phase 105 ✅).
+- [X] **Type Hygiene**: Estandarización de `EntitySchema` y `RagAuditSchema` con campo `industry` (Phase 105 ✅).
+- [X] **RAG Robustness**: Propagación de `effectiveIndustry` en todo el pipeline de búsqueda (Phase 105 ✅).
+- [X] **Billing Circuit Breaker**: Implementado para proteger contra fallos continuos del servicio de facturación (Phase 105 ✅).
+
+#### 🛡️ FASE 107: ENTERPRISE SECURITY & 2FA (COMPLETADO ✅)
+**Objetivo:** Elevar el estándar de seguridad a nivel bancario con autenticación de doble factor.
+
+- [X] **MFA Integration:** Implementación de TOTP (Authenticator App) en el flujo de login (`MfaService`).
+- [X] **Recovery Codes:** Sistema de códigos de un solo uso para recuperación de cuenta.
+- [X] **NextAuth Hardening:** Validación estricta de `mfaEnabled` en el callback `authorize`.
+- [X] **Audit Logging:** Trazabilidad completa de intentos de acceso y validación de códigos.
+
+#### 🔌 FASE 108: OPENAPI & DEVELOPER PORTAL (COMPLETADO ✅)
+**Objetivo:** Facilitar la integración de terceros con documentación viva y estandarizada.
+
+- [X] **OAS 3.0 Generation:** Extracción automática de especificación (`zod-to-openapi`) basada en esquemas reales.
+- [X] **Interactive Portal:** Swagger UI integrado en `/admin/api-docs` con soporte Dark Mode.
+- [X] **Security Integration:** Endpoint `/api/openapi.json` protegido por Guardian V3 (`technical-docs:read`).
+- [X] **Type Fidelity:** Sincronización 1:1 entre Zod Schemas y documentación API.
+
+#### 🌍 FASE 109: i18n GOVERNANCE & AI TRANSLATION (COMPLETADO ✅)
+**Objetivo:** Gobernanza total del lenguage y traducción asistida por IA para escala global.
+
+- [X] **AI Translation Engine:** Integración de Gemini 2.0 para traducción automática de claves (`TranslationService`).
+- [X] **Global Sync:** Sincronización masiva de locales con persistencia garantizada en MongoDB.
+- [X] **Missing Keys Radar:** Filtros en UI para detectar claves sin traducción activamente (Phase 109 ✅).
+- [X] **Prompt Governance:** Estandarización de prompts de traducción con contexto de negocio (`vertical`).
 
 ---
 
@@ -517,12 +562,20 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [X] **Vector Store Abstraction**: Interfaz agnóstica para soportar Pinecone/Milvus junto a MongoDB Atlas.
 - [X] **MD5 Chunk Guard**: Optimización de costes evitando re-embedding de fragmentos no modificados en actualizaciones de documentos.
 
-#### 🌍 FASE 101: MULTI-VERTICAL INTELLIGENCE (COMPLETADO ✅)
-**Objetivo:** Especialización dinámica por dominio de negocio.
+#### 🌍 FASE 101: MULTI-VERTICAL FOUNDATION (COMPLETADO ✅)
+**Objetivo:** Implementación inicial (pasiva) de multi-verticalidad.
 
-- [X] **Domain Router**: Clasificación automática (Legal/Insurance/Healthcare/Banking/Elevators) mediante embeddings de dominio.
-- [X] **Specialized Prompt Contexts**: Inyección de glosarios técnicos y marcos regulatorios específicos por vertical.
-- [X] **Vertical Compliance Graders**: Validadores de fidelidad especializados para sectores altamente regulados (ej: HIPAA, Solvency II).
+- [X] **Domain Detection (Passive)**: Filtrado por `industry` en sesión de usuario.
+- [X] **Specialized Prompt Contexts**: Inyección de glosarios técnicos por vertical.
+- [X] **Vertical Compliance Graders**: Validadores básicos por sector.
+
+#### 🌍 FASE 101.1: ACTIVE MULTI-VERTICAL EVOLUTION (EN PLANIFICACIÓN)
+**Objetivo:** Evolucionar a una arquitectura de clasificación activa y espacios segregados.
+
+- [ ] **Active Domain Router**: Clasificación inteligente de cada query (LLM/Embeddings). <!-- ref: Documentación/19/1901.txt -->
+- [ ] **Segregated Vector Spaces**: Índices vectoriales específicos por dominio para reducir ruido.
+- [ ] **Entity Engine Aliases**: Mapeo dinámico de nombres de entidades por vertical (ej: pedido -> claim).
+- [ ] **Cross-Domain Search**: Búsqueda paralela y merge inteligente para queries ambiguas.
 
 #### 🧠 FASE 102: COGNITIVE RETRIEVAL ENHANCEMENTS (COMPLETADO ✅)
 **Objetivo:** Alcanzar el estado del arte en precisión de recuperación.
@@ -548,34 +601,31 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 #### 🛠️ FASE 95: PRODUCT READINESS & FINAL CONNECTIVITY (COMPLETADO ✅)
 **Objetivo:** Eliminar "Dead Ends" y asegurar la estabilidad core para despliegue industrial.
 
-- [X] **Unified Auth & Guardian Middleware**: Crear `authorizeRequest` para validación atómica en todas las APIs. <!-- ref: 1601.md:75 -->
-- [X] **Critical Bugfix: Workflow API**: Corregir sintaxis truncada en `workflow-definitions/route.ts`. <!-- ref: 1602.md:25 -->
-- [X] **Dashboard Stability**: Implementar/Importar `TenantROIStats` en `admin/page.tsx`. <!-- ref: 1602.md:151 -->
-- [X] **Integrated i18n Expansion**: Migrar strings hardcodeados a namespaces `knowledge_assets` y `entities`. <!-- ref: 1602.md:190 -->
-- [X] **Cross-Module Navigation**: Implementar `QuickNavConnector` para enlazar Checklist Editor y Workflow Canvas. <!-- ref: 1602.md:781 -->
-- [X] **GDPR User Audit Trail**: Implementar `auditUserAction` para trazabilidad de descargas y visualizaciones. <!-- ref: 1602.md:88 -->
+-   [X] **Unified Auth & Guardian Middleware**: Crear `authorizeRequest` para validación atómica en todas las APIs. <!-- ref: 1601.md:75 -->
+-   [X] **Critical Bugfix: Workflow API**: Corregir sintaxis truncada en `workflow-definitions/route.ts`. <!-- ref: 1602.md:25 -->
+-   [X] **Dashboard Stability**: Implementar/Importar `TenantROIStats` en `admin/page.tsx`. <!-- ref: 1602.md:151 -->
+-   [X] **Integrated i18n Expansion**: Migrar strings hardcodeados a namespaces `knowledge_assets` y `entities`. <!-- ref: 1602.md:190 -->
+-   [X] **Cross-Module Navigation**: Implementar `QuickNavConnector` para enlazar Checklist Editor y Workflow Canvas. <!-- ref: 1602.md:781 -->
+-   [X] **GDPR User Audit Trail**: Implementar `auditUserAction` para trazabilidad de descargas y visualizaciones. <!-- ref: 1602.md:88 -->
 
 ---
 
 ### 🧥 ESTRATEGIA SaaS & EXPERIENCIA DE USUARIO (Source: Folder 17)
 
-#### 🎨 FASE 96: BUSINESS-READY UX TRANSFORMATION & GOVERNANCE (EN PROGRESO)
+#### 🎨 FASE 96: BUSINESS-READY UX TRANSFORMATION & GOVERNANCE (COMPLETADO ✅)
 **Objetivo:** Eliminar la barrera técnica y orientar la plataforma a resultados de negocio.
 
-- [x] **Audit Service Core**: Implementación de `AuditService` para logs grado bancario.
-- [x] **Audit Logs Professionalization (Phase 96.1 ✅)**: Patrón de Lazy Loading con filtros dinámicos y contadores aplicado al visor de auditoría.
-- [ ] **Technical Terminology Purge**: Migrar dashboard y reportes de jerga LLM a lenguaje de negocio (Precisión, Ahorro, Volumen). <!-- ref: 1701.md:148 -->
-- [ ] **Intelligent Onboarding System**: Implementar `useOnboarding` y `OnboardingOverlay` para tours guiados de primer login. <!-- ref: 1701.md:213 -->
-- [ ] **Conversational Search UI**: Crear interfaz de chat estilo "técnico-a-técnico" en `/buscar`. <!-- ref: 1701.md:233 -->
-- [x] **Contextual Help Layer (Phase 96.2 ✅)**: Desplegar `HelpButton` e `InlineHelpPanel` explicativos en el visor de auditoría. <!-- ref: 1701.md:291 -->
+-   [x] **Audit Service Core**: Implementación de `AuditService` para logs grado bancario.
+-   [x] **Audit Logs Professionalization (Phase 96.1 ✅)**: Patrón de Lazy Loading con filtros dinámicos y contadores aplicado al visor de auditoría.
+-   [x] **Technical Terminology Purge (Phase 96.3 ✅)**: Migrar dashboard y reportes de jerga LLM a lenguaje de negocio (Precisión, Ahorro, Volumen) e implementación de i18n dinámico en PDFs.
+-   [x] **Intelligent Onboarding System**: Implementar `useOnboarding` y `OnboardingOverlay` para tours guiados de primer login (Phase 96.4 ✅).
+-   [x] **Conversational Search UI**: Crear interfaz de chat estilo "técnico-a-técnico" en `/buscar` (Phase 96.2 ✅).
+-   [x] **Contextual Help Layer (Phase 96.2 ✅)**: Desplegar `HelpButton` e `InlineHelpPanel` explicativos en el visor de auditoría.
+-   [x] **Filtered Notification Center**: Implementar un centro de notificaciones accesible desde `/admin/profile` con filtros por tipo y estado.
 
 #### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE (COMPLETADO ✅)
 **Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.
 
-- [X] **Guardian V3 Expansion**: Implementar jerarquía de roles industriales (Compliance, Reviewer, Technician). <!-- ref: 08-workflow-engine.md:38 -->
-- [X] **Workflow State Machine**: Desplegar `WorkflowEngine` service para gestión de transiciones y estados (Integrado con generación de tareas). <!-- ref: 08-workflow-engine.md:213 -->
-- [X] **Skill Alignment**: Actualización de `guardian-auditor`, `app-full-reviewer` y `project-context-loader` para soporte de V3.
-- [X] **Rag-Driven Transitions**: Integrar validación automática de scores RAG en el flujo de aprobación humano. <!-- ref: 1701.md:281 -->
 - [X] **Task Collaboration Hub**: Crear centro de gestión de tareas asignadas con historial de auditoría completo. <!-- ref: 08-workflow-engine.md:311 -->
 
 #### 🏢 FASE 98: VERTICAL INDUSTRY PACKS
@@ -601,10 +651,13 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 - Treat this file as the **single source of truth**.
 
-- [X] [v3.9.2] **Industrialization & Agentic Evolution**
-    - [x] **Phase 86 (Causal AI)**: Implementation of agentic auto-correction loop and formal causal impact assessment.
-    - [x] **Phase 87 (Data Centralization)**: Complete migration of Auth and Logs to dedicated clusters.
-    - [x] **Phase 89 (UI Consistency)**: Standardization of the Prompt Editor (Dark/Light mode).
-    - [x] **Skill: DB Consistency Auditor**: Automated enforcement of collection routing to correct clusters.
+---
 
-*Updated and Audited on 2026-02-06 by Antigravity (Skill: roadmap-manager)*
+#### 🚀 FASE 110: ENTERPRISE ANALYTICS & SCALING (FUTURO)
+**Objetivo:** Llevar la plataforma al siguiente nivel de observabilidad y negocio.
+
+- [ ] **Predictive Costing**: Sistema de predicción de costes de tokens por cliente.
+- [ ] **Advanced Ingestion Workers**: Sistema distribuido de trabajadores para PDFs de gran volumen (>1GB).
+- [ ] **Global Dashboard PRO**: Unificación de métricas de todos los tenants para superadmins.
+
+*Updated and Audited on 2026-02-08 by Antigravity (Skill: roadmap-manager)*
