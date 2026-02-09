@@ -75,7 +75,16 @@ export class SecureCollection<T extends Document> {
         // 1. Aislamiento Multi-tenant
         // El SuperAdmin (Auditoría 015) bypassea el filtro de tenant para gestión global
         if (!this.isSuperAdmin) {
-            if (this.allowedTenants.length > 1) {
+            const globalAllowedCollections = ['document_types', 'translations'];
+            const isGlobalAllowed = globalAllowedCollections.includes(this.collection.collectionName);
+
+            if (isGlobalAllowed) {
+                // Permitir ver lo propio + lo global del sistema (abd_global)
+                baseFilter = {
+                    ...baseFilter,
+                    tenantId: { $in: [...this.allowedTenants, 'abd_global'] }
+                } as any;
+            } else if (this.allowedTenants.length > 1) {
                 baseFilter = { ...baseFilter, tenantId: { $in: this.allowedTenants } } as any;
             } else {
                 baseFilter = { ...baseFilter, tenantId: this.primaryTenantId } as any;

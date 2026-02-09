@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import {
     Plus, Search, Filter, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
-    Archive, ShieldOff
+    Archive, ShieldOff, RotateCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DocumentUploadModal } from "@/components/admin/DocumentUploadModal";
+import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -39,28 +39,16 @@ import { ContentCard } from "@/components/ui/content-card";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Layers, Database, History } from "lucide-react";
 
-interface KnowledgeAsset {
-    _id: string;
-    filename: string;
-    componentType: string;
-    model: string;
-    version: string;
-    status: 'vigente' | 'obsoleto' | 'borrador' | 'archivado' | 'active' | 'obsolete' | 'draft' | 'archived';
-    ingestionStatus?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-    progress?: number;
-    attempts?: number;
-    error?: string;
-    totalChunks: number;
-    createdAt: string;
-    updatedAt: string;
-}
+import { useTranslations } from "next-intl";
+import { KnowledgeAsset, AssetStatus, IngestionStatus } from "@/types/knowledge";
 
 export default function DocumentsPage() {
     const { toast } = useToast();
+    const t = useTranslations('knowledge_assets');
     const [searchTerm, setSearchTerm] = useState("");
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    // 1. Fetching con useApiList
+    // 1. Fetching with useApiList
     const {
         data: documents,
         isLoading,
@@ -72,10 +60,10 @@ export default function DocumentsPage() {
         dataKey: 'assets'
     });
 
-    // 2. Optimización Perceptual (UX Instantánea)
+    // ... perceptual optimization ...
     const { updateOptimistic, deleteOptimistic } = useApiOptimistic(documents, setData);
 
-    // 3. Mutaciones con useApiMutation
+    // 3. Mutations
     const statusMutation = useApiMutation({
         endpoint: '/api/admin/knowledge-assets/status',
         method: 'PATCH',
@@ -85,7 +73,7 @@ export default function DocumentsPage() {
                 level: 'INFO',
                 source: 'UI_DOCS',
                 action: 'STATUS_CHANGE',
-                message: 'Estado de documento actualizado',
+                message: 'Document status updated',
             });
         }
     });
@@ -93,35 +81,30 @@ export default function DocumentsPage() {
     const deleteMutation = useApiMutation({
         endpoint: (id) => `/api/admin/knowledge-assets/${id}`,
         method: 'DELETE',
-        confirmMessage: (id) => `¿Estás seguro de eliminar este documento? Esta acción es irreversible.`,
+        confirmMessage: (id) => t('delete_confirm'),
         onSuccess: () => {
             refresh();
             logClientEvent({
                 level: 'WARN',
                 source: 'UI_DOCS',
                 action: 'DELETE_DOC',
-                message: 'Documento eliminado del corpus',
+                message: 'Document deleted from corpus',
             });
         }
     });
 
-    const handleStatusChange = async (documentId: string, newStatus: string) => {
-        // Actualización optimista para feedback inmediato
-        updateOptimistic(documentId, { status: newStatus as any });
-
+    const handleStatusChange = async (documentId: string, newStatus: AssetStatus) => {
+        updateOptimistic(documentId, { status: newStatus });
         try {
             await statusMutation.mutate({ documentId, status: newStatus });
         } catch (error) {
-            // Si falla, el refresh del useApiList (vía mutation onSuccess o error) restaurará el estado
             refresh();
         }
     };
 
     const handleDelete = async (documentId: string) => {
-        // Eliminación optimista
         const originalData = [...documents];
         deleteOptimistic(documentId);
-
         try {
             await deleteMutation.mutate(documentId);
         } catch (error) {
@@ -129,16 +112,14 @@ export default function DocumentsPage() {
         }
     };
 
-    // 4. Auto-refresh si hay procesamientos activos
+    // 4. Auto-refresh
     useEffect(() => {
         const hasProcessing = documents.some(d => d.ingestionStatus === 'PROCESSING' || d.ingestionStatus === 'PENDING');
         if (hasProcessing) {
-            const interval = setInterval(refresh, 3000); // Refrescar cada 3s si hay trabajo
+            const interval = setInterval(refresh, 3000);
             return () => clearInterval(interval);
         }
     }, [documents, refresh]);
-
-    const filteredDocs = documents;
 
     const stats = {
         active: documents.filter(d => ['vigente', 'active'].includes(d.status)).length,
@@ -149,21 +130,21 @@ export default function DocumentsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Gestión del"
-                highlight="Corpus Técnico"
-                subtitle="Sube y gestiona los manuales que alimentan el sistema RAG."
+                title={t('title').split(' ')[0]} // "Gestión"
+                highlight={t('title').split(' ').slice(1).join(' ')} // "del Corpus Técnico"
+                subtitle={t('subtitle')}
                 actions={
                     <Button
                         onClick={() => setIsUploadOpen(true)}
                         className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
                     >
                         <Plus size={18} />
-                        Nuevo Documento
+                        {t('actions.new')}
                     </Button>
                 }
             />
 
-            <DocumentUploadModal
+            <UnifiedIngestModal
                 isOpen={isUploadOpen}
                 onClose={() => {
                     setIsUploadOpen(false);
@@ -173,19 +154,19 @@ export default function DocumentsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <MetricCard
-                    title="Active Documents"
+                    title={t('metrics.active')}
                     value={stats.active}
                     icon={<Layers className="w-5 h-5" />}
                     color="teal"
                 />
                 <MetricCard
-                    title="Indexed Chunks"
+                    title={t('metrics.indexed')}
                     value={stats.totalChunks}
                     icon={<Database className="w-5 h-5" />}
                     color="blue"
                 />
                 <MetricCard
-                    title="Last Ingest"
+                    title={t('metrics.last_ingest')}
                     value={stats.lastIngest}
                     icon={<History className="w-5 h-5" />}
                     color="slate"
@@ -197,44 +178,39 @@ export default function DocumentsPage() {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <Input
-                            placeholder="Buscar por nombre, componente o modelo..."
+                            placeholder={t('search_placeholder')}
                             className="pl-10 border-slate-200 focus:ring-teal-500/20"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button variant="outline" className="border-slate-200 text-slate-600 gap-2">
-                        <Filter size={18} />
-                        Filtros
-                    </Button>
                 </div>
 
                 <div className="rounded-xl border border-slate-100 overflow-hidden">
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow>
-                                <TableHead className="w-[300px] font-bold text-slate-900">Documento</TableHead>
-                                <TableHead className="font-bold text-slate-900">Tipo / Modelo</TableHead>
-                                <TableHead className="font-bold text-slate-900">Versión</TableHead>
-                                <TableHead className="font-bold text-slate-900">Estado</TableHead>
-                                <TableHead className="font-bold text-slate-900">Fragmentos</TableHead>
-                                <TableHead className="font-bold text-slate-900 text-right">Acciones</TableHead>
+                                <TableHead className="w-[35%] font-bold text-slate-900">{t('table.document')}</TableHead>
+                                <TableHead className="w-[20%] font-bold text-slate-900">{t('table.type_model')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-slate-900">{t('table.status')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-slate-900">{t('table.chunks')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-slate-900 text-right">{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                        Cargando documentos...
+                                        {t('table.loading')}
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredDocs.length === 0 ? (
+                            ) : documents.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                        No se encontraron documentos.
+                                        {t('table.empty')}
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredDocs.map((doc) => (
+                            ) : documents.map((doc) => (
                                 <TableRow key={doc._id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
@@ -246,7 +222,7 @@ export default function DocumentsPage() {
                                                     {doc.filename}
                                                 </p>
                                                 <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">
-                                                    Uploaded: {new Date(doc.createdAt).toLocaleDateString()}
+                                                    {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()}
                                                 </p>
                                             </div>
                                         </div>
@@ -259,21 +235,19 @@ export default function DocumentsPage() {
                                             <p className="text-xs font-bold text-slate-700">{doc.model}</p>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="w-[15%]">
                                         <div className="flex flex-col gap-1">
-                                            {/* Badge de Ingesta (Phase 54) */}
                                             {doc.ingestionStatus === 'PENDING' && (
                                                 <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 animate-pulse">
-                                                    <Clock size={12} /> Pending Analysis
+                                                    <Clock size={12} /> {t('status.pending')}
                                                 </Badge>
                                             )}
                                             {doc.ingestionStatus === 'PROCESSING' && (
-                                                <div className="space-y-1 w-32">
+                                                <div className="space-y-1 w-24">
                                                     <div className="flex justify-between text-[10px] text-teal-600 font-bold">
-                                                        <span>Analyzing...</span>
                                                         <span>{doc.progress}%</span>
                                                     </div>
-                                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                                                         <div
                                                             className="bg-teal-500 h-full transition-all duration-500"
                                                             style={{ width: `${doc.progress}%` }}
@@ -283,83 +257,50 @@ export default function DocumentsPage() {
                                             )}
                                             {doc.ingestionStatus === 'FAILED' && (
                                                 <Badge className="bg-red-100 text-red-700 border-red-200 gap-1" title={doc.error}>
-                                                    <AlertCircle size={12} /> Failed ({doc.attempts} att)
+                                                    <AlertCircle size={12} /> {t('status.failed')}
                                                 </Badge>
                                             )}
 
-                                            {/* Badge de Estado del Documento (Existente) */}
                                             {(!doc.ingestionStatus || doc.ingestionStatus === 'COMPLETED') && (
                                                 <>
                                                     {['vigente', 'active'].includes(doc.status) && (
                                                         <Badge className="bg-emerald-100/50 text-emerald-700 border-emerald-200/50 gap-1 hover:bg-emerald-100/50 shadow-none">
-                                                            <CheckCircle2 size={12} /> Active
+                                                            <CheckCircle2 size={12} /> {t('status.active')}
                                                         </Badge>
                                                     )}
                                                     {['obsoleto', 'obsolete'].includes(doc.status) && (
                                                         <Badge className="bg-amber-100/50 text-amber-700 border-amber-200/50 gap-1 hover:bg-amber-100/50 shadow-none">
-                                                            <AlertCircle size={12} /> Obsolete
+                                                            <AlertCircle size={12} /> {t('status.obsolete')}
                                                         </Badge>
                                                     )}
                                                     {['archivado', 'archived'].includes(doc.status) && (
-                                                        <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 hover:bg-slate-100 shadow-none">
-                                                            <Archive size={12} /> Archived
-                                                        </Badge>
-                                                    )}
-                                                    {['borrador', 'draft'].includes(doc.status) && (
-                                                        <Badge className="bg-blue-100/50 text-blue-700 border-blue-200/50 gap-1 hover:bg-blue-100/50 shadow-none">
-                                                            <Clock size={12} /> Draft
+                                                        <Badge className="bg-slate-100 text-slate-600 border-slate-200 gap-1">
+                                                            <Archive size={12} /> {t('status.archived')}
                                                         </Badge>
                                                     )}
                                                 </>
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="w-[15%]">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-semibold text-slate-900">{doc.totalChunks}</span>
-                                            <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                            <div className="flex-1 max-w-[40px] h-1 bg-slate-100 rounded-full overflow-hidden">
                                                 <div
                                                     className="bg-teal-500 h-full transition-all duration-1000"
-                                                    style={{ width: `${Math.min(100, (doc.totalChunks === 0 ? 0 : (doc.totalChunks / 100) * 100))}%` }}
+                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 200) * 100)}%` }}
                                                 ></div>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100 text-slate-400">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-xl border-slate-100">
-                                                <DropdownMenuLabel className="text-xs text-slate-400">Acciones</DropdownMenuLabel>
-                                                <DropdownMenuItem
-                                                    className="rounded-lg gap-2 cursor-pointer"
-                                                    onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}
-                                                >
-                                                    <Download size={14} /> Ver / Descargar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator className="bg-slate-50" />
-                                                <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">Estado</DropdownMenuLabel>
-                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'vigente')}>
-                                                    <CheckCircle2 size={14} className="text-emerald-500" /> Marcar Vigente
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
-                                                    <AlertCircle size={14} className="text-amber-500" /> Marcar Obsoleto
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'archivado')}>
-                                                    <Archive size={14} className="text-slate-400" /> Archivar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator className="bg-slate-50" />
-                                                <DropdownMenuItem
-                                                    onClick={() => handleDelete(doc._id)}
-                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg gap-2 cursor-pointer"
-                                                >
-                                                    <Trash2 size={14} /> Eliminar Permanente
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <ActionsMenu
+                                            doc={doc}
+                                            t={t}
+                                            handleStatusChange={handleStatusChange}
+                                            handleDelete={handleDelete}
+                                            refresh={refresh}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -368,5 +309,64 @@ export default function DocumentsPage() {
                 </div>
             </ContentCard>
         </PageContainer>
+    );
+}
+
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, refresh }: any) {
+    const { toast } = useToast();
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100 text-slate-400">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-xl border-slate-100">
+                <DropdownMenuLabel className="text-xs text-slate-400">{t('table.actions')}</DropdownMenuLabel>
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer"
+                    onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}
+                >
+                    <Download size={14} /> {t('actions.download')}
+                </DropdownMenuItem>
+
+                {(doc.ingestionStatus === 'FAILED' || doc.ingestionStatus === 'PENDING') && (
+                    <DropdownMenuItem
+                        className="rounded-lg gap-2 cursor-pointer text-teal-600 focus:text-teal-600 focus:bg-teal-50"
+                        onClick={async () => {
+                            try {
+                                const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { method: 'POST' });
+                                if (!res.ok) throw new Error('Retry failed');
+                                toast({ title: t('retry_success'), description: t('retry_desc') });
+                                refresh();
+                            } catch (err) {
+                                toast({ variant: "destructive", title: "Error", description: "Retry failed" });
+                            }
+                        }}
+                    >
+                        <RotateCw size={14} /> {t('actions.retry')}
+                    </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator className="bg-slate-50" />
+                <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">{t('table.status')}</DropdownMenuLabel>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'vigente')}>
+                    <CheckCircle2 size={14} className="text-emerald-500" /> {t('actions.mark_active')}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
+                    <AlertCircle size={14} className="text-amber-500" /> {t('actions.mark_obsolete')}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'archivado')}>
+                    <Archive size={14} className="text-slate-400" /> {t('actions.archive')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-50" />
+                <DropdownMenuItem
+                    onClick={() => handleDelete(doc._id)}
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg gap-2 cursor-pointer"
+                >
+                    <Trash2 size={14} /> {t('actions.delete')}
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

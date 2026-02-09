@@ -61,14 +61,14 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
 
             <div className="space-y-6">
                 <div className="bg-slate-900 text-white rounded-2xl p-6 space-y-4">
-                    <h4 className="text-teal-400 font-bold flex items-center gap-2">
+                    <h4 className="text-primary font-bold flex items-center gap-2">
                         <Info size={18} />
                         Estado de Cumplimiento
                     </h4>
                     <div className="space-y-4 text-sm text-slate-300">
                         <div className="flex justify-between items-center pb-2 border-b border-white/10">
                             <span>Aislamiento de Datos</span>
-                            <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">Activo</Badge>
+                            <Badge className="bg-primary/20 text-primary border-primary/30">Activo</Badge>
                         </div>
                         <div className="flex justify-between items-center pb-2 border-b border-white/10">
                             <span>Región de Datos</span>
@@ -76,7 +76,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
                         </div>
                         <div className="flex justify-between items-center">
                             <span>Cifrado</span>
-                            <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">AES-256</Badge>
+                            <Badge className="bg-primary/20 text-primary border-primary/30">AES-256</Badge>
                         </div>
                     </div>
                 </div>

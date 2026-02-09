@@ -143,27 +143,32 @@ export class TranslationService {
         const cacheKey = `i18n:${effectiveTenantId}:${locale}`;
 
         try {
-            // 2. Intentar Cache (Redis)
-            const cached = await redis.get<Record<string, any>>(cacheKey);
-            if (cached) return cached;
+            // 2. Intentar Cache (Redis) - Resiliencia: si falla Redis, seguimos con DB/Archivos
+            try {
+                const cached = await redis.get(cacheKey) as Record<string, any>;
+                if (cached) return cached;
+            } catch (redisError) {
+                console.warn(`[i18n-cache] ⚠️ Redis unreachable for key: ${cacheKey}. Falling back to DB/Files.`, redisError);
+            }
 
-            // 3. Cargar MASTER (Platform Master)
+            // 3. Cargar BASE desde archivos locales (Siempre se carga como fallback base)
+            let finalMessages = await this.loadFromLocalFile(locale);
+
+            // 4. Aplicar Overrides de MASTER (Platform Master)
             const masterCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
             const masterDocs = await masterCollection.find({ locale, isObsolete: false });
-            let masterMessages = this.flatToNested(masterDocs);
 
-            // Si no hay nada en DB para Master, cargar de JSON
-            if (Object.keys(masterMessages).length === 0) {
-                masterMessages = await this.loadFromLocalFile(locale);
-                // Background sync si cargamos de local
-                if (Object.keys(masterMessages).length > 0) {
-                    this.syncToDb(locale, masterMessages, 'platform_master').catch(() => { });
+            if (masterDocs.length > 0) {
+                const masterDbMessages = this.flatToNested(masterDocs);
+                finalMessages = this.deepMerge(finalMessages, masterDbMessages);
+            } else {
+                // Si Master está vacío en DB, sincronizamos el archivo local a la DB para futuras ediciones
+                if (Object.keys(finalMessages).length > 0) {
+                    this.syncToDb(locale, finalMessages, 'platform_master').catch(() => { });
                 }
             }
 
-            let finalMessages = masterMessages;
-
-            // 4. Cargar TENANT OVERRIDES (Si aplica)
+            // 5. Cargar TENANT OVERRIDES (Si aplica)
             if (effectiveTenantId !== 'platform_master') {
                 const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: effectiveTenantId } });
                 const tenantDocs = await tenantCollection.find({ locale, isObsolete: false });
@@ -171,14 +176,17 @@ export class TranslationService {
                 if (tenantDocs.length > 0) {
                     const tenantMessages = this.flatToNested(tenantDocs);
                     // Merge profundo (Tenant sobreescribe Master)
-                    finalMessages = this.deepMerge(masterMessages, tenantMessages);
+                    finalMessages = this.deepMerge(finalMessages, tenantMessages);
                     console.log(`[i18n] 🧬 Merged ${tenantDocs.length} overrides for tenant ${effectiveTenantId}`);
                 }
             }
 
-            // 5. Guardar en Redis
+            // 5. Guardar en Redis (con resiliencia al límite de Upstash)
             if (Object.keys(finalMessages).length > 0) {
-                await redis.set(cacheKey, finalMessages, { ex: this.CACHE_TTL });
+                console.log(`[i18n-debug] Root keys for ${locale}:`, Object.keys(finalMessages).join(', '));
+                await redis.set(cacheKey, finalMessages, { ex: this.CACHE_TTL }).catch((e: Error) => {
+                    console.warn(`[i18n-cache] ⚠️ Redis Set failed (likely limit exceeded or connection error):`, e.message);
+                });
             }
 
             return finalMessages;

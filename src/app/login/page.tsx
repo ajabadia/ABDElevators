@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,59 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
+    console.log("🚀 [CLIENT] LoginPage mounted - Version 1.2 DEBUG");
     const t = useTranslations('login');
     const router = useRouter();
+    const [isMagicLink, setIsMagicLink] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [requiresMfa, setRequiresMfa] = useState(false);
     const [mfaCode, setMfaCode] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Verificar si ya hay una sesión con MFA pendiente al cargar la página
+    useEffect(() => {
+        const checkMfaSession = async () => {
+            const session = await getSession();
+            if (session?.user?.mfaPending) {
+                setRequiresMfa(true);
+            }
+        };
+        checkMfaSession();
+    }, []);
+
+    const handleMagicLink = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            const res = await fetch('/api/auth/magic-link/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || t('error_generic'));
+            }
+
+            setSuccess(t('magic_link_sent'));
+            // Optional: clear email or keep it? Keep it for convenience.
+        } catch (err: any) {
+            setError(err.message || t('error_generic'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCredentialsLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
@@ -34,11 +76,59 @@ export default function LoginPage() {
                 redirect: false,
             });
 
-            if (result?.error) {
-                if (result.error.includes("MFA_REQUIRED")) {
+
+            if (result?.ok) {
+                console.log("✅ [CLIENT] signIn.ok, fetching session...");
+                // Verificar si es una sesión parcial (MFA Pendiente)
+                let session = await getSession();
+                console.log("👤 [CLIENT] Initial session:", session);
+
+                // Pequeño reintento por si la cookie tarda en propagarse
+                // Retry loop with exponential backoff for session propagation
+                // Total wait time: ~2s (200 + 400 + 600 + 800)
+                if (!session?.user?.mfaPending) {
+                    const delays = [200, 400, 600, 800];
+                    for (const delay of delays) {
+                        console.log(`⏳ [CLIENT] Session not synced, retrying in ${delay}ms...`);
+                        await new Promise(r => setTimeout(r, delay));
+                        session = await getSession();
+                        if (session?.user?.mfaPending) {
+                            console.log("✅ [CLIENT] Session synced!");
+                            break;
+                        }
+                    }
+                }
+                console.log("👤 [CLIENT] Final session state:", session);
+
+                if (session?.user?.mfaPending) {
+                    console.log("🔒 [CLIENT] MFA_PENDING detected, showing challenge");
                     setRequiresMfa(true);
                     setError("");
-                } else if (result.error.includes("INVALID_MFA_CODE")) {
+                    setIsLoading(false);
+                    return;
+                }
+
+                // SECURITY: Solo redirigir si tenemos sesión y NO hay MFA pendiente
+                if (session?.user) {
+                    console.log("🚀 [CLIENT] No MFA required, redirecting to admin...");
+                    router.push("/admin/knowledge-assets");
+                    router.refresh();
+                    return;
+                }
+
+                // Si llegamos aquí y ok era true pero no hay sesión, algo raro pasa
+                console.warn("⚠️ [CLIENT] signIn.ok but session is still null. Propagation delay?");
+                setError(t('error_session_sync'));
+                setIsLoading(false);
+                return;
+            }
+
+            if (result?.error) {
+                const errorCode = (result as any).code || result.error;
+                if (errorCode?.includes("MFA_REQUIRED")) {
+                    setRequiresMfa(true);
+                    setError("");
+                } else if (errorCode?.includes("INVALID_MFA_CODE")) {
                     setError(t('error_mfa'));
                 } else {
                     setError(t('error_invalid'));
@@ -88,11 +178,11 @@ export default function LoginPage() {
                     <AnimatePresence mode="wait">
                         {!requiresMfa ? (
                             <motion.form
-                                key="login"
+                                key={isMagicLink ? "magic" : "login"}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                onSubmit={handleSubmit}
+                                onSubmit={isMagicLink ? handleMagicLink : handleCredentialsLogin}
                                 className="space-y-6"
                             >
                                 <div className="space-y-2">
@@ -108,28 +198,31 @@ export default function LoginPage() {
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                        {t('password_label')}
-                                    </label>
-                                    <div className="relative">
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder={t('password_placeholder')}
-                                            className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                        </button>
+
+                                {!isMagicLink && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                            {t('password_label')}
+                                        </label>
+                                        <div className="relative">
+                                            <Input
+                                                type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder={t('password_placeholder')}
+                                                className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {error && (
                                     <motion.div
@@ -141,6 +234,21 @@ export default function LoginPage() {
                                     </motion.div>
                                 )}
 
+                                {success && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
+                                    >
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="w-2 h-2 rounded-full bg-emerald-500"
+                                        />
+                                        {success}
+                                    </motion.div>
+                                )}
+
                                 <Button
                                     type="submit"
                                     disabled={isLoading}
@@ -149,15 +257,30 @@ export default function LoginPage() {
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">
                                             <Loader2 className="h-5 w-5 animate-spin" />
-                                            {t('verifying')}
+                                            {isMagicLink ? t('sending') : t('verifying')}
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
-                                            {t('button')}
+                                            {isMagicLink ? t('magic_link_button') : t('button')}
                                             <ArrowRight size={20} />
                                         </div>
                                     )}
                                 </Button>
+
+                                <div className="text-center pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsMagicLink(!isMagicLink);
+                                            setError("");
+                                            setSuccess("");
+                                        }}
+                                        className="text-sm text-slate-500 hover:text-teal-400 transition-colors font-medium border-b border-dashed border-slate-700 hover:border-teal-400 pb-0.5"
+                                    >
+                                        {isMagicLink ? t('password_toggle') : t('magic_link_toggle')}
+                                    </button>
+                                </div>
+
                             </motion.form>
                         ) : (
                             <motion.form
@@ -165,7 +288,7 @@ export default function LoginPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                onSubmit={handleSubmit}
+                                onSubmit={handleCredentialsLogin}
                                 className="space-y-6"
                             >
                                 <p className="text-sm text-slate-400 text-center leading-relaxed">

@@ -4,7 +4,7 @@ import { UserRole } from '@/types/roles';
 /**
  * Esquemas para la Visión 2.0 (Generalización)
  */
-export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC']);
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'MEDICAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC']);
 export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
 export const AppEnvironmentEnum = z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']);
@@ -259,6 +259,7 @@ export const EntitySchema = z.object({
     receivedAt: z.date().optional(),
     errorMessage: z.string().nullable().optional(),
     tenantId: z.string().optional(), // Inyectado por el middleware/helper
+    industry: IndustryTypeSchema.default('ELEVATORS'), // Añadido para multi-vertical (Phase 101.1)
     metadata: z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
         modelos: z.array(z.any()).optional(),
@@ -280,7 +281,8 @@ export type Entity = z.infer<typeof EntitySchema>;
 export const RagAuditSchema = z.object({
     _id: z.any().optional(),
     correlationId: z.string().uuid(),
-    phase: z.string(),                    // 'EXTRACCION_MODELOS', 'VECTOR_SEARCH', 'REPORTE'
+    industry: IndustryTypeSchema.default('GENERIC'),   // Trazabilidad por industria (Phase 105)
+    phase: z.string(),                    // 'EXTRACCIÓN_MODELOS', 'VECTOR_SEARCH', 'REPORTE'
     input: z.any(),                      // prompt o query
     output: z.any(),                     // respuesta Gemini o resultados search
     durationMs: z.number(),
@@ -313,7 +315,7 @@ export const IngestAuditSchema = z.object({
 
     // Metadata
     correlationId: z.string(),
-    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE']),
+    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'PROCESSING']),
     details: z.object({
         chunks: z.number().default(0),
         duration_ms: z.number(),
@@ -393,7 +395,12 @@ export const KnowledgeAssetSchema = z.object({
     cloudinaryUrl: z.string().optional(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
+    sizeBytes: z.number().default(0),
     totalChunks: z.number().default(0),
+    documentTypeId: z.string().optional(), // Referencia al maestro de tipos (Fase Categorización)
+    contextHeader: z.any().optional(), // Metadata de contexto del documento
+    scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'), // Visibilidad/Propiedad
+    environment: AppEnvironmentEnum.default('PRODUCTION'), // PRODUCTION, STAGING, SANDBOX
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()), // Añadido para seguimiento de cambios
     deletedAt: z.date().optional(),
@@ -404,6 +411,11 @@ export const KnowledgeAssetSchema = z.object({
  */
 export const DocumentTypeSchema = z.object({
     _id: z.any().optional(),
+    tenantId: z.string().optional(), // 'global' if shared
+    scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'),
+    industry: IndustryTypeSchema.optional(), // Legacy support
+    industries: z.array(IndustryTypeSchema).default([]), // Multi-industry support
+    category: z.enum(['RAG_ASSET', 'USER_DOCUMENT']).default('RAG_ASSET'),
     name: z.string(),
     description: z.string().optional(),
     isActive: z.boolean().default(true),
@@ -477,6 +489,12 @@ export const UserSchema = z.object({
         language: 'es'
     }),
 
+    // MFA & Security (Phase 120.1)
+    mfaEnabled: z.boolean().default(false),
+    mfaMethod: z.enum(['totp']).optional(),
+    mfaSecretHash: z.string().optional(),
+    mfaRecoveryCodes: z.array(z.string()).optional(),
+
     isActive: z.boolean().default(true),
     createdAt: z.date(),
     updatedAt: z.date(),
@@ -487,11 +505,11 @@ export const UserSchema = z.object({
  * Esquema para Actualización de Perfil (Usuario)
  */
 export const UpdateProfileSchema = z.object({
-    firstName: z.string().min(2, 'Nombre demasiado corto').optional(),
-    lastName: z.string().min(2, 'Apellidos demasiado cortos').optional(),
-    jobTitle: z.string().optional(),
-    photoUrl: z.string().url().optional(),
-    photoCloudinaryId: z.string().optional(),
+    nombre: z.string().min(2, 'Nombre demasiado corto').optional(),
+    apellidos: z.string().min(2, 'Apellidos demasiado cortos').optional(),
+    puesto: z.string().optional(),
+    foto_url: z.string().url().optional(),
+    foto_cloudinary_id: z.string().optional(),
 });
 
 /**
@@ -541,6 +559,8 @@ export const UserDocumentSchema = z.object({
     mimeType: z.string(),
     sizeBytes: z.number(),
     description: z.string().optional(),
+    documentTypeId: z.string().optional(), // Referencia al maestro de tipos
+    fileMd5: z.string().optional(), // Deduplicación Fase 100
     createdAt: z.date(),
 });
 
@@ -562,12 +582,12 @@ export const TenantConfigSchema = z.object({
         quota_bytes: z.number().default(1024 * 1024 * 1024), // 1GB default
     }),
     subscription: z.object({
-        tier: z.enum(['FREE', 'PRO', 'ENTERPRISE']).default('FREE'),
-        status: z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED']).default('ACTIVE'),
+        tier: z.enum(['FREE', 'BASIC', 'PRO', 'ENTERPRISE']).default('FREE'),
+        status: z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED', 'PAST_DUE']).default('ACTIVE'),
         stripe_customer_id: z.string().optional(),
         stripe_subscription_id: z.string().optional(),
-        current_period_start: z.date().optional(),
-        current_period_end: z.date().optional(),
+        current_period_start: z.coerce.date().optional(),
+        current_period_end: z.coerce.date().optional(),
     }).optional(),
     branding: z.object({
         logo: z.object({
@@ -612,7 +632,15 @@ export const TenantConfigSchema = z.object({
             email: z.string().optional(), // Validado como email si canal es EMAIL
         }).optional(),
     }).optional(),
-    createdAt: z.date().default(() => new Date()),
+    customLimits: z.object({
+        llm_tokens_per_month: z.number().optional(),
+        storage_bytes: z.number().optional(),
+        vector_searches_per_month: z.number().optional(),
+        api_requests_per_month: z.number().optional(),
+        users: z.number().optional(),
+    }).optional(),
+
+    createdAt: z.coerce.date().default(() => new Date()),
 });
 
 export type TenantConfig = z.infer<typeof TenantConfigSchema>;
@@ -1227,6 +1255,7 @@ export const PromptVersionSchema = z.object({
     ip: z.string().optional(),
     userAgent: z.string().optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     createdAt: z.date().default(() => new Date()),
 });
 
@@ -1237,7 +1266,8 @@ export const PromptSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
-    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST']).default('GENERAL'),
+    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST', 'ROUTING']).default('GENERAL'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     model: z.string().default('gemini-1.5-flash'), // Permite elegir el modelo por cada prompt
     template: z.string(),
     variables: z.array(PromptVariableSchema).default([]),

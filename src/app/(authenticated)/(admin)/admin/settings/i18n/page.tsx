@@ -37,10 +37,11 @@ export default function AdminI18nPage() {
     const [secondaryLocale, setSecondaryLocale] = useState('en');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [namespaceFilter, setNamespaceFilter] = useState('');
+    const [showMissingOnly, setShowMissingOnly] = useState(false);
 
     // Determinar si hay filtros activos (para lazy loading)
     // '__ALL__' es un valor especial que significa "cargar todos"
-    const hasActiveFilters = Boolean(namespaceFilter || searchQuery);
+    const hasActiveFilters = Boolean(namespaceFilter || searchQuery || showMissingOnly);
 
     // Cargar estadísticas de namespaces
     const {
@@ -165,6 +166,19 @@ export default function AdminI18nPage() {
                                     </span>
                                 </button>
                             ))}
+
+                            <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 self-center hidden md:block" />
+
+                            <button
+                                onClick={() => setShowMissingOnly(!showMissingOnly)}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${showMissingOnly
+                                    ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20"
+                                    : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-amber-600 hover:border-amber-500/50"
+                                    }`}
+                            >
+                                <AlertCircle className="w-3 h-3" />
+                                {t('page.filterMissing')}
+                            </button>
                         </div>
 
                         <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -198,6 +212,7 @@ export default function AdminI18nPage() {
                     primaryMessages={safeMessagesPrimary}
                     secondaryMessages={safeMessagesSecondary}
                     searchQuery={searchQuery}
+                    showMissingOnly={showMissingOnly}
                     loading={loadingPrimary || loadingSecondary}
                     hasActiveFilters={hasActiveFilters}
                     onRefresh={() => {

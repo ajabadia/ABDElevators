@@ -1,0 +1,2064 @@
+vfx app release notes
+---------------------
+
+--------------------------------------
+v2.0 20101130
+--------------------------------------
+
+* Fixed bug where if a channel was soloed, then other non-soloed 
+  channels at 0dB gain would still be heard.
+
+* Try and set entire plugin folder writeable when assimilating
+  a plugin. This fixes problems with plugins that need to write
+  to their folder.
+
+--------------------------------------
+v2.0 20101122
+--------------------------------------
+
+* Better app restart mechanism on Mac that lets the launcher script 
+  exec into the vfx wine app.
+
+--------------------------------------
+v2.0 20101118
+--------------------------------------
+
+* Get plugin parameter units more reliably.
+
+* Much nicer handling of bank and program change, so things are likely to
+  happen more like what you would expect.
+
+* Globally-learned "accept" and "back" buttons work in the
+  bank/preset confirmation screens.
+
+* If there is a single preset in a bank, then MIDI program change will
+  change the patch of the first plugin in that preset if program
+  changes would normally be routed to the mixer.
+
+* Hitting the V-MACHINE "Panic" function causes the active parameter 
+  to revert to the patch for the active plugin.
+
+* Channel mute works correctly.
+
+* Only unload plugin DLL's when really necessary - i.e. when deleting them,
+  changing to a new library, etc.
+
+* VFX application restarts when a plugin DLL is unloaded.
+
+* MIDI PANIC sends all notes off correctly again!
+
+* MIDI PANIC goes out on channel 16 (previously channel 16 was missed!).
+
+* MIDI PANIC works across splits now.
+
+--------------------------------------
+v2.0 20101026
+--------------------------------------
+
+* Strip any trailing newline at the end of parameter value
+  display strings (fixes strange/missing units for VSM).
+
+* Tightened up protection against strange use of string buffers
+  by plugin DLL's when getting parameter information from VST plugins.
+
+* Fixed v-machine logo colours in PC/Mac app that were a bit too
+  light in the previous build.
+
+* Latest wizards.
+
+* Updated user guide and quick start.
+
+--------------------------------------
+v2.0 20101015
+--------------------------------------
+
+* Only change selected parameter on plugin-initiated parameter change
+  (e.g. by twiddling gui knob) if the change occurs both:
+    - more than a short time after the plugin's gui was opened AND
+    - more than a short time after the last plugin-initiated parameter 
+      change.
+
+  This prevents plugins that do a big parameter splatter at certain 
+  times (e.g. initialisation, setting chunk, opening gui, etc) from 
+  changing the selected parameter when that change is not wanted.
+
+* Twiddling a gui knob or selecting a parmater table parameter will
+  change the parameter about to be learned in midi learn mode.
+
+* Don't attempt to display units for plugins that nastily put -1 in
+  the unit string buffer (fixes parameter value display corruption
+  for Lounge Lizard).
+
+* Implemented transpose in the VFX application GUI.
+
+--------------------------------------
+v2.0 20101013
+--------------------------------------
+
+* VFX application contains latest wizard database.
+
+* "Import Plugin" comes before library import/export commands in the
+  "File" menu.
+
+* Added new wizard parameter "no_set_program_before_chunk".
+  All plugins have their program set before their chunk unless this
+  wizard parameter has a non-zero value.
+
+* Avoid receiving parameter notifications from plugins while loading
+  and setting chunks on plugins.
+
+* Fixed a nasty bug where using the front panel to change a two-state
+  parameter would crash the VFX application.
+
+* Avoid the strange blue text in the front panel that occurred after
+  renaming a preset (on Windows only).
+
+* Fixed active selection handling in front panel controller so
+  that scrolling with priority parameters ticked works again.
+
+* Scroll to selected table row when the selection changes and the
+  newly selected row is not in view.
+
+* Fixed broken plugin import. All plugins should import fine now.
+
+* Reverted change where all plugins never unload their DLL. This
+  was a bit over the top, and also very inconvenient when deleting
+  plugins from a VFX library (because the vfx app had to quit).
+
+* Twiddling plugin parameters via their VST GUIs changes the selected
+  parameter in the front panel and in the parameter table.
+
+--------------------------------------
+v2.0 20101012
+--------------------------------------
+
+* Active plugin is highlighted blue in it's slot.
+
+* When changing the front panel parameter, the parameter table
+  highlight changes to show which parameter is active.
+
+* When clicking in the parameter table, update the front panel to 
+  show the parameter that was clicked on.
+
+* When selecting a plugin by clicking on it, show it's "patch"
+  parameter in the front panel.
+
+* When choosing a new plugin for a slot, make that slot the
+  active slot if a new plugin was chosen.
+
+* Don't allow making a slot active that has no plugin in it.
+
+* Show the message "No plugin" in the front panel when there is
+  a slot active that has no plugin in it.
+
+* Time signature denominator can only be one of 2, 4, 8, 16, 32, 64.
+
+* BPM defaults to 120.
+
+* The Windows partition of the Classic Keys DVD will not be auto-mounted.
+  This prevents people from running the classic keys installer from that
+  partition, and consequently running into trouble when they try to
+  access the large VSM resources file that the Mac cannot access
+  (at least not in OSX 10.4 and 10.5).
+
+* The Mac mount of the Classic Keys DVD is shown as the initial folder when
+  running a VST plugin installer on Mac.
+
+* Fixed assertion failure in vfx library dialog on Mac that was going off
+  when collapsing a tree node, and causing no item to be selected.
+
+* The active preset is automatically saved under the following circumstances:
+   - Before any sync or export operation.
+   - After it is renamed.
+
+* For generally increased stability, never unload DLL's when running on PC/Mac.
+  A lot of plugins cause trouble when their DLL is unloaded, and even more trouble
+  if it is subsequently loaded again. (Note: plugin instances are still created
+  and freed as per normal).
+
+* There is a notification mechanism on meta data about a plugin, so that
+  the host can be updated when a plugin becomes licensed or unlicensed.
+  This results in the correct presence or absence of an unlicensed warning
+  on the front panel.
+
+* If a plugin must be licensed in order to run on a vmachine, and it is not
+  licensed, and it is put on a vmachine, then the message "No license" is
+  displayed instead of "Bad license" as it was before.
+
+* Accept any of the following wizard variables to indicate that a plugin must be
+  licensed in order to run on a v-machine: license_required, licence_required,
+  must_be_licensed_on_vmachine.
+
+* Various changes to prevent Key Performer crashes when it loads
+  new chunks:
+
+    - Don't set program before setting chunk.
+    - Only use "effStopProcess" and "effStartProcess" when stopping and
+      starting plugins. Set "effMainsChanged" to off only
+      when about to free a plugin instance.
+    - Added wizard variable "no_vst_chunks" to use only parameter dumps
+      with a plugin, and not chunk files, even if the plugin thinks
+      it can use chunk files.
+
+--------------------------------------
+v2.0 20100812
+--------------------------------------
+
+* Added ezdrummer auth tool to toolset.
+
+* Fixed bug where on V-MACHINE, the parameter values on
+  the first loaded preset could not be changed.
+
+* Removed dodgy reset "feature" that was resetting when 
+  it shouldn't.
+
+--------------------------------------
+v2.0 20100811
+--------------------------------------
+
+* Installers get quickstart guide.
+
+* Latest wizard database built in to vfx application.
+
+* Added wizard parameter "licence_required" to prevent plugins
+  from instantiating on a v-machine unless they are licensed. Useful
+  for plugins like Lounge Lizard that throw up a GUI and hang the V-MACHINE
+  if they are not licensed.
+
+* Max. menu items upped from 1000 to 5000 on Windows - so you can have more
+  banks.
+
+* Better handling of selected objects reset (i.e. selected channel and plugin) 
+  when the active preset is changed, that prevents doubling up on certain gui
+  initialisation activities including opening the plugin gui window twice.
+  This change solves the problem where certain plugins show something special
+  in their gui the first time it is opened after they are loaded 
+  (e.g. license info prompts).
+
+* VFX application restart function on V-MACHINE uses printf correctly, and does
+  not have a delayed message if there is a popup message at the time of reset.
+
+* Added a low-powered reset function - hold "panic", then press "menu".
+  Low-powered because it doesn't work if the main event loop is not running
+  (which occurs if a plugin throws up a message box for example).
+
+--------------------------------------
+v2.0 20100611
+--------------------------------------
+
+* Nicer and more consistent firmware update messages.
+
+* V-MACHINE popups show for 2 seconds.
+
+* Tuned device certificate installation prompts. There is now only
+  one simple prompt. The internet check happens automatically.
+
+* New wizard builtins:
+
+    $VFX_BUILTIN(common_documents)
+    The path to the windows common documents folder.
+    C:/Documents and Settings/AllUsers/Documents
+
+    $VFX_BUILTIN(win_common_documents)
+    The path to the windows common documents folder.
+    C:\Documents and Settings\AllUsers\Documents
+
+* Show an ellipsis on busy messages for a tiny bit before spinning.
+  This prevents annoying "spin too soon" and ugly "stuck spinner"
+  (which occurs in the latter case when the h8 is busy).
+
+* Plugin licensing changes:
+   - Plugins that are licensed with the "License Plugin" feature will only run 
+     on the V-MACHINE that they are licensed for. If run on a different V-MACHINE,
+     the plugin will not load, and the V-MACHINE front panel displays which
+     plugin has the problem.
+   - The license information (serial numbers, registration keys, etc) is
+     obfuscated to be non-human readable in the plugin info file.
+   - Only the V-MACHINE that license information was generated for can
+     read that license information from the plugin info file.
+
+* Show front panel warning for unlicensed plugins, or for plugins
+  with a bad license.
+
+* The "load plugin" errors that can occur on the V-MACHINE now report the
+  plugin that has the problem on the front panel display.
+
+* Resolved front panel busy/popup message conflict. Now front panel popup
+  messages on the V-MACHINE display for the correct amount of time even
+  when there is a simultaneous busy message. The popup message takes
+  precedence over the busy message.
+
+* Syncrosoft support removed.
+
+* Fixes to V-MACHINE midi handling to prevent hung notes and inter-device
+  MIDI interleaving when USB midi devices are used to play music.
+
+* The V-MACHINE's windows drive has a unique serial number. This
+  allows plugin DRM tools to uniquely identify individual V-MACHINEs.
+
+* On Mac, import from a vfxlibrary when it is double clicked and the
+  VFX application is not yet running.
+
+* On Mac, the vfx application identifies itself as "VFX" instead of
+  "vfx_application". The full new identifier is "com.smproaudio.VFX".
+  Application prefs and data have moved to
+      .../Preferences/com.smproaudio.VFX.plist
+  and .../Preferences/com.smproaudio.VFX.data
+  respectively.
+
+--------------------------------------
+v2.0 20100505
+--------------------------------------
+
+* Send levels from older non-quadratic-fader-curve presets are converted
+  correctly when those older-style presets are loaded.
+
+--------------------------------------
+v2.0 20100504
+--------------------------------------
+
+* Fixed MIDI routing bug where in the following configuration...
+
+   - plugin with no midi-out in slot A, and midi-thru turned on.
+   - plugin in slot B accepting midi from "computer" and from slot A.
+
+  ...the plugin in slot B was not playing any notes.
+
+* Look for device certificates at the correct URL when checking online.
+
+* Fixed bug where a channel fader stopped working when the master fader
+  was at unity gain and vice versa.
+
+* Save/import/export is confined to the "File" menu. There are no longer
+  duplicate file operations in the bank and preset menus (context or
+  otherwise).
+
+* Send midi panic on all MIDI channels (i.e. not just channel 0 which 
+  is what was happening until this point).
+
+--------------------------------------
+v2.0 20100427
+--------------------------------------
+
+* V-MACHINE certificates are now packaged up inside the VFX executable. The VFX
+  application will try and install a certificate when a V-MACHINE is connected.
+  If a valid certificate is not found for the connected V-MACHINE, then the old
+  file or internet choice is given. This happens every time the V-MACHINE
+  application connects. The user is prompted to contact VFX for support if no
+  valid certificate can be found.
+
+* Fixed bug where the original shipped VFX library would not run SampleTank 2
+  off external storage because of it's old Z: drive-ridddled instrument cache
+  being invalid.
+
+* Missing folder during plugin import prompts user for a "folder" instead of
+  the more cryptic "dir".
+
+* Fixed USB stick bug where sticks with a FAT32 filesystem mounted directly on the
+  block device were not being set read-write. This meant that until now any USB
+  stick that was formatted in this way would have random plugin failures (for
+  any plugin that needed to write to the stick such as SampleTank2 SE that
+  ships with the V-MACHINE) and exporting to those sticks would not work.
+
+* When changing banks, browse to the first preset of the new bank rather than
+  the preset with the same index as to old preset (this is how it used to be 
+  a month or so ago).
+
+* Fixed bug on V-MACHINE where forwarding MIDI from a USB MIDI keyboard along
+  to a connected PC was occasionally missing notes.
+
+* MIDI CC in parameter table displays as "None" when 0 (which means none)
+  is entered.
+
+* Parameter table in PC application updates the MIDI CC column when a
+  parameter is unlearned. If an old parameter was assigned to a CC when
+  that CC is learned to a different parameter, then the old parameter
+  will update in the table view also.
+
+* Some "may not work" info is displayed after importing a plugin without
+  using a Wizard file.
+
+* Show Channel and Slot in plugin GUI title bar (previously only slot was shown).
+
+* There is no more "VFX Plugin Auth" menu item. Plugin auth is to be handled
+  by one or more of:
+      - the wizard (when you click "License Plugin for V-MACHINE")
+      - the plugin GUI itself
+      - dragging an auth file into the plugin folder in Windows Explorer
+        or Mac Finder.
+
+* Firmware update procedure improvements:
+    - There is no more "Format V-MACHINE" menu item. Firmware update and
+      format are handled by a single menu item now.
+    - The VFX application does not crash if a V-MACHINE is unplugged while
+      the update prompt is being displayed.
+    - A V-MACHINE in update mode can be reconnected over and over again to
+      the VFX application
+
+* V-MACHINE logging goes to connected VFX application log file when V-MACHINE logging
+  is turned on.
+
+* Fixed bug where "connect vmachine to license" prompt was not detecting the connection
+  or removal of a vmachine.
+
+* Correctly load older vfx chunk files that had bad CRC's as produced
+  by VFX build 20091208.
+
+--------------------------------------
+v2.0 20100420
+--------------------------------------
+
+* Import, export, and sync with plugins by default.
+
+* When importing and exporting banks, check for duplicate names and only
+  warn about replacing banks if there are actually banks to replace. The
+  names for replaced banks are displayed in the warning.
+
+* Don't confirm bank selection on MIDI bank change. The selection will
+  only be confirmed when a MIDI program change arrives.
+
+* Fixed low level MIDI handler that was incorrectly blending MIDI from
+  different MIDI-IN devices into a single buffer. There is now a separate MIDI
+  buffer for each MIDI-IN device.
+
+* Massive fix and simplification of V-MACHINE COMMS layer:
+    - No more reentrancy in V-MACHINE comms routines.
+    - Bugs associated with re-entrancy are now gone. These were especially
+      apparent on Windows 7 and prevented firmware update and basic
+      V-MACHINE comms from occuring on some machines.
+
+* When importing a plugin with a wizard, warn if there is:
+
+      - a parameter count mismatch 
+   OR - a version mismatch (but only when the wizard file has a version field)
+
+  between the plugin and the wizard, and allow the user to proceed with the
+  real values from the plugin if they really want to. The import dialog now
+  displays the parameter count for the plugin and the wizard also.
+
+--------------------------------------
+v2.0 20100416
+--------------------------------------
+
+* Plugins that appear to be SynthEdit plugins will never have their DLL's
+  unloaded when running on Mac/wine. Unloading OP-X or Stringer (both
+  SynthEdit plugs) on Mac/wine makes them become unstable for future
+  loads. Plugin wizards can have a "dont_free_library_on_mac" variable that
+  will force a DLL to never unload on Mac. This wizard variable overrides
+  the automatic synthedit detection on Mac.
+
+--------------------------------------
+v2.0 20100415
+--------------------------------------
+
+* Windows VFX just has the one "Show VST Editor" option now. The parameter
+  table is always shown (just like on Mac).
+
+* Load chunk files prior to instantiating plugins. This helps plugins
+  work on wine (and especially on Mac) that have some kind of race condition
+  inside wine during instantiation (e.g. Stringer and certain other
+  SynthEdit plugins).
+
+* On Mac, Wine output now goes in vfx.log in the user's Logs directory.
+  There is no more vfx.exe.so.log alongside the vfx application launcher
+  script that used to contain this output.
+
+* Fixed a thread priority changing bug on Mac where priority was being set
+  to the V-MACHINE's idea of "high" priority, which is nastily high for
+  a general purpose computer. Now the Mac's idea of "high" is just the
+  priority that the main app thread starts up with.
+
+* The V-MACHINE and Mac builds set main thread priority to quite low
+  while loading a DLL, unloading a DLL, and setting chunks on plugins.
+  This seems to bizarrely make certain plugins not crash during these
+  operations.
+
+* Fixed bug where the parameter table did not refresh when the 
+  selected plugin remained the same when changing presets.
+
+* Fixed bug where the parameter table was not being hooked up to parameter
+  changes on plugins inserted into slots after a preset was loaded.
+
+* Correctly step parameter values according to parameter info from
+  plugins.
+
+* A much nicer sliding parameter algorithm for stepping parameter
+  values when no step info is available (no longer misses steps).
+
+* Path-handling refactor - result is more reliable path handling and 
+  finally Windows network-style paths work on Windows ("\\foo\bar").
+
+* Added front panel and app menu item "Delete all presets in bank".
+
+* Upped major.minor version to "2.0".
+
+* Preset files now have a version number for the preset file format.
+
+* Presets made prior to quadratic fader curves have their faders and
+  pans converted to the new level system so that they still sound the same.
+
+* MIDI program change delay defaults to "Immediate".
+
+* Retain old selected preset index if possible when changing
+  banks.
+
+--------------------------------------
+v1.5 20100408
+--------------------------------------
+
+* The import-plugin wizard now refuses to copy any file into a vfx plugin
+  folder that reports it's product name as "Wine". This is useful for
+  preventing Mac-wine DLL's from polluting the V-MACHINE-wine environment.
+
+* Don't load VFX plugin chunks that have newer formats than are supported
+  by the current vfx app build.
+
+* Fixed bug where program changes were sometimes being lost if preceeded
+  by a bank select.
+
+* Fixed introduced bug where MIDI CC 0 was being processed as a learned
+  parameter.
+
+* Use bank select MSB if a controller cares to send it:
+      - Use MSB as bank LSB if the controller does not send bank LSB.
+      - Use MSB as bank MSB if the controller sends bank LSB.
+
+* Don't crash when using bad file characters in preset and bank names.
+
+* Fixed bad bounds check when setting plugin program when a preset is first
+  loaded.
+
+* Fixed recent introduced bug where the front panel could not be used to change
+  the plugin patch.
+
+* Revamped the wine build system on Mac:
+    - Use latest wine version (1.1.41) for better Windows installer support.
+    - Use macports to build wine, thus getting all the Mac-friendliness that
+      macports provides including X client library patches, and most
+      of wine's optional dependencies are now turned on.
+    - This resolves Lounge Lizard installer and DLL problems on Mac.
+
+* Allow any extended ascii character (0x80-0xff) in filenames.
+
+--------------------------------------
+v1.5 20100330
+--------------------------------------
+
+* Mac - Added wine-gecko to wine folder for html rendering support of plugins
+  and their installers.
+
+* Mac - Import-plugin dialog refreshes correctly after the
+  "update wizard database" button is clicked.
+
+* Mac/PC - Info prompts cannot have their text field written into, but
+  can still be selected and copied from.
+
+* Mac - Info/input prompts get more space for their message.
+
+* Wizard files - $VFX_REG_STRING will expand integer and binary keys into
+  string form. Binary values come out looking like "0a,fe,d2,2d" (i.e.
+  suitable for quoting in the "registry_keys" value of a wizard file).
+
+* Mac - Show popup to allow user to keep Windows partition mounted for as
+  long as a Windows installation from that partition requires.
+
+* Mac - Forcibly unmount (umount -f) Windows partition when the time to
+  unmount arrives.
+
+* Set plugin program and chunk sequentially inside the same 
+  effBeginSetProgram/effEndSetProgram nest.
+
+* Refuse to instantiate plugin if parameter count in plugin info (e.g.
+  from wizard file) does not match actual parameter count of plugin.
+  A message pops up on the front panel display "Bad param count".
+
+* Tweaked vmachine initialisation sequence so that the host is started when
+  plugins are initially configured in the host. This makes plugins like VB3
+  configure correctly at startup (it needs to be running to acknowledge
+  program and parameter changes). This also makes the true-pianos custom
+  loading GUI display correctly if it is the very first plugin that is 
+  loaded when a V-MACHINE is turned on.
+
+--------------------------------------
+v1.5 20100326
+--------------------------------------
+
+* Always attempt to create Windows special folders when retrieving their location.
+  This is especially important when running on Wine - stops a lot of assertion
+  failures that were occuring when official Windows locations did not exist.
+  Also makes things work properly on machines where Windows has been upgraded
+  from XP to Vista or Win7 and the machine has lots of special folders that
+  don't exist under the naming scheme of the newer version of Windows.
+
+* Mac - Clicking the "Run VST Plugin Installer" menu item results in the VFX
+        app having a go at mounting the Windows-software partition of any
+        inserted hybrid optical disk. The contents of the disk are shown if
+        such partition was mounted. If not, then the contents of any currently
+        mounted ISO partition on an optical disk are shown.
+        Any partition that was mounted at this point is unmounted again once
+        the plugin installer has been executed.
+
+* Mac - Distribute free clones of Windows core fonts into wine fonts folder.
+        Corollory: Virtual String Machine GUI works on Mac now.
+
+* Changed order of plugin instance destruction/creation when changing presets.
+  Any unused plugin instances in the new preset are first destroyed before
+  any new instances are instantiated.
+  Corollary: Sampletank will not crash under wine when navigating from a preset
+             with some other IK-brand plugin (e.g. Amplitube) to a preset with
+             Sampletank.
+
+* Mac - corrected Mac transfer speed constant to accurately reflect USB
+        transfer time on Mac.
+
+* Mac - Fixed #2316 - mac app plugin import drop down list is small.
+
+* Mac - Allow browsing inside mac file packages when the file being opened is not itself
+  a mac file package (especially useful for browsing inside wine folder for
+  Windoze-y stuff).
+
+* Mac - Fixed #2320 - When a file to copy does not exist, the window to locate the
+    file does not appear and the vfx app appears to have hung.
+
+* Mac - Fixed #2319 - import plugin dialog - After updating wizard database, it is
+    now impossible to import anything - ok button greyed out, wizard selection not
+    updating for selected plugin. Also after "browse"ing, and cancelling, can't
+    select from dropdown.
+
+* Fixed generation of QFE part of windows exe version number to handle leading zero.
+
+* Spin busy spinner in PC application when copying large single files.
+
+* Set plugin params and chunks from VFX chunk files after starting the plugin.
+  This is because some plugs (like VB3) will not respond to having their stuff
+  set unless they are started.
+
+--------------------------------------
+v1.5 20100317
+--------------------------------------
+
+* Don't write into the user field of the vst effect structure in plugins. Some plugins
+  appear to incorrectly use this field for their own purposes (e.g. NoName EQ).
+
+* Resize gui windows after calling the vst attach function. This makes the editor gui
+  the correct size for plugins that only know what size they want *after* the attach
+  call (e.g. NoName EQ).
+
+* Mac - show gui's correctly for plugins that formerly showed a mostly black screen.
+        (fixes gui problems with any plugin that uses the vst gui library that
+        comes with the vst sdk v2.4).
+
+* Support .vfxdll files for running only on a V-MACHINE.
+    - If running headless and loading a dll, and if there is a .vfxdll
+      alongside the dll with the same basename, then load the .vfxdll instead.
+    - When importing a dll, import any identically basenamed .vfxdll.
+    - corollary: solves OPX problems for the OPX developer.
+
+* Buffer overrun fixes to plugin notification queues in host.
+    - Check for buffer overrun on host callback queues.
+    - Dynamically grow host callback queues up to an absolute maximum size.
+    - corollary: MiniMonsta and LoungeLizard work fine now (and any
+                 other plugins that were running of the ends of the
+                 notification queues).
+
+--------------------------------------
+v1.1 20100227
+--------------------------------------
+
+* L/R audio-in controls work properly when there is only one plugin, or
+  only one channel of audio in use.
+
+* Windows plugin wizard is more streamlined - encourages looking in dropdowns
+  (no more browse buttons).
+
+* Slot letter goes in VST GUI title bar.
+
+* VST gui's size and resize correctly.
+
+* Don't blat custom gui displays with animated messages.
+
+* No gain multiplication is performed on channels with their level
+  set to 0dB. So there is now a performance gain when running at 0dB levels.
+
+* Midi note-on is not sent to plugins in a muted channel.
+
+* Cannot have newlines or tabs in preset names when renaming them.
+
+* New PC delay option only applies to midi-program change, and manual program
+  change by button press always needs a confirm.
+
+* "Preset and Plugins" PC mode reads "Preset then Plugins".
+
+* MIDI-learned "Accept" and "Back" don't scroll left in normal menu mode.
+  "Accept" only ever works for loading a preset when scrolling through
+  presets and deleting/importing/exporting. "Back" no longer decreases
+  parameter values.
+
+* Click-and-hold only causes key repeats for sensible repeatable operations.
+
+
+--------------------------------------
+v1.1 20100225
+--------------------------------------
+
+Windows and Mac
+
+* Treat second click of a double click as a second single click if the
+  double-clicked object does not respond to double clicks.
+
+* Added mixer midi channel gui control.
+
+* Fixed mouse wheel stepping on tempo and time signature gui controls.
+
+All Platforms
+
+* The vfx application ignores bank-select msb and lsb when program changes are
+  being routed to plugins.
+
+* When program changes and bank changes are routed to vfx preset and bank
+  changes, the program change that is applied by the vfx application is the
+  exact program change that was received by the vfx application. The same
+  change was made for midi-learned controls for bank and preset changes.
+
+* Bank and program changes received by the vfx application that are routed to
+  vfx bank and program changes update the display only, just as if a front
+  panel button was pressed, or a midi-learned bank or preset knob was twiddled.
+
+* The ordering of global MIDI learn parameters on the front panel display
+  was changed.
+
+* The "accept" button can now be global-MIDI-learned.
+
+* Plugins only receive MIDI program and bank changes if the program/bank
+  change comes in on a channel that the plugin is configured to receive on.
+
+* Mixer gets it's own assignable MIDI channel.
+
+* Program change semantics tweaked. The two options are now:
+    1. Program change to plugins only.
+    2. Program change to Preset and Plugins. If the preset doesn't want
+       the program change (i.e. the mixer is set to some channel that
+       is different to the channel of the program change), then the
+       program change goes to any plugins that want it.
+
+* The VFX application correctly accepts bank MSB and LSB before a program change.
+
+* Front panel and midi-learn options for mute toggles, solo toggles, and a 
+  'play this' command which mutes instrument channels that are not the
+  channel with the 'play this' command being given to it.
+
+
+--------------------------------------
+v1.1 20100222
+--------------------------------------
+
+All Platforms
+
+* Busy messages get a spinner.
+  - On any file/folder copy/delete on PC app.
+  - For any busy message on V-MACHINE.
+  - Spinner is next to the "please wait", rather than the
+    changeable busy text above.
+
+Windows
+
+* parse_input_file wizard command accepts non-absolute paths.
+
+--------------------------------------
+v1.1 20100218
+--------------------------------------
+
+Windows and Mac
+
+* Fixed save file and parse input file wizard commands.
+
+* Fixed all problems related to the mouse pointer getting stuck in the top
+  left corner of the screen.
+
+* Main app window shows before wizards are loaded and before
+  the first library is extracted, and the front panel shows that those two
+  things are happening. So there is no more gui-less long wait at startup for
+  wizard extraction or bank loading.
+
+All Platforms
+
+* VFX host respondes positively to "receiveVstMidiEvent" and
+  "sendVstMidiEvent" "host-cando" calls (so widi plugin should work now).
+
+* Files overwritten by the "vmachine_files_to_create" wizard section are
+  restored when running a plugin on a PC that was formerly run on a
+  V-MACHINE.
+
+--------------------------------------
+v1.1 2010208
+--------------------------------------
+
+Windows and Mac
+
+* NIHWID.exe is back in firmware resources!
+
+--------------------------------------
+v1.1 20100121
+--------------------------------------
+
+All Platforms
+
+* Front panel buttons nicely increment and decrement gain and pan
+  with correct value snapping and sensible inc/dec amounts.
+
+* Pan-centre is now 128 so that MIDI CC value 64 will set centre-pan.
+
+* Fixed bug where front panel was not showing control values when they reached
+  their lowest value.
+
+* Quadratic curve on volume faders for perceived linear change in volume.
+
+* Gain factors are pre-calculated, so there is a cpu speed-up in the host.
+
+* Front panel shows slider gain in dB.
+
+* Plugins only receive MIDI CC's on midi channels that match the configured midi
+  channels for the plugins.
+
+* Corrected bad CRC calculation in VFX chunk files. Upped vfx chunk version to
+  version 3.
+
+V-MACHINE
+
+* V-Machine performs application administration even when CPU load is high,
+  so stuff that should happen still happens (e.g. button presses, synchronise
+  with PC, detect connected MIDI controller/storage, etc).
+
+* V-Machine performs application admin interleaved with audio when CPU load
+  is high and there has been a front panel button press.
+
+* Buffer size for license tool output increased from 1024 bytes to 10*1024 bytes.
+
+* MIDI is forwarded from USB-connected MIDI controllers to a connected PC.
+
+Windows and Mac
+
+* Latest wizard database at build time (version 20100119).
+
+* Vastly improved slider/knob values from GUI and from MIDI:
+   - 0dB, centre pan, min, and max levels in gui only ever appear when the underlying value
+     truly is 0dB, centre pan, min, or max respectively.
+
+   - Incoming MIDI CC's learned to the mixer are able to set the maximum level
+     on controls (previously they could only set the maximum minus 1).
+
+* Vastly improved control slider/knob dragging:
+   - mouse doesn't leave window and irritatingly run out of room
+   - knob doesn't accept dragging outside the range of the knob's values,
+     so you can slide down to the minimum, then down some more, then
+     immediately slide up to increase the value.
+   - double click to go to snap value (currently 0dB or centre pan)
+
+* Much nicer main window dragging - the application no longer errantly performs 
+  gui processing while the main window is being dragged.
+
+Windows
+
+* Resizable and multi-line input prompt dialog.
+
+* More roomy and more nicely spaced vfx message/question box.
+
+* Fixed stupid bug where mouse wheel events were affecting mouse move coordinates.
+
+* Disallow right-click while dragging controls.
+
+Mac
+
+* Main window drags correctly and doesn't lose track of where the mouse is.
+
+
+--------------------------------------
+v1.1 20100111
+--------------------------------------
+
+All Platforms
+
+* Allow buffer sizes as low as 32 samples on V-MACHINE.
+* AAS tools in VFX firmware resources.
+* Accelerating click-and-hold on front panel buttons.
+
+--------------------------------------
+v1.1 20100107
+--------------------------------------
+
+All Platforms
+
+* Fixed subtle intermittent bug in free space checks on linux and mac.
+Mac Application
+
+Mac and PC
+
+* Allow opening old ".vfxvmachine" files with rename to ".vfxlibrary".
+
+* Tweaked menu structure a bit, so V-MACHINE is back at the top level,
+  and removed duplicate items from main menu.
+
+* Bank and preset context-sensitive menus are now different to main
+  menu bank/preset submenus. The context-sensitive ones contain
+  import/export items. Import/export is all under "File" in the main
+  menu.
+
+Mac
+
+* Caught up on new functionality of PC app. The most noticeable parts are new
+  dialogs and USB-hotplug support.
+
+* Restructured and simplified mac menus/hotkeys.
+
+* Main window background is drawn when deminiaturizing.
+
+* Mac app data folder has moved from ~/.vfx to
+  ~/Library/Preferences/com.smproaudio.vfx_application.data
+
+* All app options live in the .vfxoptions file. Mac-style plist
+  prefs to be used only when not affecting shared code handling
+  of options.
+
+
+--------------------------------------
+v1.1 20091210
+--------------------------------------
+
+PC Application
+
+* Embedded latest wizard database (20091210) in PC application.
+
+* Renaming a bank that doesn't yet exist on disk works now
+  - an empty bank folder is created with the new name.
+
+All Platforms
+
+* More lenient bank load code that prevented stupid bank load
+  failure when zero banks should have been loaded without any
+  error.
+
+* Fixed nasty bug in parent directory getter code inside disk
+  space checker function that broke anything getting disk space
+  on non-existant directories inside non-existent directories.
+
+V-MACHINE
+
+* Export with plugins to empty stick and to empty library on
+  v-machine works now.
+
+* Export from empty internal drive to stick works now.
+
+* Disconnect vmachine after firmware update on PC side - ensures a
+  disconnect occurs if update fails.
+
+* Disconnect vmachine before throwing up "firmware-update-necessary" message boxes.
+    corollary: Message box for actual update appears once the prompt dialog is closed, 
+    if the v-machine is restarted in update mode in the meantime without the prompt
+    dialog being closed.
+
+--------------------------------------
+v1.1 20091208
+--------------------------------------
+
+* Application detects change in MIDI devices if MIDI devices are changed
+  in options dialog.
+
+* Always enable potential V-MACHINE's if the MIDI device count has changed
+  since MIDI-enable options were last saved.
+
+* Don't save MIDI options if no changes are made to MIDI options in options
+  dialog.
+
+* Determine potential V-MACHINE's by manufacturer and product id, rather than
+  by device name (which is different in different language environments).
+
+--------------------------------------
+v1.1 20091203
+--------------------------------------
+
+* Top active library is labelled "Primary".
+
+* Importing a plugin with a license sequence now lets the user know 
+  there is a license sequence even when no V-MACHINE is connected.
+
+* Compiled 20091202 wizard database into the executable.
+
+* Fixed bug in audio device re-configuration code that was causing crashes/hangs.
+
+* Removed forced closure on audio device change (which was inadequately implemented
+  anyway (i.e. still invoked audio code and caused crashes), so audio devices can be
+  changed on the fly now.
+
+* More helpful messages about firmware updates.
+
+--------------------------------------
+v1.1 20091202
+--------------------------------------
+
+* Standard installer icon.
+
+* The first build to use the stabalised and reproducable build environment.
+
+* Implemented MIDI device selection GUI in options dialog.
+  - All devices except potential V-MACHINEs are disabled by default.
+
+* Increased MIDI buffer size inside VST host to handle larger/faster amounts of
+  MIDI from plugins that emit MIDI. Certain plugins can generate a fair bit all
+  at once, especially when manipulating controls on the plugin's GUI editor.
+
+--------------------------------------
+v1.1 20091126
+--------------------------------------
+
+* Reworked MIDI-routing so that it works.
+  - Fixed bug where plugs that emitted MIDI fed back on themselves.
+  - MIDI-IN for any slot user-selectably comes from the computer,
+    the previous plugin in the chain, or both, or neither.
+  - Any slot has a selectable MIDI-THRU, that passes MIDI coming
+    into that slot into the output from that slot.
+
+--------------------------------------
+v1.1 20091123
+--------------------------------------
+
+* New $VFX_BUILTIN()s:
+    $VFX_BUILTIN(common_program_files)
+    $VFX_BUILTIN(win_common_program_files)
+    $VFX_BUILTIN(destination_dll_dir)
+
+* DLL's can get their directory before their ID has been established.
+  (so plugins that do this such as "Oddity" can be imported).
+
+* Installer has checkboxes to view FAQ and launch VFX application.
+
+* About box shows all text and has nicer looking size.
+
+--------------------------------------
+v1.1 20091119
+--------------------------------------
+
+* Nice bugfix to nasty subtle windows bug in GetOpenFileName()
+  and GetSaveFileName() functions. Those functions change the
+  current directory and lock it, hence if the user browses 
+  to a USB stick for example, the USB stick cannot be safely removed.
+  So now USB device removal notifications work properly in the
+  VFX app on Windows.
+
+* Bugfixes to low-level copy code.
+
+* Reworked code for discovery of real location of windows folders on unix
+  filesystem when running inside wine. Folders don't have to exist now in
+  order to get what the path to them would be.
+  So wizard symlinks and file copies to windows drives should really work now.
+
+--------------------------------------
+v1.1 20091118
+--------------------------------------
+
+* Save and load vst bank chunks instead of vst preset chunks. Some plugins
+  such as Albino only support bank chunks, so this makes a whole category
+  of plugins (i.e. bank-chunk-only plugins) work. A possible downside is
+  longer load times, but I guess we wait and see if this is really a problem
+  in practice - probably only for plugins which have a lot of internal patches
+  and the end user doesn't realise this and always saves them all.
+
+* Use dynamic buffers for low-level line scanning and wizard array scanning.
+  Corollary: wizard files with long wizard arrays now work.
+
+* assert() all reg file bytes are written to temp reg file for reg
+  section in wizard files.
+
+* Look for nice-ified wizard folder names. i.e. plugs with bad filesystem
+  characters in the plugin name will work with the wizard system now.
+
+--------------------------------------
+v1.1 20091113
+--------------------------------------
+
+* Added registry hack for original shipped and pre-loaded sampletank that
+  did not have any registry information in it's wizard file.
+
+* Fixed bug where win-style path checker function was not checking
+  properly. Corollary: stuff like win-style paths in symlink section
+  of wizard files works now.
+
+* Added front panel menu to set playback gain.
+
+* Gain settings on front panel go in steps of 1dB (instead of 0.1dB which
+  is what was there before).
+
+* Limit gain settings range on front panel to what the underlying sound driver
+  supports.
+
+* Fixed bug where leaving out the optional input prompt default value
+  in a wizard file crashed the VFX application.
+
+--------------------------------------
+v1.1 20091112
+--------------------------------------
+
+* Fixed bug where VFX app would not run on vista without admin rights.
+  Fix was very odd - basically ignore failed return code from device
+  notification request, and the notification works anyway .. strange.
+  Testing this fix requires testing that usb device removal/insertion
+  works correctly and the active/fallback libraries change appropriately.
+
+* Fixed bug where a strange uncloseable window appeared when deleting
+  a plugin while its editor window was open.
+
+* Fixed bug where "import: all banks + plugins" was not importing
+  everything when there were multiple libraries to import from, and
+  there was more than one bank with the same name to import.
+
+* Fixed bug where more than four plugin search paths crashed
+  the VFX app. (e.g. when more than three libraries are on
+  a stick plugged into a V-MACHINE). There can now be up
+  to 64 plugin search paths.
+
+* Fixed bug where program changes could crash the V-MACHINE when
+  it was in "program change changes preset" mode.
+
+* Don't crash and burn when wizard symlink args are bad.
+
+--------------------------------------
+v1.1 20091111
+--------------------------------------
+
+* added wizard builtins for user's local app data folder:
+    $VFX_BUILTIN(user_local_application_data)
+    $VFX_BUILTIN(win_user_local_application_data)
+
+* "input_prompt" wizard sequence command can take an optional
+  third argument that specifies the initial value for the 
+  prompt.
+
+* $VFX_REG_STRING() takes a third argument which is the default
+  value if the string does not exist in the registry.
+
+* Put in sampletank assimilation hack so that the old shipped
+  sampletank library (as installed on units at the factory)
+  will work with the new firmware. The sampletank prefs file
+  will be changed to reference P: instead of Z: if a Z:
+  reference exists. So the old sampletank works on new software
+  on all platforms now. It's still an ugly hack though.
+
+--------------------------------------
+v1.1 20091110
+--------------------------------------
+
+* App icon top left. Minimize and close buttons at right of menu buttons.
+
+* Added wizard support for more builtins:
+   - $VFX_BUILTIN(application_data)
+   - $VFX_BUILTIN(win_application_data)
+   - $VFX_BUILTIN(user_application_data)
+   - $VFX_BUILTIN(win_user_application_data)
+
+* Fixed plugin assimilation bug where the plugin name part of the "dll_name"
+  wizard datum was not being converted into something acceptable by the file
+  system. Now all invalid file characters in "dll_name" are replaced with
+  an underscore.
+
+* Fixed wizard file bug where absolute paths were not working
+  correctly in the "symlinks" section.
+
+* Wizard database is embedded in application exe.
+  When the vfx application is run, if the embedded database is
+  more up to date than the one on disk, then the embedded database
+  will magically appear and be used.
+
+* Hint on how to update firmware in message that tells you
+  when firmware is old.
+
+--------------------------------------
+v1.1 20091104
+--------------------------------------
+
+* "execute_tool" works again.
+
+* Fixed bug where first argument of lines in "dirs_to_copy" and "files_to_copy"
+  wizard sections were not being correctly checked if they contained a ":".
+  e.g. "X:/foo/bar"
+
+* Fixed long-standing bug in directory tree copy that was not
+  correctly ensuring the destination's parent existed, only it's
+  grandparent.
+
+* Wizard does not screw up it's parse buffer when doing slash expansions
+  (forward slash, backslash, etc).
+
+* Fixed bug where parameters to wizard expansions were not being
+  parsed correctly. (Corolloray: "store" sequence command works now,
+  amongst other things).
+
+* Allow parameters to be set to values less than 0.0 and greater than 1.0.
+  This is needed because some plugins use these out of range values in
+  a happy flaunting of the VST standard.
+
+* Don't die if a plugin changes it's parameter count on the fly.
+
+--------------------------------------
+v1.1 20091101
+--------------------------------------
+
+* Fixed wizard bug where nested functions were not being expanded
+  correctly.
+
+  e.g. The following snippet now works fine:
+
+        $VFX_BACK_SLASHES($VFX_BUILTIN(program_files))
+
+* No newline needed at the end of a wizard file.
+
+* Any wizard array item can be commented out with a "#".
+
+* Fixed bug where "dirs_to_copy" and "files_to_copy" wizard sections
+  were not handling lines beginning with windows-style absolute paths
+  correctly.
+
+* Wizard "dirs_to_copy" and "files_to_copy" sections can have absolute
+  windows-style paths at the start of each copy line (but with forward
+  slashes) that will result in a copy from the correct folder in wine
+  for that drive on non-windows platforms.
+
+  e.g. The following will work fine on Mac:
+
+    dirs_to_copy:
+    ...
+    C:/foo/bar.txt
+    ...
+
+
+* Wizard "dirs_to_copy" section can have include and exclude patterns
+  after path specifications separated by semicolons.
+  e.g.
+
+    dirs_to_copy:
+    ...
+    foo:bar;include:*.foo;exclude:fred
+    foo:bar;exclude: foo*.txt
+    foo:bar;exclude: */Organ
+    ...
+    
+  If the keyword is left out, then an "include" operation is assumed.
+  IMPORTANT NOTE: the match is performed on the full source path, and
+                  not just the filename. An initial '*/' is implied
+                  if it is not explicitly written in, so "exclude: Organ"
+                  will match against only the final path component.
+
+* Can import VFX-ified plugins via the "Import VST Plugin"
+  menu/dialog. A plugin that has wizard info alongside is
+  considered to be a VFX plugin, and when imported its files
+  are just copied verbatim.
+
+  The import plugin dialog widgets indicate when a VFX plugin
+  is being imported, and there is text saying a direct folder
+  copy will take place.
+
+* Juggled menus around:
+   - plugin right-click has license, and vfx auth
+   - plugin chooser menu has an "install plugin" subitem
+   - there is a plugin menu in the main right-click menu
+     with install, license and vfx auth
+   - V-MACHINE menu with infrequent subitems lives inside
+     file menu
+   - There is a main menu "sync..." item.
+
+--------------------------------------
+v1.1 20091028
+--------------------------------------
+
+* Added wizard sequence command "store" which looks like this:
+
+    store;<wizard_variable>;<value>
+
+  The above line sets the value of a wizard variable to the literal
+  string that the given value expands to. This literal string is
+  saved to the wizard file.
+
+  This is useful if you want to capture information from a PC at
+  the time of import and/or licensing of a plugin (e.g. The
+  path to the special program files folder on a German install
+  of Windows).
+
+* Added wizard section called "import_sequence" that contains the
+  same things that the license sequence can contain but is run 
+  as the first stage of importing a plugin.
+
+* Added new builtins for getting windows-style paths.
+  (e.g. "C:\Program Files" instead of "/foo/.wine/c_drive/Program Files")
+    - $VFX_BUILTIN(win_program_files)
+    - $VFX_BUILTIN(win_user_documents)
+
+* Refactored wizard functionality for plugin file copy, directory copy, and
+  symlink creation so that absolute absolute paths can be used. The useful
+  result of this is that path expansions such as $VFX_BUILTIN(program_files) will
+  work in these sections.
+
+* Much nicer missing file/folder prompt when copying plugin files and folders.
+
+* Removed double prompt to license plugin after importing.
+
+* Greater leniency for allowed filename characters (bugzilla #2201).
+
+* Better error reporting for license sequence.
+
+* Fixed bug where plugin files were not updated with licensing information.
+  i.e. Licensing a plugin should work properly now!!
+
+* License steps can be commented out with "#" at the beginning of the line
+  in the wizard file.
+
+--------------------------------------
+v1.1 20091027
+--------------------------------------
+
+* Prevented self-referential infinite lookup in wizard file.
+
+* Reworked wizard file parser to support new primitives.
+
+* Removed "variable_values" section from wizard files. Now any
+  wizard lookup string can be a variable value.
+
+* Wizard files now support:
+    - $VFX_EXPAND(<user_variable>)
+    - $VFX_BUILTIN(user_name)
+    - $VFX_BUILTIN(program_files)
+    - $VFX_BUILTIN(user_documents)
+    - $VFX_BUILTIN(dll_dir)
+    - $VFX_REG_STRING(<key>,<value_name>)
+    - $VFX_CLOSE_BRACKET()
+    - $VFX_FORWARD_SLASHES(<string>)
+    - $VFX_BACK_SLASHES(<string>)
+    - $VFX_DOUBLE_BACK_SLASHES(<string>)
+
+* Plugin ID can be on any line in wizard file.
+
+* Removed "Importing Plugin..." LCD message glitch.
+
+* Fixed introduced bug where PANIC was not handled by the VFX
+  application while a custom-GUI VFX plugin was running.
+  i.e. You can "PANIC" to leave a VFX plugin GUI on the V-MACHINE again now.
+
+* Re-enabled high thread priority for VFX application on V-MACHINE and MAc.
+  Turns out this makes most plugins take less CPU.
+
+
+--------------------------------------
+v1.1 20091023
+--------------------------------------
+
+* Refactored licensing and v-machine-app-running code to be more manageable,
+  readable, and expandable. Fixed a lot of bugs in the process, and there are
+  no more state loops calling several functions for single units of
+  functionality.
+
+* Fixed bug where wizard array items could not contain "..."
+
+* V-MACHINE wine reserves 1GB of address space for windows apps
+  (as opposed to the 512MB patch that was in there previously).
+  Mac wine is still at 512MB - maybe that should change too sometime?
+
+* Fixed major memory bugs in code that scanned strings from files for the
+  licensing sequence.
+
+* Wizard file syntax changes/enhancements:
+    - All variable expansions appear as $VFX_EXPAND(FOO)
+
+    - There is a new "variable_values" section that is used to expand 
+      variables. Variable expansion is no longer permanent. i.e.
+      You can re-use wizard files that live next to plugins.
+
+    - Variable values can reference other variables.
+
+* Made growable buffer macros for use where growable buffers are needed.
+  (Loading chunkfiles, wizard files, etc).
+
+
+--------------------------------------
+v1.1 20091013
+-------------------------------------
+
+* Import plugin works again (but not license sequence).
+
+* Scroll bars on combo boxes in vst import dialog.
+
+* recursively find VST plugins for dropdown in import dialog.
+
+* wizard magic folder is created if it doesn't already exist when checking
+  the internet for the latest wizard file.
+
+* Fixed bug where non-chunk-saving plugins caused a crash when saving them.
+
+* V-MACHINE firmware runs again.
+
+* Fixed introduced bug that caused crashes when exporting to a library
+  directly below a drive letter. e.g. "X:\foo.vfxlibrary".
+
+--------------------------------------
+v1.1 20091009
+-------------------------------------
+
+* Import plugin code is broken in this build. You can use the new
+  import dialog, but clicking "import" will never result in anything being
+  imported.
+
+* Made new "import vst plugin" dialog that scans for plugins and wizard files,
+  and can download wizard updates from the web.
+
+   - Intelligently checks plugins as they are selected on the fly.
+   - Only downloads new database if there is a new database. Does
+     the check by downloading a database info file first.
+   - Displays info on selected plugin and wizard file.
+
+* Implemented wizard database mechanism whereby a zipfile is downloaded
+  and extracted into the magic folder.
+
+* Reworked wizard info engine as follows:
+
+ - There is no more statically compiled wizard information. This is just
+   annoying and becomes outdated very quickly.
+
+ - Wizard information only comes from wizard files. There is at most one loaded
+   wizard file at any time (c.f. old system of all wizard info loaded all the
+   time).  Most of the time when the VFX app is running there will be no loaded
+   wizard file.
+
+ - Wizard information is only ever read and used in these situations:
+      * when a plugin is imported when a plugin is assimilated into the host
+      * during plugin-search (normally at application startup).
+
+ - The VFX application's total inherent wizard knowledge is made up of the
+   wizard files in the wizard magic folder that lives in the application data
+   area.
+
+ - There is no magic area on the V-MACHINE itself. The magic folder is for the
+   desktop application only.
+
+ - If a plugin DLL has a wizard file next to it then that wizard file is used.
+
+ - If a plugin has no wizard file alongside, then no wizard info is used.
+
+
+* PC app gets system menu.
+
+* Corrected hacky string clipping of drawn strings on Windows platform.
+
+--------------------------------------
+v1.1 20090928
+-------------------------------------
+
+* The desktop application will not talk to a V-MACHINE that does not have
+  the same version of software as the desktop application.
+
+* Fixed long-standing bug where changing to program 0 was not possible.
+
+* "Program change changes preset" works again.
+
+* Can minimize the PC application by clicking the taskbar button.
+
+* The VFX VST host will no longer set parameters that report themselves as non-automatable.
+
+* Fixed long-standing bug where a binary or integer parameter was not 
+  being identified as such, and was overwriting the
+  VFX_VST_HOST_PARAMETER_INFO flag.
+
+* Plugin names use all available space plugin label area on main screen.
+
+* Import/export menu items on bank and preset menus.
+
+* Quotes around name of changed active library in front panel popup.
+
+* Removed front panel popup message log entry.
+
+* Fixed bug where synchronised plugins were not being placed
+  in their own folder inside "/storage/plugs", but rather in 
+  their own folder.
+
+* Altered "PANIC" mode, so that plugins without wizard files
+  will not be recognised (and hence no plugin DLL's are loaded
+  at startup).
+
+* Reverted change from last build that made plugin paths all
+  be inside /plugs - it wasn't helpful, and made it hard to
+  work out which plugins were external.
+
+--------------------------------------
+v1.1 20090925
+-------------------------------------
+
+* Plugins that run off external sticks have their path set to,
+  and are LoadLibrary()ed from, their symlink inside /plugs.
+
+* vfx_symlink() always tries to delete old target link before making new one.
+
+--------------------------------------
+v1.1 20090923
+-------------------------------------
+
+* Fixed read/write bugs in new chunk file load/save code.
+
+* Fixed file read/write bug on Windows where files > 4096 bytes in
+  size would fail their reads and writes.
+
+* Removed assertion failure in PC app that was occuring when a
+  Windows device changed before the gui module was initialised.
+
+--------------------------------------
+v1.1 20090922
+-------------------------------------
+
+* Removed calls to change vfx application's thread priority inside
+  the host when doing various things with plugins. These calls did
+  not seem to server any purpose.
+
+* Comprehensive rework of plugin chunk save/load:
+   - chunk files of up to 10MB in size are permitted.
+   - chunk files will not be saved for plugins that do not
+     support chunk files AND have no parameters.
+   - Loading a chunk file into a plugin follows the VST guidelines
+     now and calls effBeginLoadProgram, effBeginSetProgram, and
+     effEndSetProgram.
+   - Chunk files now contain metadata about the chunk including:
+       plugin ID, data size, checksum, parameter count. 
+   - A chunk file will not be applied to a plugin if:
+       (- the checksum on the chunk file is bad)
+       OR
+       (- the plugin ID does not match
+          OR the parameter count does not match
+          OR the plugin version does not match)
+       OR
+       (- effBeginLoadProgram is implemented by the plugin
+          and refuses to accept the chunk)
+   - Previously bad chunks were applied and weird crashes
+     and behaviour happened.
+   - Obviously chunk files currently in circulation have no
+     metadata and they will still fail when applied to the
+     wrong plugin.
+
+* Select plugin menu has plugins sorted by name and FX plugins have (fx)
+  in brackets at the end of their name.
+
+* PC shows same display and spinner as V-MACHINE when synchronising.
+
+* Clean restarts on V-MACHINE front panel - so you don't see strange
+  old text.
+
+* Import/export/sync dialogs:
+    - "All Banks" instead of "Banks" at the top node.
+    - New helpful notes line says more about what is going on.
+
+* Front panel config options to the left, and preset management to
+  the right (reverse of what was there before).
+
+* Report wine version in log when going to info menu.
+
+--------------------------------------
+v1.1 20090916
+-------------------------------------
+
+* Safer code for getting parameter value strings.
+
+* Diagnostics in h8 send code.
+
+* More robust front_panel_device_write() that more explicitly handles the
+  long-string case, assert()s for valid row, and will not send
+  unprintable characters up the lpc.
+
+* Assert that parameters are set to something between 0.0 and 1.0
+  inclusive inside the VFX VST host.
+  
+* Assert that a parameter being set is within the range of valid parameters
+  for a plugin in the VFX VST host.
+
+* Delete plugins menu updates when deleting plugins and in other
+  circumstances where it used to buggily not update.
+
+* PANIC works on PC.
+
+* PANIC shows "PANIC!" as a front panel popup.
+
+* Changed front panel popup time to 2 seconds.
+
+* Fixed bug where front panel popups were being killed by
+  other front panel writes.
+
+* Active library change enhancements:
+    - "Fallback" library option.
+    - currently used library is shown in options dialog
+    - name of changed library is notified in a front panel popup
+
+* Entries in "delete plugin" menu are sorted alphabetically.
+
+* Fixed bug where "delete plugin" menu was not refreshed when changing
+  active library.
+
+--------------------------------------
+v1.1 20090914
+-------------------------------------
+
+* Delete menu only allows deleting internal banks and presets.
+
+* Fixed: Confirm and Return still exsist when changing banks and presets.
+  Change to 'load' and 'back' to be consistant. Same for plugin parade.
+
+* Fixed: 'cant find DLL' messages should be changed to 'cant find plugin' or a
+  similar message.
+
+* Fixed: The verb and back are cut short on the vmachine screen by the space
+  used by level meters. The moment you enter the menu and back is shown so easy
+  to reproduce.
+
+* Fixed: FUT825 when using the virtual lcd in pc app to perform a export
+  bank+plugins by pressing the virtual menu button. Seems all the export
+  functions in there create an error.
+
+* Fixed: import from the virtual lcd screen and menu in the pc app, does not do
+  anything and does not create an error.
+
+* Fixed: Mem 0% does not show the amount of ram used in the system info menu page.
+
+* Fixed: snw2425 error when trying to export bank in firmware with no usb drive
+  connected.
+
+* Fixed bug where input gain was broken in audio menu on V-MACHINE.
+
+* 0dB channel 0 and master faders for new presets - 
+  so you can try stuff out quickly without pulling faders around.
+
+* 0db channel 0 and master faders for the plugin parade.
+
+* Turned on audio capture for asio devices.
+
+* Explicity "not saved" notification when trying to save from
+  plugin parade.
+
+* Cannot delete external plugins and banks from front panel menu.
+
+* Plugin parade gets FX plugins.
+    - preset names have "fx:" prefix.
+    - audio capture is turned on.
+
+* Plugin parade improvements:
+   - sorted alphabetically
+   - "[]" around externally loaded plugins
+
+* Front panel menu re-ordered to put exciting frequent operations
+  less button presses away. First menu item is always version.
+
+
+--------------------------------------
+v1.1 20090910
+-------------------------------------
+
+* Unload all plugins on PC app exit.
+
+* USB hot-plug implemented, so the active library can happily
+  live on a stick, and you can plug in and out without restarting the app.
+
+* User-configured active library remains configured until they
+  change it. Active library temporarily reverts to default
+  when user-configured library is unavailable.
+
+* Fixed bug where a new library name could not be OK'd in the
+  change active library file prompt.
+
+* Tidied up front panel display - verb/back/ok/cancel.
+* Tidied up import/export/sync strings - more uniform and informative.
+
+* Set focus to active library widget in options dialog when
+  user cancels the open-file dialog.
+
+--------------------------------------
+v1.1 20090908
+-------------------------------------
+
+* Enforce all internal paths to not have two slashes in a row.
+  i.e. "/foo//bar" is invalid.
+
+* Added user option to set active library path.
+   - If the path does not reside on an extant volume at application
+   - startup, then the default active library path is used.
+   - The active library can be changed without a restart of the application.
+
+* Any active library is renamed to have the ".vfxlibrary" extension
+  if possible (i.e. if not read-only).
+
+* Default active library is inside the user's music folder and is
+  named "V-MACHINE Library.vfxlibrary".
+
+* Wizard magic folder lives inside the app. data folder, and not
+  inside the active library folder.
+
+* V-MACHINE state file lives inside the app. data folder, and not
+  inside the active library folder.
+
+--------------------------------------
+v1.1 20090903
+-------------------------------------
+
+* Fixed the bug that prevented the VFX VST host API from ever being enabled.
+
+--------------------------------------
+v1.1 20090902
+-------------------------------------
+
+* Fixed bad comms over USB with 64 bit int's in serialised structs
+  (so vmachine reports direct disk space over usb now).
+* Fixed hang on delete banks with name.
+* Fixed hang on "clear v-machine".
+* "Delete Plugin" front panel menu fixes:
+    - shows all internal plugins only (irrespective of which
+      internal and external plugins are actually being used by the host).
+    - menu is always visible and indicates when there are no plugins
+      to delete
+    - no more "delete plugin" crashes.
+    - menu is available in PC application
+* Fixed buffer size bug that was mangling bank names for bank
+  folders of length similiar to the size of the bank name buffer.
+
+--------------------------------------
+v1.1 20090830
+--------------------------------------
+
+* Don't show "no banks" bank if there are no internal banks but there
+  are external banks.
+* External plugins take priority over internal plugins on v-machine
+* New "Enable/disable VFX VST Host API commands". So the API is dead unless
+  the "enable" command is called.
+  - corollory: plugins that call the VFX api without checking the host type
+               now work.
+* Plugin name abbreviations work better and worked out safer.
+* Lots of new plugin management code:
+    - folders can be scanned on the fly for plugins
+    - the host can rescan its set of plugins without needing a restart
+* Massive import/export rework:
+    - new import/export gui with tree views
+    - nice folder prompts on windows - behaviour similar to mac packages
+    - host can change sets of plugins on the fly
+    - can import/export with/without plugins
+    - can import/export with/without replacing plugins
+    - folder size checks that abandon early if check fails early
+    - removed lots of bugs
+    - more durable against folders with duplicate banks/plugs
+* Sync rework to match new import/export:
+    - new gui tree
+    - prompt to export to stick if sync will take too long
+    - folder size checks that abandon early if check fails early
+    - can sync with/without plugins
+    - can sync with/without replacing plugins
+* Reworked V-MACHINE import/export from stick logic:
+    - always overwrite plugins
+    - proper checks for which plugins reside where
+    - immediate availability of exported banks
+* Folder size checks work heaps better and abandon early if the 
+    check fails early.
+* Try and make files and directories writeable before copying over or deleting them.
+    - Can be good when copying off CD on windows, because target files in those
+      cases by default remain read-only on windows.
+* Many bugfixes.
+
+--------------------------------------
+v1.1 20090722
+--------------------------------------
+
+All platforms
+
+* VFX VST host reports its vendor as "VFX" and its product ID as "VFX VST Host"
+  rather than the other way around.
+* New linux kernel with libusb compiled in (for synchrosoft support).
+* Import/export fixes and enhancements.
+
+Windows
+
+* Vastly improved open/save dialogs for selecting folders.
+* Accelerated PC->V-MACHINE comms by sending multiple VFX sysex's with one
+  MIDI API send() call.
+* New "import from library tree".
+
+--------------------------------------
+v1.0 20090327
+--------------------------------------
+* Fixed bug preventing last plugin parameter from being learnt.
+
+--------------------------------------
+v1.0 20090325
+--------------------------------------
+* Plugin crash detection
+* Parameter step enhancements
+* Bug fixes in menu items
+
+--------------------------------------
+v1.0 20090320
+--------------------------------------
+
+* Input gain save/load.
+* Save overwrite confirmation on Windows.
+* Internet GUI authorisation.
+* App checks connected V-MACHINE's build number.
+* Other glitch fixes leading up to release.
+
+--------------------------------------
+v1.0 20090318
+--------------------------------------
+
+* Bufixes to glitches in yesterday's build.
+* Basic authorisation accessible from GUI.
+
+--------------------------------------
+v1.0 20090317
+--------------------------------------
+
+* Authentication in place (but no GUI controls for using it yet).
+* Global V-Machine state persists to disk.
+* Windows application runs again.
+* Windows app has transparency.
+* 3rd party plugin V-Machine plugin support fleshed out
+  (message popups, authentication, etc).
+* Lots of bugfixes.
+
+--------------------------------------
+v1.0 20090305
+--------------------------------------
+
+* Plugin MIDI chaining.
+* Importing plugins from stick correctly detects already imported plugins.
+* Attempt to chmod a+rx before loading plugin DLLs.
+* Only internal plugins ever get deleted.
+* Nice crash info in front panel.
+* V-MACHINE firmware on head branch - so lots of new stuff in there!!!
+* (Windows app still defunct)
+
+--------------------------------------
+v1.0 20090304
+--------------------------------------
+
+* License tool runs on Mac.
+
+--------------------------------------
+v1.0 20090303
+--------------------------------------
+
+* Lots of bugfixes.
+* Host queues for plugins are emptied before unloading plugins.
+* Bugfixes to front panel display update.
+* Fixed problems with bank import.
+* Can use .vmachine's on stick on V-MACHINE.
+* Syncing Empty vmachine, bank, and preset works.
+* Fixed bug where closedir(NULL) on Mac was killing everything.
+
+--------------------------------------
+v1.0 20090227
+--------------------------------------
+
+VFX Application - Mac
+
+* More bugfixes leading up to first release.
+* Big sync bugfix that stops connected V-MACHINE's from getting confused about
+  the sequence numbers on confirmed messages.
+* Cool LCD panel FX.
+* Wine address space reduced to half a gig - should solve most memory issues.
+* V-Machine logo lights up when V-MACHINE connected/dims when disconnected.
+
+VFX Application - PC - STILL DEFUNCT
+
+--------------------------------------
+v1.0 20090226
+--------------------------------------
+
+VFX Application - Mac
+
+* Lots of bugfixes leading up to first release.
+* Syncing bugfixes that solve file naming problems on the V-MACHINE.
+
+VFX Application - PC - STILL DEFUNCT
+
+
+--------------------------------------
+v1.0 20090225
+--------------------------------------
+
+VFX Application - Mac
+
+* Import/Export functionality ready for testing.
+* Lots of bug fixes.
+
+VFX Application - PC
+
+* Currently defunct. Needs work to catch up to Mac now.
+
+--------------------------------------
+v1.0 20090218
+--------------------------------------
+
+VFX Application - Mac
+
+* *** FIRST SNAPSHOT OF MAC APP TO GO BEYOND DEV TEAM !!! ***
+
+* Most features of the PC app have now been implemented on the Mac.
+
+* Application menus on the power button are implemented as standard Mac menus,
+  and the power button just quits.
+
+* Installing plugins with the help of wizard files does not work yet.
+
+* The version of Wine being used in the Mac app. is different to that on the
+  V-Machine. As such some formerly working plugins will break and vice versa.
+  It is yet to be decided which Wine to use on the Mac.
+
+* Plugin GUIs run inside X11, so there are useability issues related to clicking
+  between the plugin editor window and the main window.
+
+VFX Application - PC
+
+* No sse2 optimisations (only sse) in order to support Pentium 3 and lower.
+* Updated PDF user guide.
+* The build is currently broken so you can't actually run 20090218 on a PC.
+
+--------------------------------------
+v1.0 20090130
+--------------------------------------
+
+V-MACHINE
+
+* Added memory usage to SystemInfo menu.
+* Changed soundcard output level to -6dB to lower noise floor.
+
+VFX Application - PC
+
+* Fixed stability issue when changing between audio drivers
+* Fixed font rendering issue occuring on some systems 
+* Fixed minor bug allowing some problematic plugins to load 
+
+
+--------------------------------------
+v1.0 20090122
+--------------------------------------
+
+VFX Application - Mac
+
+    * Implemented power off.
+    * Implemented menu separators.
+    * Implemented menu checkmarks.
+    * Prevented selection of menu items that have sub-menus.
+    * Audio works better - buffers are handled correctly and the
+      same rate can be set.
+    * MIDI is processed on the main thread - essential for sysmsg
+      comms with the V-MACHINE.
+
+
+VFX Application - PC
+
+* Options menu with ASIO devices.
+* Added more descriptive prompts while importing plugins and running license tools.
+* Fixed a regression that caused app to hang after importing a plugin.
+* Fixed a regression that stopped a plugin being listed immediately after being imported.
+* Added prompt to relocate a file/folder if it can't be found during plugin import.
+
+
+--------------------------------------
+v1.0 20090121
+--------------------------------------
+
+VFX Application
+
+* Timestamps on log entries.
+* Disabled the ability to start an incorrect second V-MACHINE update via the GUI.
+* Corrected update messages to match new hotplug functionality.
+* Prevented sync when no V-Machine attached.
+* Clipping obfuscation in Directsound and ASIO.
+* MIDI device/V-Machine hotplug - at last!
+* Fixed problem where app won't start without a valid audio device.
+* Fixed audio initialisation sequencing trouble.
+* Build and date/time at start of log file.
+* Added plugin licensing support.
+* IK Multimedia License tool integration in wizard.
+* Added facility for v-machine to create supporting plugin files from vfxinfo on startup.
+
+
+--------------------------------------
+v1.0 20081212
+--------------------------------------
+
+V-MACHINE
+
+V-MACHINE and VFX Application
+
+VFX Application
+
+* Can clone presets from same bank.
+* Syncing fixes.
+* First bank renames ok.
+* New intelligent update mechanism that can handle an entire linux kernel.
+* Sync progress indicator.
+* Comms working in the presence of dud MIDI-OUT devices.
+* Create new folder when creating new bank from GUI.
+* Plugin deletion works correctly.
+* Some nicer busy messages.
+* Mouse on MIDI channel and splits works again.
+* Confirmation menus on delete operations.
+* Disable app window and show hourglass cursor when the app is busy.
+* Last slot of main mixer is useable again.
+* Clear preset, clear bank, delete bank, and clear V-Machine in a nice front
+  panel menu.
+* Delete plugin works from front panel in PC application.
+* Clear all presets in a bank.
+* Delete all banks.
+* Windows executable has version information.
+* User guide packed with app installer.
+* Running the application while an instance is already running will simply bring
+  the existing instance's window to the foreground instead of a second erroneous
+  instance being launched.
+* Clicking "Help" opens the FAQ in a browser.
+* Removed master solo.
+* Renders more intelligently so there is no big delay on OS-triggered screen
+  updates.
+* Renamed save/load to import/export respectively in menus and dialogs.
+* Table window is enabled in floating editor mode.
+* Sampletank doesn't export again - it didn't do it properly in 20081205.
+* Version display in about box doesn't show "FOO DEV" in candidate builds.
+
+--------------------------------------
+v1.0 20081205
+--------------------------------------
+
+V-MACHINE
+
+* Delete plugin menu.
+* Audio always runs unless buffer size changes.
+* Fade out nicely on preset/bank change.
+
+V-MACHINE and VFX Application
+
+* Sampletank DLL will work with both Wizard import and with "Save Machine".
+* Format V-Machine storage from application menu.
+* DLL's with no wizard info will load.
+* Import current external bank implemented (includes importing needed plugins).
+
+VFX Application
+
+* Save V-Machine re-implemented.
+* Channel tabs update correctly when changing presets and banks.
+* Dropdown menus, including plugins menu, are scrollable.
+* Installer won't overwrite existing banks and plugs.
+* No read only checkbox in windows open file dialog.
+* Installer opens FAQ before showing wizard dialog.
+* Bank and preset menus also available in main menu.
+* Select text by default when renaming presets and banks.
+* Active preset immediately uses newly imported plugin.
+* Rename preset fixed.
+* Load bank implemented.
+* Rename bank fixed.
+* Alpha blending in GUI repaired.
+* Fixed LCD offset.
+* LCD graphics clip to the edge of the LCD.
+* Fixed bug where unloaded, and then reloaded plugin was not making sound.
+* FAQ links in installer.
+
+
+-------------------------------------
+V1.0 20081128
+-------------------------------------
+
+Initial release.
+

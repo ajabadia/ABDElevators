@@ -1,0 +1,12 @@
+﻿--- ­ƒÅó Auth Cluster Verification ---
+Found 3 tenants in Auth DB: [ 'default_tenant', 'elevadores_mx', 'abd_global' ]
+
+--- ­ƒôä Document Types Verification (Main DB) ---
+Total Document Types: 10
+Categories found: { RAG_ASSET: 5, USER_DOCUMENT: 5 }
+Tenants associated: { abd_global: 9, elevadores_mx: 1 }
+
+Sample Document Types:
+ - Ley / Norma legal (RAG_ASSET) [Tenant: abd_global]
+ - Documentaci├│n Legal (RAG_ASSET) [Tenant: abd_global]
+ - Pedido a talleres  (RAG_ASSET) [Tenant: abd_global]

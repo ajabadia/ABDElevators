@@ -15,7 +15,8 @@ import {
     Sparkles,
     Trash2,
     Rocket,
-    X
+    X,
+    Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
@@ -45,12 +46,13 @@ export default function AdminPromptsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [industryFilter, setIndustryFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory, setShowGlobalHistory] = useState(false);
     const { environment } = useEnvironmentStore();
 
     // Categorías disponibles
-    const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL'];
+    const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL', 'ROUTING'];
 
     // 1. Gestión de datos con hook genérico
     const {
@@ -75,12 +77,6 @@ export default function AdminPromptsPage() {
     });
 
     // 2. Lógica de Filtrado y Contadores
-    const categoryCounts = prompts.reduce((acc: any, p: any) => {
-        const cat = p.category || 'GENERAL';
-        acc[cat] = (acc[cat] || 0) + 1;
-        return acc;
-    }, {});
-
     const filteredPrompts = prompts.filter(p => {
         const matchesSearch =
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -89,14 +85,22 @@ export default function AdminPromptsPage() {
 
         const matchesTenant = tenantFilter === 'all' || p.tenantId === tenantFilter;
         const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+        const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter;
 
-        return matchesSearch && matchesTenant && matchesCategory;
+        return matchesSearch && matchesTenant && matchesCategory && matchesIndustry;
     });
+
+    const categoryCounts = filteredPrompts.reduce((acc: any, p: any) => {
+        const cat = p.category || 'GENERAL';
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+    }, {});
 
     const clearFilters = () => {
         setSearchQuery('');
         setTenantFilter('all');
         setCategoryFilter('all');
+        setIndustryFilter('all');
     };
 
     const handleSaved = () => {
@@ -178,7 +182,7 @@ export default function AdminPromptsPage() {
                                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
                                     />
                                 </div>
-                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all') && (
+                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all' || industryFilter !== 'all') && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -225,18 +229,34 @@ export default function AdminPromptsPage() {
                                 ))}
                             </div>
 
-                            {uniqueTenants.length > 1 && (
+                            <div className="grid grid-cols-2 gap-2">
+                                {uniqueTenants.length > 1 && (
+                                    <select
+                                        value={tenantFilter}
+                                        onChange={e => setTenantFilter(e.target.value)}
+                                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
+                                    >
+                                        <option value="all">Organización</option>
+                                        {uniqueTenants.map(t => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                )}
                                 <select
-                                    value={tenantFilter}
-                                    onChange={e => setTenantFilter(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
+                                    value={industryFilter}
+                                    onChange={e => setIndustryFilter(e.target.value)}
+                                    className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
                                 >
-                                    <option value="all">Todas las Organizaciones</option>
-                                    {uniqueTenants.map(t => (
-                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                    ))}
+                                    <option value="all">Industria</option>
+                                    <option value="GENERIC">Genérico</option>
+                                    <option value="ELEVATORS">Ascensores</option>
+                                    <option value="LEGAL">Legal</option>
+                                    <option value="BANKING">Banca</option>
+                                    <option value="INSURANCE">Seguros</option>
+                                    <option value="IT">IT</option>
+                                    <option value="MEDICAL">Médico</option>
                                 </select>
-                            )}
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
@@ -287,18 +307,15 @@ export default function AdminPromptsPage() {
                                                         )}>
                                                             V{p.version}
                                                         </span>
-                                                        {!p.active && (
-                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                                                                INACTIVO
-                                                            </span>
-                                                        )}
                                                         <Badge variant="outline" className={cn(
                                                             "text-[8px] h-4 py-0",
-                                                            environment === 'PRODUCTION' ? "text-emerald-500 border-emerald-500/20" :
-                                                                environment === 'STAGING' ? "text-amber-500 border-amber-500/20" :
-                                                                    "text-purple-500 border-purple-500/20"
+                                                            p.industry === 'ELEVATORS' ? "text-blue-500 border-blue-500/20" :
+                                                                p.industry === 'LEGAL' ? "text-purple-500 border-purple-500/20" :
+                                                                    p.industry === 'BANKING' ? "text-emerald-500 border-emerald-500/20" :
+                                                                        p.industry === 'INSURANCE' ? "text-rose-500 border-rose-500/20" :
+                                                                            "text-slate-500 border-slate-500/20"
                                                         )}>
-                                                            {environment}
+                                                            {p.industry || 'GENERIC'}
                                                         </Badge>
                                                     </div>
                                                     <div className="flex items-center gap-2">
@@ -306,8 +323,8 @@ export default function AdminPromptsPage() {
                                                             {p.key}
                                                         </p>
                                                         <span className="text-[10px] opacity-20">|</span>
-                                                        <p className={cn("text-[9px] font-bold tracking-tight italic", modal.data === p && modal.isOpen ? "text-white/70" : "text-teal-500/70")}>
-                                                            {p.tenantInfo?.name || p.tenantId}
+                                                        <p className={cn("text-[8px] font-black tracking-widest text-teal-500", modal.data === p && modal.isOpen ? "text-white/70" : "")}>
+                                                            {p.category}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -329,9 +346,9 @@ export default function AdminPromptsPage() {
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
                             <Sparkles size={64} className="text-teal-500" />
                         </div>
-                        <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Sugerencia Pro</h4>
+                        <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Multi-Vertical RAG</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                            Los prompts con la categoría <strong>EXTRACTION</strong> afectarán directamente a los modelos detectados en el pipeline inicial. Valida siempre que mantengas los placeholders <code className="text-teal-500">{"{{text}}"}</code>.
+                            Los prompts ahora soportan dimensiones por industria. El sistema seleccionará el prompt más específico disponible para la vertical detectada.
                         </p>
                     </div>
                 </div>
@@ -358,9 +375,9 @@ export default function AdminPromptsPage() {
                                     <Sparkles size={32} className="text-slate-300 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Control Maestro de Gemini</h3>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Control Maestro Multi-Vertical</h3>
                                     <p className="text-xs text-slate-500 max-w-xs mt-2 mx-auto font-medium">
-                                        Selecciona una ingeniería de prompt del listado lateral para desbloquear las capacidades de edición avanzada y visualización de versiones.
+                                        Selecciona una ingeniería de prompt para configurar las respuestas especializadas de cada vertical del negocio.
                                     </p>
                                 </div>
                                 <Button

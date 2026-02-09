@@ -80,10 +80,42 @@ export class MfaService {
         );
 
         // También marcamos en el usuario principal que tiene MFA habilitado
-        await db.collection('users').updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: { mfaEnabled: true } }
-        );
+        try {
+            const updateResult = await db.collection('users').updateOne(
+                { _id: new ObjectId(userId) },
+                { $set: { mfaEnabled: true } }
+            );
+
+            if (updateResult.modifiedCount === 0 && updateResult.matchedCount === 0) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'MFA_SERVICE',
+                    action: 'MFA_USER_UPDATE_FAILED',
+                    message: `No se encontró usuario para actualizar flag mfaEnabled: ${userId}`,
+                    correlationId: generateUUID(),
+                    details: { userId, updateResult }
+                });
+            } else {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'MFA_SERVICE',
+                    action: 'MFA_USER_UPDATED',
+                    message: `Flag mfaEnabled actualizado en users collection para: ${userId}`,
+                    correlationId: generateUUID(),
+                    details: { userId, modifiedCount: updateResult.modifiedCount }
+                });
+            }
+        } catch (error: any) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'MFA_SERVICE',
+                action: 'MFA_USER_UPDATE_CRASH',
+                message: `Error actualizando flag mfaEnabled para usuario: ${userId}`,
+                correlationId: generateUUID(),
+                details: { userId, error: error.message }
+            });
+            // Should we revert mfa_configs? probably yes, but for now just log critical error
+        }
 
         await logEvento({
             level: 'INFO',
@@ -158,6 +190,16 @@ export class MfaService {
     static async isEnabled(userId: string): Promise<boolean> {
         const db = await connectAuthDB();
         const config = await db.collection('mfa_configs').findOne({ userId, enabled: true });
+
+        await logEvento({
+            level: 'DEBUG',
+            source: 'MFA_SERVICE',
+            action: 'CHECK_ENABLED',
+            message: `Checking MFA status for ${userId}`,
+            correlationId: generateUUID(),
+            details: { userId, found: !!config, configId: config?._id }
+        });
+
         return !!config;
     }
 }

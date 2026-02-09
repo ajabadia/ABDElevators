@@ -91,8 +91,7 @@ export const menuSections: MenuSection[] = [
                 nameKey: 'items.assets',
                 href: '/admin/knowledge-assets',
                 icon: FileText,
-                roles: [UserRole.ADMIN, UserRole.ENGINEERING],
-                module: 'RAG'
+                roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
             },
             {
                 name: 'Search Explorer',
@@ -100,7 +99,6 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/knowledge-base',
                 icon: Search,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-                module: 'RAG'
             },
             {
                 name: 'Semantic Map',
@@ -177,6 +175,13 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/billing',
                 icon: CreditCard,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            },
+            {
+                name: 'Contracts',
+                nameKey: 'items.contracts',
+                href: '/admin/billing/contracts',
+                icon: FileText,
+                roles: [UserRole.SUPER_ADMIN]
             },
             {
                 name: 'API Keys',

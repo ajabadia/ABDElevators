@@ -18,7 +18,7 @@ export function SecurityCenterCard({ config }: SecurityCenterCardProps) {
     return (
         <ContentCard className="bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between p-8" noPadding={true}>
             <div className="flex items-center gap-6">
-                <div className="h-14 w-14 bg-teal-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-teal-600/20">
+                <div className="h-14 w-14 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
                     <Shield size={28} />
                 </div>
                 <div>
@@ -33,13 +33,13 @@ export function SecurityCenterCard({ config }: SecurityCenterCardProps) {
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100">
+                        <Button variant="outline" className="border-primary/20 text-primary bg-primary/5 hover:bg-primary/10">
                             Certificar GDPR
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2 text-teal-700">
+                            <DialogTitle className="flex items-center gap-2 text-primary">
                                 <Shield className="h-5 w-5" />
                                 Certificado de Cumplimiento GDPR
                             </DialogTitle>

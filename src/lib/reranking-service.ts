@@ -40,7 +40,7 @@ export class RerankingService {
                     fragments,
                     count: results.length,
                     industry
-                }, tenantId);
+                }, tenantId, 'PRODUCTION', industry as any);
                 renderedPrompt = promptText;
                 modelName = model;
             } catch (error) {

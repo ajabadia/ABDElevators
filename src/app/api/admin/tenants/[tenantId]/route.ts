@@ -25,7 +25,20 @@ export async function GET(
         }
 
         const config = await TenantService.getConfig(tenantId);
-        return NextResponse.json({ success: true, config });
+
+        console.log(`[API GET] Tenant ${tenantId} config returned:`, {
+            hasBranding: !!config?.branding,
+            colors: config?.branding?.colors
+        });
+
+        return NextResponse.json(
+            { success: true, config },
+            {
+                headers: {
+                    'Cache-Control': 'no-store, max-age=0',
+                }
+            }
+        );
     } catch (error: any) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });

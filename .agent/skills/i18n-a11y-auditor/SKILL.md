@@ -41,8 +41,12 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 1. **Inyección de i18n**: Sustituir textos hardcodeados por `t('clave')`.
 2. **Actualización de Diccionarios**: 
    - Añadir claves a `messages/es.json` y `messages/en.json`.
-   - **IMPORTANTE**: En este proyecto, los JSONs son el Fallback L4. El sistema sincronizará estos cambios a MongoDB/Redis automáticamente.
-   - **Gobernanza DB**: Para sincronizar manualmente nuevas claves a la base de datos, ejecutar: `npx tsx src/scripts/sync-db-translations-simple.ts`
+   - **MANDATORIO**: Tras añadir claves, DEBES sincronizar con la base de datos y limpiar la caché de Redis ejecutando:
+     ```bash
+     npx tsx scripts/force-sync-i18n.ts [locale]
+     ```
+     (donde `[locale]` es `es`, `en` o ambos).
+   - **Gobernanza DB**: El sistema prioriza Redis > DB > Archivos. Sin este paso, las nuevas claves no se verán en producción/dev hasta que expire el TTL.
    - **Prompts Dinámicos**: Si se detectan términos técnicos en prompts de IA, reportar para auditoría con `audit-db-prompts-simple.ts`
 3. **Refactorización a11y**: Añadir atributos ARIA missing y corregir jerarquía de etiquetas.
 
@@ -53,9 +57,11 @@ description: Audita y corrige la implementación de internacionalización (i18n)
   - ✅ SIEMPRE usar: "Inteligencia Técnica", "Búsqueda Semántica", "Buscador", "Inteligente", "Simulador de Análisis".
   - 📋 Referencia: `messages/es.json` y `messages/en.json` (secciones `user_dashboard`, `common`).
 - **INTEGRIDAD JSON**: Verifica la sintaxis JSON. Un error romperá el fallback local.
-- **SINCRONIZACIÓN**: Si añades una clave en un idioma, DEBES añadirla en todos los soportados para evitar `MISSING_MESSAGE`.
+- **SINCRONIZACIÓN (MANDATORIA)**:
+  - Si añades una clave en un idioma, DEBES añadirla en todos los soportados para evitar `MISSING_MESSAGE`.
+  - **DEBES** ejecutar `scripts/force-sync-i18n.ts` inmediatamente después de modificar los JSONs para invalidar la caché.
 - **JERARQUÍA**: Mantén el JSON agrupado por módulos (admin, common, public, profile, etc.).
-- **GOBERNANZA DB**: Después de actualizar JSONs, considerar ejecutar `sync-db-translations-simple.ts` para propagar a MongoDB.
+- **GOBERNANZA DB**: El archivo JSON local es la fuente de verdad (L4) para el desarrollador, pero la DB/Redis es la fuente de verdad para el runtime. La sincronización es el puente obligatorio.
 
 ## Output (formato exacto)
 1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y)" y "Gravedad".
@@ -64,3 +70,6 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 
 ## Manejo de Errores
 - Si un componente usa estados complejos para textos dinámicos, recomienda mover esos textos a un archivo de constantes o directamente a los diccionarios.
+- **ERROR: MISSING_MESSAGE**: Si detectas este error en runtime (pero las claves SÍ están en los JSON), es probable que el sistema de caché (Redis/DB) esté desincronizado. 
+  - **SOLUCIÓN**: Consulta la skill `error-resolution-handler` e implementa la solución `i18n_missing_key`.
+  - **COMANDO**: `npx tsx scripts/force-sync-i18n.ts [locale]`

@@ -15,6 +15,7 @@ export class MultilingualSearchService {
         tenantId: string,
         correlationId: string,
         limit = 5,
+        industry: string = 'GENERIC',
         environment: string = 'PRODUCTION'
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.multilingual_search', {
@@ -22,6 +23,7 @@ export class MultilingualSearchService {
                 'tenant.id': tenantId,
                 'correlation.id': correlationId,
                 'rag.query': query,
+                'rag.industry': industry,
                 'rag.strategy': 'BGE-M3',
                 'rag.environment': environment
             }
@@ -45,6 +47,7 @@ export class MultilingualSearchService {
                             "filter": {
                                 "$and": [
                                     { "tenantId": { "$in": ["global", tenantId] } },
+                                    { "industry": industry },
                                     { "environment": environment }
                                 ]
                             }

@@ -1,13 +1,13 @@
 "use client"
 
-import { UserSemanticSearch } from "@/components/shared/UserSemanticSearch"
+import { ConversationalSearch } from "@/components/shared/ConversationalSearch"
 import { Sparkles, Info } from "lucide-react"
 import { PageContainer } from "@/components/ui/page-container"
 import { PageHeader } from "@/components/ui/page-header"
 import { useTranslations } from "next-intl"
 
 export default function SearchPage() {
-    const t = useTranslations('admin.dashboard.search') // Reusing search namespace if exists or similar
+    const t = useTranslations('admin.dashboard.search')
 
     return (
         <PageContainer spacing="loose">
@@ -18,7 +18,7 @@ export default function SearchPage() {
             />
 
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <UserSemanticSearch />
+                <ConversationalSearch />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">

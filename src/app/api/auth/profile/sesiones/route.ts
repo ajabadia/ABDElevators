@@ -4,7 +4,7 @@ import { SessionService } from '@/lib/session-service';
 import { AppError } from '@/lib/errors';
 
 /**
- * GET /api/auth/perfil/sesiones
+ * GET /api/auth/profile/sesiones
  * Obtiene todas las sesiones activas del usuario actual.
  */
 export async function GET() {
@@ -30,7 +30,7 @@ export async function GET() {
 }
 
 /**
- * DELETE /api/auth/perfil/sesiones
+ * DELETE /api/auth/profile/sesiones
  * Revoca una sesión específica (Logout remoto).
  */
 export async function DELETE(req: NextRequest) {

@@ -1,58 +1,17 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.30 - EVOLUTION ERA - v3.9.7)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.31 - ENTERPRISE ERA - v4.2.1)
 
 ## 📖 Overview
 
-This document consolidates **all** roadmap information, implementation plans, and task checklist into a single, authoritative reference. It preserves historical progress, detailed phase breakdown, and the high-level cognitive infrastructure vision.
-
 ---
 
-### 🏛️ Detailed Phase Roadmap
-
-#### 🟢 FASE 1-7: CIMENTACIÓN SAAS & CORE (COMPLETADO ✅)
-
-- [X] **FASE 1: INFRAESTRUCTURA Y FUNDAMENTOS** (Inicialización, Datos, IA).
-- [X] **FASE 2: GESTIÓN DE CONOCIMIENTO** (Ingesta, Pipeline, Ciclo de Vida).
-- [X] **FASE 3: ANÁLISIS & RAG** (Portal Técnico, Orquestación, Informes).
-- [X] **FASE 4: FUNCIONES ENTERPRISE** (Usuarios, Reportes, Observabilidad, Deploy).
-- [X] **FASE 5: GESTIÓN DE USUARIOS** (Maestro, Perfil, Documentos Pro).
-- [X] **FASE 6: RAG PROFESIONAL** (Checklists Dinámicos, Configurador Visual, Validación Humana, Audit Trail).
-- [X] **FASE 7: GENERALIZACIÓN SAAS** (Core Abstraction, Workflows, Multi-tenant Metadata, Billing).
-
-#### 🟣 FASE 12-14: GOBIERNO, COMPLIANCE & CONTINUIDAD (COMPLETADO ✅)
-
-- [X] **FASE 12: MODO DEMO EFÍMERO & FREE TRIAL**
-  - [X] Ephemeral Tenant Factory.
-  - [X] Auto-Cleanup Engine (TTL).
-- [X] **FASE 13: CONTINUIDAD & DISASTER RECOVERY**
-  - [X] Unified Backup Engine (JSON Export).
-  - [X] Knowledge Package (.zip) for portability.
-- [X] **FASE 14: GDPR COMPLIANCE & DERECHO AL OLVIDO**
-  - [X] Permanent Purge System.
-  - [X] Deletion Certificate (PDF Signature).
-- [X] **FASE 16: MARKETING OVERHAUL** (Completado)
-  - [X] Hero / Bento Redesign.
-  - [X] FAQ & Vision.
-
-#### 🚀 FASE 17-18: AUTONOMÍA OPERATIVA & AUDITORÍA TOTAL (COMPLETADO ✅)
-
-- [X] **FASE 17: AI Infrastructure Autoscaling** - Implementation of the `InfrastructureAutoscaler`.
-- [X] **FASE 18: Universal Security Audit** - Implementation of the `SecurityAuditEngine`.
-- [X] **FASE 19: INTERNACIONALIZACIÓN COMPLETA** (ES/EN - Optimized & Resilient).
-- [X] **FASE 20: SISTEMA DE TICKETING EMPRESARIAL**.
-
----
-
-- **Status & Metrics (v3.9.7 - UX ERA)**
+- **Status & Metrics (v4.2.0 - ENTERPRISE ERA)**
 - **Global Progress:** 100% (Architecture Pivot complete).
-- **Industrialization Progress:** 100% (Phases 101-109 VERIFIED SUCCESS).
+- **Industrialization Progress:** 100% (Phases 101-111 VERIFIED SUCCESS).
 - **UX Transformation:** 100% (Phase 96 COMPLETADA).
+- **Enterprise SaaS Ready:** 80% (Phase 120.1, 120.3, 120.4, 110, 111 COMPLETADA 🛡️).
 - **Core Status:** 100% (High-Availability Industrial Grade).
-- **Recent Ship:** Business-Ready UX (Conversational Search, Onboarding, Notifications) Phase 96.
-- **Tenant Isolation:** Industry-segregated retrieval & Schema standardization (MEDICAL added).
-- **Advanced RAG Evolution:** Active Domain Router for Legal, Banking, Insurance and Elevators.
-- **Vercel Stability:** Hardened diagnostic endpoints & Secure session handling.
-- **Task Collaboration Hub:** Operational for multi-vertical human-in-the-loop validation.
-- **Project Status:** **High-Performance Industrial Platform (v3.9.7 - UX Era solidified).**
+- **Recent Ship:** Interactive Sandbox Demo (Public), Magic Links Authentication (Passwordless), Advanced Checklist Configs & i18n Multi-tier Cache.
+- **Project Status:** **High-Performance Industrial Platform (v4.2.1 - Enterprise SaaS Evolution).**
 
 ---
 
@@ -134,6 +93,26 @@ This document consolidates **all** roadmap information, implementation plans, an
 - [X] **Global Sync:** Sincronización masiva de locales con persistencia garantizada en MongoDB.
 - [X] **Missing Keys Radar:** Filtros en UI para detectar claves sin traducción activamente (Phase 109 ✅).
 - [X] **Prompt Governance:** Estandarización de prompts de traducción con contexto de negocio (`vertical`).
+
+#### 🎮 FASE 110: INTERACTIVE SANDBOX DEMO (COMPLETADO ✅)
+**Objetivo:** Demo público e interactivo para mostrar capacidades RAG sin autenticación.
+
+- [X] **Public Route:** Ruta `/sandbox` accesible sin login con rate limiting estricto (5 req/min por IP).
+- [X] **Demo Documents:** Documentos hardcodeados (Manual Otis Gen2, Contrato Torre Norte) para contexto limitado.
+- [X] **Chat Interface:** Componente `SandboxChat` con UI simplificada y feedback visual.
+- [X] **Backend API:** `/api/sandbox/chat` con inyección de contexto demo y modelo `gemini-1.5-flash`.
+- [X] **Security:** Sin acceso a datos reales de tenants, rate limiting por IP, sin persistencia de conversaciones.
+
+#### 🔐 FASE 111: MAGIC LINKS AUTHENTICATION (COMPLETADO ✅)
+**Objetivo:** Autenticación passwordless mediante enlaces mágicos por email.
+
+- [X] **Backend API:** `/api/auth/magic-link/request` para generación y envío de tokens seguros.
+- [X] **Auth Integration:** Lógica de verificación en `lib/auth.ts` con detección de prefijo `MAGIC_LINK:`.
+- [X] **Verification Page:** `/auth-pages/magic-link/verify` con estados de carga, éxito y error.
+- [X] **Login UI:** Toggle entre "Password" y "Magic Link" modes en `/login` con animaciones Framer Motion.
+- [X] **i18n:** Claves traducidas en ES/EN para toda la experiencia de usuario.
+- [X] **Security:** Tokens de 64-char hex, expiración 15 min, single-use, rate limiting AUTH tier, email enumeration protection.
+- [X] **Database:** Colección `magic_links` en auth DB con campos `email`, `token`, `expiresAt`, `used`, `ip`, `userId`.
 
 ---
 
@@ -493,15 +472,15 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 **Objetivo:** Reducir fricción de entrada y demostrar valor inmediato (ROI).
 
 - [ ] **ROI Calculator**: Implementar calculadora interactiva en Landing Page. <!-- ref: Documentación/09/gaps funcionales.md:5 -->
-- [ ] **Interactive Sandbox Demo**: Simulador "Sube tu PDF" limitado para usuarios no registrados. <!-- ref: Documentación/09/gaps funcionales.md:4 -->
-- [ ] **Magic Links (Passwordless)**: Opción de login sin contraseña vía email. <!-- ref: Documentación/09/gaps funcionales.md:13 -->
-- [ ] **Post-Invite Onboarding Wizard**: Flujo guiado de 3 pasos tras el primer login. <!-- ref: Documentación/09/gaps funcionales.md:11 -->
+- [X] **Interactive Sandbox Demo**: Simulador "Sube tu PDF" limitado para usuarios no registrados (Fase 110 ✅). <!-- ref: Documentación/09/gaps funcionales.md:4 -->
+- [X] **Magic Links (Passwordless)**: Opción de login sin contraseña vía email (Fase 111 ✅). <!-- ref: Documentación/09/gaps funcionales.md:13 -->
+- [X] **Post-Invite Onboarding Wizard**: Flujo guiado de 3 pasos tras el primer login (Phase 96.4 ✅). <!-- ref: Documentación/09/gaps funcionales.md:11 -->
 
 #### 💂 FASE 81: SEGURIDAD ENTERPRISE & GOVERNANCE PRO
 **Objetivo:** Cumplir con estándares bancarios e industriales de alta seguridad.
 
-- [ ] **2FA (Two-Factor Authentication)**: Implementación de TOTP (Authenticator) / SMS backup. <!-- ref: Documentación/07/roadmap-detallado.md:108 -->
-- [ ] **Swagger/OpenAPI Portal**: Interfaz interactiva para desarrolladores en `/admin/api-docs`. <!-- ref: Documentación/07/mejoras-tecnicas.md:269 -->
+- [X] **2FA (Two-Factor Authentication)**: Implementación de TOTP (Authenticator) / SMS backup (Fase 107 ✅). <!-- ref: Documentación/07/roadmap-detallado.md:108 -->
+- [X] **Swagger/OpenAPI Portal**: Interfaz interactiva para desarrolladores en `/admin/api-docs` (Fase 108 ✅). <!-- ref: Documentación/07/mejoras-tecnicas.md:269 -->
 - [ ] **Document Relationships**: Motor de vinculación lógica ("A anula B", "X es compatible con Y"). <!-- ref: Documentación/09/gaps funcionales.md:27 -->
 - [ ] **Inline PDF Secure Preview**: Visualización in-browser sin descarga temporal. <!-- ref: Documentación/09/gaps funcionales.md:30 -->
 - [ ] **Scheduled Review Dates**: Fechas de caducidad y alertas de revisión para manuales técnicos. <!-- ref: Documentación/09/gaps funcionales.md:28 -->
@@ -623,6 +602,29 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 -   [x] **Contextual Help Layer (Phase 96.2 ✅)**: Desplegar `HelpButton` e `InlineHelpPanel` explicativos en el visor de auditoría.
 -   [x] **Filtered Notification Center**: Implementar un centro de notificaciones accesible desde `/admin/profile` con filtros por tipo y estado.
 
+---
+
+#### 🏢 FASE 120: ENTERPRISE SaaS TRANSFORMATION (NEXT 🚀)
+**Objetivo:** Elevar la plataforma a estándares de "Enterprise-Ready" para clientes B2B de gran escala.
+**Referencia:** [Doc 2001.txt](file:///d:/desarrollos/ABDElevators/documentación/20/2001.txt)
+
+-   [X] **120.1: CIAM & Security Hardening (Identity Hub)** (Phase 120.1 ✅)
+    -   [X] Mandatory MFA para roles ADMIN/SUPERADMIN.
+    -   [X] Soporte fundamentos para SSO OIDC/SAML por tenant.
+    -   [X] Guardian "Policy as Code" y auditoría de cambios de rol.
+-   [ ] **120.2: Smart Billing & Usage Quotas (NEXT 🚀)**
+    -   [ ] Integración con Stripe (Checkouts/Portal).
+    -   [ ] Modelo de tiers (BASIC/PRO/ENTERPRISE) con Entitlements dinámicos.
+    -   [ ] Hard enforcement de límites (tokens, storage, searches) vía `UsageService`.
+-   [X] **120.3: Deep Observability & Reliability** (Phase 120.3 ✅)
+    -   [X] Implementación de OpenTelemetry SDK (Custom Spans).
+    -   [X] Dashboards de SLIs/SLOs de respuesta RAG (`/api/admin/observability/slis`).
+    -   [X] Drills automatizados de backup/restore para MongoDB.
+-   [X] **120.4: B2B Experience & ROI Visibility** (Phase 120.4 ✅)
+    -   [X] Onboarding Wizard completo para nuevos Tenants.
+    -   [X] Business Dashboards (ROI, Ahorro, Calidad RAG) con Chart.js.
+    -   [X] Explainable AI Governance UI (Decision Tracing).
+
 #### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE (COMPLETADO ✅)
 **Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.
 
@@ -660,4 +662,12 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [ ] **Advanced Ingestion Workers**: Sistema distribuido de trabajadores para PDFs de gran volumen (>1GB).
 - [ ] **Global Dashboard PRO**: Unificación de métricas de todos los tenants para superadmins.
 
-*Updated and Audited on 2026-02-08 by Antigravity (Skill: roadmap-manager)*
+#### 🔐 FASE 121: AUTH RETROSPECTIVE & HARDENING (FUTURO 🚀)
+**Objetivo:** Revisión integral y blindaje de los sistemas de acceso para garantizar máxima resiliencia y seguridad.
+
+- [ ] **Audit MFA Hub:** Revisión de la propagación de sesiones MFA y persistencia en Redis.
+- [ ] **Magic Link Logic Overhaul:** Optimización de redirecciones profundas y estados de error.
+- [ ] **Rate Limiting Intelligence:** Implementación de bloqueos progresivos por IP/Usuario en flujos de auth.
+- [ ] **Session Security:** Blindaje de cookies y tokens JWT contra ataques de sesión.
+
+*Updated and Audited on 2026-02-08 by Antigravity v4.1.0 (Skill: roadmap-manager)*

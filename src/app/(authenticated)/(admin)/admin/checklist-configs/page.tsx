@@ -4,6 +4,7 @@ import React from 'react';
 import { ChecklistConfigList } from '@/components/admin/ChecklistConfigList';
 import { LayoutGrid, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,12 +15,14 @@ import { ContentCard } from "@/components/ui/content-card";
  * Dashboard principal para gestionar las reglas de negocio de los checklists.
  */
 export default function ConfigsChecklistPage() {
+    const t = useTranslations('admin.checklists');
+
     return (
         <PageContainer>
             <PageHeader
-                title="Checklists Dinámicos"
+                title={t('title')}
                 highlight="Dinámicos"
-                subtitle="Define cómo se clasifican y priorizan los elementos detectados por la IA en los pedidos técnicos."
+                subtitle={t('subtitle')}
                 actions={
                     <Link
                         href="/admin"
@@ -35,21 +38,21 @@ export default function ConfigsChecklistPage() {
 
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <ContentCard>
-                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">Categorización Automática</h3>
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('cards.categorization.title')}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Los elementos se asignan a categorías basadas en las palabras clave definidas. Asegúrate de usar términos técnicos precisos.
+                        {t('cards.categorization.desc')}
                     </p>
                 </ContentCard>
                 <ContentCard>
-                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">Priorización Inteligente</h3>
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('cards.prioritization.title')}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        El orden de las categorías determina qué elementos ve primero el técnico en el taller para optimizar el flujo de trabajo.
+                        {t('cards.prioritization.desc')}
                     </p>
                 </ContentCard>
                 <ContentCard>
-                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">Aislamiento por Tenant</h3>
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('cards.multi_tenant.title')}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Cada tenant tiene sus propias configuraciones de checklist, permitiendo adaptar el sistema a diferentes tipos de ascensores o normativas.
+                        {t('cards.multi_tenant.desc')}
                     </p>
                 </ContentCard>
             </div>

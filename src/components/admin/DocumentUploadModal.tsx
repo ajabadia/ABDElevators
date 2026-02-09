@@ -46,10 +46,10 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
     const fetchTypes = async () => {
         try {
-            const res = await fetch('/api/admin/document-types');
+            const res = await fetch('/api/admin/document-types?category=RAG_ASSET');
             if (res.ok) {
                 const data = await res.json();
-                setTiposDocs(data);
+                setTiposDocs(data.items || []);
             }
         } catch (error) {
             console.error('Error fetching types:', error);
@@ -72,11 +72,17 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         setIsUploading(true);
         setDeduplicated(false); // Reset por precaución
 
+        // Buscar el ID del tipo si es posible (tipo actualmente es el name o id según el Select)
+        const selectedType = tiposDocs.find(t => t.name.toLowerCase() === tipo.toLowerCase()) as any;
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('tipo', tipo);
         formData.append('version', version);
         formData.append('maskPii', maskPii.toString());
+        if (selectedType && selectedType._id) {
+            formData.append('documentTypeId', selectedType._id.toString());
+        }
 
         let errorDetails: any = null;
         try {

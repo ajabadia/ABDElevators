@@ -35,6 +35,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         category: initialPrompt?.category ?? 'GENERAL' as any,
         template: initialPrompt?.template ?? '',
         model: initialPrompt?.model ?? 'gemini-1.5-flash',
+        industry: initialPrompt?.industry ?? 'GENERIC' as any,
         maxLength: initialPrompt?.maxLength,
         variables: initialPrompt?.variables ?? []
     });
@@ -250,17 +251,36 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-slate-400 text-xs">Categoría</Label>
-                                            <select value={formData.category} onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as any }))} className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                                <option value="EXTRACTION">Extracción</option><option value="ANALYSIS">Análisis</option><option value="RISK">Riesgos</option><option value="CHECKLIST">Checklist</option><option value="GENERAL">General</option>
+                                            <Label className="text-slate-400 text-xs text-teal-400">Industria (Vertical)</Label>
+                                            <select value={formData.industry} onChange={e => setFormData(prev => ({ ...prev, industry: e.target.value as any }))} className="w-full bg-slate-950 border-teal-500/30 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500 outline-none">
+                                                <option value="GENERIC">Genérico (Global)</option>
+                                                <option value="ELEVATORS">Ascensores</option>
+                                                <option value="LEGAL">Legal / Contratos</option>
+                                                <option value="BANKING">Banca / Finanzas</option>
+                                                <option value="INSURANCE">Seguros (Insurance)</option>
+                                                <option value="IT">Tecnología (IT)</option>
+                                                <option value="MEDICAL">Médico / Salud</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-slate-400 text-xs">Modelo</Label>
                                             <select value={formData.model || 'gemini-1.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
+                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
                                             </select>
                                         </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-400 text-xs">Categoría</Label>
+                                        <select value={formData.category} onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as any }))} className="w-full bg-slate-950 border-slate-800 text-slate-300 rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
+                                            <option value="EXTRACTION">Extracción</option>
+                                            <option value="ANALYSIS">Análisis</option>
+                                            <option value="RISK">Riesgos</option>
+                                            <option value="CHECKLIST">Checklist</option>
+                                            <option value="GENERAL">General</option>
+                                            <option value="ROUTING">Routing</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <VariableManager variables={formData.variables} onAdd={addVariable} onUpdate={updateVariable} onRemove={removeVariable} />

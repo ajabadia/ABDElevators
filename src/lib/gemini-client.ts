@@ -19,13 +19,21 @@ export function getGenAI() {
 }
 
 /**
- * Mapea nombres de modelos legacy/incorrectos a modelos oficiales de Google.
+ * Mapea nombres de modelos comerciales o técnicos a nombres oficiales de la SDK.
  */
 export function mapModelName(model: string): string {
-    if (model.startsWith('gemini-3')) {
-        return 'gemini-2.0-flash-exp';
+    const m = model.toLowerCase();
+
+    // Soporte para Gemini 2.x/3.x (requested by user)
+    // Nota: Mapeamos a las versiones estables más recientes si el alias no es directo.
+    if (m.includes('gemini-2.5') || m.includes('gemini-3')) {
+        return 'gemini-2.0-flash'; // O la versión pro si se prefiere, pero flash es el default para RAG
     }
-    return model;
+
+    if (m.includes('gemini-2.0')) return 'gemini-2.0-flash';
+    if (m.includes('pro')) return 'gemini-1.5-pro';
+    if (m.includes('flash')) return 'gemini-1.5-flash';
+    return 'gemini-1.5-flash'; // Fallback seguro
 }
 
 /**

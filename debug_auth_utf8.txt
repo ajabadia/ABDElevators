@@ -1,0 +1,23 @@
+﻿Inspecting Auth Cluster: cluster0.xarmew0.mongodb.net/
+Databases: [ 'ABDElevators-Auth', 'admin', 'local' ]
+DB [ABDElevators-Auth] Collections: [
+  'organizations',
+  'users',
+  'permission_groups',
+  'tenants',
+  'sessions',
+  'mfa_configs'
+]
+  - organizations: 2 docs
+  - users: 11 docs
+  - permission_groups: 2 docs
+  - tenants: 5 docs
+    Sample doc IDs: [
+  'ascensores-pro',
+  'garcia-legales',
+  'banco-parque',
+  'default_tenant',
+  'elevadores_mx'
+]
+  - sessions: 9 docs
+  - mfa_configs: 1 docs

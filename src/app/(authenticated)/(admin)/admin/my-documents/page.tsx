@@ -28,6 +28,7 @@ interface PersonalDocument {
     sizeBytes: number;
     cloudinaryUrl: string;
     createdAt: string;
+    fileMd5?: string;
 }
 
 export default function MyDocumentsPage() {
@@ -44,6 +45,11 @@ export default function MyDocumentsPage() {
         endpoint: '/api/auth/knowledge-assets'
     });
 
+    // 1.5 Fetch Document Types
+    const { data: docTypes } = useApiList<{ _id: string, name: string }>({
+        endpoint: '/api/admin/document-types?category=USER_DOCUMENT'
+    });
+
     // 2. Mutación para Subir (usado por el formulario)
     const { mutate: uploadDoc, isLoading: uploading } = useApiMutation({
         endpoint: '/api/auth/knowledge-assets',
@@ -52,6 +58,15 @@ export default function MyDocumentsPage() {
         onSuccess: () => {
             modal.close();
             fetchDocs();
+            toast({ title: "Éxito", description: "Tu documento se ha guardado y procesado." });
+        },
+        onError: (err) => {
+            console.error("Upload failed", err);
+            toast({
+                title: "Error al subir",
+                description: typeof err === 'string' ? err : "No se pudo subir el archivo. Verifica el tamaño o formato.",
+                variant: 'destructive'
+            });
         }
     });
 
@@ -66,6 +81,14 @@ export default function MyDocumentsPage() {
     const handleUpload = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+
+        // Validación básica cliente
+        const file = formData.get('file') as File;
+        if (file && file.size > 10 * 1024 * 1024) {
+            toast({ title: "Error", description: "El archivo es demasiado grande (Máx 10MB)", variant: "destructive" });
+            return;
+        }
+
         uploadDoc(formData);
     };
 
@@ -78,7 +101,14 @@ export default function MyDocumentsPage() {
                     <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded text-teal-600">
                         <FileText size={16} />
                     </div>
-                    <span className="font-medium">{doc.originalName}</span>
+                    <div className="flex flex-col">
+                        <span className="font-medium">{doc.originalName}</span>
+                        {doc.fileMd5 && (
+                            <span className="text-[10px] text-slate-400 font-mono" title="MD5 Hash for Deduplication">
+                                {doc.fileMd5}
+                            </span>
+                        )}
+                    </div>
                 </div>
             )
         },
@@ -128,9 +158,9 @@ export default function MyDocumentsPage() {
                             isError={!!listError}
                             isCached={docs && docs.length > 0}
                         />
-                    </div>
+                    </div >
                     <p className="text-slate-500">Espacio personal para tus manuales, notas y archivos técnicos.</p>
-                </div>
+                </div >
 
                 <Dialog open={modal.isOpen} onOpenChange={modal.setIsOpen}>
                     <DialogTrigger asChild>
@@ -161,7 +191,7 @@ export default function MyDocumentsPage() {
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </div >
 
             <ContentCard noPadding={true}>
                 <DataTable
@@ -171,6 +201,6 @@ export default function MyDocumentsPage() {
                     emptyMessage="No has subido ningún documento personal aún."
                 />
             </ContentCard>
-        </div>
+        </div >
     );
 }

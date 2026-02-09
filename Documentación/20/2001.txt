@@ -1,0 +1,2571 @@
+Ahora mismo estás bastante cerca de “SaaS profesional” a nivel técnico, pero faltan varias piezas típicas de producto enterprise‑ready en cuatro bloques: seguridad/compliance, multi‑tenant & billing, operabilidad y experiencia de producto.
+​
+
+1) Seguridad y compliance
+Ya tienes buena base: RBAC por rol, tenantId en casi todo, audit logs y SLA logging; pero para SaaS “serio” suelen pedir:
+
+Identidad avanzada:
+
+SSO SAML/OIDC por tenant (Azure AD, Okta, Google Workspace).
+
+MFA obligatoria al menos para roles ADMIN / SUPERADMIN.
+​
+​
+
+Controles de acceso formales:
+
+Hardening de GuardianEngine + PermissionPolicy hacia un modelo “policy as code” más verificable (tests de RLS/tenant breach automáticos).
+​
+
+Revisiones periódicas de permisos (access review) y registro explícito de cambios de rol/políticas.
+
+Cifrado / gestión de secretos:
+
+Política clara de cifrado en reposo (discos DB/Backups) y en tránsito (HSTS, TLS modern).
+​
+
+Gestión centralizada de secretos (Vault, AWS Secrets, Doppler, etc.), rotación periódica de claves API/LLM/Cloudinary, no sólo .env.
+​
+
+Compliance “audit‑friendly” (aunque no certifiques ya mismo):
+
+Matriz de controles mínima alineada con SOC2/ISO‑27001 (accesos, backups, cambios, incidentes, retención logs).
+
+Export de logs a un SIEM externo (Splunk, Datadog, Loki) y retención configurable (90/180/365 días) para clientes enterprise.
+
+2) Multi‑tenant y billing de producto
+Tienes muchas piezas internas (usage logs, límites, pricing plans), pero para un SaaS listo para vender falta pulir:
+
+Modelo de tenant & organización:
+
+UI clara para gestionar organizaciones, dominios verificados, invitados, equipos internos, etc.
+​
+
+Controles de “noisy neighbor”: límites duros y blandos por tenant (tokens, storage, jobs en cola), con mensajes UX claros.
+​
+
+Billing “end‑to‑end”:
+
+Integración sólida con Stripe/Chargebee/etc.: trials, upgrades/downgrades, prorrateo, facturas descargables, tarjetas y SEPA.
+
+Lógica completa de estados de suscripción: trial, active, grace, past_due, canceled, con reflejo en permisos (“modo sólo lectura”, suspensión progresiva).
+​
+
+Métricas internas claras: MRR, churn, ARPA, uso por tenant conectadas a tu usagelogs y pricing.
+​
+
+3) Operabilidad, fiabilidad y escalado
+Tu logging y colas ya son bastante buenos, pero a nivel “SaaS profesional” se espera:
+
+Observabilidad full‑stack:
+
+Trazas distribuidas (OpenTelemetry) para peticiones clave: ingest, RAG chat, workflows.
+
+Dashboards de SLO/SLA (p95 por endpoint crítico, tasa de errores, colas retrasadas), y alertas en PagerDuty/Slack.
+
+Health checks profundos (DB, colas, LLM providers, Cloudinary) con endpoints internos.
+​
+​
+
+Resiliencia y DR:
+
+Backups programados (DB + blobs) probados con drills de restore.
+
+Estrategia de despliegue segura (blue/green o canary), con smoke tests automáticos post‑deploy.
+
+Plan documentado de incident response (roles, tiempos, plantillas de comunicación).
+
+4) Experiencia de producto B2B (admin & tenant)
+Tu UI admin es muy potente, pero de cara a clientes:
+
+Onboarding & self‑service:
+
+Asistente de onboarding por tenant (crear usuarios, conectar fuentes, subir primeros documentos, configurar checklists y gobernanza).
+​
+​
+
+Centro de ayuda integrado (docs, vídeos, “guided tours”) y feedback in‑app.
+​
+
+Tenant‑facing analytics:
+
+Dashboards de ROI por tenant más “de negocio”: tiempo ahorrado, consultas por área, riesgos detectados/resueltos, etc., no sólo métricas técnicas.
+​
+​
+
+Export de datos (reports, logs de IA, checklist history) en formatos amigables (CSV/Excel/JSON) y API documentada para integraciones.
+​
+​
+
+Hardening de flujos IA:
+
+Controles de “safe use” para LLM (límites de tamaño input, masking PII configurable por tenant, plantillas de prompts auditables).
+​
+​
+
+UI de gobernanza más explicativa (por qué se bloqueó una acción, qué policy aplicó, cómo pedir override).
+
+
+
+
+Te propongo un roadmap en 4 bloques, cada uno razonable para 1–2 sprints cortos.
+
+Bloque 1: Identidad, roles y seguridad
+Objetivo: estar cómodo enseñando esto a un CISO sin que salten alarmas obvias.
+
+Autenticación y MFA
+
+Integrar MFA obligatoria para ADMIN / SUPERADMIN (TOTP o WebAuthn).
+​
+
+Preparar capa para añadir SSO OIDC/SAML por tenant (aunque al principio sea sólo “en roadmap”).
+
+Endurecer permisos y guardian
+
+Revisar GuardianEngine/políticas para que todo acceso sensible (ingest, borrar assets, cambiar workflows) pase por una policy clara y testeada.
+​
+​
+
+Añadir tests automáticos de “tenant escape” (no puedes leer/editar recursos de otro tenant aunque toques IDs a mano).
+
+Secret management básico
+
+Centralizar secretos (LLM keys, Cloudinary, Resend, etc.) en un secret manager y documentar rotación.
+​
+
+Revisar headers de seguridad (HSTS, CSP, cookies secure/HttpOnly) y terminarlos como checklist.
+​
+​
+
+Bloque 2: Billing, límites y multi‑tenant “real”
+Objetivo: poder cobrar sin miedo y que un tenant “grande” no rompa a los demás.
+
+Modelo de suscripción
+
+Consolidar pricingplans, usage logs y tenant.subscription en un único modelo “Plan + límites efectivos”.
+​
+
+Implementar estados de suscripción: trial, active, grace, suspended, canceled, y que el motor de permisos reaccione (ej.: sólo lectura en suspended).
+
+Integración con pasarela
+
+Integrar Stripe/Chargebee o similar con: alta de tenant, cambio de plan, cancelación, facturas descargables.
+​
+
+Conectar events Webhook → actualización de estado de tenant + envio de notificaciones in‑app/email.
+
+Rate limits y quotas por tenant
+
+Formalizar AccessControlService.checkUsageLimits y derivarlo de plan/contrato (tokens, storage, jobs simultáneos).
+​
+
+UX: mostrar uso y “cuánto queda” en el dashboard de tenant, con avisos antes de bloquear.
+​
+​
+
+Bloque 3: Observabilidad, fiabilidad y backups
+Objetivo: detectar problemas antes que los clientes y poder recuperarte.
+
+Observabilidad
+
+Instrumentar endpoints y workers clave con OpenTelemetry (trazas + métricas).
+
+Crear dashboards:
+
+p95 y tasa de error de ingest, ragchat, pedidos/:id/analyze.
+
+Lag de colas (ingest, workflows).
+
+Alertas básicas (Slack/email) sobre: errores 5xx > X%, cola retrasada, ingest fallidas repetidas.
+
+Logging centralizado
+
+Enviar logs estructurados a un backend (Loki/ELK/Datadog).
+
+Definir retención base (90 días) y opción extendida para enterprise.
+
+Backups y DR
+
+Automatizar backups de Mongo y Neo4j + pruebas de restore periódicas.
+​
+
+Documentar RPO/RTO objetivo (aunque sean modestos) y el runbook de incidentes críticos.
+
+Bloque 4: Experiencia de producto B2B y gobernanza IA
+Objetivo: que un cliente vea un producto redondo, no sólo “una demo muy potente”.
+
+Onboarding de tenant
+
+Wizard inicial: subir primeros PDFs, configurar tipos de documento, checklists, roles, alertas.
+​
+​
+
+Plantillas de configuración por vertical (ascensores, legal, banking), usando tu DomainRouterService.
+​
+​
+
+Dashboards de negocio por tenant
+
+Extender tu Tenant ROI Dashboard con métricas legibles: tiempo ahorrado, casos resueltos, riesgos detectados, calidad RAG en el último mes.
+​
+​
+
+Export de datos (CSV/JSON) de checklists, reports, logs de IA por entidad.
+​
+​
+
+Gobernanza IA explicable
+
+UI para GovernanceEngine: listar políticas activas por entidad/acción, con explicación corta.
+​
+​
+
+Vista de AIGOVERNANCE/audit logs amigable (qué acción se bloqueó, por qué, cómo solicitar override).
+​
+​
+
+Con lo que ya tienes, empezaría por Bloque 2 (billing+limits) y Bloque 3 (observabilidad+backups), porque desbloquean pasar de “proyecto muy sólido” a “producto que puedes vender tranquilo”.
+
+
+
+
+Bloque 2 lo puedes aterrizar en tres frentes: modelo de suscripción, integración de pasarela, y límites/quotas efectivos.
+​
+
+1) Modelo de suscripción unificado
+Objetivo: una única fuente de verdad para plan, estado y límites.
+
+Definir schema de tenant.subscription
+
+Campos recomendados:
+
+planId (ref a pricingplans).
+​
+
+status: trial, active, grace, past_due, suspended, canceled.
+
+billingProvider: stripe, manual, sandbox.
+
+providerCustomerId, providerSubscriptionId.
+
+trialEndsAt, currentPeriodEnd, canceledAt, suspendedAt.
+
+seatsLimit, tokensLimit, storageLimit, searchesLimit (derivados del plan pero overrideables).
+​
+​
+
+Normalizar pricingplans
+
+Asegúrate de que cada plan tenga:
+
+slug, name, priceMonthly/Yearly, features.
+​
+
+limits: { tokens, storage, searches, users }.
+​
+
+Añade un pequeño servicio PlanLimitsService que, dado tenant, devuelva los límites efectivos (plan + overrides).
+​
+​
+
+Migración de datos
+
+Script para:
+
+Rellenar tenant.subscription.planId desde el plan actual si ya lo guardas en otra parte.
+​
+
+Inicializar status = trial o active según tu situación actual.
+
+2) Integración con pasarela (Stripe como ejemplo)
+Objetivo: alta/cambio/cancelación de suscripciones automatizadas.
+
+Crear un pequeño BillingService
+
+Responsabilidades mínimas:
+
+createCheckoutSession(tenantId, planId) → URL para pago inicial.
+
+createPortalSession(tenantId) → gestión de pago/plan por el cliente.
+
+handleWebhook(event) → actualizar tenant.subscription al cambiar el estado en Stripe.
+
+Endpoints HTTP
+
+POST /api/billing/checkout
+
+Recibe planId, mira tenantId de sesión, llama a BillingService.createCheckoutSession y devuelve la URL.
+
+POST /api/billing/portal
+
+Crea sesión de portal para que el admin del tenant gestione tarjeta/facturas.
+
+POST /api/billing/webhook (sin auth, validado por firma)
+
+Procesa eventos clave:
+
+checkout.session.completed → status = active, set planId.
+
+invoice.payment_failed → status = past_due / grace.
+
+customer.subscription.deleted → status = canceled.
+
+UI en tu BillingPage
+
+Botón “Actualizar método de pago / Ver facturas” → llama al endpoint de portal y redirige.
+​
+
+Cambio de plan: selector de plan que llama a checkout con planId.
+​
+
+3) Limits & quotas por tenant
+Objetivo: que AccessControlService aplique límites reales y que el usuario lo vea claro.
+
+Servicio TenantLimitsService
+
+Función central:
+
+ts
+getEffectiveLimits(tenantId): {
+  tokensPerMonth: number;
+  storageBytes: number;
+  searchesPerMonth: number;
+  seats: number;
+}
+Calcula:
+
+Plan base (pricingplans.limits).
+​
+
+Overrides específicos (tenant.subscription.overrides).
+​
+
+Registrar consumo coherente
+
+Usa tu UsageService pero normalizado:
+
+trackLLM(tenantId, tokens, type, correlationId) → suma en usagelogs tipo LLMTOKENS.
+​
+
+trackStorage(tenantId, bytes, correlationId) al subir PDFs.
+​
+
+trackSearch(tenantId, correlationId) en RAG chat / búsquedas vectoriales.
+​
+
+AccessControlService.checkUsageLimits
+
+Reescribirlo para que:
+
+Obtenga limits = getEffectiveLimits(tenantId).
+
+Lea acumulados del mes en curso desde usagelogs.
+​
+
+Compare y, si se supera:
+
+Para REPORTS/caro → lanzar AppError FORBIDDEN con código BILLING_LIMIT_REACHED.
+​
+
+Para cosas menos críticas → devolver warning (p.ej., permitir pero marcar para aviso).
+
+Añadir tests:
+
+“cuando se excede tokensPerMonth, falla ingest y chat con error de billing”.
+
+“cuando está cerca del límite, añade flag de warning en la respuesta”.
+
+UX de consumo y estados
+
+En dashboard del tenant (no sólo global):
+
+Barra de uso para tokens, storage, búsquedas, usuarios, usando tus UsageBar actuales pero con datos por tenant.
+​
+​
+
+Mensajes claros:
+
+“Has usado el 85% de tus tokens este mes, considera actualizar de plan.”
+
+“Tu suscripción está en estado past_due, algunas funciones se limitarán el DD/MM.”
+
+En flows bloqueados (por checkUsageLimits):
+
+Respuestas consistentes con código de error BILLING_LIMIT_REACHED y texto que incluya un CTA a la página de billing.
+
+4) Estados de suscripción y efectos en permisos
+Objetivo: que el estado de billing impacte en lo que se puede hacer.
+
+Mapeo simple subscription.status → capacidades
+
+Ejemplo:
+
+trial: todo, pero con límites más bajos y banner.
+
+active: todo según plan.
+
+grace/past_due: lectura, pero sin nuevas ingest ni nuevos informes.
+
+suspended: sólo lectura de lo ya generado, sin llamadas a LLM ni ingest.
+
+canceled: acceso sólo al admin para exportar datos durante X días.
+
+Integrar en tu capa de permisos
+
+En auth / GuardianEngine o en un BillingGuard sencillo:
+
+Antes de ejecutar casos de uso caros (IngestService.prepareIngest, TechnicalRagChatUseCase, GenerateReport, etc.), comprobar subscription.status.
+​
+
+En caso de bloqueo, lanzar AppErrorFORBIDDEN con code = BILLING_STATUS_SUSPENDED.
+
+UI reactiva
+
+Banner fijo en la app cuando status != active explicando la situación y botones a Billing/Soporte.
+
+En Profile/Admin de tenant, una tarjeta con: plan, estado, fechas clave y enlaces de acción.
+
+Con esto puedes tener, en 1–2 iteraciones, un circuito de monetización completo: planes → checkout → estado de suscripción → límites efectivos → bloqueos coherentes + UX clara.
+
+
+
+Bloque 3 lo puedes bajar a tierra en tres ejes: observabilidad (trazas/métricas/logs), health & SLOs, y backups/DR para Mongo+Neo4j.
+​
+
+1) Observabilidad: trazas, métricas y logs
+1.1 Instrumentación con OpenTelemetry
+Añadir un SDK OTel Node.js en el backend (Next API + workers):
+
+Configurar auto‑instrumentación HTTP (Next/Node) y MongoDB/Redis.
+
+Definir atributos estándar por span: tenantId, correlationId, userRole, feature (ingest, ragchat, workflow, etc.).
+​
+
+Crear algunos spans manuales en puntos clave:
+
+IngestService.executeAnalysis (subspans para fetchPdf, analyzePdf, indexChunks).
+​
+
+TechnicalRagChatUseCase.answer (subspans vectorSearch, llmGenerate).
+​
+
+agentEngine.stream / SSE de análisis de pedidos (span por ejecución del grafo).
+​
+​
+
+1.2 Logs correlacionados
+Estandarizar logEvento para incluir siempre traceId / spanId si están disponibles, además de correlationId y tenantId.
+​
+
+Elegir un backend de logs (Loki/ELK/Datadog) y configurar export desde el runtime (p.ej. Pino → Loki/HTTP).
+
+Resultados rápidos: en un incidente de ingest lenta o fallos en RAG, podrás ver el trace completo + logs asociados de un tirón.
+
+1.3 Métricas clave (los “golden signals”)
+Definir y exponer (vía OTel metrics o el backend que uses):
+
+Latencia p95/p99 por servicio:
+
+ingest_api_latency, ragchat_latency, agent_analyze_latency.
+​
+
+Tasa de error por servicio:
+
+ingest_error_rate, ragchat_error_rate, workflow_error_rate.
+​
+
+Saturación:
+
+ingest_queue_lag (jobs pendientes / más antiguo en cola).
+​
+​
+
+Uso CPU/memoria del pod/instancia (suele venir del stack de infra).
+
+Dashboard mínimo: gráfico de p95 + error rate + RPS para ingest y ragchat, y gráfico de lag de cola para ingest.
+
+2) Health checks y SLO básicos
+2.1 Health checks profundos
+Implementar endpoints internos protegidos tipo /api/_health y /api/_ready:
+
+/_health (liveness):
+
+Responde “OK” si el proceso está vivo.
+
+/_ready (readiness): comprueba:
+
+connectDB (Mongo), connectLogsDB, connectAuthDB.
+​
+​
+
+Conexión básica a Neo4j (runQuery MATCH (n) RETURN count(n) LIMIT 1).
+​
+​
+
+Conexión a Redis/Bull (ping simple).
+​
+
+Opcional: LLM provider (petición lightweight a /models o similar, quizá con cache).
+​
+
+Kubernetes / el orquestador usaría /_ready para sacar de rotación instancias sanas pero con dependencias caídas.
+
+2.2 SLOs reales
+Elige 2–3 SLOs iniciales por importancia para usuarios:
+
+Ingest
+
+SLI: “% de peticiones POST /api/admin/ingest con respuesta < 20s y estado 2xx/409”.
+​
+
+SLO: ≥ 99% mensual.
+
+RAG chat
+
+SLI: “% de respuestas de /apitechnical/ragchat servidas < 3s y 2xx”.
+​
+
+SLO: ≥ 99% mensual.
+
+Agent analyze
+
+SLI: “% de ejecuciones de /apipedidos/:id/analyze completadas sin error < 60s”.
+​
+​
+
+Configura alertas (en tu APM/monitorización) con burn‑rate simple: “si p95 > objetivo durante más de 10 minutos” o “error rate > 1%” → alerta Slack/email.
+
+3) Backups y recuperación (Mongo + Neo4j)
+3.1 MongoDB
+Basado en guías de Mongo:
+​
+
+Elegir método:
+
+Si usas Atlas → snapshots gestionados + policy (p.ej. retention 7/30 días).
+​
+
+Si es self‑managed:
+
+Para producción, preferible snapshots del filesystem (LVM, EBS snapshots) sobre mongodump puro, para RPO/RTO razonables.
+​
+
+Tareas concretas:
+
+Programar backups diarios de las DBs relevantes (main, logs, auth), con retención adecuada.
+​
+​
+
+Guardar configuración (URI, claves) en secret manager.
+
+Script de restore probado en entorno staging (reconstruir un snapshot y apuntar tu app de pruebas).
+​
+
+3.2 Neo4j
+Para tu grafo de conocimiento:
+​
+​
+
+Usar herramientas nativas de backup de Neo4j (neo4j-admin backup) o snapshots del volumen donde corre.
+​
+
+Decidir si el grafo se considera fuente de verdad o derivado de Mongo:
+
+Si es derivado (puedes regenerarlo con GraphEngine.syncEntityToGraph + GraphExtractionService), el requisito de backups puede ser menos estricto; bastaría con tener job de re‑población documentado.
+​
+​
+
+Si no, configurar backup periódico igual que Mongo.
+
+3.3 Política de RPO/RTO y drills
+Definir objetivos:
+
+Por ejemplo, RPO 24h (pierdes como máximo un día de datos) y RTO 4h (tardas menos de 4h en volver a estar arriba).
+
+Practicar al menos 1 vez cada X meses:
+
+Escenario: pérdida de base Mongo → restauras último snapshot en un entorno de prueba y verificas login, ingest, RAG.
+​
+
+Escenario: pérdida de Neo4j → levantas nueva instancia y re‑sincronizas desde Mongo.
+
+Con estas tareas, en 1–2 iteraciones tienes:
+
+Trazas/métricas/logs suficientes para ver problemas de ingest/RAG/workflows.
+​
+
+Health checks y SLOs básicos para hablar de fiabilidad con clientes.
+
+Backups y una historia razonable de DR para Mongo y Neo4j
+
+
+
+Bloque 1 lo puedes bajar a tres frentes: MFA/SSO, hardening de permisos/tenant‑isolation, y gestión de secretos + seguridad básica de plataforma.
+​
+
+1) MFA y base para SSO
+1.1 MFA para ADMIN / SUPERADMIN
+Aunque uses NextAuth/Auth.js, el patrón es similar.
+​
+
+Modelo de datos:
+
+Añadir en users campos tipo:
+
+mfaEnabled: boolean
+
+mfaMethod: 'totp' | 'webauthn' | null
+
+mfaSecret (si TOTP, cifrada)
+
+mfaDevices[] (si WebAuthn, credenciales registradas)
+
+Flujo TOTP mínimo:
+
+Endpoint POST /api/auth/mfa/setup:
+
+Requiere sesión activa.
+
+Genera secreto TOTP, devuelve otpauth:// para QR (no guardes aún mfaEnabled=true).
+​
+
+Endpoint POST /api/auth/mfa/verify-setup:
+
+Usuario envía código TOTP.
+
+Si es correcto, guarda mfaEnabled=true, mfaMethod='totp', mfaSecret cifrada.
+​
+
+Login:
+
+Tras user+pass OK, si mfaEnabled y rol ∈ {ADMIN, SUPERADMIN}, marcas la sesión como “pending mfa”.
+
+Endpoint POST /api/auth/mfa/verify-login:
+
+Valida TOTP, eleva sesión a “fully authenticated”.
+
+Hard rule:
+
+Para ADMIN / SUPERADMIN, no permitir acceso a rutas críticas si la sesión no está marcada como mfaVerified=true.
+
+Más adelante puedes añadir WebAuthn (llaves de seguridad) con el mismo esquema.
+
+1.2 Base para SSO por tenant
+No hace falta integrarlo ya, pero sí preparar el terreno.
+
+En tenants:
+
+Campos opcionales:
+
+ssoProvider: 'azuread' | 'okta' | 'gsuite' | null
+
+ssoConfig (clientId, issuerURL, mapping de claims ↔ roles)
+
+ssoEnforced: boolean (si true, sólo SSO para ese tenant).
+
+Ruta conceptual:
+
+Reservar endpoints como /api/auth/sso/:tenantSlug/start y /api/auth/sso/:tenantSlug/callback.
+
+Login normal sigue funcionando; cuando quieras añadir SSO, mapeas estos endpoints a un provider OIDC específico usando la config del tenant.
+
+Con esto, cuando un cliente enterprise pida SSO, no tienes que rehacer el modelo.
+
+2) Hardening de permisos y tenant‑isolation
+2.1 Formalizar Guardian / capa de autorización
+Tú ya tienes requireRole, enforcePermission, GuardianEngine y políticas; la idea es hacerlos único punto de entrada a decisiones de autorización.
+​
+
+Crea una interfaz clara:
+
+ts
+interface AuthorizationContext {
+  userId: string;
+  tenantId: string;
+  role: string;
+}
+
+type Permission =
+  | 'ingest:write'
+  | 'assets:delete'
+  | 'workflows:edit'
+  | 'governance:manage'
+  | 'billing:view'
+  | 'billing:manage'
+  | 'users:manage'
+  | ...;
+Implementa un servicio PermissionService que:
+
+a) Mapea role → conjunto de Permission base.
+
+b) Aplica overrides de políticas (aipolicies, guardian policies).
+​
+
+c) Exposición:
+
+assertPermission(ctx, 'ingest:write') → lanza AppError(FORBIDDEN) si no.
+​
+​
+
+En endpoints:
+
+Sustituir checks manuales if role != ADMIN por llamadas a assertPermission.
+
+2.2 Tenant‑isolation “paranoico”
+Ya usas tenantId en casi todas las colecciones; el paso extra es no repetir la lógica y testearla.
+​
+
+Crear helpers para queries:
+
+En vez de:
+
+ts
+const collection = await getTenantCollection('knowledgeassets', session);
+const asset = await collection.findOne({ _id: new ObjectId(id), tenantId });
+Centralizar en un repositorio:
+
+ts
+knowledgeAssetRepo.findByIdForTenant(id, tenantId, role);
+En el repo, aplicar la lógica:
+
+SUPERADMIN: puede omitir tenantId.
+
+Otros roles: tenantId obligatorio en el filtro.
+​
+​
+
+Tests automáticos de aislamiento:
+
+Test de integración que crea tenantA, tenantB con assets distintos y asegura que:
+
+Con sesión de tenantA, nunca puedes leer tenantB aunque pases el _id correcto.
+
+Igual para documentchunks, entities, logs, etc.
+
+Esto es exactamente lo que miran las checklists de multitenancy serias.
+
+3) Secret management y seguridad básica de plataforma
+3.1 Gestión de secretos
+Ahora mismo probablemente gestionas claves (Gemini, Cloudinary, Resend, etc.) vía .env y variables en Vercel/host. Lo mínimo “serio”:
+​
+
+Adoptar un gestor de secretos (según dónde despliegues):
+
+AWS Secrets Manager, GCP Secret Manager, Vault, Doppler, etc.
+​
+
+Cambios concretos:
+
+Todas las claves sensibles (LLM, Cloudinary, SMTP, Stripe) se leen desde el secret manager, no desde fichero.
+
+Documentar un proceso de rotación:
+
+Rotar keys de LLM/Cloudinary al menos anual, preferible semestral.
+
+Cambiar secrets AUTH_SECRET y equivalentes con cuidado (sesiones).
+​
+
+3.2 Endurecer configuración web
+Revisar y asegurar:
+​
+
+HSTS activado (al menos 6 meses), X-Content-Type-Options: nosniff, X-Frame-Options: DENY o equivalente CSP.
+
+Cookies de sesión: Secure, HttpOnly, SameSite=Lax o Strict.
+
+Desactivar cualquier header de debug en producción (por ejemplo, endpoints tipo /api/core/debugdb).
+​
+
+Asegurar sanitización:
+
+Validación con Zod ya está bastante extendida; revisar puntos que reciben JSON dinámico (workflows, prompts, policies) y asegurar Zod + límites de tamaño.
+​
+​
+
+3.3 Trazabilidad de cambios sensibles
+Ya tienes logEvento y colecciones de auditoría; pon foco en cambios que un auditor pregunta:
+​
+
+Asegúrate de loguear con suficiente detalle:
+
+Cambios de rol de usuario.
+
+Cambios en políticas de GovernanceEngine / permisos.
+
+Cambios de plan/suscripción/billing (con efecto sobre bloques 2).
+​
+
+Cambios en workflows automatizados que afecten a entidades de negocio (p.ej. procesamiento automático de pedidos).
+​
+
+Formato:
+
+Logs con who, when, what (antes/después si es posible), tenantId, correlationId.
+​
+​
+
+Con este bloque implementado:
+
+Tienes MFA obligatorio para admins y base lista para SSO por tenant.
+
+Toda autorización pasa por una capa clara, con tests de tenant‑isolation.
+​
+
+Secretos y configuración de seguridad están endurecidos a un nivel aceptable para primeras conversaciones de compliance.
+
+
+
+Bloque 4 son tres cosas: onboarding, dashboards “de negocio” por tenant y una capa de gobernanza IA explicable.
+​
+
+1) Onboarding de tenant
+Objetivo: que un admin nuevo pase de “cero” a “primer informe/insight útil” en 1 sesión guiada.
+
+Wizard inicial para ADMIN del tenant
+
+Paso 1: “Contexto de negocio”
+
+Campos simples: industria (usa tu IndustryType + DomainRouterService como preselección), tamaño de flota, países/regiones.
+​
+
+Paso 2: “Fuentes de conocimiento”
+
+Botón para subir 2–3 PDFs clave (manual general, contrato tipo, normativa local) que llamen a /api/admin/ingest.
+​
+
+Mostrar estado de ingest en la misma pantalla (progreso, errores básicos).
+
+Paso 3: “Roles y equipo”
+
+Crear usuarios tipo “técnico”, “responsable de mantenimiento”, “calidad/compliance” con roles predefinidos.
+​
+​
+
+Paso 4: “Checklists y workflows”
+
+Elegir plantilla de checklist por vertical (mantenimiento, modernización) usando tu ChecklistConfig y MockChecklist como base.
+​
+
+Activar 1–2 workflows simples (ej.: “si riesgo alto → crear tarea humana”).
+
+Técnicamente es mostly UI sobre endpoints que ya tienes; el trabajo está en empaquetar pasos y estados.
+
+Plantillas por vertical
+
+Define en JSON (en tu ontología/registry) plantillas por industry:
+
+Document types recomendados.
+
+Checklists iniciales y categorías.
+
+Workflows recomendados (ej.: escalado de riesgos, revisión de informes).
+​
+​
+
+El wizard sólo aplica estas plantillas al tenant.
+
+2) Dashboards de negocio por tenant
+Objetivo: que el cliente vea valor (ahorro, riesgos, calidad) sin leer métricas técnicas.
+
+Métricas que ya tienes y puedes “traducir”
+
+De IntelligenceDashboard y UsageService:
+​
+​
+
+tasksAutomated (pedidos analizados automáticamente).
+
+minutesSaved y estimatedCostSaving ya los calculas (15 min/pedido, 50 €/hora).
+​
+
+learnedCorrections (nº de correcciones de IA aprendidas).
+​
+
+De RagEvaluationService/ragevaluations:
+
+avgFaithfulness, avgRelevance, avgPrecision últimos 30/100 casos.
+​
+
+De tus logs de riesgos/reportes:
+
+Nº de entidades con riesgos detectados vs resueltos (puedes derivarlo de validaciones/human validations o metadata risks).
+​
+
+Construir un TenantBusinessDashboardUseCase
+
+Entrada: tenantId.
+
+Output: algo así:
+
+ts
+{
+  automation: {
+    tasksAutomated,
+    minutesSaved,
+    estimatedCostSaving,
+  },
+  quality: {
+    ragFaithfulness,
+    ragRelevance,
+    ragPrecision,
+    trend: number[],
+  },
+  risk: {
+    openRisks,
+    resolvedRisksLast30d,
+    componentsMostAtRisk: { name: string; count: number }[],
+  },
+  adoption: {
+    activeUsersLast30d,
+    queriesPerUser,
+    docsIngested,
+  }
+}
+Internamente reutiliza:
+
+IntelligenceDashboard.getMetrics.
+
+RagQualityAnalyticsUseCase.
+
+Queries a entities/humanvalidations para riesgos.
+​
+​
+
+UI: panel por tenant
+
+En el área de admin del tenant (no global):
+
+3–4 tarjetas: “Ahorro estimado mes”, “Calidad de respuestas RAG”, “Riesgos abiertos”, “Uso de la plataforma”.
+​
+
+Gráfico simple de trend de calidad RAG o de tareas automatizadas a lo largo de los meses.
+
+CTA claros: “Mejora calidad subiendo estos documentos”, “Revisa riesgos en estos modelos”.
+
+3) Gobernanza IA explicable
+Objetivo: que no sea una “caja negra”: por qué una acción se ejecutó o se bloqueó, y bajo qué política.
+
+UI para políticas de GovernanceEngine
+
+Backend ya tienes aipolicies y AIGOVERNANCE logs.
+​
+
+Crear un GovernancePoliciesUseCase:
+
+Lista políticas activas para tenantId: entidad, acción, autoExecute, requiresHumanReview.
+​
+
+Pantalla por tenant:
+
+Tabla con columnas: “Entidad”, “Acción”, “Modo” (auto, review, blocked), “Última modificación”.
+
+Formulario para crear/editar política (con Zod y validaciones) sin tocar directamente la colección a pelo.
+
+UI amigable de audit logs de IA
+
+Tienes GovernanceEngine.logDecision en aiauditlogs.
+​
+
+Crear GetAIAuditLogUseCase con filtros: rango de fechas, entidad, acción, estado (executed, blocked, review).
+​
+
+Pantalla:
+
+Tabla con: timestamp, agente, entidad, acción, resultado, política aplicada, confianza.
+​
+
+Al hacer click: detalle de contexto (inputs principales) y por qué se bloqueó (texto corto de la policy).
+
+Explicar decisiones en los flujos UI
+
+En acciones automáticas visibles (p.ej. update de entidad vía workflow, cambio de estado por IA):
+
+Incluir siempre un “chip” o tooltip tipo “Ejecutado por IA – ver detalle”, que abra el log correspondiente.
+​
+​
+
+Cuando algo se bloquea por gobernanza o billing:
+
+Mensaje estándar:
+
+“Esta acción ha sido bloqueada por la política X del tenant. Razón: requiere revisión humana.”
+​
+
+Controles de uso “seguro” por tenant
+
+Exponer en la UI de gobernanza opciones tipo:
+
+“Permitir IA sobre campos con PII” sí/no, ligado a tu maskPii y PIIMasker.
+​
+​
+
+Modo estricto de RAG: sólo usar contextos aprobados / validados. (Puedes reutilizar estados de documentos/checklists).
+​
+​
+
+Esto convierte tus mecanismos técnicos (DomainRouter, PII masking, GovernanceEngine, AIGOVERNANCE logs) en herramientas que un responsable de negocio/compliance entiende y controla.
+
+Con este bloque implementado:
+
+Un tenant nuevo puede autopilotarse a un primer resultado útil con un wizard.
+​
+​
+
+Cada cliente tiene un dashboard que habla su idioma (ahorro, calidad, riesgo), no sólo logs técnicos.
+​
+​
+
+Las decisiones de IA quedan gobernadas y explicables, con políticas visibles y logs navegables
+
+
+
+Para el dashboard de negocio te propongo un único caso de uso GetTenantBusinessDashboardUseCase con un contrato muy claro y JSON listo para consumir desde Next (server components o hooks).
+​
+
+Caso de uso y contrato
+Firma del caso de uso
+ts
+// core/application/analytics/GetTenantBusinessDashboardUseCase.ts
+export class GetTenantBusinessDashboardUseCase {
+  async execute(params: {
+    tenantId: string;
+    from?: Date;  // opcional, rango de análisis
+    to?: Date;    // opcional
+  }): Promise<TenantBusinessDashboardDto> { ... }
+}
+Shape del DTO (TenantBusinessDashboardDto)
+ts
+export interface TenantBusinessDashboardDto {
+  period: {
+    from: string; // ISO
+    to: string;   // ISO
+  };
+
+  automation: {
+    tasksAutomated: number;          // nº pedidos/análisis automatizados
+    minutesSaved: number;            // total minutos ahorrados
+    estimatedCostSaving: number;     // € ahorrados estimados
+    tasksAutomatedTrend: Array<{
+      date: string;                  // ISO día
+      count: number;                 // tareas automatizadas ese día
+    }>;
+  };
+
+  quality: {
+    ragFaithfulness: number | null;  // 0–100 o null si no hay datos
+    ragRelevance: number | null;
+    ragContextPrecision: number | null;
+    ragTrend: Array<{
+      date: string;
+      faithfulness: number | null;
+      relevance: number | null;
+      contextPrecision: number | null;
+    }>;
+  };
+
+  risk: {
+    openRisks: number;               // entidades con riesgos abiertos
+    resolvedRisksLast30d: number;    // riesgos cerrados en periodo reciente
+    topRiskComponents: Array<{
+      name: string;                  // modelo/componente
+      count: number;                 // nº veces aparece en riesgos
+    }>;
+  };
+
+  adoption: {
+    activeUsersLast30d: number;
+    docsIngested: number;
+    entitiesAnalyzed: number;        // pedidos/entidades con análisis agente
+    avgQueriesPerActiveUser: number;
+  };
+
+  usage: {
+    tokensUsed: number;              // periodo
+    storageBytesUsed: number;
+    vectorSearches: number;
+  };
+}
+Endpoint API en Next y JSON de respuesta
+Route de ejemplo
+ts
+// app/api/admin/tenant-business-dashboard/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { GetTenantBusinessDashboardUseCase } from "@/core/application/analytics/GetTenantBusinessDashboardUseCase";
+
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const searchParams = req.nextUrl.searchParams;
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+
+  const useCase = new GetTenantBusinessDashboardUseCase();
+  const dto = await useCase.execute({
+    tenantId: session.user.tenantId,
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+  });
+
+  return NextResponse.json({ success: true, data: dto });
+}
+JSON típico devuelto
+json
+{
+  "success": true,
+  "data": {
+    "period": {
+      "from": "2026-02-01T00:00:00.000Z",
+      "to": "2026-02-08T00:00:00.000Z"
+    },
+    "automation": {
+      "tasksAutomated": 124,
+      "minutesSaved": 1860,
+      "estimatedCostSaving": 1550,
+      "tasksAutomatedTrend": [
+        { "date": "2026-02-01", "count": 10 },
+        { "date": "2026-02-02", "count": 18 }
+      ]
+    },
+    "quality": {
+      "ragFaithfulness": 87,
+      "ragRelevance": 91,
+      "ragContextPrecision": 83,
+      "ragTrend": [
+        { "date": "2026-02-01", "faithfulness": 85, "relevance": 90, "contextPrecision": 80 },
+        { "date": "2026-02-02", "faithfulness": 88, "relevance": 92, "contextPrecision": 85 }
+      ]
+    },
+    "risk": {
+      "openRisks": 7,
+      "resolvedRisksLast30d": 21,
+      "topRiskComponents": [
+        { "name": "Modelo X", "count": 9 },
+        { "name": "Cuadro maniobra Y", "count": 5 }
+      ]
+    },
+    "adoption": {
+      "activeUsersLast30d": 14,
+      "docsIngested": 96,
+      "entitiesAnalyzed": 72,
+      "avgQueriesPerActiveUser": 8.5
+    },
+    "usage": {
+      "tokensUsed": 452300,
+      "storageBytesUsed": 987654321,
+      "vectorSearches": 1340
+    }
+  }
+}
+Con este contrato montas el dashboard en Next simplemente con un hook useTenantBusinessDashboard que haga GET /api/admin/tenant-business-dashboard y alimente tus MetricCard y gráficos.
+
+
+Te propongo un conjunto de métricas extra pensadas para tu contexto (RAG interno + workflows + mantenimiento) y para un dashboard B2B que miran managers, no devs.
+​
+
+1) Salud del tenant y adopción
+Añadir a la sección adoption:
+
+dau, wau, mau por tenant
+
+dailyActiveUsers, weeklyActiveUsers, además de activeUsersLast30d.
+
+featureUsage
+
+Array { feature: 'ragchat' | 'checklists' | 'reports' | 'insights' | 'predictiveMaintenance', users: number, events: number }. 
+​
+
+journeyCompletion
+
+% de pedidos que pasan por el flujo completo: ingest → análisis agente → checklist → informe generado.
+​
+​
+
+2) Métricas de “resolutividad” de IA
+Con lo que ya tienes (entidades analizadas, hallazgos, validaciones humanas) puedes derivar:
+
+resolutionRate
+
+% de casos en que el flujo IA + checklist + validación deja el pedido “cerrado” sin reabrirlo.
+​
+​
+
+firstPassAutomationRate
+
+% de pedidos resueltos sin necesidad de segunda iteración de IA ni revisión manual extensa.
+​
+​
+
+manualOverrideRate
+
+nº de acciones propuestas por IA que han sido cambiadas por humanos / total de acciones.
+​
+
+Estas son las que mejor venden “confianza” y madurez del sistema.
+
+3) Métricas de riesgo y cumplimiento
+Además de openRisks y resolvedRisksLast30d:
+
+highRiskIncidents
+
+nº de entidades/mantenimientos con riesgo categorizado como “alto” o “crítico” en el periodo.
+​
+
+slaBreachesByRisk
+
+nº de casos con riesgo alto que se han resuelto fuera de SLA interno del cliente (si lo modelas).
+​
+
+complianceCoverage
+
+% de documentos/entidades relevantes que tienen checklist y normativas asociadas (ej.: ascensores con normativa EN81 detectada en el grafo).
+​
+​
+
+4) Coste y eficiencia del uso de IA
+Usando tus usagelogs y pricing/planes:
+
+costPerAutomatedTask
+
+tokens usados / tareas automatizadas (puedes estimar coste LLM por 1M tokens).
+​
+
+costPerResolvedCase
+
+coste IA + coste técnico estimado / nº de casos resueltos.
+​
+
+hallucinationRateProxy
+
+Aprox: % de evaluaciones RAG con faithfulness < umbral.
+​
+
+Esto te permite enseñar que el sistema no sólo ahorra tiempo sino que lo hace a coste controlado.
+
+5) Profundizar en calidad RAG
+Además de faithfulness, relevance y contextPrecision:
+
+resolutionCSAT (si metes feedback simple tipo 1–5 en informes/checklists)
+
+avgUserRating en informes generados.
+​
+
+citationCoverage (si los informes incluyen referencias)
+
+% de frases relevantes con cita a documentos/chunks.
+
+retrievalPrecisionAt3 (aunque sea aproximado)
+
+% de evaluaciones donde al menos un chunk top‑3 aparece marcado como relevante en la evaluación.
+
+6) Forma integrada en el DTO
+Puedes extender el DTO anterior así (añadiendo campos, no rompes front):
+
+ts
+export interface TenantBusinessDashboardDto {
+  // ...
+  adoption: {
+    activeUsersLast30d: number;
+    dailyActiveUsers: number;
+    weeklyActiveUsers: number;
+    docsIngested: number;
+    entitiesAnalyzed: number;
+    avgQueriesPerActiveUser: number;
+    featureUsage: Array<{
+      feature: 'ragchat' | 'checklists' | 'reports' | 'insights' | 'predictiveMaintenance';
+      users: number;
+      events: number;
+    }>;
+    journeyCompletionRate: number; // 0-100
+  };
+
+  automation: {
+    tasksAutomated: number;
+    minutesSaved: number;
+    estimatedCostSaving: number;
+    tasksAutomatedTrend: { date: string; count: number }[];
+    firstPassAutomationRate: number; // 0-100
+  };
+
+  quality: {
+    ragFaithfulness: number | null;
+    ragRelevance: number | null;
+    ragContextPrecision: number | null;
+    hallucinationRate: number | null; // % con baja faithfulness
+    ragTrend: Array<{
+      date: string;
+      faithfulness: number | null;
+      relevance: number | null;
+      contextPrecision: number | null;
+    }>;
+    resolutionRate: number | null;
+    manualOverrideRate: number | null;
+  };
+
+  risk: {
+    openRisks: number;
+    resolvedRisksLast30d: number;
+    highRiskIncidents: number;
+    complianceCoverage: number; // 0-100
+    topRiskComponents: { name: string; count: number }[];
+  };
+
+  usage: {
+    tokensUsed: number;
+    storageBytesUsed: number;
+    vectorSearches: number;
+    costPerAutomatedTask: number | null;
+    costPerResolvedCase: number | null;
+  };
+}
+Con esto puedes montar un dashboard que hable de:
+
+Adopción y salud del tenant.
+
+Valor de negocio (resolución, ahorro, riesgos).
+
+Calidad y coste del “cerebro IA”, sin meter todavía métricas demasiado frikis.
+
+
+Para integrar ese DTO con Chart.js sólo necesitas definir bien las props de cada gráfico y normalizar fechas.
+
+1) Setup básico en Next
+Instalar dependencias:
+
+bash
+npm install chart.js react-chartjs-2
+Registrar componentes base (p.ej. en ui/charts/chart-setup.ts):
+
+ts
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Tooltip,
+  Legend,
+);
+2) Ejemplo: tendencia de tareas automatizadas
+Con automation.tasksAutomatedTrend: { date, count }[]:
+
+tsx
+// ui/charts/TasksAutomatedChart.tsx
+"use client";
+
+import { Line } from "react-chartjs-2";
+
+type Props = {
+  data: { date: string; count: number }[];
+};
+
+export function TasksAutomatedChart({ data }: Props) {
+  const labels = data.map(d => d.date); // ya en formato YYYY-MM-DD
+  const counts = data.map(d => d.count);
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Tareas automatizadas",
+        data: counts,
+        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        tension: 0.2,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: "index" as const, intersect: false },
+    },
+    scales: {
+      x: { ticks: { maxRotation: 0, autoSkip: true } },
+      y: { beginAtZero: true },
+    },
+  };
+
+  return <Line data={chartData} options={options} />;
+}
+3) Ejemplo: calidad RAG en el tiempo
+Con quality.ragTrend:
+
+tsx
+// ui/charts/RagQualityTrendChart.tsx
+"use client";
+
+import { Line } from "react-chartjs-2";
+
+type Point = {
+  date: string;
+  faithfulness: number | null;
+  relevance: number | null;
+  contextPrecision: number | null;
+};
+
+export function RagQualityTrendChart({ data }: { data: Point[] }) {
+  const labels = data.map(p => p.date);
+  const faith = data.map(p => p.faithfulness ?? null);
+  const rel = data.map(p => p.relevance ?? null);
+  const prec = data.map(p => p.contextPrecision ?? null);
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Faithfulness",
+        data: faith,
+        borderColor: "rgba(75, 192, 192, 1)",
+        tension: 0.2,
+      },
+      {
+        label: "Relevance",
+        data: rel,
+        borderColor: "rgba(255, 159, 64, 1)",
+        tension: 0.2,
+      },
+      {
+        label: "Context precision",
+        data: prec,
+        borderColor: "rgba(153, 102, 255, 1)",
+        tension: 0.2,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      tooltip: { mode: "index" as const, intersect: false },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+      },
+    },
+  };
+
+  return <Line data={chartData} options={options} />;
+}
+4) Ejemplo: barras de top componentes de riesgo
+Con risk.topRiskComponents:
+
+tsx
+// ui/charts/TopRiskComponentsChart.tsx
+"use client";
+
+import { Bar } from "react-chartjs-2";
+
+type ComponentRisk = { name: string; count: number };
+
+export function TopRiskComponentsChart({ data }: { data: ComponentRisk[] }) {
+  const labels = data.map(d => d.name);
+  const counts = data.map(d => d.count);
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Incidencias",
+        data: counts,
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+    ],
+  };
+
+  const options = {
+    indexAxis: "y" as const,
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      x: { beginAtZero: true },
+    },
+  };
+
+  return <Bar data={chartData} options={options} />;
+}
+5) Integración en la página de dashboard
+tsx
+// app/(admin)/dashboard/page.tsx
+import { TasksAutomatedChart } from "@/ui/charts/TasksAutomatedChart";
+import { RagQualityTrendChart } from "@/ui/charts/RagQualityTrendChart";
+import { TopRiskComponentsChart } from "@/ui/charts/TopRiskComponentsChart";
+
+export default async function DashboardPage() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/tenant-business-dashboard`, {
+    cache: "no-store",
+  });
+  const { data } = await res.json();
+
+  return (
+    <div className="space-y-8">
+      <TasksAutomatedChart data={data.automation.tasksAutomatedTrend} />
+      <RagQualityTrendChart data={data.quality.ragTrend} />
+      <TopRiskComponentsChart data={data.risk.topRiskComponents} />
+    </div>
+  );
+}
+Con ese patrón reutilizas el DTO tal cual: cada gráfico recibe justo la subestructura que necesita y Chart.js sólo ve arrays de labels y valores.
+
+
+Un wizard de onboarding en tu caso puede verse como un único caso de uso GetTenantOnboardingState + CompleteTenantOnboardingStep, con 3–4 pasos bien definidos y JSON muy simple para React.
+
+Pasos del wizard
+Propuestos para tu producto:
+
+Paso 1 – Perfil e industria
+Datos: nombre organización, industria, países, tamaño flota/equipos.
+
+Paso 2 – Fuentes de conocimiento iniciales
+Datos: checklist de “subir X documentos clave” y estado de ingest de los que ya ha subido.
+
+Paso 3 – Equipo y roles
+Datos: usuarios clave creados y roles asignados (mínimo 1 admin, 1 técnico).
+
+Paso 4 – Flujos IA y plantillas
+Datos: checklists y workflows recomendados activados (ej.: mantenimiento, modernización).
+
+Contrato: leer estado del wizard
+Caso de uso
+ts
+// core/application/onboarding/GetTenantOnboardingStateUseCase.ts
+export class GetTenantOnboardingStateUseCase {
+  async execute(params: { tenantId: string }): Promise<TenantOnboardingStateDto> { ... }
+}
+DTO TenantOnboardingStateDto
+ts
+export type OnboardingStepId =
+  | "profile"
+  | "knowledge"
+  | "team"
+  | "flows";
+
+export interface TenantOnboardingStateDto {
+  tenantId: string;
+  completed: boolean;        // true si todos los pasos hechos
+  currentStep: OnboardingStepId;
+
+  steps: Array<{
+    id: OnboardingStepId;
+    title: string;
+    description: string;
+    completed: boolean;
+    blocking: boolean;       // si hay que completarlo antes de seguir
+  }>;
+
+  profile: {
+    organizationName?: string;
+    industry?: string;       // ELEVATORS, LEGAL, BANKING...
+    countries?: string[];
+    fleetSize?: number | null;
+    completed: boolean;
+  };
+
+  knowledge: {
+    recommendedDocs: Array<{
+      id: string;
+      label: string;
+      description: string;
+      uploaded: boolean;
+      assetId?: string;      // id en knowledgeassets si existe
+      ingestStatus?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+    }>;
+    completed: boolean;
+  };
+
+  team: {
+    users: Array<{
+      id: string;
+      email: string;
+      name?: string;
+      role: string;
+      hasMfa: boolean;
+    }>;
+    hasAdmin: boolean;
+    hasTechnician: boolean;
+    completed: boolean;
+  };
+
+  flows: {
+    recommendedWorkflows: Array<{
+      id: string;
+      name: string;
+      description: string;
+      enabled: boolean;
+    }>;
+    recommendedChecklists: Array<{
+      id: string;
+      name: string;
+      description: string;
+      enabled: boolean;
+    }>;
+    completed: boolean;
+  };
+}
+Endpoint de lectura
+ts
+// app/api/admin/onboarding/state/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { GetTenantOnboardingStateUseCase } from "@/core/application/onboarding/GetTenantOnboardingStateUseCase";
+
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const useCase = new GetTenantOnboardingStateUseCase();
+  const dto = await useCase.execute({ tenantId: session.user.tenantId });
+
+  return NextResponse.json({ success: true, data: dto });
+}
+Contrato: actualizar cada paso
+Un único caso de uso que toma stepId + payload:
+
+ts
+// core/application/onboarding/CompleteTenantOnboardingStepUseCase.ts
+export class CompleteTenantOnboardingStepUseCase {
+  async execute(params: {
+    tenantId: string;
+    stepId: OnboardingStepId;
+    payload: any;
+  }): Promise<TenantOnboardingStateDto> { ... }
+}
+Payloads por paso (lado API)
+ts
+// Paso 1 - profile
+// POST /api/admin/onboarding/step/profile
+{
+  "organizationName": "Ascensores XYZ",
+  "industry": "ELEVATORS",
+  "countries": ["ES", "PT"],
+  "fleetSize": 120
+}
+
+// Paso 2 - knowledge
+// POST /api/admin/onboarding/step/knowledge
+{
+  "uploadedDocs": [
+    { "id": "manual_general", "assetId": "65f123..." },
+    { "id": "contrato_tipo", "assetId": "65f456..." }
+  ]
+}
+
+// Paso 3 - team
+// POST /api/admin/onboarding/step/team
+{
+  "users": [
+    { "email": "admin@cliente.com", "role": "ADMIN" },
+    { "email": "tecnico@cliente.com", "role": "TECHNICAL" }
+  ]
+}
+
+// Paso 4 - flows
+// POST /api/admin/onboarding/step/flows
+{
+  "enabledWorkflows": ["wf_risk_escalation", "wf_auto_checklist"],
+  "enabledChecklists": ["chk_mantenimiento", "chk_modernizacion"]
+}
+Endpoint genérico de actualización
+ts
+// app/api/admin/onboarding/step/[step]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { CompleteTenantOnboardingStepUseCase } from "@/core/application/onboarding/CompleteTenantOnboardingStepUseCase";
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { step: string } },
+) {
+  const session = await auth();
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const stepId = params.step as any; // "profile" | "knowledge" | "team" | "flows"
+  const payload = await req.json();
+
+  const useCase = new CompleteTenantOnboardingStepUseCase();
+  const dto = await useCase.execute({
+    tenantId: session.user.tenantId,
+    stepId,
+    payload,
+  });
+
+  return NextResponse.json({ success: true, data: dto });
+}
+Ejemplo de uso en Next (client)
+tsx
+// ui/onboarding/OnboardingWizard.tsx
+"use client";
+
+import { useEffect, useState } from "react";
+
+export function OnboardingWizard() {
+  const [state, setState] = useState<TenantOnboardingStateDto | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/onboarding/state")
+      .then(res => res.json())
+      .then(res => setState(res.data));
+  }, []);
+
+  if (!state) return null;
+
+  const current = state.currentStep;
+
+  // según current, renderizas el formulario correspondiente
+  // y al guardar haces POST /api/admin/onboarding/step/[step]
+}
+Con este contrato, el backend sólo tiene que rellenar el DTO a partir de tus colecciones (tenants, knowledgeassets, users, workflows, checklist-configs) y el frontend puede montar un wizard paso a paso sin lógica adicional.
+
+La integración es sencilla si tratas el onboarding como “estado adicional” que condiciona y enriquece el dashboard que ya tienes.
+
+1) Extender el endpoint de dashboard
+Añade el estado de onboarding al DTO del dashboard:
+
+ts
+export interface TenantDashboardDto {
+  business: TenantBusinessDashboardDto;
+  onboarding: TenantOnboardingStateDto;
+}
+Endpoint:
+
+ts
+// GET /api/admin/tenant-dashboard
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.tenantId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const [business, onboarding] = await Promise.all([
+    new GetTenantBusinessDashboardUseCase().execute({ tenantId: session.user.tenantId }),
+    new GetTenantOnboardingStateUseCase().execute({ tenantId: session.user.tenantId }),
+  ]);
+
+  return NextResponse.json({ success: true, data: { business, onboarding } });
+}
+2) Cálculo de progreso de onboarding
+En el propio GetTenantOnboardingStateUseCase puedes añadir:
+
+ts
+export interface TenantOnboardingStateDto {
+  // ...
+  progressPercent: number; // 0-100
+}
+Ejemplo de cálculo:
+
+stepsCompleted = steps.filter(s => s.completed).length
+
+progressPercent = Math.round((stepsCompleted / steps.length) * 100)
+
+3) Uso en el dashboard B2B
+En la página:
+
+tsx
+// app/(admin)/dashboard/page.tsx
+import { OnboardingBanner } from "@/ui/onboarding/OnboardingBanner";
+import { BusinessDashboard } from "@/ui/dashboard/BusinessDashboard";
+
+export default async function DashboardPage() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/tenant-dashboard`, { cache: "no-store" });
+  const { data } = await res.json();
+  const { business, onboarding } = data;
+
+  return (
+    <div className="space-y-6">
+      {!onboarding.completed && (
+        <OnboardingBanner onboarding={onboarding} />
+      )}
+
+      <BusinessDashboard data={business} />
+    </div>
+  );
+}
+Ejemplo de banner:
+
+tsx
+// ui/onboarding/OnboardingBanner.tsx
+"use client";
+
+import Link from "next/link";
+
+export function OnboardingBanner({ onboarding }: { onboarding: TenantOnboardingStateDto }) {
+  return (
+    <div className="rounded-md border border-dashed border-blue-300 bg-blue-50 p-4 flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium">
+          Completa la configuración inicial para aprovechar al máximo la plataforma.
+        </p>
+        <p className="text-xs text-slate-600">
+          Progreso: {onboarding.progressPercent}% · Paso actual: {onboarding.currentStep}
+        </p>
+      </div>
+      <Link
+        href="/admin/onboarding"
+        className="text-xs px-3 py-1 rounded bg-blue-600 text-white"
+      >
+        Continuar onboarding
+      </Link>
+    </div>
+  );
+}
+4) Métricas de “activación” ligadas al wizard
+En TenantBusinessDashboardDto puedes añadir campos calculados a partir del estado de onboarding para mostrar en tarjetas:
+
+ts
+export interface TenantBusinessDashboardDto {
+  // ...
+  activation: {
+    onboardingCompleted: boolean;
+    onboardingProgress: number;
+    timeToOnboardDays: number | null; // fecha completado - fecha alta
+  };
+}
+Esto permite, en el dashboard, mostrar algo tipo “Onboarding completado en 3 días” y condicionar ciertos gráficos (por ejemplo, ocultar métricas avanzadas hasta que haya al menos X pasos completados).
+
+Con este diseño, el wizard y el dashboard comparten datos a través de los DTOs de onboarding y negocio, y el dashboard se convierte en el “hub” que recuerda al usuario que complete los pasos clave sin duplicar lógica.
+
+Lo clave es tratar el tier como “atributo de tenant” que alimenta tres cosas: cómo lo aprovisionas, qué límites tiene y qué features ve.
+​
+
+1) Modelo de tiers y entitlements
+Primero un modelo explícito, independiente de billing:
+
+ts
+type TenantTier = "BASIC" | "PRO" | "ENTERPRISE";
+
+interface Tenant {
+  id: string;
+  name: string;
+  tier: TenantTier;
+  // ...
+}
+Entitlements (qué puede hacer y hasta cuánto):
+
+ts
+interface FeatureEntitlement {
+  featureKey: string;            // "rag.chat", "checklist.advanced", "insights", "sso"
+  allowed: boolean;
+  limit?: number;                // p.ej. 100 informes/mes
+}
+
+interface TierConfig {
+  tier: TenantTier;
+  defaultEntitlements: FeatureEntitlement[];
+  defaultLimits: {
+    tokensPerMonth: number;
+    storageBytes: number;
+    vectorSearchesPerMonth: number;
+    maxUsers: number;
+  };
+}
+Y una tabla (o colección) tierconfigs donde defines todo esto.
+
+2) Provisioning según tier
+En tu “TenantProvisioningService” (parte del onboarding):
+
+Entrada mínima:
+
+ts
+provisionTenant({
+  organizationName,
+  requestedTier,   // BASIC/PRO/ENTERPRISE
+  ownerUser,       // email, nombre
+})
+Pasos básicos comunes:
+
+Crear registro en tenants con tier = requestedTier.
+
+Crear usuario owner con rol ADMIN.
+
+Inicializar tenant.settings (idioma, industria, etc.).
+
+Lógica específica por tier (inspirado en AWS SaaS Lens):
+
+BASIC (todo compartido):
+
+Usa las DB/colas/infra compartidas actuales (lo que ya tienes).
+​
+​
+
+Entitlements conservadores (límites bajos, sin SSO, sin Neo4j opcional si quisieras abaratar).
+
+PRO (shared pero con mejores límites y features):
+
+Misma infraestructura que BASIC, pero:
+
+Límites de tokens/storage/searches más altos.
+​
+​
+
+Entitlements activan features como reports avanzados, insights, predictive.
+​
+
+Puedes usar colas separadas/ponderadas para ingest para mejorar SLA.
+​
+
+ENTERPRISE (silo parcial o total, si lo necesitas a futuro):
+
+Opción A: misma DB pero colas y Neo4j dedicados.
+
+Opción B: tenant realmente aislado (DB/cluster propios) si un cliente lo exige.
+
+Provisioning dispara infraestructura vía IaC (pulumi/terraform) según tier.
+
+En tu primera versión, puedes mantener una sola infraestructura y que el tier influya sólo en límites y features; dejas la parte de infra dedicada preparada pero no obligatoria.
+
+3) Cómo influye el tier en el runtime
+3.1 Entitlements / feature flags
+Implementar un pequeño servicio:
+
+ts
+interface EntitlementContext {
+  tenantId: string;
+  userId?: string;
+}
+
+class EntitlementService {
+  async canUse(ctx: EntitlementContext, featureKey: string): Promise<boolean> { ... }
+  async getLimit(ctx: EntitlementContext, featureKey: string): Promise<number | undefined> { ... }
+}
+Evalúa a partir de:
+
+tenant.tier → TierConfig.defaultEntitlements.
+
+Overrides por tenant si los tienes (tenant.entitlementsOverrides).
+
+Uso en código:
+
+Antes de mostrar un módulo (UI) o permitir un endpoint:
+
+ts
+if (!(await entitlements.canUse({ tenantId }, "insights"))) {
+  // Ocultar sección o devolver 403 FEATURE_NOT_AVAILABLE_FOR_TIER
+}
+3.2 Límites por tier
+Tu TenantLimitsService de billing lee tier y TierConfig:
+
+ts
+const limits = await limitsService.getEffectiveLimits(tenantId);
+// derivado de plan + tier
+Y AccessControlService.checkUsageLimits compara consumo vs límites, como ya comentamos.
+​
+​
+
+Esto te permite cosas como:
+
+BASIC: 50 informes/mes, PRO: 500, ENTERPRISE: ilimitado.
+
+BASIC: sin agentic SSE, sólo RAG simple; PRO+ENTERPRISE: todo habilitado.
+
+4) Tier en el onboarding wizard
+Cuando creas el tenant (o lo actualizas tras checkout):
+
+Guardas tenant.tier.
+
+El wizard y el dashboard leen ese tier para proponer plantillas distintas:
+
+Ejemplos:
+
+BASIC:
+
+Wizard sugiere sólo un flujo: subir PDF base + checklist simple de mantenimiento.
+
+No muestra predictive maintenance ni insights avanzados.
+
+PRO:
+
+Ofreces activar InsightsEngine y PredictiveEngine por defecto.
+​
+
+ENTERPRISE:
+
+Incluyes paso extra de gobernanza IA y SSO, porque son features de ese tier.
+​
+
+Técnicamente es sólo condicionar el DTO de onboarding y el de dashboard con tier.
+
+5) Cambio de tier (upgrade/downgrade)
+Cuando billing cambia de plan (Stripe/lo que uses), actualizas:
+
+tenant.subscription.planId y, si lo deseas, tenant.tier.
+
+Recalculas entitlements/limits efectivos.
+
+Buenas prácticas:
+
+Al upgrade:
+
+Activar features inmediatamente (entitlements).
+
+Opcional: lanzar job de “hardening”: por ejemplo, mover al tenant a una cola mejor si pasa a tier alto.
+
+Al downgrade:
+
+No borrar datos, sólo impedir nuevas acciones que excedan el tier (p.ej. no más informes avanzados, pero los antiguos siguen accesibles).
+
+Señalar en UI qué features se han desactivado por cambio de tier.
+
+6) Resumen operativo para ti
+Con lo que ya tienes, puedes:
+
+Añadir tier a tenants y definir TierConfig en una colección o config TS.
+​
+​
+
+Implementar EntitlementService y TenantLimitsService que lean tier + plan y devuelvan:
+
+canUse(featureKey)
+
+limit(featureKey)
+
+Usar tier en:
+
+Onboarding wizard (plantillas distintas por tier).
+
+Dashboard B2B (mostrar qué features están incluidos; upsell claro al siguiente tier).
+
+AccessControl (bloquear features o subir límites según tier).
+
+Con esto, el provisioning de tenants pasa de “crear siempre lo mismo” a “crear tenant + entitlements según tier”, y la app se adapta automáticamente a BASIC/PRO/ENTERPRISE sin forks de código ni despliegues separados.
+
+Para aislar por tiers en multi‑tenant sin volverte loco, piensa en tres niveles: datos, recursos y controles lógicos, y decide qué cambia entre BASIC / PRO / ENTERPRISE.
+​
+
+1) Patrón general: pool para bajos tiers, bridge/silo para altos
+Buenas prácticas actuales recomiendan mezclar modelos y exponerlos como parte del tiering:
+
+BASIC → pool:
+
+Todos comparten mismas DB/tablas (lo que ya haces con tenantId en Mongo).
+​
+
+Aislamiento lógico fuerte (filtros por tenant, tests de cross‑tenant) pero sin infra dedicada.
+
+PRO → bridge ligero:
+
+App y DB compartidas, pero aisláis ciertos recursos:
+
+Colas BullMQ separadas o con prioridades (para que un BASIC ruidoso no afecte a PRO).
+​
+
+Espacios de logs/monitorización filtrados por tenant o tier.
+​
+
+ENTERPRISE → bridge/silo:
+
+Mismas tablas (o colecciones) pero posibilidad de:
+
+Bases de datos separadas para datos especialmente sensibles, o incluso DB por tenant si lo exigen.
+
+Neo4j/Redis/colas dedicadas (o al menos pools separados) para evitar noisy neighbor y limitar blast radius.
+​
+
+Eso encaja bien con un producto como el tuyo: la mayoría de clientes en pool compartido, unos pocos con “silo parcial” o completo como extra de tier.
+
+2) Aislamiento de datos por tier
+Mantén la invariantes de seguridad iguales para todos los tiers; lo que cambia es el “grado” de aislamiento.
+
+Base para todos los tiers:
+
+tenantId en todas las colecciones (ya lo haces) y en índices críticos (knowledgeassets, documentchunks, logs, etc.).
+​
+
+Repositorios que siempre incluyen el filtro por tenant y tests de “no cross‑tenant” (como comentamos antes).
+​
+
+Opciones extra para PRO/ENTERPRISE:
+
+Vector isolation:
+
+Namespace/colección de embeddings por tenant (o al menos por tier), nunca mezclar embeddings de tenants distintos, especialmente para enterprise.
+​
+​
+
+Bridge para ENTERPRISE:
+
+Un cluster/DB lógica aparte para sus datos más sensibles (p.ej. logs de IA o datos de cumplimiento), aunque parte de los datos sigan en el pool.
+
+La idea: BASIC y PRO comparten DB física, pero todos tienen aislamiento lógico fuerte; ENTERPRISE añade capas (DB/namespace propios) como valor añadido y requisito de riesgo.
+
+3) Aislamiento de recursos y rendimiento por tier
+Para evitar noisy neighbor sin multiplicar costes:
+​
+
+Colas y workers:
+
+Una cola principal para BASIC/PRO y una cola prioritaria o separada para ENTERPRISE (por ejemplo, ingest-queue y ingest-enterprise-queue).
+​
+
+Workers dedicados a enterprise, con límites de concurrencia diferenciados.
+
+Cuotas de recursos:
+
+Limitar por tier el número de jobs simultáneos, tamaño máximo de PDFs, frecuencia de insights/predictive, etc., usando tu AccessControlService.
+​
+
+Esto protege a todos de tenants intensivos y te permite vender “rendimiento garantizado” a tiers altos.
+
+Infraestructuras dedicadas (sólo para algunos ENTERPRISE):
+
+Si un cliente lo exige, puedes provisionar un entorno “semi‑silo” (cluster, VPC o namespace K8s propio) y enrutar su tráfico a ese entorno usando tenantId/tier.
+
+4) Controles lógicos y gobernanza por tier
+Lo que cambia por tier no sólo es el “dónde” sino el “qué” y el “cómo”:
+​
+
+Feature gating:
+
+Algunos módulos sólo para PRO/ENTERPRISE (insights, predictive, gobernanza avanzada, SSO).
+​
+
+Usa el mismo EntitlementService para decidir si se muestra una feature y si se acepta la llamada al endpoint.
+
+Guardrails adicionales en tiers altos:
+
+Para ENTERPRISE, puedes habilitar políticas extra en GovernanceEngine (ej.: toda acción IA requiere revisión humana o logging extendido).
+​
+
+Para BASIC, mantienes un conjunto de políticas más simple por coste/UX.
+
+Observabilidad aislada:
+
+Métricas y logs filtrados por tenant y tier; para ENTERPRISE, dashboards dedicados y alertas específicas.
+​
+
+5) Estrategia práctica para tu caso
+Con tu base actual, un camino razonable sería:
+​
+
+Corto plazo:
+
+Mantener una única infra “pool” para todos los tiers.
+
+Endurecer aislamiento lógico (repositorios, tests, filtros de tenant).
+
+Añadir diferencias de limits/entitlements por tier (BASIC/PRO/ENTERPRISE) como ya hemos hablado.
+
+Medio plazo:
+
+Separar colas y quizá Neo4j para ENTERPRISE (bridge model).
+​
+
+Aislar embeddings por tenant/tier si no lo haces ya.
+​
+​
+
+Largo plazo (sólo si un cliente grande lo exige):
+
+Silo parcial o total: DB y/o infra dedicadas para 1–N tenants enterprise, manteniendo la lógica de app común.
+
+Así aprovechas al máximo tu arquitectura multi‑tenant actual y al mismo tiempo tienes una historia clara de “más aislamiento y garantías” a medida que subes de tier.
+
+
+Los fallos reales suelen caer siempre en los mismos tres sitios: filtros de tenant mal aplicados, identidad/SSO mal integrada y componentes “olvidados” (jobs, caché, logs).
+
+1) Filtros de tenant incompletos o mal construidos
+Consultas sin tenantId en algún endpoint “nuevo” o poco usado.
+
+Desarrollas un listado o una API interna y se te olvida añadir el filtro; acaban devolviendo datos de otros tenants.
+
+Lógica AND/OR mal parentizada.
+
+Ejemplo clásico:
+
+WHERE tenant_id = 'A' AND active = 1 OR vip = 1
+
+Esto devuelve VIPs de todos los tenants.
+
+Jobs de background que procesan colecciones completas sin respetar tenant.
+
+Scripts de mantenimiento, migraciones o reglas automáticas que recorren toda la colección y modifican documentos de otros tenants.
+
+En tu caso, cualquier sitio donde haces connectDB() en lugar de getTenantCollection() sería el candidato natural a este tipo de bug.
+
+2) Identity / SSO rompiendo el contexto de tenant
+Configuración de Identity Broker que permite “pivotar” de un tenant a otro.
+
+Caso real: Okta mal configurado con auto‑link de cuentas; un usuario de un tenant pudo enlazar su identidad a otra cuenta y ver datos de otros.
+
+APIs de plataforma cloud con fallos en la validación de tokens.
+
+Ejemplo de Microsoft / Entra ID: vulnerabilidad en API que permitía usar tokens para acceder a recursos de otros tenants si se conocía su ID.
+
+MFA deshabilitada para logins federados, asumiendo “el IdP del cliente se ocupa”, lo que baja la seguridad precisamente en los tenants más críticos.
+
+En tu roadmap de SSO/MFA, estos casos te interesan para no confiar ciegamente en el IdP y seguir validando tú el tenantId y el mapping de cuentas.
+
+3) Componentes “satélite” sin tenant awareness
+Muy típico en incidentes reales: la app principal está bien, pero…
+
+Caché compartida sin tenantId en la clave.
+
+Si cacheas resultados de búsquedas, prompts o configuraciones sin incluir tenantId, puedes servir a B los resultados de A.
+
+Logs y trazas con datos de varios tenants mezclados.
+
+A nivel de seguridad/compliance, un log central que contenga identificadores o contenidos sensibles de múltiples tenants puede ser considerado fuga de datos si alguien accede a él sin filtrado.
+
+Webhooks o APIs internas sin comprobación de tenant.
+
+Servicios internos que aceptan peticiones autenticadas pero no verifican que el tenantId del token coincida con el recurso solicitado.
+
+4) Qué lecciones extraer para tu plataforma
+Viendo estos casos, para tu arquitectura concreta yo reforzaría:
+
+Tests automáticos de aislamiento en todos los repositorios:
+
+Dado tenantA y tenantB, intentar leer/escribir cross‑tenant debe fallar SIEMPRE, tanto en endpoints como en servicios batch.
+
+Revisión de todos los puntos “no HTTP”:
+
+Workers BullMQ (IngestWorkerService, workflows), Graph/Neo4j, extracción RAG, caché si la introduces, asegurando que siempre pasan y respetan tenantId.
+​
+
+En identity/SSO, cuando lo añadas:
+
+Validar de forma explícita tenantId en el token/idp y no derivarlo solo del correo/dominio.
+
+No relajar MFA ni checks de autorización para logins federados.
+
+Si quieres, puedo ayudarte a diseñar un pequeño “pack de pruebas de aislamiento”: una batería concreta de tests y checks estáticos para minimizar justo estos tipos de fallo.
+
+
+Un “pack” mínimo de pruebas de aislamiento para tu plataforma podría incluir:
+
+1) Tests automáticos de repositorios
+Objetivo: asegurar que cada repo aplica bien tenantId.
+
+Para cada repositorio (knowledgeassets, documentchunks, entities, logs de IA, etc.):
+
+Crear datos de prueba para tenantA y tenantB.
+
+Tests:
+
+findByIdForTenant(idA, tenantA) devuelve el documento.
+
+findByIdForTenant(idA, tenantB) lanza error o devuelve null.
+
+Los listados (listForTenant) nunca devuelven elementos del otro tenant.
+
+Esto se puede hacer con una TenantIsolationTestSuite reutilizable.
+
+2) Tests end‑to‑end de API
+Objetivo: detectar errores en endpoints “nuevos” o complejos.
+
+Para endpoints clave (/knowledge-assets, /ingest/status, /entities, /logs/audit, /ragchat):
+
+Montar dos sesiones simuladas (o tokens) con tenantId diferentes.
+
+Con el token A, intentar acceder a recursos creados por B:
+
+Debe devolver 403 o 404, nunca 200/2xx con datos.
+
+Incluir especialmente:
+
+Endpoints de administración (delete/soft‑delete, status updates).
+
+Consultas de logs y audit.
+
+3) Tests en workers y jobs
+Objetivo: garantizar que procesos batch no “barren” todos los tenants.
+
+Para cada worker (ingest, workflows, insights, predictive):
+
+Simular un job con tenantId concreto.
+
+Verificar que todas las operaciones de DB que hace ese worker usan ese tenantId en filtros.
+
+Tests negativos:
+
+Si por error quitas tenantId del payload del job, el worker debería fallar rápido, no procesar “todo”.
+
+4) Reglas estáticas / code review
+Objetivo: evitar anti‑patrones que se repiten.
+
+Reglas sencillas:
+
+No se permite connectDB().collection("X").find(...) sin tenantId salvo en módulos explícitamente globales (config, pricing, etc.).
+
+Cualquier uso de find(...)/aggregate(...) en colecciones multi‑tenant debe incluir tenantId en la primera etapa/filtro.
+
+En cachés, las claves deben incluir siempre tenantId cuando el contenido dependa de datos del tenant.
+
+Puedes reforzarlo con lint rules personalizadas o simplemente con checklist de revisión de PR.
+
+5) Pruebas de “fuga” en RAG / logs
+Dado que tu core es RAG:
+
+Verificar que:
+
+El retriever nunca mezcla embeddings de tenants distintos.
+
+Los prompts que se guardan/registran (si lo haces) no mezclan instrucciones o contextos cross‑tenant.
+
+Los logs de IA (aiauditlogs, applicationlogs) pueden filtrarse por tenantId y no se usan nunca “en bloque” para mostrar algo a un cliente.
+
+Con este conjunto de pruebas y reglas, reduces mucho la probabilidad de los fallos de aislamiento más comunes sin necesidad de cambiar tu modelo de datos actual.
+
+
+Te bosquejo las dos cosas, enfocadas a cómo encajarían en tu código actual.
+
+1) MFA TOTP en tu stack actual
+Ya usas NextAuth v5 con Credentials y tienes validación de email/password en libauth.
+​
+
+1.1. Modelo de datos
+En users (auth DB) añade campos:
+
+ts
+interface User {
+  // ...
+  mfaEnabled: boolean;
+  mfaMethod?: "totp";          // por ahora sólo TOTP
+  mfaSecretHash?: string;      // secreto cifrado/hasheado
+  mfaRecoveryCodes?: string[]; // opcional
+}
+1.2. Endpoint para setup de TOTP
+Ruta protegida solo para usuario autenticado:
+
+ts
+// app/api/auth/mfa/setup/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { connectAuthDB } from "@/lib/db";
+import { generateSecret } from "otplib/authenticator";
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const secret = generateSecret(); // guarda sólo en DB tras verify-setup
+  const otpauthUrl = `otpauth://totp/ABD-RAG:${session.user.email}?secret=${secret}&issuer=ABD-RAG`;
+
+  // Opcional: guarda temporalmente en un campo tipo mfaTempSecret
+  const db = await connectAuthDB();
+  await db.collection("users").updateOne(
+    { email: session.user.email.toLowerCase() },
+    { $set: { mfaTempSecret: secret } },
+  );
+
+  return NextResponse.json({ success: true, otpauthUrl });
+}
+Verificación de setup:
+
+ts
+// app/api/auth/mfa/verify-setup/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { connectAuthDB } from "@/lib/db";
+import { verify } from "otplib/authenticator";
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { code } = await req.json();
+  const db = await connectAuthDB();
+  const user = await db.collection("users").findOne({ email: session.user.email.toLowerCase() });
+  if (!user?.mfaTempSecret) {
+    return NextResponse.json({ error: "No hay setup pendiente" }, { status: 400 });
+  }
+
+  const ok = verify({ token: code, secret: user.mfaTempSecret });
+  if (!ok) {
+    return NextResponse.json({ error: "Código inválido" }, { status: 400 });
+  }
+
+  await db.collection("users").updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        mfaEnabled: true,
+        mfaMethod: "totp",
+        mfaSecretHash: user.mfaTempSecret, // aquí deberías cifrar/hashear
+      },
+      $unset: { mfaTempSecret: "" },
+    },
+  );
+
+  return NextResponse.json({ success: true });
+}
+1.3. Flujo de login con paso MFA
+En tu authorize de Credentials (en libauth.config), ahora:
+
+Validar email/password como ya haces.
+​
+
+Si usuario tiene mfaEnabled y rol ADMIN o SUPERADMIN:
+
+No devuelves sesión completa, sino un token “mfa_pending”.
+
+Pseudo:
+
+ts
+// dentro de authorize(credentials)
+if (!isValidPassword) return null;
+
+const dbUser = userFromDB;
+const requiresMfa = dbUser.mfaEnabled && ["ADMIN", "SUPERADMIN"].includes(dbUser.role);
+
+if (requiresMfa) {
+  return {
+    id: dbUser._id.toString(),
+    email: dbUser.email,
+    mfaPending: true,
+  };
+}
+
+// caso normal (sin MFA)
+return {
+  id: dbUser._id.toString(),
+  email: dbUser.email,
+  role: normalizedRole,
+  tenantId: dbUser.tenantId,
+  // ...
+};
+En el callback jwt/session de NextAuth:
+
+Si token.mfaPending es true, marcas la sesión como “pendiente” y no incluyes role/tenantId todavía, o bien los incluyes pero añades mfaVerified: false.
+
+Endpoint para verificar TOTP en login:
+
+ts
+// app/api/auth/mfa/verify-login/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { connectAuthDB } from "@/lib/db";
+import { verify } from "otplib/authenticator";
+import { auth } from "@/lib/auth";
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  // aquí la sesión vendría en estado "mfaPending"
+  if (!session?.user?.email || !session.user.mfaPending) {
+    return NextResponse.json({ error: "No hay MFA pendiente" }, { status: 400 });
+  }
+
+  const { code } = await req.json();
+  const db = await connectAuthDB();
+  const user = await db.collection("users").findOne({ email: session.user.email.toLowerCase() });
+  if (!user?.mfaSecretHash) {
+    return NextResponse.json({ error: "MFA no configurado" }, { status: 400 });
+  }
+
+  const ok = verify({ token: code, secret: user.mfaSecretHash });
+  if (!ok) {
+    return NextResponse.json({ error: "Código inválido" }, { status: 400 });
+  }
+
+  // Aquí deberías actualizar el JWT/session para poner mfaVerified=true.
+  // Con Auth.js v5, puedes usar un endpoint de "update" o forzar re-login con flag.
+
+  return NextResponse.json({ success: true });
+}
+Y en tu middleware (middleware.ts), antes de permitir acceso a rutas admin:
+
+ts
+// si es ruta admin...
+if (session && pathname.startsWith("/admin")) {
+  if (["ADMIN", "SUPERADMIN"].includes(session.user.role) && !session.user.mfaVerified) {
+    // redirigir a pantalla de MFA
+  }
+}
+Esto encaja con tu middleware actual que ya protege /admin y /api/admin.
+​
+
+2) Tests concretos de tenant‑isolation en tu código
+Ya tienes buenos ejemplos de chequeo (apientities/[id]/vector-search, /pedidos/[id]/checklist) donde validas entity.tenantId. Te propongo dos capas de tests:
+​
+
+2.1. Test de repositorio genérico
+Define funciones helper sobre connectDB para repos de entidad:
+
+ts
+// lib/repos/entity-repo.ts
+import { connectDB } from "@/lib/db";
+import { ObjectId } from "mongodb";
+
+export async function findEntityByIdForTenant(id: string, tenantId: string) {
+  const db = await connectDB();
+  return db.collection("entities").findOne({
+    _id: new ObjectId(id),
+    tenantId,
+  });
+}
+Test (con Vitest/Jest):
+
+ts
+it("no permite leer entidades de otro tenant", async () => {
+  const tenantA = "tenantA";
+  const tenantB = "tenantB";
+
+  const db = await connectDB();
+  const { insertedId } = await db.collection("entities").insertOne({
+    tenantId: tenantA,
+    identifier: "X-1",
+  });
+
+  const ok = await findEntityByIdForTenant(insertedId.toString(), tenantA);
+  expect(ok).not.toBeNull();
+
+  const wrong = await findEntityByIdForTenant(insertedId.toString(), tenantB);
+  expect(wrong).toBeNull();
+});
+Repites patrón para knowledgeassets, documentchunks, aiauditlogs, etc.
+
+2.2. Test e2e de endpoints con cross‑tenant
+Para endpoints como /apientities/[id]/vector-search y /apipedidos/[id]/checklist, ya tienes lógica:
+
+entity.tenantId !== tenantId ⇒ log CROSSTENANTACCESSATTEMPT y 403.
+​
+
+Test pseudo (Playwright / supertest):
+
+ts
+it("bloquea vector-search cross-tenant", async () => {
+  const entityId = await seedEntity({ tenantId: "tenantA" });
+
+  const tokenTenantB = await loginAs("userB@tenantB.com"); // sesión con tenantId=tenantB
+
+  const res = await fetch(`/api/entities/${entityId}/vector-search`, {
+    headers: { Authorization: `Bearer ${tokenTenantB}` },
+  });
+
+  expect(res.status).toBe(403);
+});
+Y análogo para /pedidos/:id/checklist donde ya registras el intento y tiras FORBIDDEN.
+​
+
+Con estos dos temas:
+
+MFA TOTP: añades un segundo factor obligatorio para tus roles de alto privilegio integrándose con tu Auth.js actual.
+​
+
+Tenant‑isolation tests: sistematizas lo que ya haces en algunos endpoints (logs de CROSSTENANTACCESSATTEMPT) y lo conviertes en batería de tests para todos los repos y APIs sensibles.
+​
+​

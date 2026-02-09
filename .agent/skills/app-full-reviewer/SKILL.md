@@ -27,6 +27,11 @@ Antes de iniciar, determina si el archivo pertenece a **Área Pública (Marketin
 2. Revisa semántica HTML, ARIA labels y compatibilidad con lectores de pantalla.
 3. **Público Solo**: Verifica metadatos SEO (Title, Description).
 
+### Fase 2.5: Auditoría de Feedback Visual (Skill: toast-notifier-auditor)
+1. Escanea interacciones asíncronas (con API/Server Actions).
+2. Verifica si existe feedback visual inmediato (Toasts) para éxito y error.
+3. Implementa `useToast` si falta.
+
 ### Fase 3: Auditoría de Seguridad Integral
 Combina la lógica de permisos con la robustez técnica:
 1. **Permisos (Skill: guardian-auditor)**:
@@ -70,6 +75,7 @@ Combina la lógica de permisos con la robustez técnica:
 - [ ] Identificada Área (Pública vs Privada)
 - [ ] Ejecutada Auditoría UI/Styling (ui-styling O marketing-styling)
 - [ ] Ejecutada Auditoría i18n/a11y (+ SEO si es público)
+- [ ] Ejecutada Auditoría Feedback Visual (toast-notifier-auditor)
 - [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
 - [ ] Ejecutada Auditoría de Prompts (Solo si aplica)
 - [ ] Ejecutada Auditoría de Consistencia DB (Solo si aplica)

@@ -1,0 +1,52 @@
+scripts/check-error-logs-raw.ts(25,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/check-user-mfa.ts(9,48): error TS2307: Cannot find module './src/lib/db' or its corresponding type declarations.
+scripts/cleanup-doc-types.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/debug-docs-structure.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/debug-persistent-500-v5.ts(10,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/fix-tenants-sync.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/force-brown-branding.ts(49,39): error TS2304: Cannot find name 'result'.
+scripts/inspect-auth-cluster.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/inspect-doc-types.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/inspect-user.ts(7,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/migrate-docs-multi-tenant.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/test-pdf-parse.ts(2,8): error TS2613: Module '"D:/desarrollos/ABDElevators/node_modules/pdf-parse/dist/pdf-parse/esm/index"' has no default export. Did you mean to use 'import { PDFParse } from "D:/desarrollos/ABDElevators/node_modules/pdf-parse/dist/pdf-parse/esm/index"' instead?
+scripts/verify-fixes.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+src/app/(authenticated)/(admin)/admin/api-docs/page.tsx(12,40): error TS2307: Cannot find module 'swagger-ui-react' or its corresponding type declarations.
+src/app/(authenticated)/(admin)/admin/api-docs/page.tsx(44,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: string; deepLinking: boolean; displayOperationId: boolean; persistAuthorization: boolean; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: string; deepLinking: boolean; displayOperationId: boolean; persistAuthorization: boolean; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+src/app/(authenticated)/(admin)/admin/checklist-configs/[id]/page.tsx(13,16): error TS18047: 'params' is possibly 'null'.
+src/app/api/admin/billing/contracts/route.ts(91,82): error TS2339: Property 'errors' does not exist on type 'ZodError<unknown>'.
+src/app/api/admin/knowledge-assets/[id]/retry/route.ts(43,32): error TS2345: Argument of type '"INVALID_STATE"' is not assignable to parameter of type 'ErrorCode'.
+src/app/api/swagger/spec/route.ts(21,26): error TS2307: Cannot find module '@asteasolutions/zod-to-openapi' or its corresponding type declarations.
+src/app/api/swagger/spec/route.ts(39,66): error TS2339: Property 'openapi' does not exist on type 'ZodEnum<{ ELEVATORS: "ELEVATORS"; LEGAL: "LEGAL"; MEDICAL: "MEDICAL"; BANKING: "BANKING"; INSURANCE: "INSURANCE"; IT: "IT"; GENERIC: "GENERIC"; }>'.
+src/app/api/swagger/spec/route.ts(44,58): error TS2339: Property 'openapi' does not exist on type 'ZodObject<{ _id: ZodOptional<ZodAny>; identifier: ZodString; filename: ZodOptional<ZodString>; originalText: ZodString; ... 13 more ...; deletedAt: ZodOptional<...>; }, $strip>'.
+src/app/api/swagger/spec/route.ts(50,34): error TS2339: Property 'openapi' does not exist on type 'ZodBoolean'.
+src/app/api/swagger/spec/route.ts(51,44): error TS2339: Property 'openapi' does not exist on type 'ZodOptional<ZodString>'.
+src/app/api/swagger/spec/route.ts(55,34): error TS2339: Property 'openapi' does not exist on type 'ZodBoolean'.
+src/app/api/swagger/spec/route.ts(56,31): error TS2339: Property 'openapi' does not exist on type 'ZodString'.
+src/app/api/swagger/spec/route.ts(57,33): error TS2339: Property 'openapi' does not exist on type 'ZodString'.
+src/app/auth-pages/error/page.tsx(37,19): error TS18047: 'searchParams' is possibly 'null'.
+src/components/admin/organizations/BillingTab.tsx(152,46): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/admin/organizations/BillingTab.tsx(168,46): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/admin/organizations/BillingTab.tsx(176,46): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/profile/ProfilePhotoUpload.tsx(79,25): error TS2345: Argument of type '(prev: any) => any' is not assignable to parameter of type 'UserProfile'.
+src/components/profile/ProfilePhotoUpload.tsx(79,26): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/components/shared/DynamicBreadcrumb.tsx(11,23): error TS18047: 'pathname' is possibly 'null'.
+src/lib/labels.ts(7,14): error TS2741: Property 'MEDICAL' is missing in type '{ ELEVATORS: { singular: string; plural: string; action: string; description: string; placeholder: string; recent_title: string; }; LEGAL: { singular: string; plural: string; action: string; description: string; placeholder: string; recent_title: string; }; BANKING: { ...; }; INSURANCE: { ...; }; IT: { ...; }; GENER...' but required in type 'Record<"ELEVATORS" | "LEGAL" | "MEDICAL" | "BANKING" | "INSURANCE" | "IT" | "GENERIC", any>'.
+src/lib/openapi.ts(5,8): error TS2307: Cannot find module '@asteasolutions/zod-to-openapi' or its corresponding type declarations.
+src/lib/openapi.ts(24,58): error TS2339: Property 'openapi' does not exist on type 'ZodEnum<{ ELEVATORS: "ELEVATORS"; LEGAL: "LEGAL"; MEDICAL: "MEDICAL"; BANKING: "BANKING"; INSURANCE: "INSURANCE"; IT: "IT"; GENERIC: "GENERIC"; }>'.
+src/lib/openapi.ts(30,50): error TS2339: Property 'openapi' does not exist on type 'ZodObject<{ _id: ZodOptional<ZodAny>; identifier: ZodString; filename: ZodOptional<ZodString>; originalText: ZodString; ... 13 more ...; deletedAt: ZodOptional<...>; }, $strip>'.
+src/lib/openapi.ts(36,26): error TS2339: Property 'openapi' does not exist on type 'ZodBoolean'.
+src/lib/openapi.ts(37,36): error TS2339: Property 'openapi' does not exist on type 'ZodOptional<ZodString>'.
+src/lib/openapi.ts(41,26): error TS2339: Property 'openapi' does not exist on type 'ZodBoolean'.
+src/lib/openapi.ts(42,23): error TS2339: Property 'openapi' does not exist on type 'ZodString'.
+src/lib/openapi.ts(43,25): error TS2339: Property 'openapi' does not exist on type 'ZodString'.
+tests/unit/prompt-service-coverage.test.ts(114,74): error TS2554: Expected 0-1 arguments, but got 2.
+tests/unit/prompt-service.test.ts(125,17): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ template: string; variables: any[]; category?: string | undefined; model?: string | undefined; industry?: string | undefined; }'.
+tests/unit/prompt-service.test.ts(154,17): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ template: string; variables: any[]; category?: string | undefined; model?: string | undefined; industry?: string | undefined; }'.

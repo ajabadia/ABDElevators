@@ -32,19 +32,33 @@ export async function POST(req: NextRequest) {
         const metadataRaw = {
             type: formData.get('type') || formData.get('tipo'),
             version: formData.get('version'),
+            documentTypeId: formData.get('documentTypeId'),
+            scope: formData.get('scope') || 'TENANT',
+            industry: formData.get('industry') || 'ELEVATORS',
         };
 
         // Rule #2: Zod First
         if (!file) {
             throw new ValidationError('No file provided');
         }
-        // Validate metadata using the schema from global location or redefine if local was intended
-        // Re-using local definition for now as it was in original file, ideally move to schemas.ts
+
         const LocalIngestMetadataSchema = z.object({
             type: z.string().min(1),
             version: z.string().min(1),
+            documentTypeId: z.string().optional(),
+            scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'),
+            industry: z.string().default('ELEVATORS'),
         });
         const metadata = LocalIngestMetadataSchema.parse(metadataRaw);
+
+        // Permissions Check based on Scope
+        if (metadata.scope === 'GLOBAL' && session.user.role !== 'SUPER_ADMIN') {
+            throw new AppError('FORBIDDEN', 403, 'Global scope requires SuperAdmin permissions');
+        }
+        if (metadata.scope === 'INDUSTRY' && session.user.role !== 'SUPER_ADMIN') {
+            // Future: Allow specific Industry Managers
+            throw new AppError('FORBIDDEN', 403, 'Industry scope requires SuperAdmin permissions');
+        }
 
         const tenantId = session.user.tenantId;
         if (!tenantId) {
@@ -78,33 +92,61 @@ export async function POST(req: NextRequest) {
         }
 
         // 6. ENQUEUE HEAVY ANALYSIS (PHASE 2: ASYNC)
-        const { queueService } = await import('@/lib/queue-service');
-        const job = await queueService.addJob('PDF_ANALYSIS', {
-            tenantId,
-            userId: session.user.id as string,
-            correlationId,
-            data: {
-                docId: prep.docId,
-                options: {
-                    maskPii,
-                    userEmail,
-                    environment
+        try {
+            const { queueService } = await import('@/lib/queue-service');
+            const job = await queueService.addJob('PDF_ANALYSIS', {
+                tenantId,
+                userId: session.user.id as string,
+                correlationId,
+                data: {
+                    docId: prep.docId,
+                    options: {
+                        maskPii,
+                        userEmail,
+                        environment
+                    }
                 }
-            }
-        });
+            });
 
-        return NextResponse.json({
-            success: true,
-            message: 'Ingestion started in background.',
-            docId: prep.docId,
-            jobId: job.id,
-            correlationId
-        });
+            return NextResponse.json({
+                success: true,
+                message: 'Ingestion started in background (Queue).',
+                docId: prep.docId,
+                jobId: job.id,
+                correlationId
+            });
+        } catch (queueError) {
+            console.error('[QUEUE ERROR] Falling back to background-promise ingestion', queueError);
+
+            // Fallback: Fire and forget (Not ideal for production, but ensures processing if Redis/Queue is down in Dev)
+            // No await here
+            IngestService.executeAnalysis(prep.docId, {
+                maskPii,
+                userEmail,
+                environment,
+                correlationId
+            }).catch(e => console.error('[BACKGROUND FALLBACK ERROR]', e));
+
+            return NextResponse.json({
+                success: true,
+                message: 'Ingestion enqueued (Fallback).',
+                docId: prep.docId,
+                correlationId
+            });
+        }
 
     } catch (error: any) {
         console.error(`[INGEST ERROR] Correlation: ${correlationId}`, error);
 
         if (error.name === 'ZodError') {
+            await logEvento({
+                level: 'ERROR',
+                source: 'API_INGEST',
+                action: 'VALIDATION_ERROR',
+                message: 'Zod validation failed',
+                correlationId,
+                details: { errors: error.errors }
+            });
             return NextResponse.json(
                 new ValidationError('Invalid ingest metadata', error.errors).toJSON(),
                 { status: 400 }

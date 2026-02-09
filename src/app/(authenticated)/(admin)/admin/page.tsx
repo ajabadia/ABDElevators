@@ -3,26 +3,18 @@
 import React from "react";
 import { useSession } from "next-auth/react";
 import {
-    Building2,
-    FileText,
-    Zap,
     ShieldCheck,
-    Search,
+    Zap,
     Activity,
     AlertTriangle,
     BrainCircuit,
     Globe2,
     Server,
     Scale,
-    TrendingUp,
     Monitor,
     LayoutGrid
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { MetricCard } from "@/components/ui/metric-card";
-import { ContentCard } from "@/components/ui/content-card";
-import { UsageBar } from "@/components/admin/UsageBar";
-import { ActivityRow } from "@/components/admin/ActivityRow";
 import { useApiItem } from "@/hooks/useApiItem";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
@@ -35,10 +27,15 @@ import { AutomationStudio } from "@/components/admin/AutomationStudio";
 import { KnowledgeGovernance } from "@/components/admin/KnowledgeGovernance";
 import { ReliabilityStressMonitor } from "@/components/admin/ReliabilityStressMonitor";
 import { SecurityAutoscaleMonitor } from "@/components/admin/SecurityAutoscaleMonitor";
+import { StatsGrid } from "@/components/admin/StatsGrid";
+import { UsageSection } from "@/components/admin/UsageSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
 import { UserRole } from "@/types/roles";
 
+// Modular Components (Phase 105 Hygiene)
+import { IndustryDistribution } from "@/components/admin/IndustryDistribution";
+import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActivity";
 
 export default function AdminDashboardPage() {
     const t = useTranslations('admin.dashboard');
@@ -128,138 +125,24 @@ export default function AdminDashboardPage() {
                     {!isSuperAdmin && <TenantROIStats />}
 
                     {/* Quick Stats Grid */}
-                    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-${isCompact ? '3' : '6'}`}>
-                        <MetricCard
-                            title={isSuperAdmin ? t('metrics.tenants') : t('metrics.activeUsers')}
-                            value={isSuperAdmin ? stats.totalTenants : (stats as any).totalUsers || 0}
-                            icon={<Building2 />}
-                            trend="+12%"
-                            trendDirection="up"
-                            color="blue"
-                            className={isCompact ? "p-4" : ""}
-                        />
-                        <MetricCard
-                            title={t('metrics.documents')}
-                            value={stats.totalFiles}
-                            icon={<FileText />}
-                            trend="+5.4%"
-                            trendDirection="up"
-                            color="amber"
-                            className={isCompact ? "p-4" : ""}
-                        />
-                        <MetricCard
-                            title={t('metrics.cases')}
-                            value={stats.totalCases}
-                            icon={<ShieldCheck />}
-                            trend="+18%"
-                            trendDirection="up"
-                            color="emerald"
-                            className={isCompact ? "p-4" : ""}
-                        />
-                        <MetricCard
-                            title={t('metrics.iaSearches')}
-                            value={stats.usage.searches}
-                            icon={<Search />}
-                            trend="+24%"
-                            trendDirection="up"
-                            color="purple"
-                            className={isCompact ? "p-4" : ""}
-                        />
-                    </div>
+                    <StatsGrid stats={stats} isSuperAdmin={isSuperAdmin} isCompact={isCompact} />
 
                     {/* Consumption and Activity */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Usage Chart */}
-                        <ContentCard
-                            title={t('charts.consumptionTitle')}
-                            icon={<Zap className="text-teal-500" size={18} />}
-                            className="lg:col-span-2 shadow-xl shadow-slate-200/50 dark:shadow-none"
-                        >
-                            <div className="space-y-8 p-2">
-                                <UsageBar
-                                    label={t('charts.labels.tokens')}
-                                    value={stats.usage.tokens}
-                                    max={isSuperAdmin ? 10_000_000 : stats.limits?.tokens || 1_000_000}
-                                    format="tokens"
-                                    color="teal"
-                                />
-                                <UsageBar
-                                    label={t('charts.labels.storage')}
-                                    value={stats.usage.storage}
-                                    max={isSuperAdmin ? 100 * 1024 * 1024 * 1024 : stats.limits?.storage || 5 * 1024 * 1024 * 1024}
-                                    format="bytes"
-                                    color="blue"
-                                />
-                                <UsageBar
-                                    label={t('charts.labels.searches')}
-                                    value={stats.usage.searches}
-                                    max={isSuperAdmin ? 50_000 : stats.limits?.searches || 5_000}
-                                    format="count"
-                                    color="purple"
-                                />
-                            </div>
-                        </ContentCard>
+                        <UsageSection stats={stats} isSuperAdmin={isSuperAdmin} />
 
-                        {/* Industries or Plan Info */}
-                        <ContentCard
-                            title={isSuperAdmin ? t('distribution.title') : t('plan.title')}
-                            icon={<TrendingUp className="text-teal-500" size={18} />}
-                            className="shadow-xl shadow-slate-200/50 dark:shadow-none"
-                        >
-                            {isSuperAdmin ? (
-                                <div className="space-y-3">
-                                    {stats.industries.map((ind: any) => (
-                                        <div key={ind._id} className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-border hover:border-teal-500/30 transition-all cursor-default group">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full bg-teal-500 group-hover:scale-150 transition-transform" />
-                                                <span className="text-xs font-black uppercase tracking-tight text-muted-foreground">{ind._id}</span>
-                                            </div>
-                                            <span className="font-mono font-black text-primary tabular-nums">{ind.count}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-6 space-y-6">
-                                    <div className="relative inline-block px-10 py-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-[2rem] font-black text-2xl shadow-2xl border border-slate-700">
-                                        <div className="absolute -top-1 -right-1">
-                                            <Badge className="bg-teal-500 text-white border-none text-[8px] font-black">{t('plan.active')}</Badge>
-                                        </div>
-                                        {stats.tier || 'FREE'}
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{t('plan.renewal')}</p>
-                                        <p className="text-xs text-foreground font-bold mt-1">12 de Febrero, 2026</p>
-                                    </div>
-                                    <button className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 transition-all active:scale-95">
-                                        {t('plan.manageBtn')}
-                                    </button>
-                                </div>
-                            )}
-                        </ContentCard>
+                        {/* Industries or Plan Info (Modular Card) */}
+                        <IndustryDistribution
+                            isSuperAdmin={isSuperAdmin}
+                            industries={stats.industries}
+                            tier={stats.tier}
+                            t={t}
+                        />
                     </div>
 
-                    {/* Recent Activity */}
-                    <div className="mt-8">
-                        <ContentCard
-                            title={t('activity.title')}
-                            icon={<Activity className="text-teal-500" size={18} />}
-                            noPadding
-                            className="shadow-xl shadow-slate-200/50 dark:shadow-none"
-                        >
-                            <div className="divide-y divide-border">
-                                {stats.activities && stats.activities.length > 0 ? (
-                                    stats.activities.map((act: any, idx: number) => (
-                                        <ActivityRow key={act._id || idx} activity={act} />
-                                    ))
-                                ) : (
-                                    <div className="p-20 text-center flex flex-col items-center gap-4 text-muted-foreground">
-                                        <ShieldCheck size={48} className="opacity-10" />
-                                        <p className="text-sm font-bold tracking-tight opacity-50 uppercase tracking-[0.2em]">{t('activity.empty')}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </ContentCard>
-                    </div>
+                    {/* Recent Activity (Modular Card) */}
+                    <DashboardRecentActivity activities={stats.activities} t={t} />
                 </TabsContent>
 
                 <TabsContent value="intelligence" className="outline-none">
@@ -289,4 +172,3 @@ export default function AdminDashboardPage() {
         </PageContainer>
     );
 }
-

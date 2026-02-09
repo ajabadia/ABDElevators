@@ -14,34 +14,40 @@ export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
+    console.log('🔥 [API] Starting request to /api/technical/rag/chat');
     try {
         const session = await auth();
         if (!session) {
+            console.log('❌ [API] No Session');
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const tenantId = session.user.tenantId;
+        const tenantId = session.user?.tenantId;
+        console.log('🆔 [API] Tenant:', tenantId);
+
         if (!tenantId) {
             return NextResponse.json({ error: 'Tenant ID no encontrado en la sesión' }, { status: 403 });
         }
-        const { question, stream = false } = await req.json();
+        const { question, messages = [], stream = false } = await req.json();
 
-        if (!question) {
-            return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 });
+        if (!question && messages.length === 0) {
+            return NextResponse.json({ error: 'La pregunta o el historial son obligatorios' }, { status: 400 });
         }
+
+        const effectiveQuestion = question || (messages.length > 0 ? messages[messages.length - 1].content : '');
 
         await logEvento({
             level: 'INFO',
             source: 'TECHNICAL_RAG_CHAT_API',
             action: stream ? 'QUERY_STREAM_START' : 'QUERY_START',
-            message: `Agentic query started: ${question.substring(0, 50)}...`,
+            message: `Agentic query started: ${effectiveQuestion.substring(0, 50)}...`,
             tenantId,
             correlationId
         });
 
-        if (stream) {
+        if (effectiveQuestion && stream) {
             const encoder = new TextEncoder();
-            const generator = AgenticRAGService.runStream(question, tenantId, correlationId);
+            const generator = AgenticRAGService.runStream(effectiveQuestion, tenantId, correlationId, messages);
 
             const customStream = new ReadableStream({
                 async pull(controller) {
@@ -71,7 +77,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Execute agentic RAG service (Non-streaming)
-        const result = await AgenticRAGService.run(question, tenantId, correlationId);
+        const result = await AgenticRAGService.run(effectiveQuestion, tenantId, correlationId, messages);
 
         return NextResponse.json({
             success: true,

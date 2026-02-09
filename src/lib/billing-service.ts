@@ -1,6 +1,6 @@
 import { UsageService } from './usage-service';
 import { TenantService } from './tenant-service';
-import { TenantConfig, GlobalPricingPlanSchema } from './schemas';
+import { PLANS, PlanTier } from './plans';
 import { ObjectId } from 'mongodb';
 import { ValidationError } from './errors';
 
@@ -33,27 +33,7 @@ export interface InvoiceData {
     status: 'DRAFT' | 'ISSUED' | 'PAID' | 'OVERDUE';
 }
 
-// Precios Base Mockeados (en el futuro vendrán de DB)
-const PRICING_PLANS = {
-    'FREE': {
-        name: 'Free Tier',
-        baseFee: 0,
-        limits: { tokens: 1000000, storage: 1024 * 1024 * 100 }, // 100MB
-        overage: { tokens: 0, storage: 0 }
-    },
-    'PRO': {
-        name: 'Pro Tier',
-        baseFee: 299,
-        included: { tokens: 10000000, storage: 1024 * 1024 * 1024 * 10 }, // 10GB
-        overage: { tokens: 0.000005, storage: 0.05 } // $5 per million tokens, $0.05 per GB
-    },
-    'ENTERPRISE': {
-        name: 'Enterprise Tier',
-        baseFee: 999,
-        included: { tokens: 100000000, storage: 1024 * 1024 * 1024 * 100 }, // 100GB
-        overage: { tokens: 0.000003, storage: 0.03 }
-    }
-};
+// Los planes ahora se centralizan en plans.ts
 
 export class BillingService {
 
@@ -68,32 +48,31 @@ export class BillingService {
     } | null> {
         // 1. Obtener Configuración
         const config = await TenantService.getConfig(tenantId);
-        const tier = (config.subscription?.tier as keyof typeof PRICING_PLANS) || 'FREE';
-        const plan = PRICING_PLANS[tier];
+        const tier = (config.subscription?.tier as PlanTier) || 'FREE';
+        const plan = PLANS[tier];
 
         // 2. Determinar límites según métrica
         let limit = 0;
         let usage = 0;
-        
-        // Simulación básica para arreglar el build. 
-        // En producción esto debería conectar con UsageService.getUsageStats real
+        const customLimits = (config as any).customLimits || {};
+
         if (metric === 'TOKENS') {
-            limit = (plan as any).included?.tokens || (plan as any).limits?.tokens || 0;
+            limit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
             // Mock value for safe build - Integration with UsageService pending
-            usage = 0; 
+            usage = 0;
         } else if (metric === 'STORAGE') {
-            limit = (config.storage.quota_bytes) || (plan as any).included?.storage || 0;
+            limit = customLimits.storage_bytes ?? ((config.storage?.quota_bytes) || plan.limits.storage_bytes || 0); // Corrected property access
             usage = 0;
         } else {
-             // Unknown metric, allow pass
-             return { currentUsage: 0, limit: 0, status: 'OK' };
+            // Unknown metric, allow pass
+            return { currentUsage: 0, limit: 0, status: 'OK' };
         }
 
         // 3. Evaluar
         if (limit > 0 && usage > limit) {
-             // lógica simple: si es FREE bloquea, si es PAGADO surcharge (mock)
-             if (tier === 'FREE') return { currentUsage: usage, limit, status: 'BLOCKED', actionApplied: 'Upgrade required' };
-             return { currentUsage: usage, limit, status: 'SURCHARGE' };
+            // lógica simple: si es FREE bloquea, si es PAGADO surcharge (mock)
+            if (tier === 'FREE') return { currentUsage: usage, limit, status: 'BLOCKED', actionApplied: 'Upgrade required' };
+            return { currentUsage: usage, limit, status: 'SURCHARGE' };
         }
 
         return { currentUsage: usage, limit, status: 'OK' };
@@ -107,8 +86,8 @@ export class BillingService {
     static async changePlan(tenantId: string, newPlanSlug: string) {
         const tier = newPlanSlug.toUpperCase();
 
-        if (!(tier in PRICING_PLANS)) {
-            throw new ValidationError(`Plan inválido: ${newPlanSlug}. Planes válidos: ${Object.keys(PRICING_PLANS).join(', ')}`);
+        if (!(tier in PLANS)) {
+            throw new ValidationError(`Plan inválido: ${newPlanSlug}. Planes válidos: ${Object.keys(PLANS).join(', ')}`);
         }
 
         // 1. Obtener configuración actual completa (necesario para validación Zod en updateConfig)
@@ -141,8 +120,8 @@ export class BillingService {
         // 1. Obtener Configuración del Tenant Real (Migrado a Auth DB)
         const tenantConfig = await TenantService.getConfig(tenantId);
 
-        const tier = (tenantConfig.subscription?.tier as keyof typeof PRICING_PLANS) || 'FREE';
-        const plan = PRICING_PLANS[tier];
+        const tier = (tenantConfig.subscription?.tier as PlanTier) || 'FREE';
+        const plan = PLANS[tier];
 
         // 2. Obtener Uso
         // Aquí conectamos con UsageService. 
@@ -157,18 +136,19 @@ export class BillingService {
         const lineItems: InvoiceLineItem[] = [];
 
         // Base Fee
-        if (plan.baseFee > 0) {
+        if (plan.price_monthly > 0) {
             lineItems.push({
                 description: `Suscripción Mensual - Plan ${plan.name}`,
                 quantity: 1,
-                unitPrice: plan.baseFee,
-                total: plan.baseFee
+                unitPrice: plan.price_monthly,
+                total: plan.price_monthly
             });
         }
 
         // Overage Tokens
         if (plan.overage.tokens > 0) {
-            const includedTokens = (plan as any).included?.tokens || 0;
+            const customLimits = (tenantConfig as any).customLimits || {};
+            const includedTokens = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
             const excessTokens = Math.max(0, tokensUsed - includedTokens);
             if (excessTokens > 0) {
                 const cost = excessTokens * plan.overage.tokens;

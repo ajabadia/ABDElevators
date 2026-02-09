@@ -10,11 +10,12 @@ import { logEvento } from '@/lib/logger';
  */
 export class DomainRouterService {
     private static KEYWORDS: Record<IndustryType, string[]> = {
-        ELEVATORS: ['ascensor', 'elevador', 'lift', 'hoistway', 'maniobra', 'botonera', 'cabin', 'shaft', 'arca ii'],
-        LEGAL: ['contract', 'contrato', 'clause', 'jurisdiction', 'liability', 'indemnity', 'agreement', 'legal', 'tribunal', 'ley'],
-        BANKING: ['balance', 'asset', 'liability', 'ledger', 'loan', 'mortgage', 'interest rate', 'compliance', 'swift', 'iban', 'banca'],
-        INSURANCE: ['policy', 'premium', 'coverage', 'claim', 'underwriting', 'deductible', 'beneficiary', 'póliza', 'siniestro', 'cobertura'],
-        IT: ['code', 'api', 'server', 'database', 'frontend', 'backend', 'vulnerability', 'deployment', 'cloud', 'software'],
+        ELEVATORS: ['ascensor', 'elevador', 'lift', 'hoistway', 'maniobra', 'botonera', 'cabin', 'shaft', 'arca ii', 'elevator', 'escalator', 'mantenimiento'],
+        LEGAL: ['contract', 'contrato', 'clause', 'jurisdiction', 'liability', 'indemnity', 'agreement', 'legal', 'tribunal', 'ley', 'law', 'lawsuit'],
+        BANKING: ['balance', 'asset', 'liability', 'ledger', 'loan', 'mortgage', 'interest rate', 'compliance', 'swift', 'iban', 'banca', 'bank', 'credit'],
+        INSURANCE: ['policy', 'premium', 'coverage', 'claim', 'underwriting', 'deductible', 'beneficiary', 'póliza', 'siniestro', 'cobertura', 'insurance', 'seguro'],
+        IT: ['code', 'api', 'server', 'database', 'frontend', 'backend', 'vulnerability', 'deployment', 'cloud', 'software', 'git', 'bug'],
+        MEDICAL: ['paciente', 'historial', 'diagnóstico', 'receta', 'tratamiento', 'clínica', 'hospital', 'médico', 'síntoma', 'infection', 'bacterial', 'patient', 'doctor', 'treatment', 'medical'],
         GENERIC: []
     };
 
@@ -36,7 +37,7 @@ export class DomainRouterService {
 
         const bestHeuristic = Object.entries(scores).reduce((a, b) => b[1] > a[1] ? b : a);
 
-        if (bestHeuristic[1] > 3) {
+        if (bestHeuristic[1] >= 1) {
             return bestHeuristic[0] as IndustryType;
         }
 
@@ -72,7 +73,7 @@ export class DomainRouterService {
             });
             const detected = response.trim().toUpperCase();
 
-            const validIndustries: IndustryType[] = ['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC'];
+            const validIndustries: IndustryType[] = ['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'MEDICAL', 'GENERIC'];
             if (validIndustries.includes(detected as IndustryType)) {
                 return detected as IndustryType;
             }
@@ -81,5 +82,12 @@ export class DomainRouterService {
         }
 
         return 'GENERIC';
+    }
+
+    /**
+     * Alias for detectIndustry to match the multi-vertical strategy nomenclature.
+     */
+    static async classifyQuery(query: string, tenantId: string, correlationId?: string): Promise<IndustryType> {
+        return this.detectIndustry(query, tenantId, correlationId);
     }
 }

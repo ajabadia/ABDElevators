@@ -111,4 +111,4 @@ export async function getMongoClient(): Promise<MongoClient> {
     return await getConnectedClient(uri, '_mainPromise');
 }
 
-export default getMongoClient();
+// export default getMongoClient(); // Removed to prevent top-level await side-effects

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createBillingPortalSession } from '@/lib/stripe';
+import { createPortalSession } from '@/lib/stripe';
 import { TenantService } from '@/lib/tenant-service';
 import { AppError } from '@/lib/errors';
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const portalSession = await createBillingPortalSession(
+        const portalSession = await createPortalSession(
             customerId,
             `${baseUrl}/admin/billing`
         );

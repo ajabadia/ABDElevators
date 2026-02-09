@@ -11,8 +11,10 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 | `/about` | Visión estratégica y equipo. | 2026-02-06 |
 | `/terms` | Términos de Servicio y condiciones legales. | 2026-02-06 |
 | `/privacy` | Política de Privacidad y tratamiento de datos (GDPR). | 2026-02-06 |
-| `/login` / `/upgrade` | Acceso y gestión de suscripciones. | 2026-02-06 |
+| `/login` / `/upgrade` | Acceso y gestión de suscripciones. | 2026-02-09 |
 | `/accessibility` | Declaración de Accesibilidad y compromiso WCAG 2.1. | 2026-02-06 |
+| `/sandbox` | Demo interactivo público con documentos de ejemplo (sin autenticación). | 2026-02-09 |
+| `/auth-pages/magic-link/verify` | Verificación de Magic Links para autenticación passwordless. | 2026-02-09 |
 
 ## 👤 Panel de Usuario (Authenticated)
 | Ruta | Funcionalidad | Última Revisión |
@@ -30,7 +32,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |------|---------------|-----------------|
 | `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | 2026-02-03 12:20 |
 | `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-08 02:00 |
-| `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión. | 2026-02-03 12:35 |
+| `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión + Decision Tracing. | 2026-02-08 21:00 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
@@ -57,6 +59,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/profile` | Gestión de identidad, seguridad y preferencias del usuario. | 2026-02-07 14:30 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
 | `/admin/organizations` | Gestión de tenants: Branding, Storage Isolation y Billing. | 2026-02-07 15:45 |
+| `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-09 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -82,8 +85,10 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-06 00:00 |
 | `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 |
 | `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
+| `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
+| `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-09 |
 
 
 ---
-*Mapa actualizado por Antigravity v3.9.5 (Architecture Hardening) - 2026-02-08*
+*Mapa actualizado por Antigravity v4.2.1 (Enterprise SaaS Evolution) - 2026-02-09*
 

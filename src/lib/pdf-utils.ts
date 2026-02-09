@@ -5,18 +5,23 @@ import { ExternalServiceError } from '@/lib/errors';
  * Regla de Oro #3: AppError para manejo de errores
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-    let pdf: any = null;
     try {
-        // Importación dinámica (Lazy Loading) para evitar problemas en Serverless
-        const PDFParse = ((await import('pdf-parse')) as any).default;
-        // @ts-ignore - Depende del tipo de export de la librería
-        const result = await (PDFParse as any)(buffer);
+        // Importación dinámica robusta
+        const mod = await import('pdf-parse');
+        // Create a typed reference or cast to any to avoid TS errors with the dynamic import
+        const PDFParse = (mod as any).default || (mod as any).PDFParse || mod;
+
+        if (typeof PDFParse !== 'function') {
+            throw new Error('pdf-parse is not a function after import');
+        }
+
+        const result = await PDFParse(buffer);
         return cleanPDFText(result.text);
     } catch (error: any) {
         console.error('Error extracting PDF text:', error);
         throw new ExternalServiceError('Fallo al extraer texto del PDF', {
             message: error.message || String(error),
-            stack: error.stack
+            details: { name: error.name, code: error.code }
         });
     }
 }

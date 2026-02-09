@@ -11,22 +11,16 @@ import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
-import { Input } from "@/components/ui/input";
 import {
     Activity,
-    FileText,
-    Zap,
     Download,
-    Search,
     ShieldAlert,
     Filter,
-    Hash,
-    Database,
-    Cpu,
-    Webhook,
     HelpCircle
 } from "lucide-react";
 import { InlineHelpPanel } from "@/components/ui/inline-help-panel";
+import { AuditMetrics } from "@/components/admin/AuditMetrics";
+import { AuditFilters } from "@/components/admin/AuditFilters";
 
 interface GlobalStats {
     totalTenants: number;
@@ -69,8 +63,8 @@ interface LogEntry {
 }
 
 /**
- * AuditoriaPage: Registro Industrial & Monitoreo (Fase 96.1)
- * Implementa patrón de Lazy Loading con filtros y búsqueda avanzada.
+ * AuditoriaPage: Registro Industrial & Monitoreo (Fase 105 Hygiene).
+ * Refactored into modular components.
  */
 export default function AuditoriaPage() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -78,32 +72,27 @@ export default function AuditoriaPage() {
     const [sourceFilter, setSourceFilter] = useState('');
     const [showHelp, setShowHelp] = useState(false);
 
-    // 🛡️ Pattern: __ALL__ logic
     const hasActiveFilters = Boolean(levelFilter || sourceFilter || searchQuery);
     const actualLevel = levelFilter === '__ALL__' ? '' : levelFilter;
     const actualSource = sourceFilter === '__ALL__' ? '' : sourceFilter;
     const allParam = (levelFilter === '__ALL__' || sourceFilter === '__ALL__') ? '&all=true' : '';
 
-    // 1. Carga de Métricas Globales (Dashboard)
     const { data: globalStats, isLoading: loadingGlobal } = useApiItem<GlobalStats>({
         endpoint: '/api/admin/global-stats',
         dataKey: 'global'
     });
 
-    // 2. Carga de Estadísticas de Logs (Filtros)
-    const { data: logStats, isLoading: loadingStats } = useApiItem<LogStats>({
+    const { data: logStats } = useApiItem<LogStats>({
         endpoint: '/api/admin/logs/stats',
         autoFetch: true
     });
 
-    // 3. Carga de Logs (Lazy Loading)
-    const { data: logs, isLoading: loadingLogs, refresh: refreshLogs } = useApiList<LogEntry>({
+    const { data: logs, isLoading: loadingLogs } = useApiList<LogEntry>({
         endpoint: `/api/admin/logs?limit=50&level=${actualLevel}&source=${actualSource}&search=${searchQuery}${allParam}`,
         dataKey: 'logs',
         autoFetch: hasActiveFilters
     });
 
-    // 4. Definición de Columnas
     const columns: Column<LogEntry>[] = [
         {
             header: "Timestamp",
@@ -194,129 +183,21 @@ export default function AuditoriaPage() {
                 />
             )}
 
-            {/* Metrics Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <ContentCard className="p-4" noPadding={true}>
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pedidos (Total)</div>
-                        <FileText className="h-4 w-4 text-slate-300" />
-                    </div>
-                    <div className="p-4 pt-0">
-                        <div className="text-2xl font-black font-outfit text-slate-900 dark:text-white">
-                            {loadingGlobal ? "..." : globalStats?.totalCases || 0}
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">Acumulados en plataforma</p>
-                    </div>
-                </ContentCard>
+            {/* Metrics Dashboard (Modular) */}
+            <AuditMetrics stats={globalStats} isLoading={loadingGlobal} />
 
-                <ContentCard className="p-4" noPadding={true}>
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Incidencias SLA</div>
-                        <ShieldAlert className="h-4 w-4 text-rose-400" />
-                    </div>
-                    <div className="p-4 pt-0">
-                        <div className={`text-2xl font-black font-outfit ${globalStats?.performance?.sla_violations_30d ? 'text-rose-600' : 'text-slate-900 dark:text-white'}`}>
-                            {loadingGlobal ? "..." : globalStats?.performance?.sla_violations_30d || 0}
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">Últimos 30 días</p>
-                    </div>
-                </ContentCard>
-
-                <ContentCard className="p-4" noPadding={true}>
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tokens Consumidos</div>
-                        <Zap className="h-4 w-4 text-amber-500" />
-                    </div>
-                    <div className="p-4 pt-0">
-                        <div className="text-2xl font-black font-outfit text-slate-900 dark:text-white">
-                            {loadingGlobal ? "..." : `${Math.round((globalStats?.usage?.tokens || 0) / 1000)}k`}
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">Inferencia LLM Activa</p>
-                    </div>
-                </ContentCard>
-
-                <ContentCard className="p-4" noPadding={true}>
-                    <div className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">RAG Faithfulness</div>
-                        <Activity className="h-4 w-4 text-teal-500" />
-                    </div>
-                    <div className="p-4 pt-0">
-                        <div className="text-2xl font-black font-outfit text-teal-600">
-                            {loadingGlobal ? "..." : globalStats?.performance?.rag_quality_avg ? `${(globalStats.performance.rag_quality_avg.avgFaithfulness * 100).toFixed(0)}%` : "N/A"}
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">Score de Alucinaciones</p>
-                    </div>
-                </ContentCard>
-            </div>
-
-            {/* Búsqueda y Filtros */}
-            <div className="space-y-4 mb-6">
-                <ContentCard className="p-2 border-slate-200 dark:border-slate-800 shadow-sm" noPadding>
-                    <div className="flex items-center px-4 py-2 gap-4">
-                        <Search className="w-5 h-5 text-slate-300" />
-                        <Input
-                            placeholder="Busca por mensaje, acción, correlationId o email de usuario..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="border-none shadow-none focus-visible:ring-0 text-sm font-medium p-0 h-10 placeholder:text-slate-400"
-                        />
-                    </div>
-                </ContentCard>
-
-                <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        onClick={() => {
-                            setLevelFilter('__ALL__');
-                            setSourceFilter('');
-                        }}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center gap-2 ${levelFilter === '__ALL__'
-                            ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-500/20"
-                            : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
-                            }`}
-                    >
-                        <Activity className="w-3 h-3" />
-                        TODOS ({logStats?.total || 0})
-                    </button>
-
-                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />
-
-                    {levels.map(lvl => (
-                        <button
-                            key={lvl}
-                            onClick={() => setLevelFilter(lvl)}
-                            className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${levelFilter === lvl
-                                ? "bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-400"
-                                }`}
-                        >
-                            {lvl}
-                            <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${levelFilter === lvl ? "bg-white/20 text-white dark:bg-slate-200 dark:text-slate-600" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
-                                }`}>
-                                {logStats?.levels[lvl] || 0}
-                            </span>
-                        </button>
-                    ))}
-
-                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />
-
-                    {sources.map(src => (
-                        <button
-                            key={src}
-                            onClick={() => setSourceFilter(src)}
-                            className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${sourceFilter === src
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-blue-500/50"
-                                }`}
-                        >
-                            {src.toUpperCase()}
-                            <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${sourceFilter === src ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
-                                }`}>
-                                {logStats?.sources[src] || 0}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* Búsqueda y Filtros (Modular) */}
+            <AuditFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                levelFilter={levelFilter}
+                setLevelFilter={setLevelFilter}
+                sourceFilter={sourceFilter}
+                setSourceFilter={setSourceFilter}
+                logStats={logStats}
+                levels={levels}
+                sources={sources}
+            />
 
             {/* Logs Table */}
             <ContentCard noPadding={true} className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">

@@ -67,9 +67,9 @@ export async function extractChecklist(
     try {
         // 2️⃣ Prepare dynamic prompt (Fase 7.6)
         const documentsText = docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n");
-        const renderedPrompt = await PromptService.renderPrompt(
-            'CHECKLIST_EXTRACTOR',
-            { documents: documentsText },
+        const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
+            'checklist_extraction',
+            { text: documentsText },
             tenantId
         );
 

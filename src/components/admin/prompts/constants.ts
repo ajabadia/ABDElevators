@@ -12,8 +12,8 @@ export const SYSTEM_VARIABLES_DOC: Record<string, { desc: string, vars: string[]
         vars: ['componentType', 'componentModel', 'technicalContext', 'tenantId']
     },
     'REPORT_GENERATOR': {
-        desc: 'Redacción de informes técnicos finales.',
-        vars: ['numeroPedido', 'cliente', 'fechaIngreso', 'itemsValidados', 'observaciones', 'fuentes', 'tenantId']
+        desc: 'Redacción de informes de validación y compatibilidad profesional.',
+        vars: ['identifier', 'client', 'receivedAt', 'validatedItems', 'observations', 'sources', 'tenantId']
     },
     'CHECKLIST_EXTRACTOR': {
         desc: 'Extracción de checks desde documentos masivos.',

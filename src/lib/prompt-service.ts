@@ -6,19 +6,43 @@ import { ObjectId } from 'mongodb';
 
 /**
  * Servicio de Gestión de Prompts Dinámicos (Fase 7.6)
+ * Evolucionado para soporte Multi-Vertical (Phase 101.1)
  */
 export class PromptService {
     /**
-     * Obtiene un prompt activo por su key
+     * Obtiene un prompt activo por su key e industria (con fallback a GENERIC)
      */
-    static async getPrompt(key: string, tenantId: string, environment: string = 'PRODUCTION'): Promise<Prompt> {
+    static async getPrompt(
+        key: string,
+        tenantId: string,
+        environment: string = 'PRODUCTION',
+        industry: string = 'GENERIC'
+    ): Promise<Prompt> {
         const collection = await getTenantCollection('prompts');
 
-        const prompt = await collection.findOne({ key, tenantId, active: true, environment });
+        // 1. Intentar específico por industria
+        let prompt = await collection.findOne({
+            key,
+            tenantId,
+            industry,
+            active: true,
+            environment
+        });
+
+        // 2. Fallback a GENERIC si no es el pedido y no se encontró
+        if (!prompt && industry !== 'GENERIC') {
+            prompt = await collection.findOne({
+                key,
+                tenantId,
+                industry: 'GENERIC',
+                active: true,
+                environment
+            });
+        }
 
         if (!prompt) {
-            console.error(`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", active: true }`);
-            throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado para este tenant (${tenantId})`);
+            console.error(`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", industry: "${industry}", active: true }`);
+            throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado para este tenant (${tenantId}) e industria (${industry})`);
         }
 
         return PromptSchema.parse(prompt);
@@ -31,9 +55,10 @@ export class PromptService {
         key: string,
         variables: Record<string, any>,
         tenantId: string,
-        environment: string = 'PRODUCTION'
+        environment: string = 'PRODUCTION',
+        industry: string = 'GENERIC'
     ): Promise<{ text: string, model: string }> {
-        const prompt = await this.getPrompt(key, tenantId, environment);
+        const prompt = await this.getPrompt(key, tenantId, environment, industry);
 
         // Validar que todas las variables requeridas estén presentes
         const missingVars = prompt.variables
@@ -56,7 +81,7 @@ export class PromptService {
             rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), String(varValue));
         }
 
-        // Auditar uso (Fase Group A: Audit Prompt Usage)
+        // Auditar uso
         try {
             const collection = await getTenantCollection('prompts');
             await collection.updateOne(
@@ -71,31 +96,27 @@ export class PromptService {
         }
 
         const model = (prompt as any).model || 'gemini-1.5-flash';
-        console.log(`[DEBUG PROMPT] Key: "${key}", Model: "${model}"`);
-
-        return {
-            text: rendered,
-            model
-        };
+        return { text: rendered, model };
     }
 
     /**
-     * Obtiene el prompt principal y el de sombra (si está activo). (Fase 36)
+     * Obtiene el prompt principal y el de sombra (si está activo).
      */
     static async getPromptWithShadow(
         key: string,
         variables: Record<string, any>,
-        tenantId: string
+        tenantId: string,
+        industry: string = 'GENERIC'
     ): Promise<{
         production: { text: string, model: string },
         shadow?: { text: string, model: string, key: string }
     }> {
-        const promptObj = await this.getPrompt(key, tenantId);
+        const promptObj = await this.getPrompt(key, tenantId, 'PRODUCTION', industry);
         const production = await this.render(promptObj, variables, tenantId);
 
         if (promptObj.isShadowActive && promptObj.shadowPromptKey) {
             try {
-                const shadowPromptObj = await this.getPrompt(promptObj.shadowPromptKey, tenantId);
+                const shadowPromptObj = await this.getPrompt(promptObj.shadowPromptKey, tenantId, 'PRODUCTION', industry);
                 const shadowRendered = await this.render(shadowPromptObj, variables, tenantId);
 
                 return {
@@ -123,23 +144,18 @@ export class PromptService {
         variables: Record<string, any>,
         tenantId: string
     ): Promise<{ text: string, model: string }> {
-        // Validar que todas las variables requeridas estén presentes
         const missingVars = prompt.variables
             .filter(v => v.required && !(v.name in variables))
             .map(v => v.name);
 
         if (missingVars.length > 0) {
-            throw new AppError(
-                'MISSING_VARIABLES',
-                400,
-                `Variables requeridas faltantes: ${missingVars.join(', ')}`
-            );
+            throw new AppError('MISSING_VARIABLES', 400, `Variables requeridas faltantes: ${missingVars.join(', ')}`);
         }
 
         const allVariables = {
             ...variables,
             tenantId,
-            vertical: (variables.industry || 'ELEVATORS').toLowerCase()
+            vertical: (prompt.industry || 'GENERIC').toLowerCase()
         };
         let rendered = prompt.template;
         for (const [varName, varValue] of Object.entries(allVariables)) {
@@ -147,31 +163,7 @@ export class PromptService {
             rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), String(varValue));
         }
 
-        // Auditar uso asíncronamente
-        getTenantCollection('prompts').then(col => {
-            col.updateOne(
-                { _id: (prompt as any)._id },
-                {
-                    $inc: { usageCount: 1 },
-                    $set: { lastUsedAt: new Date() }
-                }
-            ).catch(err => console.error("Error auditing prompt usage:", err));
-        });
-
-        const model = (prompt as any).model || 'gemini-1.5-flash';
-        return { text: rendered, model };
-    }
-
-    /**
-     * Renderiza un prompt reemplazando variables (Legacy compatibility)
-     */
-    static async renderPrompt(
-        key: string,
-        variables: Record<string, any>,
-        tenantId: string
-    ): Promise<string> {
-        const result = await this.getRenderedPrompt(key, variables, tenantId);
-        return result.text;
+        return { text: rendered, model: (prompt as any).model || 'gemini-1.5-flash' };
     }
 
     /**
@@ -179,8 +171,7 @@ export class PromptService {
      */
     static async updatePrompt(
         promptId: string,
-        newTemplate: string,
-        variables: any[],
+        updates: { template: string, variables: any[], category?: string, model?: string, industry?: string },
         changedBy: string,
         changeReason: string,
         tenantId?: string,
@@ -197,15 +188,13 @@ export class PromptService {
             throw new AppError('NOT_FOUND', 404, 'Prompt no encontrado');
         }
 
-        // Validar Max Longitud (Hard Limit)
-        if (prompt.maxLength && newTemplate.length > prompt.maxLength) {
-            throw new AppError('VALIDATION_ERROR', 400, `La longitud del template (${newTemplate.length}) excede el máximo permitido (${prompt.maxLength})`);
+        if (prompt.maxLength && updates.template.length > prompt.maxLength) {
+            throw new AppError('VALIDATION_ERROR', 400, `La longitud del template (${updates.template.length}) excede el máximo permitido (${prompt.maxLength})`);
         }
 
-        // Crear snapshot de la versión anterior
         const versionSnapshot: PromptVersion = {
             promptId: new ObjectId(promptId),
-            tenantId: prompt.tenantId, // Usar el tenantId del propio prompt
+            tenantId: prompt.tenantId,
             version: prompt.version,
             template: prompt.template,
             variables: prompt.variables,
@@ -215,19 +204,22 @@ export class PromptService {
             ip: auditMetadata?.ip,
             userAgent: auditMetadata?.userAgent,
             environment: prompt.environment || 'PRODUCTION',
+            industry: prompt.industry || 'GENERIC',
             createdAt: new Date()
         };
 
         const validatedVersion = PromptVersionSchema.parse(versionSnapshot);
         await versionsCollection.insertOne(validatedVersion);
 
-        // Actualizar prompt con nueva versión
         await collection.updateOne(
-            { _id: new ObjectId(promptId), tenantId },
+            { _id: new ObjectId(promptId) },
             {
                 $set: {
-                    template: newTemplate,
-                    variables,
+                    template: updates.template,
+                    variables: updates.variables,
+                    category: updates.category || prompt.category,
+                    model: updates.model || prompt.model,
+                    industry: updates.industry || prompt.industry,
                     version: prompt.version + 1,
                     updatedBy: changedBy,
                     updatedAt: new Date()
@@ -257,22 +249,16 @@ export class PromptService {
         const collection = await getTenantCollection('prompts');
         const versionsCollection = await getTenantCollection('prompt_versions');
 
-        const versionQuery: any = {
+        const versionSnapshot = await versionsCollection.findOne({
             promptId: new ObjectId(promptId),
             version: targetVersion
-        };
-        if (tenantId) versionQuery.tenantId = tenantId;
-
-        const versionSnapshot = await versionsCollection.findOne(versionQuery);
+        });
 
         if (!versionSnapshot) {
             throw new AppError('NOT_FOUND', 404, `Versión ${targetVersion} no encontrada`);
         }
 
-        const promptQuery: any = { _id: new ObjectId(promptId) };
-        if (tenantId) promptQuery.tenantId = tenantId;
-
-        const prompt = await collection.findOne(promptQuery);
+        const prompt = await collection.findOne({ _id: new ObjectId(promptId) });
         if (!prompt) {
             throw new AppError('NOT_FOUND', 404, 'Prompt no encontrado');
         }
@@ -286,14 +272,14 @@ export class PromptService {
             changedBy,
             changeReason: `Rollback a versión ${targetVersion}`,
             environment: prompt.environment || 'PRODUCTION',
+            industry: prompt.industry || 'GENERIC',
             createdAt: new Date()
         };
 
         await versionsCollection.insertOne(PromptVersionSchema.parse(currentSnapshot));
 
-        // Restaurar versión antigua
         await collection.updateOne(
-            { _id: new ObjectId(promptId), tenantId },
+            { _id: new ObjectId(promptId) },
             {
                 $set: {
                     template: versionSnapshot.template,
@@ -304,46 +290,22 @@ export class PromptService {
                 }
             }
         );
-
-        await logEvento({
-            level: 'WARN',
-            source: 'PROMPT_SERVICE',
-            action: 'ROLLBACK_PROMPT',
-            message: `Prompt ${prompt.key} revertido a versión ${targetVersion}`,
-            correlationId: promptId,
-            details: { promptKey: prompt.key, targetVersion, changedBy }
-        });
     }
 
     /**
      * Lista todos los prompts (por tenant o global para SuperAdmins)
      */
-    static async listPrompts(
-        optionsOrTenantId: { tenantId?: string | null, activeOnly?: boolean, environment?: string, limit?: number, after?: string | null } | string | null = null,
-        legacyActiveOnly: boolean = true,
-        legacyEnvironment: string = 'PRODUCTION'
-    ): Promise<Prompt[] & { nextCursor?: string | null }> {
-        let tenantId: string | null = null;
-        let activeOnly = legacyActiveOnly;
-        let environment = legacyEnvironment;
-        let limit = 100; // Default larger for legacy
-        let after: string | null = null;
-
-        if (typeof optionsOrTenantId === 'object' && optionsOrTenantId !== null && !Array.isArray(optionsOrTenantId)) {
-            const opts = optionsOrTenantId as any;
-            tenantId = opts.tenantId ?? null;
-            activeOnly = opts.activeOnly ?? true;
-            environment = opts.environment ?? 'PRODUCTION';
-            limit = opts.limit ?? 100;
-            after = opts.after ?? null;
-        } else {
-            tenantId = optionsOrTenantId as string | null;
-        }
-
+    static async listPrompts(options: {
+        tenantId?: string | null,
+        activeOnly?: boolean,
+        environment?: string,
+        limit?: number,
+        after?: string | null
+    } = {}): Promise<Prompt[] & { nextCursor?: string | null }> {
+        const { tenantId = null, activeOnly = false, environment = 'PRODUCTION', limit = 50, after = null } = options;
         const collection = await getTenantCollection('prompts');
         const filter: any = {};
 
-        // Robust environment filtering (Phase 87.2)
         if (environment === 'PRODUCTION') {
             filter.environment = { $in: ['PRODUCTION', null, undefined] };
         } else {
@@ -354,27 +316,25 @@ export class PromptService {
             filter.$or = [{ active: true }, { active: { $exists: false } }];
         }
         if (tenantId) filter.tenantId = tenantId;
-
         if (after) {
             filter._id = { $gt: new ObjectId(after) };
         }
 
-        const prompts = await collection.find(filter, {
+        const results = await collection.find(filter, {
             sort: { _id: 1 },
             limit: limit + 1
         });
 
-        const items: any = prompts.slice(0, limit).map(p => {
+        const items: any = results.slice(0, limit).map(p => {
             const result = PromptSchema.safeParse(p);
             if (!result.success) {
-                console.error(`[PROMPT VALIDATION ERROR] ID: ${p._id}, Key: ${p.key}:`, result.error.format());
                 return { ...p, _validationError: true } as any;
             }
             return result.data;
         });
 
-        const hasNextPage = prompts.length > limit;
-        items.nextCursor = hasNextPage ? (prompts[limit - 1]._id.toString()) : null;
+        const hasNextPage = results.length > limit;
+        items.nextCursor = hasNextPage ? (results[limit - 1]._id.toString()) : null;
 
         return items;
     }
@@ -388,7 +348,6 @@ export class PromptService {
         if (tenantId) query.tenantId = tenantId;
 
         const versions = await collection.find(query, { sort: { version: -1 } });
-
         return versions.map(v => PromptVersionSchema.parse(v));
     }
 

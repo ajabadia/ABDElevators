@@ -57,6 +57,7 @@
                 "docTypes": "Tipos de Documento",
                 "organizations": "Organizaciones",
                 "users": "Usuarios",
+                "contracts": "Contratos / Casos",
                 "billing": "Facturación",
                 "apiKeys": "Claves API",
                 "audit": "Registro de Auditoría",
@@ -127,6 +128,47 @@
             "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
         }
     },
+    "knowledge_assets": {
+        "title": "Gestión del Corpus Técnico",
+        "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
+        "metrics": {
+            "active": "Documentos Activos",
+            "indexed": "Fragmentos Indexados",
+            "last_ingest": "Última Ingesta"
+        },
+        "search_placeholder": "Buscar por nombre, componente o modelo...",
+        "filters": "Filtros",
+        "actions": {
+            "new": "Nuevo Documento",
+            "retry": "Reintentar Ingesta",
+            "download": "Ver / Descargar",
+            "delete": "Eliminar Permanente",
+            "mark_active": "Marcar Vigente",
+            "mark_obsolete": "Marcar Obsoleto",
+            "archive": "Archivar"
+        },
+        "table": {
+            "document": "Documento",
+            "type_model": "Tipo / Modelo",
+            "status": "Estado / Ingesta",
+            "chunks": "Fragmentos",
+            "actions": "Acciones",
+            "loading": "Cargando documentos...",
+            "empty": "No se encontraron documentos.",
+            "uploaded": "Subido el"
+        },
+        "status": {
+            "pending": "Pendiente",
+            "processing": "Procesando",
+            "failed": "Fallido",
+            "active": "Vigente",
+            "obsolete": "Obsoleto",
+            "archived": "Archivado"
+        },
+        "retry_success": "Reintento iniciado",
+        "retry_desc": "El documento se está procesando nuevamente.",
+        "delete_confirm": "¿Estás seguro de eliminar este documento? Esta acción es irreversible."
+    },
     "nav": {
         "solutions": "Soluciones",
         "technology": "Tecnología",
@@ -149,12 +191,18 @@
         "error_generic": "Error de conexión. Intenta nuevamente.",
         "error_invalid": "Credenciales incorrectas. Verifica tu email y contraseña.",
         "error_mfa": "Código MFA incorrecto o expirado.",
+        "error_session_sync": "Sincronizando sesión segura...",
         "mfa_title": "Autenticación Reforzada",
         "mfa_desc": "Por seguridad, introduce el código de verificación para continuar.",
         "mfa_button": "Verificar Identidad",
         "mfa_back": "Regresar",
         "test_users": "ACCESO DEMO (SOLO PRUEBAS)",
-        "footer_text": "SEGURIDAD INDUSTRIAL • ENCRIPTACIÓN AES-256 • SOC2 COMPLIANT"
+        "footer_text": "SEGURIDAD INDUSTRIAL • ENCRIPTACIÓN AES-256 • SOC2 COMPLIANT",
+        "magic_link_toggle": "Iniciar con Enlace Mágico",
+        "password_toggle": "Iniciar con Contraseña",
+        "magic_link_button": "Enviar Enlace de Acceso",
+        "magic_link_sent": "¡Enlace enviado! Revisa tu correo.",
+        "sending": "Enviando..."
     },
     "hero": {
         "badge": "Gestión Documental Inteligente",
@@ -208,6 +256,8 @@
         "f14_desc": "Generación dinámica de informes con trazabilidad completa, multi-idioma (ES/EN) y terminología profesional adaptada a negocio.",
         "f15_title": "Resiliencia de Facturación",
         "f15_desc": "Circuito de protección que garantiza la disponibilidad del sistema incluso ante fallos críticos de pasarelas de pago o servicios externos.",
+        "f16_title": "Gobernanza de Checklists Avanzada",
+        "f16_desc": "Motor de configuración de reglas industriales para validación técnica. Categorización, priorización y aislamiento multi-tenant nativo.",
         "learn_more": "Saber más"
     },
     "solutions": {
@@ -658,6 +708,26 @@
             "mutation": {
                 "confirm_delete": "¿Estás seguro de que deseas eliminar la configuración \"{name}\"?",
                 "delete_success": "Configuración eliminada correctamente."
+            },
+            "cards": {
+                "categorization": {
+                    "title": "Categorización Inteligente",
+                    "desc": "Organiza tus checklists por tipo de maniobra, industria o urgencia técnica para una gestión eficiente."
+                },
+                "prioritization": {
+                    "title": "Priorización Dinámica",
+                    "desc": "Define el orden de ejecución basado en criticidad y impacto directo en la seguridad del ascensor."
+                },
+                "multi_tenant": {
+                    "title": "Aislamiento Multi-tenant",
+                    "desc": "Garantiza que cada organización gestione sus propios procedimientos de verificación de forma segura y privada."
+                }
+            },
+            "editor": {
+                "loading": "Iniciando Configurador Pro...",
+                "error_title": "Error de Sistema",
+                "error_desc": "No se pudo recuperar la configuración solicitada de la base de datos.",
+                "back_button": "Volver al Dashboard"
             }
         },
         "consumption": {
@@ -698,6 +768,10 @@
             "multilingual": {
                 "title": "Búsquedas Multilingües",
                 "label": "Vectores Latentes (Shadow)"
+            },
+            "charts": {
+                "tokens_title": "Tendencia de Consumo AI",
+                "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
             },
             "activity": {
                 "title": "Registro de Actividad",
@@ -748,6 +822,48 @@
             },
             "format": {
                 "zero_bytes": "0 Bytes"
+            },
+            "contracts": {
+                "title": "Gestión de Contratos ('Casos')",
+                "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
+                "table": {
+                    "tenant": "Tenant",
+                    "plan": "Plan Base",
+                    "override": "Override",
+                    "usage": "Uso (Tokens / Storage)",
+                    "mrr": "MRR (Est.)",
+                    "status": "Estado",
+                    "actions": "Acciones",
+                    "loading": "Cargando contratos...",
+                    "empty": "No se encontraron resultados",
+                    "search_placeholder": "Buscar tenant..."
+                },
+                "status": {
+                    "active": "ACTIVO",
+                    "past_due": "VENCIDO",
+                    "blocked": "BLOQUEADO"
+                },
+                "actions": {
+                    "edit": "Editar Contrato",
+                    "invoices": "Ver Facturas"
+                },
+                "edit": {
+                    "title": "Editar Contrato",
+                    "description": "Configuración personalizada para {name} ({id})",
+                    "plan_label": "Plan Base",
+                    "plan_desc": "El plan define las tarifas base y funcionalidades.",
+                    "overrides_title": "Overrides (Límites Personalizados)",
+                    "tokens_label": "Límite Tokens Mensuales",
+                    "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
+                    "storage_label": "Límite Almacenamiento (Bytes)",
+                    "storage_desc": "1 GB = 1073741824 Bytes.",
+                    "warning_title": "Atención",
+                    "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
+                    "save": "Guardar Cambios",
+                    "cancel": "cancelar",
+                    "success": "Contrato actualizado",
+                    "success_desc": "Se han aplicado los cambios para {name}"
+                }
             }
         },
         "logs": {
@@ -1000,6 +1116,31 @@
                     "desc": "Calidad de los fragmentos recuperados por el motor vectorial."
                 }
             },
+            "trace": {
+                "title": "Diagnóstico de Decisión IA",
+                "sections": {
+                    "quality": "Métricas de Calidad",
+                    "causal": "Análisis Causal y Autocorrección",
+                    "trace": "Traza de Razonamiento (Pensamiento)",
+                    "query": "Consulta Original",
+                    "response": "Generación del Motor",
+                    "context": "Contexto de Manuales (Chunks)"
+                },
+                "metrics": {
+                    "faithfulness": "Fidelidad",
+                    "relevance": "Relevancia",
+                    "precision": "Precisión"
+                },
+                "causal": {
+                    "cause": "Causa Raíz Detectada",
+                    "fix": "Estrategia de Corrección",
+                    "reasoning": "Razonamiento del Juez"
+                },
+                "actions": {
+                    "close": "Cerrar Diagnóstico",
+                    "audit": "Auditar Decisión"
+                }
+            },
             "history": {
                 "title": "Historial de Consultas Evaluadas",
                 "desc": "Auditoría de calidad y seguimiento del pensamiento (Trace) de la IA.",
@@ -1219,7 +1360,8 @@
                 "subtitle": "Gestiona la voz de la plataforma en múltiples idiomas con asistencia de IA.",
                 "syncBtn": "Sincronizar L4 → DB",
                 "newKeyBtn": "Nueva Llave",
-                "searchPlaceholder": "Buscar por llave o contenido..."
+                "searchPlaceholder": "Buscar por llave o contenido...",
+                "filterMissing": "Ver solo faltantes"
             },
             "languages": {
                 "es": "Español (ES)",
@@ -1648,6 +1790,11 @@
                 "infoDisabled": "Actualmente tu cuenta solo está protegida por tu contraseña. Te recomendamos activar el doble factor para evitar accesos no autorizados.",
                 "disableBtn": "Desactivar Doble Factor",
                 "setupBtn": "Configurar Doble Factor",
+                "verifySessionTitle": "Verificación Requerida",
+                "verifySessionDesc": "Para acceder a las funciones administrativas, por favor introduce tu código MFA.",
+                "verifyBtn": "Verificar",
+                "verificationSuccess": "Verificación exitosa",
+                "updateError": "Error al actualizar configuración",
                 "disableConfirm": "¿Estás seguro de que quieres desactivar la protección de doble factor? Tu cuenta será menos segura.",
                 "setupStep1": "Escanea el código QR",
                 "setupStep1Desc": "Abre tu aplicación de autenticador (Google Authenticator, Authy, etc) y escanea el código de la izquierda.",
@@ -1723,5 +1870,19 @@
                 "saveSuccess": "Traducción actualizada correctamente."
             }
         }
+    },
+    "search": {
+        "title": "Búsqueda Conversacional",
+        "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+        "analyzing": "Analizando...",
+        "sources_label": "Fuentes encontradas:",
+        "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+        "input_placeholder": "Escribe tu pregunta aquí...",
+        "suggested_questions": "Preguntas sugeridas",
+        "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+        "copy": "Copiar respuesta",
+        "regenerate": "Regenerar respuesta",
+        "feedback_positive": "Útil",
+        "feedback_negative": "No útil"
     }
 }

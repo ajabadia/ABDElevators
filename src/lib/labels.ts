@@ -29,6 +29,14 @@ export const INDUSTRY_LABELS: Record<IndustryType, any> = {
         placeholder: 'ID de operación...',
         recent_title: 'Análisis de Riesgo',
     },
+    MEDICAL: {
+        singular: 'Paciente',
+        plural: 'Pacientes',
+        action: 'Analizar Historial',
+        description: 'Sube un historial clínico o receta para validación.',
+        placeholder: 'ID de paciente...',
+        recent_title: 'Historiales Analizados',
+    },
     INSURANCE: {
         singular: 'Siniestro',
         plural: 'Siniestros',

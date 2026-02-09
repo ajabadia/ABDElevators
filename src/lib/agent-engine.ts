@@ -148,7 +148,7 @@ async function riskAnalysisNode(state: AgentStateType) {
     const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
     // Renderizar prompt dinámico de riesgo para agente
-    const renderedPrompt = await PromptService.renderPrompt(
+    const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
         'AGENT_RISK_ANALYSIS',
         {
             context,

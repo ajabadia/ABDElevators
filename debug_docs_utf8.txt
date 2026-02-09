@@ -1,0 +1,44 @@
+﻿
+DB [ABDElevators] Collections: [
+  'agent_checkpoints',
+  'policies',
+  'taxonomies',
+  'pricing_plans',
+  'document_chunks',
+  'workflow_definitions',
+  'tipos_documento_migrated_1770358003657',
+  'rate_limits',
+  'api_keys',
+  'workflow_analytics',
+  'ai_workflows',
+  'permission_groups_migrated_1770340447982',
+  'cases',
+  'tenant_configs',
+  'tickets',
+  'knowledge_assets',
+  'notifications_migrated_1770340448185',
+  'workflow_configs',
+  'documentos_tecnicos_migrated_1770339719829',
+  'prompt_versions',
+  'translations',
+  'processed_events',
+  'rag_evaluations',
+  'pedidos',
+  'ai_corrections',
+  'entities',
+  'taxonomias_migrated_1770358003657',
+  'audit_ingestion',
+  'document_types',
+  'prompts'
+]
+  - document_chunks: 0 docs
+  - tipos_documento_migrated_1770358003657: 2 docs
+    Fields: _id, nombre, descripcion, activo, creado
+    Values: [ undefined, undefined ]
+  - knowledge_assets: 2 docs
+    Fields: _id, tenantId, industry, filename, componentType, model, version, revisionDate, language, status, ingestionStatus, totalChunks, fileMd5, cloudinaryUrl, createdAt, updatedAt
+  - documentos_tecnicos_migrated_1770339719829: 2 docs
+    Fields: _id, tenantId, nombre_archivo, tipo_componente, modelo, version, fecha_revision, language, estado, cloudinary_url, cloudinary_public_id, archivo_md5, total_chunks, creado
+  - document_types: 4 docs
+    Fields: _id, name, description, isActive, createdAt
+    Values: [ 'Ley / Norma legal', undefined, undefined, 'Documentaci├│n Legal' ]

@@ -15,6 +15,7 @@ export async function GET() {
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const enabled = await MfaService.isEnabled(session.user.id);
+        console.log(`🔍 [API] GET /mfa/config - User: ${session.user.id}, Enabled: ${enabled}`);
         return NextResponse.json({ enabled });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });
@@ -30,7 +31,8 @@ export async function POST(req: NextRequest) {
         const session = await auth();
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
-        const { action } = await req.json();
+        const body = await req.json();
+        const { action } = body;
 
         if (action === 'SETUP') {
             const { secret, qrCode } = await MfaService.setup(session.user.id, session.user.email || '');
@@ -40,6 +42,12 @@ export async function POST(req: NextRequest) {
         if (action === 'DISABLE') {
             await MfaService.disable(session.user.id);
             return NextResponse.json({ success: true });
+        }
+
+        if (action === 'VERIFY') {
+            const { token } = body;
+            const isValid = await MfaService.verify(session.user.id, token);
+            return NextResponse.json({ success: isValid });
         }
 
         throw new AppError('VALIDATION_ERROR', 400, 'Acción no válida');

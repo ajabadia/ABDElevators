@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, Bell, Building2, Scale, Stethoscope } from 'lucide-react';
+import { Menu, Search, Bell, Building2, Scale, Stethoscope, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useSidebar } from '@/context/SidebarContext';
 import { NotificationBell } from './NotificationBell';
@@ -85,6 +85,12 @@ export function Header() {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                    )}
+                    {mounted && FeatureFlags.isEnabled('ENFORCE_MFA_ADMIN') && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/5 text-emerald-600/70 text-[10px] font-black uppercase tracking-tighter cursor-help group relative" title="MFA Enforcement Active">
+                            <Shield className="h-2.5 w-2.5 animate-pulse" />
+                            MFA
+                        </div>
                     )}
                 </div>
 

@@ -19,3 +19,14 @@ export function escapeRegExp(string: string) {
 export function generateUUID() {
   return crypto.randomUUID();
 }
+
+/**
+ * Formats a date to a readable string (es-ES).
+ */
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}

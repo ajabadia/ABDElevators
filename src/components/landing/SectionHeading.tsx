@@ -4,11 +4,13 @@ interface SectionHeadingProps {
     badge?: string;
     title: string;
     subtitle?: string;
+    description?: string;
     align?: 'left' | 'center';
     className?: string;
 }
 
-export function SectionHeading({ badge, title, subtitle, align = 'center', className = "" }: SectionHeadingProps) {
+export function SectionHeading({ badge, title, subtitle, description, align = 'center', className = "" }: SectionHeadingProps) {
+    const text = subtitle || description;
     return (
         <div className={`mb-16 ${align === 'center' ? 'text-center' : 'text-left'} ${className}`}>
             {badge && (
@@ -19,9 +21,9 @@ export function SectionHeading({ badge, title, subtitle, align = 'center', class
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-outfit text-white mb-6 tracking-tight leading-[1.1]">
                 {title}
             </h2>
-            {subtitle && (
+            {text && (
                 <p className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed mx-auto font-light">
-                    {subtitle}
+                    {text}
                 </p>
             )}
         </div>

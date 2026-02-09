@@ -34,6 +34,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -54,6 +61,8 @@ export default function MyDocumentsPage() {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [description, setDescription] = useState("");
+    const [documentTypeId, setDocumentTypeId] = useState("");
+    const [documentTypes, setDocumentTypes] = useState<any[]>([]);
     const [file, setFile] = useState<File | null>(null);
     const [isMounted, setIsMounted] = useState(false);
 
@@ -76,6 +85,7 @@ export default function MyDocumentsPage() {
         onClose: () => {
             setFile(null);
             setDescription("");
+            setDocumentTypeId("");
         }
     });
 
@@ -120,12 +130,24 @@ export default function MyDocumentsPage() {
 
     useEffect(() => {
         setIsMounted(true);
+        const fetchTypes = async () => {
+            try {
+                const res = await fetch('/api/admin/document-types?category=USER_DOCUMENT');
+                if (res.ok) {
+                    const data = await res.json();
+                    setDocumentTypes(data);
+                }
+            } catch (error) {
+                console.error('Error fetching document types:', error);
+            }
+        };
+        fetchTypes();
     }, []);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file) return;
-        await upload(file, { description });
+        await upload(file, { description, documentTypeId });
     };
 
     const handleDelete = async (id: string) => {
@@ -235,9 +257,16 @@ export default function MyDocumentsPage() {
                                                     </div>
                                                     <div>
                                                         <p className="font-semibold text-slate-900 dark:text-slate-100">{doc.originalName}</p>
-                                                        {doc.description && (
-                                                            <p className="text-xs text-slate-500 truncate max-w-[200px]">{doc.description}</p>
-                                                        )}
+                                                        <div className="flex gap-2 items-center mt-1">
+                                                            {(doc as any).documentTypeName && (
+                                                                <Badge variant="outline" className="text-[10px] py-0 h-4 bg-teal-50 text-teal-700 border-teal-200">
+                                                                    {(doc as any).documentTypeName}
+                                                                </Badge>
+                                                            )}
+                                                            {doc.description && (
+                                                                <p className="text-xs text-slate-500 truncate max-w-[200px]">{doc.description}</p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -291,6 +320,21 @@ export default function MyDocumentsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleUpload} className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="tipo">Tipo de Documento</Label>
+                            <Select value={documentTypeId} onValueChange={setDocumentTypeId}>
+                                <SelectTrigger id="tipo" className="border-slate-200">
+                                    <SelectValue placeholder="Seleccionar tipo..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {documentTypes.map((t) => (
+                                        <SelectItem key={t._id} value={t._id}>
+                                            {t.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="file">Archivo PDF</Label>
                             <Input

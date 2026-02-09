@@ -20,9 +20,9 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div
                         onClick={() => setConfig(prev => prev ? { ...prev, storage: { ...prev.storage, provider: 'cloudinary' } } : null)}
-                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage?.provider === 'cloudinary' ? 'border-teal-600 bg-teal-50' : 'border-slate-100 hover:border-slate-200'}`}
+                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage?.provider === 'cloudinary' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
                     >
-                        <Cloud className={config?.storage?.provider === 'cloudinary' ? 'text-teal-600' : 'text-slate-400'} size={24} />
+                        <Cloud className={config?.storage?.provider === 'cloudinary' ? 'text-primary' : 'text-slate-400'} size={24} />
                         <h4 className="font-bold mt-2">Cloudinary</h4>
                         <p className="text-[10px] text-slate-500 mt-1">Óptimo para PDFs e imágenes con CDN.</p>
                     </div>
@@ -58,7 +58,7 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                             <Label className="text-slate-700 font-semibold">Cuota Máxima de Disco</Label>
                             <p className="text-xs text-slate-500">Límite de documentos procesados.</p>
                         </div>
-                        <span className="text-3xl font-bold font-outfit text-teal-600">
+                        <span className="text-3xl font-bold font-outfit text-primary">
                             {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
                         </span>
                     </div>
@@ -91,7 +91,7 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                                 className={cn(
                                     "h-full transition-all duration-1000",
                                     (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-red-500" :
-                                        (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-teal-500"
+                                        (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
                                 )}
                                 style={{ width: `${Math.min(100, Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
                             />

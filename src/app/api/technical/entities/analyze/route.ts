@@ -53,12 +53,9 @@ export async function POST(req: NextRequest) {
 
         // 0. MD5 De-duplication (Token Savings)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
+        const { TechnicalEntityService } = await import('@/lib/services/technical-entity-service');
         const entitiesCollection = await getTenantCollection('entities');
-
-        const existingEntity = await entitiesCollection.findOne({
-            md5Hash: fileHash,
-            tenantId
-        });
+        const existingEntity = await TechnicalEntityService.findExistingByHash(fileHash, tenantId);
 
         if (existingEntity) {
             await logEvento({
@@ -86,12 +83,11 @@ export async function POST(req: NextRequest) {
 
         if (ingestOnly) {
             // 🛡️ MIGRACIÓN A BULLMQ (Fase 31: Async Jobs)
-            // Guardamos el estado inicial en "received"
             const insertResult = await entitiesCollection.insertOne({
                 identifier: file.name.split('.')[0],
                 filename: file.name,
                 md5Hash: fileHash,
-                originalText: entityText, // Ya lo extrajimos para ahorrarle trabajo al worker si queremos, o el worker lo puede re-hacer si le pasamos el buffer
+                originalText: entityText,
                 analysisDate: new Date(),
                 status: 'received',
                 tenantId,
@@ -99,7 +95,6 @@ export async function POST(req: NextRequest) {
                 correlationId
             });
 
-            // Encolar trabajo asíncrono
             const { queueService } = await import('@/lib/queue-service');
             const job = await queueService.addJob('PDF_ANALYSIS', {
                 tenantId,
@@ -109,17 +104,8 @@ export async function POST(req: NextRequest) {
                     entityId: insertResult.insertedId.toString(),
                     filename: file.name,
                     industry,
-                    fileBuffer: textBuffer.toString('base64'), // Pasamos buffer por ahora (Asumiendo < 1MB)
+                    fileBuffer: textBuffer.toString('base64'),
                 }
-            });
-
-            await logEvento({
-                level: 'INFO',
-                source: 'TECHNICAL_ENTITIES_ANALYZE_API',
-                action: 'ENQUEUED',
-                message: `Análisis de ${file.name} encolado (Job: ${job.id})`,
-                correlationId,
-                details: { jobId: job.id, entityId: insertResult.insertedId }
             });
 
             return NextResponse.json({
@@ -130,53 +116,27 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // 2. AI: Extract detected patterns (Traditional Synchronous Flow)
-        const detectedPatterns = await analyzeEntityWithGemini('entity', entityText, tenantId, correlationId);
-
-        // 3. RAG: For each pattern, search relevant context
-        const resultsWithContext = await Promise.all(
-            detectedPatterns.map(async (m: { type: string; model: string }) => {
-                const query = `${m.type} model ${m.model}`;
-                const context = await performTechnicalSearch(query, tenantId, correlationId, 2);
-                return {
-                    ...m,
-                    ragContext: context
-                };
-            })
-        );
-
-        // --- VISION 2027: Federated Discovery ---
-        const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
-            detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
-            tenantId,
-            correlationId,
-            3
-        );
-
-        // --- VISION 2.0: RISK DETECTION (Phase 7.5) ---
-        const consolidatedContext = resultsWithContext
-            .map(r => `Component ${r.model}: ${r.ragContext.map((c: any) => c.text).join(' ')}`)
-            .join('\n');
-
-        const detectedRisks = await RiskService.analyzeRisks(
+        // 2. Full Analysis via Service (Phase 105 Hygiene)
+        const {
+            resultsWithContext,
+            detectedRisks,
+            federatedInsights,
+            patternsForStorage
+        } = await TechnicalEntityService.performFullAnalysis(
             entityText,
-            consolidatedContext,
-            industry,
+            file.name,
             tenantId,
-            correlationId
+            industry,
+            correlationId,
+            fileHash
         );
 
         // 4. Save result in DB with Tenant Isolation
-        const collection = await getTenantCollection('entities');
-
         const entityData = {
             identifier: file.name.split('.')[0],
             filename: file.name,
             originalText: entityText,
-            detectedPatterns: resultsWithContext.map(r => ({
-                type: r.type,
-                model: r.model
-            })),
+            detectedPatterns: patternsForStorage,
             analysisDate: new Date(),
             status: 'analyzed' as const,
             tenantId,
@@ -189,18 +149,17 @@ export async function POST(req: NextRequest) {
         };
 
         const validatedEntity = EntitySchema.parse(entityData);
-        const insertResult = await collection.insertOne({
+        const insertResult = await entitiesCollection.insertOne({
             ...validatedEntity,
             ragContextFull: resultsWithContext,
             correlationId
         });
 
-        // 5. Vision 2.0: Save as Generic Case (Abstraction)
+        // 5. Vision 2.0: Save as Generic Case
         try {
             const caseCollection = await getCaseCollection();
             const genericCase = mapEntityToCase({ ...validatedEntity, _id: insertResult.insertedId }, tenantId);
 
-            // Inject risk findings into the generic case
             genericCase.metadata = {
                 ...genericCase.metadata,
                 risks: detectedRisks,
@@ -211,7 +170,6 @@ export async function POST(req: NextRequest) {
             await caseCollection.insertOne(validatedCase);
         } catch (caseErr) {
             console.error("[Vision 2.0 ERROR] Failed to save in generic cases collection:", caseErr);
-            // We don't block the main Entities flow
         }
 
         return NextResponse.json({

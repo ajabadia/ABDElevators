@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
-import { getPlanForTenant, hasExceededLimit, PlanTier } from '@/lib/plans';
+import { PlanTier } from '@/lib/plans';
 import { logEvento } from '@/lib/logger';
 import { sendLimitAlert } from '@/lib/email-service';
-import { TenantService } from '@/lib/tenant-service';
-import { connectDB, connectAuthDB } from '@/lib/db';
+import { connectAuthDB } from '@/lib/db';
+import { QuotaService, QuotaCheckResult } from '@/lib/quota-service';
 
 /**
  * Middleware de Límites de Consumo (Fase 9)
@@ -106,64 +105,26 @@ export async function checkLLMLimit(
     tokensToConsume: number,
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
-    const plan = getPlanForTenant(tier);
-    const collection = await getTenantCollection('usage_logs');
-
-    // Obtener consumo del mes actual
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const usage = await collection.aggregate<any>([
-        {
-            $match: {
-                tenantId,
-                tipo: 'LLM_TOKENS',
-                timestamp: { $gte: startOfMonth },
-            },
-        },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: '$valor' },
-            },
-        },
-    ]);
-
-    const currentUsage = usage[0]?.total || 0;
-    const futureUsage = currentUsage + tokensToConsume;
-    const { exceeded, percentage } = hasExceededLimit(futureUsage, plan.limits.llm_tokens_per_month);
+    const check = await QuotaService.evaluateQuota(tenantId, 'TOKENS', tokensToConsume);
 
     // Enviar notificación si es necesario (80% o 100%)
-    if (percentage >= 80) {
+    if (check.percentage >= 80) {
         await sendLimitNotificationIfNeeded(
             tenantId,
             'tokens',
-            currentUsage,
-            plan.limits.llm_tokens_per_month,
-            percentage,
-            plan.tier
+            check.current,
+            check.limit,
+            check.percentage,
+            tier || 'FREE'
         );
     }
 
-    // Log de advertencia al 80%
-    if (percentage >= 80 && percentage < 100) {
-        await logEvento({
-            level: 'WARN',
-            source: 'USAGE_LIMITER',
-            action: 'APPROACHING_LIMIT',
-            message: `Tenant ${tenantId} ha alcanzado el ${percentage.toFixed(1)}% de su límite de tokens LLM`,
-            correlationId: `limit-check-${tenantId}`,
-            details: { currentUsage, limit: plan.limits.llm_tokens_per_month, tier: plan.tier },
-        });
-    }
-
     return {
-        allowed: !exceeded,
-        reason: exceeded ? `Límite de tokens LLM excedido (${plan.limits.llm_tokens_per_month.toLocaleString()} tokens/mes)` : undefined,
-        current: currentUsage,
-        limit: plan.limits.llm_tokens_per_month,
-        percentage,
+        allowed: check.status !== 'BLOCKED',
+        reason: check.reason,
+        current: check.current,
+        limit: check.limit,
+        percentage: check.percentage,
     };
 }
 
@@ -174,39 +135,14 @@ export async function checkVectorSearchLimit(
     tenantId: string,
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
-    const plan = getPlanForTenant(tier);
-    const collection = await getTenantCollection('usage_logs');
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const usage = await collection.aggregate<any>([
-        {
-            $match: {
-                tenantId,
-                tipo: 'VECTOR_SEARCH',
-                timestamp: { $gte: startOfMonth },
-            },
-        },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: '$valor' },
-            },
-        },
-    ]);
-
-    const currentUsage = usage[0]?.total || 0;
-    const futureUsage = currentUsage + 1;
-    const { exceeded, percentage } = hasExceededLimit(futureUsage, plan.limits.vector_searches_per_month);
+    const check = await QuotaService.evaluateQuota(tenantId, 'SEARCHES', 1);
 
     return {
-        allowed: !exceeded,
-        reason: exceeded ? `Límite de búsquedas vectoriales excedido (${plan.limits.vector_searches_per_month.toLocaleString()} búsquedas/mes)` : undefined,
-        current: currentUsage,
-        limit: plan.limits.vector_searches_per_month,
-        percentage,
+        allowed: check.status !== 'BLOCKED',
+        reason: check.reason,
+        current: check.current,
+        limit: check.limit,
+        percentage: check.percentage,
     };
 }
 
@@ -217,39 +153,14 @@ export async function checkAPIRequestLimit(
     tenantId: string,
     tier?: PlanTier
 ): Promise<UsageLimitCheck> {
-    const plan = getPlanForTenant(tier);
-    const collection = await getTenantCollection('usage_logs');
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const usage = await collection.aggregate<any>([
-        {
-            $match: {
-                tenantId,
-                tipo: 'API_REQUEST',
-                timestamp: { $gte: startOfMonth },
-            },
-        },
-        {
-            $group: {
-                _id: null,
-                total: { $sum: '$valor' },
-            },
-        },
-    ]);
-
-    const currentUsage = usage[0]?.total || 0;
-    const futureUsage = currentUsage + 1;
-    const { exceeded, percentage } = hasExceededLimit(futureUsage, plan.limits.api_requests_per_month);
+    const check = await QuotaService.evaluateQuota(tenantId, 'API_REQUEST', 1);
 
     return {
-        allowed: !exceeded,
-        reason: exceeded ? `Límite de llamadas API excedido (${plan.limits.api_requests_per_month.toLocaleString()} requests/mes)` : undefined,
-        current: currentUsage,
-        limit: plan.limits.api_requests_per_month,
-        percentage,
+        allowed: check.status !== 'BLOCKED',
+        reason: check.reason,
+        current: check.current,
+        limit: check.limit,
+        percentage: check.percentage,
     };
 }
 
@@ -278,18 +189,20 @@ export async function enforceLimits(
 
     if (!check.allowed) {
         await logEvento({
-            level: 'ERROR',
+            level: check.percentage >= 200 ? 'ERROR' : 'WARN',
             source: 'USAGE_LIMITER',
             action: 'LIMIT_EXCEEDED',
-            message: `Tenant ${tenantId} bloqueado: ${check.reason}`,
-            correlationId: `limit-block-${tenantId}`,
-            details: { type, current: check.current, limit: check.limit },
+            message: `Tenant ${tenantId} (${type}): ${check.reason}`,
+            correlationId: `limit-${tenantId}`,
+            details: { type, current: check.current, limit: check.limit, status: check.allowed ? 'OVERAGE' : 'BLOCKED' },
         });
 
-        throw new AppError(
-            'STORAGE_QUOTA_EXCEEDED',
-            429,
-            check.reason || 'Límite de consumo excedido. Por favor, actualiza tu plan.'
-        );
+        if (check.percentage >= 200 || check.reason?.includes('gratuito')) {
+            throw new AppError(
+                'STORAGE_QUOTA_EXCEEDED',
+                429,
+                check.reason || 'Límite de consumo excedido. Por favor, actualiza tu plan.'
+            );
+        }
     }
 }

@@ -93,11 +93,47 @@ export default function SettingsPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Sección: Información de Gobernanza (Placeholder) */}
+                    {/* Sección: Seguridad (MFA Enforcement) */}
+                    <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                                <Shield className="h-5 w-5 text-primary" />
+                                Seguridad y Acceso
+                            </CardTitle>
+                            <CardDescription>
+                                Estado de las políticas de seguridad global.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-accent/30 border border-accent/50">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">MFA Obligatorio (Admin)</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Forzar a administradores a configurar MFA para acceder a rutas críticas.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-black uppercase tracking-wider">
+                                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Activo (Phase 120.1)
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground italic">
+                                        Configurable vía FEATURE_ENFORCE_MFA_ADMIN
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="text-sm text-muted-foreground italic bg-muted/20 p-4 rounded border border-dashed border-muted-foreground/30">
+                                <p>🔒 <strong>Política de Seguridad:</strong> Si este flag está activo y no tienes MFA configurado, serás redirigido automáticamente a tu perfil desde cualquier ruta de administración.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Sección: Trazabilidad (Placeholder) */}
                     <Card className="border-muted bg-card/40">
                         <CardHeader>
                             <CardTitle className="text-xl flex items-center gap-2">
-                                <Shield className="h-5 w-5 text-muted-foreground" />
+                                <History className="h-5 w-5 text-muted-foreground" />
                                 Trazabilidad y Auditoría
                             </CardTitle>
                             <CardDescription>

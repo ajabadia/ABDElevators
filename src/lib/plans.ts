@@ -3,7 +3,7 @@
  * Define los tiers de suscripción y sus límites de consumo.
  */
 
-export type PlanTier = 'FREE' | 'PRO' | 'ENTERPRISE';
+export type PlanTier = 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
 
 export interface PlanLimits {
     tier: PlanTier;
@@ -17,6 +17,12 @@ export interface PlanLimits {
         api_requests_per_month: number;    // Llamadas API
         users: number;                     // Usuarios por tenant
     };
+    overage: {
+        tokens: number;      // Precio por token excedente
+        storage: number;     // Precio por byte excedente (o GB, normalizaremos a byte)
+        searches: number;    // Precio por búsqueda excedente
+    };
+    stripePriceId?: string;
     features: string[];
 }
 
@@ -36,11 +42,37 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             api_requests_per_month: 1_000,        // 1k requests/mes
             users: 2,                             // 2 usuarios
         },
+        overage: { tokens: 0, storage: 0, searches: 0 },
+        stripePriceId: '',
         features: [
             'Dual-Engine Extraction (OCR + AI)',
             'Hybrid Vector Search',
             'Audit-Trail básico',
             'Soporte por email',
+        ],
+    },
+    BASIC: {
+        tier: 'BASIC',
+        name: 'Basic Business',
+        price_monthly: 49,
+        price_yearly: 490,
+        limits: {
+            llm_tokens_per_month: 500_000,
+            storage_bytes: 1 * 1024 * 1024 * 1024, // 1 GB
+            vector_searches_per_month: 2_000,
+            api_requests_per_month: 5_000,
+            users: 5,
+        },
+        overage: {
+            tokens: 0.00001, // $0.01 por 1k
+            storage: 0.10 / (1024 * 1024 * 1024), // $0.10 por GB
+            searches: 0.001
+        },
+        stripePriceId: process.env.STRIPE_PRICE_BASIC || '',
+        features: [
+            'Todo lo de Free',
+            'Branding básico',
+            'SLA 99.0%',
         ],
     },
     PRO: {
@@ -55,6 +87,12 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             api_requests_per_month: 50_000,       // 50k requests/mes
             users: 10,                            // 10 usuarios
         },
+        overage: {
+            tokens: 0.000005, // $0.005 por 1k
+            storage: 0.05 / (1024 * 1024 * 1024), // $0.05 por GB
+            searches: 0.0005
+        },
+        stripePriceId: process.env.STRIPE_PRICE_PRO || '',
         features: [
             'Todo lo de Free',
             'Audit-Trail Pro (trazabilidad completa)',
@@ -76,6 +114,8 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             api_requests_per_month: Infinity,     // Ilimitado
             users: Infinity,                      // Ilimitado
         },
+        overage: { tokens: 0, storage: 0, searches: 0 },
+        stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || '',
         features: [
             'Todo lo de Pro',
             'Recursos ilimitados',
@@ -133,17 +173,17 @@ export function calculateOverageCost(
 
     let cost = 0;
 
-    // Tokens excedentes: $0.01 por cada 1k tokens
+    // Tokens excedentes
     const excessTokens = Math.max(0, usage.tokens - plan.limits.llm_tokens_per_month);
-    cost += (excessTokens / 1000) * 0.01;
+    cost += excessTokens * plan.overage.tokens;
 
-    // Storage excedente: $0.10 por GB/mes
+    // Storage excedente
     const excessStorage = Math.max(0, usage.storage - plan.limits.storage_bytes);
-    cost += (excessStorage / (1024 * 1024 * 1024)) * 0.10;
+    cost += excessStorage * plan.overage.storage;
 
-    // Búsquedas excedentes: $0.001 por búsqueda
+    // Búsquedas excedentes
     const excessSearches = Math.max(0, usage.searches - plan.limits.vector_searches_per_month);
-    cost += excessSearches * 0.001;
+    cost += excessSearches * plan.overage.searches;
 
     return Math.round(cost * 100) / 100; // Redondear a 2 decimales
 }

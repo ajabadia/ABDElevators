@@ -8,14 +8,16 @@ export type FeatureFlag =
     | 'DYNAMIC_ENTITIES'   // Enables the generic EntityEngine (v2)
     | 'GRAPH_RELATIONS'    // Enables Neo4j/Graph logic
     | 'DEMO_MODE_UI'       // Enables Industry Switcher in Header
-    | 'EXPLAINABLE_AI';    // Enables "Reasoning" fields in RAG UI
+    | 'EXPLAINABLE_AI'     // Enables "Reasoning" fields in RAG UI
+    | 'ENFORCE_MFA_ADMIN'; // Enforce mandatory MFA for privileged users (Phase 120.1)
 
 // Default State (Production Safe)
 const DEFAULT_FLAGS: Record<FeatureFlag, boolean> = {
     'DYNAMIC_ENTITIES': false,
     'GRAPH_RELATIONS': false,
-    'DEMO_MODE_UI': true,     // Active for Phase 44 Quick Win
-    'EXPLAINABLE_AI': true    // Active for Phase 44 Quick Win
+    'DEMO_MODE_UI': true,
+    'EXPLAINABLE_AI': true,
+    'ENFORCE_MFA_ADMIN': false  // HOTFIX: Disabled to unblock login loop
 };
 
 export const FeatureFlags = {

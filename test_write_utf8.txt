@@ -1,5 +1,0 @@
-﻿[dotenv@17.2.3] injecting env (18) from .env.local -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
-­ƒôØ Testing write to workflow_definitions...
-Connected to: ABDElevators
-Successfully inserted test doc with ID: 69819ddb4bb1e15d75d1835e
-Current Collections: agent_checkpoints, policies, pricing_plans, document_chunks, workflow_definitions, tipos_documento, rate_limits, documentos_usuarios, ai_workflows, permission_groups, cases, tickets, knowledge_assets, notifications, workflow_configs, documentos_tecnicos, users---------, prompt_versions, processed_events, rag_evaluations, usage_logs, pedidos, ai_corrections, logs_aplicacion, entities, taxonomias, prompts

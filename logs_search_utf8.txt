@@ -1,3 +1,0 @@
-﻿[dotenv@17.2.3] injecting env (18) from .env.local -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
-­ƒô£ Searching logs for workflow activity...
-Found 0 recent entries:

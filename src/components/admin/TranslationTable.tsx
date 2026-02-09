@@ -27,6 +27,7 @@ interface TranslationTableProps {
     primaryMessages: Record<string, any>;
     secondaryMessages: Record<string, any>;
     searchQuery: string;
+    showMissingOnly: boolean;
     loading: boolean;
     hasActiveFilters: boolean;
     onRefresh: () => void;
@@ -38,6 +39,7 @@ export function TranslationTable({
     primaryMessages,
     secondaryMessages,
     searchQuery,
+    showMissingOnly,
     loading,
     hasActiveFilters,
     onRefresh
@@ -81,11 +83,20 @@ export function TranslationTable({
 
     const filteredKeys = flatKeys.filter(key => {
         const lowerSearch = searchQuery.toLowerCase();
-        return (
-            key.toLowerCase().includes(lowerSearch) ||
+
+        // Filtro por búsqueda
+        const matchesSearch = key.toLowerCase().includes(lowerSearch) ||
             (primaryFlat[key] && primaryFlat[key].toLowerCase().includes(lowerSearch)) ||
-            (secondaryFlat[key] && secondaryFlat[key].toLowerCase().includes(lowerSearch))
-        );
+            (secondaryFlat[key] && secondaryFlat[key].toLowerCase().includes(lowerSearch));
+
+        if (!matchesSearch) return false;
+
+        // Filtro por faltantes (si está activo, solo mostrar las que no existen en el idioma secundario)
+        if (showMissingOnly) {
+            return !secondaryFlat[key];
+        }
+
+        return true;
     });
 
     const handleEdit = (key: string, value: string, locale: string) => {

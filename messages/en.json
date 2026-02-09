@@ -57,6 +57,7 @@
                 "docTypes": "Document Types",
                 "organizations": "Organizations",
                 "users": "Users",
+                "contracts": "Contracts / Cases",
                 "billing": "Billing",
                 "apiKeys": "API Keys",
                 "audit": "Audit Trail",
@@ -149,12 +150,18 @@
         "error_generic": "Connection error. Please try again.",
         "error_invalid": "Invalid credentials. Check your email and password.",
         "error_mfa": "Invalid or expired MFA code.",
+        "error_session_sync": "Synchronizing secure session...",
         "mfa_title": "Two-Factor Authentication",
         "mfa_desc": "For security, please enter the verification code sent to your device.",
         "mfa_button": "Verify Identity",
         "mfa_back": "Back",
         "test_users": "DEMO ACCESS (TESTING ONLY)",
-        "footer_text": "INDUSTRIAL SECURITY • AES-256 ENCRYPTION • SOC2 COMPLIANT"
+        "footer_text": "INDUSTRIAL SECURITY • AES-256 ENCRYPTION • SOC2 COMPLIANT",
+        "magic_link_toggle": "Login with Magic Link",
+        "password_toggle": "Login with Password",
+        "magic_link_button": "Send Login Link",
+        "magic_link_sent": "Link sent! Check your email.",
+        "sending": "Sending..."
     },
     "hero": {
         "badge": "Intelligent Document Management",
@@ -208,6 +215,8 @@
         "f14_desc": "Dynamic report generation with full traceability, multi-language (ES/EN) support, and business-ready professional terminology.",
         "f15_title": "Billing Resilience",
         "f15_desc": "Circuit breaker protection that ensures system availability even during critical failures of payment gateways or external services.",
+        "f16_title": "Advanced Checklist Governance",
+        "f16_desc": "Industrial rule configuration engine for technical validation. Native categorization, prioritization, and multi-tenant isolation.",
         "learn_more": "Learn more"
     },
     "solutions": {
@@ -636,8 +645,27 @@
                 "inactive": "INACTIVE"
             },
             "mutation": {
-                "confirm_delete": "Are you sure you want to delete the configuration \"{name}\"?",
                 "delete_success": "Configuration deleted successfully."
+            },
+            "cards": {
+                "categorization": {
+                    "title": "Smart Categorization",
+                    "desc": "Organize your checklists by maneuver type, industry, or technical urgency for efficient management."
+                },
+                "prioritization": {
+                    "title": "Dynamic Prioritization",
+                    "desc": "Define execution order based on criticality and direct impact on elevator safety."
+                },
+                "multi_tenant": {
+                    "title": "Multi-tenant Isolation",
+                    "desc": "Ensure each organization manages its own verification procedures securely and privately."
+                }
+            },
+            "editor": {
+                "loading": "Starting Configurator Pro...",
+                "error_title": "System Error",
+                "error_desc": "Could not retrieve the requested configuration from the database.",
+                "back_button": "Back to Dashboard"
             }
         },
         "consumption": {
@@ -678,6 +706,10 @@
             "multilingual": {
                 "title": "Multilingual Searches",
                 "label": "Latent Vectors (Shadow)"
+            },
+            "charts": {
+                "tokens_title": "AI Consumption Trends",
+                "tokens_desc": "Visualization of token consumption and cache efficiency over the last 15 days."
             },
             "activity": {
                 "title": "Activity Log",
@@ -1038,6 +1070,31 @@
                     "desc": "Quality of the chunks retrieved by the vector engine."
                 }
             },
+            "trace": {
+                "title": "AI Decision Diagnostic",
+                "sections": {
+                    "quality": "Quality Metrics",
+                    "causal": "Causal Analysis & Self-Correction",
+                    "trace": "Reasoning Trace (Thought Process)",
+                    "query": "Original Query",
+                    "response": "Engine Generation",
+                    "context": "Manual Context (Chunks)"
+                },
+                "metrics": {
+                    "faithfulness": "Faithfulness",
+                    "relevance": "Relevance",
+                    "precision": "Precision"
+                },
+                "causal": {
+                    "cause": "Detected Root Cause",
+                    "fix": "Correction Strategy",
+                    "reasoning": "Judge Reasoning"
+                },
+                "actions": {
+                    "close": "Close Diagnostic",
+                    "audit": "Audit Decision"
+                }
+            },
             "history": {
                 "title": "Evaluated Query History",
                 "desc": "Quality audit and AI thought (Trace) tracking.",
@@ -1257,7 +1314,8 @@
                 "subtitle": "Manage the platform's voice across multiple languages with AI assistance.",
                 "syncBtn": "Sync L4 → DB",
                 "newKeyBtn": "New Key",
-                "searchPlaceholder": "Search by key or content..."
+                "searchPlaceholder": "Search by key or content...",
+                "filterMissing": "Show only missing"
             },
             "languages": {
                 "es": "Spanish (ES)",
@@ -1761,5 +1819,19 @@
                 "saveSuccess": "Translation updated successfully."
             }
         }
+    },
+    "search": {
+        "title": "Conversational Search",
+        "placeholder": "What do you need to know about your documents?",
+        "analyzing": "Analyzing...",
+        "sources_label": "Sources found:",
+        "error_message": "Sorry, there was an error processing your query.",
+        "input_placeholder": "Type your question here...",
+        "suggested_questions": "Suggested questions",
+        "disclaimer": "AI can make mistakes. Verify important information.",
+        "copy": "Copy answer",
+        "regenerate": "Regenerate answer",
+        "feedback_positive": "Helpful",
+        "feedback_negative": "Not helpful"
     }
 }

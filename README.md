@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 3.9.7 - UX ERA)
+# ABD Multi-Industry RAG Platform (Vision 4.2.1 - ENTERPRISE ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v3.9.7** despliega la visión de "Business-Ready UX" (Phase 96), elimina las barreras técnicas para el usuario final mediante interfaces conversacionales y asistencia inteligente.
+Esta versión **v4.2.1** despliega la visión de "Enterprise SaaS Transformation" (Phase 120), con seguridad blindada, observabilidad profunda, herramientas pro de gobernanza IA, demo público interactivo, autenticación passwordless y gestión avanzada de checklists. O
 
 ## 🚀 Inicio Rápido
 
@@ -144,6 +144,11 @@ src/
   - ✅ **Conversational Technical Search**: Interfaz de chat avanzada para consultas sobre manuales y esquemas técnicos (Phase 96).
   - ✅ **Intelligent Onboarding**: Sistema de guías interactivas para nuevos usuarios y tours por página (Phase 96).
   - ✅ **Expert Notification Center**: Gestión de alertas y eventos técnicos con filtrado inteligente (Phase 96).
+  - ✅ **Explainable AI Governance**: UI de diagnóstico de decisiones (Decision Trace) que revela el pensamiento de la IA (Phase 120.4).
+  - ✅ **B2B ROI Dashboards**: Visualización de impacto económico, precisión y consumo RAG por tenant (Phase 120.4).
+  - ✅ **Deep Observability (OTel)**: Trazabilidad distribuida con OpenTelemetry para monitoreo fino del pipeline RAG (Phase 120.3).
+  - ✅ **Advanced Checklist Management**: Motor de configuración de reglas industriales para validación técnica (Phase 105.x).
+  - ✅ **i18n Multi-tier Performance Cache**: Sistema de sincronización atómica entre JSON L4, MongoDB y Redis local.
 
 ## 🔧 Scripts Disponibles
 

@@ -25,10 +25,10 @@ export interface TenantConfig {
     name: string;
     industry: 'ELEVATORS' | 'LEGAL' | 'MEDICAL' | 'GENERIC';
     storage: {
-        provider: 'cloudinary' | 'gdrive' | 's3';
+        provider: 'cloudinary' | 'google_drive' | 's3';
         settings: {
             folder_prefix?: string;
-            bucket?: string;
+            bucket_name?: string;
             region?: string;
         };
         quota_bytes: number;
@@ -119,17 +119,31 @@ export default function TenantsPage() {
     const { mutate: saveConfig, isLoading: isSaving } = useApiMutation({
         endpoint: '/api/admin/tenants',
         successMessage: 'Configuración de la organización actualizada correctamente.',
-        onSuccess: () => refreshTenants()
+        onSuccess: () => refreshTenants(),
+        onError: (err) => {
+            console.error("Save config error:", err);
+            toast({
+                title: 'Error al guardar',
+                description: typeof err === 'string' ? err : 'No se pudo guardar la configuración.',
+                variant: 'destructive',
+            });
+        }
     });
 
     const handleSave = () => {
-        if (config) saveConfig(config);
+        if (config) {
+            if (!config.tenantId) {
+                toast({ title: 'Error', description: 'Falta tenantId', variant: 'destructive' });
+                return;
+            }
+            saveConfig(config);
+        }
     };
 
     if (!isMounted || (isLoading && !config)) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
@@ -145,10 +159,10 @@ export default function TenantsPage() {
                         <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>Refrescar</Button>
                         <Button
                             onClick={handleSave}
-                            className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
                             disabled={isSaving}
                         >
-                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : <Save size={18} />}
+                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} />}
                             Guardar Cambios
                         </Button>
                     </>
@@ -160,31 +174,31 @@ export default function TenantsPage() {
                     <TabsList className="w-full justify-start rounded-none border-b bg-white dark:bg-slate-900 h-14 px-6 gap-8">
                         <TabsTrigger
                             value="general"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
                             General
                         </TabsTrigger>
                         <TabsTrigger
                             value="branding"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
                             Identidad y Branding
                         </TabsTrigger>
                         <TabsTrigger
                             value="storage"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
                             Almacenamiento
                         </TabsTrigger>
                         <TabsTrigger
                             value="features"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
                             Módulos
                         </TabsTrigger>
                         <TabsTrigger
                             value="billing"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
                             <CreditCard size={16} className="mr-2" /> Facturación
                         </TabsTrigger>
@@ -207,7 +221,7 @@ export default function TenantsPage() {
                     </TabsContent>
 
                     <TabsContent value="billing" className="p-8 space-y-12">
-                        <BillingTab config={config} setConfig={setConfig} />
+                        <BillingTab config={config} setConfig={setConfig} usageStats={usageStats} />
                     </TabsContent>
                 </Tabs>
             </ContentCard>

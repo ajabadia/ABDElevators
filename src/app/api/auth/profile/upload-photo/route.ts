@@ -7,7 +7,7 @@ import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
 
 /**
- * POST /api/auth/perfil/upload-photo
+ * POST /api/auth/profile/upload-photo
  * Sube una foto de perfil a Cloudinary y devuelve la URL.
  * SLA: P95 < 2000ms
  */

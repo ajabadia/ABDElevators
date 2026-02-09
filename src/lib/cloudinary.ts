@@ -116,7 +116,7 @@ export async function uploadUserDocument(
     tenantId: string,
     userId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const result = await uploadToFolder(buffer, filename, `abd-elevators/tenants/${tenantId}/usuarios/${userId}/documentos`);
+    const result = await uploadToFolder(buffer, filename, `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/documentos`);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-user-docs');
     return result;
 }
@@ -134,7 +134,7 @@ export async function uploadProfilePhoto(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-elevators/tenants/${tenantId}/usuarios/${userId}/perfil`,
+                folder: `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/perfil`,
                 public_id: `perfil_${Date.now()}`,
                 transformation: [
                     { width: 400, height: 400, crop: 'fill', gravity: 'face' },
@@ -172,7 +172,7 @@ export async function uploadPDFToCloudinary(
     tenantId: string,
     folder: string = ''
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const targetFolder = folder || `abd-elevators/tenants/${tenantId}/documentos`;
+    const targetFolder = folder || `abd-rag-platform/tenants/${tenantId}/documentos`;
     const result = await uploadToFolder(buffer, filename, targetFolder);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-legacy-docs');
     return result;
@@ -191,7 +191,7 @@ export async function uploadBrandingAsset(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-elevators/tenants/${tenantId}/branding`,
+                folder: `abd-rag-platform/tenants/${tenantId}/branding`,
                 public_id: `${assetType}_${Date.now()}`,
                 transformation: assetType === 'logo'
                     ? [{ width: 800, height: 400, crop: 'limit' }, { quality: 'auto', fetch_format: 'auto' }]

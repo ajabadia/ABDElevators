@@ -10,6 +10,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { ROICalculator } from "@/components/landing/ROICalculator";
 
 /**
  * Landing Page - Versión Profesional 3.0
@@ -32,6 +33,9 @@ export default function Home() {
 
       {/* Enterprise & Compliance unificado */}
       <EnterpriseSection />
+
+      {/* ROI Calculator */}
+      <ROICalculator />
 
       {/* Pricing visible y transparente */}
       <PricingSection />

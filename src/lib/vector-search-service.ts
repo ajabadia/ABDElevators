@@ -25,7 +25,7 @@ export class VectorSearchService {
         query: string,
         tenantId: string,
         correlationId: string,
-        options: { limit?: number; minScore?: number; industry?: string; environment?: string } = {}
+        options: { limit?: number; minScore?: number; industry?: string; environment?: string } = { industry: 'GENERIC' }
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.pure_vector_search', {
             attributes: {

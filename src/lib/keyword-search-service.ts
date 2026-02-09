@@ -14,7 +14,7 @@ export class KeywordSearchService {
         tenantId: string,
         correlationId: string,
         limit = 5,
-        industry: string = 'ELEVATORS',
+        industry: string = 'GENERIC',
         environment: string = 'PRODUCTION'
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.keyword_search', {

@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity } from 'lucide-react';
+import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity, BrainCircuit } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslations, useLocale } from 'next-intl';
+import { DecisionTraceDialog } from './intelligence/DecisionTraceDialog';
+import { Button } from '@/components/ui/button';
 
 interface RagMetricStats {
     faithfulness: number;
@@ -35,6 +37,8 @@ export default function RagQualityDashboard() {
     const [evaluations, setEvaluations] = useState<RagEvaluation[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedEval, setExpandedEval] = useState<string | null>(null);
+    const [selectedEval, setSelectedEval] = useState<any | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const t = useTranslations('admin.rag_quality');
     const locale = useLocale();
     const dateLocale = locale === 'es' ? es : enUS;
@@ -217,6 +221,17 @@ export default function RagQualityDashboard() {
                                         >
                                             {expandedEval === ev._id ? t('history.hide_trace') : t('history.show_trace')}
                                         </button>
+                                        <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-800" />
+                                        <button
+                                            onClick={() => {
+                                                setSelectedEval(ev);
+                                                setIsDialogOpen(true);
+                                            }}
+                                            className="text-blue-500 hover:text-blue-600 font-bold flex items-center gap-1"
+                                        >
+                                            <BrainCircuit className="w-3 h-3" />
+                                            {t('trace.actions.audit')}
+                                        </button>
                                     </div>
                                     <span>{format(new Date(ev.timestamp), "dd MMM yyyy HH:mm", { locale: dateLocale })}</span>
                                 </div>
@@ -233,6 +248,12 @@ export default function RagQualityDashboard() {
                     </div>
                 </CardContent>
             </Card>
+
+            <DecisionTraceDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                evaluation={selectedEval}
+            />
         </div>
     );
 }
