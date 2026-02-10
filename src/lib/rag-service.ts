@@ -29,6 +29,7 @@ export interface RagResult {
     isShadow?: boolean;
     chunkType?: string;
     approxPage?: number;
+    relatedAssets?: any[]; // Phase 81
 }
 
 const PerformTechnicalSearchSchema = z.object({
@@ -135,7 +136,8 @@ export async function performTechnicalSearch(
                 model: doc.metadata.model,
                 cloudinaryUrl: (doc.metadata as any).cloudinaryUrl,
                 chunkType: doc.metadata.chunkType,
-                approxPage: doc.metadata.approxPage
+                approxPage: doc.metadata.approxPage,
+                relatedAssets: assets.find(a => a.filename === doc.metadata.sourceDoc)?.relatedAssets || []
             };
         });
 

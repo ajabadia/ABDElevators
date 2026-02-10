@@ -29,7 +29,7 @@ const CallGeminiMiniSchema = z.object({
 /**
  * Genera embeddings para un bloque de texto.
  */
-export async function generateEmbedding(text: string, tenantId: string, correlationId: string): Promise<number[]> {
+export async function generateEmbedding(text: string, tenantId: string, correlationId: string, session?: any): Promise<number[]> {
     return tracer.startActiveSpan('gemini.embed_content', {
         attributes: {
             'tenant.id': tenantId,
@@ -67,7 +67,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
                 });
             }
 
-            await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlationId);
+            await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlationId, session);
 
             span.setStatus({ code: SpanStatusCode.OK });
             return result.embedding.values;
@@ -96,7 +96,8 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 export async function callGeminiMini(
     prompt: string,
     tenantId: string,
-    options: { correlationId: string; temperature?: number; model?: string }
+    options: { correlationId: string; temperature?: number; model?: string },
+    session?: any
 ): Promise<string> {
     const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
     const modelName = mapModelName(rawModel);
@@ -133,7 +134,7 @@ export async function callGeminiMini(
             const usage = (result.response as any).usageMetadata;
             if (usage) {
                 span.setAttribute('genai.tokens', usage.totalTokenCount);
-                await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
             }
 
             span.setStatus({ code: SpanStatusCode.OK });
@@ -217,9 +218,9 @@ export async function callGeminiStream(
  * Proxies para servicios especializados (Mantener compatibilidad)
  */
 
-export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string) {
+export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
     const { ExtractionService } = await import("./extraction-service");
-    return ExtractionService.extractModelsWithGemini(text, tenantId, correlationId);
+    return ExtractionService.extractModelsWithGemini(text, tenantId, correlationId, session);
 }
 
 export async function analyzeEntityWithGemini(entitySlug: string, text: string, tenantId: string, correlationId: string) {
@@ -227,9 +228,9 @@ export async function analyzeEntityWithGemini(entitySlug: string, text: string, 
     return AdaptiveAnalysisService.analyzeEntityWithGemini(entitySlug, text, tenantId, correlationId);
 }
 
-export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string) {
+export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string, session?: any) {
     const { VisionService } = await import("./vision-service");
-    return VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId);
+    return VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId, session);
 }
 
 /**

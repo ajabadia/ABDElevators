@@ -1,0 +1,15 @@
+--- VERIFYING EXTRACTION FIX ---
+Fetching buffer from Cloudinary...
+Buffer received: 368438 bytes
+Calling extractTextFromPDF()...
+✅ SUCCESS!
+Text Length: 191513
+Preview: Real Decreto 203/2016, de 20 de mayo, por el que se establecen los
+requisitos esenciales de seguridad para la comercialización de
+ascensores y componentes de seguridad para ascensores.
+Ministerio de Industria, Energía y Turismo
+«BOE» núm. 126, de 25 de mayo de 2016
+Referencia: BOE-A-2016-4953
+ÍNDICE
+Preámbulo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+CAPÍTULO I. Disposiciones generales . . . . . . . . . . . .

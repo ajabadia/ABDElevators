@@ -87,8 +87,8 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
 | `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
 | `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-09 |
-
+| `/api/cron/stuck-jobs` | Detección y recuperación automática de procesos de ingesta bloqueados. | 2026-02-10 |
 
 ---
-*Mapa actualizado por Antigravity v4.2.1 (Enterprise SaaS Evolution) - 2026-02-09*
+*Mapa actualizado por Antigravity v4.3.0 (Resilient Enterprise Ingestion) - 2026-02-10*
 

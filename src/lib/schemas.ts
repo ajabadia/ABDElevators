@@ -315,13 +315,16 @@ export const IngestAuditSchema = z.object({
 
     // Metadata
     correlationId: z.string(),
-    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'PROCESSING']),
+    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'PROCESSING', 'RESTORED']),
     details: z.object({
         chunks: z.number().default(0),
         duration_ms: z.number(),
         savings_tokens: z.number().optional(),
-        error: z.string().optional()
-    }).optional(),
+        error: z.string().optional(),
+        source: z.string().optional(),
+        scope: z.string().optional(),
+        deduplicated: z.boolean().optional()
+    }).passthrough().optional(),
 
     timestamp: z.date().default(() => new Date()),
 });
@@ -388,7 +391,7 @@ export const KnowledgeAssetSchema = z.object({
     revisionDate: z.date(),
     language: z.string().default('es'), // Idioma principal detectado
     status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
-    ingestionStatus: z.enum(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']).default('PENDING'),
+    ingestionStatus: z.enum(['PENDING', 'QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED']).default('PENDING'),
     progress: z.number().min(0).max(100).default(0), // Porcentaje de avance
     attempts: z.number().default(0), // Reintentos realizados
     error: z.string().optional(), // Para registrar errores asíncronos
@@ -398,6 +401,11 @@ export const KnowledgeAssetSchema = z.object({
     sizeBytes: z.number().default(0),
     totalChunks: z.number().default(0),
     documentTypeId: z.string().optional(), // Referencia al maestro de tipos (Fase Categorización)
+    relatedAssets: z.array(z.object({
+        targetId: z.string(),
+        type: z.enum(['SUPERSEDES', 'COMPLEMENTS', 'DEPENDS_ON', 'AMENDS', 'RELATED_TO']),
+        description: z.string().optional()
+    })).default([]),
     contextHeader: z.any().optional(), // Metadata de contexto del documento
     scope: z.enum(['GLOBAL', 'INDUSTRY', 'TENANT']).default('TENANT'), // Visibilidad/Propiedad
     environment: AppEnvironmentEnum.default('PRODUCTION'), // PRODUCTION, STAGING, SANDBOX
@@ -1427,3 +1435,22 @@ export const SystemEmailTemplateHistorySchema = z.object({
 
 export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
+
+/**
+ * Esquema para FileBlobs (Deduplicación Física - Fase 125.1)
+ */
+export const FileBlobSchema = z.object({
+    _id: z.string(), // MD5 Hash
+    cloudinaryUrl: z.string(),
+    cloudinaryPublicId: z.string(),
+    mimeType: z.string().optional(),
+    sizeBytes: z.number(),
+    refCount: z.number().default(1),
+    tenantId: z.string().default('abd_global'), // Required for SecureCollection visibility
+    firstSeenAt: z.date().default(() => new Date()),
+    lastSeenAt: z.date().default(() => new Date()),
+    storageProvider: z.enum(['cloudinary', 's3']).default('cloudinary'),
+    metadata: z.record(z.string(), z.any()).optional(),
+});
+
+export type FileBlob = z.infer<typeof FileBlobSchema>;

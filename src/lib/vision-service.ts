@@ -14,7 +14,8 @@ export class VisionService {
     static async analyzePDFVisuals(
         pdfBuffer: Buffer,
         tenantId: string,
-        correlationId: string
+        correlationId: string,
+        session?: any
     ): Promise<Array<{ page: number; type: string; technical_description: string }>> {
         return tracer.startActiveSpan('gemini.analyze_pdf_visuals', {
             attributes: {
@@ -30,7 +31,9 @@ export class VisionService {
                 const { production } = await PromptService.getPromptWithShadow(
                     'VISUAL_ANALYZER',
                     {},
-                    tenantId
+                    tenantId,
+                    'GENERIC',
+                    session
                 );
 
                 const modelName = mapModelName(production.model);
@@ -73,7 +76,7 @@ export class VisionService {
                 const usage = (result.response as any).usageMetadata;
                 if (usage) {
                     span.setAttribute('genai.tokens', usage.totalTokenCount);
-                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
                 }
 
                 await logEvento({

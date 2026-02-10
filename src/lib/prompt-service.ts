@@ -16,9 +16,10 @@ export class PromptService {
         key: string,
         tenantId: string,
         environment: string = 'PRODUCTION',
-        industry: string = 'GENERIC'
+        industry: string = 'GENERIC',
+        session?: any
     ): Promise<Prompt> {
-        const collection = await getTenantCollection('prompts');
+        const collection = await getTenantCollection('prompts', session);
 
         // 1. Intentar específico por industria
         let prompt = await collection.findOne({
@@ -56,9 +57,10 @@ export class PromptService {
         variables: Record<string, any>,
         tenantId: string,
         environment: string = 'PRODUCTION',
-        industry: string = 'GENERIC'
+        industry: string = 'GENERIC',
+        session?: any
     ): Promise<{ text: string, model: string }> {
-        const prompt = await this.getPrompt(key, tenantId, environment, industry);
+        const prompt = await this.getPrompt(key, tenantId, environment, industry, session);
 
         // Validar que todas las variables requeridas estén presentes
         const missingVars = prompt.variables
@@ -83,7 +85,7 @@ export class PromptService {
 
         // Auditar uso
         try {
-            const collection = await getTenantCollection('prompts');
+            const collection = await getTenantCollection('prompts', session);
             await collection.updateOne(
                 { _id: (prompt as any)._id },
                 {
@@ -106,17 +108,18 @@ export class PromptService {
         key: string,
         variables: Record<string, any>,
         tenantId: string,
-        industry: string = 'GENERIC'
+        industry: string = 'GENERIC',
+        session?: any
     ): Promise<{
         production: { text: string, model: string },
         shadow?: { text: string, model: string, key: string }
     }> {
-        const promptObj = await this.getPrompt(key, tenantId, 'PRODUCTION', industry);
+        const promptObj = await this.getPrompt(key, tenantId, 'PRODUCTION', industry, session);
         const production = await this.render(promptObj, variables, tenantId);
 
         if (promptObj.isShadowActive && promptObj.shadowPromptKey) {
             try {
-                const shadowPromptObj = await this.getPrompt(promptObj.shadowPromptKey, tenantId, 'PRODUCTION', industry);
+                const shadowPromptObj = await this.getPrompt(promptObj.shadowPromptKey, tenantId, 'PRODUCTION', industry, session);
                 const shadowRendered = await this.render(shadowPromptObj, variables, tenantId);
 
                 return {

@@ -1,0 +1,164 @@
+[
+  {
+    "_id": "698a50bcc2d40a6ceda267da",
+    "level": "ERROR",
+    "source": "API_INGEST",
+    "action": "VALIDATION_ERROR",
+    "message": "Zod validation failed",
+    "correlationId": "7bbfe841-3aac-45b2-99f6-87a3de9695fd",
+    "details": {
+      "errors": [
+        {
+          "code": "invalid_value",
+          "values": [
+            "SUCCESS",
+            "FAILED",
+            "DUPLICATE",
+            "PENDING",
+            "PROCESSING"
+          ],
+          "path": [
+            "status"
+          ],
+          "message": "Invalid option: expected one of \"SUCCESS\"|\"FAILED\"|\"DUPLICATE\"|\"PENDING\"|\"PROCESSING\""
+        }
+      ]
+    },
+    "timestamp": "2026-02-09T21:25:16.788Z"
+  },
+  {
+    "_id": "698a50a3c2d40a6ceda267d9",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770672291305",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:24:51.352Z"
+  },
+  {
+    "_id": "698a4ec19b54576e861733fa",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671809159",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:49.198Z"
+  },
+  {
+    "_id": "698a4ebd9b54576e861733f9",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671805078",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:45.115Z"
+  },
+  {
+    "_id": "698a4ebb9b54576e861733f8",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671802992",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:43.034Z"
+  },
+  {
+    "_id": "698a4eb99b54576e861733f7",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671800877",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:41.373Z"
+  },
+  {
+    "_id": "698a4eb1e9c0885ec3d02229",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671792971",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:33.011Z"
+  },
+  {
+    "_id": "698a4eace9c0885ec3d02228",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671788872",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:28.911Z"
+  },
+  {
+    "_id": "698a4eaae9c0885ec3d02227",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671786788",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:26.825Z"
+  },
+  {
+    "_id": "698a4ea9e9c0885ec3d02226",
+    "level": "DEBUG",
+    "source": "TENANT_SERVICE",
+    "action": "GET_CONFIG_DB_RAW",
+    "correlationId": "sys-get-config-abd_global-1770671784791",
+    "message": "Datos brutos de DB para tenant: abd_global",
+    "details": {
+      "tenantId": "abd_global",
+      "hasBranding": true,
+      "primaryColor": "#964B00",
+      "accentColor": "#964B00"
+    },
+    "timestamp": "2026-02-09T21:16:25.294Z"
+  }
+]

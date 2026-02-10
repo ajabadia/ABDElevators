@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 4.2.1 - ENTERPRISE ERA)
+# ABD Multi-Industry RAG Platform (Vision 4.3.0 - RESILIENT INGESTION)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v4.2.1** despliega la visión de "Enterprise SaaS Transformation" (Phase 120), con seguridad blindada, observabilidad profunda, herramientas pro de gobernanza IA, demo público interactivo, autenticación passwordless y gestión avanzada de checklists. O
+Esta versión **v4.3.0** despliega la visión de "Enterprise SaaS Transformation" (Phase 120) y la nueva arquitectura de **Resilient Ingestion State Machine** (Phase 112), con seguridad blindada, observabilidad profunda, herramientas pro de gobernanza IA, demo público interactivo, autenticación passwordless y gestión avanzada de checklists. 
 
 ## 🚀 Inicio Rápido
 

@@ -1,0 +1,34 @@
+[
+  {
+    "v": 2,
+    "key": {
+      "_id": 1
+    },
+    "name": "_id_"
+  },
+  {
+    "v": 2,
+    "key": {
+      "tenantId": 1,
+      "environment": 1,
+      "fileMd5": 1
+    },
+    "name": "idx_unique_asset_md5_per_tenant",
+    "unique": true
+  },
+  {
+    "v": 2,
+    "key": {
+      "tenantId": 1,
+      "ingestionStatus": 1
+    },
+    "name": "idx_status_lookup"
+  },
+  {
+    "v": 2,
+    "key": {
+      "createdAt": -1
+    },
+    "name": "idx_global_timeline"
+  }
+]

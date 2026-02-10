@@ -75,7 +75,7 @@ export class SecureCollection<T extends Document> {
         // 1. Aislamiento Multi-tenant
         // El SuperAdmin (Auditoría 015) bypassea el filtro de tenant para gestión global
         if (!this.isSuperAdmin) {
-            const globalAllowedCollections = ['document_types', 'translations'];
+            const globalAllowedCollections = ['document_types', 'translations', 'file_blobs'];
             const isGlobalAllowed = globalAllowedCollections.includes(this.collection.collectionName);
 
             if (isGlobalAllowed) {
@@ -124,7 +124,7 @@ export class SecureCollection<T extends Document> {
     async insertOne(doc: OptionalUnlessRequiredId<T>, options?: InsertOneOptions) {
         const secureDoc = {
             ...doc,
-            tenantId: this.primaryTenantId,
+            tenantId: (this.isSuperAdmin && (doc as any).tenantId) ? (doc as any).tenantId : this.primaryTenantId,
             createdAt: new Date(),
             updatedAt: new Date()
         } as OptionalUnlessRequiredId<T>;
@@ -142,7 +142,7 @@ export class SecureCollection<T extends Document> {
         return this.collection.insertMany(secureDocs, options);
     }
 
-    async updateOne(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions) {
+    async updateOne(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions & { includeDeleted?: boolean }) {
         const finalUpdate = (update as any).$set || (update as any).$push || (update as any).$pull || (update as any).$inc
             ? update
             : { $set: update };
@@ -154,11 +154,11 @@ export class SecureCollection<T extends Document> {
             (finalUpdate as any).$set = { updatedAt: new Date() };
         }
 
-        return this.collection.updateOne(this.applyTenantFilter(filter), finalUpdate as UpdateFilter<T>, options);
+        return this.collection.updateOne(this.applyTenantFilter(filter, options?.includeDeleted), finalUpdate as UpdateFilter<T>, options);
     }
 
-    async updateMany(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions) {
-        return this.collection.updateMany(this.applyTenantFilter(filter), update, options);
+    async updateMany(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions & { includeDeleted?: boolean }) {
+        return this.collection.updateMany(this.applyTenantFilter(filter, options?.includeDeleted), update, options);
     }
 
     async findOneAndUpdate(filter: Filter<T>, update: UpdateFilter<T>, options: FindOneAndUpdateOptions = {}) {

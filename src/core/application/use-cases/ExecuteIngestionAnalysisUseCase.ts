@@ -8,6 +8,8 @@ import { PermissionService } from '../security/PermissionService';
 import { AppPermission } from '@/types/permissions';
 import { TenantTier } from '@/types/tiers';
 import { UserRole } from '@/types/roles';
+import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
+import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
 
 export interface ExecuteIngestionAnalysisInput {
     docId: string;
@@ -49,18 +51,37 @@ export class ExecuteIngestionAnalysisUseCase {
 
         const currentAttempts = (asset.attempts || 0) + 1;
 
-        // 2. Update Status to PROCESSING
-        await this.knowledgeRepo.updateStatus(docId, 'PROCESSING', {
-            attempts: currentAttempts,
-            environment: environment as any
-        });
-
         const updateProgress = async (percent: number) => {
             if (job) await job.updateProgress(percent);
             await this.knowledgeRepo.updateProgress(docId, percent);
         };
 
         try {
+            // 1. Validate state transition: QUEUED/PENDING -> PROCESSING
+            const currentStatus = asset.ingestionStatus;
+            if (currentStatus !== 'QUEUED' && currentStatus !== 'PENDING') {
+                throw new AppError(
+                    'VALIDATION_ERROR',
+                    400,
+                    `Invalid starting state: ${currentStatus}. Expected QUEUED or PENDING.`
+                );
+            }
+
+            await StateTransitionValidator.validate(
+                currentStatus,
+                'PROCESSING',
+                correlationId,
+                asset.tenantId!,
+                docId,
+                'Starting ingestion analysis'
+            );
+
+            // 2. Update Status to PROCESSING
+            await this.knowledgeRepo.updateStatus(docId, 'PROCESSING', {
+                attempts: currentAttempts,
+                environment: environment as any
+            });
+
             await updateProgress(5);
 
             // 3. Infrastructure: Fetch from Storage (Currently in-line, will be abstracted in next step)
@@ -86,7 +107,17 @@ export class ExecuteIngestionAnalysisUseCase {
                 updateProgress
             );
 
-            // 6. Success Update
+            // 6. SUCCESS: Validate transition PROCESSING -> COMPLETED
+            await StateTransitionValidator.validate(
+                'PROCESSING',
+                'COMPLETED',
+                correlationId,
+                asset.tenantId!,
+                docId,
+                'Ingestion analysis completed successfully'
+            );
+
+            // 7. Success Update
             await this.knowledgeRepo.updateStatus(docId, 'COMPLETED', {
                 progress: 100,
                 model: analysis.detectedModels[0]?.model || 'UNKNOWN',
@@ -119,8 +150,32 @@ export class ExecuteIngestionAnalysisUseCase {
         } catch (error: any) {
             console.error(`[USE_CASE_ERROR] ${docId}`, error);
 
+            // FAILURE: Validate transition PROCESSING -> FAILED
+            await StateTransitionValidator.validate(
+                'PROCESSING',
+                'FAILED',
+                correlationId,
+                asset.tenantId!,
+                docId,
+                `Analysis failed: ${error.message}`
+            );
+
             await this.knowledgeRepo.updateStatus(docId, 'FAILED', {
-                error: error.message
+                error: error.message,
+                progress: asset.progress || 0
+            });
+
+            // Add to Dead Letter Queue for manual review
+            await DeadLetterQueue.addToQueue({
+                tenantId: asset.tenantId!,
+                docId,
+                correlationId,
+                jobType: 'PDF_ANALYSIS',
+                failureReason: error.message,
+                retryCount: currentAttempts,
+                lastAttempt: new Date(),
+                stackTrace: error.stack,
+                jobData: { input, startTime: start }
             });
 
             await this.auditRepo.logIngestion({

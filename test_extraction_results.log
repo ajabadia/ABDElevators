@@ -1,0 +1,18 @@
+--- STARTING PDF EXTRACTION TEST ---
+URL: https://res.cloudinary.com/ds81rqpk4/raw/upload/v1770656766/abd-rag-platform/tenants/abd_global/documentos-rag/1770656765021_Real%20Decreto%20203-2016%20-%20BOE-A-2016-4953-consolidado
+Fetching from Cloudinary...
+✅ Buffer received: 368438 bytes
+Magic bytes (hex): 255044462d
+Magic bytes (ascii): %PDF-
+Starting extractTextFromPDF...
+❌ Extraction failed inside helper:
+Message: Fallo al extraer texto del PDF
+Details: {
+  "message": "Class constructor PDFParse cannot be invoked without 'new'",
+  "details": {
+    "name": "TypeError"
+  }
+}
+Stack: AppError: Fallo al extraer texto del PDF
+    at extractTextFromPDF (D:\desarrollos\ABDElevators\src\lib\pdf-utils.ts:22:15)
+    at async testExtraction (D:\desarrollos\ABDElevators\scripts\test-pdf-extraction.ts:34:26)

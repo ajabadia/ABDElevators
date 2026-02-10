@@ -8,15 +8,30 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     try {
         // Importación dinámica robusta
         const mod = await import('pdf-parse');
-        // Create a typed reference or cast to any to avoid TS errors with the dynamic import
         const PDFParse = (mod as any).default || (mod as any).PDFParse || mod;
 
         if (typeof PDFParse !== 'function') {
             throw new Error('pdf-parse is not a function after import');
         }
 
-        const result = await PDFParse(buffer);
-        return cleanPDFText(result.text);
+        // Compatibilidad con versiones que requieren Uint8Array (pdfjs-dist legacy)
+        const uint8Array = new Uint8Array(buffer);
+        let extractedText = '';
+
+        // Detectar si es una clase (Moderno/Class-based) o función (Legacy/Functional)
+        const isClass = PDFParse.prototype && (PDFParse.prototype.constructor.name === 'PDFParse' || 'getText' in PDFParse.prototype);
+
+        if (isClass) {
+            const instance = new PDFParse(uint8Array);
+            if (instance.load) await instance.load();
+            const result = await instance.getText();
+            extractedText = typeof result === 'string' ? result : (result?.text || '');
+        } else {
+            const result = await PDFParse(buffer);
+            extractedText = result.text;
+        }
+
+        return cleanPDFText(extractedText);
     } catch (error: any) {
         console.error('Error extracting PDF text:', error);
         throw new ExternalServiceError('Fallo al extraer texto del PDF', {

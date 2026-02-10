@@ -28,7 +28,7 @@ async function uploadToFolder(
             {
                 resource_type: resourceType,
                 folder,
-                public_id: `${Date.now()}_${filename.replace(/\.[^/.]+$/, '')}`,
+                public_id: `${Date.now()}_${resourceType === 'raw' ? filename : filename.replace(/\.[^/.]+$/, '')}`,
             },
             (error, result) => {
                 if (error) {

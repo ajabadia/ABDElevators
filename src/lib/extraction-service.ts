@@ -23,7 +23,7 @@ export class ExtractionService {
     /**
      * Extrae modelos y entidades de un texto de pedido.
      */
-    static async extractModelsWithGemini(text: string, tenantId: string, correlationId: string) {
+    static async extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
         return tracer.startActiveSpan('gemini.extract_models', {
             attributes: {
                 'tenant.id': tenantId,
@@ -40,7 +40,9 @@ export class ExtractionService {
                 const { production, shadow } = await PromptService.getPromptWithShadow(
                     'MODEL_EXTRACTOR',
                     { text },
-                    tenantId
+                    tenantId,
+                    'GENERIC',
+                    session
                 );
 
                 const renderedPrompt = production.text;
@@ -83,7 +85,21 @@ export class ExtractionService {
                 const usage = (result.response as any).usageMetadata;
                 if (usage) {
                     span.setAttribute('genai.tokens', usage.totalTokenCount);
-                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
+
+                    // Phase 2: Track cost with LLMCostTracker
+                    const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
+                    const inputTokens = usage.promptTokenCount || Math.ceil(renderedPrompt.length / 4);
+                    const outputTokens = usage.candidatesTokenCount || Math.ceil(responseText.length / 4);
+
+                    await LLMCostTracker.trackOperation(
+                        correlationId,
+                        'MODEL_EXTRACTION',
+                        modelName,
+                        inputTokens,
+                        outputTokens,
+                        duration
+                    );
                 }
 
                 span.setStatus({ code: SpanStatusCode.OK });

@@ -10,7 +10,7 @@ export class UsageService {
     /**
      * Registra el uso de tokens de LLM.
      */
-    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string) {
+    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string, session?: any) {
         return this.logUsage({
             tenantId,
             type: 'LLM_TOKENS',
@@ -18,7 +18,7 @@ export class UsageService {
             resource: model,
             description: `Consumo de ${tokens} tokens en modelo ${model}`,
             correlationId
-        });
+        }, session);
     }
 
     /**
@@ -142,10 +142,10 @@ export class UsageService {
     /**
      * Método interno para persistir el log de uso.
      */
-    private static async logUsage(data: any) {
+    private static async logUsage(data: any, session?: any) {
         try {
             const validated = UsageLogSchema.parse(data);
-            const collection = await getTenantCollection('usage_logs');
+            const collection = await getTenantCollection('usage_logs', session);
 
             await collection.insertOne(validated);
 

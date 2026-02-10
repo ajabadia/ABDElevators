@@ -30,7 +30,10 @@ export async function GET(req: NextRequest) {
         const { limit, skip, search } = QuerySchema.parse(Object.fromEntries(searchParams));
 
         // 3. SECURE COLLECTION: Multi-tenant Isolation
-        const collection = await getTenantCollection('knowledge_assets');
+        const { auth } = await import('@/lib/auth');
+        // Rule #11 Secure Multi-tenant
+        const session = await auth();
+        const collection = await getTenantCollection('knowledge_assets', session);
 
         // 4. Build filter
         const filter: any = {};
@@ -44,11 +47,11 @@ export async function GET(req: NextRequest) {
         }
 
         const [assets, total] = await Promise.all([
-            (collection.find(filter, {
+            collection.find(filter, {
                 sort: { createdAt: -1 } as any,
                 skip,
                 limit
-            }) as any).toArray(),
+            }),
             collection.countDocuments(filter)
         ]);
 
@@ -75,7 +78,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({
                 code: 'VALIDATION_ERROR',
                 message: 'Parámetros de consulta inválidos',
-                details: error.errors
+                details: error.issues
             }, { status: 400 });
         }
         if (error instanceof AppError) {

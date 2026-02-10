@@ -15,8 +15,9 @@ export interface IngestOptions {
         type: string;
         version: string;
         documentTypeId?: string;
-        scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT';
+        scope?: 'USER' | 'TENANT' | 'INDUSTRY' | 'GLOBAL';
         industry?: string;
+        ownerUserId?: string; // For USER scope
     };
     tenantId: string;
     userEmail: string;
@@ -25,6 +26,7 @@ export interface IngestOptions {
     userAgent?: string;
     correlationId?: string;
     maskPii?: boolean;
+    session?: any;
 }
 
 export interface IngestResult {
@@ -58,13 +60,23 @@ export class IngestService {
         const start = Date.now();
         const job = options.job;
 
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets');
+        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
         const assetId = new ObjectId(docId);
         const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });
 
         if (!asset) {
             throw new AppError('NOT_FOUND', 404, `Knowledge asset ${docId} not found`);
         }
+
+        // Construct a technical session for the worker
+        const workerSession = {
+            user: {
+                id: 'system_worker',
+                email: options.userEmail || asset.uploadedBy || 'system@abd.com',
+                tenantId: asset.tenantId || options.tenantId || 'platform_master',
+                role: 'ADMIN', // Worker needs enough privileges to write chunks
+            }
+        };
 
         const currentAttempts = (asset.attempts || 0) + 1;
 
@@ -85,14 +97,14 @@ export class IngestService {
             await updateProgress(5);
 
             // Fetch from Cloudinary
-            const response = await fetch(encodeURI(asset.cloudinaryUrl));
+            const response = await fetch(asset.cloudinaryUrl);
             if (!response.ok) throw new Error(`Failed to fetch from Cloudinary: ${response.statusText}`);
             const buffer = Buffer.from(await response.arrayBuffer());
 
             await updateProgress(15);
 
             // Step 2: Full Analysis
-            const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId);
+            const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession);
             await updateProgress(60);
 
             // Step 3: Indexing
@@ -104,6 +116,7 @@ export class IngestService {
                 analysis.detectedIndustry,
                 analysis.detectedLang,
                 correlationId,
+                workerSession,
                 updateProgress
             );
 
@@ -124,9 +137,9 @@ export class IngestService {
                 }
             );
 
-            await (await getTenantCollection('audit_ingestion')).insertOne(IngestAuditSchema.parse({
+            await (await getTenantCollection('audit_ingestion', workerSession)).insertOne(IngestAuditSchema.parse({
                 tenantId: asset.tenantId,
-                performedBy: options.userEmail || 'system_worker',
+                performedBy: options.userEmail || asset.uploadedBy || 'system_worker',
                 filename: asset.filename,
                 fileSize: asset.sizeBytes || 0,
                 md5: asset.fileMd5 || 'unknown',

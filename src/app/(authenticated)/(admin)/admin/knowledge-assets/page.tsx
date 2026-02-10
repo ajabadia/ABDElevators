@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import {
     Plus, Search, Filter, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
-    Archive, ShieldOff, RotateCw
+    Archive, ShieldOff, RotateCw, Link2, Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
+import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal";
+import { RelationshipManagerModal } from "@/components/admin/knowledge/RelationshipManagerModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,6 +49,8 @@ export default function DocumentsPage() {
     const t = useTranslations('knowledge_assets');
     const [searchTerm, setSearchTerm] = useState("");
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+    const [previewAsset, setPreviewAsset] = useState<{ id: string, filename: string } | null>(null);
+    const [relationshipAsset, setRelationshipAsset] = useState<KnowledgeAsset | null>(null);
 
     // 1. Fetching with useApiList
     const {
@@ -150,6 +154,22 @@ export default function DocumentsPage() {
                     setIsUploadOpen(false);
                     refresh();
                 }}
+            />
+
+            <PDFPreviewModal
+                isOpen={!!previewAsset}
+                onClose={() => setPreviewAsset(null)}
+                id={previewAsset?.id || ""}
+                filename={previewAsset?.filename || ""}
+            />
+
+            <RelationshipManagerModal
+                isOpen={!!relationshipAsset}
+                onClose={() => {
+                    setRelationshipAsset(null);
+                    refresh();
+                }}
+                asset={relationshipAsset!}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -299,6 +319,8 @@ export default function DocumentsPage() {
                                             t={t}
                                             handleStatusChange={handleStatusChange}
                                             handleDelete={handleDelete}
+                                            onPreview={() => setPreviewAsset({ id: doc._id, filename: doc.filename })}
+                                            onManageRelationships={() => setRelationshipAsset(doc)}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -312,7 +334,7 @@ export default function DocumentsPage() {
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, refresh }: any) {
     const { toast } = useToast();
     return (
         <DropdownMenu>
@@ -323,6 +345,18 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, refresh }: any)
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-xl border-slate-100">
                 <DropdownMenuLabel className="text-xs text-slate-400">{t('table.actions')}</DropdownMenuLabel>
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-teal-600 focus:text-teal-600 focus:bg-teal-50"
+                    onClick={onPreview}
+                >
+                    <Eye size={14} /> {t('actions.preview') || 'Ver Transcripción/PDF'}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer"
+                    onClick={onManageRelationships}
+                >
+                    <Link2 size={14} /> {t('actions.relationships') || 'Vincular Documentos'}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer"
                     onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}

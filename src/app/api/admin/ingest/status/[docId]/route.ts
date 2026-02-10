@@ -22,15 +22,9 @@ export async function GET(
         }
 
         const { getTenantCollection } = await import('@/lib/db-tenant');
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
-        }
-
-        const collection = await getTenantCollection('knowledge_assets');
+        const collection = await getTenantCollection('knowledge_assets', session);
         const asset = await collection.findOne({
-            _id: new ObjectId(docId),
-            tenantId // Ensure the asset belongs to the user's tenant
+            _id: new ObjectId(docId)
         });
 
         if (!asset) {

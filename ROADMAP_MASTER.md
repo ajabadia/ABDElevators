@@ -6,12 +6,12 @@
 
 - **Status & Metrics (v4.2.0 - ENTERPRISE ERA)**
 - **Global Progress:** 100% (Architecture Pivot complete).
-- **Industrialization Progress:** 100% (Phases 101-111 VERIFIED SUCCESS).
+- **Industrialization Progress:** 100% (Phases 101-112 VERIFIED SUCCESS).
 - **UX Transformation:** 100% (Phase 96 COMPLETADA).
-- **Enterprise SaaS Ready:** 80% (Phase 120.1, 120.3, 120.4, 110, 111 COMPLETADA 🛡️).
-- **Core Status:** 100% (High-Availability Industrial Grade).
-- **Recent Ship:** Interactive Sandbox Demo (Public), Magic Links Authentication (Passwordless), Advanced Checklist Configs & i18n Multi-tier Cache.
-- **Project Status:** **High-Performance Industrial Platform (v4.2.1 - Enterprise SaaS Evolution).**
+- **Enterprise SaaS Ready:** 90% (Phases 120, 112, 111, 81 COMPLETADA 🛡️).
+- **Core Status:** 100% (Resilient Ingestion Pipeline).
+- **Recent Ship:** Resilient Ingestion State Machine (DLQ + Stuck Detection), Advanced Document Relationships (Knowledge Graph), Secure Inline PDF Preview, Magic Links Authentication.
+- **Project Status:** **High-Performance Industrial Platform (v4.3.0 - Resilient Enterprise Ingestion).**
 
 ---
 
@@ -23,6 +23,7 @@
 - [X] **Feature Flags**: Manager implementado para control de despliegue.
 - [X] **Admin Refactor**: Dashboard modularizado y auditoría optimizada (Phase 105 ✅).
 - [X] **Active Multi-Vertical**: Domain Router & Industry-segregated retrieval (Phase 101.1 ✅).
+- [X] **Ingestion Stabilization**: Propagación de sesión en workers para evitar fallos de aislamiento (Phase 81.5 ✅).
 
 ---
 
@@ -103,6 +104,8 @@
 - [X] **Backend API:** `/api/sandbox/chat` con inyección de contexto demo y modelo `gemini-1.5-flash`.
 - [X] **Security:** Sin acceso a datos reales de tenants, rate limiting por IP, sin persistencia de conversaciones.
 
+---
+
 #### 🔐 FASE 111: MAGIC LINKS AUTHENTICATION (COMPLETADO ✅)
 **Objetivo:** Autenticación passwordless mediante enlaces mágicos por email.
 
@@ -111,8 +114,48 @@
 - [X] **Verification Page:** `/auth-pages/magic-link/verify` con estados de carga, éxito y error.
 - [X] **Login UI:** Toggle entre "Password" y "Magic Link" modes en `/login` con animaciones Framer Motion.
 - [X] **i18n:** Claves traducidas en ES/EN para toda la experiencia de usuario.
-- [X] **Security:** Tokens de 64-char hex, expiración 15 min, single-use, rate limiting AUTH tier, email enumeration protection.
+- [X] **Security:** Tokens of 64-char hex, expiración 15 min, single-use, rate limiting AUTH tier, email enumeration protection.
 - [X] **Database:** Colección `magic_links` en auth DB con campos `email`, `token`, `expiresAt`, `used`, `ip`, `userId`.
+
+---
+
+#### ⚙️ FASE 112: STATE MACHINE & ERROR RECOVERY (COMPLETADO ✅)
+**Objetivo:** Implementar una canalización de ingesta resiliente con validación de estados de grado bancario y recuperación automatizada.
+
+- [X] **State Machine Validation:** Transiciones estrictas PENDING → QUEUED → PROCESSING → COMPLETED/FAILED con auditoría de integridad SHA-256.
+- [X] **Dead Letter Queue (DLQ):** Almacenamiento persistente de trabajos fallidos para revisión manual y re-ejecución (`DeadLetterQueue.ts`).
+- [X] **Stuck Job Detection:** Monitor de salud para detectar procesos bloqueados (> 30 min) y forzar recuperación (`StuckDetector.ts`).
+- [X] **Vercel Cron Integration:** Despliegue de scripts de mantenimiento periódico (`/api/cron/stuck-jobs`).
+- [X] **Code Refactoring:** Unificación de lógica de preparación en `IngestPreparer` eliminando 53 líneas de código duplicado.
+
+---
+
+### 🚧 FUTURE PHASES (PENDING DEVELOPMENT)
+
+#### 🕸️ FASE FUTURA: GRAPH RAG - KNOWLEDGE GRAPH RETRIEVAL
+**Objetivo:** Implementar retrieval basado en grafos de conocimiento como alternativa a RAG vectorial.
+**Estado:** Experimental - Código pendiente en `src/services/pendientes/graph-rag/`
+**Prioridad:** Media (cuando vector RAG alcance sus límites de precisión)
+
+**Componentes:**
+- [ ] **Neo4j Infrastructure:** Provisionar Neo4j Cloud o instancia self-hosted
+- [ ] **Entity Extraction:** Reactivar `graph-extraction-service.ts` (extracción de entidades/relaciones con Gemini)
+- [ ] **Graph Retrieval:** Reactivar `graph-retrieval-service.ts` (queries por traversal de grafo)
+- [ ] **Integration:** Activar path `graphMode === 'GRAPH_ONLY'` en `lib/rag-service.ts:201`
+- [ ] **Hybrid Mode:** Combinar vector similarity + graph traversal para resultados enriquecidos
+- [ ] **Performance Testing:** Benchmarks Neo4j vs. Vector DB en escenarios reales
+
+**Beneficios Esperados:**
+- Navegación de relaciones explícitas (ej: "¿Qué ascensores instaló Técnico López?")
+- Contexto multi-hop (ej: "¿Qué edificios usan motores del mismo proveedor que Torre Central?")
+- Reducción de alucinaciones en queries relacionales complejas
+
+**Referencias:**
+- Documentación: `src/services/pendientes/graph-rag/README.md`
+- Paper: https://arxiv.org/abs/2404.16130
+- Test Script: `scripts/verify-graph-rag.ts`
+
+
 
 ---
 
@@ -481,8 +524,9 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 - [X] **2FA (Two-Factor Authentication)**: Implementación de TOTP (Authenticator) / SMS backup (Fase 107 ✅). <!-- ref: Documentación/07/roadmap-detallado.md:108 -->
 - [X] **Swagger/OpenAPI Portal**: Interfaz interactiva para desarrolladores en `/admin/api-docs` (Fase 108 ✅). <!-- ref: Documentación/07/mejoras-tecnicas.md:269 -->
-- [ ] **Document Relationships**: Motor de vinculación lógica ("A anula B", "X es compatible con Y"). <!-- ref: Documentación/09/gaps funcionales.md:27 -->
-- [ ] **Inline PDF Secure Preview**: Visualización in-browser sin descarga temporal. <!-- ref: Documentación/09/gaps funcionales.md:30 -->
+- [X] **Document Relationships**: Motor de vinculación lógica ("A anula B", "X es compatible con Y") (Phase 81 ✅). <!-- ref: Documentación/09/gaps funcionales.md:27 -->
+- [X] **Inline PDF Secure Preview**: Visualización in-browser sin descarga temporal (Phase 81 ✅). <!-- ref: Documentación/09/gaps funcionales.md:30 -->
+- [X] **Ingestion Pipeline Fix**: Resolución de contexto de sesión en `IngestService` y `PromptService` (Phase 81.5 ✅).
 - [ ] **Scheduled Review Dates**: Fechas de caducidad y alertas de revisión para manuales técnicos. <!-- ref: Documentación/09/gaps funcionales.md:28 -->
 
 #### 📊 FASE 82: COLABORACIÓN & DASHBOARD PROACTIVO
@@ -612,18 +656,45 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     -   [X] Mandatory MFA para roles ADMIN/SUPERADMIN.
     -   [X] Soporte fundamentos para SSO OIDC/SAML por tenant.
     -   [X] Guardian "Policy as Code" y auditoría de cambios de rol.
+    -   [ ] **Secret Management**: Migración de credenciales sensibles a Vault/Secret Manager y rotación documentada. <!-- ref: 2001.txt:133 -->
+    -   [ ] **Security Headers Hardening**: HSTS, CSP Strict y sanitización de inputs JSON. <!-- ref: 2001.txt:136 -->
 -   [ ] **120.2: Smart Billing & Usage Quotas (NEXT 🚀)**
-    -   [ ] Integración con Stripe (Checkouts/Portal).
-    -   [ ] Modelo de tiers (BASIC/PRO/ENTERPRISE) con Entitlements dinámicos.
-    -   [ ] Hard enforcement de límites (tokens, storage, searches) vía `UsageService`.
+    -   [ ] **Unified Subscription Model**: Schema `TenantSubscription` con estados (trial, active, past_due, canceled). <!-- ref: 2001.txt:235 -->
+    -   [ ] **Stripe Integration**: `BillingService` para Checkout, Portal y gestión de Webhooks. <!-- ref: 2001.txt:280 -->
+    -   [ ] **Tenant Limits Engine**: Servicio `TenantLimitsService` para cálculo de cuotas efectivas (Plan + Overrides). <!-- ref: 2001.txt:324 -->
+    -   [ ] **Hard Usage Enforcement**: Bloqueo de Ingest/RAG en `AccessControlService` al superar límites. <!-- ref: 2001.txt:356 -->
+    -   [ ] **Billing UI**: Panel de administración de suscripción y visualización de consumo en Dashboard. <!-- ref: 2001.txt:313 -->
 -   [X] **120.3: Deep Observability & Reliability** (Phase 120.3 ✅)
     -   [X] Implementación de OpenTelemetry SDK (Custom Spans).
     -   [X] Dashboards de SLIs/SLOs de respuesta RAG (`/api/admin/observability/slis`).
     -   [X] Drills automatizados de backup/restore para MongoDB.
+    -   [ ] **Health Check Endpoints**: Implementar `/api/_health` y `/api/_ready` para k8s reliability. <!-- ref: 2001.txt:488 -->
 -   [X] **120.4: B2B Experience & ROI Visibility** (Phase 120.4 ✅)
     -   [X] Onboarding Wizard completo para nuevos Tenants.
     -   [X] Business Dashboards (ROI, Ahorro, Calidad RAG) con Chart.js.
     -   [X] Explainable AI Governance UI (Decision Tracing).
+
+
+- [X] **120.4: B2B Experience & ROI Visibility** (Phase 120.4 ✅)
+    -   [X] Onboarding Wizard completo para nuevos Tenants.
+    -   [X] Business Dashboards (ROI, Ahorro, Calidad RAG) con Chart.js.
+    -   [X] Explainable AI Governance UI (Decision Tracing).
+
+#### 👤 FASE 125: SPACES & SMART STORAGE (NEXT 🚀)
+**Objetivo:** Implementar arquitectura de "Espacios" (Tenant vs Personal) y optimización de almacenamiento.
+**Referencia:** [Doc 2101.txt](file:///d:/desarrollos/ABDElevators/Documentación/21/2101.txt)
+
+-   [ ] **125.1: Smart Storage & Deduplication (MD5)**
+    -   [ ] **FileBlob Entity**: Separación física (Blob) de lógica (Asset) para ahorro de storage. <!-- ref: 2101.txt:469 -->
+    -   [ ] **Ingest Deduplication**: Check de MD5 antes de upload para reutilizar blobs existentes. <!-- ref: 2101.txt:440 -->
+-   [ ] **125.2: Spaces Architecture (Tenant & User)**
+    -   [ ] **Space Concept**: Abstracción de "Espacio" como contenedor de assets.
+    -   [ ] **Tenant Space (Shared)**: Espacio compartido por defecto (comportamiento actual).
+    -   [ ] **User Space (Personal)**: Extensión de `knowledge_assets` con `scope="USER"` y `ownerUserId`. <!-- ref: 2101.txt:28 -->
+    -   [ ] **Personal Doc Management**: UI/API para subir y gestionar documentos en espacio personal. <!-- ref: 2101.txt:110 -->
+-   [ ] **125.3: Personal Collections & Quick Q&A**
+    -   [ ] **User Collections**: Agrupación lógica de assets personales (Notebooks). <!-- ref: 2101.txt:230 -->
+    -   [ ] **Quick Q&A (Ephemeral Mode)**: Chat "Subir y Preguntar" sin persistencia obligatoria de assets. <!-- ref: 2101.txt:766 -->
 
 #### ⚙️ FASE 97: MULTI-VERTICAL WORKFLOW ENGINE (COMPLETADO ✅)
 **Objetivo:** Permitir la orquestación de procesos complejos validados por RAG.

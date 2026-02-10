@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
+import { logClientEvent } from "@/lib/logger-client";
 
 interface UnifiedIngestModalProps {
     isOpen: boolean;
@@ -132,25 +133,27 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                 throw new Error(data.error?.message || data.message || t('status.error'));
             }
 
-            const isDedup = data.isCloned || data.isDuplicate;
-            setDeduplicated(!!isDedup);
+            // Success state is now manual close
+            setIsUploading(false);
             setUploadSuccess(true);
+            setDeduplicated(data.isDuplicate || false);
 
             toast({
-                title: isDedup ? t('status.duplicate') : t('status.success'),
-                description: isDedup ? t('status.duplicate_desc') : t('status.success_desc'),
+                title: data.isDuplicate ? t('status.duplicate') : t('status.success'),
+                description: data.isDuplicate ? t('status.duplicate_desc') : t('status.success_desc'),
                 variant: 'default',
-                className: isDedup
+                className: data.isDuplicate
                     ? "bg-indigo-50 border-indigo-200 text-indigo-800"
                     : "bg-emerald-50 border-emerald-200 text-emerald-800"
             });
 
-            onSuccess?.();
-
-            setTimeout(() => {
-                onClose();
-                resetForm();
-            }, 2500);
+            logClientEvent({
+                level: 'INFO',
+                source: 'UI_INGEST',
+                action: 'UPLOAD_SUCCESS',
+                message: `File ${file.name} uploaded successfully`,
+                details: { docId: data.docId, isDuplicate: data.isDuplicate }
+            });
         } catch (error: any) {
             console.error('Upload error:', error);
             toast({
@@ -371,24 +374,40 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                     )}
 
                     <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="ghost" onClick={onClose} disabled={isUploading} className="text-slate-500">
-                            {t('actions.cancel')}
-                        </Button>
                         <Button
-                            className="bg-teal-600 hover:bg-teal-700 text-white min-w-[160px] shadow-lg shadow-teal-600/20"
-                            disabled={!file || !tipo || isUploading || uploadSuccess}
-                            onClick={handleUpload}
+                            variant="ghost"
+                            onClick={onClose}
+                            disabled={isUploading}
+                            className="text-slate-500"
                         >
-                            {isUploading ? (
-                                <div className="flex flex-col items-center">
-                                    <div className="flex items-center">
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        <span>{t('status.uploading')}</span>
-                                    </div>
-                                    <span className="text-[9px] font-normal opacity-70 mt-0.5">{t('status.processing_note')}</span>
-                                </div>
-                            ) : t('actions.submit')}
+                            {uploadSuccess ? t('actions.close') || 'Cerrar' : t('actions.cancel')}
                         </Button>
+                        {!uploadSuccess && (
+                            <Button
+                                className="bg-teal-600 hover:bg-teal-700 text-white min-w-[160px] shadow-lg shadow-teal-600/20"
+                                disabled={!file || !tipo || isUploading}
+                                onClick={handleUpload}
+                            >
+                                {isUploading ? (
+                                    <div className="flex flex-col items-center">
+                                        <div className="flex items-center">
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>{t('status.uploading')}</span>
+                                        </div>
+                                        <span className="text-[9px] font-normal opacity-70 mt-0.5">{t('status.processing_note')}</span>
+                                    </div>
+                                ) : t('actions.submit')}
+                            </Button>
+                        )}
+                        {uploadSuccess && (
+                            <Button
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[160px] shadow-lg shadow-emerald-600/20"
+                                onClick={onClose}
+                            >
+                                <CheckCircle2 size={18} className="mr-2" />
+                                {t('actions.done') || 'Finalizar'}
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

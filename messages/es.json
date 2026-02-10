@@ -142,6 +142,8 @@
             "new": "Nuevo Documento",
             "retry": "Reintentar Ingesta",
             "download": "Ver / Descargar",
+            "preview": "Vista Previa",
+            "relationships": "Relaciones",
             "delete": "Eliminar Permanente",
             "mark_active": "Marcar Vigente",
             "mark_obsolete": "Marcar Obsoleto",
@@ -494,7 +496,9 @@
         },
         "actions": {
             "cancel": "Cancelar",
-            "submit": "Subir e Indexar"
+            "submit": "Subir e Indexar",
+            "done": "Finalizado",
+            "close": "Cerrar"
         }
     },
     "rag_eval": {
