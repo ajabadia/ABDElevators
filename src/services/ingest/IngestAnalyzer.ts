@@ -3,6 +3,7 @@ import { analyzePDFVisuals } from '@/lib/llm';
 import { PromptService } from '@/lib/prompt-service';
 import { callGeminiMini, extractModelsWithGemini } from '@/lib/llm';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { logEvento } from '@/lib/logger';
 
 /**
  * IngestAnalyzer: Handles content extraction and semantic processing (Phase 105 Hygiene).
@@ -15,14 +16,46 @@ export class IngestAnalyzer {
         const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
 
         // 1. Extraction
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_ANALYZER',
+            action: 'EXTRACTION_START',
+            message: `Extracting text and visuals from document...`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
         const [rawText, visualFindings] = await Promise.all([
             extractTextAdvanced(buffer),
             analyzePDFVisuals(buffer, asset.tenantId, correlationId)
         ]);
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_ANALYZER',
+            action: 'EXTRACTION_SUCCESS',
+            message: `Extraction complete. Text length: ${rawText.length}, Visual elements: ${visualFindings.length}`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
 
         // 2. Domain Detection (Regla de Oro #4: Prompts from DB) - Already has observability
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_ANALYZER',
+            action: 'DOMAIN_DETECTION_START',
+            message: `Detecting document industry/domain...`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
         const { DomainRouterService } = await import('@/services/domain-router-service');
         const detectedIndustry = await DomainRouterService.detectIndustry(rawText, asset.tenantId, correlationId, session);
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_ANALYZER',
+            action: 'DOMAIN_DETECTION_SUCCESS',
+            message: `Domain detected: ${detectedIndustry}`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
 
         // 3. Language Detection - Phase 2: Add observability
         const langSpan = IngestTracer.startLanguageDetectionSpan({

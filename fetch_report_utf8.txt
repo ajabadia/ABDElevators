@@ -1,0 +1,4 @@
+﻿Testing fetch for: https://res.cloudinary.com/ds81rqpk4/raw/upload/v1770726971/abd-rag-platform/tenants/abd_global/documentos-rag/1770726969192_Real%20Decreto%20203-2016%20-%20BOE-A-2016-4953-consolidado.pdf
+Status: 401
+Status Text: Unauthorized
+OK: false

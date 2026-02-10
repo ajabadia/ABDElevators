@@ -68,7 +68,7 @@ export class BlobGarbageCollector {
 
             // Filter by grace period
             const now = Date.now();
-            const deletableBlobsblobs = orphans.filter((blob) => {
+            const deletableBlobs = orphans.filter((blob) => {
                 const age = now - blob.lastAccessedAt.getTime();
                 return age > GC_CONFIG.GRACE_PERIOD_MS;
             });

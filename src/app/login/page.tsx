@@ -69,6 +69,7 @@ export default function LoginPage() {
         setError("");
 
         try {
+            console.log("🔐 [LOGIN] Attempting signIn with:", { email, hasMfaCode: !!mfaCode });
             const result = await signIn("credentials", {
                 email,
                 password,
@@ -76,69 +77,71 @@ export default function LoginPage() {
                 redirect: false,
             });
 
+            console.log("📡 [LOGIN] signIn result summary:", {
+                ok: result?.ok,
+                error: result?.error,
+                url: result?.url,
+                code: (result as any)?.code
+            });
 
-            if (result?.ok) {
-                console.log("✅ [CLIENT] signIn.ok, fetching session...");
-                // Verificar si es una sesión parcial (MFA Pendiente)
-                let session = await getSession();
-                console.log("👤 [CLIENT] Initial session:", session);
+            // 1. Check session for mfaPending BEFORE handling errors (Auditoría v4.2)
+            const session = await getSession();
+            console.log("🤝 [LOGIN] Current Session state:", session ? `User: ${session.user?.email} | mfaPending: ${(session.user as any)?.mfaPending}` : "No Session");
 
-                // Pequeño reintento por si la cookie tarda en propagarse
-                // Retry loop with exponential backoff for session propagation
-                // Total wait time: ~2s (200 + 400 + 600 + 800)
-                if (!session?.user?.mfaPending) {
-                    const delays = [200, 400, 600, 800];
-                    for (const delay of delays) {
-                        console.log(`⏳ [CLIENT] Session not synced, retrying in ${delay}ms...`);
-                        await new Promise(r => setTimeout(r, delay));
-                        session = await getSession();
-                        if (session?.user?.mfaPending) {
-                            console.log("✅ [CLIENT] Session synced!");
-                            break;
-                        }
-                    }
-                }
-                console.log("👤 [CLIENT] Final session state:", session);
-
-                if (session?.user?.mfaPending) {
-                    console.log("🔒 [CLIENT] MFA_PENDING detected, showing challenge");
-                    setRequiresMfa(true);
-                    setError("");
-                    setIsLoading(false);
-                    return;
-                }
-
-                // SECURITY: Solo redirigir si tenemos sesión y NO hay MFA pendiente
-                if (session?.user) {
-                    console.log("🚀 [CLIENT] No MFA required, redirecting to admin...");
-                    router.push("/admin/knowledge-assets");
-                    router.refresh();
-                    return;
-                }
-
-                // Si llegamos aquí y ok era true pero no hay sesión, algo raro pasa
-                console.warn("⚠️ [CLIENT] signIn.ok but session is still null. Propagation delay?");
-                setError(t('error_session_sync'));
+            if (session?.user && (session.user as any).mfaPending) {
+                console.log("🔒 [LOGIN] Session detected with mfaPending: true. Switching to MFA mode.");
+                setRequiresMfa(true);
+                setMfaCode("");
+                setError("");
                 setIsLoading(false);
+                return; // SUCCESS path (Pending MFA)
+            }
+
+            // ⚠️ DEFENSIVE: Priority check for errors
+            if (result?.error) {
+                // MEGA ERROR TRACE: Dump everything for debugging
+                console.log("🔍 [LOGIN] MEGA ERROR TRACE:", JSON.stringify(result, null, 2));
+
+                const errorCode = (result as any).code || result.error;
+
+                // Handle legacy or explicit error codes if they happen to bypass normalization
+                if (errorCode === "MFA_REQUIRED" || errorCode?.includes("MFA_REQUIRED")) {
+                    setRequiresMfa(true);
+                    setMfaCode("");
+                    setError("");
+                    return;
+                }
+
+                if (errorCode === "INVALID_MFA_CODE" || errorCode?.includes("INVALID_MFA_CODE")) {
+                    setError(t('error_mfa'));
+                    return;
+                }
+
+                if (errorCode === "INVALID_MAGIC_LINK" || errorCode?.includes("INVALID_MAGIC_LINK")) {
+                    setError("El enlace mágico es inválido o ha expirado.");
+                    return;
+                }
+
+                // If we get "credentials" error but we didn't find mfaPending session above, treat as failure
+                console.error("❌ [LOGIN] Auth failed with error:", errorCode);
+                setError(errorCode === 'credentials' ? t('error_invalid') : `${t('error_invalid')} (${errorCode})`);
                 return;
             }
 
-            if (result?.error) {
-                const errorCode = (result as any).code || result.error;
-                if (errorCode?.includes("MFA_REQUIRED")) {
-                    setRequiresMfa(true);
-                    setError("");
-                } else if (errorCode?.includes("INVALID_MFA_CODE")) {
-                    setError(t('error_mfa'));
-                } else {
-                    setError(t('error_invalid'));
-                }
-            } else {
+            if (result?.ok) {
+                console.log("🚀 [LOGIN] Full success detected! Redirecting to dashboard...");
                 router.push("/admin/knowledge-assets");
                 router.refresh();
+                return;
             }
-        } catch (err) {
-            setError(t('error_generic'));
+
+            if (!result?.ok) {
+                console.warn("⚠️ [LOGIN] SignIn returned not OK without error code.");
+                setError(t('error_invalid'));
+            }
+        } catch (err: any) {
+            console.error("💥 [LOGIN] Fatal error in handleCredentialsLogin:", err);
+            setError(`${t('error_generic')} Check console.`);
         } finally {
             setIsLoading(false);
         }

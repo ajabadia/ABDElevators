@@ -1,12 +1,18 @@
 import Stripe from 'stripe';
 import { PLANS, PlanTier } from './plans';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error('STRIPE_SECRET_KEY is missing');
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+
+if (!stripeKey) {
+    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE?.includes('build')) {
+        throw new Error('STRIPE_SECRET_KEY is missing');
+    } else {
+        console.warn('⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.');
+    }
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-01-27' as any, // Using the latest or compatible version
+export const stripe = new Stripe(stripeKey || 'sk_test_dummy', {
+    apiVersion: '2025-01-27' as any,
     appInfo: {
         name: 'ABDElevators RAG Platform',
         version: '4.1.0',

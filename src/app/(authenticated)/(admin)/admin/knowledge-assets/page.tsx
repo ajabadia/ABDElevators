@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import {
     Plus, Search, Filter, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
-    Archive, ShieldOff, RotateCw, Link2, Eye
+    Archive, ShieldOff, RotateCw, Link2, Eye, Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
 import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal";
 import { RelationshipManagerModal } from "@/components/admin/knowledge/RelationshipManagerModal";
+import { IngestionDiagnosticModal } from "@/components/admin/knowledge/IngestionDiagnosticModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,26 +44,45 @@ import { Layers, Database, History } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 import { KnowledgeAsset, AssetStatus, IngestionStatus } from "@/types/knowledge";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function DocumentsPage() {
+export default function KnowledgeAssetsPage() {
     const { toast } = useToast();
     const t = useTranslations('knowledge_assets');
+    const tCommon = useTranslations('common');
     const [searchTerm, setSearchTerm] = useState("");
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [previewAsset, setPreviewAsset] = useState<{ id: string, filename: string } | null>(null);
     const [relationshipAsset, setRelationshipAsset] = useState<KnowledgeAsset | null>(null);
+    const [diagnosticAsset, setDiagnosticAsset] = useState<{ id: string, filename: string } | null>(null);
+
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const limit = 10;
 
     // 1. Fetching with useApiList
     const {
         data: documents,
         isLoading,
         refresh,
-        setData
+        setData,
+        total
     } = useApiList<KnowledgeAsset>({
         endpoint: '/api/admin/knowledge-assets',
-        filters: { search: searchTerm },
+        filters: {
+            search: searchTerm,
+            skip: (page - 1) * limit,
+            limit: limit
+        },
         dataKey: 'assets'
     });
+
+    // Reset to page 1 on search
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm]);
+
+    const totalPages = Math.ceil((total || 0) / limit);
 
     // ... perceptual optimization ...
     const { updateOptimistic, deleteOptimistic } = useApiOptimistic(documents, setData);
@@ -140,7 +160,7 @@ export default function DocumentsPage() {
                 actions={
                     <Button
                         onClick={() => setIsUploadOpen(true)}
-                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 gap-2 px-6"
                     >
                         <Plus size={18} />
                         {t('actions.new')}
@@ -172,34 +192,41 @@ export default function DocumentsPage() {
                 asset={relationshipAsset!}
             />
 
+            <IngestionDiagnosticModal
+                isOpen={!!diagnosticAsset}
+                onClose={() => setDiagnosticAsset(null)}
+                assetId={diagnosticAsset?.id || ""}
+                filename={diagnosticAsset?.filename || ""}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <MetricCard
                     title={t('metrics.active')}
                     value={stats.active}
                     icon={<Layers className="w-5 h-5" />}
-                    color="teal"
+                    color="primary"
                 />
                 <MetricCard
                     title={t('metrics.indexed')}
                     value={stats.totalChunks}
                     icon={<Database className="w-5 h-5" />}
-                    color="blue"
+                    color="primary"
                 />
                 <MetricCard
                     title={t('metrics.last_ingest')}
                     value={stats.lastIngest}
                     icon={<History className="w-5 h-5" />}
-                    color="slate"
+                    color="primary"
                 />
             </div>
 
             <ContentCard>
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                         <Input
                             placeholder={t('search_placeholder')}
-                            className="pl-10 border-slate-200 focus:ring-teal-500/20"
+                            className="pl-10 border-border focus:ring-primary/20"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -210,11 +237,11 @@ export default function DocumentsPage() {
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow>
-                                <TableHead className="w-[35%] font-bold text-slate-900">{t('table.document')}</TableHead>
-                                <TableHead className="w-[20%] font-bold text-slate-900">{t('table.type_model')}</TableHead>
-                                <TableHead className="w-[15%] font-bold text-slate-900">{t('table.status')}</TableHead>
-                                <TableHead className="w-[15%] font-bold text-slate-900">{t('table.chunks')}</TableHead>
-                                <TableHead className="w-[15%] font-bold text-slate-900 text-right">{t('table.actions')}</TableHead>
+                                <TableHead className="w-[35%] font-bold text-foreground">{t('table.document')}</TableHead>
+                                <TableHead className="w-[20%] font-bold text-foreground">{t('table.type_model')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-foreground">{t('table.status')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-foreground">{t('table.chunks')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-foreground text-right">{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -238,11 +265,11 @@ export default function DocumentsPage() {
                                                 <FileText size={18} />
                                             </div>
                                             <div className="max-w-[200px]">
-                                                <p className="text-slate-900 font-semibold truncate" title={doc.filename}>
+                                                <p className="text-foreground font-semibold truncate" title={doc.filename}>
                                                     {doc.filename}
                                                 </p>
-                                                <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tight">
-                                                    {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()}
+                                                <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-tight">
+                                                    {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()} {new Date(doc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
                                         </div>
@@ -258,18 +285,18 @@ export default function DocumentsPage() {
                                     <TableCell className="w-[15%]">
                                         <div className="flex flex-col gap-1">
                                             {doc.ingestionStatus === 'PENDING' && (
-                                                <Badge className="bg-slate-100 text-slate-500 border-slate-200 gap-1 animate-pulse">
+                                                <Badge variant="secondary" className="gap-1 animate-pulse">
                                                     <Clock size={12} /> {t('status.pending')}
                                                 </Badge>
                                             )}
                                             {doc.ingestionStatus === 'PROCESSING' && (
-                                                <div className="space-y-1 w-24">
-                                                    <div className="flex justify-between text-[10px] text-teal-600 font-bold">
+                                                <div className="space-y-1 w-24" aria-live="polite">
+                                                    <div className="flex justify-between text-[10px] text-primary font-bold">
                                                         <span>{doc.progress}%</span>
                                                     </div>
-                                                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                                                         <div
-                                                            className="bg-teal-500 h-full transition-all duration-500"
+                                                            className="bg-primary h-full transition-all duration-500"
                                                             style={{ width: `${doc.progress}%` }}
                                                         ></div>
                                                     </div>
@@ -304,11 +331,11 @@ export default function DocumentsPage() {
                                     </TableCell>
                                     <TableCell className="w-[15%]">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold text-slate-900">{doc.totalChunks}</span>
-                                            <div className="flex-1 max-w-[40px] h-1 bg-slate-100 rounded-full overflow-hidden">
+                                            <span className="text-sm font-semibold text-foreground">{doc.totalChunks}</span>
+                                            <div className="flex-1 max-w-[40px] h-1 bg-muted rounded-full overflow-hidden">
                                                 <div
-                                                    className="bg-teal-500 h-full transition-all duration-1000"
-                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 200) * 100)}%` }}
+                                                    className="bg-primary h-full transition-all duration-1000"
+                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 1000) * 100)}%` }}
                                                 ></div>
                                             </div>
                                         </div>
@@ -321,6 +348,7 @@ export default function DocumentsPage() {
                                             handleDelete={handleDelete}
                                             onPreview={() => setPreviewAsset({ id: doc._id, filename: doc.filename })}
                                             onManageRelationships={() => setRelationshipAsset(doc)}
+                                            onViewDiagnostics={() => setDiagnosticAsset({ id: doc._id, filename: doc.filename })}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -329,12 +357,43 @@ export default function DocumentsPage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-6 border-t border-border pt-6">
+                        <p className="text-xs text-muted-foreground">
+                            {tCommon('pagination.total_items', { total: total || 0 })}
+                        </p>
+                        <div className="flex items-center gap-4">
+                            <p className="text-xs font-medium text-muted-foreground">
+                                {tCommon('pagination.page_info', { current: page, total: totalPages })}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1 || isLoading}
+                                >
+                                    <ChevronLeft size={14} />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages || isLoading}
+                                >
+                                    <ChevronRight size={14} />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </ContentCard>
         </PageContainer>
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, refresh }: any) {
     const { toast } = useToast();
     return (
         <DropdownMenu>
@@ -350,6 +409,12 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     onClick={onPreview}
                 >
                     <Eye size={14} /> {t('actions.preview') || 'Ver Transcripción/PDF'}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-primary focus:text-primary focus:bg-primary/5"
+                    onClick={onViewDiagnostics}
+                >
+                    <Activity size={14} /> {t('actions.diagnostics') || 'Ver Diagnóstico de Ingesta'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer"

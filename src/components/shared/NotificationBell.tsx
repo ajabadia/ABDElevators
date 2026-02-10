@@ -20,6 +20,7 @@ export function NotificationBell() {
     const [mounted, setMounted] = useState(false);
 
     const fetchNotifications = async () => {
+        if (!mounted) return;
         try {
             const res = await fetch('/api/notifications');
             if (res.ok) {
@@ -27,7 +28,12 @@ export function NotificationBell() {
                 setNotifications(data.notifications || []);
             }
         } catch (error) {
-            console.error('Error fetching notifications:', error);
+            // Only log if it's not a standard network failure that might happen on page refresh
+            if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                console.warn('[NotificationBell] Connection lost or fetch aborted');
+            } else {
+                console.error('Error fetching notifications:', error);
+            }
         } finally {
             setLoading(false);
         }

@@ -17,6 +17,7 @@ export class SessionService {
         ip: string;
         userAgent: string;
     }): Promise<string> {
+        console.log(`🤝 [SESSION_SERVICE] Creating session for ${payload.email}...`);
         const db = await connectAuthDB();
         const sessions = db.collection('sessions');
 
@@ -35,8 +36,21 @@ export class SessionService {
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
         };
 
-        const result = await sessions.insertOne(UserSessionSchema.parse(newSession));
-        return result.insertedId.toString();
+        try {
+            console.log(`🧪 [SESSION_SERVICE] Validating UserSessionSchema for ${payload.email}...`);
+            const validated = UserSessionSchema.parse(newSession);
+            console.log(`✅ [SESSION_SERVICE] Validation SUCCESS for ${payload.email}`);
+
+            const result = await sessions.insertOne(validated);
+            console.log(`🤝 [SESSION_SERVICE] Inserted session ID: ${result.insertedId}`);
+            return result.insertedId.toString();
+        } catch (error: any) {
+            console.error(`💥 [SESSION_SERVICE] Validation or Insertion FAILED:`, error.message);
+            if (error.name === 'ZodError') {
+                console.error(`🔍 [SESSION_SERVICE] ZodError details:`, JSON.stringify(error.errors, null, 2));
+            }
+            throw error;
+        }
     }
 
     /**

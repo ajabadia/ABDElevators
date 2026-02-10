@@ -1,4 +1,4 @@
-export type IngestionStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type IngestionStatus = 'PENDING' | 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 export type AssetStatus = 'vigente' | 'obsoleto' | 'borrador' | 'archivado' | 'active' | 'obsolete' | 'draft' | 'archived';
 
 export interface KnowledgeAsset {
@@ -17,4 +17,9 @@ export interface KnowledgeAsset {
     updatedAt: string;
     tenantId: string;
     description?: string;
+    relatedAssets?: Array<{
+        targetId: string;
+        type: 'SUPERSEDES' | 'COMPLEMENTS' | 'DEPENDS_ON' | 'AMENDS' | 'RELATED_TO';
+        description?: string;
+    }>;
 }

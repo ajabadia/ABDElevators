@@ -23,7 +23,7 @@ export function ProfilePhotoUpload({
     const [uploading, setUploading] = useState(false);
     const [fotoUrl, setFotoUrl] = useState<string | undefined>(currentPhotoUrl);
     const { data: session, update: updateSession } = useSession();
-    const { setUser } = useProfileStore();
+    const { setUser, user: currentUser } = useProfileStore();
 
     // Sincronizar estado si cambia la prop externamente
     useEffect(() => {
@@ -76,7 +76,7 @@ export function ProfilePhotoUpload({
                 });
 
                 // 2. Actualizar Zustand Store (ya que fetchingProfile lo traerá después, pero esto es inmediato)
-                setUser((prev) => prev ? { ...prev, foto_url: newUrl, foto_cloudinary_id: publicId } : null);
+                setUser(currentUser ? { ...currentUser, foto_url: newUrl, foto_cloudinary_id: publicId } : null);
 
                 // 3. Callback
                 onUploadSuccess?.(newUrl, publicId);

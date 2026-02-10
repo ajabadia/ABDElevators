@@ -16,8 +16,8 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
 
     // Trace path for debugging
-    if (pathname.startsWith('/admin') || pathname === '/dashboard' || pathname === '/search' || pathname === '/settings') {
-        console.error(`🛡️ [MIDDLEWARE] Path: ${pathname}, Session: ${!!session}, MFA Pending: ${session?.user?.mfaPending}`);
+    if (pathname.startsWith('/admin') || pathname === '/dashboard' || pathname === '/search' || pathname === '/settings' || pathname === '/login') {
+        console.log(`🛡️ [MIDDLEWARE] Path: ${pathname} | Session: ${!!session} | User: ${session?.user?.email ?? 'none'} | MFA Verified: ${session?.user?.mfaVerified} | MFA Pending: ${session?.user?.mfaPending}`);
     }
 
     try {

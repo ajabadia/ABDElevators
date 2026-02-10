@@ -14,6 +14,9 @@ if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN
 let redisClient: any;
 
 if (process.env.REDIS_URL) {
+    if (process.env.NODE_ENV === 'development') {
+        console.log('🚀 [REDIS] Usando instancia LOCAL (Socket/IORedis)');
+    }
     const io = new IORedis(process.env.REDIS_URL);
     // Wrapper for compatibility with @upstash/redis API
     redisClient = {
@@ -34,6 +37,9 @@ if (process.env.REDIS_URL) {
         keys: async (pattern: string) => io.keys(pattern)
     };
 } else {
+    if (process.env.NODE_ENV === 'development') {
+        console.log('☁️ [REDIS] Usando instancia CLOUD (Upstash/REST)');
+    }
     redisClient = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL!,
         token: process.env.UPSTASH_REDIS_REST_TOKEN!,

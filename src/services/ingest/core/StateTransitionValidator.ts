@@ -72,7 +72,7 @@ export class StateTransitionValidator {
         if (!allowedTransitions.includes(nextState)) {
             await this.logInvalidTransition(currentState, nextState, context);
             throw new AppError(
-                'INVALID_STATE_TRANSITION',
+                'VALIDATION_ERROR',
                 400,
                 `Invalid transition: ${currentState} -> ${nextState}`
             );

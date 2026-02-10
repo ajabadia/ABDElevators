@@ -14,7 +14,12 @@ export type ErrorCode =
   | 'MISSING_VARIABLES'
   | 'INVITE_ALREADY_USED'
   | 'INVITE_EXPIRED'
-  | 'CONFLICT';
+  | 'CONFLICT'
+  | 'INVALID_USER_ID'
+  | 'USER_NOT_FOUND'
+  | 'USER_UPDATE_FAILED'
+  | 'MFA_ENABLE_FAILED'
+  | 'MFA_DISABLE_FAILED';
 
 export class AppError extends Error {
   constructor(

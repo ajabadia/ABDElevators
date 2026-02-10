@@ -40,7 +40,7 @@ export async function POST(
         }
 
         if (asset.ingestionStatus !== 'FAILED' && asset.ingestionStatus !== 'PENDING') {
-            throw new AppError('INVALID_STATE', 400, `Cannot retry asset in state: ${asset.ingestionStatus}`);
+            throw new AppError('VALIDATION_ERROR', 400, `Cannot retry asset in state: ${asset.ingestionStatus}`);
         }
 
         // 2. Reset Status to PENDING

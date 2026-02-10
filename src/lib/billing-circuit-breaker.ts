@@ -17,10 +17,10 @@ export class BillingCircuitBreaker {
      * @throws ExternalServiceError si el circuito está abierto y no ha expirado.
      */
     static async checkCircuit(): Promise<void> {
-        const state = await redis.get<string>(REDIS_KEY_STATE);
+        const state = await redis.get(REDIS_KEY_STATE) as string | null;
 
         if (state === 'OPEN') {
-            const openedAt = await redis.get<number>(REDIS_KEY_OPENED_AT);
+            const openedAt = await redis.get(REDIS_KEY_OPENED_AT) as number | null;
             const now = Date.now();
 
             if (openedAt && (now - openedAt) < RECOVERY_TIMEOUT_MS) {
@@ -69,7 +69,7 @@ export class BillingCircuitBreaker {
      * Registra un éxito en el servicio, reseteando los fallos.
      */
     static async recordSuccess(): Promise<void> {
-        const failures = await redis.get<number>(REDIS_KEY_FAILURES);
+        const failures = await redis.get(REDIS_KEY_FAILURES) as number | null;
         if (failures && failures > 0) {
             await this.reset();
         }

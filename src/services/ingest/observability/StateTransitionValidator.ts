@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * Phase 3: State Machine & Recovery
  */
 
-export type IngestionState = 'PENDING' | 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type IngestionState = 'PENDING' | 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'STUCK';
 
 interface StateTransition {
     from: IngestionState;
@@ -25,9 +25,10 @@ interface StateTransition {
 const VALID_TRANSITIONS: Record<IngestionState, IngestionState[]> = {
     'PENDING': ['QUEUED', 'FAILED'], // Can queue or fail immediately
     'QUEUED': ['PROCESSING', 'FAILED'], // Can start processing or fail
-    'PROCESSING': ['COMPLETED', 'FAILED', 'PROCESSING'], // Can complete, fail, or retry (idempotent)
+    'PROCESSING': ['COMPLETED', 'FAILED', 'PROCESSING', 'STUCK'], // Can complete, fail, retry, or get stuck
     'COMPLETED': [], // Terminal state (no transitions allowed)
     'FAILED': ['PENDING'], // Can retry from failed (manual override only)
+    'STUCK': ['PENDING', 'FAILED'], // Can retry or mark as permanently failed
 };
 
 export class StateTransitionValidator {
@@ -117,5 +118,42 @@ export class StateTransitionValidator {
      */
     static isValidTransition(from: IngestionState, to: IngestionState): boolean {
         return VALID_TRANSITIONS[from]?.includes(to) || false;
+    }
+
+    /**
+     * Auto-mark asset as STUCK when a transition fails.
+     * This is called by the FSM when an invalid transition is attempted.
+     */
+    static async markAsStuck(
+        docId: string,
+        currentState: IngestionState,
+        attemptedState: IngestionState,
+        correlationId: string,
+        tenantId: string,
+        reason: string
+    ): Promise<void> {
+        const { getTenantCollection } = await import('@/lib/db-tenant');
+        const collection = await getTenantCollection('knowledge_assets');
+
+        await collection.updateOne(
+            { _id: docId as any },
+            {
+                $set: {
+                    ingestionStatus: 'STUCK',
+                    stuckReason: `Invalid transition: ${currentState} -> ${attemptedState}. Reason: ${reason}`,
+                    stuckAt: new Date(),
+                }
+            }
+        );
+
+        await logEvento({
+            level: 'WARN',
+            source: 'STATE_VALIDATOR',
+            action: 'AUTO_MARKED_STUCK',
+            message: `Asset ${docId} auto-marked as STUCK due to invalid transition`,
+            correlationId,
+            tenantId,
+            details: { docId, currentState, attemptedState, reason }
+        });
     }
 }

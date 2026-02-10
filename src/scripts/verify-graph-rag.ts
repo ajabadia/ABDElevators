@@ -11,7 +11,7 @@ process.env.SINGLE_TENANT_ID = 'default_tenant';
 async function verifyGraphRAG() {
     console.log('--- VERIFYING GRAPH-ENHANCED RAG (PHASE 61) ---');
 
-    const { GraphExtractionService } = await import('../services/graph-extraction-service');
+    const { GraphExtractionService } = await import('../services/pendientes/graph-rag/graph-extraction-service');
     const { GraphRetrievalService } = await import('../services/graph-retrieval-service');
     const { hybridSearch } = await import('../lib/rag-service');
     const { v4: uuidv4 } = await import('uuid');

@@ -11,7 +11,7 @@ interface MetricCardProps {
     icon?: React.ReactNode;
     trend?: string;
     trendDirection?: "up" | "down" | "neutral";
-    color?: "blue" | "amber" | "emerald" | "purple" | "teal" | "rose" | "slate";
+    color?: "blue" | "amber" | "emerald" | "purple" | "teal" | "rose" | "slate" | "primary";
     className?: string;
     description?: string;
 }
@@ -34,6 +34,7 @@ export function MetricCard({
         teal: "bg-teal-500/10 text-teal-500",
         rose: "bg-rose-500/10 text-rose-500",
         slate: "bg-slate-100 dark:bg-slate-800 text-slate-500",
+        primary: "bg-primary/10 text-primary",
     };
 
     const TrendIcon = trendDirection === "up" ? TrendingUp : trendDirection === "down" ? TrendingDown : Minus;

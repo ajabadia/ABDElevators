@@ -149,7 +149,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     icon={<Zap size={18} className="text-yellow-500" />}
                                     current={usageStats.usage.tokens}
                                     limit={usageStats.limits.llm_tokens_per_month}
-                                    format={(v) => v.toLocaleString()}
+                                    format={(v: number) => v.toLocaleString()}
                                     status={usageStats.status.tokens}
                                 />
                                 <UsageCard
@@ -165,7 +165,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     icon={<Receipt size={18} className="text-purple-500" />}
                                     current={usageStats.usage.searches}
                                     limit={usageStats.limits.vector_searches_per_month}
-                                    format={(v) => v.toLocaleString()}
+                                    format={(v: number) => v.toLocaleString()}
                                     status={usageStats.status.searches}
                                 />
                                 <UsageCard
@@ -173,7 +173,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     icon={<Building size={18} className="text-slate-500" />}
                                     current={usageStats.usage.apiRequests}
                                     limit={usageStats.limits.api_requests_per_month}
-                                    format={(v) => v.toLocaleString()}
+                                    format={(v: number) => v.toLocaleString()}
                                     status={usageStats.status.apiRequests}
                                 />
                             </>

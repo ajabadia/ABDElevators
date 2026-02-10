@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.31 - ENTERPRISE ERA - v4.2.1)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.31 - ENTERPRISE ERA - v4.2.2)
 
 ## 📖 Overview
 
@@ -10,8 +10,8 @@
 - **UX Transformation:** 100% (Phase 96 COMPLETADA).
 - **Enterprise SaaS Ready:** 90% (Phases 120, 112, 111, 81 COMPLETADA 🛡️).
 - **Core Status:** 100% (Resilient Ingestion Pipeline).
-- **Recent Ship:** Resilient Ingestion State Machine (DLQ + Stuck Detection), Advanced Document Relationships (Knowledge Graph), Secure Inline PDF Preview, Magic Links Authentication.
-- **Project Status:** **High-Performance Industrial Platform (v4.3.0 - Resilient Enterprise Ingestion).**
+- **Recent Ship:** Resilient Ingestion State Machine, Advanced Document Relationships, Auth Reliability v4.2 (State-Driven MFA, Magic Link Fixes).
+- **Project Status:** **High-Performance Industrial Platform (v4.3.1 - Resilient Enterprise Ingestion).**
 
 ---
 
@@ -733,12 +733,12 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [ ] **Advanced Ingestion Workers**: Sistema distribuido de trabajadores para PDFs de gran volumen (>1GB).
 - [ ] **Global Dashboard PRO**: Unificación de métricas de todos los tenants para superadmins.
 
-#### 🔐 FASE 121: AUTH RETROSPECTIVE & HARDENING (FUTURO 🚀)
+#### 🔐 FASE 121: AUTH RETROSPECTIVE & HARDENING (COMPLETADO ✅)
 **Objetivo:** Revisión integral y blindaje de los sistemas de acceso para garantizar máxima resiliencia y seguridad.
 
-- [ ] **Audit MFA Hub:** Revisión de la propagación de sesiones MFA y persistencia en Redis.
-- [ ] **Magic Link Logic Overhaul:** Optimización de redirecciones profundas y estados de error.
-- [ ] **Rate Limiting Intelligence:** Implementación de bloqueos progresivos por IP/Usuario en flujos de auth.
-- [ ] **Session Security:** Blindaje de cookies y tokens JWT contra ataques de sesión.
+- [X] **Audit MFA Hub:** Revisión de la propagación de sesiones MFA y persistencia en Redis (State-Driven MFA).
+- [X] **Magic Link Logic Overhaul:** Optimización de redirecciones, fallback de `tenantId` y estados de error.
+- [X] **Rate Limiting Intelligence:** Implementación de bloqueos progresivos en flujos de auth.
+- [X] **Session Security:** Blindaje de cookies y tokens JWT contra ataques de sesión.
 
 *Updated and Audited on 2026-02-08 by Antigravity v4.1.0 (Skill: roadmap-manager)*

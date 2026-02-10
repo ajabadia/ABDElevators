@@ -126,6 +126,12 @@
             "client": "Cliente",
             "page": "Página {current} de {total}",
             "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
+        },
+        "pagination": {
+            "previous": "Anterior",
+            "next": "Siguiente",
+            "page_info": "Página {current} de {total}",
+            "total_items": "{total} documentos en total"
         }
     },
     "knowledge_assets": {
@@ -147,7 +153,8 @@
             "delete": "Eliminar Permanente",
             "mark_active": "Marcar Vigente",
             "mark_obsolete": "Marcar Obsoleto",
-            "archive": "Archivar"
+            "archive": "Archivar",
+            "diagnostics": "Ver Diagnóstico"
         },
         "table": {
             "document": "Documento",
@@ -260,6 +267,10 @@
         "f15_desc": "Circuito de protección que garantiza la disponibilidad del sistema incluso ante fallos críticos de pasarelas de pago o servicios externos.",
         "f16_title": "Gobernanza de Checklists Avanzada",
         "f16_desc": "Motor de configuración de reglas industriales para validación técnica. Categorización, priorización y aislamiento multi-tenant nativo.",
+        "f17_title": "Máquina de Estados Resiliente",
+        "f17_desc": "Canalización de ingesta blindada con validación de estados de grado bancario, Dead Letter Queue para recuperaciones manuales y auto-detección de procesos bloqueados.",
+        "f18_title": "Autenticación Resiliente (v4.2)",
+        "f18_desc": "Motor de seguridad reforzado con State-Driven MFA para evitar inconsistencias de sesión y fallos críticos en el flujo de credenciales.",
         "learn_more": "Saber más"
     },
     "solutions": {

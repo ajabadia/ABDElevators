@@ -81,6 +81,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
             if (res.ok) {
                 const data = await res.json();
                 setTiposDocs(data.items || []);
+            } else {
+                console.error('Failed to fetch document types:', res.statusText);
             }
         } catch (error) {
             console.error('Error fetching types:', error);
@@ -267,9 +269,9 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                         <SelectValue placeholder={t('fields.placeholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {tiposDocs.map((t) => (
-                                            <SelectItem key={t._id} value={t._id}>
-                                                {t.name}
+                                        {tiposDocs.map((docType) => (
+                                            <SelectItem key={docType._id} value={docType._id}>
+                                                {docType.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

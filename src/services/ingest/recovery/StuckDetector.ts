@@ -33,7 +33,7 @@ export class StuckDetector {
             const stuck = await collection.find({
                 ingestionStatus: 'PROCESSING',
                 updatedAt: { $lt: thresholdDate }
-            }).toArray();
+            });
 
             for (const job of stuck) {
                 const stuckDuration = Date.now() - new Date(job.updatedAt).getTime();
@@ -89,9 +89,10 @@ export class StuckDetector {
                 );
 
                 // Update status to FAILED
-                const collection = await getTenantCollection('knowledge_assets', session, job.tenantId);
+                const collection = await getTenantCollection('knowledge_assets', session, 'MAIN');
+                const { ObjectId } = await import('mongodb');
                 await collection.updateOne(
-                    { _id: job.docId },
+                    { _id: new ObjectId(job.docId) as any },
                     {
                         $set: {
                             ingestionStatus: 'FAILED',

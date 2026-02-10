@@ -8,6 +8,7 @@ import { ObjectId } from 'mongodb';
 import { IngestPreparer } from './ingest/IngestPreparer';
 import { IngestAnalyzer } from './ingest/IngestAnalyzer';
 import { IngestIndexer } from './ingest/IngestIndexer';
+import { getSignedUrl } from '@/lib/cloudinary';
 
 export interface IngestOptions {
     file: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
@@ -56,7 +57,6 @@ export class IngestService {
      * Phase 2 & 3: Heavy Analysis & Indexing (Asynchronous)
      */
     static async executeAnalysis(docId: string, options: Partial<IngestOptions> & { job?: any }): Promise<IngestResult> {
-        const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
         const job = options.job;
 
@@ -67,6 +67,8 @@ export class IngestService {
         if (!asset) {
             throw new AppError('NOT_FOUND', 404, `Knowledge asset ${docId} not found`);
         }
+
+        const correlationId = options.correlationId || asset.correlationId || crypto.randomUUID();
 
         // Construct a technical session for the worker
         const workerSession = {
@@ -97,17 +99,68 @@ export class IngestService {
             await updateProgress(5);
 
             // Fetch from Cloudinary
-            const response = await fetch(asset.cloudinaryUrl);
-            if (!response.ok) throw new Error(`Failed to fetch from Cloudinary: ${response.statusText}`);
+            if (!asset.cloudinaryUrl) {
+                throw new AppError('EXTERNAL_SERVICE_ERROR', 503, `Missing Cloudinary URL for asset ${assetId}. Record may be corrupted.`);
+            }
+
+            // Generate a SIGNED URL for secure internal fetch
+            const signedUrl = getSignedUrl(asset.cloudinaryPublicId || asset.cloudinary_public_id, 'raw');
+
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'FETCH_START',
+                message: `Fetching file from Cloudinary using signed URL...`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+
+            const response = await fetch(signedUrl);
+            if (!response.ok) {
+                throw new Error(`Cloudinary fetch failed: [${response.status} ${response.statusText}] for URL: ${asset.cloudinaryUrl}`);
+            }
             const buffer = Buffer.from(await response.arrayBuffer());
+
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'FETCH_SUCCESS',
+                message: `File fetched successfully (${buffer.length} bytes).`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
 
             await updateProgress(15);
 
             // Step 2: Full Analysis
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'ANALYSIS_START',
+                message: `Starting Document Analysis...`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
             const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession);
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'ANALYSIS_SUCCESS',
+                message: `Analysis complete. Lang: ${analysis.detectedLang}, Industry: ${analysis.detectedIndustry}`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
             await updateProgress(60);
 
             // Step 3: Indexing
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'INDEXING_START',
+                message: `Starting Document Indexing...`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
             const successCount = await IngestIndexer.index(
                 analysis.rawText,
                 analysis.visualFindings,
@@ -119,6 +172,14 @@ export class IngestService {
                 workerSession,
                 updateProgress
             );
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'INDEXING_SUCCESS',
+                message: `Indexing complete. ${successCount} chunks processed.`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
 
             // Final Update
             await knowledgeAssetsCollection.updateOne(
@@ -166,9 +227,13 @@ export class IngestService {
      */
     static async processDocument(options: IngestOptions): Promise<IngestResult> {
         const prep = await this.prepareIngest(options);
+
+        // Ensure options has the correlationId from prep
+        const updatedOptions = { ...options, correlationId: prep.correlationId };
+
         if (prep.status === 'DUPLICATE') {
             return { success: true, correlationId: prep.correlationId, message: "Duplicate", chunks: 0, isDuplicate: true };
         }
-        return this.executeAnalysis(prep.docId, options);
+        return this.executeAnalysis(prep.docId, updatedOptions);
     }
 }

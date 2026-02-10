@@ -33,17 +33,17 @@ export async function POST(req: NextRequest) {
         // Audit headers for banking-grade traceability
         const ipAddress = req.headers.get('x-forwarded-for') || '0.0.0.0';
         const userAgent = req.headers.get('user-agent') || 'Unknown';
-        const userEmail = session.user.email;
+        const userEmail = session.user.email || 'unknown@abd.com';
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const metadataRaw = {
-            type: formData.get('type') || formData.get('tipo'),
-            version: formData.get('version'),
-            documentTypeId: formData.get('documentTypeId'),
-            scope: formData.get('scope') || 'TENANT',
-            industry: formData.get('industry') || 'ELEVATORS',
-            ownerUserId: formData.get('ownerUserId'), // For USER scope
+            type: (formData.get('type') || formData.get('tipo')) as string || undefined,
+            version: (formData.get('version') as string) || '1.0',
+            documentTypeId: (formData.get('documentTypeId') as string) || undefined,
+            scope: (formData.get('scope') as string) || 'TENANT',
+            industry: (formData.get('industry') as string) || 'ELEVATORS',
+            ownerUserId: (formData.get('ownerUserId') as string) || undefined,
         };
 
         // Rule #2: Zod First
@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
         }
 
         const LocalIngestMetadataSchema = z.object({
-            type: z.string().min(1),
-            version: z.string().min(1),
-            documentTypeId: z.string().optional(),
+            type: z.string().min(1, "Tipo de activo es requerido"),
+            version: z.string().min(1, "Versión es requerida").default('1.0'),
+            documentTypeId: z.string().optional().nullable().transform(v => v === "" ? undefined : v ?? undefined),
             scope: z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT'),
             industry: z.string().default('ELEVATORS'),
-            ownerUserId: z.string().optional(),
+            ownerUserId: z.string().optional().nullable().transform(v => v === "" ? undefined : v ?? undefined),
         });
         const metadata = LocalIngestMetadataSchema.parse(metadataRaw);
 

@@ -56,7 +56,7 @@ export class SemanticCache {
             }
 
             // 2. Intentar L2 (Redis) - Latencia ~10-50ms (Upstash REST/Socket)
-            const cached = await redis.get<RagResult[]>(key);
+            const cached = await redis.get(key) as RagResult[] | null;
 
             if (cached) {
                 // Promocionar a L1 para futuras peticiones rápidas

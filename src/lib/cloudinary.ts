@@ -27,8 +27,9 @@ async function uploadToFolder(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: resourceType,
+                type: 'upload', // Ensure public access even for 'raw' types
                 folder,
-                public_id: `${Date.now()}_${resourceType === 'raw' ? filename : filename.replace(/\.[^/.]+$/, '')}`,
+                public_id: resourceType === 'raw' ? filename : filename.replace(/\.[^/.]+$/, ''),
             },
             (error, result) => {
                 if (error) {
@@ -69,13 +70,13 @@ export async function uploadRAGDocument(
     input: StreamInput,
     filename: string,
     tenantId: string,
-    estimatedSize?: number // Optional for logging/quota check if stream
+    options: { estimatedSize?: number; fileHash?: string } = {}
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
+    const { estimatedSize = 0, fileHash } = options;
     // 1. Verificar quota del tenant (Approximation if stream)
-    const size = Buffer.isBuffer(input) ? input.length : (estimatedSize || 0);
+    const size = Buffer.isBuffer(input) ? input.length : estimatedSize;
 
-    // We check quota if size is known or > 0. If unknown stream, we might check post-upload?
-    // For now, if size provided or buffer, checking:
+    // We check quota if size is known or > 0
     if (size > 0) {
         const hasQuota = await TenantService.hasStorageQuota(tenantId, size);
         if (!hasQuota) {
@@ -86,7 +87,11 @@ export async function uploadRAGDocument(
     // 2. Obtener prefijo de carpeta según config del tenant
     const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
 
-    const result = await uploadToFolder(input, filename, `${folderPrefix}/documentos-rag`);
+    // Use MD5 if provided to allow overwriting, otherwise fallback to timestamp
+    const uniqueId = fileHash || Date.now().toString();
+    const finalPublicId = `${uniqueId}/${filename}`; // Use / to create a "folder" hierarchy in Cloudinary
+
+    const result = await uploadToFolder(input, finalPublicId, `${folderPrefix}/documentos-rag`);
     await UsageService.trackStorage(tenantId, size, 'cloudinary-rag-docs');
     return result;
 }
@@ -247,4 +252,16 @@ export function getDownloadUrl(publicId: string, resourceType: 'raw' | 'image' =
  */
 export function getPDFDownloadUrl(publicId: string): string {
     return getDownloadUrl(publicId, 'raw');
+}
+
+/**
+ * Generates a SIGNED URL for internal server-side fetches.
+ * This bypasses ACL restrictions and ensures the worker can access the file.
+ */
+export function getSignedUrl(publicId: string, resourceType: 'raw' | 'image' = 'raw'): string {
+    return cloudinary.url(publicId, {
+        resource_type: resourceType,
+        sign_url: true,
+        type: 'upload',
+    });
 }

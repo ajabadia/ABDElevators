@@ -11,10 +11,10 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 | `/about` | Visión estratégica y equipo. | 2026-02-06 |
 | `/terms` | Términos de Servicio y condiciones legales. | 2026-02-06 |
 | `/privacy` | Política de Privacidad y tratamiento de datos (GDPR). | 2026-02-06 |
-| `/login` / `/upgrade` | Acceso y gestión de suscripciones. | 2026-02-09 |
+| `/login` / `/upgrade` | Acceso y gestión de suscripciones. | 2026-02-10 |
 | `/accessibility` | Declaración de Accesibilidad y compromiso WCAG 2.1. | 2026-02-06 |
 | `/sandbox` | Demo interactivo público con documentos de ejemplo (sin autenticación). | 2026-02-09 |
-| `/auth-pages/magic-link/verify` | Verificación de Magic Links para autenticación passwordless. | 2026-02-09 |
+| `/auth-pages/magic-link/verify` | Verificación de Magic Links para autenticación passwordless. | 2026-02-10 |
 
 ## 👤 Panel de Usuario (Authenticated)
 | Ruta | Funcionalidad | Última Revisión |
@@ -59,7 +59,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/profile` | Gestión de identidad, seguridad y preferencias del usuario. | 2026-02-07 14:30 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
 | `/admin/organizations` | Gestión de tenants: Branding, Storage Isolation y Billing. | 2026-02-07 15:45 |
-| `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-09 |
+| `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-10 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -72,9 +72,9 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ## 🔌 Infraestructura (API Endpoints Clave)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
-| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase). | 2026-02-08 02:00 |
+| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase). | 2026-02-10 10:00 |
 | `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos (ExecuteIngestionAnalysis). | 2026-02-08 02:00 |
-| `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-08 02:00 |
+| `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-10 10:00 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-06 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
@@ -86,9 +86,9 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 |
 | `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
 | `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
-| `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-09 |
+| `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-10 |
 | `/api/cron/stuck-jobs` | Detección y recuperación automática de procesos de ingesta bloqueados. | 2026-02-10 |
 
 ---
-*Mapa actualizado por Antigravity v4.3.0 (Resilient Enterprise Ingestion) - 2026-02-10*
+*Mapa actualizado por Antigravity v4.3.1 (Resilient Enterprise Ingestion) - 2026-02-10*
 

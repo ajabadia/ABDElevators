@@ -147,7 +147,8 @@
             "delete": "Permanent Delete",
             "mark_active": "Mark Active",
             "mark_obsolete": "Mark Obsolete",
-            "archive": "Archive"
+            "archive": "Archive",
+            "diagnostics": "View Diagnostics"
         },
         "table": {
             "document": "Document",
@@ -260,6 +261,8 @@
         "f15_desc": "Circuit breaker protection that ensures system availability even during critical failures of payment gateways or external services.",
         "f16_title": "Advanced Checklist Governance",
         "f16_desc": "Industrial rule configuration engine for technical validation. Native categorization, prioritization, and multi-tenant isolation.",
+        "f17_title": "Resilient State Machine",
+        "f17_desc": "Iron-clad ingestion pipeline with bank-grade state validation, Dead Letter Queue for manual recoveries, and automated stuck process detection.",
         "learn_more": "Learn more"
     },
     "solutions": {

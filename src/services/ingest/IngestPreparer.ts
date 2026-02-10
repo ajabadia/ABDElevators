@@ -5,6 +5,7 @@ import { ValidationError } from '@/lib/errors';
 import { withRetry } from '@/lib/retry';
 import { uploadRAGDocument } from '@/lib/cloudinary';
 import { IngestOptions } from '../ingest-service';
+import { logEvento } from '@/lib/logger';
 
 /**
  * IngestPreparer: Handles validations, deduplication and initial storage (Phase 105 Hygiene).
@@ -35,7 +36,7 @@ export class IngestPreparer {
 
         const dedupeQuery: any = {
             fileMd5: fileHash,
-            tenantId: scope === 'TENANT' ? tenantId : 'global',
+            tenantId: scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] },
             environment
         };
 
@@ -56,6 +57,7 @@ export class IngestPreparer {
                             // Update metadata if it changed
                             version: metadata.version,
                             documentTypeId: metadata.documentTypeId,
+                            correlationId,
                         }
                     },
                     { includeDeleted: true }
@@ -93,13 +95,35 @@ export class IngestPreparer {
                 return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true };
             }
 
-            // If it's PENDING or FAILED, we return it as PENDING to allow the UI to track it/retry
-            return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId };
+            // If it's PENDING or FAILED, check if it's corrupted (missing URL)
+            if (!existingDoc.cloudinaryUrl) {
+                console.warn(`[IngestPreparer] Existing asset ${existingDoc._id} is corrupted (missing Cloudinary URL). Deleting to allow fresh re-upload.`);
+                await knowledgeAssetsCollection.deleteOne({ _id: existingDoc._id });
+                // Fall through to allow creating a new clean record
+            } else {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_PREPARER',
+                    action: 'DOCUMENT_RECOVERY_SUCCESS',
+                    message: `Existing asset ${existingDoc._id} recovered and updated to PENDING.`,
+                    correlationId,
+                    tenantId
+                });
+                return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId };
+            }
         }
 
         // 2. Physical Deduplication (Phase 125.1)
         const fileBlobsCollection = await getTenantCollection('file_blobs', session);
         let fileBlob = await fileBlobsCollection.findOne({ _id: fileHash as any });
+
+        // Defensive check for broken blobs (null URL) - Phase 125.2 Hardening
+        if (fileBlob && !fileBlob.cloudinaryUrl) {
+            console.warn(`[IngestPreparer] Found BROKEN blob for MD5 ${fileHash}. Deleting and re-uploading.`);
+            await fileBlobsCollection.deleteOne({ _id: fileHash as any });
+            fileBlob = null; // Forces re-upload
+        }
+
         let cloudinaryResult;
 
         if (fileBlob) {
@@ -116,15 +140,76 @@ export class IngestPreparer {
             );
         } else {
             // New Blob - Upload to Cloudinary
-            const uploadResult = await withRetry(
-                () => uploadRAGDocument(buffer, file.name, tenantId),
-                { maxRetries: 3, initialDelayMs: 1000 }
-            );
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_PREPARER',
+                action: 'UPLOAD_START',
+                message: `Uploading file ${file.name} to Cloudinary...`,
+                correlationId,
+                tenantId
+            });
 
-            cloudinaryResult = {
-                secureUrl: uploadResult.secureUrl,
-                publicId: uploadResult.publicId
-            };
+            try {
+                const uploadResult = await withRetry(
+                    () => uploadRAGDocument(buffer, file.name, tenantId, { fileHash }),
+                    { maxRetries: 3, initialDelayMs: 1000 }
+                );
+
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_PREPARER',
+                    action: 'UPLOAD_SUCCESS',
+                    message: `File uploaded successfully to Cloudinary. URL: ${uploadResult.secureUrl}`,
+                    correlationId,
+                    tenantId
+                });
+
+                cloudinaryResult = {
+                    secureUrl: uploadResult.secureUrl,
+                    publicId: uploadResult.publicId
+                };
+            } catch (uploadError: any) {
+                // Log the upload failure
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'INGEST_PREPARER',
+                    action: 'UPLOAD_FAILED',
+                    message: `Cloudinary upload failed: ${uploadError.message}`,
+                    correlationId,
+                    tenantId,
+                    stack: uploadError.stack
+                });
+
+                // Create a FAILED asset record for traceability
+                const failedAsset = {
+                    tenantId: scope === 'TENANT' ? tenantId : 'global',
+                    industry,
+                    filename: file.name,
+                    componentType: metadata.type,
+                    model: 'PENDING',
+                    version: metadata.version,
+                    revisionDate: new Date(),
+                    status: 'vigente',
+                    ingestionStatus: 'FAILED',
+                    error: `Upload failed: ${uploadError.message}`,
+                    cloudinaryUrl: null,
+                    cloudinaryPublicId: null,
+                    fileMd5: fileHash,
+                    sizeBytes: fileSize,
+                    totalChunks: 0,
+                    documentTypeId: metadata.documentTypeId,
+                    scope,
+                    environment,
+                    correlationId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                };
+
+                const result = await knowledgeAssetsCollection.insertOne(failedAsset);
+
+                // Return early with FAILED status
+                return { docId: result.insertedId.toString(), status: 'FAILED', correlationId };
+            }
 
             // Register new Blob
             try {

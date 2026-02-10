@@ -61,25 +61,22 @@ export class PrepareIngestionUseCase {
             // Update status to QUEUED
             await this.knowledgeRepo.updateStatus(docId, 'QUEUED', {});
 
-            const job = await queueService.addJob('PDF_ANALYSIS', {
+            // Use simple queue instead of BullMQ
+            const { ingestionQueue } = await import('@/lib/simple-queue');
+            ingestionQueue.add(docId, {
                 tenantId,
                 userId: userEmail || 'system',
                 correlationId,
-                data: {
-                    docId,
-                    options: {
-                        maskPii: true,
-                        userEmail,
-                        environment
-                    }
-                }
+                maskPii: true,
+                userEmail,
+                environment
             });
 
             return {
                 success: true,
                 message: 'Ingestion started in background.',
                 docId,
-                jobId: job.id,
+                jobId: docId, // Use docId as jobId for simplicity
                 correlationId,
                 savings: prepareResult.savings || 0 // Physical dedup savings
             };
