@@ -1,9 +1,10 @@
 import { getTenantCollection } from './db-tenant';
 import { PLANS, PlanTier } from './plans';
 import { BillingEngine, BillingResult } from './billing-engine';
-import { TenantService } from './tenant-service';
 import { logEvento } from './logger';
 import { AppError } from './errors';
+import { LimitsService } from './limits-service';
+import { TenantService } from './tenant-service';
 
 export type QuotaStatus = 'ALLOWED' | 'OVERAGE_WARNING' | 'BLOCKED';
 
@@ -27,39 +28,37 @@ export class QuotaService {
      */
     static async evaluateQuota(
         tenantId: string,
-        type: 'TOKENS' | 'STORAGE' | 'SEARCHES' | 'USERS' | 'API_REQUEST',
+        type: 'TOKENS' | 'STORAGE' | 'SEARCHES' | 'USERS' | 'API_REQUEST' | 'SPACES_TENANT' | 'SPACES_USER',
         requestedAmount: number = 0
     ): Promise<QuotaCheckResult> {
         try {
-            // 1. Obtener Configuración y Tier
-            const config = await TenantService.getConfig(tenantId);
-            const tier = (config.subscription?.tier as PlanTier) || 'FREE';
-            const plan = PLANS[tier];
+            // 1. Obtener Límites Efectivos y Estado (Phase 120.2)
+            const limits = await LimitsService.getEffectiveLimits(tenantId);
+            const tier = (limits as any).tier || 'FREE'; // Para compatibilidad con calculateOverage
 
-            // 2. Obtener Consumo Actual
+            // 2. Bloqueo por estado de suscripción
+            if (limits.status === 'suspended' || limits.status === 'canceled') {
+                return {
+                    status: 'BLOCKED',
+                    reason: `Suscripción ${limits.status.toUpperCase()}. Acceso restringido.`,
+                    current: 0,
+                    limit: 0,
+                    percentage: 100
+                };
+            }
+
+            // 3. Obtener Consumo Actual
             const currentUsage = await this.getCurrentUsage(tenantId, type);
             const totalUsage = currentUsage + requestedAmount;
 
-            // 3. Determinar Límite
+            // 4. Determinar Límite desde LimitsService
             let limit = 0;
-            const customLimits = (config as any).customLimits || {};
-
             switch (type) {
-                case 'TOKENS':
-                    limit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
-                    break;
-                case 'STORAGE':
-                    limit = customLimits.storage_bytes ?? plan.limits.storage_bytes;
-                    break;
-                case 'SEARCHES':
-                    limit = customLimits.vector_searches_per_month ?? plan.limits.vector_searches_per_month;
-                    break;
-                case 'USERS':
-                    limit = customLimits.users ?? plan.limits.users;
-                    break;
-                case 'API_REQUEST':
-                    limit = customLimits.api_requests_per_month ?? plan.limits.api_requests_per_month;
-                    break;
+                case 'TOKENS': limit = limits.tokens; break;
+                case 'STORAGE': limit = limits.storage; break;
+                case 'SEARCHES': limit = limits.searches; break;
+                case 'USERS': limit = limits.users; break;
+                case 'API_REQUEST': limit = limits.apiRequests; break;
             }
 
             if (limit === Infinity) {
@@ -130,7 +129,7 @@ export class QuotaService {
     /**
      * Obtiene el consumo actual desde los logs de uso.
      */
-    private static async getCurrentUsage(tenantId: string, type: 'TOKENS' | 'STORAGE' | 'SEARCHES' | 'USERS' | 'API_REQUEST'): Promise<number> {
+    private static async getCurrentUsage(tenantId: string, type: 'TOKENS' | 'STORAGE' | 'SEARCHES' | 'USERS' | 'API_REQUEST' | 'SPACES_TENANT' | 'SPACES_USER'): Promise<number> {
         const collection = await getTenantCollection('usage_logs');
 
         const startOfMonth = new Date();
@@ -144,8 +143,14 @@ export class QuotaService {
             case 'SEARCHES': metricType = 'VECTOR_SEARCH'; break;
             case 'API_REQUEST': metricType = 'API_REQUEST'; break;
             case 'USERS':
-                const db = await getTenantCollection('users'); // Simplified, normally in auth db
-                return await db.countDocuments({ tenantId, active: true });
+                const usersDb = await getTenantCollection('users'); // Simplified, normally in auth db
+                return await usersDb.countDocuments({ tenantId, active: true });
+            case 'SPACES_TENANT':
+                const mainDb = await (await import('@/lib/db')).connectDB();
+                return await mainDb.collection('spaces').countDocuments({ tenantId });
+            case 'SPACES_USER':
+                // Note: user specific current usage is handled in SpaceService since it needs userId
+                return 0;
         }
 
         const result = await collection.aggregate([
@@ -192,37 +197,46 @@ export class QuotaService {
      * Usado por el dashboard de facturación.
      */
     static async getTenantUsageStats(tenantId: string) {
-        const config = await TenantService.getConfig(tenantId);
-        const tier = (config.subscription?.tier as PlanTier) || 'FREE';
-        const plan = PLANS[tier];
+        const limits = await LimitsService.getEffectiveLimits(tenantId);
         const collection = await getTenantCollection('usage_logs');
 
         // Parallel fetch of all metrics
-        const [tokens, storage, searches, apiRequests, users] = await Promise.all([
+        const [tokens, storage, searches, apiRequests, users, spaces_per_tenant] = await Promise.all([
             this.getCurrentUsage(tenantId, 'TOKENS'),
             this.getCurrentUsage(tenantId, 'STORAGE'),
             this.getCurrentUsage(tenantId, 'SEARCHES'),
             this.getCurrentUsage(tenantId, 'API_REQUEST'),
-            this.getCurrentUsage(tenantId, 'USERS')
+            this.getCurrentUsage(tenantId, 'USERS'),
+            this.getCurrentUsage(tenantId, 'SPACES_TENANT')
         ]);
 
         const stats = {
-            tier,
-            planName: plan.name,
-            usage: {
-                tokens,
-                storage,
-                searches,
-                apiRequests,
-                users
+            status: limits.status,
+            planSlug: limits.planSlug || 'FREE',
+            tier: limits.tier || 'FREE',
+            // Flatten usage for UI
+            tokens,
+            storage,
+            searches,
+            api_requests: apiRequests,
+            users,
+            spaces_per_tenant,
+            limits: {
+                tokens: limits.tokens,
+                storage: limits.storage,
+                searches: (limits as any).searches,
+                api_requests: (limits as any).apiRequests,
+                users: limits.users,
+                spaces_per_tenant: limits.spaces_per_tenant,
+                spaces_per_user: limits.spaces_per_user
             },
-            limits: plan.limits,
-            status: {
-                tokens: this.getMetricStatus(tokens, plan.limits.llm_tokens_per_month, tier),
-                storage: this.getMetricStatus(storage, plan.limits.storage_bytes, tier),
-                searches: this.getMetricStatus(searches, plan.limits.vector_searches_per_month, tier),
-                apiRequests: this.getMetricStatus(apiRequests, plan.limits.api_requests_per_month, tier),
-                users: this.getMetricStatus(users, plan.limits.users, tier),
+            metricStatus: {
+                tokens: this.getMetricStatus(tokens, limits.tokens, (limits as any).tier || 'FREE'),
+                storage: this.getMetricStatus(storage, limits.storage, (limits as any).tier || 'FREE'),
+                searches: this.getMetricStatus(searches, (limits as any).searches, (limits as any).tier || 'FREE'),
+                api_requests: this.getMetricStatus(apiRequests, (limits as any).apiRequests, (limits as any).tier || 'FREE'),
+                users: this.getMetricStatus(users, limits.users, (limits as any).tier || 'FREE'),
+                spaces_per_tenant: this.getMetricStatus(spaces_per_tenant, limits.spaces_per_tenant, (limits as any).tier || 'FREE'),
             }
         };
 

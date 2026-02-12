@@ -39,6 +39,14 @@ export async function GET(
             }
         }
 
+        const minConfidence = searchParams.get('minConfidence');
+        const maxConfidence = searchParams.get('maxConfidence');
+        if (minConfidence !== null || maxConfidence !== null) {
+            filter.confidence_score = {};
+            if (minConfidence !== null) filter.confidence_score.$gte = parseFloat(minConfidence);
+            if (maxConfidence !== null) filter.confidence_score.$lte = parseFloat(maxConfidence);
+        }
+
         const skip = (page - 1) * limit;
         const [items, total] = await Promise.all([
             collection.find(filter, { sort: { creado: -1, createdAt: -1 } as any, skip, limit }),

@@ -25,7 +25,16 @@ export async function POST(req: NextRequest) {
             correlationId: correlacion_id
         });
 
-        // Ejecutar simulación
+        // Ejecutar simulación o comparativa
+        if (body.compare) {
+            const result = await PromptTesterService.runComparison(validatedInput);
+            return NextResponse.json({
+                success: true,
+                comparison: result,
+                correlationId: correlacion_id
+            });
+        }
+
         const result = await PromptTesterService.runSimulation(validatedInput);
 
         return NextResponse.json({

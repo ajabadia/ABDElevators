@@ -2,7 +2,10 @@ import { UsageService } from './usage-service';
 import { TenantService } from './tenant-service';
 import { PLANS, PlanTier } from './plans';
 import { ObjectId } from 'mongodb';
-import { ValidationError } from './errors';
+import { ValidationError, AppError } from './errors';
+import { getTenantCollection } from './db-tenant';
+import { TenantSubscriptionSchema, TenantSubscription } from './schemas/billing';
+import { logEvento } from './logger';
 
 export interface InvoiceLineItem {
     description: string;
@@ -29,6 +32,9 @@ export interface InvoiceData {
     taxRate: number; // 0.21 for 21%
     taxAmount: number;
     total: number;
+    totalAmount?: number; // Compatibilidad UI
+    tierName?: string;    // Compatibilidad UI
+    isManual?: boolean;   // Compatibilidad UI
     currency: string;
     status: 'DRAFT' | 'ISSUED' | 'PAID' | 'OVERDUE';
 }
@@ -48,7 +54,7 @@ export class BillingService {
     } | null> {
         // 1. Obtener Configuración
         const config = await TenantService.getConfig(tenantId);
-        const tier = (config.subscription?.tier as PlanTier) || 'FREE';
+        const tier = (config.subscription?.planSlug as PlanTier) || 'FREE';
         const plan = PLANS[tier];
 
         // 2. Determinar límites según métrica
@@ -120,18 +126,18 @@ export class BillingService {
         // 1. Obtener Configuración del Tenant Real (Migrado a Auth DB)
         const tenantConfig = await TenantService.getConfig(tenantId);
 
-        const tier = (tenantConfig.subscription?.tier as PlanTier) || 'FREE';
+        const tier = (tenantConfig.subscription?.planSlug as PlanTier) || 'FREE';
         const plan = PLANS[tier];
 
-        // 2. Obtener Uso
-        // Aquí conectamos con UsageService. 
-        // UsageService.getUsageStats normally returns aggregate, we need precise range.
-        // Simulamos valores para el preview si no hay método específico range.
+        // 2. Obtener Uso Real
+        const startOfMonth = new Date(year, month - 1, 1);
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59);
 
-        // En una implementación real: UsageService.getUsage(tenantId, start, end)
-        // Por ahora usamos valores simulados basados en trackLLM
-        const tokensUsed = 15000000; // Mock activity
-        const storageUsed = 5 * 1024 * 1024 * 1024; // 5GB
+        const usage = await UsageService.getAggregateUsage(tenantId, startOfMonth, endOfMonth);
+
+        const tokensUsed = usage['LLM_TOKENS'] || 0;
+        const searchesUsed = usage['VECTOR_SEARCH'] || 0;
+        const storageUsed = usage['STORAGE_BYTES'] || 0;
 
         const lineItems: InvoiceLineItem[] = [];
 
@@ -184,6 +190,9 @@ export class BillingService {
             taxRate,
             taxAmount,
             total: subtotal + taxAmount,
+            totalAmount: subtotal + taxAmount, // Para compatibilidad UI
+            tierName: plan.name, // Para compatibilidad UI
+            isManual: true, // Siempre manual por ahora
             currency: 'EUR',
             status: 'DRAFT'
         };
@@ -217,5 +226,48 @@ export class BillingService {
         // Upsert logical: delete current and insert new (simple seed)
         await db.collection('pricing_plans').deleteMany({});
         return await db.collection('pricing_plans').insertMany(plansToInsert);
+    }
+
+    /**
+     * Actualiza manualmente la suscripción de un tenant.
+     * Fase 120.2: Manual Billing Control
+     */
+    static async manualUpdateSubscription(
+        tenantId: string,
+        data: Partial<TenantSubscription>,
+        updatedBy: string
+    ) {
+        const collection = await getTenantCollection('tenants');
+        const tenant = await collection.findOne({ tenantId });
+
+        if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant no encontrado');
+
+        const currentSub = (tenant as any).subscription || { planSlug: 'FREE', status: 'active' };
+
+        const newSubData: TenantSubscription = {
+            ...currentSub,
+            ...data,
+            updatedAt: new Date(),
+            createdAt: currentSub.createdAt || new Date()
+        };
+
+        // Validar con Zod
+        const validated = TenantSubscriptionSchema.parse(newSubData);
+
+        await collection.updateOne(
+            { tenantId },
+            { $set: { subscription: validated, updatedAt: new Date() } }
+        );
+
+        await logEvento({
+            level: 'INFO',
+            source: 'BILLING_SERVICE',
+            action: 'MANUAL_SUB_UPDATE',
+            message: `Suscripción actualizada manualmente para ${tenantId} por ${updatedBy}`,
+            correlationId: `manual_${Date.now()}`,
+            details: { previous: currentSub.planSlug, current: validated.planSlug }
+        });
+
+        return validated;
     }
 }

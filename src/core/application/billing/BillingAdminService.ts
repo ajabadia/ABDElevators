@@ -6,6 +6,7 @@ import { TenantConfigSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { BillingEngine } from '@/lib/billing-engine';
+import { LimitsService } from '@/lib/limits-service';
 
 export interface ContractSummary {
     tenantId: string;
@@ -17,10 +18,13 @@ export interface ContractSummary {
     usage: {
         tokens: number;
         storage: number;
+        spaces_per_tenant: number;
     };
     limits: {
         tokens: number;
         storage: number;
+        spaces_per_tenant: number;
+        spaces_per_user: number;
     };
     mrr: number; // Estimated
     nextBillingDate: Date;
@@ -54,54 +58,47 @@ export class BillingAdminService {
         // Enriquecer con datos de uso y cálculo de MRR en paralelo
         const contracts = await Promise.all(tenants.map(async (tenant: any) => {
             try {
-                // Parse config safely
+                // Parse config safely (Phase 120.2)
                 const config = TenantConfigSchema.parse(tenant);
-                const tier = (config.subscription?.tier as PlanTier) || 'FREE';
-                const plan = PLANS[tier];
+                const sub = config.subscription;
+                const plan = PLANS[sub.planSlug];
 
                 // Get Real Usage
                 const usageStats = await QuotaService.getTenantUsageStats(config.tenantId);
-                const customLimits = config.customLimits || {};
 
-                // Determine Effective Limits
-                const tokenLimit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
-                const storageLimit = customLimits.storage_bytes ?? plan.limits.storage_bytes;
+                // Get Spaces count for usage display
+                const mainDb = await (await import('@/lib/db')).connectDB();
+                const spacesCount = await mainDb.collection('spaces').countDocuments({ tenantId: config.tenantId });
 
-                // Calculate Projected Overage Cost
-                // Use BillingEngine logic or simple approximation?
-                // QuotaService.calculateOverage uses Plan.overage prices.
-                // If custom pricing is implemented later, we'd use that.
-                // For now, assume Plan Overage Prices apply unless overridden (future).
+                // Determine Limits from unified model
+                const limits = await LimitsService.getEffectiveLimits(config.tenantId);
 
-                let overageCost = 0;
-                // Tokens
-                if (usageStats.usage.tokens > tokenLimit && plan.overage.tokens > 0) {
-                    overageCost += (usageStats.usage.tokens - tokenLimit) * plan.overage.tokens;
-                }
-                // Storage
-                if (usageStats.usage.storage > storageLimit && plan.overage.storage > 0) {
-                    overageCost += (usageStats.usage.storage - storageLimit) * plan.overage.storage;
-                }
+                // Calculate Projected Cost via BillingEngine
+                const tokensCost = BillingEngine.calculateMetricCost(usageStats.tokens, sub.overrides['llm_tokens_per_month'] || plan.metrics['llm_tokens_per_month'] || plan.metrics['tokens']);
+                const storageCost = BillingEngine.calculateMetricCost(usageStats.storage, sub.overrides['storage_bytes'] || plan.metrics['storage_bytes'] || plan.metrics['storage']);
 
-                const mrr = plan.price_monthly + overageCost;
+                const mrr = plan.price_monthly + tokensCost.totalCost + storageCost.totalCost;
 
                 return {
                     tenantId: config.tenantId,
                     name: config.name,
-                    tier: tier,
+                    tier: sub.planSlug,
                     planName: plan.name,
-                    status: config.subscription?.status || 'FREE',
-                    customOverrides: Object.keys(customLimits).length > 0,
+                    status: sub.status,
+                    customOverrides: Object.keys(sub.overrides).length > 0,
                     usage: {
-                        tokens: usageStats.usage.tokens,
-                        storage: usageStats.usage.storage
+                        tokens: usageStats.tokens,
+                        storage: usageStats.storage,
+                        spaces_per_tenant: spacesCount
                     },
                     limits: {
-                        tokens: tokenLimit,
-                        storage: storageLimit
+                        tokens: limits.tokens,
+                        storage: limits.storage,
+                        spaces_per_tenant: limits.spaces_per_tenant,
+                        spaces_per_user: limits.spaces_per_user
                     },
                     mrr: Math.round(mrr * 100) / 100,
-                    nextBillingDate: new Date(new Date().setDate(new Date().getDate() + 30)) // Mock if not in DB
+                    nextBillingDate: sub.currentPeriodEnd || new Date(new Date().setDate(new Date().getDate() + 30))
                 };
             } catch (err) {
                 console.error(`Error processing contract for tenant ${tenant.tenantId}`, err);
@@ -113,8 +110,8 @@ export class BillingAdminService {
                     planName: 'Error',
                     status: 'ERROR',
                     customOverrides: false,
-                    usage: { tokens: 0, storage: 0 },
-                    limits: { tokens: 0, storage: 0 },
+                    usage: { tokens: 0, storage: 0, spaces_per_tenant: 0 },
+                    limits: { tokens: 0, storage: 0, spaces_per_tenant: 0, spaces_per_user: 0 },
                     mrr: 0,
                     nextBillingDate: new Date()
                 } as ContractSummary;
@@ -134,35 +131,69 @@ export class BillingAdminService {
             storage_bytes?: number;
             vector_searches_per_month?: number;
             users?: number;
+            spaces_per_tenant?: number;
+            spaces_per_user?: number;
         }
     }) {
         const currentConfig = await TenantService.getConfig(tenantId);
+        const sub = currentConfig.subscription;
 
         const updates: any = {};
+        const subscriptionUpdates: any = {};
 
         // 1. Tier Change
-        if (data.tier && data.tier !== currentConfig.subscription?.tier) {
-            updates.subscription = {
-                ...(currentConfig.subscription || {}),
-                tier: data.tier
-            };
+        if (data.tier && data.tier !== sub.planSlug) {
+            subscriptionUpdates.planSlug = data.tier;
         }
 
-        // 2. Custom Limits Override
+        // 2. Custom Limits Override (Phase 120.2)
         if (data.customLimits) {
-            updates.customLimits = {
-                ...(currentConfig.customLimits || {}),
-                ...data.customLimits
+            subscriptionUpdates.overrides = {
+                ...(sub.overrides || {})
             };
 
-            // Clean up undefined/nulls if passed to remove limit?
-            // If user passes 0 or -1 to "remove override", we might need logic.
-            // For now, assume explicit value is set.
+            if (data.customLimits.llm_tokens_per_month !== undefined) {
+                subscriptionUpdates.overrides['llm_tokens_per_month'] = {
+                    type: 'FLAT_FEE_OVERAGE',
+                    includedUnits: data.customLimits.llm_tokens_per_month,
+                    currency: 'EUR'
+                };
+            }
+            if (data.customLimits.storage_bytes !== undefined) {
+                subscriptionUpdates.overrides['storage_bytes'] = {
+                    type: 'FLAT_FEE_OVERAGE',
+                    includedUnits: data.customLimits.storage_bytes,
+                    currency: 'EUR'
+                };
+            }
+            if (data.customLimits.spaces_per_tenant !== undefined) {
+                subscriptionUpdates.overrides['spaces_per_tenant'] = {
+                    type: 'FLAT_FEE_OVERAGE',
+                    includedUnits: data.customLimits.spaces_per_tenant,
+                    currency: 'EUR'
+                };
+            }
+            if (data.customLimits.spaces_per_user !== undefined) {
+                subscriptionUpdates.overrides['spaces_per_user'] = {
+                    type: 'FLAT_FEE_OVERAGE',
+                    includedUnits: data.customLimits.spaces_per_user,
+                    currency: 'EUR'
+                };
+            }
+            // ... more if needed
+        }
+
+        if (Object.keys(subscriptionUpdates).length > 0) {
+            updates.subscription = {
+                ...sub,
+                ...subscriptionUpdates,
+                updatedAt: new Date()
+            };
         }
 
         await TenantService.updateConfig(tenantId, updates, {
             performedBy: 'BillingAdmin',
-            correlationId: `update-contract-${Date.now()}`
+            correlationId: crypto.randomUUID()
         });
 
         await logEvento({
@@ -170,7 +201,7 @@ export class BillingAdminService {
             source: 'BILLING_ADMIN',
             action: 'CONTRACT_UPDATED',
             message: `Contract updated for tenant ${tenantId}`,
-            correlationId: `update-contract-${Date.now()}`,
+            correlationId: crypto.randomUUID(),
             details: { tenantId, updates }
         });
 

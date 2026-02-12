@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 4.3.1 - RESILIENT INGESTION)
+# ABD Multi-Industry RAG Platform (Vision 4.3.3 - ENTERPRISE PROFESSIONAL)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v4.3.1** despliega la visión de "Enterprise SaaS Transformation" (Phase 120), la nueva arquitectura de **Resilient Ingestion State Machine** (Phase 112) y el motor de **Enterprise Auth Reliability** (Phase 121) con State-Driven MFA.
+Esta versión **v4.3.3** despliega la visión de "Enterprise SaaS Transformation" (Phase 120), con una optimización exhaustiva de los módulos de **Billing**, **Permissions** y **Knowledge Assets**, alcanzando la plena compatibilidad con **React 19** y los estándares de **Vercel React Best Practices**.
 
 ## 🚀 Inicio Rápido
 
@@ -109,6 +109,14 @@ src/
 ```
 
 ## 📊 Características Clave
+### 💎 Key Features
+
+- **🚀 Collaborative Spaces**: Multi-tenant "Spaces" architecture allowing shared (Tenant) and personal (User) knowledge silos.
+- **🔐 Granular API Security**: API Keys with optional scoping to specific Knowledge Spaces for secure external integrations.
+- **🧠 Hybrid RAG Engine**: Combines semantic (BGE-M3), keyword (BM25), and graph-based retrieval for maximum precision.
+- **🛡️ Enterprise Governance**: Granular permissions (Guardian V3), PII masking, and full audit trail for SOC2 compliance.
+- **⚡ Industrial Ingestion**: High-performance pipeline with MD5 deduplication, asynchronous processing (BullMQ), and self-healing.
+- **📊 Advanced Analytics**: ROI tracking, RAG evaluation (LLM Judge), and real-time usage metrics via Admin Dashboard.
   - ✅ **Multi-Vertical Intelligence**: Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis (Vision 2026).
   - ✅ **Infinite Memory & Streaming**: Ingesta en streaming y de-duplicación inteligente para gestionar bibliotecas técnicas ilimitadas.
   - ✅ **Vercel Serverless Stability Path**: Polyfill de DOMMatrix y workers agnósticos al entorno para evitar crashes en despliegues cloud.

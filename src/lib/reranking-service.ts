@@ -35,14 +35,22 @@ export class RerankingService {
 
             try {
                 const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
-                const { text: promptText, model } = await PromptService.getRenderedPrompt('RAG_RERANKER', {
+                const { production, shadow } = await PromptService.getPromptWithShadow('RAG_RERANKER', {
                     query,
                     fragments,
                     count: results.length,
                     industry
-                }, tenantId, 'PRODUCTION', industry as any);
-                renderedPrompt = promptText;
-                modelName = model;
+                }, tenantId, industry as any);
+
+                renderedPrompt = production.text;
+                modelName = production.model;
+
+                if (shadow) {
+                    const { runShadowCall } = await import("./gemini-client");
+                    runShadowCall(shadow.text, shadow.model, tenantId, correlationId, 'RAG_RERANKER', shadow.key).catch(e =>
+                        console.error("[RERANKER SHADOW ERROR]", e)
+                    );
+                }
             } catch (error) {
                 console.warn(`[RERANKING_SERVICE] ⚠️ Fallback to Master Prompt:`, error);
                 await logEvento({

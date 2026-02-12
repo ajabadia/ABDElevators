@@ -4,7 +4,7 @@ import { Handle, Position } from '@xyflow/react';
 import { Split, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export const ConditionNode = memo(({ data }: { data: { label: string, analytics?: { count: number, avgDuration: number, errorRate: number } } }) => {
+export const ConditionNode = memo(({ data }: { data: { label: string, isOrphan?: boolean, isCyclic?: boolean, analytics?: { count: number, avgDuration: number, errorRate: number } } }) => {
     const { analytics } = data;
 
     return (
@@ -15,6 +15,16 @@ export const ConditionNode = memo(({ data }: { data: { label: string, analytics?
             {analytics && analytics.count > 0 && (
                 <div className="absolute -top-3 -right-2 bg-slate-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                     {analytics.count}
+                </div>
+            )}
+            {data.isOrphan && (
+                <div className="absolute -top-7 right-0 bg-amber-500 text-[9px] text-white px-2 py-0.5 rounded-t-md font-black uppercase tracking-tighter">
+                    ⚠️ Desconectado
+                </div>
+            )}
+            {data.isCyclic && (
+                <div className="absolute -bottom-6 left-0 bg-purple-600 text-[8px] text-white px-2 py-0.5 rounded-b-md font-bold uppercase tracking-wider">
+                    🔄 Bucle Detectado
                 </div>
             )}
             <Handle type="target" position={Position.Left} className="w-3 h-3 bg-slate-400" />

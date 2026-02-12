@@ -25,7 +25,7 @@ export function HeroSection() {
                 {/* Columna izquierda: Texto */}
                 <div className="z-10 text-left">
                     <Badge className="mb-6 bg-teal-500/10 text-teal-400 border border-teal-500/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
-                        <Sparkles className="w-3 h-3 mr-2 inline-block" />
+                        <Sparkles className="w-3 h-3 mr-2 inline-block" aria-hidden="true" />
                         {heroT('badge')}
                     </Badge>
 
@@ -44,7 +44,7 @@ export function HeroSection() {
                     <ul className="mb-10 space-y-3">
                         {[1, 2, 3].map((i) => (
                             <li key={i} className="flex items-start gap-3 text-slate-300">
-                                <CheckCircle2 className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" />
+                                <CheckCircle2 className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                                 <span>{heroT(`benefit${i}` as any)}</span>
                             </li>
                         ))}
@@ -53,15 +53,15 @@ export function HeroSection() {
                     {/* CTAs */}
                     <div className="flex flex-col sm:flex-row gap-4 mb-6">
                         <Link href="/login">
-                            <Button className="h-14 px-8 bg-teal-600 hover:bg-teal-500 text-white text-base font-bold rounded-xl gap-2 group transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 hover:-translate-y-0.5">
+                            <Button className="h-14 px-8 bg-teal-600 hover:bg-teal-500 text-white text-base font-bold rounded-xl gap-2 group transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 hover:motion-safe:-translate-y-0.5">
                                 {heroT('cta_main')}
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="w-5 h-5 group-hover:motion-safe:translate-x-1 transition-transform" aria-hidden="true" />
                             </Button>
                         </Link>
                         <Link href="#pricing">
                             <Button
                                 variant="outline"
-                                className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-white text-base font-semibold rounded-xl backdrop-blur-sm transition-all hover:-translate-y-0.5"
+                                className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-white text-base font-semibold rounded-xl backdrop-blur-sm transition-all hover:motion-safe:-translate-y-0.5"
                             >
                                 {heroT('cta_sec')}
                             </Button>
@@ -75,17 +75,17 @@ export function HeroSection() {
                     {/* Stats de negocio */}
                     <div className="mt-12 flex flex-wrap items-center gap-6 lg:gap-8 border-t border-white/5 pt-8">
                         <div>
-                            <p className="text-2xl font-bold text-white">{statsT('stat1_value')}</p>
+                            <p className="text-2xl font-bold text-white tabular-nums">{statsT('stat1_value')}</p>
                             <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat1_label')}</p>
                         </div>
                         <div className="w-px h-8 bg-white/10" />
                         <div>
-                            <p className="text-2xl font-bold text-white">{statsT('stat2_value')}</p>
+                            <p className="text-2xl font-bold text-white tabular-nums">{statsT('stat2_value')}</p>
                             <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat2_label')}</p>
                         </div>
                         <div className="w-px h-8 bg-white/10" />
                         <div>
-                            <p className="text-2xl font-bold text-white text-teal-400 text-shadow">{statsT('stat3_value')}</p>
+                            <p className="text-2xl font-bold text-white text-teal-400 text-shadow tabular-nums">{statsT('stat3_value')}</p>
                             <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{statsT('stat3_label')}</p>
                         </div>
                     </div>
@@ -102,7 +102,7 @@ export function HeroSection() {
                             <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-black opacity-80" />
                             <div className="z-10 text-center space-y-4">
                                 <div className="w-20 h-20 bg-teal-500/20 rounded-2xl mx-auto flex items-center justify-center border border-teal-500/30 shadow-[0_0_30px_rgba(20,184,166,0.2)]">
-                                    <Database className="w-10 h-10 text-teal-400" />
+                                    <Database className="w-10 h-10 text-teal-400" aria-hidden="true" />
                                 </div>
                                 <p className="text-slate-400 font-mono text-sm border border-slate-800 rounded px-2 py-1 bg-slate-950/50">
                                     System Status: <span className="text-teal-400">ONLINE</span>
@@ -113,7 +113,7 @@ export function HeroSection() {
                     {/* Floating elements */}
                     <div className="absolute -bottom-6 -left-6 bg-slate-900/90 border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce duration-[4000ms] backdrop-blur-xl">
                         <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center text-teal-400 shadow-[0_0_15px_rgba(45,212,191,0.3)]">
-                            <Sparkles size={20} />
+                            <Sparkles size={20} aria-hidden="true" />
                         </div>
                         <div>
                             <p className="text-[10px] text-slate-500 font-bold uppercase">Compliance Check</p>

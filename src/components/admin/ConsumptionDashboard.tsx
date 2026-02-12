@@ -120,6 +120,15 @@ export function ConsumptionDashboard() {
         }
     });
 
+    // 3. Carga de preview de factura
+    const {
+        data: invoiceData,
+        isLoading: loadingInvoice
+    } = useApiItem<any>({
+        endpoint: '/api/admin/billing/invoice-preview',
+        autoFetch: true
+    });
+
     useEffect(() => {
         setIsMounted(true);
     }, []);
@@ -567,9 +576,20 @@ export function ConsumptionDashboard() {
                             </CardHeader>
                             <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
                                 <div className="text-4xl font-black text-slate-800 dark:text-white">
-                                    {(stats?.tokens ? (stats.tokens / 1000000) * 5 + 299 : 299).toFixed(2)} €
+                                    {loadingInvoice ? (
+                                        <Loader2 className="animate-spin h-8 w-8 text-teal-500" />
+                                    ) : (
+                                        `${(invoiceData?.totalAmount || 0).toLocaleString()} €`
+                                    )}
                                 </div>
-                                <Badge variant="outline" className="text-xs text-slate-500">{t('invoice.tier_estimate')}</Badge>
+                                <Badge variant="outline" className="text-xs text-slate-500">
+                                    {invoiceData?.tierName || t('invoice.tier_estimate')}
+                                </Badge>
+                                {invoiceData?.isManual && (
+                                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">
+                                        Modo Facturación Manual
+                                    </p>
+                                )}
                             </CardContent>
                             <CardFooter>
                                 <Button className="w-full bg-teal-600 hover:bg-teal-500" onClick={handleDownloadInvoice} disabled={downloading}>

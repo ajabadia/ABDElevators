@@ -13,6 +13,15 @@ if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN
 // Phase 120: Added local Redis Socket support via REDIS_URL
 let redisClient: any;
 
+const createDummyClient = () => ({
+    get: async () => null,
+    set: async () => 'OK',
+    del: async () => 0,
+    exists: async () => 0,
+    keys: async () => [],
+    flushall: async () => 'OK'
+});
+
 if (process.env.REDIS_URL) {
     if (process.env.NODE_ENV === 'development') {
         console.log('🚀 [REDIS] Usando instancia LOCAL (Socket/IORedis)');
@@ -36,14 +45,17 @@ if (process.env.REDIS_URL) {
         exists: async (key: string) => io.exists(key),
         keys: async (pattern: string) => io.keys(pattern)
     };
-} else {
+} else if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     if (process.env.NODE_ENV === 'development') {
         console.log('☁️ [REDIS] Usando instancia CLOUD (Upstash/REST)');
     }
     redisClient = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
+} else {
+    // Phase 120: Mock client if no configuration to avoid bootsrap errors (Auditoría 016)
+    redisClient = createDummyClient();
 }
 
 export const redis = redisClient;

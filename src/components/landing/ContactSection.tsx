@@ -31,12 +31,12 @@ export function ContactSection() {
                                 content={t('address')}
                             />
                             <ContactEntry
-                                icon={<Phone className="text-blue-400" size={24} />}
+                                icon={<Phone className="text-blue-400" size={24} aria-hidden="true" />}
                                 title="Teléfono"
                                 content={t('phone')}
                             />
                             <ContactEntry
-                                icon={<Mail className="text-emerald-400" size={24} />}
+                                icon={<Mail className="text-emerald-400" size={24} aria-hidden="true" />}
                                 title="Email"
                                 content={t('email')}
                             />
@@ -61,6 +61,8 @@ export function ContactSection() {
                                 <Label htmlFor="name" className="text-slate-300 ml-1">{t('name_label')}</Label>
                                 <Input
                                     id="name"
+                                    name="name"
+                                    autoComplete="name"
                                     placeholder="Tu nombre completo"
                                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-teal-500/50"
                                 />
@@ -70,7 +72,9 @@ export function ContactSection() {
                                 <Label htmlFor="email" className="text-slate-300 ml-1">{t('email_label')}</Label>
                                 <Input
                                     id="email"
+                                    name="email"
                                     type="email"
+                                    autoComplete="email"
                                     placeholder="tu@email.com"
                                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-teal-500/50"
                                 />
@@ -80,13 +84,14 @@ export function ContactSection() {
                                 <Label htmlFor="message" className="text-slate-300 ml-1">{t('message_label')}</Label>
                                 <Textarea
                                     id="message"
+                                    name="message"
                                     placeholder="¿En qué podemos ayudarte?"
                                     className="bg-white/5 border-white/10 min-h-[150px] rounded-xl focus:ring-teal-500/50"
                                 />
                             </div>
 
                             <Button className="w-full h-14 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl gap-2 transition-all shadow-lg shadow-teal-500/10">
-                                <Send size={18} />
+                                <Send size={18} aria-hidden="true" />
                                 {t('send_button')}
                             </Button>
                         </form>

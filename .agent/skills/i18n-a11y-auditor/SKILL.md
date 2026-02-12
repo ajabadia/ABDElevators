@@ -37,7 +37,22 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 4. **Formularios**: Asegurar que cada `Input` tenga un `Label` asociado correctamente.
 5. **SEO (Páginas Públicas)**: Verificar `metadata` (Title tag único, Meta description optimizada).
 
-### Fase 3: Ejecución de Mejoras
+### Fase 3: Auditoría de Errores y Estados (UX Standard)
+1. **Presentación de Errores (Toasts)**:
+   - Toda acción asíncrona (save, delete, ingest) que falle DEBE mostrar un `toast` con `variant: "destructive"`.
+   - El mensaje DEBE estar internacionalizado.
+   - Referencia: `useWorkflowCRUD.ts`.
+2. **Validación Visual de Reglas**:
+   - Los errores lógicos o de integridad (ej: bucles en grafos, campos faltantes) DEBEN presentarse como **Badges** o **Warning Labels** sobre el elemento afectado.
+   - Colores standard: Amber (`bg-amber-500`) para advertencias/huérfanos, Red (`bg-red-600`) para errores críticos/anomalías, Purple (`bg-purple-600`) para errores lógicos/ciclos.
+   - Referencia: `ActionNode.tsx` (badges de bucle/desconexión).
+3. **Detección de Anomalías**:
+   - Desviaciones de datos (ej: tasa de error > 15%) DEBEN resaltarse con efectos visuales (`animate-pulse`) y etiquetas de "ANOMALÍA".
+4. **Estados de Carga y Vacíos**:
+   - Las listas DEBEN manejar el estado `isLoading` con esqueletos o mensajes de carga.
+   - Las tablas vacías DEBEN mostrar un mensaje informativo claro (`t('table.empty')`).
+
+### Fase 4: Ejecución de Mejoras
 1. **Inyección de i18n**: Sustituir textos hardcodeados por `t('clave')`.
 2. **Actualización de Diccionarios**: 
    - Añadir claves a `messages/es.json` y `messages/en.json`.
@@ -46,25 +61,18 @@ description: Audita y corrige la implementación de internacionalización (i18n)
      npx tsx scripts/force-sync-i18n.ts [locale]
      ```
      (donde `[locale]` es `es`, `en` o ambos).
-   - **Gobernanza DB**: El sistema prioriza Redis > DB > Archivos. Sin este paso, las nuevas claves no se verán en producción/dev hasta que expire el TTL.
-   - **Prompts Dinámicos**: Si se detectan términos técnicos en prompts de IA, reportar para auditoría con `audit-db-prompts-simple.ts`
 3. **Refactorización a11y**: Añadir atributos ARIA missing y corregir jerarquía de etiquetas.
+4. **Estandarización de Errores**: Implementar Toasts destructivos o Badges según el patrón de `/admin/workflows`.
 
 ## Instrucciones y Reglas
-- **REGLA DE ORO #1**: No inventes traducciones. Si el término es muy técnico del sector ascensores, mantén el término en inglés si es el estándar industrial o pregunta al usuario.
+- **REGLA DE ORO #1**: No inventes traducciones.
 - **REGLA DE ORO #2 (TERMINOLOGÍA PROFESIONAL)**: 
-  - ❌ NUNCA usar: "RAG", "Vector Search", "Explorer", "Agentic", "Simulator" en UI visible al usuario.
-  - ✅ SIEMPRE usar: "Inteligencia Técnica", "Búsqueda Semántica", "Buscador", "Inteligente", "Simulador de Análisis".
-  - 📋 Referencia: `messages/es.json` y `messages/en.json` (secciones `user_dashboard`, `common`).
-- **INTEGRIDAD JSON**: Verifica la sintaxis JSON. Un error romperá el fallback local.
-- **SINCRONIZACIÓN (MANDATORIA)**:
-  - Si añades una clave en un idioma, DEBES añadirla en todos los soportados para evitar `MISSING_MESSAGE`.
-  - **DEBES** ejecutar `scripts/force-sync-i18n.ts` inmediatamente después de modificar los JSONs para invalidar la caché.
-- **JERARQUÍA**: Mantén el JSON agrupado por módulos (admin, common, public, profile, etc.).
-- **GOBERNANZA DB**: El archivo JSON local es la fuente de verdad (L4) para el desarrollador, pero la DB/Redis es la fuente de verdad para el runtime. La sincronización es el puente obligatorio.
+  - ❌ "RAG", "Vector Search", "Explorer".
+  - ✅ "Inteligencia Técnica", "Búsqueda Semántica", "Buscador".
+- **REGLA DE ORO #3 (PRESENTACIÓN DE ERRORES)**: Los errores no son solo logs. El usuario DEBE verlos mediante Toasts (acciones) o Badges (datos).
 
 ## Output (formato exacto)
-1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y)" y "Gravedad".
+1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y/Error)" y "Gravedad".
 2. **Plan de Acción**: Lista de cambios propuestos incluyendo las nuevas claves propuestas.
 3. **Ejecución**: Código refactorizado y bloques de JSON para añadir.
 

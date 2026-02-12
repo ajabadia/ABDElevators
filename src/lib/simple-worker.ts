@@ -1,6 +1,13 @@
 import { ingestionQueue } from './simple-queue';
 import { IngestService } from '@/services/ingest-service';
 import { logEvento } from './logger';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load environment variables for standalone execution
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+}
 
 /**
  * Simple worker that processes ingestion jobs from the in-memory queue

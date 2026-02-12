@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { IntelligenceAnalyticsService } from '@/lib/intelligence-analytics';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
 export async function GET() {
@@ -28,7 +29,6 @@ export async function GET() {
 
         return NextResponse.json(stats);
     } catch (error) {
-        console.error('[API INTELLIGENCE STATS]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_INTELLIGENCE_STATS_GET', correlationId);
     }
 }

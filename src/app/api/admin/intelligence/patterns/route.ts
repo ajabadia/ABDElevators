@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { IntelligenceAnalyticsService } from '@/lib/intelligence-analytics';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
+import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -30,8 +31,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(result);
     } catch (error) {
-        console.error('[API INTELLIGENCE PATTERNS]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_INTELLIGENCE_PATTERNS_GET', correlationId);
     }
 }
 
@@ -42,9 +42,8 @@ export async function PATCH(req: NextRequest) {
 
         const body = await req.json();
         const validated = ModerateSchema.safeParse(body);
-
         if (!validated.success) {
-            return NextResponse.json({ error: 'Invalid input', details: validated.error.issues }, { status: 400 });
+            throw new AppError('VALIDATION_ERROR', 400, 'Invalid input', validated.error.issues);
         }
 
         const { patternId, action, updates } = validated.data;
@@ -64,7 +63,6 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('[API INTELLIGENCE MODERATE]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_INTELLIGENCE_PATTERNS_PATCH', correlationId);
     }
 }

@@ -26,6 +26,8 @@ export const PromptVersionSchema = z.object({
     userAgent: z.string().optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
     industry: IndustryTypeSchema.default('GENERIC'),
+    category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST', 'ROUTING']).optional(),
+    model: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
 });
 export type PromptVersion = z.infer<typeof PromptVersionSchema>;

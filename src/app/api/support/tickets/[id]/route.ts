@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     try {
         const session = await auth();
         if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Debe iniciar sesión');
+            throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
         }
 
         const db = await connectDB();
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const ticket = await db.collection('tickets').findOne({ _id: new ObjectId(id) });
 
         if (!ticket) {
-            throw new NotFoundError('Ticket no encontrado');
+            throw new NotFoundError('api.errors.ticket_not_found');
         }
 
         // Multi-Tenant Security (Phase 70 RBAC)
@@ -41,12 +41,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 ].filter(Boolean);
 
             if (allowedTenants && !allowedTenants.includes(ticket.tenantId)) {
-                throw new AppError('FORBIDDEN', 403, 'No tienes acceso a este ticket');
+                throw new AppError('FORBIDDEN', 403, 'api.errors.forbidden_access');
             }
         } else {
             // Normal user: only see their own tickets
             if (ticket.createdBy !== session.user.id) {
-                throw new AppError('FORBIDDEN', 403, 'No tienes acceso a este ticket');
+                throw new AppError('FORBIDDEN', 403, 'api.errors.forbidden_access');
             }
         }
 

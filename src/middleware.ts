@@ -25,8 +25,22 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         const isPublicPath =
             pathname === '/' ||
             pathname === '/login' ||
+            pathname === '/pricing' ||
+            pathname === '/terms' ||
+            pathname === '/privacy' ||
+            pathname === '/contact' ||
+            pathname === '/accessibility' ||
+            pathname === '/about' ||
+            pathname === '/architecture' ||
+            pathname === '/upgrade' ||
+            pathname.startsWith('/features/') ||
+            pathname === '/features' ||
+            pathname.startsWith('/sandbox/') ||
+            pathname === '/sandbox' ||
             pathname.startsWith('/auth') ||
-            pathname.startsWith('/_next');
+            pathname.startsWith('/api/auth') ||
+            pathname.startsWith('/_next') ||
+            pathname === '/favicon.ico';
 
         // 2. Auth Logic Protection
         // Protect ALL paths not explicitly whitelisted

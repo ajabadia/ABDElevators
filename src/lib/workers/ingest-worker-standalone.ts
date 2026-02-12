@@ -2,6 +2,11 @@ import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { IngestService } from '@/services/ingest-service';
 import { logEvento } from '@/lib/logger';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load environment variables
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 /**
  * Standalone Worker para desarrollo local

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { uploadUserDocument } from '@/lib/cloudinary';
 import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
@@ -139,75 +138,36 @@ export async function POST(req: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // 🔍 Deduplicación Smart (MD5) - Fase 100
-        const fileMd5 = crypto.createHash('md5').update(buffer).digest('hex');
+        // 🔍 Deduplicación Smart (Universal) - Fase 125.1
+        const { BlobStorageService } = await import('@/services/storage/BlobStorageService');
 
-        // 🛡️ Rule #11: Use SecureCollection for DB operations
+        const { blob, deduplicated } = await BlobStorageService.getOrCreateBlob(
+            buffer,
+            { filename: file.name, mimeType: file.type },
+            {
+                tenantId,
+                userId: session.user.id,
+                correlationId,
+                source: 'USER_DOCS'
+            }
+        );
+
+        console.log(`[API_USER_DOCS] BlobStorageService result (deduplicated: ${deduplicated}):`, {
+            md5: blob._id,
+            providerId: blob.providerId,
+            url: blob.url,
+            secureUrl: blob.secureUrl,
+            fields: Object.keys(blob)
+        });
+
+        const uploadResult = {
+            publicId: blob.providerId,
+            secureUrl: blob.secureUrl || blob.url
+        };
+        const fileMd5 = blob._id;
+
+        // 🛡️ Rule #11: Use SecureCollection for DB operations (Tenant Isolation)
         const userDocsCollection = await getTenantCollection('user_documents', session);
-        const kaCollection = await getTenantCollection('knowledge_assets', session);
-
-        // Buscar si ya existe este archivo (checksum) en el tenant o globalmente
-        // 1. Buscar en user_documents (mismo tenant)
-        const existingUserDoc = await userDocsCollection.findOne({ fileMd5 });
-        // 2. Buscar en knowledge_assets (quizás es un manual público o global)
-        const existingKA = !existingUserDoc ? await kaCollection.findOne({ fileMd5 }) : null;
-
-        let uploadResult;
-
-        if (existingUserDoc) {
-            // 1. Hit in tenant user docs
-            console.log(`[SmartUpload] Deduplication HIT (UserDoc) for MD5 ${fileMd5}`);
-            uploadResult = {
-                publicId: existingUserDoc.cloudinaryPublicId || existingUserDoc.savedName,
-                secureUrl: existingUserDoc.cloudinaryUrl
-            };
-            await logEvento({
-                level: 'INFO',
-                source: 'API_USER_DOCS',
-                action: 'DEDUPLICATION_HIT',
-                message: `File ${file.name} deduplicated (UserDoc Hit)`,
-                correlationId,
-                details: { originalId: existingUserDoc._id }
-            });
-        } else if (existingKA) {
-            // 2. Hit in global knowledge assets
-            console.log(`[SmartUpload] Deduplication HIT (KnowledgeAsset) for MD5 ${fileMd5}`);
-            uploadResult = {
-                publicId: existingKA.cloudinaryPublicId || existingKA.savedName || '', // Fallback for safety
-                secureUrl: existingKA.cloudinaryUrl || ''
-            };
-
-            // Safety check: if missing critical info, force upload
-            if (!uploadResult.publicId || !uploadResult.secureUrl) {
-                console.warn(`[SmartUpload] Deduplication hit but missing data in KA ${existingKA._id}. Re-uploading.`);
-                const cloudResult = await uploadUserDocument(buffer, file.name, tenantId, session.user.id);
-                uploadResult = {
-                    publicId: cloudResult.publicId,
-                    secureUrl: cloudResult.secureUrl
-                };
-            }
-
-            await logEvento({
-                level: 'INFO',
-                source: 'API_USER_DOCS',
-                action: 'DEDUPLICATION_HIT',
-                message: `File ${file.name} deduplicated (KA Hit)`,
-                correlationId,
-                details: { originalId: existingKA._id }
-            });
-        } else {
-            // 3. MISS - Upload to Cloudinary
-            try {
-                const cloudResult = await uploadUserDocument(buffer, file.name, tenantId, session.user.id);
-                uploadResult = {
-                    publicId: cloudResult.publicId,
-                    secureUrl: cloudResult.secureUrl
-                };
-            } catch (uploadErr: any) {
-                console.error("Cloudinary Upload Error:", uploadErr);
-                throw new AppError('EXTERNAL_SERVICE_ERROR', 502, 'Failed to upload file to storage provider');
-            }
-        }
 
         const docData = {
             userId: session.user.id,
@@ -257,14 +217,42 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, url: uploadResult.secureUrl });
     } catch (error: any) {
+        const errorDetails = {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+            correlationId,
+            timestamp: new Date().toISOString()
+        };
+        console.error(`[API_USER_DOCS] Critical failure:`, errorDetails);
+
+        // 🚨 EMERGENCY DEBUG: Write to disk because logs are truncated
+        try {
+            const fs = await import('fs');
+            const path = await import('path');
+            fs.appendFileSync(path.resolve(process.cwd(), 'API_CRASH.log'), JSON.stringify(errorDetails, null, 2) + '\n---\n');
+        } catch (e) {
+            console.error('Failed to write emergency log', e);
+        }
+
         if (error.name === 'ZodError') {
+            console.error('[API_USER_DOCS] Zod Validation Error Details:', JSON.stringify(error.issues, null, 2));
             return NextResponse.json(
-                new ValidationError('Invalid document metadata', error.issues).toJSON(),
+                new ValidationError(`Invalid document metadata: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(', ')}`, error.issues).toJSON(),
                 { status: 400 }
             );
         }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
+
+        // Handle AppError even if instanceof fails (bundler isolation)
+        if (error instanceof AppError || error.name === 'AppError' || error.status) {
+            return NextResponse.json(
+                {
+                    code: error.code || 'UPLOAD_ERROR',
+                    message: error.message,
+                    details: error.details
+                },
+                { status: error.status || 400 }
+            );
         }
 
         await logEvento({

@@ -1,10 +1,8 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApiList } from "@/hooks/useApiList";
-import { useTranslations } from "next-intl";
-import { format } from "date-fns";
+import { useTranslations, useFormatter } from "next-intl";
 import {
     Table,
     TableBody,
@@ -26,14 +24,14 @@ import {
 import {
     MoreHorizontal,
     Search,
-    AlertTriangle,
-    CheckCircle,
-    Ban,
     Edit,
-    FileText
+    FileText,
+    Shield,
+    Loader2
 } from "lucide-react";
 import { EditContractSheet } from "./EditContractSheet";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Contract {
     tenantId: string;
@@ -45,10 +43,13 @@ interface Contract {
     usage: {
         tokens: number;
         storage: number;
+        spaces_per_tenant: number;
     };
     limits: {
         tokens: number;
         storage: number;
+        spaces_per_tenant: number;
+        spaces_per_user: number;
     };
     mrr: number;
     nextBillingDate: string;
@@ -56,18 +57,30 @@ interface Contract {
 
 export function ContractTable() {
     const [search, setSearch] = useState("");
-    const [page, setPage] = useState(1);
+    const [page] = useState(1);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-    const { data: contracts, isLoading, refresh } = useApiList<Contract>({
+    const t = useTranslations('admin.billing.contracts');
+    const format = useFormatter();
+    const { toast } = useToast();
+
+    const { data: contracts, isLoading, refresh, error } = useApiList<Contract>({
         endpoint: '/api/admin/billing/contracts',
         filters: { page, limit: 10, search },
         dataKey: 'contracts',
         debounceMs: 500
     });
 
-    const t = useTranslations('admin.billing.contracts');
+    useEffect(() => {
+        if (error) {
+            toast({
+                title: "Error",
+                description: t('table.loading_error') || "Could not load contracts",
+                variant: "destructive"
+            });
+        }
+    }, [error, toast, t]);
 
     const handleEditClick = (contract: Contract) => {
         setSelectedContract(contract);
@@ -92,125 +105,147 @@ export function ContractTable() {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
-                <div className="relative w-72">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
+                        type="search"
+                        role="searchbox"
                         placeholder={t('table.search_placeholder')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-8"
+                        className="pl-10 h-10 bg-background rounded-lg border-slate-200 dark:border-slate-800"
+                        aria-label={t('table.search_placeholder')}
                     />
                 </div>
             </div>
 
-            <div className="rounded-md border">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>{t('table.tenant')}</TableHead>
-                            <TableHead>{t('table.plan')}</TableHead>
-                            <TableHead>{t('table.override')}</TableHead>
-                            <TableHead>{t('table.usage')}</TableHead>
-                            <TableHead>{t('table.mrr')}</TableHead>
-                            <TableHead>{t('table.status')}</TableHead>
-                            <TableHead className="text-right">{t('table.actions')}</TableHead>
+                    <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                        <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
+                            <TableHead className="font-bold">{t('table.tenant')}</TableHead>
+                            <TableHead className="font-bold">{t('table.plan')}</TableHead>
+                            <TableHead className="font-bold">{t('table.override')}</TableHead>
+                            <TableHead className="font-bold">{t('table.usage')}</TableHead>
+                            <TableHead className="font-bold">{t('table.mrr')}</TableHead>
+                            <TableHead className="font-bold">{t('table.status')}</TableHead>
+                            <TableHead className="text-right font-bold">{t('table.actions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading && contracts.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
-                                    {t('table.loading')}
+                                <TableCell colSpan={7} className="h-48 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
+                                        <p className="text-sm text-muted-foreground font-medium animate-pulse">{t('table.loading')}</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
 
                         {!isLoading && contracts.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
-                                    {t('table.empty')}
+                                <TableCell colSpan={7} className="h-48 text-center">
+                                    <div className="flex flex-col items-center gap-3 opacity-50">
+                                        <Shield className="w-12 h-12" aria-hidden="true" />
+                                        <p className="font-medium">{t('table.empty')}</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
 
                         {contracts.map((contract: Contract) => (
-                            <TableRow key={contract.tenantId}>
-                                <TableCell className="font-medium">
+                            <TableRow key={contract.tenantId} className="border-slate-100 dark:border-slate-800 group hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                                <TableCell className="font-medium py-4">
                                     <div className="flex flex-col">
-                                        <span>{contract.name}</span>
-                                        <span className="text-xs text-muted-foreground">{contract.tenantId}</span>
+                                        <span className="text-slate-900 dark:text-slate-100 font-bold">{contract.name}</span>
+                                        <span className="text-[10px] text-muted-foreground font-mono">{contract.tenantId}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="outline">{contract.tier}</Badge>
+                                    <Badge variant="outline" className="font-bold tracking-tight">{contract.tier}</Badge>
                                 </TableCell>
                                 <TableCell>
                                     {contract.customOverrides ? (
-                                        <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200">
-                                            Custom
+                                        <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200/50 font-bold text-[10px]">
+                                            {t('table.custom_badge')}
                                         </Badge>
                                     ) : (
-                                        <span className="text-muted-foreground text-xs">-</span>
+                                        <span className="text-muted-foreground text-xs font-medium">-</span>
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    <div className="space-y-1 text-xs">
+                                    <div className="space-y-1.5 text-[11px]">
                                         <div className="flex items-center gap-2">
-                                            <span className="w-12 text-muted-foreground">Tokens:</span>
-                                            <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <span className="w-12 text-muted-foreground font-medium">Tokens:</span>
+                                            <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/20 dark:border-slate-700/50">
                                                 <div
-                                                    className="h-full bg-blue-500"
+                                                    className="h-full bg-blue-500 transition-all duration-500"
                                                     style={{ width: `${Math.min((contract.usage.tokens / contract.limits.tokens) * 100, 100)}%` }}
                                                 />
                                             </div>
-                                            <span>
-                                                {Intl.NumberFormat('en', { notation: "compact" }).format(contract.usage.tokens)} /
-                                                {contract.limits.tokens === Infinity ? '∞' : Intl.NumberFormat('en', { notation: "compact" }).format(contract.limits.tokens)}
+                                            <span className="font-mono">
+                                                {format.number(contract.usage.tokens, { notation: "compact" })} /
+                                                {contract.limits.tokens === Infinity ? t('table.unlimited') : format.number(contract.limits.tokens, { notation: "compact" })}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-12 text-muted-foreground">Store:</span>
-                                            <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <span className="w-12 text-muted-foreground font-medium">Store:</span>
+                                            <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/20 dark:border-slate-700/50">
                                                 <div
-                                                    className="h-full bg-orange-500"
+                                                    className="h-full bg-orange-500 transition-all duration-500"
                                                     style={{ width: `${Math.min((contract.usage.storage / contract.limits.storage) * 100, 100)}%` }}
                                                 />
                                             </div>
-                                            <span>
-                                                {Intl.NumberFormat('en', { notation: "compact", style: 'unit', unit: 'byte' }).format(contract.usage.storage)} /
-                                                {contract.limits.storage === Infinity ? '∞' : Intl.NumberFormat('en', { notation: "compact", style: 'unit', unit: 'byte' }).format(contract.limits.storage)}
+                                            <span className="font-mono">
+                                                {format.number(contract.usage.storage, { style: 'unit', unit: 'byte', unitDisplay: 'narrow', notation: 'compact' })} /
+                                                {contract.limits.storage === Infinity ? t('table.unlimited') : format.number(contract.limits.storage, { style: 'unit', unit: 'byte', unitDisplay: 'narrow', notation: 'compact' })}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-12 text-muted-foreground font-medium">Spaces:</span>
+                                            <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/20 dark:border-slate-700/50">
+                                                <div
+                                                    className="h-full bg-teal-500 transition-all duration-500"
+                                                    style={{ width: `${Math.min((contract.usage.spaces_per_tenant / contract.limits.spaces_per_tenant) * 100, 100)}%` }}
+                                                />
+                                            </div>
+                                            <span className="font-mono">
+                                                {format.number(contract.usage.spaces_per_tenant, { notation: 'compact' })} /
+                                                {contract.limits.spaces_per_tenant === Infinity ? t('table.unlimited') : format.number(contract.limits.spaces_per_tenant, { notation: 'compact' })}
                                             </span>
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <span className="font-mono font-medium">
-                                        {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(contract.mrr)}
+                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                                        {format.number(contract.mrr, { style: 'currency', currency: 'EUR' })}
                                     </span>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge className={cn("border-0", getStatusColor(contract.status))}>
+                                    <Badge className={cn("border-0 font-bold text-[10px]", getStatusColor(contract.status))}>
                                         {t(`status.${contract.status.toLowerCase() as 'active' | 'past_due' | 'blocked'}`)}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Abrir menú</span>
-                                                <MoreHorizontal className="h-4 w-4" />
+                                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label={t('table.open_menu')}>
+                                                <span className="sr-only">{t('table.open_menu')}</span>
+                                                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
+                                        <DropdownMenuContent align="end" className="w-48 shadow-lg border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-100">
                                             <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
-                                            <DropdownMenuItem onClick={() => handleEditClick(contract)}>
-                                                <Edit className="mr-2 h-4 w-4" />
+                                            <DropdownMenuItem onClick={() => handleEditClick(contract)} className="gap-2 cursor-pointer">
+                                                <Edit className="h-4 w-4 text-slate-500" aria-hidden="true" />
                                                 {t('actions.edit')}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => alert("Próximamente: Historial de facturas")}>
-                                                <FileText className="mr-2 h-4 w-4" />
+                                            <DropdownMenuItem onClick={() => toast({ title: t('actions.upcoming_title'), description: t('actions.upcoming_desc') })} className="gap-2 cursor-pointer">
+                                                <FileText className="h-4 w-4 text-slate-500" aria-hidden="true" />
                                                 {t('actions.invoices')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -221,8 +256,6 @@ export function ContractTable() {
                     </TableBody>
                 </Table>
             </div>
-
-            {/* Pagination Implementation could go here */}
 
             {selectedContract && (
                 <EditContractSheet

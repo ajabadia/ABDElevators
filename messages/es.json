@@ -37,6 +37,7 @@
             "sections": {
                 "core": "Core",
                 "inventory": "Inventario Técnico",
+                "workspace": "Espacio de Trabajo",
                 "studio": "Automation Studio",
                 "corporate": "Corporativo & Admin",
                 "governance": "Gobernanza & Sistemas",
@@ -48,7 +49,9 @@
                 "documents": "Mis Documentos",
                 "support": "Soporte Técnico",
                 "entities": "Entidades Técnicas",
-                "assets": "Biblioteca de Documentos",
+                "spaces": "Mis Espacios",
+                "admin_spaces": "Gestión de Espacios",
+                "assets": "Knowledge Assets",
                 "explorer": "Buscador Semántico",
                 "graph": "Mapa Semántico",
                 "workflows": "Editor de Workflows",
@@ -127,6 +130,15 @@
             "page": "Página {current} de {total}",
             "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
         },
+        "errors": {
+            "unauthorized": "Autenticación requerida. Por favor inicia sesión.",
+            "forbidden": "Acceso restringido. Permisos insuficientes.",
+            "forbidden_access": "Violación de aislamiento técnico. No tienes acceso a este recurso.",
+            "not_found": "Recurso no encontrado.",
+            "ticket_not_found": "Ticket de soporte no encontrado o ya archivado.",
+            "validation_error": "Fallo en la validación de entrada. Revisa los datos proporcionados.",
+            "internal_error": "Ocurrió un error inesperado en el sistema. Referencia: {id}"
+        },
         "pagination": {
             "previous": "Anterior",
             "next": "Siguiente",
@@ -176,7 +188,68 @@
         },
         "retry_success": "Reintento iniciado",
         "retry_desc": "El documento se está procesando nuevamente.",
-        "delete_confirm": "¿Estás seguro de eliminar este documento? Esta acción es irreversible."
+        "delete_confirm": "¿Estás seguro de eliminar este documento? Esta acción es irreversible.",
+        "spaces": {
+            "title": "Espacios de Trabajo",
+            "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
+            "tabs": {
+                "quick_qa": "Quick Q&A",
+                "personal": "Mi Espacio",
+                "collections": "Colecciones"
+            },
+            "placeholders": {
+                "personal_title": "Gestión de Documentos Personales",
+                "personal_desc": "Próximamente: Sube y gestiona tus propios archivos PDF.",
+                "collections_title": "Colecciones Inteligentes",
+                "collections_desc": "Próximamente: Organiza documentos en carpetas por proyecto o tema."
+            },
+            "quick_qa": {
+                "title": "Quick Q&A",
+                "desc": "Pega texto técnico, notas o especificaciones para consultar sin persistencia.",
+                "snippet_label": "Fragmento de Texto (Snippet)",
+                "snippet_badge": "Efímero",
+                "snippet_placeholder": "Pega aquí el contenido a analizar...",
+                "context_label": "Contexto Adicional (Opcional)",
+                "context_placeholder": "Ej: Instrucciones específicas, versión de software...",
+                "clear_all": "Limpiar Todo",
+                "promote": "Promocionar a Documento",
+                "chat_title": "Chat Efímero",
+                "chat_welcome_title": "Haz una pregunta sobre el texto",
+                "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
+                "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
+                "status_loading": "Consultando información...",
+                "promote_success": "Snippet guardado como Documento persistente",
+                "promote_error": "Error al promocionar",
+                "conn_error": "Error de conexión",
+                "validation_error": "Debes pegar un texto y escribir una pregunta",
+                "ia_error": "Error al consultar a la IA"
+            },
+            "admin": {
+                "title": "Gestión de Espacios",
+                "search_placeholder": "Buscar espacios...",
+                "new_space": "Nuevo Espacio",
+                "manage": "Gestionar",
+                "table": {
+                    "space": "Espacio",
+                    "type": "Tipo",
+                    "visibility": "Visibilidad",
+                    "status": "Estado",
+                    "created": "Creado",
+                    "actions": "Acciones"
+                },
+                "types": {
+                    "global": "Global",
+                    "industry": "Industria",
+                    "tenant": "Tenant",
+                    "team": "Equipo",
+                    "personal": "Personal"
+                },
+                "status": {
+                    "active": "Activo",
+                    "inactive": "Inactivo"
+                }
+            }
+        }
     },
     "nav": {
         "solutions": "Soluciones",
@@ -269,8 +342,14 @@
         "f16_desc": "Motor de configuración de reglas industriales para validación técnica. Categorización, priorización y aislamiento multi-tenant nativo.",
         "f17_title": "Máquina de Estados Resiliente",
         "f17_desc": "Canalización de ingesta blindada con validación de estados de grado bancario, Dead Letter Queue para recuperaciones manuales y auto-detección de procesos bloqueados.",
-        "f18_title": "Autenticación Resiliente (v4.2)",
+        "f18_title": "Autenticación Resiliente (v4.3)",
         "f18_desc": "Motor de seguridad reforzado con State-Driven MFA para evitar inconsistencias de sesión y fallos críticos en el flujo de credenciales.",
+        "f19_title": "Módulos de Grado Industrial",
+        "f19_desc": "Optimización profesional de los módulos de Facturación, Permisos y Activos con estándares de Vercel y trazabilidad UUID segura.",
+        "f20_title": "Espacios de Conocimiento Seguros",
+        "f20_desc": "Organiza el conocimiento de tu organización en silos aislados con control de acceso independiente. Ideal para documentos por departamento o proyecto.",
+        "f21_title": "Claves API con Alcance Restringido",
+        "f21_desc": "Crea integraciones API granulares que solo tengan acceso a espacios específicos. Seguridad garantizada para clientes externos IoT o CRM.",
         "learn_more": "Saber más"
     },
     "solutions": {
@@ -607,6 +686,89 @@
             "save_success": "Configuración guardada correctamente",
             "save_error": "Error al guardar la configuración"
         },
+        "prompts": {
+            "title": "Gobernanza de Prompt Engineering",
+            "subtitle": "Gestiona los prompts maestros para los motores RAG y agentes IA.",
+            "new_prompt": "Nuevo Prompt Maestro",
+            "tabs": {
+                "active": "Prompts Activos",
+                "testing": "Testing / Borradores"
+            },
+            "form": {
+                "key": "Clave Interna",
+                "title": "Título Descriptivo",
+                "version": "Versión Semántica",
+                "content": "Contenido del System Prompt",
+                "tags": "Etiquetas",
+                "is_active": "Establecer como versión activa"
+            },
+            "table": {
+                "prompt": "Prompt",
+                "version": "Versión",
+                "last_modified": "Última Modificación",
+                "status": "Estado Actual"
+            },
+            "messages": {
+                "save_success": "Versión del prompt sincronizada en DB con éxito.",
+                "delete_success": "Prompt archivado correctamente.",
+                "create_success": "Nuevo prompt registrado en el sistema."
+            }
+        },
+        "support": {
+            "title": "Consola de Soporte Industrial",
+            "subtitle": "Gestiona consultas técnicas y derivaciones del sistema.",
+            "stats": {
+                "open": "Tickets Abiertos",
+                "pending": "Esperando Respuesta",
+                "resolved": "Resueltos (30d)"
+            },
+            "status": {
+                "OPEN": "Abierto",
+                "IN_PROGRESS": "En Progreso",
+                "RESOLVED": "Resuelto",
+                "CLOSED": "Cerrado"
+            },
+            "priority": {
+                "LOW": "Baja",
+                "MEDIUM": "Media",
+                "HIGH": "Crítica",
+                "URGENT": "Urgente"
+            },
+            "actions": {
+                "assign": "Asignar a...",
+                "reply": "Responder a Cliente",
+                "resolve": "Marcar como Resuelto",
+                "close": "Cerrar Permanentemente"
+            }
+        },
+        "jobs": {
+            "title": "Reliability Dashboard",
+            "subtitle": "Infraestructura BullMQ & Gestión de Dead Letter Queue (DLQ).",
+            "monitor": "Agent Monitor",
+            "status": {
+                "active": "Activo",
+                "waiting": "En espera",
+                "completed": "Completado",
+                "failed": "Fallido (DLQ)",
+                "delayed": "Retrasado"
+            },
+            "table": {
+                "id": "ID de Trabajo",
+                "type": "Tipo de Proceso",
+                "status": "Estado Actual",
+                "duration": "Tiempo Ejecución",
+                "failed_reason": "Traza de Error"
+            },
+            "actions": {
+                "retry": "Reintento Manual",
+                "delete": "Purgar de la Cola",
+                "details": "Ver Stack Trace"
+            },
+            "messages": {
+                "retry_success": "Reubicación en cola activa exitosa.",
+                "delete_success": "Trabajo purgado del sistema."
+            }
+        },
         "dashboard": {
             "title": "Control Global",
             "subtitle": "Visión consolidada de toda la infraestructura.",
@@ -659,6 +821,30 @@
             "activity": {
                 "title": "Actividad Reciente del Sistema",
                 "empty": "No hay actividad reciente registrada."
+            }
+        },
+        "spaces": {
+            "title": "Gestión de Espacios",
+            "highlight": "Jerárquica",
+            "subtitle": "Configura la organización de tu base de conocimiento por industrias, equipos y tenants.",
+            "new": "Nuevo Espacio",
+            "search_placeholder": "Buscar espacios...",
+            "types": {
+                "GLOBAL": "Global",
+                "INDUSTRY": "Industria",
+                "TENANT": "Tenant",
+                "TEAM": "Equipo",
+                "PERSONAL": "Personal"
+            },
+            "visibility": {
+                "PUBLIC": "Público",
+                "INTERNAL": "Interno",
+                "PRIVATE": "Privado",
+                "RESTRICTED": "Restringido"
+            },
+            "status": {
+                "active": "Activo",
+                "inactive": "Inactivo"
             }
         },
         "roi": {
@@ -755,68 +941,58 @@
             "tabs": {
                 "metrics": "Métricas de Uso",
                 "billing": "Facturas y Pagos"
+            }
+        },
+        "metrics": {
+            "reports": {
+                "label": "Informes / Pedidos",
+                "desc": "Informes generados"
             },
-            "metrics": {
-                "reports": {
-                    "label": "Informes / Pedidos",
-                    "desc": "Informes generados"
-                },
-                "tokens": {
-                    "label": "IA Generativa",
-                    "desc": "Tokens Gemini consumidos"
-                },
-                "storage": {
-                    "label": "Almacenamiento",
-                    "desc": "Espacio en Cloudinary"
-                },
-                "search": {
-                    "label": "RAG Search",
-                    "desc": "Búsquedas vectoriales"
-                }
+            "tokens": {
+                "label": "IA Generativa",
+                "desc": "Tokens Gemini consumidos"
             },
-            "savings": {
-                "title": "Ahorro Inteligente por Deduplicación",
-                "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
-                "tokens": "Tokens Ahorrados",
-                "efficiency": "Eficiencia de Ingesta"
+            "storage": {
+                "label": "Almacenamiento",
+                "desc": "Espacio en Cloudinary"
             },
-            "multilingual": {
-                "title": "Búsquedas Multilingües",
-                "label": "Vectores Latentes (Shadow)"
+            "search": {
+                "label": "RAG Search",
+                "desc": "Búsquedas vectoriales"
+            }
+        },
+        "savings": {
+            "title": "Ahorro Inteligente por Deduplicación",
+            "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
+            "tokens": "Tokens Ahorrados",
+            "efficiency": "Eficiencia de Ingesta"
+        },
+        "multilingual": {
+            "title": "Búsquedas Multilingües",
+            "label": "Vectores Latentes (Shadow)"
+        },
+        "charts": {
+            "tokens_title": "Tendencia de Consumo AI",
+            "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
+        },
+        "billing": {
+            "title": "Datos de Facturación",
+            "desc": "Configura los datos fiscales para tus facturas.",
+            "fields": {
+                "fiscal_name": "Razón Social",
+                "tax_id": "CIF/NIF",
+                "address": "Dirección"
             },
-            "charts": {
-                "tokens_title": "Tendencia de Consumo AI",
-                "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
-            },
-            "activity": {
-                "title": "Registro de Actividad",
-                "limit": "Últimos 20 eventos",
-                "table": {
-                    "date": "Fecha",
-                    "type": "Tipo",
-                    "resource": "Recurso",
-                    "amount": "Cantidad"
-                }
-            },
-            "billing": {
-                "title": "Datos de Facturación",
-                "desc": "Configura los datos fiscales para tus facturas.",
-                "fields": {
-                    "fiscal_name": "Razón Social",
-                    "tax_id": "CIF/NIF",
-                    "address": "Dirección"
-                },
-                "not_configured": "No configurado",
-                "edit": "Editar Datos",
-                "dialog": {
-                    "title": "Editar Datos Fiscales",
-                    "desc": "Estos datos aparecerán en tu próxima factura.",
-                    "fiscal_name_label": "Razón Social (Empresa)",
-                    "tax_id_label": "CIF / VAT ID",
-                    "address_label": "Dirección Fiscal",
-                    "saving": "Guardando...",
-                    "save": "Guardar Cambios"
-                }
+            "not_configured": "No configurado",
+            "edit": "Editar Datos",
+            "dialog": {
+                "title": "Editar Datos Fiscales",
+                "desc": "Estos datos aparecerán en tu próxima factura.",
+                "fiscal_name_label": "Razón Social (Empresa)",
+                "tax_id_label": "CIF / VAT ID",
+                "address_label": "Dirección Fiscal",
+                "saving": "Guardando...",
+                "save": "Guardar Cambios"
             },
             "invoice": {
                 "title": "Próxima Factura",
@@ -841,17 +1017,25 @@
             "contracts": {
                 "title": "Gestión de Contratos ('Casos')",
                 "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
+                "metadata": {
+                    "title": "Gestión de Contratos y Casos | Admin",
+                    "description": "Administración de planes, límites y overrides por tenant con control de cuotas industrial."
+                },
                 "table": {
-                    "tenant": "Tenant",
+                    "tenant": "Organización",
                     "plan": "Plan Base",
-                    "override": "Override",
+                    "override": "Personalización",
                     "usage": "Uso (Tokens / Storage)",
                     "mrr": "MRR (Est.)",
                     "status": "Estado",
                     "actions": "Acciones",
                     "loading": "Cargando contratos...",
                     "empty": "No se encontraron resultados",
-                    "search_placeholder": "Buscar tenant..."
+                    "search_placeholder": "Buscar tenant...",
+                    "loading_error": "Error al cargar contratos",
+                    "unlimited": "∞",
+                    "custom_badge": "Personalizado",
+                    "open_menu": "Abrir menú de acciones"
                 },
                 "status": {
                     "active": "ACTIVO",
@@ -859,25 +1043,38 @@
                     "blocked": "BLOQUEADO"
                 },
                 "actions": {
-                    "edit": "Editar Contrato",
-                    "invoices": "Ver Facturas"
+                    "edit": "Editar Contrato / Límites",
+                    "invoices": "Ver Facturas",
+                    "upcoming_title": "Próximamente",
+                    "upcoming_desc": "Historial de facturas en fase de desarrollo."
                 },
                 "edit": {
-                    "title": "Editar Contrato",
-                    "description": "Configuración personalizada para {name} ({id})",
-                    "plan_label": "Plan Base",
-                    "plan_desc": "El plan define las tarifas base y funcionalidades.",
-                    "overrides_title": "Overrides (Límites Personalizados)",
-                    "tokens_label": "Límite Tokens Mensuales",
-                    "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
-                    "storage_label": "Límite Almacenamiento (Bytes)",
-                    "storage_desc": "1 GB = 1073741824 Bytes.",
-                    "warning_title": "Atención",
-                    "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
+                    "title": "Editar Configuración de Contrato",
+                    "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
+                    "plan_label": "Plan de Suscripción",
+                    "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+                    "plans": {
+                        "free": "Prueba Gratuita",
+                        "basic": "Básico Business",
+                        "pro": "Profesional",
+                        "enterprise": "Corporativo"
+                    },
+                    "overrides_title": "Límites Personalizados (Overrides)",
+                    "tokens_label": "Límite de Tokens (Mes)",
+                    "tokens_desc": "0 para usar el valor por defecto del plan.",
+                    "storage_label": "Límite de Almacenamiento (Bytes)",
+                    "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+                    "spaces_tenant_label": "Límite Espacios (Tenant)",
+                    "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
+                    "spaces_user_label": "Límite Espacios (Usuario)",
+                    "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)",
+                    "warning_title": "Cambio Crítico de Cuotas",
+                    "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
                     "save": "Guardar Cambios",
-                    "cancel": "cancelar",
-                    "success": "Contrato actualizado",
-                    "success_desc": "Se han aplicado los cambios para {name}"
+                    "cancel": "Cancelar",
+                    "success": "Contrato Actualizado",
+                    "success_desc": "Se ha guardado la configuración para {name}",
+                    "error_updating": "Error al actualizar el contrato"
                 }
             }
         },
@@ -1181,6 +1378,11 @@
                 "highlight": "Guardian V3",
                 "subtitle": "Gestión centralizada de políticas de acceso y control de seguridad.",
                 "new_policy": "Nueva Política",
+                "filter": "Filtrar",
+                "metadata": {
+                    "title": "Matriz de Permisos | Guardian V3",
+                    "description": "Gestión centralizada de políticas de acceso y control de seguridad industrial."
+                },
                 "stats": {
                     "total": "Total Políticas",
                     "total_desc": "Políticas activas en el sistema",
@@ -1368,36 +1570,64 @@
                 }
             }
         },
+        "api_keys": {
+            "title": "Gestión de Acceso API",
+            "subtitle": "Administre llaves de API para integraciones externas (ERP, CRM, IoT).",
+            "new_key": "Generar Nueva Llave",
+            "active_keys": "Llaves Activas",
+            "no_keys": "No hay llaves activas",
+            "no_keys_desc": "Cree una nueva llave de API para comenzar a integrar sus sistemas externos con nuestra plataforma.",
+            "revoke_btn": "Revocar Llave",
+            "revoke_confirm": "¿Está seguro de que desea revocar esta llave? Las aplicaciones que la usen dejarán de funcionar inmediatamente.",
+            "created": "Creada {distance}",
+            "last_used": "Último uso: {distance}",
+            "space_restriction": "Restricción de Espacio (Opcional)",
+            "space_restriction_desc": "Las llaves restringidas solo pueden realizar consultas RAG dentro del espacio seleccionado.",
+            "select_space": "Seleccione un espacio (Global por defecto)",
+            "global_space": "Global (Todos los espacios accesibles)",
+            "scopes": "Alcances (Permisos)",
+            "save_warning": "¡Guarde esta llave ahora!",
+            "save_warning_desc": "Esta es la única vez que le mostraremos la llave de API completa. Si la pierde, deberá generar una nueva.",
+            "copied": "Copiado",
+            "copy_toast": "Copiado al portapapeles",
+            "create_success": "Llave de API creada con éxito",
+            "revoke_success": "Llave revocada con éxito",
+            "error_name": "Asigne un nombre a la llave",
+            "error_permissions": "Seleccione al menos un permiso"
+        },
         "i18n": {
             "page": {
                 "title": "Gobernanza i18n",
-                "highlight": "Idiomas",
-                "subtitle": "Gestiona la voz de la plataforma en múltiples idiomas con asistencia de IA.",
-                "syncBtn": "Sincronizar L4 → DB",
+                "highlight": "Internacionalización",
+                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+                "syncBtn": "Sincronizar DB",
                 "newKeyBtn": "Nueva Llave",
-                "searchPlaceholder": "Buscar por llave o contenido...",
+                "searchPlaceholder": "Busca por llave o texto...",
                 "filterMissing": "Ver solo faltantes"
             },
             "languages": {
-                "es": "Español (ES)",
-                "en": "English (EN)"
+                "es": "Español",
+                "en": "Inglés"
             },
             "table": {
-                "keyHeader": "Llave (i18n ID)",
-                "primaryLabel": "Primario",
-                "secondaryLabel": "Secundario",
-                "autoTranslateBtn": "AUTOTRADUCIR FALTANTES",
+                "keyHeader": "LLAVE TÉCNICA",
+                "primaryLabel": "PRINCIPAL",
+                "secondaryLabel": "COMPARACIÓN",
+                "autoTranslateBtn": "AUTO-TRADUCIR",
                 "save": "Guardar",
                 "cancel": "Cancelar",
                 "empty": "Vacío",
                 "missing": "Faltante",
-                "noResults": "No se encontraron llaves de traducción"
+                "noResults": "No se encontraron traducciones para los filtros aplicados."
             },
             "notifications": {
-                "aiSuccessTitle": "IA: Traducción completada",
-                "aiSuccessDesc": "Se han generado las traducciones faltantes.",
+                "aiSuccessTitle": "IA: Traducción Completada",
+                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
                 "upToDateTitle": "Todo al día",
-                "upToDateDesc": "No hay llaves faltantes en este idioma."
+                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
+                "syncSuccessTitle": "Sincronización Exitosa",
+                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+                "saveSuccess": "Traducción actualizada correctamente."
             }
         }
     },
@@ -1850,40 +2080,6 @@
             "typeError": "Por favor selecciona un archivo de imagen.",
             "successTitle": "Foto actualizada",
             "successDesc": "Tu foto de perfil se ha actualizado correctamente."
-        },
-        "i18n": {
-            "page": {
-                "title": "Gobernanza i18n",
-                "highlight": "Internacionalización",
-                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
-                "syncBtn": "Sincronizar DB",
-                "newKeyBtn": "Nueva Llave",
-                "searchPlaceholder": "Busca por llave o texto..."
-            },
-            "languages": {
-                "es": "Español",
-                "en": "Inglés"
-            },
-            "table": {
-                "keyHeader": "LLAVE TÉCNICA",
-                "primaryLabel": "PRINCIPAL",
-                "secondaryLabel": "COMPARACIÓN",
-                "autoTranslateBtn": "AUTO-TRADUCIR",
-                "save": "Guardar",
-                "cancel": "Cancelar",
-                "empty": "Vacío",
-                "missing": "Faltante",
-                "noResults": "No se encontraron traducciones para los filtros aplicados."
-            },
-            "notifications": {
-                "aiSuccessTitle": "IA: Traducción Completada",
-                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
-                "upToDateTitle": "Todo al día",
-                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
-                "syncSuccessTitle": "Sincronización Exitosa",
-                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
-                "saveSuccess": "Traducción actualizada correctamente."
-            }
         }
     },
     "search": {

@@ -26,3 +26,11 @@ export interface IngestResult {
     savings?: number;
     language?: string;
 }
+export interface IngestPrepareResult {
+    docId: string;
+    status: 'PENDING' | 'DUPLICATE' | 'FAILED';
+    correlationId: string;
+    isDuplicate?: boolean;
+    savings?: number;
+    error?: string;
+}

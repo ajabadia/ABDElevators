@@ -10,7 +10,8 @@ import crypto from 'crypto';
 const QuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
     skip: z.coerce.number().min(0).default(0),
-    search: z.string().optional()
+    search: z.string().optional(),
+    spaceId: z.string().optional() // 🌌 Phase 125.2
 });
 
 /**
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 
         // 2. Validate inputs
         const { searchParams } = new URL(req.url);
-        const { limit, skip, search } = QuerySchema.parse(Object.fromEntries(searchParams));
+        const { limit, skip, search, spaceId } = QuerySchema.parse(Object.fromEntries(searchParams));
 
         // 3. SECURE COLLECTION: Multi-tenant Isolation
         const { auth } = await import('@/lib/auth');
@@ -44,6 +45,10 @@ export async function GET(req: NextRequest) {
                 { model: { $regex: search, $options: 'i' } },
                 { description: { $regex: search, $options: 'i' } }
             ];
+        }
+
+        if (spaceId) {
+            filter.spaceId = spaceId;
         }
 
         const [assets, total] = await Promise.all([

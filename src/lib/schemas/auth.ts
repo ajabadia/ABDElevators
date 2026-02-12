@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { UserRole } from '../../types/roles';
 import { IndustryTypeSchema } from './core';
+import { TenantSubscriptionSchema } from './billing';
 
 /**
  * 🔐 FASE 11: Security & Auth Schemas
@@ -185,7 +186,7 @@ export const TenantConfigSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
     name: z.string(),
-    industry: IndustryTypeSchema,
+    industry: IndustryTypeSchema.default('GENERIC'),
     storage: z.object({
         provider: z.enum(['cloudinary', 'google_drive', 's3']).default('cloudinary'),
         settings: z.object({
@@ -194,15 +195,18 @@ export const TenantConfigSchema = z.object({
             credentials_ref: z.string().optional(), // Referencia a un secret manager
         }),
         quota_bytes: z.number().default(1024 * 1024 * 1024), // 1GB default
+    }).default({
+        provider: 'cloudinary',
+        settings: {},
+        quota_bytes: 1024 * 1024 * 1024
     }),
-    subscription: z.object({
-        tier: z.enum(['FREE', 'BASIC', 'PRO', 'ENTERPRISE']).default('FREE'),
-        status: z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED', 'PAST_DUE']).default('ACTIVE'),
-        stripe_customer_id: z.string().optional(),
-        stripe_subscription_id: z.string().optional(),
-        current_period_start: z.coerce.date().optional(),
-        current_period_end: z.coerce.date().optional(),
-    }).optional(),
+    subscription: TenantSubscriptionSchema.default({
+        planSlug: 'FREE',
+        status: 'trial',
+        overrides: {},
+        createdAt: new Date(),
+        updatedAt: new Date()
+    }),
     branding: z.object({
         logo: z.object({
             url: z.string().url().optional(),
@@ -243,15 +247,8 @@ export const TenantConfigSchema = z.object({
         recepcion: z.object({
             canal: z.enum(['EMAIL', 'POSTAL', 'IN_APP', 'XML_EDI']).default('EMAIL'),
             modo: z.enum(['PDF', 'XML', 'EDI', 'CSV', 'PAPER']).default('PDF'),
-            email: z.string().optional(), // Validado como email si canal es EMAIL
+            email: z.string().optional().nullable(), // Validado como email si canal es EMAIL
         }).optional(),
-    }).optional(),
-    customLimits: z.object({
-        llm_tokens_per_month: z.number().optional(),
-        storage_bytes: z.number().optional(),
-        vector_searches_per_month: z.number().optional(),
-        api_requests_per_month: z.number().optional(),
-        users: z.number().optional(),
     }).optional(),
 
     createdAt: z.coerce.date().default(() => new Date()),

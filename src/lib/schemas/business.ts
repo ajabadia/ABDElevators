@@ -59,7 +59,15 @@ export const EntitySchema = z.object({
         modelos: z.array(z.any()).optional(),
         risks: z.array(RiskFindingSchema).optional(),
         federatedInsights: z.array(z.any()).optional(),
+        checklist: z.array(z.object({
+            id: z.string(),
+            description: z.string(),
+            completed: z.boolean().default(false),
+            completedBy: z.string().optional(),
+            completedAt: z.date().optional(),
+        })).optional(),
     }).optional(),
+    confidence_score: z.number().min(0).max(1).optional(),
     transitions_history: z.array(WorkflowLogSchema).default([]),
     fileMd5: z.string().optional(),
     createdAt: z.date().default(() => new Date()),
@@ -87,6 +95,9 @@ export const ChecklistItemSchema = z.object({
     description: z.string().min(1),
     notes: z.string().optional(),
     icon: z.string().optional(),
+    confidence: z.number().min(0).max(1).optional(),
+    confidenceLevel: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
+    ragReference: z.string().optional(),
 });
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 
@@ -130,5 +141,18 @@ export const ItemValidationSchema = z.object({
     itemId: z.string(),
     status: z.enum(['OK', 'REVIEW', 'PENDING']).default('PENDING'),
     notes: z.string().optional(),
+    technicianId: z.string().optional(),
+    updatedAt: z.date().default(() => new Date()),
 });
 export type ItemValidation = z.infer<typeof ItemValidationSchema>;
+
+export const ExtractedChecklistSchema = z.object({
+    _id: z.any().optional(),
+    entityId: z.string(),
+    tenantId: z.string(),
+    items: z.array(ChecklistItemSchema),
+    validations: z.record(z.string(), ItemValidationSchema).default({}),
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+export type ExtractedChecklist = z.infer<typeof ExtractedChecklistSchema>;

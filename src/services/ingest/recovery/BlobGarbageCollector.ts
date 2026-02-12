@@ -11,7 +11,7 @@
  */
 
 import { logEvento } from '@/lib/logger';
-import { FileBlobManager } from '../core/FileBlobManager';
+import { BlobStorageService } from '../../storage/BlobStorageService';
 import crypto from 'crypto';
 
 /**
@@ -61,7 +61,7 @@ export class BlobGarbageCollector {
 
         try {
             // Find all orphaned blobs
-            const orphans = await FileBlobManager.findOrphanedBlobs(session);
+            const orphans = await BlobStorageService.findOrphanedBlobs(session);
             orphansFound = orphans.length;
 
             await this.logOrphansFound(correlationId, orphansFound);
@@ -69,7 +69,7 @@ export class BlobGarbageCollector {
             // Filter by grace period
             const now = Date.now();
             const deletableBlobs = orphans.filter((blob) => {
-                const age = now - blob.lastAccessedAt.getTime();
+                const age = now - blob.lastSeenAt.getTime();
                 return age > GC_CONFIG.GRACE_PERIOD_MS;
             });
 
@@ -86,8 +86,8 @@ export class BlobGarbageCollector {
                 const blob = deletableBlobs[i];
 
                 try {
-                    await FileBlobManager.deleteOrphanedBlob(
-                        blob.md5,
+                    await BlobStorageService.deleteOrphanedBlob(
+                        blob._id,
                         correlationId,
                         session
                     );
@@ -96,7 +96,7 @@ export class BlobGarbageCollector {
                 } catch (error) {
                     errors++;
                     const err = error as Error;
-                    await this.logGCError(correlationId, blob.md5, err);
+                    await this.logGCError(correlationId, blob._id, err);
                 }
             }
 

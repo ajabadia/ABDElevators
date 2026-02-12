@@ -19,7 +19,8 @@ export type ErrorCode =
   | 'USER_NOT_FOUND'
   | 'USER_UPDATE_FAILED'
   | 'MFA_ENABLE_FAILED'
-  | 'MFA_DISABLE_FAILED';
+  | 'MFA_DISABLE_FAILED'
+  | 'LIMIT_EXCEEDED';
 
 export class AppError extends Error {
   constructor(

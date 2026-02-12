@@ -97,7 +97,7 @@ export class PromptService {
             console.error("Error auditing prompt usage:", err);
         }
 
-        const model = (prompt as any).model || 'gemini-1.5-flash';
+        const model = (prompt as any).model || 'gemini-2.5-flash';
         return { text: rendered, model };
     }
 
@@ -208,6 +208,8 @@ export class PromptService {
             userAgent: auditMetadata?.userAgent,
             environment: prompt.environment || 'PRODUCTION',
             industry: prompt.industry || 'GENERIC',
+            category: prompt.category,
+            model: prompt.model,
             createdAt: new Date()
         };
 
@@ -276,6 +278,8 @@ export class PromptService {
             changeReason: `Rollback a versión ${targetVersion}`,
             environment: prompt.environment || 'PRODUCTION',
             industry: prompt.industry || 'GENERIC',
+            category: prompt.category,
+            model: prompt.model,
             createdAt: new Date()
         };
 
@@ -287,6 +291,8 @@ export class PromptService {
                 $set: {
                     template: versionSnapshot.template,
                     variables: versionSnapshot.variables,
+                    category: (versionSnapshot as any).category || prompt.category,
+                    model: (versionSnapshot as any).model || prompt.model,
                     version: prompt.version + 1,
                     updatedBy: changedBy,
                     updatedAt: new Date()

@@ -9,6 +9,7 @@ import { IngestPreparer } from './ingest/IngestPreparer';
 import { IngestAnalyzer } from './ingest/IngestAnalyzer';
 import { IngestIndexer } from './ingest/IngestIndexer';
 import { getSignedUrl } from '@/lib/cloudinary';
+import { GraphExtractionService } from './graph-extraction-service';
 
 export interface IngestOptions {
     file: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
@@ -19,6 +20,7 @@ export interface IngestOptions {
         scope?: 'USER' | 'TENANT' | 'INDUSTRY' | 'GLOBAL';
         industry?: string;
         ownerUserId?: string; // For USER scope
+        spaceId?: string; // 🌌 Phase 125.2: Target Space
     };
     tenantId: string;
     userEmail: string;
@@ -180,6 +182,22 @@ export class IngestService {
                 correlationId,
                 tenantId: asset.tenantId
             });
+
+            // Step 4: Graph Extraction (Phase 122)
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'GRAPH_EXTRACTION_START',
+                message: `Extracting entities and relations for Knowledge Graph...`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+            await GraphExtractionService.extractAndPersist(
+                analysis.rawText,
+                asset.tenantId,
+                correlationId,
+                { sourceDoc: asset.filename }
+            ).catch(e => console.error('[GRAPH_EXTRACTION_ERROR]', e));
 
             // Final Update
             await knowledgeAssetsCollection.updateOne(

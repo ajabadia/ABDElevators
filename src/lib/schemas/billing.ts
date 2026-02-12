@@ -108,3 +108,29 @@ export const TenantCreditSchema = z.object({
     expiryDate: z.date().nullable(),
 });
 export type TenantCredit = z.infer<typeof TenantCreditSchema>;
+
+export const TenantSubscriptionStatusSchema = z.enum(['trial', 'active', 'past_due', 'suspended', 'canceled']);
+export type TenantSubscriptionStatus = z.infer<typeof TenantSubscriptionStatusSchema>;
+
+export const TenantSubscriptionSchema = z.object({
+    planSlug: z.enum(['FREE', 'BASIC', 'PRO', 'ENTERPRISE']).default('FREE'),
+    status: TenantSubscriptionStatusSchema.default('trial'),
+
+    // Stripe Integration
+    stripeCustomerId: z.string().optional().nullable(),
+    stripeSubscriptionId: z.string().optional().nullable(),
+
+    // Limits Overrides (Phase 120.2)
+    overrides: z.record(z.string(), MetricPricingSchema).default({}),
+
+    // Dates
+    trialEndsAt: z.date().optional().nullable(),
+    currentPeriodStart: z.date().optional().nullable(),
+    currentPeriodEnd: z.date().optional().nullable(),
+    canceledAt: z.date().optional().nullable(),
+    suspendedAt: z.date().optional().nullable(),
+
+    createdAt: z.date().default(() => new Date()),
+    updatedAt: z.date().default(() => new Date()),
+});
+export type TenantSubscription = z.infer<typeof TenantSubscriptionSchema>;

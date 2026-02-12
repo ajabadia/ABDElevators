@@ -51,10 +51,16 @@ export default function KnowledgeAssetsPage() {
     const t = useTranslations('knowledge_assets');
     const tCommon = useTranslations('common');
     const [searchTerm, setSearchTerm] = useState("");
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
-    const [previewAsset, setPreviewAsset] = useState<{ id: string, filename: string } | null>(null);
-    const [relationshipAsset, setRelationshipAsset] = useState<KnowledgeAsset | null>(null);
-    const [diagnosticAsset, setDiagnosticAsset] = useState<{ id: string, filename: string } | null>(null);
+
+    // Modal State Refactor (Audit Item 3.2)
+    type ModalState =
+        | { type: 'closed' }
+        | { type: 'upload' }
+        | { type: 'preview', id: string, filename: string }
+        | { type: 'relationship', asset: KnowledgeAsset }
+        | { type: 'diagnostic', id: string, filename: string };
+
+    const [modalState, setModalState] = useState<ModalState>({ type: 'closed' });
 
     // Pagination state
     const [page, setPage] = useState(1);
@@ -136,11 +142,17 @@ export default function KnowledgeAssetsPage() {
         }
     };
 
-    // 4. Auto-refresh
+    // 4. Adaptive Polling Optimization (Audit Item 2)
     useEffect(() => {
-        const hasProcessing = documents.some(d => d.ingestionStatus === 'PROCESSING' || d.ingestionStatus === 'PENDING');
-        if (hasProcessing) {
-            const interval = setInterval(refresh, 3000);
+        const processingItems = documents.filter(d =>
+            d.ingestionStatus === 'PROCESSING' ||
+            d.ingestionStatus === 'PENDING'
+        );
+
+        if (processingItems.length > 0) {
+            // Incremental polling strategy: 3s + 1s per processing item, max 10s
+            const intervalMs = Math.min(3000 + (processingItems.length * 1000), 10000);
+            const interval = setInterval(refresh, intervalMs);
             return () => clearInterval(interval);
         }
     }, [documents, refresh]);
@@ -154,12 +166,12 @@ export default function KnowledgeAssetsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title={t('title').split(' ')[0]} // "Gestión"
-                highlight={t('title').split(' ').slice(1).join(' ')} // "del Corpus Técnico"
+                title={t('title').split(' ')[0]}
+                highlight={t('title').split(' ').slice(1).join(' ')}
                 subtitle={t('subtitle')}
                 actions={
                     <Button
-                        onClick={() => setIsUploadOpen(true)}
+                        onClick={() => setModalState({ type: 'upload' })}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 gap-2 px-6"
                     >
                         <Plus size={18} />
@@ -169,34 +181,34 @@ export default function KnowledgeAssetsPage() {
             />
 
             <UnifiedIngestModal
-                isOpen={isUploadOpen}
+                isOpen={modalState.type === 'upload'}
                 onClose={() => {
-                    setIsUploadOpen(false);
+                    setModalState({ type: 'closed' });
                     refresh();
                 }}
             />
 
             <PDFPreviewModal
-                isOpen={!!previewAsset}
-                onClose={() => setPreviewAsset(null)}
-                id={previewAsset?.id || ""}
-                filename={previewAsset?.filename || ""}
+                isOpen={modalState.type === 'preview'}
+                onClose={() => setModalState({ type: 'closed' })}
+                id={modalState.type === 'preview' ? modalState.id : ""}
+                filename={modalState.type === 'preview' ? modalState.filename : ""}
             />
 
             <RelationshipManagerModal
-                isOpen={!!relationshipAsset}
+                isOpen={modalState.type === 'relationship'}
                 onClose={() => {
-                    setRelationshipAsset(null);
+                    setModalState({ type: 'closed' });
                     refresh();
                 }}
-                asset={relationshipAsset!}
+                asset={modalState.type === 'relationship' ? modalState.asset : null as any}
             />
 
             <IngestionDiagnosticModal
-                isOpen={!!diagnosticAsset}
-                onClose={() => setDiagnosticAsset(null)}
-                assetId={diagnosticAsset?.id || ""}
-                filename={diagnosticAsset?.filename || ""}
+                isOpen={modalState.type === 'diagnostic'}
+                onClose={() => setModalState({ type: 'closed' })}
+                assetId={modalState.type === 'diagnostic' ? modalState.id : ""}
+                filename={modalState.type === 'diagnostic' ? modalState.filename : ""}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -223,8 +235,11 @@ export default function KnowledgeAssetsPage() {
             <ContentCard>
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" size={18} />
                         <Input
+                            type="search"
+                            role="searchbox"
+                            aria-label={t('search_placeholder')}
                             placeholder={t('search_placeholder')}
                             className="pl-10 border-border focus:ring-primary/20"
                             value={searchTerm}
@@ -346,9 +361,9 @@ export default function KnowledgeAssetsPage() {
                                             t={t}
                                             handleStatusChange={handleStatusChange}
                                             handleDelete={handleDelete}
-                                            onPreview={() => setPreviewAsset({ id: doc._id, filename: doc.filename })}
-                                            onManageRelationships={() => setRelationshipAsset(doc)}
-                                            onViewDiagnostics={() => setDiagnosticAsset({ id: doc._id, filename: doc.filename })}
+                                            onPreview={() => setModalState({ type: 'preview', id: doc._id, filename: doc.filename })}
+                                            onManageRelationships={() => setModalState({ type: 'relationship', asset: doc })}
+                                            onViewDiagnostics={() => setModalState({ type: 'diagnostic', id: doc._id, filename: doc.filename })}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -373,16 +388,18 @@ export default function KnowledgeAssetsPage() {
                                     size="icon-sm"
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1 || isLoading}
+                                    aria-label={tCommon('pagination.previous_page') || 'Previous Page'}
                                 >
-                                    <ChevronLeft size={14} />
+                                    <ChevronLeft size={14} aria-hidden="true" />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="icon-sm"
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages || isLoading}
+                                    aria-label={tCommon('pagination.next_page') || 'Next Page'}
                                 >
-                                    <ChevronRight size={14} />
+                                    <ChevronRight size={14} aria-hidden="true" />
                                 </Button>
                             </div>
                         </div>

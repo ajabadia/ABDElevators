@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
 import {
     ShieldCheck,
     Zap,
@@ -18,24 +19,49 @@ import { Badge } from "@/components/ui/badge";
 import { useApiItem } from "@/hooks/useApiItem";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
-import { GlobalSemanticSearch } from "@/components/shared/GlobalSemanticSearch";
 import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 import { TenantROIStats } from "@/components/admin/TenantROIStats";
 import { QuickNavConnector } from "@/components/admin/QuickNavConnector";
-import { CollectiveIntelligenceDashboard } from "@/components/admin/CollectiveIntelligenceDashboard";
-import { AutomationStudio } from "@/components/admin/AutomationStudio";
-import { KnowledgeGovernance } from "@/components/admin/KnowledgeGovernance";
-import { ReliabilityStressMonitor } from "@/components/admin/ReliabilityStressMonitor";
-import { SecurityAutoscaleMonitor } from "@/components/admin/SecurityAutoscaleMonitor";
 import { StatsGrid } from "@/components/admin/StatsGrid";
 import { UsageSection } from "@/components/admin/UsageSection";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DashboardTabs } from "@/components/admin/DashboardTabs";
 import { useTranslations } from "next-intl";
 import { UserRole } from "@/types/roles";
 
 // Modular Components (Phase 105 Hygiene)
 import { IndustryDistribution } from "@/components/admin/IndustryDistribution";
 import { DashboardRecentActivity } from "@/components/admin/DashboardRecentActivity";
+
+// Dynamic Imports for Heavy Tab Components (Performance Optimization - Phase 122)
+const CollectiveIntelligenceDashboard = dynamic(
+    () => import("@/components/admin/CollectiveIntelligenceDashboard").then(mod => ({ default: mod.CollectiveIntelligenceDashboard })),
+    { loading: () => <DashboardSkeleton /> }
+);
+
+const AutomationStudio = dynamic(
+    () => import("@/components/admin/AutomationStudio").then(mod => ({ default: mod.AutomationStudio })),
+    { loading: () => <DashboardSkeleton /> }
+);
+
+const KnowledgeGovernance = dynamic(
+    () => import("@/components/admin/KnowledgeGovernance").then(mod => ({ default: mod.KnowledgeGovernance })),
+    { loading: () => <DashboardSkeleton /> }
+);
+
+const GlobalSemanticSearch = dynamic(
+    () => import("@/components/shared/GlobalSemanticSearch").then(mod => ({ default: mod.GlobalSemanticSearch })),
+    { loading: () => <DashboardSkeleton /> }
+);
+
+const ReliabilityStressMonitor = dynamic(
+    () => import("@/components/admin/ReliabilityStressMonitor").then(mod => ({ default: mod.ReliabilityStressMonitor })),
+    { loading: () => <DashboardSkeleton /> }
+);
+
+const SecurityAutoscaleMonitor = dynamic(
+    () => import("@/components/admin/SecurityAutoscaleMonitor").then(mod => ({ default: mod.SecurityAutoscaleMonitor })),
+    { loading: () => <DashboardSkeleton /> }
+);
 
 export default function AdminDashboardPage() {
     const t = useTranslations('admin.dashboard');
@@ -80,13 +106,14 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsCompact(!isCompact)}
+                            aria-label={t('warRoomToggle')}
+                            aria-pressed={isCompact}
                             className={`p-2 rounded-lg transition-colors ${isCompact ? 'bg-teal-500/10 text-teal-500' : 'hover:bg-muted text-muted-foreground'}`}
-                            title={t('warRoomToggle')}
                         >
-                            {isCompact ? <Monitor size={20} /> : <LayoutGrid size={20} />}
+                            {isCompact ? <Monitor size={20} aria-hidden="true" /> : <LayoutGrid size={20} aria-hidden="true" />}
                         </button>
                         <Badge variant="outline" className="gap-2 px-4 py-2 bg-background border-border text-teal-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
-                            <Activity size={14} className="animate-pulse text-teal-500" />
+                            <Activity size={14} className="motion-safe:animate-pulse text-teal-500" aria-hidden="true" />
                             {t('liveFeed')}
                         </Badge>
                     </div>
@@ -95,32 +122,33 @@ export default function AdminDashboardPage() {
 
             <QuickNavConnector />
 
-            <Tabs defaultValue="overview" className="space-y-6 mt-8">
-                <TabsList className="bg-muted p-1 rounded-2xl border border-border w-full flex justify-start overflow-x-auto">
-                    <TabsTrigger value="overview" className="rounded-xl px-6">
-                        {t('tabs.overview')}
-                    </TabsTrigger>
-                    <TabsTrigger value="intelligence" className="rounded-xl px-6 gap-2">
-                        <BrainCircuit size={16} /> {t('tabs.intelligence')}
-                    </TabsTrigger>
-                    <TabsTrigger value="automation" className="rounded-xl px-6 gap-2">
-                        <Zap size={16} /> {t('tabs.automation')}
-                    </TabsTrigger>
-                    <TabsTrigger value="governance" className="rounded-xl px-6 gap-2">
-                        <Scale size={16} /> {t('tabs.governance')}
-                    </TabsTrigger>
-                    <TabsTrigger value="search" className="rounded-xl px-6 gap-2">
-                        <Globe2 size={16} /> {t('tabs.search')}
-                    </TabsTrigger>
-                    <TabsTrigger value="reliability" className="rounded-xl px-6 gap-2">
-                        <Server size={16} /> {t('tabs.reliability')}
-                    </TabsTrigger>
-                    <TabsTrigger value="security_scale" className="rounded-xl px-6 gap-2">
-                        <ShieldCheck size={16} /> {t('tabs.security')}
-                    </TabsTrigger>
-                </TabsList>
 
-                <TabsContent value="overview" className="space-y-8 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <DashboardTabs defaultTab="overview">
+                <DashboardTabs.List>
+                    <DashboardTabs.Tab id="overview">
+                        {t('tabs.overview')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="intelligence" icon={BrainCircuit}>
+                        {t('tabs.intelligence')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="automation" icon={Zap}>
+                        {t('tabs.automation')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="governance" icon={Scale}>
+                        {t('tabs.governance')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="search" icon={Globe2}>
+                        {t('tabs.search')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="reliability" icon={Server}>
+                        {t('tabs.reliability')}
+                    </DashboardTabs.Tab>
+                    <DashboardTabs.Tab id="security_scale" icon={ShieldCheck}>
+                        {t('tabs.security')}
+                    </DashboardTabs.Tab>
+                </DashboardTabs.List>
+
+                <DashboardTabs.OverviewPanel id="overview">
                     {/* Tenant ROI Dashboard (Fase 24.2b) */}
                     {!isSuperAdmin && <TenantROIStats />}
 
@@ -143,32 +171,32 @@ export default function AdminDashboardPage() {
 
                     {/* Recent Activity (Modular Card) */}
                     <DashboardRecentActivity activities={stats.activities} t={t} />
-                </TabsContent>
+                </DashboardTabs.OverviewPanel>
 
-                <TabsContent value="intelligence" className="outline-none">
+                <DashboardTabs.Panel id="intelligence" lazy>
                     <CollectiveIntelligenceDashboard />
-                </TabsContent>
+                </DashboardTabs.Panel>
 
-                <TabsContent value="automation" className="outline-none">
+                <DashboardTabs.Panel id="automation" lazy>
                     <AutomationStudio />
-                </TabsContent>
+                </DashboardTabs.Panel>
 
-                <TabsContent value="governance" className="outline-none">
+                <DashboardTabs.Panel id="governance" lazy>
                     <KnowledgeGovernance />
-                </TabsContent>
+                </DashboardTabs.Panel>
 
-                <TabsContent value="search" className="outline-none">
+                <DashboardTabs.Panel id="search" lazy>
                     <GlobalSemanticSearch />
-                </TabsContent>
+                </DashboardTabs.Panel>
 
-                <TabsContent value="reliability" className="outline-none">
+                <DashboardTabs.Panel id="reliability" lazy>
                     <ReliabilityStressMonitor />
-                </TabsContent>
+                </DashboardTabs.Panel>
 
-                <TabsContent value="security_scale" className="outline-none">
+                <DashboardTabs.Panel id="security_scale" lazy>
                     <SecurityAutoscaleMonitor />
-                </TabsContent>
-            </Tabs>
+                </DashboardTabs.Panel>
+            </DashboardTabs>
         </PageContainer>
     );
 }

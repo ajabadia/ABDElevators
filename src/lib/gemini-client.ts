@@ -24,16 +24,20 @@ export function getGenAI() {
 export function mapModelName(model: string): string {
     const m = model.toLowerCase();
 
-    // Soporte para Gemini 2.x/3.x (requested by user)
-    // Nota: Mapeamos a las versiones estables más recientes si el alias no es directo.
-    if (m.includes('gemini-2.5') || m.includes('gemini-3')) {
-        return 'gemini-2.0-flash'; // O la versión pro si se prefiere, pero flash es el default para RAG
+    // Soporte para Gemini 3 (Working models per user feedback)
+    if (m.includes('gemini-3')) {
+        if (m.includes('image')) return 'gemini-3-pro-image';
+        if (m.includes('preview')) return 'gemini-3-pro-preview';
+        return 'gemini-3-pro';
     }
 
-    if (m.includes('gemini-2.0')) return 'gemini-2.0-flash';
-    if (m.includes('pro')) return 'gemini-1.5-pro';
-    if (m.includes('flash')) return 'gemini-1.5-flash';
-    return 'gemini-1.5-flash'; // Fallback seguro
+    // Soporte para Gemini 2.5 (Working models per documentation)
+    if (m.includes('gemini-2.5')) {
+        return 'gemini-2.5-flash';
+    }
+
+    // Fallback estable prioritario según Documentación/MODELOS_DISPONIBLES.md
+    return 'gemini-2.5-flash';
 }
 
 /**

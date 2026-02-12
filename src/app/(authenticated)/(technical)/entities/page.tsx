@@ -105,10 +105,13 @@ export default function EntitiesPage() {
 
             if (entityData) {
                 setAnalysisResult({
+                    id: entityData._id,
                     entityId: entityData.identifier || entityData.id || entityData.numero_pedido,
                     patterns: entityData.detectedPatterns || entityData.modelos_detectados || entityData.metadata?.modelos || [],
                     risks: entityData.risks || entityData.metadata?.risks || [],
-                    federatedInsights: entityData.federatedInsights || entityData.metadata?.federatedInsights || []
+                    federatedInsights: entityData.federatedInsights || entityData.metadata?.federatedInsights || [],
+                    confidence: entityData.confidence_score,
+                    checklist: entityData.metadata?.checklist || []
                 });
                 setShowTrace(false);
                 refresh();
@@ -138,10 +141,13 @@ export default function EntitiesPage() {
                         &larr; Back to New Analysis
                     </Button>
                     <RagReportView
+                        id={analysisResult.id}
                         identifier={analysisResult.entityId}
                         detectedPatterns={analysisResult.patterns}
                         risks={analysisResult.risks}
                         federatedInsights={analysisResult.federatedInsights}
+                        confidence={analysisResult.confidence}
+                        checklist={analysisResult.checklist}
                     />
                 </div>
             ) : (

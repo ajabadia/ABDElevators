@@ -57,7 +57,8 @@ export async function performTechnicalSearch(
     correlationId: string,
     limit = 5,
     industry: string = 'ELEVATORS',
-    environment: string = 'PRODUCTION'
+    environment: string = 'PRODUCTION',
+    spaceId?: string
 ): Promise<RagResult[]> {
     return withSpan('rag-service', 'rag.technical_search', async (span) => {
         span.setAttributes({
@@ -88,7 +89,7 @@ export async function performTechnicalSearch(
             embeddingKey: "embedding",
         });
 
-        const filter = {
+        const filter: any = {
             $and: [
                 { status: { $ne: "obsoleto" } },
                 { deletedAt: { $exists: false } },
@@ -102,6 +103,10 @@ export async function performTechnicalSearch(
                 }
             ]
         };
+
+        if (spaceId) {
+            filter.$and.push({ spaceId });
+        }
 
         const results = await vectorStore.maxMarginalRelevanceSearch(query, {
             k: limit,
@@ -168,7 +173,8 @@ export async function hybridSearch(
     correlationId: string,
     limit = 5,
     environment: string = 'PRODUCTION',
-    industry: string = 'ELEVATORS'
+    industry: string = 'ELEVATORS',
+    spaceId?: string
 ): Promise<RagResult[]> {
     return withSpan('rag-service', 'rag.hybrid_search', async (span) => {
         const inicio = Date.now();
@@ -201,9 +207,9 @@ export async function hybridSearch(
         const { GraphRetrievalService } = await import('@/services/graph-retrieval-service');
 
         const [geminiResults, bgeResults, keywordResults, graphContext] = await Promise.all([
-            performTechnicalSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment),
-            MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment),
-            KeywordSearchService.pureKeywordSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment),
+            performTechnicalSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
+            MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
+            KeywordSearchService.pureKeywordSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
             GraphRetrievalService.getGraphContext(query, tenantId, correlationId)
         ]);
 
@@ -211,7 +217,7 @@ export async function hybridSearch(
         try {
             const variations = await QueryExpansionService.expandQuery(query, tenantId, correlationId);
             const expansionPromises = variations.map((v: string) =>
-                performTechnicalSearch(v, tenantId, correlationId, limit, effectiveIndustry, environment)
+                performTechnicalSearch(v, tenantId, correlationId, limit, effectiveIndustry, environment, spaceId)
             );
             const expansionHits = await Promise.all(expansionPromises);
             expandedResults = expansionHits.flat();

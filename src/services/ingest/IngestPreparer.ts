@@ -1,22 +1,23 @@
 import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
-import { ValidationError } from '@/lib/errors';
-import { withRetry } from '@/lib/retry';
-import { uploadRAGDocument } from '@/lib/cloudinary';
+import { ValidationError, AppError } from '@/lib/errors';
 import { IngestOptions } from '../ingest-service';
 import { logEvento } from '@/lib/logger';
+
+import { IngestPrepareResult } from './types';
 
 /**
  * IngestPreparer: Handles validations, deduplication and initial storage (Phase 105 Hygiene).
  */
 export class IngestPreparer {
-    static async prepare(options: IngestOptions) {
+    static async prepare(options: IngestOptions): Promise<IngestPrepareResult> {
         const { file, metadata, tenantId, environment = 'PRODUCTION' } = options;
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
         const scope = metadata.scope || 'TENANT';
         const industry = metadata.industry || 'ELEVATORS';
+        const spaceId = metadata.spaceId; // 🌌 Phase 125.2
 
         // 1. Critical Size Validation
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -37,6 +38,7 @@ export class IngestPreparer {
         const dedupeQuery: any = {
             fileMd5: fileHash,
             tenantId: scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] },
+            spaceId: spaceId, // 🌌 Refinar por espacio si se provee
             environment
         };
 
@@ -75,7 +77,7 @@ export class IngestPreparer {
                     details: { source: 'ADMIN_INGEST', duration_ms: Date.now() - start }
                 }));
 
-                return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId };
+                return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
 
             // Rule #7: If it's failed/pending, let the worker handle retry if needed, 
@@ -92,7 +94,7 @@ export class IngestPreparer {
                     status: 'DUPLICATE',
                     details: { source: 'ADMIN_INGEST', duration_ms: Date.now() - start }
                 }));
-                return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true };
+                return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true, savings: 0 };
             }
 
             // If it's PENDING or FAILED, check if it's corrupted (missing URL)
@@ -109,134 +111,82 @@ export class IngestPreparer {
                     correlationId,
                     tenantId
                 });
-                return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId };
+                return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
         }
 
-        // 2. Physical Deduplication (Phase 125.1)
-        const fileBlobsCollection = await getTenantCollection('file_blobs', session);
-        let fileBlob = await fileBlobsCollection.findOne({ _id: fileHash as any });
+        // 2. Physical Deduplication (Phase 125.1 Unified)
+        let blob;
+        let isBlobDeduplicated = false;
 
-        // Defensive check for broken blobs (null URL) - Phase 125.2 Hardening
-        if (fileBlob && !fileBlob.cloudinaryUrl) {
-            console.warn(`[IngestPreparer] Found BROKEN blob for MD5 ${fileHash}. Deleting and re-uploading.`);
-            await fileBlobsCollection.deleteOne({ _id: fileHash as any });
-            fileBlob = null; // Forces re-upload
-        }
-
-        let cloudinaryResult;
-
-        if (fileBlob) {
-            // Deduplication Hit! Reuse existing blob
-            console.log(`[IngestPreparer] Deduplication HIT for MD5 ${fileHash}. Reusing blob.`);
-            cloudinaryResult = {
-                secureUrl: fileBlob.cloudinaryUrl,
-                publicId: fileBlob.cloudinaryPublicId
-            };
-            // Async refCount increment (fire & forget for speed, or await if strict)
-            await fileBlobsCollection.updateOne(
-                { _id: fileHash as any },
-                { $inc: { refCount: 1 }, $set: { lastSeenAt: new Date() } }
+        try {
+            const { BlobStorageService } = await import('@/services/storage/BlobStorageService');
+            const result = await BlobStorageService.getOrCreateBlob(
+                buffer,
+                { filename: file.name, mimeType: (file as any).type || 'application/pdf' },
+                {
+                    tenantId,
+                    userId: options.userEmail,
+                    correlationId,
+                    source: 'RAG_INGEST'
+                },
+                session
             );
-        } else {
-            // New Blob - Upload to Cloudinary
+            blob = result.blob;
+            isBlobDeduplicated = result.deduplicated;
+        } catch (error: any) {
+            // Log the storage failure
             await logEvento({
-                level: 'INFO',
+                level: 'ERROR',
                 source: 'INGEST_PREPARER',
-                action: 'UPLOAD_START',
-                message: `Uploading file ${file.name} to Cloudinary...`,
+                action: 'STORAGE_FAILED',
+                message: `Universal storage failed: ${error.message}`,
                 correlationId,
-                tenantId
+                tenantId,
+                stack: error.stack
             });
 
-            try {
-                const uploadResult = await withRetry(
-                    () => uploadRAGDocument(buffer, file.name, tenantId, { fileHash }),
-                    { maxRetries: 3, initialDelayMs: 1000 }
-                );
+            // Create a FAILED asset record for traceability
+            const failedAsset = {
+                tenantId: scope === 'TENANT' ? tenantId : 'global',
+                industry,
+                filename: file.name,
+                componentType: metadata.type,
+                model: 'PENDING',
+                version: metadata.version,
+                revisionDate: new Date(),
+                status: 'vigente',
+                ingestionStatus: 'FAILED',
+                error: `Storage failed: ${error.message}`,
+                cloudinaryUrl: null,
+                cloudinaryPublicId: null,
+                fileMd5: fileHash,
+                sizeBytes: fileSize,
+                totalChunks: 0,
+                documentTypeId: metadata.documentTypeId,
+                scope,
+                spaceId, // 🌌 Phase 125.2
+                environment,
+                correlationId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-                await logEvento({
-                    level: 'INFO',
-                    source: 'INGEST_PREPARER',
-                    action: 'UPLOAD_SUCCESS',
-                    message: `File uploaded successfully to Cloudinary. URL: ${uploadResult.secureUrl}`,
-                    correlationId,
-                    tenantId
-                });
+            const result = await knowledgeAssetsCollection.insertOne(failedAsset);
 
-                cloudinaryResult = {
-                    secureUrl: uploadResult.secureUrl,
-                    publicId: uploadResult.publicId
-                };
-            } catch (uploadError: any) {
-                // Log the upload failure
-                await logEvento({
-                    level: 'ERROR',
-                    source: 'INGEST_PREPARER',
-                    action: 'UPLOAD_FAILED',
-                    message: `Cloudinary upload failed: ${uploadError.message}`,
-                    correlationId,
-                    tenantId,
-                    stack: uploadError.stack
-                });
-
-                // Create a FAILED asset record for traceability
-                const failedAsset = {
-                    tenantId: scope === 'TENANT' ? tenantId : 'global',
-                    industry,
-                    filename: file.name,
-                    componentType: metadata.type,
-                    model: 'PENDING',
-                    version: metadata.version,
-                    revisionDate: new Date(),
-                    status: 'vigente',
-                    ingestionStatus: 'FAILED',
-                    error: `Upload failed: ${uploadError.message}`,
-                    cloudinaryUrl: null,
-                    cloudinaryPublicId: null,
-                    fileMd5: fileHash,
-                    sizeBytes: fileSize,
-                    totalChunks: 0,
-                    documentTypeId: metadata.documentTypeId,
-                    scope,
-                    environment,
-                    correlationId,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                };
-
-                const result = await knowledgeAssetsCollection.insertOne(failedAsset);
-
-                // Return early with FAILED status
-                return { docId: result.insertedId.toString(), status: 'FAILED', correlationId };
-            }
-
-            // Register new Blob
-            try {
-                // Use upsert to handle race conditions where another thread might have inserted it
-                await fileBlobsCollection.updateOne(
-                    { _id: fileHash as any },
-                    {
-                        $setOnInsert: {
-                            _id: fileHash as any,
-                            cloudinaryUrl: cloudinaryResult.secureUrl,
-                            cloudinaryPublicId: cloudinaryResult.publicId,
-                            mimeType: (file as any).type || 'application/pdf',
-                            sizeBytes: fileSize,
-                            refCount: 1,
-                            firstSeenAt: new Date(),
-                            lastSeenAt: new Date(),
-                            tenantId: 'abd_global', // Phase 125.1 Fix
-                            storageProvider: 'cloudinary',
-                            metadata: { originalFilename: file.name, uploadedBy: options.userEmail }
-                        }
-                    },
-                    { upsert: true }
-                );
-            } catch (e) {
-                console.warn('[IngestPreparer] Blob insert race condition ignored', e);
-            }
+            return {
+                docId: result.insertedId.toString(),
+                status: 'FAILED',
+                correlationId,
+                error: `Storage failed: ${error.message}`,
+                savings: 0
+            };
         }
+
+        const cloudinaryResult = {
+            secureUrl: blob.secureUrl || blob.url || (blob as any).cloudinaryUrl,
+            publicId: blob.providerId || (blob as any).cloudinaryPublicId
+        };
 
         // 3. Initial Registry
         const docMetadata = {
@@ -256,6 +206,7 @@ export class IngestPreparer {
             totalChunks: 0,
             documentTypeId: metadata.documentTypeId,
             scope,
+            spaceId, // 🌌 Phase 125.2
             environment,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -276,10 +227,10 @@ export class IngestPreparer {
                 source: 'ADMIN_INGEST',
                 scope,
                 duration_ms: Date.now() - start,
-                deduplicated: !!fileBlob // Audit if it was deduplicated
+                deduplicated: isBlobDeduplicated // Audit if it was deduplicated
             }
         }));
 
-        return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: fileBlob ? fileSize : 0 };
+        return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: isBlobDeduplicated ? fileSize : 0 };
     }
 }

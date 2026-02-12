@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 type ApiHandlerFunction = (
     req: NextRequest,
-    context: { tenantId: string; apiKeyId: any; correlationId: string }
+    context: { tenantId: string; apiKeyId: any; correlationId: string; spaceId?: string }
 ) => Promise<NextResponse>;
 
 /**
@@ -44,7 +44,8 @@ export function publicApiHandler(
             const response = await handler(req, {
                 tenantId: validKey.tenantId,
                 apiKeyId: validKey._id,
-                correlationId
+                correlationId,
+                spaceId: validKey.spaceId
             });
 
             // 4. Log Success

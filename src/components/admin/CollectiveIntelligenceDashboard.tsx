@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IntelligenceMetrics } from '@/types/intelligence';
+import { ProactiveInsightsSection } from './intelligence/ProactiveInsightsSection';
 
 export function CollectiveIntelligenceDashboard() {
     const [metrics, setMetrics] = useState<IntelligenceMetrics | null>(null);
@@ -173,6 +174,11 @@ export function CollectiveIntelligenceDashboard() {
                         ))}
                     </div>
                 </ContentCard>
+            </div>
+
+            {/* Nueva Sección Proactiva (Fase 83) */}
+            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                <ProactiveInsightsSection />
             </div>
         </div>
     );

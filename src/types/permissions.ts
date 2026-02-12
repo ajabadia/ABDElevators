@@ -3,6 +3,8 @@ export enum AppPermission {
     KNOWLEDGE_INGEST = 'knowledge:ingest',
     KNOWLEDGE_REDACT = 'knowledge:redact',
     KNOWLEDGE_DELETE = 'knowledge:delete',
+    KNOWLEDGE_MANAGE_SPACES = 'knowledge:manage_spaces',
+    KNOWLEDGE_MANAGE_COLLECTIONS = 'knowledge:manage_collections',
 
     // Business Operations
     ENTITY_ANALYZE = 'entity:analyze',

@@ -197,6 +197,21 @@ const t = await getTranslations('knowledgeAssets');
 - [ ] Paginación y filtros con textos traducidos si la lista puede crecer
 - [ ] Mensajes de vacío ("no hay datos") en vez de tablas vacías
 
+### ✅ Rendimiento y Optimización (Vercel Standards)
+- [ ] **Eliminación de Waterfalls**: Usa `Promise.all()` para fetches independientes (`async-parallel`).
+- [ ] **Componentes de Servidor (RSC)**: La página/sección es RSC por defecto a menos que necesite interactividad (`use client`).
+- [ ] **Bundle Optimization**: Evita "barrel files" e importa componentes/iconos directamente (`bundle-barrel-imports`).
+- [ ] **Carga Diferida**: Usa `next/dynamic` para componentes pesados o pesados en JS (`bundle-dynamic-imports`).
+- [ ] **Eficiencia de Re-render**: Memoriza componentes pesados con `memo()` y evita props no primitivas estáticas (`rerender-memo`).
+- [ ] **Data Fetching**: Usa `SWR` o `React.cache()` para deduplicar peticiones (`client-swr-dedup` / `server-cache-react`).
+
+### ✅ Arquitectura de Componentes (Composition Patterns)
+- [ ] **Evita Props Booleanas**: No añadas props booleanas para personalizar comportamiento; usa composición (`architecture-avoid-boolean-props`).
+- [ ] **Compound Components**: Estructura componentes complejos con contexto compartido (`architecture-compound-components`).
+- [ ] **Variantes Explícitas**: Crea componentes de variante explícitos en lugar de modos booleanos (`patterns-explicit-variants`).
+- [ ] **Children sobre Render Props**: Usa `children` para composición en lugar de props `renderX` (`patterns-children-over-render-props`).
+- [ ] **Desacoplar Implementación**: El Provider es el único lugar que conoce cómo se gestiona el estado (`state-decouple-implementation`).
+
 ---
 
 ## Checklist: Autenticación, Seguridad y MFA

@@ -236,13 +236,20 @@ export class [ServiceName] {
 }
 ```
 
-### 3. React Page Template (Server Component)
+### 3. React Page Template (Server Component - Default)
 
 ```typescript
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { PageContainer, PageHeader, ContentCard } from '@/components/ui';
+import { Suspense } from 'react';
+
+// Use Parallel Data Fetching in Server Components
+async function getPageData() {
+    // const [res1, res2] = await Promise.all([fetch1(), fetch2()]);
+    // return { ... };
+}
 
 export default async function [PageName]() {
     // 1. Authentication
@@ -254,8 +261,8 @@ export default async function [PageName]() {
     // 2. i18n
     const t = await getTranslations('[namespace]');
 
-    // 3. Data Fetching (if needed)
-    // const data = await fetchData();
+    // 3. Data Fetching
+    // const data = await getPageData();
 
     return (
         <PageContainer>
@@ -264,9 +271,11 @@ export default async function [PageName]() {
                 description={t('description')}
             />
 
-            <ContentCard>
-                {/* TODO: Implement your UI */}
-            </ContentCard>
+            <Suspense fallback={<div>Loading...</div>}>
+                <ContentCard>
+                    {/* Implements business logic or children */}
+                </ContentCard>
+            </Suspense>
         </PageContainer>
     );
 }
@@ -309,7 +318,7 @@ export function [ComponentName]({ /* props */ }: [ComponentName]Props) {
         setError(null);
 
         try {
-            // TODO: Implement your logic
+            // OPTIMIZATION: Use SWR or native fetch for deduplication
             const response = await fetch('/api/...', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -49,26 +49,31 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
 
         setChangingPlan(slug);
         try {
-            const res = await fetch('/api/billing/change-plan', {
+            // Asumimos que el tenantId se maneja en el servidor o viene del contexto
+            // Para simplicidad en este componente, enviamos el slug y el servidor lo asocia al tenant de la sesión
+            const res = await fetch('/api/admin/billing/manual-change', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newPlanSlug: slug })
+                body: JSON.stringify({
+                    tenantId: 'current', // El servidor detecta 'current' o usa el tenant de la sesión
+                    subscriptionData: { planSlug: slug.toUpperCase() }
+                })
             });
             const data = await res.json();
 
             if (data.success) {
                 toast({
                     title: '¡Plan Actualizado!',
-                    description: `Ahora estás en el plan ${slug.toUpperCase()}. Se han aplicado ${data.creditApplied}€ en créditos por prorrateo.`,
+                    description: `Plan cambiado a ${slug.toUpperCase()} correctamente.`,
                 });
                 if (onPlanChanged) onPlanChanged(slug);
             } else {
-                throw new Error(data.message);
+                throw new Error(data.message || 'Error al cambiar plan');
             }
         } catch (err: any) {
             toast({
                 title: 'Error al cambiar plan',
-                description: err.message || 'Ocurrió un error inesperado.',
+                description: err.message || 'Ocurrió un error inesperado al procesar el cambio manual.',
                 variant: 'destructive'
             });
         } finally {

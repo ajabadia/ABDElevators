@@ -23,7 +23,8 @@ import {
     UserCircle,
     BrainCircuit,
     ShieldAlert,
-    Languages
+    Languages,
+    Box
 } from 'lucide-react';
 import { UserRole } from '@/types/roles';
 
@@ -148,6 +149,25 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/settings/i18n',
                 icon: Languages,
                 roles: [UserRole.SUPER_ADMIN]
+            }
+        ]
+    },
+    {
+        label: 'Knowledge Workspace',
+        labelKey: 'sections.workspace',
+        items: [
+            {
+                name: 'Spaces',
+                nameKey: 'items.spaces',
+                href: '/spaces',
+                icon: Box
+            },
+            {
+                name: 'Admin Spaces',
+                nameKey: 'items.admin_spaces',
+                href: '/admin/spaces',
+                icon: Shield,
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             }
         ]
     },

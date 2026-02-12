@@ -176,6 +176,7 @@ export const KnowledgeAssetSchema = z.object({
         description: z.string().optional()
     })).default([]),
     contextHeader: z.any().optional(), // Metadata de contexto del documento
+    spaceId: z.string().optional(), // Reference to the NEW Space entity (Phase 125.2)
     correlationId: z.string().optional(), // Added for tracing
 });
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;

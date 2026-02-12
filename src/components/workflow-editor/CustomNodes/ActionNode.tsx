@@ -37,6 +37,11 @@ export const ActionNode = memo(({ data, selected }: { data: any, selected: boole
                     ⚠️ ANOMALÍA DETECTADA
                 </div>
             )}
+            {data.isCyclic && (
+                <div className="absolute -bottom-6 left-0 bg-purple-600 text-[8px] text-white px-2 py-0.5 rounded-b-md font-bold uppercase tracking-wider">
+                    🔄 Bucle Detectado
+                </div>
+            )}
 
             {/* Analytics Badge */}
             {hasData && (

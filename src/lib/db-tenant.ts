@@ -41,6 +41,7 @@ export class SecureCollection<T extends Document> {
     private readonly allowedTenants: string[];
     private readonly isSuperAdmin: boolean;
     private readonly useSoftDeletes: boolean;
+    private readonly session: any; // Added for Phase 125.2 context
 
     public get tenantId(): string {
         return this.primaryTenantId;
@@ -55,6 +56,7 @@ export class SecureCollection<T extends Document> {
         this.primaryTenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID || 'unknown';
         this.isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
         this.useSoftDeletes = options.softDeletes ?? true; // Por defecto usamos soft deletes para seguridad de datos
+        this.session = session;
 
         const accessList = (session?.user?.tenantAccess || []).map((a: any) => a.tenantId);
         this.allowedTenants = Array.from(new Set([this.primaryTenantId, ...accessList])).filter(Boolean);
@@ -75,15 +77,34 @@ export class SecureCollection<T extends Document> {
         // 1. Aislamiento Multi-tenant
         // El SuperAdmin (Auditoría 015) bypassea el filtro de tenant para gestión global
         if (!this.isSuperAdmin) {
-            const globalAllowedCollections = ['document_types', 'translations', 'file_blobs'];
+            const globalAllowedCollections = ['document_types', 'translations', 'file_blobs', 'spaces'];
             const isGlobalAllowed = globalAllowedCollections.includes(this.collection.collectionName);
 
-            if (isGlobalAllowed) {
-                // Permitir ver lo propio + lo global del sistema (abd_global)
+            if (this.collection.collectionName === 'knowledge_assets') {
+                // 🌌 Phase 125.2: Space-aware isolation for Assets
+                const userId = this.session?.user?.id || 'unknown';
                 baseFilter = {
                     ...baseFilter,
-                    tenantId: { $in: [...this.allowedTenants, 'abd_global'] }
+                    tenantId: { $in: [...this.allowedTenants, 'abd_global'] },
+                    $or: [
+                        { spaceId: { $exists: false } }, // Legacy fallback
+                        { spaceId: { $in: this.session?.user?.accessibleSpaces || [] } }, // Planned for Phase 125.2
+                        { ownerUserId: userId } // Personal assets
+                    ]
                 } as any;
+            } else if (isGlobalAllowed) {
+                // 🛡️ Si ya hay un filtro por tenantId, validamos que esté en los permitidos.
+                // Si no hay, inyectamos el set completo (propios + global).
+                const incomingTenantId = (baseFilter as any).tenantId;
+                const allowedSet = [...this.allowedTenants, 'abd_global'];
+
+                if (incomingTenantId && typeof incomingTenantId === 'string') {
+                    if (!allowedSet.includes(incomingTenantId)) {
+                        baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as any;
+                    }
+                } else {
+                    baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as any;
+                }
             } else if (this.allowedTenants.length > 1) {
                 baseFilter = { ...baseFilter, tenantId: { $in: this.allowedTenants } } as any;
             } else {
@@ -122,9 +143,20 @@ export class SecureCollection<T extends Document> {
     // --- WRITE OPERATIONS ---
 
     async insertOne(doc: OptionalUnlessRequiredId<T>, options?: InsertOneOptions) {
+        const isGlobalAllowed = ['document_types', 'translations', 'file_blobs', 'spaces'].includes(this.collection.collectionName);
+        const incomingTenantId = (doc as any).tenantId;
+
+        // 🛡️ Phase 125.2: Allow abd_global for global-compatible collections if specified
+        const finalTenantId = (this.isSuperAdmin && incomingTenantId)
+            ? incomingTenantId
+            : (isGlobalAllowed && incomingTenantId === 'abd_global')
+                ? 'abd_global'
+                : this.primaryTenantId;
+
         const secureDoc = {
             ...doc,
-            tenantId: (this.isSuperAdmin && (doc as any).tenantId) ? (doc as any).tenantId : this.primaryTenantId,
+            tenantId: finalTenantId,
+            ownerUserId: (doc as any).ownerUserId || this.session?.user?.id,
             createdAt: new Date(),
             updatedAt: new Date()
         } as OptionalUnlessRequiredId<T>;

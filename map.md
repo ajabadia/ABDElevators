@@ -22,6 +22,7 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 | `/profile` | Dashboard personal, estadísticas de uso y avatar. | - |
 | `/my-documents` | Repositorio personal de archivos analizados. | - |
 | `/search` | Búsqueda Inteligente Conversacional sobre manuales técnicos. | 2026-02-08 |
+| `/spaces` | Hub de Espacios personales, colecciones y Quick Q&A (Phase 125). | 2026-02-12 |
 | `/support` | Sistema de tickets y centro de ayuda empresarial. | - |
 
 ## 🛡️ Panel de Administración (Control Center)
@@ -31,16 +32,17 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | 2026-02-03 12:20 |
-| `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-08 02:00 |
+| `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-10 |
+| `/admin/spaces` | Dashboard administrativo de Espacios Industriales. | 2026-02-12 |
 | `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión + Decision Tracing. | 2026-02-08 21:00 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-06 10:15 |
-| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-06 10:15 |
-| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-06 10:15 |
-| `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-06 07:45 |
+| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-10 |
+| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-10 |
+| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-10 |
+| `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-10 |
 | `/admin/settings/i18n` | Gobernanza i18n: Editor de traducciones con asistencia de IA. | 2026-02-06 12:00 |
 
 ### ⚡ Automation Studio (Workflows)
@@ -58,8 +60,16 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-06 10:15 |
 | `/admin/profile` | Gestión de identidad, seguridad y preferencias del usuario. | 2026-02-07 14:30 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
-| `/admin/organizations` | Gestión de tenants: Branding, Storage Isolation y Billing. | 2026-02-07 15:45 |
+| `/admin/billing/contracts` | Gestión de contratos, límites y planes por tenant. | 2026-02-10 |
+| `/admin/api-keys` | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
+| `/admin/ingest/jobs` | Panel de gestión de Dead Letter Queue (DLQ) y jobs atascados (Phase 126). | 2026-02-12 |
+| `/admin/workflows` | Diseñador visual de grafos para automatizar flujos RAG (Phase 127). | 2026-02-12 |
 | `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-10 |
+
+## 🏭 Verticales Industriales (Workshop & Taller)
+| Ruta | Funcionalidad | Última Revisión |
+|------|---------------|-----------------|
+| `/workshop/orders/new` | Registro de pedidos de taller con extracción de manuales (Phase 128). | 2026-02-12 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -88,7 +98,11 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
 | `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-10 |
 | `/api/cron/stuck-jobs` | Detección y recuperación automática de procesos de ingesta bloqueados. | 2026-02-10 |
+| `/admin/ingest/jobs` | Panel de gestión de Dead Letter Queue (DLQ) y jobs atascados (Phase 126). | 2026-02-11 |
+| `/api/admin/spaces` | Gestión administrativa de espacios universales (Quota & Hierarchy). | 2026-02-11 |
+| `/api/spaces` | Recuperación de espacios accesibles para navegación del usuario. | 2026-02-11 |
+| `/api/core/quick-qa` | Endpoint efímero para preguntas rápidas sobre texto pegado. | 2026-02-11 |
+| `/api/collections` | Gestión de colecciones personales (Notebooks). | 2026-02-11 |
 
 ---
-*Mapa actualizado por Antigravity v4.3.1 (Resilient Enterprise Ingestion) - 2026-02-10*
-
+*Mapa actualizado por Antigravity v4.4.3 (Industrial Refinement Edition) - 2026-02-12*

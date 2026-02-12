@@ -1,0 +1,733 @@
+Una propuesta razonable para un SaaS serio es tratar los workflows como “procesos de negocio configurables” con tres piezas claras: diseñador, orquestador y bandeja de tareas.
+​
+
+1. Visión de producto
+Objetivo: que un admin de negocio (no dev) pueda definir y ajustar procesos como “Validación técnica”, “Aprobación legal” o “Revisión de contrato” sin tocar código, y que el equipo trabaje sobre esos procesos desde una bandeja clara.
+​
+
+Pilares:
+
+Diseñador visual de workflow por tipo de entidad (Casos, Equipos, Usuarios).
+
+Motor de estados + acciones automáticas (ya lo tienes).
+
+Bandeja de tareas de revisión y aprobación (ya la tienes parcialmente con WorkflowTaskInbox).
+​
+
+2. Diseñador visual de workflows
+2.1. Página “Workflows” en admin
+Nueva sección en el panel:
+
+Ruta: /admin/workflows.
+
+Estructura:
+
+PageHeader con:
+
+Título: “Workflows de negocio”.
+
+Highlight: “Procesos”.
+
+Subtítulo: “Define y ajusta los flujos de aprobación para cada tipo de caso/entidad.”
+
+Filtros:
+
+Tenant (solo para superadmin).
+
+Tipo de entidad: ENTITY, EQUIPMENT, USER (select).
+
+Entorno: PRODUCTION, SANDBOX.
+​
+
+Lista de definiciones:
+
+Tabla con: nombre, entityType, environment, activo, default, fecha actualización.
+​
+
+Acciones: “Editar”, “Clonar”, “Desactivar”.
+
+Backend: usar WorkflowService.listDefinitions({ tenantId, entityType, environment }) con paginación.
+​
+
+2.2. Editor de un workflow concreto
+Vista /admin/workflows/[id] o modal a pantalla completa:
+
+Panel izquierdo: propiedades generales
+
+Nombre del workflow.
+
+EntityType (solo lectura si ya creado).
+
+Entorno.
+
+Flags active, isDefault.
+​
+
+Panel central: editor de estados
+
+Lista tipo Kanban/diagram:
+
+Cada estado: card con label, id interno (solo lectura), color, icon, flags isInitial, isFinal, requiresValidation, rolesAllowed.
+​
+
+Acciones:
+
+Añadir estado.
+
+Definir qué roles pueden editar en ese estado (rolesAllowed).
+
+Panel derecho: transiciones
+
+Para cada transición:
+
+from, to (seleccionables).
+
+label (texto del botón que verá el usuario: “Enviar a revisión”, “Aprobar”).
+​
+
+requiredRole.
+
+Condiciones:
+
+checklistComplete (bool).
+
+minDocuments (number).
+
+requireSignature (bool).
+
+requireComment (bool).
+​
+
+Acciones automáticas (checkboxes):
+
+notifyAdmin, notifyUser, logAudit, etc. (estas ya las implementa tu handleActions).
+​
+
+Persistencia:
+
+Al guardar:
+
+Construir un objeto Partial<WorkflowDefinition> con states y transitions y llamar a WorkflowService.createOrUpdateDefinition(...).
+​
+
+Validaciones:
+
+1 estado isInitial como máximo.
+
+Al menos un estado isFinal.
+
+Sin ciclos sin salida si el caso de uso lo requiere.
+
+3. Uso operativo en los “Casos”
+3.1. Detalle de caso con timeline de estados
+En la página de detalle de caso (tu “ENTITY” principal):
+
+Encabezado del caso:
+
+Badge con estado actual (label, color, icon).
+​
+
+Línea de tiempo de estados: historial de cambios con fecha, usuario y acción (aprovechando ya tu log de workflow).
+​
+
+Sección “Acciones de estado”:
+
+Motor UI que:
+
+Carga el workflow activo para tenant + entityType.
+
+Calcula las transiciones disponibles desde el estado actual, filtrando por requiredRole y condiciones (ej. checklist completo).
+​
+
+Renderiza botones:
+
+Ej.: “Iniciar análisis”, “Enviar a revisión”, “Aprobar informe”, “Solicitar correcciones”.
+​
+
+Al pulsar un botón:
+
+Llamas al use case/gateway de transición (que ya tienes en el servicio de casos, usando workflow engine).
+
+Si requiresValidation = true en el estado destino, se genera automáticamente una workflowtask con WorkflowTaskService.
+​
+
+3.2. Tareas generadas por workflows
+Las transiciones que exigen validación (requiresValidation: true) crean tareas en workflowtasks con:
+
+caseId, title, description, assignedRole, priority, status.
+​
+
+La bandeja WorkflowTaskInbox en /admin/tasks:
+
+Filtros:
+
+Estado de tarea (PENDING, COMPLETED).
+
+Rol asignado (para que cada rol vea “sus” tareas).
+
+Tipo de entidad / caseId.
+​
+
+Cada tarea:
+
+Muestra título (“Revisión requerida para estado X”), descripción, caso asociado, fecha creación.
+​
+
+Acciones: “Abrir caso”, “Marcar como completada” (con campo de notas opcional).
+​
+
+Al completar:
+
+WorkflowTaskService.updateStatus(...) cambia status y registra log TASKSTATUSUPDATED.
+​
+
+Esto, de cara al cliente, se percibe como:
+“Cualquier cambio de estado que requiera revisión generará automáticamente una tarea para el rol adecuado, y la bandeja de tareas muestra qué revisiones están pendientes”.
+
+4. Workflows disparados por eventos (automatización)
+Para ir más allá de “solo estados”:
+
+ProcessWorkflowEventUseCase ya soporta workflows que se disparan por triggers (ej. “cuando un análisis detecte un riesgo alto”).
+​
+
+Para un SaaS profesional:
+
+Añade en tu editor de workflows una pestaña “Automatizaciones”:
+
+Definir triggers: eventType (por ejemplo REPORT_COMPLETED, RISK_DETECTED), condition (field, operator, value).
+​
+
+Definir actions: invocar handlers de tipo notify, createTask, updateEntity, etc. registrados en ActionHandlerRegistry.
+​
+
+Ejemplo:
+
+“Cuando un análisis de entidad genere un riesgo crítico (riskLevel = 'HIGH'), crear automáticamente un caso de cumplimiento y asignar una tarea de revisión al rol COMPLIANCE”.
+
+Internamente, tú ya tienes la base (use case y registry); se trata de exponerlo en UI con un editor de “si pasa X, haz Y”.
+
+5. Detalles que lo hacen “digno de SaaS”
+Multi-tenant y multi-entorno:
+
+Un workflow por tenantId + entityType + environment, con posibilidad de versiones sandbox vs producción (ya soportado en WorkflowService).
+​
+
+Observabilidad:
+
+Logs WORKFLOWSERVICE, WORKFLOWENGINE, WORKFLOWTASKSERVICE con correlationId y tenantId ya están.
+​
+
+Puedes añadir una pestaña de “Analítica” simple: número de casos por estado, tiempo medio en cada estado, tareas abiertas por rol (apoyado en WorkflowAnalyticsService).
+​
+
+Seguridad:
+
+Acceso a configuración de workflows restringido a permisos específicos (PermissionResource: 'workflow') usando tu GuardianEngine / PermissionService.
+​
+
+
+
+
+ el workflow, debería poder ser gobernado por un LLM, es decir, en algún punto, se lanza un prompt, al que habría que indicarle qué pasos tiene o puede tener un workflow, qué workflows existen para el tenant. El LLM evaluaría qué hacer y o bien lanzaría un workflow existente, o propondría crear uno o, incluso, podría llegar a crear uno nuevo. Otro caso podría ser que un paso lance un prompt a n LLM en un paso del workflow, el LLM devolviese datos estructurados a un paso siguiente o decidiese si va por un camino del workflow o por otro ¿lo ves realizable con lo que hay ahora? Si es necesario, estaríamos a tiempo de cambiar de tecnología, ampliar la existente, poner otras piezas, etc
+Sí, es perfectamente realizable con lo que tienes, pero conviene estructurarlo en dos capas:
+
+motor de workflow clásico (lo que ya tienes)
+
+capa “LLM orchestrator” encima que decide qué workflow/ramas usar y, en algunos nodos, actúa como step del workflow.
+​
+​
+
+Te lo aterrizo en un diseño concreto, profesional y extendible.
+
+1. Concepto: motor de estados gobernado por LLM
+El motor actual sigue siendo la fuente de verdad de estados, transiciones, permisos y trazabilidad (workflowdefinitions, workflowtasks, logs).
+​
+
+El LLM:
+
+Lee catálogo de workflows de un tenant (WorkflowService.listDefinitions / getActiveWorkflow).
+​
+
+Recibe la descripción del caso, el contexto y las opciones de transición disponibles.
+
+Devuelve:
+
+“Usa workflow X y lanza transición Y ahora”.
+
+o “No hay workflow adecuado, propongo crear uno con estos estados/transiciones”.
+
+o “En este nodo, toma el camino A/B y devuelve además datos estructurados para el siguiente paso”.
+
+Patrón de diseño: orchestrator–workers y routing LLM aplicado sobre un state machine clásico.
+
+2. Caso A: el LLM elige qué workflow lanzar o crear
+2.1. Catálogo de workflows por tenant
+Ya tienes:
+
+WorkflowService.listDefinitions({ tenantId, entityType, environment }).
+​
+
+WorkflowService.seedDefaultWorkflow(tenantId, industry, correlationId).
+​
+
+Añade:
+
+Un endpoint admin interno, p. ej. GET /api/internal/workflows/catalog:
+
+Entrada: tenantId, entityType, environment.
+
+Salida simplificada para el LLM:
+
+workflows[]: id, name, entityType, states[] (id,label), transitions[] (from,to,label,conditions).
+​
+
+2.2. Orchestrator LLM
+Nuevo servicio, p. ej. WorkflowOrchestratorService:
+
+Método suggestWorkflow({ tenantId, entityType, description, existingWorkflows }):
+
+Construye un prompt del estilo:
+
+“Estos son los workflows existentes para este tenant (lista JSON). Descripción del caso: …. Decide:
+
+si alguno encaja (devuelve { action: "USE_EXISTING", workflowId, reason }),
+
+o si conviene proponer uno nuevo ({ action: "PROPOSE_NEW", definition, reason }),
+
+o no hacer nada.”
+
+Devuelve JSON parseable, validado con Zod.
+
+Método proposeDefinition puede devolver algo muy cercano a tu WorkflowDefinitionSchema (estados + transiciones), que luego validas y presentas en UI antes de activar.
+​
+
+Flujo:
+
+Usuario crea un nuevo “tipo de caso” o describe un proceso.
+
+Backend llama WorkflowOrchestratorService.suggestWorkflow(...).
+
+Si USE_EXISTING:
+
+Asocias ese workflow al nuevo tipo de casos (o simplemente usas el active por entityType).
+
+Si PROPOSE_NEW:
+
+Guardas la definición como borrador (no active) y la muestras en el editor visual para que el admin la revise/edite.
+
+Tras aprobación humana, llamas a WorkflowService.createOrUpdateDefinition con active: true.
+​
+
+3. Caso B: un paso del workflow que pregunta a un LLM y decide rama
+Aquí usas el patrón “router LLM”: un nodo del flujo cuyo “output” es decidir siguiente transición + opcionalmente datos estructurados.
+​
+​
+
+3.1. Marcar estados/transiciones “LLM-driven”
+Extiende WorkflowDefinitionSchema (o un campo metadata) para:
+
+En un estado:
+
+llmNode?: { promptKey: string; schemaKey: string; } (prompt del sistema RAG, más esquema de salida).
+
+En una transición:
+
+decisionStrategy?: "USER" | "LLM",
+
+llmRouting?: { promptKey: string; branches: { value: string; to: string }[] }.
+
+Ejemplos:
+
+Estado analizando:
+
+llmNode.promptKey = "WORKFLOW_CASE_ANALYSIS" → LLM recibe contexto del caso y devuelve un JSON con campos riskLevel, needComplianceReview, summary.
+
+Transición desde analizando:
+
+llmRouting define ramas:
+
+"HIGH_RISK" → to: revision
+
+"LOW_RISK" → to: completado.
+
+3.2. Ejecución en motor
+En tu motor de casos/workflow:
+
+Cuando reaches un estado con llmNode:
+
+Llamas a un nuevo WorkflowLLMNodeService.runNode(...):
+
+Renderiza el prompt usando tu PromptService (ya lo tienes para RAG).
+​
+
+Llama al LLM y valida la respuesta con Zod (schemaKey).
+
+Persiste los datos estructurados en case.metadata.workflow.llmOutputs[stateId].
+
+Cuando quieras “salir” de ese estado sin intervención humana:
+
+Le pasas el resultado al router de transiciones:
+
+Si la transición tiene decisionStrategy: "LLM":
+
+Llamas a WorkflowLLMRouterService.route(...) que:
+
+Toma llmOutputs[stateId], llmRouting.branches y decide toState (o, si quieres, lo deja decidir directamente al LLM).
+
+Ejecutas la transición normal (executeTransition), generando tareas si requiresValidation lo pide.
+​
+
+Esto no rompe nada de tu FSM: solo introduces que la lógica de elección de transición puede depender de un output LLM.
+
+4. Integración con tu arquitectura actual
+Lo bueno es que encaja bien con lo que ya tienes:
+
+Prompts y RAG:
+
+Ya usas PromptService.getRenderedPrompt para generar prompts con variables y tracking.
+​
+
+Puedes crear prompts maestros del tipo WORKFLOW_ROUTER, WORKFLOW_NODE_ANALYZER usando el mismo sistema.
+​
+
+Trazabilidad:
+
+Cada llamada LLM para workflow:
+
+Usa correlationId del caso/workflow (ya estándar en tu ecosistema).
+​
+
+Registra eventos en logs con source: WORKFLOWLLM, action: NODEEXECUTED/ROUTERDECISION y guarda la respuesta JSON en auditingestion o un nuevo auditworkflow.
+​
+
+Permisos y gobernanza:
+
+Solo usuarios con permisos workflow pueden:
+
+Aceptar propuestas de nuevos workflows.
+
+Marcar estados como llmNode o transiciones como decisionStrategy: "LLM".
+
+El LLM nunca ejecuta directamente cambios; siempre devuelve una propuesta que el motor aplica según tus reglas de seguridad (GuardianEngine, PermissionService).
+​
+
+5. ¿Hace falta cambiar de tecnología?
+Con lo que tienes:
+
+Motor de estados + tareas (WorkflowService, WorkflowTaskService, ProcessWorkflowEventUseCase).
+​
+
+Sistema de prompts multi-tenant (PromptService) y RAG/LLM plumbing ya robusto.
+​
+
+Observabilidad, DLQ, permisos finos.
+
+No necesitas cambiar de tecnología ni meter un Airflow/Kestra/LangGraph para esto; puedes:
+
+Implementar el LLM orchestrator como un servicio adicional (tipo WorkflowOrchestratorService + WorkflowLLMNodeService) sobre tu stack actual.
+
+Si más adelante quieres gráficos complejos (loops profundos, cientos de nodos), podrías integrar algo como LangGraph para workflows puramente LLM, pero tu motor de negocio puede seguir siendo el mismo.
+​
+​
+
+6. Siguiente paso concreto
+Si te encaja este enfoque, te propongo:
+
+Extender WorkflowDefinitionSchema con metadata mínima:
+
+llmNode a nivel de estado.
+
+decisionStrategy + llmRouting a nivel de transición.
+
+Diseñar 2 prompts maestros:
+
+WORKFLOW_ROUTER: dado caso + catálogo de workflows, decide USE_EXISTING / PROPOSE_NEW.
+
+WORKFLOW_NODE_ANALYZER: dado caso+estado, devuelve JSON con riskLevel, nextBranch, etc.
+
+Crear WorkflowOrchestratorService y WorkflowLLMNodeService siguiendo los patrones de PromptService / RagJudgeService que ya tienes.
+​
+
+Si quieres, en el siguiente mensaje puedo bajarlo a pseudo-interfaces TypeScript para esos campos nuevos y los dos servicios LLM, para que lo implementes con cambios mínimos sobre tu código actual.
+
+
+
+
+Tu stack ya tiene casi todas las piezas para Human‑in‑the‑Loop; solo hay que usarlas de forma sistemática en el workflow LLM‑driven que comentábamos.
+​
+
+1. Puntos donde meter al humano
+En el diseño propuesto hay tres sitios claros:
+
+Antes de activar/crear un workflow sugerido por LLM
+
+LLM propone definición (states + transitions).
+
+Un admin la revisa y la aprueba/rechaza desde el editor visual.
+
+Hasta que un humano no aprueba, el workflow queda como active: false / isDraft: true.
+
+En nodos de decisión críticos
+
+Un estado puede tener requiresValidation: true, lo que ya dispara una tarea manual (workflowtasks).
+​
+
+El LLM puede sugerir una ruta, pero la transición final la dispara un humano (botón en UI) o un humano confirma la decisión del LLM.
+
+En tareas generadas por acciones automáticas
+
+El HumanTaskHandler que ya tienes genera tareas de tipo DOCUMENTREVIEW con assignedRole, priority, checklistConfigId.
+​
+
+Es perfecto para “la IA ha detectado riesgo, revisa esto” antes de seguir.
+
+2. Cómo enganchar Human‑in‑the‑Loop con lo que ya tienes
+2.1. Revisión humana de workflows propuestos por LLM
+Extiende WorkflowDefinitionSchema con algo tipo:
+
+status: 'draft' | 'active' | 'archived' (ahora solo tienes active/isdefault).
+​
+
+Flujo:
+
+WorkflowOrchestratorService.proposeDefinition guarda una definición con status: 'draft', active: false.
+​
+
+En /admin/workflows:
+
+Lista separada de workflows “Pendientes de revisión”.
+
+Acción “Aprobar”:
+
+Cambia status → active, marca active: true y, si procede, isdefault: true.
+
+Acción “Rechazar”:
+
+Marca status: 'archived' o borra la definición.
+
+Human‑in‑the‑Loop:
+
+Ningún workflow generado por el LLM se usa en producción sin un click explícito de un admin.
+
+2.2. Paso del workflow + decisión LLM + confirmación humana
+Para estados críticos:
+
+Usa el campo que ya existe: requiresValidation: true en el estado destino.
+​
+
+Amplía las tareas generadas:
+
+El engine ya hace:
+
+si nextState.requiresValidation → inserta en workflowtasks una tarea DOCUMENTREVIEW con título “Revisión requerida para estado X”, assignedRole adecuado.
+​
+
+Añade a metadata de la tarea:
+
+Resultado del LLM (llmDecision, llmScore, llmReason).
+
+Siguiente ruta propuesta (proposedNextState si estás en un patrón router).
+
+En la UI WorkflowTaskInbox:
+
+Mostrar:
+
+“Propuesta de la IA: Aprobar / Rechazar / Enviar a revisión”.
+
+Razón del LLM (y, si quieres, enlace al trace de IA via AIGovernance / aiauditlogs).
+​
+
+Botones:
+
+“Aceptar recomendación”: ejecuta la transición sugerida.
+
+“Cambiar ruta”: deja elegir otra transición válida desde ese estado.
+
+Backend:
+
+Endpoint para “resolver tarea de workflow”:
+
+PATCH api/admin/workflow-tasks/[id] ya permite cambiar status y notes.
+​
+
+Añade (si no lo tienes en el frontend) una operación para disparar la transición del caso asociado cuando la tarea se marca COMPLETED con una decisión concreta (p.ej. en payload decision: 'APPROVE' | 'REJECT').
+
+2.3. HumanTaskHandler + checklists
+Ya tienes HumanTaskHandler como IActionHandler:
+
+Crea tareas con:
+
+type: action.params.taskType (DOCUMENTREVIEW, etc.)
+
+assignedRole, priority, checklistConfigId, metadata.
+​
+
+Para Human‑in‑the‑Loop más rico:
+
+Usa checklistConfigId para enlazar con tu editor/renderer de checklists (que ya tienes para validación de pedidos).
+​
+
+Crea una página de detalle de tarea:
+
+Muestra el caso, el output del LLM, y la checklist específica a completar.
+
+Solo cuando la checklist está completa y el usuario marca la tarea como COMPLETED, se permite la transición de estado.
+
+3. Convivencia LLM ↔ humano en rutas del workflow
+Con el esquema que te propuse antes:
+
+Transición puede tener decisionStrategy:
+
+"LLM_DIRECT": el motor acepta la decisión de LLM directamente (para cosas low‑risk).
+
+"LLM_SUGGEST_HUMAN_APPROVE": LLM decide propuesta, pero se crea tarea y la ruta real se toma cuando el humano aprueba (lo de arriba).
+
+"HUMAN_ONLY": sin IA, solo botones manuales.
+
+Implementación mínima:
+
+En el motor de workflow, cuando evalúas una transición con decisionStrategy:
+
+"LLM_DIRECT":
+
+Tomas la ruta devuelta por el LLM y ejecutas transición si pasa governance/permission.
+
+"LLM_SUGGEST_HUMAN_APPROVE":
+
+Guardas la propuesta en metadata del caso/tarea.
+
+Pones requiresValidation = true y creas tarea manual.
+
+"HUMAN_ONLY":
+
+No llamas al LLM; solo UI.
+
+Así mantienes un modelo claro de quién manda en cada punto.
+
+4. ¿Hace falta cambiar tecnología?
+No:
+
+Ya tienes:
+
+WorkflowEngine, WorkflowService, WorkflowTaskService, HumanTaskHandler, MongoWorkflowRepository.
+​
+
+Bandeja WorkflowTaskInbox y APIs api/admin/workflow-tasks para listar/actualizar tareas.
+​
+
+Infra de prompts + LLM + governance (PromptService, GovernanceEngine, AIWorkflow, WorkflowAnalyticsService).
+​
+
+Human‑in‑the‑Loop es, sobre todo:
+
+Usar sistemáticamente requiresValidation, workflowtasks y HumanTaskHandler en los puntos de decisión LLM.
+
+Añadir dos o tres campos de metadata + UI para que el humano vea y confirme lo que el LLM propone.
+
+Si quieres, en el siguiente paso te puedo escribir el “contrato” exacto de la tarea de revisión (shape de workflowtasks + metadata de LLM + decisiones posibles) para que lo implementes igual en backend y frontend.
+
+
+Para integrar bien Human‑in‑the‑Loop, basta con clarificar el contrato de la tarea de revisión y cómo se resuelve.
+
+1. Forma de la tarea de revisión
+En workflowtasks (lo haces ya con WorkflowTaskService y HumanTaskHandler), una tarea de revisión gobernada por IA podría tener siempre esta forma:
+​
+
+ts
+type WorkflowTaskStatus = 'PENDING' | 'INPROGRESS' | 'COMPLETED' | 'REJECTED' | 'CANCELLED';
+
+interface WorkflowReviewTask {
+  id: string;
+  tenantId: string;
+  caseId: string;            // o entityId asociado
+  type: 'DOCUMENTREVIEW' | 'RISKREVIEW' | 'WORKFLOWDECISION';
+  title: string;
+  description: string;
+  assignedRole: UserRole;    // ADMIN, COMPLIANCE, REVIEWER, TECHNICAL…
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  status: WorkflowTaskStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+
+  metadata?: {
+    workflowId?: string;
+    nodeLabel?: string;
+    correlationId?: string;
+
+    // Output del LLM que llevó a crear la tarea
+    llmProposal?: {
+      suggestedNextState?: string;         // id del estado destino propuesto
+      suggestedAction?: 'APPROVE' | 'REJECT' | 'ESCALATE' | string;
+      score?: number;                      // riesgo/confianza
+      reason?: string;                     // explicación breve
+      rawOutputId?: string;                // id en logs/audit si quieres
+    };
+
+    // Checklists u otros artefactos de revisión
+    checklistConfigId?: string;
+    extraContext?: any;
+  };
+}
+HumanTaskHandler ya construye algo muy parecido; el ajuste es rellenar metadata.llmProposal cuando la tarea nace de una decisión LLM.
+​
+
+2. Decisiones del humano sobre la tarea
+Cuando el revisor abre la tarea en WorkflowTaskInbox:
+
+Debe poder ver:
+
+Datos del caso.
+
+Propuesta de la IA (llmProposal).
+
+Checklist asociada si existe.
+
+Al cerrar la tarea, la UI envía a PATCH api/admin/workflow-tasks/[id]:
+​
+
+ts
+{
+  status: 'COMPLETED' | 'REJECTED' | 'CANCELLED',
+  decision: 'APPROVE' | 'REJECT' | 'ESCALATE' | 'FOLLOW_LLM' | 'OVERRIDE',
+  chosenNextState?: string,   // opcional: si el humano elige un estado concreto
+  notes?: string
+}
+Puedes extender el esquema Zod de UpdateStatusSchema para incluir decision y chosenNextState (actualmente solo tiene status y notes).
+​
+
+3. Qué hace el backend al resolver la tarea
+En el handler PATCH api/admin/workflow-tasks/[id]:
+
+Actualiza la tarea con status y notes (como ya haces con WorkflowTaskService.updateStatus).
+​
+
+Si status === 'COMPLETED':
+
+Recupera la tarea (getTaskById) para leer caseId, metadata.llmProposal, decision, chosenNextState.
+​
+
+Decide qué transición de workflow ejecutar:
+
+Si decision === 'FOLLOW_LLM' y hay llmProposal.suggestedNextState, usa esa.
+
+Si chosenNextState viene informado, usa ese.
+
+Si decision === 'REJECT', puedes llevar el caso a un estado de “rechazado” o a “correcciones”.
+
+Llama a tu servicio de casos/workflow para ejecutar la transición correspondiente (igual que cuando pulsas un botón de cambio de estado en la UI de casos).
+
+Log:
+
+Registrar un evento WORKFLOWTASKSERVICE.TASKRESOLVED con:
+
+decision, chosenNextState, llmProposal, userId, correlationId.
+​
+
+Con esto, tú mantienes:
+
+IA que propone rutas y crea tareas.
+
+Humanos que ven la propuesta, aplican criterio y disparan el cambio de estado.
+
+Trazabilidad clara de “qué recomendó el LLM” vs “qué decidió el humano”.

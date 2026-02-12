@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     Terminal,
     Save,
@@ -42,13 +44,15 @@ import { useFormModal } from '@/hooks/useFormModal';
  * Actualizado con Editor Pro y Visual UI.
  */
 export default function AdminPromptsPage() {
+    const t = useTranslations('admin.prompts');
     const modal = useFormModal<any>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [industryFilter, setIndustryFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
-    const [showGlobalHistory, setShowGlobalHistory] = useState(false);
+    const [showGlobalHistory] = useState(false); // Refactored to not use setShowGlobalHistory if not needed locally or pass to modal
+    const [_showGlobalHistory, setShowGlobalHistory] = useState(false);
     const { environment } = useEnvironmentStore();
 
     // Categorías disponibles
@@ -106,7 +110,7 @@ export default function AdminPromptsPage() {
     const handleSaved = () => {
         modal.close();
         fetchPrompts();
-        toast({ title: "Guardado", description: "El prompt se ha actualizado correctamente." });
+        toast({ title: t('messages.save_success') });
     };
 
     const handlePromote = async () => {
@@ -122,7 +126,7 @@ export default function AdminPromptsPage() {
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
-            toast({ title: "Promovido", description: "El prompt ha sido promovido a Producción." });
+            toast({ title: t('messages.promote_success') || 'Promoted', description: t('messages.promote_desc') || "The prompt has been promoted to Production." });
         } catch (err: any) {
             toast({ title: "Error", description: err.message, variant: "destructive" });
         }
@@ -132,9 +136,9 @@ export default function AdminPromptsPage() {
         <PageContainer className="h-full pb-10">
             {/* Header */}
             <PageHeader
-                title="Motor de Prompts IA"
+                title={t('title')}
                 highlight="Prompts"
-                subtitle="Configura el razonamiento vectorial y la extracción de datos."
+                subtitle={t('subtitle')}
                 actions={
                     <>
                         <Button
@@ -142,7 +146,7 @@ export default function AdminPromptsPage() {
                             variant="outline"
                             className="rounded-xl border-slate-200 dark:border-slate-800"
                         >
-                            <History className="w-4 h-4 mr-2" /> Historial Global
+                            <History className="w-4 h-4 mr-2" /> {t('actions.history') || 'Global History'}
                         </Button>
                         {environment === 'STAGING' && modal.isOpen && modal.data && (
                             <Button
@@ -150,18 +154,18 @@ export default function AdminPromptsPage() {
                                 variant="outline"
                                 className="rounded-xl border-amber-200 bg-amber-50 dark:bg-amber-900/10 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/20"
                             >
-                                <Rocket className="w-4 h-4 mr-2" /> Promover a Producción
+                                <Rocket className="w-4 h-4 mr-2" /> {t('actions.promote') || 'Promote to Production'}
                             </Button>
                         )}
                         <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
-                            <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
+                            <Plus className="w-4 h-4 mr-2" /> {t('new_prompt')}
                         </Button>
                     </>
                 }
             />
 
             <AnimatePresence>
-                {showGlobalHistory && (
+                {_showGlobalHistory && (
                     <PromptGlobalHistory onClose={() => setShowGlobalHistory(false)} />
                 )}
             </AnimatePresence>
@@ -176,7 +180,7 @@ export default function AdminPromptsPage() {
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <input
-                                        placeholder="Buscar por nombre, clave o descripción..."
+                                        placeholder={t('search_placeholder') || "Search by name, key or description..."}
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
@@ -188,7 +192,7 @@ export default function AdminPromptsPage() {
                                         size="icon"
                                         onClick={clearFilters}
                                         className="rounded-xl text-slate-400 hover:text-rose-500"
-                                        title="Limpiar filtros"
+                                        title={t('actions.clear_filters') || "Clear filters"}
                                     >
                                         <X size={18} />
                                     </Button>
@@ -205,7 +209,7 @@ export default function AdminPromptsPage() {
                                             : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
                                     )}
                                 >
-                                    TODOS ({prompts.length})
+                                    {t('filters.all') || 'ALL'} ({prompts.length})
                                 </button>
                                 {CATEGORIES.map(cat => (
                                     <button
@@ -236,7 +240,7 @@ export default function AdminPromptsPage() {
                                         onChange={e => setTenantFilter(e.target.value)}
                                         className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
                                     >
-                                        <option value="all">Organización</option>
+                                        <option value="all">{t('filters.organization') || 'Organization'}</option>
                                         {uniqueTenants.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
@@ -247,7 +251,7 @@ export default function AdminPromptsPage() {
                                     onChange={e => setIndustryFilter(e.target.value)}
                                     className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
                                 >
-                                    <option value="all">Industria</option>
+                                    <option value="all">{t('filters.industry') || 'Industry'}</option>
                                     <option value="GENERIC">Genérico</option>
                                     <option value="ELEVATORS">Ascensores</option>
                                     <option value="LEGAL">Legal</option>
@@ -323,7 +327,7 @@ export default function AdminPromptsPage() {
                                                             {p.key}
                                                         </p>
                                                         <span className="text-[10px] opacity-20">|</span>
-                                                        <p className={cn("text-[8px] font-black tracking-widest text-teal-500", modal.data === p && modal.isOpen ? "text-white/70" : "")}>
+                                                        <p className={cn("text-[10px] font-black tracking-widest text-teal-500", modal.data === p && modal.isOpen ? "text-white/70" : "")}>
                                                             {p.category}
                                                         </p>
                                                     </div>
@@ -336,7 +340,7 @@ export default function AdminPromptsPage() {
                             ) : (
                                 <div className="p-20 text-center opacity-40">
                                     <Search size={40} className="mx-auto mb-4" />
-                                    <p className="text-sm font-bold tracking-tight">No se encontraron prompts</p>
+                                    <p className="text-sm font-bold tracking-tight">{t('messages.no_prompts') || 'No prompts found'}</p>
                                 </div>
                             )}
                         </div>
@@ -348,7 +352,7 @@ export default function AdminPromptsPage() {
                         </div>
                         <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Multi-Vertical RAG</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                            Los prompts ahora soportan dimensiones por industria. El sistema seleccionará el prompt más específico disponible para la vertical detectada.
+                            {t('info.multi_vertical') || 'Prompts now support industry dimensions. The system will select the most specific available prompt for the detected vertical.'}
                         </p>
                     </div>
                 </div>
@@ -375,9 +379,9 @@ export default function AdminPromptsPage() {
                                     <Sparkles size={32} className="text-slate-300 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Control Maestro Multi-Vertical</h3>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('editor_placeholder_title') || 'Multi-Vertical Master Control'}</h3>
                                     <p className="text-xs text-slate-500 max-w-xs mt-2 mx-auto font-medium">
-                                        Selecciona una ingeniería de prompt para configurar las respuestas especializadas de cada vertical del negocio.
+                                        {t('editor_placeholder_desc') || 'Select a prompt engineering to configure specialized responses for each business vertical.'}
                                     </p>
                                 </div>
                                 <Button
@@ -385,7 +389,7 @@ export default function AdminPromptsPage() {
                                     variant="outline"
                                     className="mt-6 rounded-2xl border-dashed border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
                                 >
-                                    <Plus size={16} className="mr-2" /> Crear Primer Prompt Dinámico
+                                    <Plus size={16} className="mr-2" /> {t('actions.create_first') || 'Create First Dynamic Prompt'}
                                 </Button>
                             </motion.div>
                         )}

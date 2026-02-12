@@ -93,8 +93,56 @@ export class QueueService {
             state: await job.getState(),
             progress: job.progress,
             result: job.returnvalue,
-            failedReason: job.failedReason
+            failedReason: job.failedReason,
+            timestamp: job.timestamp,
+            finishedOn: job.finishedOn,
+            data: job.data
         };
+    }
+
+    /**
+     * Lista trabajos de una cola con paginación y filtro de estado.
+     */
+    public async listJobs(type: JobType, statuses: any[] = ['failed', 'completed', 'active', 'waiting', 'delayed'], start = 0, end = 10) {
+        const queue = this.getQueue(type);
+        const jobs = await queue.getJobs(statuses, start, end, true);
+
+        return Promise.all(jobs.map(async (job) => ({
+            id: job.id,
+            state: await job.getState(),
+            progress: job.progress,
+            timestamp: job.timestamp,
+            finishedOn: job.finishedOn,
+            failedReason: job.failedReason,
+            data: job.data
+        })));
+    }
+
+    /**
+     * Reintenta un trabajo fallido.
+     */
+    public async retryJob(type: JobType, jobId: string) {
+        const queue = this.getQueue(type);
+        const job = await queue.getJob(jobId);
+        if (!job) throw new Error('Job not found');
+
+        const state = await job.getState();
+        if (state !== 'failed') throw new Error(`Cannot retry job in state: ${state}`);
+
+        await job.retry();
+        return { success: true };
+    }
+
+    /**
+     * Elimina un trabajo de la cola.
+     */
+    public async deleteJob(type: JobType, jobId: string) {
+        const queue = this.getQueue(type);
+        const job = await queue.getJob(jobId);
+        if (!job) throw new Error('Job not found');
+
+        await job.remove();
+        return { success: true };
     }
 }
 

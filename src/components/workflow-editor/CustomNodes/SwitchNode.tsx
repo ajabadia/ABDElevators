@@ -19,6 +19,11 @@ export const SwitchNode = memo(({ data, selected }: { data: any, selected: boole
                     ⚠️ Desconectado
                 </div>
             )}
+            {data.isCyclic && (
+                <div className="absolute -bottom-6 left-0 bg-purple-600 text-[8px] text-white px-2 py-0.5 rounded-b-md font-bold uppercase tracking-wider">
+                    🔄 Bucle Detectado
+                </div>
+            )}
             <Handle type="target" position={Position.Left} className="w-3 h-3 bg-slate-400" />
 
             <div className="flex items-center gap-3 mb-3">

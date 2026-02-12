@@ -274,6 +274,41 @@ export class UsageService {
     }
 
     /**
+     * Obtiene el uso agregado de métricas para un tenant en un periodo.
+     * Fase 120.2: Manual Billing Support
+     */
+    static async getAggregateUsage(tenantId: string, start: Date, end: Date) {
+        try {
+            const collection = await getTenantCollection('usage_logs');
+            const stats = await collection.aggregate<any>([
+                {
+                    $match: {
+                        tenantId,
+                        timestamp: { $gte: start, $lte: end }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$type',
+                        total: { $sum: '$value' }
+                    }
+                }
+            ]);
+
+            // Convertir array a objeto mapa para fácil acceso
+            const usageMap: Record<string, number> = {};
+            stats.forEach((s: any) => {
+                usageMap[s._id] = s.total;
+            });
+
+            return usageMap;
+        } catch (error) {
+            console.error('[UsageService] Error fetching aggregate usage:', error);
+            return {};
+        }
+    }
+
+    /**
      * Calcula métricas de eficiencia personal para un usuario (Fase 24.2)
      * Basado en Validaciones realizadas y Tickets de soporte.
      */

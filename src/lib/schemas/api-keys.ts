@@ -23,7 +23,8 @@ export const ApiKeySchema = z.object({
     expiresAt: z.date().optional(), // Null = Never
     isActive: z.boolean().default(true),
     createdAt: z.date().default(() => new Date()),
-    createdBy: z.string()          // User ID
+    createdBy: z.string(),          // User ID
+    spaceId: z.string().optional()  // Restricted to a specific Space (optional)
 });
 export type ApiKey = z.infer<typeof ApiKeySchema>;
 

@@ -20,7 +20,7 @@ const CallGeminiMiniSchema = z.object({
     prompt: z.string().min(1),
     tenantId: z.string(),
     options: z.object({
-        correlationId: z.string().uuid(),
+        correlationId: z.string(),
         temperature: z.number().min(0).max(1).optional(),
         model: z.string().optional()
     })
@@ -99,7 +99,7 @@ export async function callGeminiMini(
     options: { correlationId: string; temperature?: number; model?: string },
     session?: any
 ): Promise<string> {
-    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-2.5-flash' } = options;
     const modelName = mapModelName(rawModel);
 
     return tracer.startActiveSpan('gemini.generate_content', {
@@ -170,7 +170,7 @@ export async function callGeminiPro(
 ): Promise<string> {
     return callGemini(prompt, tenantId, options.correlationId, {
         ...options,
-        model: options.model || 'gemini-1.5-pro'
+        model: options.model || 'gemini-3-pro'
     });
 }
 
@@ -182,7 +182,7 @@ export async function callGeminiStream(
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string }
 ) {
-    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-2.5-flash' } = options;
     const modelName = mapModelName(rawModel);
 
     return tracer.startActiveSpan('gemini.stream_content', {
@@ -247,7 +247,7 @@ export async function callGemini(
     }
 ): Promise<string> {
     const start = Date.now();
-    const modelName = mapModelName(options?.model || 'gemini-1.5-flash');
+    const modelName = mapModelName(options?.model || 'gemini-2.5-flash');
 
     return tracer.startActiveSpan('gemini.text_generation', {
         attributes: {

@@ -1,0 +1,1703 @@
+Tienes implementado ya gran parte de lo que definimos; te resumo por bloques y te marco lo que falta o está a medias.
+​
+
+1. Ingesta RAG (API, servicio, worker)
+Grado de implementación: ~85–90%
+
+API POST api/admin/ingest:
+
+Autenticación con auth y validación de sesión.
+​
+
+Zod local para metadata (LocalIngestMetadataSchema) con defaults y normalización.
+​
+
+Guardian V3 (IngestGuardian.authorize) con scopes USER/TENANT/INDUSTRY/GLOBAL.
+​
+
+Detección de environment y maskPii.
+​
+
+Delegación a IngestService.prepareIngest y manejo explícito de DUPLICATE.
+​
+
+Encolado en Redis (queueService.addJob a cola PDFANALYSIS) con fallback a executeAnalysis en background y trazas con IngestTracer.
+​
+
+Logging de errores con logEvento (VALIDATIONERROR, FATALERROR) y códigos de error coherentes.
+​
+
+IngestService:
+
+prepareIngest delega en IngestPreparer (no se ve aquí pero lo estás usando correctamente).
+​
+
+executeAnalysis:
+
+Recupera el asset, gestiona ingestionStatus y attempts.
+​
+
+Descarga PDF desde Cloudinary usando getSignedUrl + fetch y loguea FETCHSTART/FETCHSUCCESS.
+​
+
+Llama a IngestAnalyzer.analyze y IngestIndexer.index con logs ANALYSIS* e INDEXING*.
+​
+
+Añadido GraphExtractionService.extractAndPersist como fase 4 con logs GRAPHEXTRACTION*.
+​
+
+Actualización final de knowledgeassets (COMPLETED, progress, language, totalChunks, industry, contextHeader) y auditingestion con IngestAuditSchema.
+​
+
+Manejo de error: set FAILED, guarda error y relanza.
+​
+
+Worker:
+
+Worker BullMQ para cola PDFANALYSIS con conexión Redis (getRedisConnection) y listener de eventos JOBSTART/JOBCOMPLETED/JOBFAILED.
+​
+
+Worker standalone para dev (worker-standalone.ts) usando ioredis en localhost y el mismo patrón de executeAnalysis.
+​
+
+Pendiente / puntos a vigilar:
+
+Confirmar que IngestPreparer.prepare:
+
+Marca correctamente ingestionStatus inicial (PENDING) y guarda correlationId en el asset.
+
+Registra una entrada en auditingestion para PENDING / FAILED de la fase de preparación.
+
+Asegurar que en todos los caminos de error de prepareIngest devuelves una estructura clara (status: FAILED / DUPLICATE) y que la API no intenta encolar en esos casos.
+
+Verificar que en producción solo tienes un worker activo (o el de Vercel o el standalone, pero no duplicados).
+
+2. API de assets, trazas y reintentos
+Grado de implementación: ~95%
+
+Listado de assets GET api/admin/knowledge-assets:
+
+Uso de enforcePermission(knowledge, read) en vez de roles directos.
+​
+
+Secure collection multi-tenant con getTenantCollection, filtros por search, logs de SLA y errores.
+​
+
+Cambio de estado PATCH api/admin/knowledge-assets/status:
+
+Autenticación con auth y roles ADMIN/SUPERADMIN.
+​
+
+Zod para documentId/status.
+​
+
+Transacción simulada: actualiza master y chunks con filtro por cloudinaryPublicId o origenDoc + tenantId.
+​
+
+Logging INFO + ERROR + SLAVIOLATION.
+​
+
+Borrado DELETE api/admin/knowledge-assets/[id]:
+
+Soft delete coherente (marca obsoleto, deletedAt en asset y chunks; no borras Cloudinary).
+​
+
+Logs con soft-delete y SLAVIOLATION.
+​
+
+Descarga / preview:
+
+GET [...]download con fetch a Cloudinary, headers correctos y logging.
+​
+
+GET [...]preview con enforcePermission, URL de visualización (fl_attachment→inline) y redirect.
+​
+
+Relaciones:
+
+PATCH [...]relationships con esquema Zod, enforcePermission(knowledge, write) y logging.
+​
+
+Retry:
+
+POST [...]retry resetea FAILED→PENDING, limpia error, loguea INGESTRETRYINITIATED y llama a IngestService.executeAnalysis en background.
+​
+
+Trace:
+
+GET [...]trace recupera asset, luego auditingestion y applicationlogs por correlationId.
+​
+
+Pendiente / puntos a vigilar:
+
+En retry estás llamando a executeAnalysis directamente, sin volver a pasar por cola; es correcto como fallback, pero si quieres uniformidad con la cola, podrías reutilizar el mismo flujo de queueService.addJob con tipo RETRY o similar.
+
+3. Logging, auditoría y observabilidad
+Grado de implementación: ~90%
+
+Logging:
+
+Uso extensivo de logEvento con source, action, mensajes claros y correlationId en:
+
+Ingest API, IngestService, IngestWorker.
+​
+
+Intelligence, logs admin, assets, download/preview, retry.
+​
+
+SLAs: SLAVIOLATION en listados, descarga, preview, retry, stats, etc.
+​
+
+Audit trail:
+
+Uso de IngestAuditSchema en worker para registrar éxito del procesamiento asíncrono.
+​
+
+AuditTrailSchema definido para eventos generales; se está empezando a usar (no veo aquí su repositorio pero el esquema existe).
+​
+
+Logs admin:
+
+GET api/admin/logs, logsexport, logsstats con filtros avanzados, stats y CSV.
+​
+
+Uso de getTenantCollection(..., LOGS, softDeletes: false) para aislar BD de logs.
+​
+
+Pendiente / puntos a vigilar:
+
+Aún hay rutas que en errores genéricos devuelven Internal Server Error sin pasar por handleApiError (por ejemplo algunos endpoints de intelligence).
+​
+
+No todas las operaciones de configuración/gobernanza parecen usar todavía AuditTrailSchema (aunque el esquema está preparado).
+
+4. i18n (infraestructura y API)
+Grado de implementación: ~80–85%
+
+Infra y endpoints:
+
+Rutas api/admin/i18n:
+
+GET con filtros por locale/namespace/search, helpers nestToFlat/flatToNest.
+​
+
+POST para crear keys individuales con TranslationSchema y log de creación.
+​
+
+PATCH por locale para actualizar múltiples traducciones.
+​
+
+auto-translate con TranslationService.autoTranslate (Gemini) y tenant-aware.
+​
+
+i18n/stats para namespaces y totales.
+​
+
+i18n/sync para sincronizar JSON local→DB con log MANUALSYNC.
+​
+
+En el resto del código:
+
+Sigues usando next-intl en páginas y componentes (no se ve aquí, pero ya lo tenías en versiones anteriores; la API de i18n admin refuerza esa línea).
+
+Pendiente:
+
+Aún hay bastante texto hardcodeado en español en API y mensajes (“Documento no encontrado”, “Critical error deleting document”, etc.).
+​
+
+Falta el paso sistemático de mover esos textos a es.json/en.json y usar códigos/keys para errores de cara a UI.
+
+5. Seguridad, permisos y multi‑tenant
+Grado de implementación: ~90%
+
+Permisos:
+
+Uso consistente de requireRole y enforcePermission para admin (logs, intelligence, knowledge, i18n).
+​
+
+IngestGuardian.authorize para scopes y ownership en ingesta.
+​
+
+Multi-tenant:
+
+getTenantCollection con contexto de sesión y posibilidad de LOGS DB separada.
+​
+
+Filtros por tenantId en assets, logs, chunks admin, etc.
+​
+
+Seguridad de datos:
+
+API de download/preview validan rol/permiso o tenant antes de devolver URL/archivo.
+​
+
+Pendiente:
+
+Revisar que todas las rutas antiguas de app/api estén migradas a enforcePermission/requireRole y no mezclen lógica manual de roles.
+
+6. Paneles de administración y chunks
+Grado de implementación: ~80–90%
+
+GET api/admin/knowledge-base/chunks:
+
+Soporta búsqueda semántica (hybridSearch) y regex, filtros por environment, language, tipo (shadow/original), cursor pagination.
+​
+
+Integra con servicio RAG existente.
+​
+
+Stats globales y dashboards:
+
+Endpoints de stats globales de RAG quality (faithfulness/relevance/precision), consumo de tokens/storage, SLAs, industria, tenants recientes.
+​
+
+Pendiente:
+
+Asegurar que hybridSearch es environment-aware y tenant-aware de manera coherente en todos los usos (ya comentas en comentarios que hay que revisarlo).
+​
+
+Conclusión rápida
+Lo más crítico que definimos (pipeline de ingesta robusto, colas, trazas, logs de auditoría, endpoints admin de activos, i18n admin, logs admin) está ya muy cerca de “banking-grade” en diseño, y cubres la mayoría de puntos de la checklist.
+​
+
+Te quedan sobre todo tareas de pulido y homogeneización:
+
+Mover textos sueltos a i18n.
+
+Centralizar manejo de errores en algunos endpoints antiguos.
+
+Usar audit trail genérico para más acciones administrativas.
+
+Revisar que IngestPreparer inicializa siempre bien estados y audita los fallos de preparación.
+
+
+
+
+Veo el núcleo muy sólido; las mejoras que más valor te dan ahora son de homogeneización y “último kilómetro”.
+​
+
+1. i18n y textos hardcodeados
+Aún hay bastante copy en español en componentes admin y algunos handlers (Gestión de Soporte, mensajes de error tipo “Documento no encontrado”, labels de filtros, etc.).
+​
+
+Tienes toda la infraestructura de i18n admin (pantalla AdminI18nPage, API api/admin/i18n*) bien montada; aprovecharla para migrar esos textos a es.json/en.json te deja el producto realmente bilingüe y facilita cambios futuros.
+​
+
+2. Estandarización de errores y manejo en APIs
+Una parte de las rutas usa ya handleApiError y AppError de forma limpia (api/admin/logs, api/admin/knowledge-base/chunks, i18n APIs).
+​
+
+Otra sigue con patrones mixtos (return NextResponse.json({ error: 'Internal Server Error' }), catch error any sin handleApiError en endpoints de inteligencia y soporte), lo que dificulta un tratamiento uniforme en frontend y logging.
+​
+
+Consolidar todo en AppError + handleApiError (y códigos de error consistentes) mejorará DX y trazabilidad.
+
+3. UX y consistencia en paneles admin
+El diseño de los módulos nuevos (usuarios dinámicos, i18n, prompts, assets) es muy coherente: PageContainer, PageHeader, ContentCard, tablas dinámicas, filtros, etc.
+​
+
+Módulos más antiguos (p.ej. algunos de tickets/soporte y gestión simple de prompts legacy) tienen UI más “plana” y sin useTranslations, sin los mismos patrones de diseño y sin estados vacíos/skeleton tan trabajados.
+​
+
+Unificar:
+
+Uso de useTranslations en todos los textos.
+
+Skeletons y mensajes de “selecciona un elemento” coherentes entre módulos (como ya haces en TicketDetailWrapper, usuarios, i18n).
+​
+
+4. MFA, sesión y seguridad de acceso fino
+La parte de MFA a nivel de servicios (MfaService) y middleware de MFA pendiente ya la tenías; en este snapshot se ve muy trabajada la parte de usuarios (usuarios dinámicos con columna mfaEnabled y badges “MFA activo/no MFA”).
+​
+
+Lo que falta por cerrar es la experiencia completa:
+
+Asegurar que todos los flujos sensibles (API keys, configuración de notificaciones, gobernanza, i18n admin) exigen MFA activado para roles altos cuando lo vuelvas a activar.
+​
+
+Revisar que los errores de MFA se exponen de forma consistente a la UI (códigos claros) y se localizan vía i18n.
+
+5. Dead letter queue, stuck jobs y workers
+Has implementado un ecosistema muy potente: DeadLetterQueue, StuckDetector, StateTransitionValidator con hash SHA‑256, GC de blobs, ServiceAccountAuth para workers.
+​
+
+A nivel funcional aún está a medias:
+
+Falta un panel admin visible para revisar trabajos fallidos (DLQ) y relanzarlos con retryJob, aunque el servicio esté listo.
+​
+
+El StuckDetector.runPeriodicCheck depende de una invocación periódica (cron o job scheduler); conviene asegurar que en tu entorno de producción haya una estrategia clara (cron externo, serverless cron, etc.).
+​
+
+6. Monitorización RAG y paneles de calidad
+El backend para calidad RAG (RagEvaluationService, RagJudgeService, dashboard de admin/ragquality) está bien armado.
+​
+
+Mejora posible: exponer más claramente en UI los casos “problemáticos” (p.ej. tabla de últimos queries con faithfulness baja) y conectar desde el panel de eval a los logs/trace del asset o de la conversación para hacer debugging operativo rápido.
+​
+
+7. Accesibilidad y ARIA
+En los dashboards nuevos ya usas bastante role="region", aria-label, aria-busy y patrones accesibles en charts y estados de carga.
+​
+
+Otros componentes (especialmente legacy, tablas viejas, algunos formularios de prompts y soporte) usan HTML y Tailwind sin atributos ARIA ni labels claros.
+​
+
+Un barrido para aplicar el mismo estándar (roles, aria-live para estados de “cargando”, labels asociados a inputs) cerraría el gap de a11y.
+
+
+Priorizaría así, pensando en impacto alto con esfuerzo razonable.
+
+1. Errores e i18n en APIs (1–2 días)
+Estandarizar manejo de errores:
+
+Usar siempre AppError + handleApiError en rutas que aún devuelven Internal Server Error “a pelo” (intelligence, soporte, alguna admin).
+​
+
+Asegurar que todas incluyen correlationId y, si aplica, tenantId en logs.
+​
+
+Internacionalizar mensajes visibles:
+
+Extraer textos de error y mensajes de usuario (no los puramente técnicos) a es.json/en.json.
+
+Usar claves de error (code) para mapear en frontend a mensajes traducidos.
+
+Impacto: respuesta consistente para UI, logging más legible, base sólida para multi‑idioma.
+
+2. UI admin legacy → patrón moderno (2–3 días)
+Unificar UI de módulos antiguos (soporte, prompts legacy, algunos admin) con los patrones nuevos:
+
+PageContainer, PageHeader, ContentCard, botones consistentes.
+
+useTranslations para textos, skeletons y “empty states” uniformes.
+​
+
+Añadir estados de carga/error claros en listas y detalles (como haces en usuarios, i18n, assets).
+​
+
+Impacto: experiencia uniforme, menos “coste cognitivo” al moverte por el panel.
+
+3. Dead letters, stuck jobs y reintentos (2 días)
+Completar el ciclo operativo de ingesta:
+
+Exponer en un panel admin sencillo los jobs fallidos (DLQ) con acciones de “ver error” y “reintentar”.
+​
+
+Asegurar despliegue de StuckDetector (cron o similar) en el entorno real.
+
+Integrar con la traza actual:
+
+Desde el panel de un asset fallido, enlazar al trace (api/admin/knowledge-assets/[id]/trace) y al job correspondiente.
+
+Impacto: operabilidad real de la plataforma; reduces “magia negra” cuando algo se rompe.
+
+4. MFA y recursos sensibles (2 días cuando re‑actives MFA)
+Definir claramente qué operaciones requieren MFA activo (API keys, i18n admin, gobernanza, permisos de usuarios).
+
+Enforcer:
+
+Middleware/capa de autorización que, para esos endpoints, compruebe mfaEnabled (y, si aplicas “MFA fresh”, un timestamp reciente).
+​
+
+Mensajes de error y UI claros para “necesitas activar o completar MFA”.
+
+Impacto: salto real en seguridad percibida y exigida para clientes enterprise.
+
+5. A11y y refinamiento RAG dashboards (iterativo, 1–2 días por barrido)
+A11y:
+
+Barridos por módulo para añadir roles/ARIA y labels en componentes que aún no los tienen.
+​
+
+RAG quality:
+
+Desde los gráficos, permitir navegar a la lista de consultas con peor métrica y, desde ahí, al trace/logs del asset o de la conversación.
+​
+
+Impacto: mejora incremental continua; bueno para presentaciones y auditorías.
+
+
+Propongo estos issues listos para pegar en tu tracker (puedes ajustar etiquetas/estimaciones).
+
+1. Unificar manejo de errores e i18n en APIs
+Título: Estandarizar errores HTTP y mensajes en APIs (AppError + handleApiError + i18n)
+
+Descripción:
+
+Objetivo: que todas las rutas API devuelvan errores consistentes y traducibles.
+
+Tareas:
+
+Revisar endpoints que aún devuelven Internal Server Error o { error: '...' } sin handleApiError (especialmente módulos de inteligencia, soporte y algunos admin).
+​
+
+Sustituir throw new Error(...) por AppError con code, status, message y details.
+
+Usar handleApiError(error, SOURCE, correlationId) en catch de todas las rutas nuevas y legacy relevantes.
+​
+
+Extraer mensajes de error “de cara al usuario” a es.json/en.json y mapear por code en el frontend.
+
+Resultado esperado:
+
+Respuestas de error homogéneas, fácilmente manejables en la UI.
+
+Logs con correlationId y tenantId en todas las rutas críticas.
+
+2. Modernizar UI de módulos admin legacy
+Título: Migrar módulos admin legacy al patrón de diseño moderno
+
+Descripción:
+
+Objetivo: que todos los módulos admin usen la misma estructura visual y de i18n.
+
+Tareas:
+
+Identificar pantallas admin legacy (p. ej. soporte/tickets, prompts antiguos u otras vistas con texto hardcodeado en español).
+​
+
+En cada pantalla:
+
+Envolver en PageContainer + PageHeader + ContentCard como en usuarios, i18n, assets.
+​
+
+Sustituir textos por useTranslations('...').
+
+Añadir estados de carga (skeletons) y “empty state” similares a los de usuarios, i18n y knowledge assets.
+
+Verificar consistencia de botones (variante, iconos, labels) con el resto de la app.
+
+Resultado esperado:
+
+Experiencia coherente en todo el panel admin y base sólida para localización completa.
+
+3. Panel de Dead Letters y gestión de jobs de ingesta
+Título: Panel admin para Dead Letter Queue y jobs de ingesta
+
+Descripción:
+
+Objetivo: dotar a operaciones de una vista central de jobs de ingesta fallidos o atascados.
+
+Tareas:
+
+Crear endpoints admin para:
+
+Listar jobs fallidos/stuck de ingesta (columna estado, error, docId, correlationId).
+
+Reintentar un job (p. ej. re-encolar o llamar a IngestService.executeAnalysis con los parámetros correctos).
+​
+
+Crear pantalla admin:
+
+Tabla con filtros (por estado, fecha, tenantId, correlationId).
+
+Acciones: ver detalle (error + trace) y botón “Reintentar”.
+
+Conectar con api/admin/knowledge-assets/[id]/trace para abrir la traza completa del asset.
+​
+
+Documentar cómo se ejecuta el StuckDetector (cron/cronless) en el entorno de producción.
+
+Resultado esperado:
+
+Capacidad de recuperar ingestas fallidas sin tocar la base de datos manualmente.
+
+4. Enforzar MFA en operaciones críticas
+Título: Requerir MFA para operaciones sensibles (API keys, i18n, gobernanza)
+
+Descripción:
+
+Objetivo: aumentar seguridad en operaciones de alto impacto.
+
+Tareas:
+
+Definir lista de endpoints críticos: gestión de API keys, traducciones maestro (api/admin/i18n*), gobernanza de IA, permisos de usuarios, etc.
+​
+
+Implementar una capa de autorización que:
+
+Compruebe session.user.mfaEnabled (y, si aplicas, “fresh MFA”) antes de permitir estas operaciones.
+
+Devuelva códigos de error claros (MFA_REQUIRED) para que la UI pueda reaccionar.
+
+Actualizar la UI para:
+
+Mostrar mensajes claros cuando falte MFA o no esté completado.
+
+Guiar al usuario a la configuración/activación MFA.
+
+Resultado esperado:
+
+Protección adicional para cambios de configuración global y accesos de alto riesgo.
+
+5. Mejora de accesibilidad (a11y) en paneles y formularios
+Título: Barrido de accesibilidad en dashboards y formularios admin
+
+Descripción:
+
+Objetivo: mejorar a11y (screen readers, navegación por teclado) de la consola.
+
+Tareas:
+
+Para cada módulo admin:
+
+Añadir role="region" y aria-label en bloques principales (cards de métricas, gráficos, tablas) siguiendo el patrón de dashboards recientes.
+​
+
+Garantizar que todos los inputs tienen Label htmlFor y, si aplica, aria-describedby para errores/ayudas.
+
+Para loaders, usar aria-busy y aria-live="polite" donde haya contenido dinámico.
+​
+
+Revisar componentes de tabla y modal para asegurar foco y roles correctos.
+
+Resultado esperado:
+
+Panel más accesible, alineado con expectativas enterprise y auditorías básicas de accesibilidad.
+
+6. Profundizar en la observabilidad de calidad RAG
+Título: Navegación desde métricas RAG a casos concretos y trazas
+
+Descripción:
+
+Objetivo: que las métricas de calidad RAG sean accionables para debugging.
+
+Tareas:
+
+Extender el dashboard de admin/ragquality para:
+
+Mostrar lista de consultas recientes con peor faithfulness / answerrelevance / contextprecision.
+​
+
+Permitir navegar desde cada fila a:
+
+La evaluación RAG específica (detalle de métricas y feedback).
+
+El asset/documento origen (si aplica).
+
+La traza de logs asociada (correlationId).
+
+Ajustar API de evaluación si falta algún campo (p. ej. link a asset o trace).
+
+Resultado esperado:
+
+Menos “black box” en el RAG; más capacidad de explicar y corregir problemas concretos.
+
+
+Te dejo criterios de aceptación formales para los dos issues más delicados: DLQ y MFA.
+
+1) Panel de Dead Letters y jobs de ingesta
+Given hay documentos cuya ingesta ha fallado o se ha quedado atascada
+When un usuario con rol ADMIN o SUPERADMIN accede al nuevo panel de jobs de ingesta
+Then ve una tabla con:
+
+docId, filename, tenantId
+
+estado del job (FAILED/STUCK/RETRYING)
+
+último error resumido
+
+correlationId y fecha/hora del último intento
+
+Given el usuario está en el panel de jobs y selecciona un job con estado FAILED
+When pulsa el botón “Ver detalle”
+Then se muestra:
+
+el mensaje de error completo (o los últimos N errores si hay reintentos)
+
+enlace directo al trace del asset (/api/admin/knowledge-assets/[id]/trace)
+
+información básica del asset (status, totalChunks, ingestionStatus actual)
+
+Given un job de ingesta está en estado FAILED o STUCK
+When el usuario pulsa “Reintentar”
+Then
+
+el sistema re‑encola el job o llama a IngestService.executeAnalysis con el docId correcto
+
+se crea un nuevo log de auditoría indicando que el reintento ha sido iniciado (acción INGESTRETRYINITIATED, con correlationId nuevo o enlazado)
+
+la UI muestra un mensaje de confirmación (“Retry initiated…”) sin bloquear al usuario
+
+Given un job ha sido re‑intentado desde el panel
+When el worker termina correctamente la re‑ingesta
+Then
+
+el asset pasa a ingestionStatus = COMPLETED y totalChunks > 0
+
+los nuevos logs de INGESTSERVICE/INGESTANALYZER/INGESTINDEXER quedan asociados al mismo correlationId del reintento
+
+el job desaparece del listado principal de “pendientes/fallidos” (o aparece como SUCCESS si mantienes histórico)
+
+Given el StuckDetector marca jobs como STUCK tras el umbral configurado
+When el panel carga la lista de jobs
+Then esos jobs aparecen etiquetados como STUCK, diferenciados de FAILED, con información del tiempo que llevan en ese estado.
+
+2) Requerir MFA en operaciones sensibles
+Given un usuario ADMIN o SUPERADMIN sin MFA habilitado intenta:
+
+gestionar API keys
+
+acceder a admin i18n (/admin/i18n)
+
+modificar gobernanza o permisos de usuarios
+When llama a los endpoints protegidos o abre las pantallas asociadas
+Then
+
+la API devuelve un error con code = "MFA_REQUIRED" y status = 403
+
+la UI muestra un mensaje claro indicando que debe activar MFA antes de continuar (localizado vía i18n)
+
+Given un usuario con MFA habilitado pero sin MFA “reciente” (si aplicas freshness)
+When realiza una operación crítica (crear API key, sync i18n, cambiar permisos)
+Then
+
+si no hay challenge activo, recibe MFA_REQUIRED y la UI le muestra el flujo de verificación MFA
+
+tras completar correctamente MFA, puede repetir la operación sin error durante la ventana de tiempo configurada
+
+Given un usuario con MFA habilitado introduce un código incorrecto en el flujo de login o challenge
+When el backend valida el código
+Then
+
+MfaService.verify devuelve false
+
+el provider de auth responde con code = "INVALID_MFA_CODE" y status adecuado
+
+la UI muestra un mensaje traducido tipo “Código MFA inválido. Inténtalo de nuevo.” y no le concede acceso ni permisos elevados
+
+Given un usuario con MFA habilitado y código correcto completa el login o el challenge
+When vuelve a llamar a un endpoint sensible
+Then
+
+la verificación de MFA pasa sin errores
+
+la operación se ejecuta normalmente, respetando el resto de checks de rol/permiso
+
+no se vuelve a pedir MFA hasta que expire la ventana de freshness (si la aplicas)
+
+
+Te dejo criterios de aceptación para a11y y para el dashboard de calidad RAG.
+
+1) Mejora de accesibilidad (a11y)
+Given un usuario usa lector de pantalla
+When navega por cada página admin principal (usuarios, assets, i18n, RAG quality, inteligencia, soporte)
+Then
+
+cada sección principal (cabecera, zona de filtros, tabla, gráficos, panel lateral) está envuelta en un contenedor con role="region" y aria-label descriptivo (localizado con i18n)
+
+los headers de sección se leen con orden lógico (H1/H2 coherente con la jerarquía visual)
+
+Given un usuario navega por teclado
+When recorre formularios (filtros, modales de creación/edición, configuraciones)
+Then
+
+el foco avanza únicamente por elementos interactivos en un orden lógico
+
+todos los inputs tienen label asociado (<Label htmlFor="...">) y el lector anuncia el nombre del campo
+
+botones e iconos tienen texto visible o aria-label descriptivo cuando el icono por sí solo no es suficiente
+
+Given una página está cargando datos asíncronamente (tablas, gráficos, paneles)
+When el contenido aún no está listo
+Then
+
+el contenedor correspondiente indica aria-busy="true" y, si muestra mensaje de “cargando”, está asociado a aria-live="polite"
+
+cuando termina la carga, aria-busy pasa a false y el lector de pantalla recibe una actualización clara del cambio (p. ej. “10 resultados cargados”)
+
+Given se produce un error de validación en un formulario
+When el usuario envía el formulario con datos incorrectos
+Then
+
+el campo con error queda marcado visualmente y su mensaje de error está referenciado por aria-describedby desde el input
+
+el lector de pantalla anuncia que el campo tiene un error y lee el texto del mensaje
+
+Given se abre un modal (crear/editar entidad, invitar usuario, crear traducción)
+When el modal aparece
+Then
+
+el foco inicial se mueve dentro del modal (primer control relevante)
+
+la navegación por tab queda “encerrada” en el modal hasta cerrarlo
+
+el cierre del modal devuelve el foco al elemento que lo abrió
+
+2) Dashboard de calidad RAG
+Given existen evaluaciones RAG recientes en ragevaluations
+When un usuario ADMIN/SUPERADMIN abre la página admin/ragquality
+Then
+
+ve métricas agregadas (fe, rel, prec, count) que coinciden con los valores calculados en backend (promedios de los últimos N registros)
+
+ve una gráfica de tendencias que muestra correctamente la evolución temporal de estas métricas
+
+Given hay evaluaciones con métricas bajas (p. ej. faithfulness < 0.8)
+When el usuario mira la sección de “peores casos” en el dashboard
+Then
+
+se lista un subconjunto de consultas con peor faithfulness/answerrelevance/contextprecision
+
+cada fila muestra al menos: query truncada, scores, timestamp, tenant/industria si aplica
+
+Given el usuario selecciona una evaluación concreta desde la lista del dashboard
+When hace clic en una acción de “ver detalles”
+Then
+
+se abre un panel/detalle que muestra:
+
+la pregunta original
+
+el contexto usado (o un resumen)
+
+la respuesta generada
+
+las métricas RAG completas y feedback textual del juez (cuando exista)
+
+Given una evaluación está asociada a un asset/documento concreto (por correlationId o referencia en contextchunks)
+When el usuario está en la vista de detalle de esa evaluación
+Then
+
+dispone de un enlace directo a la ficha del asset correspondiente (si está disponible)
+
+dispone de un enlace a la traza de logs (/api/admin/knowledge-assets/[id]/trace o equivalente) para ver el pipeline completo asociado a ese correlationId
+
+Given un usuario quiere investigar problemas sistemáticos de calidad RAG
+When aplica filtros en el dashboard (por rango de fechas, tenant, industria, rango de métricas)
+Then
+
+los gráficos y listas se actualizan respetando los filtros
+
+el número total de evaluaciones mostradas se corresponde con el filtro aplicado
+
+la UI indica claramente qué filtros están activos
+
+
+Una forma simple de cerrar el bucle que comentas para el dashboard RAG es:
+
+Añadir siempre en ragevaluations al menos:
+
+correlationId (ya lo tienes).
+​
+
+tenantId (ya lo tienes).
+​
+
+assetId/docId cuando la evaluación venga de una respuesta ligada a un documento concreto (lo puedes pasar desde tu flujo de RAG cuando llames a RagEvaluationService.evaluateQuery).
+​
+
+Con eso puedes navegar: evaluación → asset → trace/logs sin tocar más el pipeline.
+
+
+
+
+
+Hay tres zonas donde ahora mismo hay más riesgo de desalineación, código muerto o futuros bugs.
+
+1. Ingesta: doble arquitectura y scripts sueltos
+Tienes dos caminos de ingesta en paralelo:
+
+El nuevo flujo por casos de uso: PrepareIngestionUseCase + ExecuteIngestionAnalysisUseCase + DeadLetterQueue + StateTransitionValidator.
+​
+
+El servicio “monolítico”: IngestService.prepareIngest/executeAnalysis/processDocument que aún descarga de Cloudinary y llama directamente a IngestAnalyzer/IngestIndexer.
+​
+
+Además hay scripts de prueba/import (ingest-import-test.ts, ingest-minimal.ts, ingest-zod.ts) que importan cosas desde ../src... y no se usan en runtime.
+​
+
+Riesgos:
+
+Que una parte de la app (p. ej. scripts de retry o tools de consola) use IngestService.executeAnalysis mientras el flujo principal usa ExecuteIngestionAnalysisUseCase, llevando a estados incoherentes y a saltarse el DeadLetterQueue o el validador de estados.
+​
+
+Confusión con la cola usada: lib/simple-queue vs BullMQ IngestWorkerService que ya has marcado como legacy/test‑mocks.
+​
+
+Qué haría:
+
+Elegir un único flujo oficial para producción (idealmente: casos de uso + repositorios + DLQ) y:
+
+Adaptar IngestService a ser un thin wrapper sobre ese flujo, o marcarlo como legacy y usarlo solo desde scripts.
+
+Eliminar o mover a scripts/legacy/ los archivos de prueba/import que no se importan en el código principal.
+
+Garantizar que todos los puntos que disparan ingestas (API, retry, consola) terminan pasando por la misma FSM (StateTransitionValidator) y el mismo DeadLetterQueue.
+​
+
+2. Workers, colas y mocks
+Tienes:
+
+lib/queue-service (cola central actual).
+
+services/ingest/test-mocks-worker-service.ts (BullMQ IngestWorkerService), ya documentado como deprecado.
+​
+
+Un worker “standalone” de ingest y scripts de retry que llaman a IngestService.executeAnalysis.
+​
+
+Riesgos:
+
+El mock de BullMQ ya está marcado como “safe to delete” y no se importa, pero si alguien lo reutiliza sin leer el markdown, puede mezclar colas y perder trazabilidad.
+​
+
+Si en algún entorno se arranca tanto el worker nuevo como algún proceso antiguo (o script manual que haga polling) podrías procesar el mismo docId dos veces, con carreras en los estados (PENDING/QUEUED/PROCESSING).
+​
+
+Qué haría:
+
+Borrar o aislar completamente test-mocks-worker-service.ts y mock-checklist-service.ts (ya marcados como deprecated) para que no vuelvan a entrar en juego.
+​
+
+Documentar de forma explícita:
+
+“En producción se usa SOLO lib/queue-service + worker X”.
+
+Scripts de consola (retry, test PDFs) deben delegar en el mismo caso de uso ExecuteIngestionAnalysisUseCase en vez de duplicar lógica.
+
+3. Seguridad/permiso y rutas legacy
+La nueva capa de permisos (PermissionService + GuardianEngine + enforcePermission) está bien integrada en muchos sitios (intelligence, knowledge, logs, i18n).
+​
+
+Pero todavía:
+
+Hay UseCases que tiran de lógica ad‑hoc (por ejemplo ProcessEntityAnalysisUseCase lanza throw new Error('Entidad no encontrada') en vez de AppError y no pasa por guardian/permissions).
+​
+
+Algunos endpoints de soporte/invitaciones usan reglas manuales (comprobando rol o tenant directamente) y no el sistema unificado.
+​
+
+Riesgos:
+
+Inconsistencia: un usuario puede poder ejecutar acciones de alto nivel en un módulo porque se comprueba solo el rol, mientras otro módulo sí respeta PermissionService.can(...) y lo bloquea.
+​
+
+Errores Error genéricos que no pasan por tu pipeline de logging/handleApiError, rompiendo la trazabilidad.
+
+Qué haría:
+
+Barrido de todas las rutas y use cases para:
+
+Sustituir throw new Error(...) por AppError o por un resultado controlado.
+
+Reemplazar checks manuales de rol por requireRole o enforcePermission según el caso.
+​
+
+Alinearlo con la capa de MFA cuando la reactives, para que todo lo “sensible” pase por la misma combinación: rol + permiso + (MFA).
+
+
+Te marco ficheros y motivos concretos para un refactor dirigido, solo donde veo riesgo real.
+
+1. Ingesta y colas
+src/services/ingest/ingest-service.ts
+​
+
+Motivo:
+
+Duplica lógica de análisis/indexado que ya tienes en ExecuteIngestionAnalysisUseCase (descarga de Cloudinary, cambios de estado, etc.).
+​
+
+executeAnalysis hace todo “a pelo” sin pasar por StateTransitionValidator, DeadLetterQueue ni PermissionService.
+​
+
+Acción:
+
+O bien lo conviertes en wrapper fino que llame al use case ExecuteIngestionAnalysisUseCase.execute, o lo marcas explícitamente como legacy y lo usas solo en scripts.
+
+src/application/use-cases/ingest/PrepareIngestionUseCase.ts vs api/admin/ingest
+​
+
+Motivo:
+
+En la API de ingest ya haces parte de la preparación y encolado; el use case hace lo mismo con simple-queue.
+​
+
+Acción:
+
+Decidir si:
+
+La API usa directamente el use case (ideal), o
+
+El use case es solo para CLI/tests y la API es la fuente de verdad.
+
+Evitar que haya dos formas distintas de encolar (simple-queue vs queue-service).
+
+Scripts de ingest (búsqueda rápida: ingest-*.ts en scripts/ o similar)
+​
+
+Motivo:
+
+Muchos fueron útiles para migraciones/pruebas y no se usan en runtime.
+
+Acción:
+
+Moverlos a scripts/legacy/ o documentarlos como “solo uso manual”, para que ningún desarrollador los tome como camino “oficial”.
+
+2. Workers y mocks
+src/services/ingest/test-mocks-worker-service.ts
+​
+
+Motivo:
+
+Ya está documentado como deprecated, no se importa, y representa la arquitectura BullMQ anterior.
+​
+
+Acción:
+
+Borrarlo o moverlo fuera de src/ (por ejemplo a docs/legacy), para evitar reusos accidentales.
+
+src/services/ingest/test-mocks-checklist-service.ts y test-mocks.md
+​
+
+Motivo:
+
+Mock de checklist LLM que ya no se usa; docs indican “safe to delete”.
+​
+
+Acción:
+
+Igual que arriba: eliminar o sacar de src/ y confiar en el historial de git.
+
+3. Casos de uso y permisos
+src/application/use-cases/entities/ProcessEntityAnalysisUseCase.ts
+​
+
+Motivo:
+
+Lanza new Error('Entidad no encontrada') y no AppError, por lo que se puede colar error sin pasar por tu pipeline de logging/handleApiError.
+​
+
+No usa PermissionService ni GuardianEngine, solo usageRepo.checkLimits.
+​
+
+Acción:
+
+Cambiar a throw new AppError('NOTFOUND', 404, 'Entidad no encontrada') o similar.
+
+Evaluar si este análisis debe estar sujeto a permisos/guardian como el resto.
+
+src/application/use-cases/ingest/ExecuteIngestionAnalysisUseCase.ts
+​
+
+Motivo:
+
+Está bastante bien conectado (usa PermissionService, StateTransitionValidator, DeadLetterQueue), pero descarga directamente con fetch(asset.cloudinaryUrl).
+​
+
+En IngestService.executeAnalysis usas getSignedUrl y logs adicionales.
+​
+
+Acción:
+
+Homogeneizar: o ambos usan un pequeño servicio IngestStorage.fetchBuffer(asset); así evitas divergencias entre paths.
+
+src/application/use-cases/audit/ListAuditLogsUseCase.ts
+​
+
+Motivo:
+
+Lanza AppError(DATABASEERROR, 500, 'Error listing audit logs', originalError: error.message), está bien pero revisa que el controlador que lo llame use handleApiError; si no, se pierde la info.
+
+Acción:
+
+Solo confirmar integración con el endpoint que lo consume.
+
+4. Endpoints con manejo de errores/seguridad “mixto”
+Soporte / tickets: app/(authenticated)/admin/soporte/page.tsx y APIs api/support/...
+​
+
+Motivo:
+
+La página de admin de soporte tiene copy en duro en español y depende de endpoints que probablemente no usan handleApiError ni enforcePermission todavía.
+​
+
+Acción:
+
+Revisar las rutas api/support asociadas:
+
+Usar AppError + handleApiError.
+
+Integrar con PermissionService o al menos requireRole.
+
+Migrar textos a i18n.
+
+Invitaciones masivas: BulkInviteUseCase + api/admin/users/bulk-invite
+​
+
+Motivo:
+
+Usa reglas manuales (throw new Error('Email already registered'), Error('Tenant ID missing'), etc.).
+​
+
+Acción:
+
+Cambiar a ValidationError / AppError con códigos claros.
+
+Garantizar que la API que lo llama envuelve con handleApiError.
+
+Inteligencia: api/admin/intelligence/*
+​
+
+Motivo:
+
+Algunos endpoints capturan errores como console.error(...) y devuelven { error: 'Internal Server Error' } sin handleApiError.
+​
+
+Permisos ya usan enforcePermission, lo cual está bien.
+​
+
+Acción:
+
+Reemplazar return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }) por handleApiError(error, SOURCE, correlationId).
+
+5. Configuración de embeddings locales
+src/lib/multilingual-service.ts (importado desde IngestIndexer)
+​
+
+Motivo:
+
+Solo genera embeddings BGE‑M3 si process.env.ENABLE_LOCAL_EMBEDDINGS === 'true'; si no, devuelve temprano.
+​
+
+Esto puede dejar embedding_multilingual vacío en producción si olvidas la env var.
+
+Acción:
+
+Revisar:
+
+Que en los entornos donde esperas búsqueda multilingüe la env var esté definida.
+
+O, si no quieres depender de env, fallar explícitamente o registrar un log WARN claro cuando está desactivado.
+
+Para que te sea útil algo ahora mismo, te propongo un mini‑roadmap muy acotado (2 bloques de trabajo).
+
+Bloque 1 (1 día): Ingesta y colas
+Unificar camino “oficial” de análisis
+
+Decidir que el análisis asíncrono pasa siempre por ExecuteIngestionAnalysisUseCase (FSM + DLQ + PermissionService).
+​
+
+En IngestService.executeAnalysis:
+
+Reemplazar la lógica interna por una llamada al use case (o, al menos, extraer la parte de descarga+análisis a un servicio común que usen ambos).
+​
+
+Actualizar:
+
+api/admin/ingest (fallback) y api/admin/knowledge-assets/[id]/retry para que llamen a ese mismo camino único.
+​
+
+Limpiar mocks y colas legacy
+
+Eliminar o mover fuera de src/:
+
+services/ingest/test-mocks-worker-service.ts.
+​
+
+services/ingest/test-mocks-checklist-service.ts y test-mocks.md.
+​
+
+Documentar en README/arquitectura:
+
+“Cola oficial: lib/queue-service + worker X”.
+
+“Cualquier script/manual debe delegar en los use cases de ingest”.
+
+Resultado: un único pipeline coherente de ingesta, menos riesgo de que un script o worker antiguo haga cosas por su cuenta.
+
+Bloque 2 (1 día): Permisos y errores en casos de uso “descolgados”
+Casos de uso con Error genérico
+
+ProcessEntityAnalysisUseCase:
+
+Cambiar throw new Error('Entidad no encontrada') por AppError(NOTFOUND, 404, ...).
+​
+
+Evaluar si debe pasar por PermissionService.can(...) como ExecuteIngestionAnalysisUseCase.
+​
+
+BulkInviteUseCase:
+
+Cambiar todos los new Error(...) (“Email already registered”, “Tenant ID missing”, etc.) por ValidationError/AppError.
+​
+
+Endpoints con manejo de error simple
+
+Rutas api/admin/intelligence/* y api/support/*:
+
+Sustituir return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }) por handleApiError(error, SOURCE, correlationId).
+​
+
+Asegurarte de que cualquier error de los use cases (AppError/ValidationError) fluye correctamente.
+
+Resultado: todos los caminos “no RAG” importantes (entidades, soporte, inteligencia, invitaciones) pasan por el mismo modelo de permisos y de errores que el resto del sistema.
+
+Cuando termines estos dos bloques, lo siguiente que recomendaría es atacar el tema i18n/UX admin legacy, pero con esto ya eliminas bastante código potencialmente peligroso o incoherente.
+
+Te propongo un plan muy concreto para i18n + UX en admin legacy, en tres pasos.
+
+1. Identificar pantallas objetivo
+Prioriza estas vistas (todas tienen texto hardcodeado y patrón viejo):
+
+Soporte/tickets: AdminSoportePage y componentes TicketList, TicketDetail (títulos, botones, textos en español).
+​
+
+Prompts legacy (si sigues usando alguna lista sencilla sin el nuevo editor multi‑vertical).
+
+Cualquier página admin con title="..." y subtítulos en español sin useTranslations.
+
+Acción rápida: buscar en app/(authenticated)/admin cadenas como Gestión de, Soporte, Tickets, Selecciona un caso, etc., y listarlas.
+
+2. Migrar una pantalla completa como plantilla (Soporte)
+Para AdminSoportePage y su ecosistema:
+
+Añadir namespace i18n
+
+En es.json y en.json, crear admin.support con claves:
+
+title, highlight, subtitle,
+
+textos de botones (refresh, etc.),
+
+textos de estados vacíos (“Selecciona un caso…”, “No hay tickets”, etc.).
+
+Actualizar la página
+
+En AdminSoportePage:
+
+Importar useTranslations('admin.support').
+
+Reemplazar textos duros:
+
+title="Centro de Gestión" → title={t('title')}.
+​
+
+highlight="Tickets" → t('highlight').
+
+subtitle="Monitorea y resuelve incidencias..." → t('subtitle').
+​
+
+Botón “Refrescar lista” → t('refresh').
+
+Asegurarte de que el layout usa ya PageContainer + PageHeader + panel izquierda/derecha (ya lo tienes, solo falta i18n).
+​
+
+Estados vacíos/carga
+
+En el panel derecho, el texto “Gestión de Soporte / Selecciona un caso…” pasarlo a t('empty.title'), t('empty.description').
+​
+
+Si TicketList muestra mensajes de “cargando” o “sin tickets”, también moverlos a i18n.
+
+Accesibilidad mínima
+
+Añadir role="region" y aria-label={t('list.regionLabel')} para el panel de lista, y otro para el detalle, reutilizando i18n.
+​
+
+Con esta pantalla tienes una plantilla clara para el resto.
+
+3. Aplicar el mismo patrón al resto de módulos legacy
+Repite el mismo esquema para:
+
+Cualquier otro módulo admin legacy con textos fijos:
+
+Crear namespace admin.<modulo> en es/en.json.
+
+Usar useTranslations('admin.<modulo>') en la page.
+
+Pasar títulos, subtítulos, labels de filtros, textos de botones y empty states a i18n.
+
+A la vez:
+
+Asegúrate de que todas las páginas usan el envoltorio estándar:
+
+PageContainer
+
+PageHeader (con title, highlight, subtitle)
+
+ContentCard para el cuerpo principal.
+​
+
+Si quieres, dime qué página quieres atacar después de soporte (por ejemplo, “prompts legacy” o “algún módulo concreto”), y te escribo el listado de claves i18n y cambios de JSX casi línea a línea para esa vista.
+
+
+Para “prompts legacy” el objetivo es dejarlos al nivel de AdminI18nPage o del nuevo editor de prompts, pero sin reescribir toda la lógica. Te marco pasos concretos.
+
+1. Definir namespace i18n
+En es.json y en.json, crea por ejemplo admin.prompts con claves (en castellano solo como ejemplo):
+
+Estructura general:
+
+page.title: “Gestión de Prompts”
+
+page.highlight: “Prompts”
+
+page.subtitle: “Configura las plantillas de IA para cada caso de uso.”
+
+Listado:
+
+table.empty: “No hay prompts configurados.”
+
+table.loading: “Cargando prompts…”
+
+table.searchPlaceholder: “Buscar por clave, nombre o vertical…”
+
+Acciones:
+
+actions.new: “Nuevo prompt”
+
+actions.edit: “Editar prompt”
+
+actions.delete: “Eliminar prompt”
+
+actions.duplicate: “Duplicar prompt”
+
+Columnas:
+
+table.columns.name: “Nombre”
+
+table.columns.key: “Clave”
+
+table.columns.industry: “Industria”
+
+table.columns.environment: “Entorno”
+
+table.columns.updatedAt: “Actualizado”
+
+table.columns.actions: “Acciones”
+
+Estados vacíos/modales:
+
+empty.title: “No se encontraron prompts”
+
+empty.description: “Cambia los filtros o crea un nuevo prompt.”
+
+modal.create.title: “Crear nuevo prompt”
+
+modal.edit.title: “Editar prompt”
+
+modal.save: “Guardar cambios”
+
+modal.cancel: “Cancelar”
+
+(En en.json las mismas claves traducidas.)
+
+2. Actualizar la página de lista de prompts legacy
+En la page correspondiente (por ejemplo algo tipo app/(authenticated)/admin/prompts/page.tsx):
+
+Importar i18n y estructura estándar:
+
+tsx
+import { useTranslations } from 'next-intl';
+import PageContainer from '@/components/ui/page-container';
+import PageHeader from '@/components/ui/page-header';
+import ContentCard from '@/components/ui/content-card';
+// ...resto imports
+
+export default function PromptsLegacyPage() {
+  const t = useTranslations('admin.prompts');
+
+  // ...
+  return (
+    <PageContainer>
+      <PageHeader
+        title={t('page.title')}
+        highlight={t('page.highlight')}
+        subtitle={t('page.subtitle')}
+      />
+      <ContentCard>
+        {/* resto de la UI */}
+      </ContentCard>
+    </PageContainer>
+  );
+}
+Reemplazar textos hardcodeados:
+
+Cualquier h1, h2, botones “Nuevo prompt”, “Editar”, “Eliminar”, etc., por t('…') según las claves que has creado.
+
+Placeholder de búsqueda por t('table.searchPlaceholder').
+
+Mensajes de “no hay prompts” y “cargando” por t('table.empty') y t('table.loading').
+
+Columnas de la tabla:
+
+Si tienes algo como:
+
+tsx
+{columns: [
+  { header: 'Nombre', accessorKey: 'name' },
+  { header: 'Clave', accessorKey: 'key' },
+  // ...
+]}
+pásalo a:
+
+tsx
+{columns: [
+  { header: t('table.columns.name'), accessorKey: 'name' },
+  { header: t('table.columns.key'), accessorKey: 'key' },
+  // ...
+]}
+3. Modales / formularios legacy de prompts
+Para el modal de crear/editar prompt legacy:
+
+Título y botones:
+
+title="Nuevo Prompt" → title={t('modal.create.title')} o t('modal.edit.title') según modo.
+
+Botón guardar → t('modal.save').
+
+Botón cancelar → t('modal.cancel').
+
+Labels de campos:
+
+Clave, nombre, industria, entorno, contenido del prompt…
+
+Crear claves tipo:
+
+form.key.label, form.key.placeholder
+
+form.name.label
+
+form.industry.label
+
+form.environment.label
+
+form.body.label
+
+y usar t('form.key.label'), etc.
+
+4. Ajustes de UX mínimos
+Asegúrate de que la página legacy:
+
+Usa PageContainer + PageHeader + ContentCard como el resto.
+​
+
+Tiene un estado vacío claro con icono y texto (empty.title, empty.description).
+
+Añade accesibilidad básica:
+
+role="region" / aria-label={t('page.title')} alrededor de la tabla de prompts.
+
+Para el buscador, Label + input con id y htmlFor coherentes.
+
+
+
+La parte de UI de prompts que tienes ahora es bastante moderna; lo que le falta es i18n y un poco de pulido en textos y accesibilidad.
+​
+
+1. PromptVersionList (historial de versiones)
+Componentes afectados: src/components/admin/PromptVersionList.tsx.
+​
+
+Textos a internacionalizar
+Cadenas actuales a mover a admin.prompts:
+
+"Historial de versiones" → history.title.
+​
+
+"Error desconocido" → history.errorUnknown.
+​
+
+"Cargando" → history.loading.
+​
+
+"Versión v{n}" → history.versionLabel (usa t('history.versionLabel', { version: v.version })).
+​
+
+"Revertir" → history.rollback.
+​
+
+"Cerrar" → history.close.
+​
+
+En el JSX:
+
+tsx
+import { useTranslations } from 'next-intl';
+
+export const PromptVersionList: React.FC<Props> = ({ ... }) => {
+  const t = useTranslations('admin.prompts');
+
+  // ...
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+      <div className="bg-white p-6 rounded w-96 max-h-[80vh] overflow-y-auto shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">
+          {t('history.title')}
+        </h3>
+
+        {error && (
+          <p className="text-red-600 mb-2">
+            {error || t('history.errorUnknown')}
+          </p>
+        )}
+
+        {loading && (
+          <p className="mb-2">
+            {t('history.loading')}
+          </p>
+        )}
+
+        {/* versiones */}
+        <ul className="space-y-2">
+          {versions.map((v) => (
+            <li key={v.id} className="border p-2 rounded flex justify-between items-center text-sm">
+              <div className="flex flex-col">
+                <span className="font-bold">
+                  {t('history.versionLabel', { version: v.version })}
+                </span>
+                {/* resto */}
+              </div>
+              <button
+                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                onClick={() => handleRollback(v.version)}
+                disabled={loading}
+              >
+                {t('history.rollback')}
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          className="mt-4 px-4 py-2 bg-gray-300 rounded"
+          onClick={onClose}
+        >
+          {t('history.close')}
+        </button>
+      </div>
+    </div>
+  );
+};
+Accesibilidad mínima
+Añadir role="dialog" y aria-modal="true" al contenedor del modal.
+​
+
+Etiquetar el título y referenciarlo con aria-labelledby.
+
+tsx
+<div
+  className="fixed inset-0 bg-black/30 flex items-center justify-center"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="prompt-version-history-title"
+>
+  <div className="bg-white ...">
+    <h3 id="prompt-version-history-title" className="text-lg font-semibold mb-4">
+      {t('history.title')}
+    </h3>
+    ...
+  </div>
+</div>
+2. PromptVisualTester (tester visual)
+Componente: PromptVisualTester.
+​
+
+Textos a sacar a i18n (admin.prompts.tester)
+Cadenas actuales:
+
+"Variables de Prueba" → tester.variables.title.
+​
+
+"Define los valores para los placeholders del prompt." → tester.variables.description.
+​
+
+"JSON de Variables" → tester.variables.jsonLabel.
+​
+
+"Modo Comparativa A/B" → tester.compareMode.label.
+​
+
+"Modelo A" → tester.modelA.label.
+​
+
+"Modelo B" → tester.modelB.label.
+​
+
+"Sin comparación" → tester.compareMode.none.
+​
+
+"Draft Template B (Opcional)" → tester.templateB.label.
+​
+
+"Deja vacío para usar el mismo template A" → tester.templateB.placeholder.
+​
+
+Botón "Ejecutar Comparativa A/B" / "Ejecutar Simulación" → tester.runCompare / tester.runSingle.
+​
+
+"Previsualización del Prompt" → tester.preview.title.
+​
+
+"Template vacío" → tester.preview.empty.
+​
+
+"Resultado de la IA" → tester.output.title.
+​
+
+"Respuesta generada por el modelo seleccionado." → tester.output.description.
+​
+
+"Configura las variables y pulsa Ejecutar para ver el resultado." → tester.output.empty.
+​
+
+"Ejecutando simulación..." / "Ejecutando simulación comparativa..." → tester.output.runningSingle / tester.output.runningCompare.
+​
+
+"Resultado único" → tester.output.singleLabel.
+​
+
+"Versión A" / "Versión B" → tester.output.versionA / tester.output.versionB.
+​
+
+"Error en el formato JSON de las variables" → tester.errors.badJson.
+​
+
+"Error en la simulación" → tester.errors.simulation (texto para el backend).
+​
+
+En el componente:
+
+tsx
+import { useTranslations } from 'next-intl';
+
+export function PromptVisualTester({ template, variables }: PromptVisualTesterProps) {
+  const t = useTranslations('admin.prompts.tester');
+
+  // ...
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      {/* Input Section */}
+      <div className="space-y-6">
+        <Card className="bg-slate-900 border-slate-800 text-white shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <FileJson className="w-5 h-5 text-blue-400" />
+              {t('variables.title')}
+            </CardTitle>
+            <CardDescription className="text-slate-400">
+              {t('variables.description')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">
+                {t('variables.jsonLabel')}
+              </Label>
+              <Textarea
+                value={testVariables}
+                onChange={e => setTestVariables(e.target.value)}
+                placeholder={t('variables.jsonPlaceholder')}
+                ...
+              />
+            </div>
+            {/* resto… */}
+          </CardContent>
+        </Card>
+        {/* etc. */}
+      </div>
+      {/* Output Section */}
+    </div>
+  );
+}
+En handleRunTest, sustituir mensajes de error de toast por t('errors.badJson'), t('errors.simulation').
+
+Accesibilidad
+Check “Modo Comparativa A/B”: ya usas <Label htmlFor="compareMode">, mantenerlo pero usa t('compareMode.label').
+​
+
+Panel de resultado vacío:
+
+Añadir aria-live="polite" en el contenedor que cambia entre vacío / loading / resultado para que un lector reciba el cambio.
+
+tsx
+<CardContent className="flex-1" aria-live="polite">
+  {/* estados: vacío, loading, result, comparison */}
+</CardContent>
+3. Página de prompts legacy (lista + editor)
+Aunque en el dump no se ve el archivo de la page, por el contexto ya tienes:
+
+Listado de prompts dinámicos (PromptService.listPrompts).
+​
+
+PromptEditor (probablemente en components/admin/PromptEditor.tsx).
+​
+
+Acciones recomendadas:
+
+Page de prompts:
+
+Envolver con PageContainer + PageHeader, importar useTranslations('admin.prompts') y usar:
+
+t('page.title'), t('page.highlight'), t('page.subtitle').
+
+Tabla/lista de prompts:
+
+Cabeceras y textos vacíos a t('table.*') (como te propuse antes).
+
+Botones de acciones (editar, versionado, borrar) a t('actions.*').
+
+PromptEditor:
+
+Labels de campos y textos del modal a un sub-namespace admin.prompts.editor:
+
+editor.titleCreate, editor.titleEdit, editor.form.name.label, etc.
+
+Con estos cambios, dejas todo el ecosistema de prompts (lista, editor, versiones, tester visual) alineado con i18n y UX del resto del admin, sin tocar la lógica de negocio.
+
+
+Tres mejoras adicionales que encajan bien con lo que ya has hecho:
+
+1. Internacionalizar PromptVersionList y PromptVisualTester
+PromptVersionList tiene todo el copy en castellano (“Historial de versiones”, “Cargando”, “Error desconocido”, “Versión v…”, “Revertir”, “Cerrar”).
+​
+
+Muévelos a admin.prompts.history.* y usa useTranslations('admin.prompts').
+​
+
+Añade role="dialog", aria-modal="true" y aria-labelledby en el modal.
+​
+
+PromptVisualTester tiene muchos textos duros (“Variables de Prueba”, “Modo Comparativa AB”, “Sin comparación”, “Resultado de la IA”, mensajes de error de JSON, etc.).
+​
+
+Saca todo a admin.prompts.tester.* y conecta los toast.error/toast.success a i18n.
+​
+
+Marca la zona de resultados con aria-live="polite" para que el cambio de estado sea accesible.
+​
+
+2. Exponer y conectar la historia global de prompts
+El servicio PromptService.getGlobalHistory ya construye un historial de cambios con promptName, promptKey, createdAt, etc., listo para UI.
+​
+
+Falta:
+
+Un endpoint admin (GET api/admin/prompts/history) que consuma getGlobalHistory con filtros mínimos (tenantId opcional).
+​
+
+Una vista sencilla en el admin (tabla “Activity log” de prompts) enlazada desde la pantalla de prompts:
+
+columnas: fecha, promptName, promptKey, versión, changeReason, changedBy.
+​
+
+acciones: abrir PromptVersionList para ese prompt, abrir editor.
+
+Esto te cierra la trazabilidad “quién tocó qué prompt y cuándo” sin cambiar nada del core.
+
+3. Alinear prompts maestros RAG con i18n y gobernanza
+Los prompts maestros (PROMPTS.EXTRAERMODELOS, RAGJUDGE, RAGGENERATOR, CHATRAGGENERATOR, etc.) siguen siendo constantes en castellano dentro de código.
+​
+
+Mejora posible:
+
+Exponerlos en la UI de prompts (o en una sección “Prompts del sistema”) como registros prompts en BD, gestionados por PromptService.
+​
+
+Marcar con flags de sólo editable por SUPERADMIN + quizá un “locked” para que el usuario normal los vea pero no los rompa.
+
+Opcional: versiones localizadas por idioma usando la misma infraestructura de prompts dinámicos, de forma que puedas tener variantes EN/ES del RAGGENERATOR sin tocar código.
+​

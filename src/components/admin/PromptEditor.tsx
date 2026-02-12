@@ -34,7 +34,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         description: initialPrompt?.description ?? '',
         category: initialPrompt?.category ?? 'GENERAL' as any,
         template: initialPrompt?.template ?? '',
-        model: initialPrompt?.model ?? 'gemini-1.5-flash',
+        model: initialPrompt?.model ?? 'gemini-2.5-flash',
         industry: initialPrompt?.industry ?? 'GENERIC' as any,
         maxLength: initialPrompt?.maxLength,
         variables: initialPrompt?.variables ?? []
@@ -163,13 +163,13 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
     };
 
     const handleRollback = async (targetVersion: number) => {
-        if (!confirm(`¿Restaurar V${targetVersion}?`)) return;
+        if (!confirm(`¿Estás seguro de que deseas restaurar la Versión ${targetVersion}? Esto creará una nueva revisión con el contenido de dicha versión.`)) return;
         setLoading(true);
         try {
             const res = await fetch(`/api/admin/prompts/${(initialPrompt as any)._id}/versions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetVersion })
+                body: JSON.stringify({ targetVersion, changeReason: `Restauración de versión ${targetVersion}` })
             });
             if (!res.ok) throw new Error("Rollback fallido");
             toast({ title: "Restaurado" });
@@ -264,10 +264,10 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-slate-400 text-xs">Modelo</Label>
-                                            <select value={formData.model || 'gemini-1.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                                                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
+                                            <select value={formData.model || 'gemini-2.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                                <option value="gemini-3-pro">Gemini 3 Pro</option>
+                                                <option value="gemini-3-pro-image">Gemini 3 Pro (Image)</option>
                                             </select>
                                         </div>
                                     </div>

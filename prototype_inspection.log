@@ -1,6 +1,0 @@
-Importing pdf-parse...
-Resolved PDFParse Name: PDFParse
-Is Class (ToString): true
-Prototype Methods: constructor, destroy, getInfo, getPageLinks, getText, load, shouldParse, getPageText, getHyperlinks, getImage, convertToRGBA, resolveEmbeddedImage, getScreenshot, getTable, getPathGeometry, getPageTables, fillPageTables
-Instance Keys: options, doc, progress
-Instance Methods: constructor, destroy, getInfo, getPageLinks, getText, load, shouldParse, getPageText, getHyperlinks, getImage, convertToRGBA, resolveEmbeddedImage, getScreenshot, getTable, getPathGeometry, getPageTables, fillPageTables

@@ -46,6 +46,15 @@ export class PrepareIngestionUseCase {
         // prepareResult.status === 'PENDING' (new asset created)
         const docId = prepareResult.docId;
 
+        if (prepareResult.status === 'FAILED') {
+            return {
+                success: false,
+                message: prepareResult.error || 'Preparation failed.',
+                docId,
+                correlationId
+            };
+        }
+
         // 2. Enqueue Async Analysis (Transition: PENDING → QUEUED)
         try {
             // Validate state transition: PENDING → QUEUED

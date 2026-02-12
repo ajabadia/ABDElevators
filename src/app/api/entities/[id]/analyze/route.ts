@@ -101,11 +101,26 @@ export async function GET(
                             $set: {
                                 detectedPatterns: detectedPatterns,
                                 "metadata.risks": riesgos,
+                                confidence_score: finalState.confidence_score || 0,
                                 status: 'analyzed',
                                 updatedAt: new Date()
                             }
                         }
                     );
+
+                    // Alerta Proactiva (Fase 82)
+                    if ((finalState.confidence_score || 0) < 0.70 || riesgos.some((r: any) => r.severity === 'HIGH' || r.severity === 'CRITICAL')) {
+                        const { NotificationService } = await import('@/lib/notification-service');
+                        await NotificationService.notify({
+                            tenantId: tenantId!,
+                            type: 'RISK_ALERT',
+                            level: (finalState.confidence_score || 0) < 0.50 ? 'ERROR' : 'WARNING',
+                            title: `Análisis Crítico: ${entity.identifier}`,
+                            message: `Se ha completado un análisis con confianza baja (${Math.round((finalState.confidence_score || 0) * 100)}%) o riesgos críticos. Revisión manual requerida.`,
+                            link: `/entities/${id}`,
+                            metadata: { entityId: id, confidence: finalState.confidence_score }
+                        });
+                    }
 
                     // Registrar consumo de "REPORTS" (Facturación)
                     try {

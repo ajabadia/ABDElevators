@@ -11,7 +11,7 @@ const QuerySchema = z.object({
 
 export const POST = publicApiHandler(
     'rag:query',
-    async (req, { tenantId, correlationId }) => {
+    async (req, { tenantId, correlationId, spaceId }) => {
         const body = await req.json();
         const { query, limit, strategy } = QuerySchema.parse(body);
 
@@ -19,14 +19,14 @@ export const POST = publicApiHandler(
 
         switch (strategy) {
             case 'hybrid':
-                results = await hybridSearch(query, tenantId, correlationId, limit);
+                results = await hybridSearch(query, tenantId, correlationId, limit, 'PRODUCTION', 'ELEVATORS', spaceId);
                 break;
             case 'multilingual':
-                results = await performMultilingualSearch(query, tenantId, correlationId, limit);
+                results = await performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION'); // Still needs spaceId update if needed
                 break;
             case 'standard':
             default:
-                results = await performTechnicalSearch(query, tenantId, correlationId, limit);
+                results = await performTechnicalSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
                 break;
         }
 

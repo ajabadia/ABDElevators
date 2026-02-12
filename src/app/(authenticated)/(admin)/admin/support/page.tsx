@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useCallback, Suspense } from 'react';
+import { useTranslations } from 'next-intl';
 import TicketList from '@/components/tickets/TicketList';
 import TicketDetail from '@/components/tickets/TicketDetail';
 import { PageContainer } from "@/components/ui/page-container";
@@ -26,6 +27,7 @@ export interface TicketUI {
 }
 
 export default function AdminSoportePage() {
+    const t = useTranslations('admin.support');
     const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -40,9 +42,9 @@ export default function AdminSoportePage() {
     return (
         <PageContainer className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
             <PageHeader
-                title="Centro de Gestión"
+                title={t('title')}
                 highlight="Tickets"
-                subtitle="Monitorea y resuelve incidencias de soporte técnico."
+                subtitle={t('subtitle')}
                 actions={
                     <Button
                         variant="outline"
@@ -50,7 +52,7 @@ export default function AdminSoportePage() {
                         onClick={handleRefresh}
                         className="rounded-xl border-slate-200"
                     >
-                        <RefreshCw className="w-4 h-4 mr-2" /> Refrescar Lista
+                        <RefreshCw className="w-4 h-4 mr-2" /> {t('actions.refresh') || 'Refresh'}
                     </Button>
                 }
             />
@@ -80,8 +82,8 @@ export default function AdminSoportePage() {
                             <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
                                 <RefreshCw className="w-10 h-10 opacity-20" />
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white capitalize">Gestión de Soporte</h3>
-                            <p className="text-sm mt-2 max-w-xs font-medium text-slate-500">Selecciona un caso del panel izquierdo para ver la conversación y tomar acciones.</p>
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white capitalize">{t('title')}</h3>
+                            <p className="text-sm mt-2 max-w-xs font-medium text-slate-500">{t('placeholder_desc') || 'Select a case from the left panel to see conversation and take actions.'}</p>
                         </div>
                     )}
                 </div>

@@ -22,6 +22,7 @@ Este documento es tu **prompt de sistema** para pasar a Cursor, Antigrávity, o 
 - DB: MongoDB Atlas
 - AI/ML: Gemini API (LLM + embeddings)
 - Hosting: Vercel
+- UI: Tailwind CSS 4 + Shadcn UI
 
 **Duración:** 4 semanas para MVP, luego evolución 18 meses.
 
@@ -210,7 +211,21 @@ OBLIGATORIO (en middleware.ts):
 SI ROMPES: Rechazamos tu PR sin piedad.
 ```
 
-### 11. Multi-tenant Harmony (Regla de Oro #9)
+### 10. accessibility (Regla de Oro #10)
+
+```
+REGLA: Todo componente UI debe ser accesible por defecto.
+
+OBLIGATORIO:
+- Roles semánticos (main, nav, section, article).
+- Atributos ARIA (aria-label, aria-describedby, aria-hidden).
+- Gestión de foco (focus-visible).
+- Contraste WCAG AA (mínimo 4.5:1).
+
+SI ROMPES: Deuda técnica inaceptable.
+```
+
+### 11. Multi-tenant Harmony (Regla de Oro #1)
 
 ```
 REGLA: Toda operación de DB debe realizarse a través de SecureCollection para garantizar aislamiento.
@@ -238,6 +253,33 @@ PATRÓN:
 3. Sincronizar fallbacks a DB mediante sync script si no existen.
 
 SI ROMPES: Perdemos capacidad de ajuste en caliente.
+```
+
+### 13. Data Protection (Regla de Oro #3)
+
+```
+REGLA: Datos PII o sensibles deben cifrarse en reposo.
+
+OBLIGATORIO:
+- Uso de `SecurityService.encrypt()` para campos marcados en la ontología.
+- No loguear valores sensibles en texto plano.
+
+SI ROMPES: Violación de cumplimiento GDPR/SOC2.
+```
+
+---
+
+### 14. Composition Patterns
+
+```
+REGLA: Preferir composición sobre props booleanas para variantes.
+
+PATRÓN:
+❌ <Button loading={true} error={false} primary={true} />
+✅ <PrimaryButton icon={<Loader />} />
+✅ Estructura de "Compound Components" para UI compleja (Context-based).
+
+SI ROMPES: Deuda técnica por explosión de props.
 ```
 
 ---
@@ -351,6 +393,38 @@ if (isFeatureEnabled('RAG_VECTOR_SEARCH')) {
 } else {
   // Búsqueda clásica (fallback)
 }
+```
+
+### React 19 Patterns
+
+```
+REGLA: Usar APIs modernas de React 19.
+
+OBLIGATORIO:
+- NO usar `forwardRef`. Pasar `ref` como una prop normal.
+- Usar `use(Context)` en lugar de `useContext` para lectura condicional si aplica.
+- Usar `startTransition` para actualizaciones no urgentes que puedan ser interrumpidas.
+```
+
+### Performance Optimization (Waterfalls)
+
+```
+REGLA: Evitar cascadas de promesas (Waterfalls).
+
+PATRÓN:
+❌ await getA(); await getB(); // Cascada
+✅ const [a, b] = await Promise.all([getA(), getB()]); // Paralelo
+
+MANDATORIO: Paralelizar fetches independientes en Server Components y API Routes.
+```
+
+### Localized Formatting
+
+```
+REGLA: No usar `Intl` directamente con locales hardcoded.
+
+PATRÓN:
+✅ Usar `useFormatter` de `next-intl` para moneda, números y fechas.
 ```
 
 ### JSDoc

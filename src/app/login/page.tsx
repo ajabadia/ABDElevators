@@ -167,7 +167,7 @@ export default function LoginPage() {
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-block group/logo transition-transform hover:scale-105">
                             <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-teal-500/20 group-hover/logo:rotate-3 transition-all">
-                                <Lock className="text-white" size={32} />
+                                <Lock className="text-white" size={32} aria-hidden="true" />
                             </div>
                             <h1 className="text-3xl font-black text-white tracking-tight">
                                 ABD<span className="text-teal-500"> RAG</span>
@@ -189,11 +189,14 @@ export default function LoginPage() {
                                 className="space-y-6"
                             >
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                    <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
                                         {t('email_label')}
                                     </label>
                                     <Input
+                                        id="email"
+                                        name="email"
                                         type="email"
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={t('email_placeholder')}
@@ -204,12 +207,15 @@ export default function LoginPage() {
 
                                 {!isMagicLink && (
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                        <label htmlFor="password" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
                                             {t('password_label')}
                                         </label>
                                         <div className="relative">
                                             <Input
+                                                id="password"
+                                                name="password"
                                                 type={showPassword ? "text" : "password"}
+                                                autoComplete="current-password"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder={t('password_placeholder')}
@@ -219,9 +225,10 @@ export default function LoginPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
+                                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
                                             >
-                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
                                             </button>
                                         </div>
                                     </div>
@@ -231,6 +238,8 @@ export default function LoginPage() {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
+                                        role="alert"
+                                        aria-live="assertive"
                                         className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
                                     >
                                         {error}
@@ -241,11 +250,14 @@ export default function LoginPage() {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
+                                        role="status"
+                                        aria-live="polite"
                                         className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
                                     >
                                         <motion.div
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
+                                            aria-hidden="true"
                                             className="w-2 h-2 rounded-full bg-emerald-500"
                                         />
                                         {success}
@@ -259,13 +271,13 @@ export default function LoginPage() {
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
                                             {isMagicLink ? t('sending') : t('verifying')}
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             {isMagicLink ? t('magic_link_button') : t('button')}
-                                            <ArrowRight size={20} />
+                                            <ArrowRight size={20} aria-hidden="true" />
                                         </div>
                                     )}
                                 </Button>
@@ -299,10 +311,16 @@ export default function LoginPage() {
                                 </p>
 
                                 <Input
+                                    id="mfa-code"
+                                    name="mfa-code"
                                     type="text"
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    pattern="[0-9]*"
                                     value={mfaCode}
                                     onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
+                                    aria-label="Código de autenticación de dos factores"
                                     className="h-14 text-center text-3xl font-mono tracking-[0.3em] bg-slate-800/50 border-slate-700 text-white focus:border-teal-500/50 rounded-xl"
                                     maxLength={6}
                                     autoFocus
@@ -310,7 +328,11 @@ export default function LoginPage() {
                                 />
 
                                 {error && (
-                                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium">
+                                    <div
+                                        role="alert"
+                                        aria-live="assertive"
+                                        className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
+                                    >
                                         {error}
                                     </div>
                                 )}
@@ -320,7 +342,7 @@ export default function LoginPage() {
                                     disabled={isLoading || mfaCode.length < 6}
                                     className="w-full h-12 bg-teal-600 hover:bg-teal-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all"
                                 >
-                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : t('mfa_button')}
+                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" /> : t('mfa_button')}
                                 </Button>
 
                                 <button
