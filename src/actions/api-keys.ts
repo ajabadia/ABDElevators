@@ -1,3 +1,5 @@
+'use server';
+
 import { auth } from '@/lib/auth';
 import { ApiKeyService } from '@/lib/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
