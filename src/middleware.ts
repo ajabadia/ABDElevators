@@ -42,6 +42,16 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             pathname.startsWith('/_next') ||
             pathname === '/favicon.ico';
 
+        // 🛡️ [PHASE 132.1] INTERNAL PROTECTION & DEBUG REMOVAL
+        // block access to any remaining /debug/ paths or paths requiring internal secret
+        if (pathname.startsWith('/api/internal/')) {
+            const internalSecret = request.headers.get("x-internal-secret");
+            if (internalSecret !== process.env.INTERNAL_API_SECRET || !process.env.INTERNAL_API_SECRET) {
+                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${pathname} from ${ip}`);
+                return new NextResponse(JSON.stringify({ success: false, message: "Forbidden" }), { status: 403 });
+            }
+        }
+
         // 2. Auth Logic Protection
         // Protect ALL paths not explicitly whitelisted
         if (!session && !isPublicPath) {

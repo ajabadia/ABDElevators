@@ -283,4 +283,209 @@ export class GridFSUtils {
             },
         });
     }
+
+    // ============================================================================
+    // Phase 131: Temporary Processing Blob Methods (Ingestion Pipeline)
+    // ============================================================================
+
+    /**
+     * Save buffer for processing (Phase 131)
+     * Stores PDF temporarily in GridFS before indexing
+     * 
+     * @param buffer - File buffer
+     * @param tenantId - Tenant ID for isolation
+     * @param docId - Document/Asset ID
+     * @param correlationId - Audit correlation ID
+     * @returns GridFS blob ID
+     */
+    static async saveForProcessing(
+        buffer: Buffer,
+        tenantId: string,
+        docId: string,
+        correlationId: string
+    ): Promise<string> {
+        const { bucket } = await getGridFSBucket();
+        const startTime = Date.now();
+        const filename = `temp_${tenantId}_${docId}_${Date.now()}.blob`;
+
+        return new Promise((resolve, reject) => {
+            const uploadStream = bucket.openUploadStream(filename, {
+                metadata: {
+                    tenantId,
+                    docId,
+                    type: 'processing_blob',
+                    uploadedAt: new Date().toISOString(),
+                },
+            });
+
+            uploadStream.on('finish', async () => {
+                const blobId = uploadStream.id.toString();
+                const durationMs = Date.now() - startTime;
+
+                await logEvento({
+                    level: 'INFO',
+                    source: 'GRIDFS',
+                    action: 'PROCESSING_BLOB_SAVED',
+                    message: `Processing blob saved: ${filename}`,
+                    correlationId,
+                    tenantId,
+                    details: {
+                        blobId,
+                        filename,
+                        sizeBytes: buffer.length,
+                        tenantId,
+                        docId,
+                        durationMs,
+                    },
+                });
+
+                resolve(blobId);
+            });
+
+            uploadStream.on('error', async (error) => {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'GRIDFS',
+                    action: 'PROCESSING_BLOB_SAVE_FAILED',
+                    message: `Failed to save processing blob: ${filename}`,
+                    correlationId,
+                    tenantId,
+                    details: {
+                        filename,
+                        tenantId,
+                        docId,
+                        errorName: error.name,
+                        errorMessage: error.message,
+                    },
+                });
+                reject(error);
+            });
+
+            uploadStream.end(buffer);
+        });
+    }
+
+    /**
+     * Get buffer for processing (Phase 131)
+     * Retrieves PDF from GridFS for analysis/indexing
+     * 
+     * @param blobId - GridFS blob ID
+     * @param correlationId - Audit correlation ID
+     * @returns File buffer
+     */
+    static async getForProcessing(
+        blobId: string,
+        correlationId: string
+    ): Promise<Buffer> {
+        const { bucket } = await getGridFSBucket();
+        const startTime = Date.now();
+
+        return new Promise((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            const downloadStream = bucket.openDownloadStream(new ObjectId(blobId));
+
+            downloadStream.on('data', (chunk) => {
+                chunks.push(chunk);
+            });
+
+            downloadStream.on('end', async () => {
+                const buffer = Buffer.concat(chunks);
+                const durationMs = Date.now() - startTime;
+
+                await logEvento({
+                    level: 'DEBUG',
+                    source: 'GRIDFS',
+                    action: 'PROCESSING_BLOB_READ',
+                    message: `Processing blob read: ${blobId}`,
+                    correlationId,
+                    details: {
+                        blobId,
+                        sizeBytes: buffer.length,
+                        durationMs,
+                    },
+                });
+
+                resolve(buffer);
+            });
+
+            downloadStream.on('error', async (error) => {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'GRIDFS',
+                    action: 'PROCESSING_BLOB_READ_FAILED',
+                    message: `Failed to read processing blob: ${blobId}`,
+                    correlationId,
+                    details: {
+                        blobId,
+                        errorName: error.name,
+                        errorMessage: error.message,
+                    },
+                });
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * Delete processing blob after indexing (Phase 131)
+     * Cleanup temporary blob used for ingestion processing
+     * 
+     * @param blobId - GridFS blob ID
+     * @param correlationId - Audit correlation ID
+     */
+    static async deleteAfterProcessing(
+        blobId: string,
+        correlationId: string
+    ): Promise<void> {
+        const { bucket } = await getGridFSBucket();
+
+        try {
+            await bucket.delete(new ObjectId(blobId));
+            await logEvento({
+                level: 'INFO',
+                source: 'GRIDFS',
+                action: 'PROCESSING_BLOB_DELETED',
+                message: `Processing blob deleted: ${blobId}`,
+                correlationId,
+                details: {
+                    blobId,
+                    reason: 'post-processing-cleanup',
+                },
+            });
+        } catch (error) {
+            const err = error as Error;
+            await logEvento({
+                level: 'WARN',
+                source: 'GRIDFS',
+                action: 'PROCESSING_BLOB_DELETE_FAILED',
+                message: `Failed to delete processing blob: ${blobId}`,
+                correlationId,
+                details: {
+                    blobId,
+                    errorName: err.name,
+                    errorMessage: err.message,
+                },
+            });
+        }
+    }
+
+    /**
+     * Check if processing blob exists (Phase 131)
+     * Used for fallback validation
+     * 
+     * @param blobId - GridFS blob ID
+     * @returns True if blob exists
+     */
+    static async exists(
+        blobId: string
+    ): Promise<boolean> {
+        const { bucket } = await getGridFSBucket();
+        
+        try {
+            await bucket.find({ _id: new ObjectId(blobId) }).limit(1).toArray();
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }

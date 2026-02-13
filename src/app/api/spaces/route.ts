@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import { SpaceService } from '@/services/space-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'Session required');
         }
 
-        const spacesCursor = await SpaceService.getAccessibleSpaces(
+        const items = await SpaceService.getAccessibleSpaces(
             session.user.tenantId,
             session.user.id,
             {
@@ -43,8 +44,6 @@ export async function GET(req: NextRequest) {
             },
             session
         );
-
-        const items = await spacesCursor.toArray();
 
         return NextResponse.json({
             success: true,

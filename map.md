@@ -20,6 +20,7 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/profile` | Dashboard personal, estadísticas de uso y avatar. | - |
+| `/dashboard` | **NEW** Dashboard Principal (Role-Based Dispatcher). | 2026-02-13 |
 | `/my-documents` | Repositorio personal de archivos analizados. | - |
 | `/search` | Búsqueda Inteligente Conversacional sobre manuales técnicos. | 2026-02-08 |
 | `/spaces` | Hub de Espacios personales, colecciones y Quick Q&A (Phase 125). | 2026-02-12 |
@@ -31,10 +32,11 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 🧠 Knowledge & RAG
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/knowledge-base` | Explorador vectorial, visualización de chunks y rankings. | 2026-02-03 12:20 |
-| `/admin/knowledge-assets` | Gestión de archivos (PDFs), ingesta masiva y estado de análisis. | 2026-02-10 |
-| `/admin/spaces` | Dashboard administrativo de Espacios Industriales. | 2026-02-12 |
-| `/admin/rag-quality` | Dashboard de evaluación (RAGAs) y métricas de precisión + Decision Tracing. | 2026-02-08 21:00 |
+| `/admin/knowledge` | **Unified Knowledge Hub**: Activos, Explorador Neural y Espacios. | 2026-02-13 |
+| `/admin/knowledge-base` | *Redirects to /admin/knowledge?tab=explorer* | 2026-02-13 |
+| `/admin/knowledge-assets` | *Redirects to /admin/knowledge?tab=assets* | 2026-02-13 |
+| `/admin/spaces` | *Redirects to /admin/knowledge?tab=spaces* | 2026-02-13 |
+| `/admin/rag-quality` | *Redirects to /admin/ai?tab=rag-quality* | 2026-02-13 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
@@ -48,7 +50,8 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/workflows` | Editor visual de grafos para automatizar flujos RAG. | 2026-02-03 23:45 |
+| `/admin/ai` | **Unified AI Hub**: Workflows, RAG Quality, Predictive & Playground. | 2026-02-13 |
+| `/admin/workflows` | *Redirects to /admin/ai?tab=workflows* | 2026-02-13 |
 | `/admin/workflows/active` | Monitor de ejecuciones en tiempo real. | 2026-02-03 23:45 |
 | `/admin/workflow-tasks` | Centro de Colaboración de Tareas (Task Hub). | 2026-02-06 00:00 |
 
@@ -60,9 +63,10 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-06 10:15 |
 | `/admin/profile` | Gestión de identidad, seguridad y preferencias del usuario. | 2026-02-07 14:30 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
-| `/admin/billing/contracts` | Gestión de contratos, límites y planes por tenant. | 2026-02-10 |
-| `/admin/api-keys` | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
-| `/admin/ingest/jobs` | Panel de gestión de Dead Letter Queue (DLQ) y jobs atascados (Phase 126). | 2026-02-12 |
+| /admin/billing/contracts | Gestión de contratos, límites y planes por tenant. | 2026-02-12 |
+| /admin/api-keys | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
+| /admin/prompts | Gestión de directivas de IA e i18n avanzada (Phase 109). | 2026-02-12 |
+| /admin/ingest/jobs | Panel de gestión de Dead Letter Queue (DLQ) y jobs atascados (Phase 126). | 2026-02-12 |
 | `/admin/workflows` | Diseñador visual de grafos para automatizar flujos RAG (Phase 127). | 2026-02-12 |
 | `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-10 |
 
@@ -70,6 +74,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/workshop/orders/new` | Registro de pedidos de taller con extracción de manuales (Phase 128). | 2026-02-12 |
+| `/admin/cases/[id]` | **Case Hero Layout**: Detalle de caso, timeline y chat. | 2026-02-13 |
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Última Revisión |
@@ -82,7 +87,8 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ## 🔌 Infraestructura (API Endpoints Clave)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
-| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase). | 2026-02-10 10:00 |
+| `/api/admin/cases/[id]` | Recuperación segura de detalles de casos (Entity Detail). | 2026-02-13 |
+| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase) + Multi-level Chunking. | 2026-02-13 |
 | `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos (ExecuteIngestionAnalysis). | 2026-02-08 02:00 |
 | `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-10 10:00 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
@@ -105,4 +111,4 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/collections` | Gestión de colecciones personales (Notebooks). | 2026-02-11 |
 
 ---
-*Mapa actualizado por Antigravity v4.4.3 (Industrial Refinement Edition) - 2026-02-12*
+*Mapa actualizado por Antigravity v4.5.0 (Unified Experience Edition) - 2026-02-13*

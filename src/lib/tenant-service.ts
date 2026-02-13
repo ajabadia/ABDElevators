@@ -143,15 +143,22 @@ export class TenantService {
             // 4. Invalidate Cache
             this.cache.delete(tenantId);
 
-            // 5. Audit Snapshot New
-            await db.collection('tenant_configs_history').insertOne({
+            // 5. Audit Snapshot New (Phase 132.3: Unified Audit)
+            const { AuditTrailService } = await import('./services/audit-trail-service');
+            await AuditTrailService.logConfigChange({
+                actorType: 'USER', // TODO: Obtener del contexto de sesión si es posible
+                actorId: metadata?.performedBy || 'SYSTEM',
                 tenantId,
+                action: 'UPDATE_TENANT_CONFIG',
+                entityType: 'TENANT',
+                entityId: tenantId,
+                changes: {
+                    before: previousState,
+                    after: validated
+                },
                 correlationId,
-                previousState,
-                newState: validated,
-                performedBy: metadata?.performedBy || 'SYSTEM',
-                timestamp: new Date()
-            });
+                performedBy: metadata?.performedBy || 'SYSTEM' // Compatibilidad
+            } as any);
 
             // Log éxito
             await logEvento({

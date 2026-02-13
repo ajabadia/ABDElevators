@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle, Download, Settings, Building2 } from 'lucide-react';
+import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle, Download, Settings, Building2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlanSelector } from './PlanSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

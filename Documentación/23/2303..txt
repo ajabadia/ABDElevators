@@ -1,0 +1,729 @@
+La ruta de ingesta está clara y el síntoma que describes encaja bastante bien con un fallo en la fase 2 (executeAnalysis) al hacer fetch desde Cloudinary, antes de que el indexer cree los chunks.
+​
+
+1. Ruta completa de ingesta
+Subida y registro inicial (sincronía)
+Endpoint: POST /api/admin/ingest.
+​
+Pasos:
+
+Auth + Guardian (scope USER/TENANT/INDUSTRY/GLOBAL).
+​
+
+IngestService.prepareIngest(file, metadata, tenantId, environment, userEmail, ip, userAgent, correlationId, maskPii, session).
+​
+
+Guarda knowledgeassets con:
+
+cloudinaryUrl, cloudinaryPublicId, sizeBytes, tenantId, ingestionStatus = PENDING/NEW.
+​
+
+Crea/usa fileblobs vía FileBlobManager.
+​
+
+Si no es duplicado, se encola el job:
+
+queueService.addJob("PDFANALYSIS", { docId: prep.docId, maskPii, userEmail, environment, ... }).
+​
+
+Si la cola falla, fallback:
+
+IngestService.executeAnalysis(prep.docId, ...) en background.
+​
+
+En tu caso “los documentos llegan al almacenamiento”, así que esta parte está funcionando: uploadRAGDocument se completa, y knowledgeassets tiene el PDF.
+​
+
+Worker / fase pesada (asíncrona)
+Método: IngestService.executeAnalysis(docId, options).
+​
+Pasos clave:
+
+Carga el asset:
+
+knowledgeAssetsCollection.findOne({ _id: assetId }). Si no lo encuentra, error “Knowledge asset docId not found”.
+​
+
+Actualiza ingestionStatus a PROCESSING, aumenta attempts, guarda progress.
+​
+
+updateProgress(5).
+​
+
+Step 1 – Fetch del PDF desde Cloudinary:
+
+Si no hay asset.cloudinaryUrl ⇒ AppError(EXTERNALSERVICEERROR, 503, Missing Cloudinary URL...).
+​
+
+Genera URL firmada:
+
+const signedUrl = getSignedUrl(asset.cloudinaryPublicId || asset.cloudinarypublicid, "raw").
+​
+
+fetch(signedUrl) y Buffer.from(await response.arrayBuffer()).
+​
+
+Si response.ok es falso ⇒ lanza Error("Cloudinary fetch failed 401 Unauthorized for URL ..."). Este error se captura más abajo y la ingesta se marca como FAILED.
+​
+
+updateProgress(15).
+​
+
+Step 2 – Análisis
+
+IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession).
+​
+
+updateProgress(60).
+​
+
+Step 3 – Indexado (chunks)
+
+IngestIndexer.index(analysis.rawText, analysis.visualFindings, asset, analysis.documentContext, analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession, updateProgress).
+​
+
+Aquí se crean los documentos en documentchunks.
+
+updateProgress(100) e inserta entrada en auditingestion, y finalmente:
+
+ingestionStatus = COMPLETED, totalChunks = successCount, language, industry, etc.
+​
+
+Si no se crean chunks, es que estamos fallando:
+
+Antes de llamar a IngestIndexer.index, o
+
+dentro del propio IngestIndexer antes de la inserción.
+
+El log que aparece en tu dump confirma un caso típico:
+
+Error Cloudinary fetch failed 401 Unauthorized for URL https://res.cloudinary.com/... en IngestService.executeAnalysis.
+​
+
+Ahí se corta la ejecución de la fase pesada; por eso ves los PDFs en Cloudinary pero no aparecen chunks.
+
+2. Puntos concretos donde puede estar rompiendo
+Cloudinary: URL firmada vs configuración
+
+getSignedUrl(publicId, "raw") construye una URL firmada tipo https://res.cloudinary.com/.../raw/upload/....
+​
+
+El error 401 Unauthorized indica:
+
+CLOUDINARY_API_KEY/SECRET no cuadran con ese cloudname, o
+
+el publicId o resource_type no corresponden a lo subido (por ejemplo, se subió como image pero se intenta leer como raw).
+​
+
+Cómo verificar rápidamente:
+
+Mira un knowledgeasset afectado:
+
+cloudinaryPublicId / cloudinarypublicid.
+
+cloudinaryUrl.
+
+Con el mismo publicId, prueba manualmente desde un script mínimo a hacer:
+
+getSignedUrl(publicId, "raw") + fetch(signedUrl) usando las mismas env vars que el worker.
+
+Si ahí también fallas con 401, el problema es de credenciales Cloudinary o tipo de recurso.
+
+Campo cloudinaryUrl nulo
+
+El código antes de fetch hace:
+
+if (!asset.cloudinaryUrl) throw new AppError(EXTERNALSERVICEERROR, 503, Missing Cloudinary URL for asset ...).
+​
+
+Si la subida sí se hizo (tú ves el PDF), pero knowledgeassets.cloudinaryUrl es null, la ingesta fallará siempre en executeAnalysis.
+
+En ese caso, hay que revisar la parte donde se rellena cloudinaryUrl en IngestPreparer / uploadRAGDocument para confirmar que guarda el dato en el asset.
+​
+
+IngestIndexer
+
+Si llegases a ver logs:
+
+INGESTSERVICE / ANALYSISSUCCESS
+
+pero nunca INGESTSERVICE / INDEXINGSUCCESS,
+
+entonces el fallo está dentro de IngestIndexer.index (p.ej. error al insertar en documentchunks o conflicto con tenantId/status). En el dump no se ve error concreto, pero es el siguiente sitio a inspeccionar.
+​
+
+3. Qué miraría yo paso a paso
+Estado de un knowledgeasset recién fallado
+
+Endpoint: GET /api/admin/ingest/status/:docId.
+​
+
+Ver ingestionStatus (FAILED), error y updatedAt.
+
+Directo en DB:
+
+db.knowledgeassets.findOne({ _id: ObjectId(docId) }):
+
+cloudinaryUrl
+
+cloudinaryPublicId / cloudinarypublicid
+
+ingestionStatus, error, attempts.
+
+Logs INGESTSERVICE para ese correlationId
+
+Busca en applicationlogs:
+
+source: "INGESTSERVICE", correlationId del asset (lo guarda en el propio asset).
+​
+
+Fíjate si ves:
+
+FETCHSTART y luego un ERROR/FATAL con Cloudinary fetch failed ....
+
+O bien ANALYSISSTART pero no INDEXINGSTART.
+
+Comprobación Cloudinary
+
+Usa el publicId tal cual está en el asset:
+
+Si se subió via uploadRAGDocument, el publicId tiene un prefijo con tenantId/folder y un identificador MD5/fecha.
+​
+
+Desde la misma env de servidor:
+
+cloudinary.url(publicId, { resource_type: "raw", sign_url: true, type: "upload" }).
+
+fetch esa URL.
+
+Si falla, es config; si funciona, el desfase está entre esa llamada y la que hace tu server (por ejemplo, env distintas entre ingest API y worker).
+
+4. Diagnóstico probable y siguiente cambio
+Por el error que aparece en tu dump (Cloudinary fetch failed 401 Unauthorized for URL ...), el flujo ahora mismo es:
+
+Fase 1 OK:
+
+Subida a Cloudinary + registro en knowledgeassets.
+
+Fase 2:
+
+Worker llama a executeAnalysis.
+
+Lee el asset.
+
+Intenta fetch del PDF desde Cloudinary usando getSignedUrl.
+
+Obtiene 401.
+
+Marca ingestionStatus = FAILED, guarda error y no llama a IngestIndexer.index.
+
+Por eso “los documentos llegan al almacenamiento, pero nunca se crean los chunks”.
+
+Lo más útil ahora es:
+
+Confirmar ese error en logs o en el campo error de knowledgeassets para un doc concreto.
+
+Probar manualmente un fetch(signedUrl) con el publicId de ese asset.
+
+Si confirma 401, revisar:
+
+CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET en el entorno donde corre el worker.
+
+Qué resource_type se usó al subir (uploadRAGDocument usa resource_type: "raw").
+​
+
+Si quieres, en el siguiente paso podemos escribir un script mínimo que:
+
+Dado un docId, recorra:
+
+asset → signedUrl → fetch → log de resultado.
+
+Y, si pasa el fetch, llame a IngestAnalyzer + IngestIndexer para ese asset a mano, para sacar el error exacto que está parando la creación de chunks.
+
+
+
+
+
+
+
+Sí, tiene pinta de que está todo conectado: el problema de descarga que ves en /admin/my-documents y /admin/knowledge-assets es el mismo que está rompiendo la fase de análisis/indexado.
+
+1. Qué está pasando con esa URL concreta
+La URL que te da error:
+
+https://res.cloudinary.com/ds81rqpk4/raw/upload/v1770469680/abd-elevators/tenants/elevadores_mx/usuarios/69852a7074191a8423fba876/documentos/1770469679603_pedido%20-%20español
+​
+
+observaciones:
+
+resource_type = raw, type = upload (bien).
+
+La parte de public_id es todo lo que viene después de /raw/upload/v1770469680/:
+
+abd-elevators/tenants/elevadores_mx/usuarios/69852a7074191a8423fba876/documentos/1770469679603_pedido%20-%20español.
+​
+
+Cloudinary acepta caracteres no ASCII en public_id, pero hay restricciones en algunos modos (strict transformations, acceso autenticado, etc.).
+
+El hecho de que obtengas:
+
+401 Unauthorized desde servidor (Failed to fetch file from storage: Unauthorized).
+
+Y, a veces, que el navegador diga “no se encuentra la página” en res.cloudinary.com,
+indica que Cloudinary no está entregando ese asset con esa URL.
+​
+
+Esto encaja con el error que se ve en la ruta de ingesta:
+
+Cloudinary fetch failed 401 Unauthorized for URL https://res.cloudinary.com/... dentro de IngestService.executeAnalysis.
+​
+
+Si el servidor no puede leer el PDF desde Cloudinary, la ingesta se queda a medias: asset creado, pero sin chunks.
+
+2. Causas probables (todas convergen)
+Hay tres frentes típicos que pueden causar exactamente esto:
+
+Modo de acceso / privacidad en Cloudinary
+
+Si el asset se ha subido como resource_type: raw pero con tipo authenticated o private, o tienes Strict Transformations para raw, un acceso sin firma válida da 401.
+
+Aunque en tu código usas sign_url: true en getSignedUrl, si las credenciales (cloud_name/api_key/api_secret) del entorno no son las correctas, la firma no será válida y Cloudinary responde 401.
+
+Desfase entre cómo subes y cómo lees
+
+En tu código:
+
+Subes con uploadToFolder/uploadRAGDocument:
+
+cloudinary.uploader.upload_stream({ resource_type: "raw", type: "upload", folder, public_id: finalPublicId }).
+​
+
+Lees con getSignedUrl(publicId, "raw"):
+
+cloudinary.url(publicId, { resource_type: "raw", sign_url: true, type: "upload" }).
+​
+
+Si en algún punto:
+
+publicId no coincide (p.ej. guardas una versión normalizada o sin la parte final).
+
+O el asset se sube con otro resource_type (por error) o sin type: upload.
+
+obtendrás 401/404.
+
+Configuración de la cuenta Cloudinary
+
+Algunas cuentas activan restricciones adicionales (por ejemplo, ciertas carpetas, o una policy de acceso que exige firma específica). Un error ahí se manifiesta como 401, aunque el asset exista.
+
+3. Por qué esto rompe también la ingesta (chunks)
+La ruta es:
+
+Subida: OK → asset con cloudinaryUrl y publicId.
+​
+
+Worker/executeAnalysis:
+
+Intenta fetch(signedUrl) para obtener el PDF.
+
+Cloudinary responde 401 → se lanza error.
+
+ingestionStatus pasa a FAILED y no se llama al indexer, así que no se crean documentchunks.
+​
+
+Y en el lado UI:
+
+/admin/knowledge-assets/:id/download hace:
+
+getPDFDownloadUrl(publicId) → URL muy parecida a la que has pegado.
+​
+
+fetch(downloadUrl) → mismo 401.
+
+Devuelve EXTERNAL_SERVICE_ERROR al frontend.
+​
+
+Así que sí: el fallo de descarga que ves desde la UI es el mismo fallo que impide que se generen los chunks.
+
+4. Qué revisar muy concreto
+Con un solo ejemplo de documento (el de pedido - español):
+
+En Mongo (knowledgeassets)
+
+Comprueba ese documento:
+
+cloudinaryUrl
+
+cloudinaryPublicId / cloudinarypublicid
+
+ingestionStatus, error, attempts.
+
+Con eso puedes ver:
+
+Si el asset se marcó como FAILED con error de Cloudinary.
+
+El publicId exacto que está usando el servidor.
+
+Reproducir el getSignedUrl + fetch en un script con tus env actuales
+
+En un script Node usando las mismas env que la API:
+
+ts
+import { v2 as cloudinary } from "cloudinary";
+import fetch from "node-fetch";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+async function test() {
+  const publicId = "abd-elevators/tenants/elevadores_mx/usuarios/69852a7074191a8423fba876/documentos/1770469679603_pedido - español"; // o la versión exacta que tengas en DB
+
+  const url = cloudinary.url(publicId, {
+    resource_type: "raw",
+    type: "upload",
+    sign_url: true,
+  });
+
+  console.log("Signed URL:", url);
+  const res = await fetch(url);
+  console.log(res.status, res.statusText);
+  const text = await res.text();
+  console.log(text.slice(0, 300));
+}
+
+test().catch(console.error);
+Si aquí también te da 401, sabes que:
+
+O las credenciales no son válidas en ese entorno.
+
+O la cuenta Cloudinary está en modo que exige algo más (p.ej. transformación permitida, etc.).
+
+Comprobar la configuración Cloudinary
+
+En el dashboard de Cloudinary:
+
+Que cloud_name coincida con ds81rqpk4.
+
+Que las API key/secret que usas corresponden a esa cuenta.
+
+Que no tengas alguna policy especial para raw/upload que requiera cosas adicionales.
+
+5. Relación con el nombre del fichero (“español”)
+Es poco probable que el problema sea únicamente el nombre con acento, porque:
+
+Cloudinary soporta public_id con caracteres no ingleses, siempre que la URL esté correctamente codificada.
+​
+
+En tu URL el espacio es %20, pero ñ aparece literal. Eso suele ser correcto si el server ha generado bien la firma sobre ese public_id.
+
+Si hubiera un problema de encoding, verías más normalmente un 404 o “asset not found”, no tanto un 401 de autorización.
+
+Dicho eso, como prueba rápida:
+
+Intenta subir un PDF con un nombre simple (sin espacios ni ñ) y mira si:
+
+Se puede descargar desde /admin/.../download.
+
+Se generan los chunks.
+
+Si con un nombre simple también falla con 401, el problema no es el nombre, es claramente la configuración/firma Cloudinary.
+
+Resumiendo:
+
+Sí, todo apunta a Cloudinary: la API no puede volver a leer lo que ha subido, por 401.
+
+Esto rompe tanto la descarga desde /admin/... como la fase de análisis que necesita el PDF para generar chunks.
+
+Lo siguiente que haría es:
+
+Ver un asset concreto en knowledgeassets (publicId + error).
+
+Ejecutar el script de prueba con getSignedUrl + fetch en el mismo entorno.
+
+Ajustar credenciales / configuración Cloudinary hasta que ese fetch deje de dar 401.
+
+
+
+1. Problema actual
+Flujo actual:
+
+API recibe File.
+
+Sube a Cloudinary.
+
+Guarda knowledgeasset.
+
+Worker descarga el PDF desde Cloudinary y a partir de ahí:
+
+Analiza texto → crea chunks.
+​
+
+Cualquier problema Cloudinary→PDF (401, 404, config) rompe toda la fase pesada.
+
+La clave es no depender de Cloudinary para el procesamiento; usar el stream/buffer original.
+
+2. Nuevo flujo propuesto (sin “round-trip” a Cloudinary)
+Objetivo: separar claramente “almacenamiento” de “procesamiento”.
+
+API /front (fase ligera):
+
+Recibe el File vía FormData como ahora.
+
+Lógica:
+
+Crea un knowledgeasset en estado PENDING o UPLOADING, con tenantId, metadata básica, pero sin asumir que Cloudinary ni chunks están listos.
+
+Lanza en paralelo:
+
+Subida a Cloudinary:
+
+En back, usas uploadRAGDocument(fileStream, ...).
+
+Cuando sube:
+
+Actualizas el asset con cloudinaryUrl, publicId, status: STORED si el resto va bien.
+​
+
+Procesado local del mismo stream/buffer:
+
+Lees el File completo en buffer (o stream a pipeline).
+
+Llamas directamente a:
+
+IngestAnalyzer.analyze(buffer, asset, ...).
+
+IngestIndexer.index(...).
+
+Sin pasar por Cloudinary.
+​
+
+Al final, si ambas cosas (Cloudinary + chunks) han ido bien:
+
+ingestionStatus = COMPLETED.
+
+Si una de las dos falla:
+
+Guardas un estado parcial:
+
+STORED_NO_INDEX (Cloudinary OK, chunks NO).
+
+INDEXED_NO_STORAGE (chunks OK, Cloudinary NO).
+
+El asset mantiene info de qué parte falta.
+
+Worker / jobs
+
+Puedes seguir usando job queue, pero pasando el buffer/stream directamente:
+
+(a) La API encola un job con:
+
+docId, tenantId, metadata mínima.
+
+Un puntero a un fileblob local (GridFS / MinIO / S3) o, en el caso simple, el buffer que ya has guardado.
+
+(b) El worker:
+
+Lee el blob desde tu propio storage (no Cloudinary).
+
+Analiza + indexa.
+
+En paralelo o después, sube a Cloudinary solo para “delivery”.
+
+Esto elimina el “dependemos de que Cloudinary me devuelva mi propio PDF”.
+
+3. Mecanismo de “reintento” y completar partes faltantes
+Como propones:
+
+Cada asset tiene flags claros:
+
+ts
+interface KnowledgeAsset {
+  // ...
+  ingestionStatus:
+    | "PENDING"
+    | "UPLOADING"
+    | "PROCESSING"
+    | "COMPLETED"
+    | "STORED_NO_INDEX"
+    | "INDEXED_NO_STORAGE"
+    | "FAILED";
+  hasStorage: boolean;    // Cloudinary ok
+  hasChunks: boolean;     // documentchunks creados
+  lastError?: string;
+}
+Endpoint/reintento:
+
+POST /api/admin/ingest/:docId/retry que hace:
+
+Si hasStorage = true y hasChunks = false:
+
+Vuelve a procesar texto → indexar usando tu copia local (o incluso, si te ves obligado, vuelve a usar Cloudinary, pero ya como fallback).
+
+Si hasStorage = false y hasChunks = true:
+
+Vuelve a subir el PDF a Cloudinary desde tu storage local.
+
+Si ambos faltan (FAILED), fuerza un flujo completo de nuevo.
+
+Cuando el usuario vuelva a subir el mismo archivo:
+
+Detección de duplicado por hash/MD5 (ya la tienes): si se detecta, en vez de abortar sin más, puedes:
+
+Reutilizar hasStorage/hasChunks y solo ejecutar la parte que falte.
+
+4. Cómo implementarlo sin reescribir medio sistema
+A corto plazo, puedes hacerlo de forma incremental:
+
+En la API de ingest (POST /api/admin/ingest):
+
+Ahora llamas a IngestService.prepareIngest(file, ...) y luego el worker descarga desde Cloudinary.
+​
+
+Cambio:
+
+Haz que prepareIngest devuelva también un buffer o puntero a fileblob local.
+
+En vez de encolar solo { docId } para que el worker descargue de Cloudinary, encola:
+
+{ docId, blobId } o algún identificador que permita al worker leer el PDF desde tu DB/storage.
+
+En IngestService.executeAnalysis:
+
+Cambia el orden:
+
+Hoy:
+
+Cargar asset.
+
+Descargar desde Cloudinary (fetch).
+
+Analizar + indexar.
+
+Nuevo:
+
+Cargar asset.
+
+Obtener buffer desde tu storage interno (fileblob / GridFS / lo que uses).
+
+Analizar + indexar.
+
+Si cloudinaryUrl no existe todavía:
+
+Subir a Cloudinary ahora, pero si falla, solo marcas la parte de storage como pendiente.
+
+En la práctica, es mover el “origen” del buffer: de Cloudinary a tu propio storage.
+
+Añadir estados parciales en knowledgeassets:
+
+Para no liar lógica, empieza con algo sencillo:
+
+Si analiza+indexa bien pero Cloudinary falla:
+
+ingestionStatus = STORED_NO_INDEX o similar.
+
+Si Cloudinary ok pero analiza/indexa falla:
+
+ingestionStatus = INDEXED_NO_STORAGE.
+
+Luego puedes afinar nombres y UI.
+
+5. Qué ganas
+Los problemas de Cloudinary (401, 404, config) dejan de bloquear el procesamiento y la creación de chunks.
+
+Si Cloudinary cae o se desconfigura, sigues pudiendo indexar documentos (solo fallará la parte de “descarga PDF original” desde la UI).
+
+Puedes implementar fácilmente un completar partes faltantes reejecutando solo la mitad que falló, sin pedir al usuario que haga cosas raras.
+
+
+La idea es buena y es justo el movimiento que haría: dejar de depender de Cloudinary para procesar y usar solo tu propio storage / buffer como fuente de verdad.
+​
+
+Pasos mínimos que resumiría para implementarlo:
+
+En la API de ingest:
+
+Guardar siempre el PDF en tu capa interna (fileblobs/GridFS o similar) y crear el knowledgeasset con ingestionStatus = PENDING.
+​
+
+Subir a Cloudinary en paralelo, pero que eso no bloquee el job de análisis.
+
+En IngestService.executeAnalysis:
+
+En vez de fetch desde Cloudinary, leer el PDF desde tu storage interno usando un blobId/fileHash.
+
+Analizar + indexar chunks desde ese buffer.
+
+Solo al final, si Cloudinary aún no está OK, intentar completar esa parte y marcar flags (hasStorage, hasChunks, ingestionStatus).
+​
+
+Estados parciales en knowledgeassets:
+
+COMPLETED: storage + chunks OK.
+
+STORED_NO_INDEX: Cloudinary OK, falta indexar.
+
+INDEXED_NO_STORAGE: chunks OK, falta Cloudinary.
+
+FAILED: nada consistente; reintentar flujo completo.
+
+Endpoint de retry:
+
+Dado un docId, mira flags y solo ejecuta la parte pendiente (subir o indexar).
+
+Con eso, aunque Cloudinary vuelva a dar guerra, el procesamiento de documentos y la creación de chunks dejan de depender de su disponibilidad o configuración.
+
+
+Sí, con PDFs muy grandes (cientos de MB–1 GB) el enfoque “cárgalo entero y luego procesa” se vuelve problemático a nivel de memoria, tiempos y cuotas.
+​
+
+1. Problemas con un PDF de ~1 GB
+Memoria: cargar 1 GB en un único buffer en Node puede disparar el uso de RAM y provocar OOM o GC agresivo.
+
+Tiempo de lectura: leer el archivo completo antes de empezar el análisis/chunking introduce mucha latencia inicial.
+
+Límites de proveedor IA:
+
+Al final vas a chunkear en trozos de unos pocos KB–MB, así que no necesitas el archivo entero en memoria para empezar.
+
+Red / Cloudinary:
+
+Tanto subir 1 GB como volver a descargarlo es caro en tiempo y cuota de ancho de banda.
+​
+
+2. Estrategia “grande” más segura
+Para documentos muy grandes:
+
+Streaming + chunking incremental:
+
+En lugar de leer todo el PDF en un buffer:
+
+Parseas el PDF en streaming (páginas/bloques).
+
+Vas generando texto y chunking sobre la marcha, enviando chunks al indexador en lotes.
+
+Límite de tamaño input:
+
+Fijar un máximo (p.ej. 100–200 MB) para la vía estándar.
+
+Para más de eso:
+
+Pides al usuario dividir el documento.
+
+O lo procesas en un pipeline offline más controlado (job dedicado, sin bloquear workers normales).
+
+Storage interno en vez de memoria:
+
+Guardar el PDF (o partes) en almacenamiento interno (GridFS, S3, etc.).
+
+Leer fragmentos en streaming desde ahí cuando se necesiten, no en un buffer único.
+
+3. Conclusión práctica
+Para los tamaños típicos de tu caso (informes técnicos, contratos, normativa), el cambio a procesar desde tu storage interno en lugar de descargar desde Cloudinary es una mejora clara, no un problema.
+
+Para un PDF de 1 GB:
+
+Sí, habría que introducir límites o procesamiento por streaming.
+
+Pero ese es un caso que ya hoy sería problemático con cualquier enfoque (incluyendo el actual con Cloudinary), por lo que lo razonable es tratarlo como “caso especial” con límites y/o pipeline offline.

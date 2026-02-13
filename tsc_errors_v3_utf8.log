@@ -1,0 +1,24 @@
+﻿scripts/check-user-mfa.ts(9,48): error TS2307: Cannot find module './src/lib/db' or its corresponding type declarations.
+scripts/cleanup-doc-types.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/debug-docs-structure.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/debug-persistent-500-v5.ts(10,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/fix-tenants-sync.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/force-brown-branding.ts(49,39): error TS2304: Cannot find name 'result'.
+scripts/inspect-auth-cluster.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/inspect-doc-types.ts(8,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/inspect-user.ts(7,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/migrate-blobs.ts(76,53): error TS2345: Argument of type '{ _id: string; cloudinaryUrl: string; cloudinaryPublicId: string; sizeBytes: number; refCount: number; tenantId: string; firstSeenAt: Date; lastSeenAt: Date; storageProvider: "cloudinary" | "s3"; mimeType?: string | undefined; metadata?: Record<...> | undefined; }' is not assignable to parameter of type 'OptionalId<Document>'.
+  Type '{ _id: string; cloudinaryUrl: string; cloudinaryPublicId: string; sizeBytes: number; refCount: number; tenantId: string; firstSeenAt: Date; lastSeenAt: Date; storageProvider: "cloudinary" | "s3"; mimeType?: string | undefined; metadata?: Record<...> | undefined; }' is not assignable to type '{ _id?: ObjectId | undefined; }'.
+    Types of property '_id' are incompatible.
+      Type 'string' is not assignable to type 'ObjectId'.
+scripts/migrate-docs-multi-tenant.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/test-import-esm.ts(1,10): error TS2305: Module '"../src/lib/rag-service"' has no exported member 'ragService'.
+scripts/test-pdf-parse.ts(2,8): error TS2613: Module '"D:/desarrollos/ABDElevators/node_modules/pdf-parse/dist/pdf-parse/esm/index"' has no default export. Did you mean to use 'import { PDFParse } from "D:/desarrollos/ABDElevators/node_modules/pdf-parse/dist/pdf-parse/esm/index"' instead?
+scripts/verify-fixes.ts(9,17): error TS7006: Parameter 'key' implicitly has an 'any' type.
+scripts/verify-ingestion-states.ts(19,61): error TS2339: Property 'execute' does not exist on type 'typeof PrepareIngestionUseCase'.
+scripts/verify-ingestion-states.ts(37,85): error TS2345: Argument of type '"elevadores_mx"' is not assignable to parameter of type 'DatabaseType | undefined'.
+scripts/verify-ingestion-states.ts(48,70): error TS2339: Property 'execute' does not exist on type 'typeof ExecuteIngestionAnalysisUseCase'.
+scripts/verify-v3-resilience.ts(43,13): error TS2353: Object literal may only specify known properties, and 'buffer' does not exist in type 'IngestOptions'.
+test-prompt-tester.ts(22,64): error TS2345: Argument of type '{ template: string; variables: { vertical: string; tema: string; }; tenantId: string; industry: string; model: "gemini-1.5-flash"; correlationId: string; }' is not assignable to parameter of type '{ template: string; variables: Record<string, any>; tenantId: string; industry: string; model: "gemini-3-pro-image" | "gemini-3-pro" | "gemini-2.5-flash"; correlationId: string; promptId?: string | undefined; templateB?: string | undefined; modelB?: "gemini-3-pro-image" | ... 2 more ... | undefined; }'.
+  Types of property 'model' are incompatible.
+    Type '"gemini-1.5-flash"' is not assignable to type '"gemini-3-pro-image" | "gemini-3-pro" | "gemini-2.5-flash"'. Did you mean '"gemini-2.5-flash"'?

@@ -93,4 +93,31 @@ export class SpaceInvitationService {
             { session }
         );
     }
+
+    /**
+     * Lista invitaciones pendientes/expiradas para un tenant.
+     */
+    static async listInvitations(tenantId: string): Promise<SpaceInvitation[]> {
+        const collection = await getTenantCollection<SpaceInvitation>('space_invitations');
+        // SecureCollection.find ya devuelve un array. Ordenamos en memoria para simplicidad 
+        // o si SecureCollection permitiera pasar opciones de sort.
+        const results = await collection.find({ tenantId });
+        return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+
+    /**
+     * Revoca una invitación.
+     */
+    static async revokeInvitation(token: string, session?: ClientSession): Promise<void> {
+        const collection = await getTenantCollection<SpaceInvitation>('space_invitations', session);
+        const result = await collection.updateOne(
+            { token, status: 'PENDING' },
+            { $set: { status: 'REVOKED' } },
+            { session }
+        );
+
+        if (result.matchedCount === 0) {
+            throw new AppError('INVITATION_NOT_FOUND', 404, 'Invitación no encontrada o ya procesada');
+        }
+    }
 }

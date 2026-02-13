@@ -1,0 +1,1389 @@
+Sí, y no es solo percepción: en el código se ve que la navegación ha ido creciendo por capas (features, roles, tabs, dashboards) sin un “mapa mental” único que la ordene.
+​
+
+En concreto:
+
+El AppSidebar agrupa secciones por “familias” técnicas (RAG, workflows, governance, logs, billing, soporte), pero muchas pantallas nuevas se han ido añadiendo como items más en esas secciones.
+​
+Para un usuario, eso se traduce en muchos destinos de menú de profundidad similar, sin jerarquía clara de tareas (“Subir documentos”, “Revisar pedidos”, “Configurar IA”, “Ver alertas”, etc.).
+
+Hay varias vistas que se solapan en propósito:
+
+Documentos personales vs knowledge assets vs espacios.
+
+Paneles de IA (RAG eval, insights, predictive, workflows analytics) que parecen “herramientas distintas” en lugar de formar parte de un mismo “Centro de IA”.
+​
+
+La navegación mezcla:
+
+Menús orientados a dominio (Pedidos, Documentos, Workflows).
+
+Menús orientados a motores (RAG, IA, Guardian, Logs, Billing).
+
+Menús orientados a roles (Admin, Técnico, Compliance, Soporte).
+Eso da poder, pero sin una capa de “modo de trabajo” (por ejemplo: Técnico de campo, Jefe de mantenimiento, Admin de tenant) se percibe como denso.
+
+Resumiendo: la base de UI es buena (sidebar moderna, command palette, dashboards muy trabajados), pero le falta un “information architecture pass” que:
+
+Reduzca y renombre secciones pensando en roles y tareas, no en módulos internos.
+
+Agrupe las herramientas de IA, logs y governance en hubs claros (Centro de IA, Centro de Operaciones, Configuración del Tenant), en lugar de dispersarlas.
+
+
+
+
+Problemas que veo de coherencia interna en páginas
+1. Gestión de documentos fragmentada
+Problema: Tres sitios diferentes para "documentos" sin clara diferenciación:
+
+/admin/my-documents - Documentos personales del usuario
+
+/admin/knowledge-assets - Assets de conocimiento del tenant
+
+/admin/spaces - Espacios colaborativos con documentos
+
+Qué esperaría:
+
+Una única entrada "Documentos" con pestañas/vistas:
+
+"Mis documentos"
+
+"Documentos del equipo/tenant"
+
+"Espacios colaborativos"
+
+O bien, que "Spaces" se centre solo en permisos/colaboración, no en ser otro gestor de documentos.
+
+2. Paneles de IA dispersos sin centro unificado
+Problema: Tienes múltiples pantallas de "inteligencia" sin relación visual/flujo:
+
+/admin/rag-evaluations - Métricas RAG
+
+/admin/insights - Insights del grafo
+
+/admin/predictive-maintenance - Predicciones
+
+/admin/ai-workflows - Workflows IA
+
+/admin/cross-vertical - Patrones federados
+
+Qué esperaría:
+
+Un hub "Centro de IA" (/admin/ai-hub) con:
+
+Dashboard principal con métricas clave de todos los motores.
+
+Pestañas o cards para entrar en cada motor específico.
+
+Flujo claro: "esto es lo que la IA ha encontrado/predicho/automatizado hoy".
+
+3. Configuración mezclada con operaciones
+Problema: En varias páginas mezclas:
+
+Acciones del día a día (subir, validar, revisar)
+
+Con configuración técnica (límites, prompts, tipos de documento)
+
+Ejemplos concretos:
+
+/admin/ingest: lista jobs + botón "subir documento" + tabs de configuración de tipos de documento.
+Esperaría:
+
+Subir documentos → acción principal en "Documentos" o dashboard.
+
+Configurar tipos → en "Configuración del tenant".
+
+Ver jobs de ingest → en "Operaciones/Logs".
+
+/admin/prompts: listado + editor + historial + test playground, todo en una sola página muy densa.
+Esperaría:
+
+Lista de prompts con preview.
+
+Al hacer clic en uno, abrir página dedicada o modal lateral con editor + versiones + test.
+
+4. Workflows duplicados conceptualmente
+Problema:
+
+/admin/workflows - Workflows de caso (estados, transiciones)
+
+/admin/ai-workflows - Workflows de IA (triggers, acciones automáticas)
+
+Están en menús separados pero conceptualmente son "automatizaciones". Un usuario no técnico puede no entender la diferencia.
+
+Esperaría:
+
+Una sección "Automatización" con:
+
+"Flujos de trabajo (casos)" - los manuales/humanos.
+
+"Automatizaciones IA" - los triggers automáticos.
+
+O unificarlos en una sola vista con filtro por tipo.
+
+5. Bandeja de tareas huérfana
+Problema:
+
+/admin/workflow-tasks - Bandeja de tareas generadas por workflows.
+
+Pero no hay conexión visual clara con:
+
+Los workflows que las generan.
+
+Los casos/entidades a los que pertenecen.
+
+Esperaría:
+
+Que desde un caso/pedido veas sus tareas directamente (timeline/sidebar).
+
+Y que la bandeja global sea más un "centro de trabajo" con:
+
+Filtros por tipo, prioridad, fecha.
+
+Acciones rápidas (resolver, reasignar, comentar).
+
+Link claro al caso original.
+
+6. Logs y observabilidad en demasiados sitios
+Problema:
+
+/admin/logs - Logs de aplicación
+
+/admin/observability - Métricas SLA, RAG, etc.
+
+/admin/ingest (tab jobs) - Logs de ingest
+
+Governance audit en otro sitio
+
+Esperaría:
+
+Un "Centro de Operaciones" con:
+
+Dashboard de salud del sistema.
+
+Pestañas: Logs, Métricas, SLAs, Auditoría.
+
+O al menos que desde cada página técnica (ingest, RAG, workflows) haya un botón "Ver logs relacionados" que filtre el centro.
+
+7. Billing y límites separados de uso
+Problema:
+
+/admin/billing - Facturas, planes, pagos.
+
+/admin/usage - Uso de tokens, storage, etc.
+
+Pero un admin querría verlos juntos: "cuánto he usado vs cuánto me queda vs cuánto pago".
+
+Esperaría:
+
+Billing con tabs:
+
+"Uso actual" (dashboard de métricas).
+
+"Plan y límites".
+
+"Facturas e historial".
+
+8. Fichas de entidades/casos sin "centro de mando"
+Problema:
+
+Cuando abres un pedido/caso, tienes tabs o secciones para:
+
+Datos generales.
+
+Checklist.
+
+Validaciones.
+
+Documentos adjuntos.
+
+Informes.
+
+Timeline (a veces).
+
+Pero falta una vista "hero" que te diga:
+
+Estado actual.
+
+Qué necesita atención (alertas, tareas pendientes).
+
+Acciones rápidas (validar, generar informe, cambiar estado).
+
+Esperaría:
+
+Un dashboard/resumen como primera pestaña.
+
+Resto de tabs para detalle.
+
+Sidebar derecho con timeline y acciones rápidas siempre visible.
+
+Resumen de patrones que faltan
+Hubs temáticos en vez de listas planas:
+
+Centro de IA, Centro de Operaciones, Centro de Documentos.
+
+Separación clara: acción cotidiana vs configuración vs diagnóstico.
+
+Contexto siempre presente: desde cualquier detalle, poder volver al contexto (caso, tenant, usuario).
+
+Dashboards "hero" en páginas de detalle (caso, documento, workflow) que resuman estado + acciones.
+
+Navegación lateral/breadcrumbs más fuerte para no perderte en niveles de profundidad.
+
+
+
+Exacto, ese es otro problema grande: páginas "huérfanas" o semi-ocultas que existen pero no tienen entrada clara en el menú principal o están enterradas bajo rutas no evidentes.
+
+Páginas que casi no se sabe que existen
+Basándome en tu código:
+
+1. Gestión de organización/tenant
+Rutas huérfanas:
+
+/admin/organizations - Gestión de la organización/tenant actual
+
+/admin/users - Gestión de usuarios del tenant
+
+Problema:
+
+No hay entrada directa en el sidebar para "Organización" o "Mi empresa".
+
+Los usuarios están dispersos: algunos llegan desde "Profile" → "Team", otros ni saben que existe.
+
+Dónde esperarías verlo:
+
+Una sección del menú "⚙️ Organización" o "🏢 Mi empresa" con:
+
+Información del tenant (nombre, industria, configuración).
+
+Usuarios y roles.
+
+Invitaciones pendientes.
+
+Configuración de límites/cuotas (si es admin).
+
+2. Permisos y políticas (Guardian)
+Rutas huérfanas:
+
+/admin/permissions - Gestión de permisos y políticas
+
+/admin/permissions/roles - Roles personalizados
+
+/admin/permissions/policies - Políticas de acceso
+
+Problema:
+
+Están bajo un menú "Guardian" técnico, o peor, sin entrada directa.
+
+Un admin que quiera "gestionar quién puede hacer qué" no va a buscar en "Guardian" (suena a término de desarrollador).
+
+Dónde esperarías verlo:
+
+Dentro de "Organización" o en "Seguridad y accesos":
+
+Usuarios → Roles → Permisos → Políticas (flujo natural).
+
+3. Billing detallado
+Rutas huérfanas/semi:
+
+/admin/billing existe en el menú, pero:
+
+/admin/billing/invoices - Facturas individuales
+
+/admin/billing/payment-methods - Métodos de pago
+
+No están como submenú visible, solo accesibles desde dentro de billing.
+
+Problema:
+
+Un usuario que quiere "ver mi factura de enero" tiene que entrar en Billing → buscar → clic en factura.
+
+No hay acceso directo tipo "Facturas" en el menú.
+
+Dónde esperarías verlo:
+
+Billing con submenu desplegable:
+
+Resumen y uso actual
+
+Plan y límites
+
+Facturas
+
+Métodos de pago
+
+4. Configuración avanzada de tenant
+Rutas semi-ocultas:
+
+Configuración de tipos de documento (dentro de /admin/ingest).
+
+Configuración de checklist (no hay ruta dedicada, se gestiona por API o desde configs).
+
+Traducción/i18n (/admin/i18n existe pero está muy escondida).
+
+Problema:
+
+No hay un "Centro de configuración" claro donde un admin pueda:
+
+Ver todas las configs disponibles.
+
+Tipos de documento, plantillas de checklist, prompts custom, límites, notificaciones, etc.
+
+Dónde esperarías verlo:
+
+"⚙️ Configuración" como sección principal con:
+
+Organización (datos, usuarios).
+
+Documentos y tipos.
+
+Workflows y automatizaciones.
+
+Prompts e IA.
+
+Notificaciones.
+
+Idioma e internacionalización.
+
+5. Notificaciones y alertas
+Problema:
+
+Tienes un sistema de notificaciones (NotificationService), pero no hay:
+
+/admin/notifications - Centro de notificaciones históricas.
+
+Configuración de "qué notificaciones quiero recibir".
+
+Dónde esperarías verlo:
+
+En el header, icono de campana con badge.
+
+Al hacer clic: panel lateral con notificaciones recientes.
+
+Link a página completa /admin/notifications con historial y filtros.
+
+Desde "Configuración" → "Notificaciones" para gestionar preferencias.
+
+6. Auditoría y compliance
+Rutas semi-ocultas:
+
+Governance audit logs están en código pero no hay ruta UI clara.
+
+Data lifecycle, retención, borrados → no hay UI visible.
+
+Problema:
+
+Un compliance officer o auditor quiere ver:
+
+Quién ha accedido a qué.
+
+Cambios en configuración sensible.
+
+Decisiones IA bloqueadas/permitidas.
+
+No hay entrada de menú "Auditoría" o "Compliance".
+
+Dónde esperarías verlo:
+
+Sección "🔒 Seguridad y Auditoría":
+
+Logs de acceso.
+
+Cambios de configuración.
+
+Decisiones de governance/IA.
+
+Políticas de retención de datos.
+
+Resumen del problema de "rutas huérfanas"
+Tienes muchas funcionalidades construidas, pero:
+
+No están en el menú principal o están bajo nombres técnicos que un usuario de negocio no entiende.
+
+No hay jerarquía visual: todo parece del mismo nivel, cuando algunas son configuraciones avanzadas y otras acciones diarias.
+
+Falta un "mapa mental" de la app:
+
+¿Dónde voy para gestionar mi equipo?
+
+¿Dónde para ver facturación?
+
+¿Dónde para configurar la IA?
+
+Solución propuesta: estructura de menú reorganizada
+text
+📊 Dashboard
+
+📁 Documentos
+  └─ Mis documentos
+  └─ Documentos del equipo
+  └─ Espacios colaborativos
+
+🔍 Casos y Pedidos
+  └─ Todos los casos
+  └─ Pendientes de validación
+  └─ Informes generados
+
+✅ Mis Tareas
+  └─ Bandeja de entrada
+  └─ Tareas asignadas
+
+🤖 Centro de IA
+  └─ Dashboard de IA
+  └─ Insights y predicciones
+  └─ Workflows automáticos
+  └─ Métricas RAG
+  └─ Patrones federados
+
+⚙️ Configuración
+  └─ Mi organización
+      ├─ Información general
+      ├─ Usuarios y equipos
+      └─ Invitaciones
+  └─ Documentos y tipos
+  └─ Workflows
+  └─ Prompts e IA
+  └─ Notificaciones
+  └─ Idioma (i18n)
+
+💳 Facturación
+  └─ Uso actual
+  └─ Plan y límites
+  └─ Facturas
+  └─ Métodos de pago
+
+🔒 Seguridad
+  └─ Permisos y roles
+  └─ Políticas de acceso
+  └─ Auditoría
+  └─ Logs de sistema
+
+🛠️ Operaciones (solo ADMIN/SUPERADMIN)
+  └─ Ingest y jobs
+  └─ Logs técnicos
+  └─ Observabilidad y SLAs
+  └─ Mantenimiento
+Con esto:
+
+Todas las rutas tienen una entrada visible.
+
+Jerarquía clara: acción cotidiana arriba, config en medio, ops/seguridad abajo.
+
+Nombres de negocio, no técnicos.
+
+
+
+
+
+🏗️ Arquitectura de Información ABD Platform
+Principios de diseño
+Por tarea y rol, no por módulo técnico
+
+Hubs temáticos para agrupar funcionalidad relacionada
+
+Separación clara: Acción cotidiana → Configuración → Operaciones/Diagnóstico
+
+Contexto persistente: siempre se puede volver al objeto principal (caso, documento, tenant)
+
+Dashboards "hero" como primera vista en páginas de detalle
+
+🎯 Estructura global de navegación
+text
+┌─────────────────────────────────────────────────────────────────┐
+│                        NAVEGACIÓN PRINCIPAL                      │
+└─────────────────────────────────────────────────────────────────┘
+
+📊 DASHBOARD (personalizado por rol)
+   ├─ Vista Técnico
+   │  ├─ Mis tareas pendientes
+   │  ├─ Casos asignados
+   │  ├─ Alertas IA (riesgos, predicciones)
+   │  └─ QA rápida
+   │
+   ├─ Vista Supervisor/Manager
+   │  ├─ Estado del equipo
+   │  ├─ Casos críticos
+   │  ├─ Métricas de rendimiento
+   │  └─ Insights IA del día
+   │
+   └─ Vista Admin
+      ├─ Salud del sistema
+      ├─ Uso y facturación
+      ├─ SLAs y alertas
+      └─ Governance
+
+─────────────────────────────────────────────────────────────────
+
+📁 DOCUMENTOS Y CONOCIMIENTO
+   │
+   ├─ 📂 Mis Documentos                    [/admin/documents/my]
+   │  ├─ Subir documento
+   │  ├─ Lista con filtros (tipo, fecha, estado)
+   │  └─ Acciones: ver, descargar, eliminar, compartir
+   │
+   ├─ 📚 Base de Conocimiento               [/admin/knowledge]
+   │  ├─ Todos los documentos del tenant
+   │  ├─ Filtros: tipo, industria, ambiente, estado ingest
+   │  ├─ Vista: lista | grid
+   │  └─ Acciones: reindexar, ver chunks, eliminar
+   │
+   ├─ 👥 Espacios Colaborativos             [/admin/spaces]
+   │  ├─ Lista de espacios
+   │  ├─ Crear espacio
+   │  └─ Detalle de espacio:
+   │     ├─ Documentos del espacio
+   │     ├─ Miembros y permisos
+   │     └─ Invitaciones
+   │
+   └─ ⚙️ Configuración de Documentos        [/admin/documents/config]
+      ├─ Tipos de documento
+      ├─ Plantillas de metadatos
+      └─ Reglas de clasificación automática
+
+─────────────────────────────────────────────────────────────────
+
+🔍 CASOS Y ANÁLISIS (vertical ascensores/pedidos)
+   │
+   ├─ 📋 Todos los Casos                    [/admin/cases]
+   │  ├─ Lista con filtros avanzados
+   │  ├─ Estados workflow
+   │  ├─ Vista: tabla | kanban
+   │  └─ Buscar por identificador/cliente
+   │
+   ├─ ⏳ Pendientes de Validación           [/admin/cases?status=review]
+   │  └─ Vista filtrada de casos en revisión
+   │
+   ├─ 📊 Informes Generados                 [/admin/reports]
+   │  ├─ Lista de informes LLM
+   │  ├─ Filtros: caso, técnico, fecha
+   │  └─ Acciones: ver, descargar PDF, reenviar
+   │
+   └─ 📄 Detalle de Caso                    [/admin/cases/:id]
+      │
+      ├─ Tab: Resumen (DASHBOARD HERO)
+      │  ├─ Estado actual y siguiente acción
+      │  ├─ Alertas y riesgos IA
+      │  ├─ Tareas pendientes
+      │  ├─ Acciones rápidas (validar, generar informe, cambiar estado)
+      │  └─ Métricas clave (confianza, riesgo, progreso checklist)
+      │
+      ├─ Tab: Datos Generales
+      │  ├─ Identificador, cliente, fecha
+      │  ├─ Metadata
+      │  └─ Editar (si permisos)
+      │
+      ├─ Tab: Checklist Técnico
+      │  ├─ Items auto-generados por IA
+      │  ├─ Validación por item (OK/Review/Rejected)
+      │  └─ Añadir items manuales
+      │
+      ├─ Tab: Análisis IA
+      │  ├─ Texto extraído
+      │  ├─ Patrones detectados
+      │  ├─ Riesgos y confianza
+      │  └─ Hallazgos (findings)
+      │
+      ├─ Tab: Documentos Adjuntos
+      │  ├─ PDFs relacionados
+      │  ├─ Subir nuevo
+      │  └─ Ver chunks RAG
+      │
+      ├─ Tab: Validaciones
+      │  ├─ Historial de validaciones humanas
+      │  ├─ Estado general (aprobado/rechazado)
+      │  └─ Observaciones técnico
+      │
+      ├─ Tab: Informes
+      │  ├─ Informes LLM generados
+      │  ├─ Generar nuevo informe
+      │  └─ Descargar PDF
+      │
+      ├─ Tab: Timeline (siempre visible como sidebar)
+      │  ├─ Eventos ordenados:
+      │  │  ├─ Ingest
+      │  │  ├─ Análisis IA
+      │  │  ├─ Cambios de estado workflow
+      │  │  ├─ Validaciones humanas
+      │  │  ├─ Comentarios
+      │  │  └─ Informes generados
+      │  └─ Filtros: tipo evento, actor
+      │
+      └─ Comentarios y Colaboración (sidebar)
+         ├─ Thread de comentarios
+         └─ Añadir comentario/nota
+
+─────────────────────────────────────────────────────────────────
+
+✅ MIS TAREAS
+   │
+   ├─ 📥 Bandeja de Entrada                 [/admin/tasks]
+   │  ├─ Tareas asignadas a mí
+   │  ├─ Filtros: prioridad, tipo, caso, fecha
+   │  ├─ Acciones rápidas:
+   │  │  ├─ Resolver
+   │  │  ├─ Reasignar
+   │  │  ├─ Comentar
+   │  │  └─ Ir al caso
+   │  └─ Vista: lista | kanban
+   │
+   ├─ 📤 Tareas Creadas por Mí              [/admin/tasks/created]
+   │
+   └─ ✓ Historial Completadas               [/admin/tasks/completed]
+
+─────────────────────────────────────────────────────────────────
+
+🤖 CENTRO DE INTELIGENCIA
+   │
+   ├─ 🎛️ Dashboard de IA                    [/admin/ai]
+   │  ├─ Resumen de motores activos
+   │  ├─ Métricas clave agregadas:
+   │  │  ├─ RAG precision/faithfulness
+   │  │  ├─ Insights generados hoy
+   │  │  ├─ Predicciones críticas
+   │  │  ├─ Workflows IA ejecutados
+   │  │  └─ Decisiones governance bloqueadas
+   │  └─ Acceso rápido a cada motor
+   │
+   ├─ 💡 Insights y Patrones                [/admin/ai/insights]
+   │  ├─ Lista de insights generados (InsightEngine)
+   │  ├─ Filtros: tipo, categoría, tenant
+   │  ├─ Vista de patrones de grafo
+   │  └─ Acciones: descartar, actuar, crear workflow
+   │
+   ├─ 🔮 Mantenimiento Predictivo           [/admin/ai/predictive]
+   │  ├─ Predicciones de fallos (PredictiveEngine)
+   │  ├─ Componentes en riesgo
+   │  ├─ Urgencia y próximas acciones
+   │  └─ Generar tarea de mantenimiento
+   │
+   ├─ 🔄 Workflows Automáticos              [/admin/ai/workflows]
+   │  ├─ Lista de workflows IA activos
+   │  ├─ Crear/editar workflow
+   │  ├─ Triggers (ON_INSIGHT, ON_PREDICTION, ON_RISK)
+   │  ├─ Acciones (BRANCH, HUMAN_TASK, NOTIFY, etc.)
+   │  └─ Analytics de ejecuciones
+   │
+   ├─ 🔍 RAG y Búsqueda Semántica           [/admin/ai/rag]
+   │  ├─ Evaluaciones RAG (precision, faithfulness)
+   │  ├─ Búsqueda de prueba (playground)
+   │  ├─ Análisis de reranker y judge
+   │  └─ Métricas por query
+   │
+   ├─ 🌐 Patrones Federados                 [/admin/ai/federated]
+   │  ├─ Patrones cross-vertical
+   │  ├─ Búsqueda global
+   │  └─ Validación de patrones
+   │
+   └─ 🛡️ Governance de IA                   [/admin/ai/governance]
+      ├─ Decisiones bloqueadas/permitidas
+      ├─ Reglas activas
+      ├─ Audit log de IA
+      └─ Configurar políticas
+
+─────────────────────────────────────────────────────────────────
+
+🔄 WORKFLOWS Y AUTOMATIZACIÓN
+   │
+   ├─ 🗂️ Workflows de Casos                 [/admin/workflows/cases]
+   │  ├─ Definiciones de workflow (estados, transiciones)
+   │  ├─ Crear/editar workflow
+   │  ├─ Vista de estados y transiciones
+   │  ├─ Roles permitidos por estado
+   │  └─ Condiciones (checklist, docs, firma)
+   │
+   ├─ 🤖 Automatizaciones IA                [enlace a /admin/ai/workflows]
+   │
+   └─ 📊 Analytics de Workflows             [/admin/workflows/analytics]
+      ├─ Tiempo por estado
+      ├─ Cuellos de botella
+      ├─ Casos completados vs abandonados
+      └─ Eficiencia por técnico
+
+─────────────────────────────────────────────────────────────────
+
+⚙️ CONFIGURACIÓN
+   │
+   ├─ 🏢 Mi Organización                    [/admin/organization]
+   │  ├─ Tab: Información General
+   │  │  ├─ Nombre, industria, logo
+   │  │  ├─ Configuración regional (idioma, zona horaria)
+   │  │  └─ Editar
+   │  │
+   │  ├─ Tab: Usuarios y Equipos            [/admin/users]
+   │  │  ├─ Lista de usuarios
+   │  │  ├─ Invitar nuevo usuario
+   │  │  ├─ Gestionar roles
+   │  │  └─ Desactivar/eliminar
+   │  │
+   │  └─ Tab: Invitaciones Pendientes       [/admin/organization/invitations]
+   │     ├─ Lista de invitaciones
+   │     └─ Reenviar/cancelar
+   │
+   ├─ 📝 Prompts e IA                       [/admin/prompts]
+   │  ├─ Lista de prompts
+   │  ├─ Crear/editar prompt
+   │  ├─ Versiones y rollback
+   │  ├─ Test playground
+   │  └─ Modo sombra (A/B testing)
+   │
+   ├─ 🔔 Notificaciones                     [/admin/settings/notifications]
+   │  ├─ Preferencias de notificaciones
+   │  ├─ Canales (email, UI, webhook)
+   │  └─ Alertas personalizadas
+   │
+   ├─ 🌍 Idioma e Internacionalización      [/admin/i18n]
+   │  ├─ Idiomas activos
+   │  ├─ Traducciones por namespace
+   │  └─ Sincronizar con ficheros
+   │
+   └─ 🎨 Personalización                    [/admin/settings/branding]
+      ├─ Logo y colores
+      ├─ Plantillas de informes
+      └─ Footer personalizado
+
+─────────────────────────────────────────────────────────────────
+
+💳 FACTURACIÓN Y USO
+   │
+   ├─ 📊 Uso Actual                         [/admin/billing/usage]
+   │  ├─ Dashboard de métricas en tiempo real:
+   │  │  ├─ Tokens LLM (usado/límite)
+   │  │  ├─ Storage (GB usado/límite)
+   │  │  ├─ Vector searches
+   │  │  ├─ API requests
+   │  │  └─ Informes generados
+   │  └─ Gráficos de tendencia (30 días)
+   │
+   ├─ 📋 Mi Plan                            [/admin/billing/plan]
+   │  ├─ Plan actual (FREE/PRO/ENTERPRISE)
+   │  ├─ Límites y cuotas
+   │  ├─ Upgrade/downgrade
+   │  └─ Próxima renovación
+   │
+   ├─ 🧾 Facturas                           [/admin/billing/invoices]
+   │  ├─ Historial de facturas
+   │  ├─ Descargar PDF
+   │  └─ Estado (pagada/pendiente)
+   │
+   └─ 💳 Métodos de Pago                    [/admin/billing/payment]
+      ├─ Tarjetas guardadas
+      ├─ Añadir método
+      └─ Actualizar facturación
+
+
+
+
+Sí, hay funcionalidades actuales que quedarían fuera del esquema que te pasé, y otras que habría que crear nuevas. Déjame completar el árbol con lo que falta:
+
+🔴 Utilidades actuales que FALTABAN en el esquema anterior
+1. Sección de Seguridad y Auditoría (completa)
+text
+🔒 SEGURIDAD Y AUDITORÍA
+   │
+   ├─ 🛡️ Permisos y Roles                  [/admin/permissions]
+   │  ├─ Tab: Roles                        [/admin/permissions/roles]
+   │  │  ├─ Lista de roles (predefinidos + custom)
+   │  │  ├─ Crear/editar rol
+   │  │  └─ Asignar permisos por rol
+   │  │
+   │  └─ Tab: Políticas de Acceso          [/admin/permissions/policies]
+   │     ├─ Políticas Guardian activas
+   │     ├─ Crear política
+   │     └─ Simular permiso (check endpoint)
+   │
+   ├─ 📜 Auditoría                         [/admin/audit]
+   │  ├─ Tab: Logs de Acceso
+   │  │  ├─ Quién accedió a qué documento/informe
+   │  │  ├─ Filtros: usuario, recurso, fecha
+   │  │  └─ Exportar para compliance
+   │  │
+   │  ├─ Tab: Cambios de Configuración
+   │  │  ├─ Historial de cambios en:
+   │  │  │  ├─ Tenant config
+   │  │  │  ├─ Límites y cuotas
+   │  │  │  ├─ Prompts críticos
+   │  │  │  └─ Workflows
+   │  │  └─ Before/after + quién + cuándo
+   │  │
+   │  ├─ Tab: Decisiones de IA (Governance)
+   │  │  ├─ Acciones bloqueadas/permitidas
+   │  │  ├─ Reglas aplicadas
+   │  │  └─ Payload y contexto
+   │  │
+   │  └─ Tab: Operaciones Admin
+   │     ├─ Scripts ejecutados
+   │     ├─ Lifecycle (purgas, borrados)
+   │     └─ Cambios críticos de sistema
+   │
+   └─ 🔐 Sesiones Activas                  [/admin/security/sessions]
+      ├─ Sesiones de usuarios del tenant
+      ├─ Cerrar sesión remota (admin)
+      └─ Historial de logins (intentos fallidos)
+2. Centro de Operaciones (para ADMIN/SUPERADMIN)
+text
+🛠️ OPERACIONES (solo ADMIN/SUPERADMIN)
+   │
+   ├─ 📥 Ingest y Jobs                     [/admin/operations/ingest]
+   │  ├─ Tab: Jobs Activos
+   │  │  ├─ Cola de ingest (pending, processing, failed)
+   │  │  ├─ Retry job
+   │  │  └─ Cancelar job
+   │  │
+   │  ├─ Tab: Historial de Ingest
+   │  │  ├─ Audit de ingestiones (success/failed)
+   │  │  ├─ Duración por fase
+   │  │  └─ Errores comunes
+   │  │
+   │  └─ Tab: Estado de Assets
+   │     ├─ Assets sin chunks (fallo indexado)
+   │     ├─ Assets sin Cloudinary (fallo storage)
+   │     └─ Completar partes faltantes
+   │
+   ├─ 📊 Observabilidad y SLAs             [/admin/operations/observability]
+   │  ├─ Dashboard de SLAs
+   │  │  ├─ Violaciones por key (ingest, llm, api)
+   │  │  ├─ P95, P99 por operación
+   │  │  └─ Tendencias
+   │  │
+   │  ├─ Métricas de Sistema
+   │  │  ├─ Uso de BD (MAIN/AUTH/LOGS)
+   │  │  ├─ Uso de storage (Cloudinary, GridFS)
+   │  │  ├─ Tasa de error por endpoint
+   │  │  └─ Latencias LLM
+   │  │
+   │  └─ Alertas Activas
+   │     ├─ Configurar thresholds
+   │     └─ Historial de alertas disparadas
+   │
+   ├─ 📋 Logs Técnicos                     [/admin/operations/logs]
+   │  ├─ Búsqueda avanzada de logs
+   │  ├─ Filtros: level, source, action, correlationId, tenant
+   │  ├─ Ver trace completo (por correlationId)
+   │  └─ Exportar logs
+   │
+   ├─ 🔧 Mantenimiento                     [/admin/operations/maintenance]
+   │  ├─ Limpieza de datos (lifecycle)
+   │  ├─ Reindexar documentos
+   │  ├─ Sincronizar grafo semántico
+   │  └─ Ejecutar migraciones
+   │
+   └─ 🌐 Estado de Servicios Externos      [/admin/operations/status]
+      ├─ Cloudinary (storage)
+      ├─ Gemini/LLM (API status)
+      ├─ MongoDB (conexiones)
+      └─ Email (Resend)
+3. Notificaciones (nueva página necesaria)
+text
+🔔 NOTIFICACIONES                          [/admin/notifications]
+   │
+   ├─ Tab: Centro de Notificaciones
+   │  ├─ Lista de notificaciones (leídas/no leídas)
+   │  ├─ Filtros: tipo, fecha
+   │  ├─ Marcar como leída
+   │  └─ Ir a contexto (caso, tarea, documento)
+   │
+   └─ Tab: Preferencias                    [/admin/settings/notifications]
+      ├─ Canales (email, UI, webhook)
+      ├─ Tipos de notificación:
+      │  ├─ Tareas asignadas
+      │  ├─ Cambios en casos
+      │  ├─ Alertas IA (riesgos, predicciones)
+      │  ├─ Facturación y límites
+      │  └─ Sistema (mantenimiento)
+      └─ Frecuencia (inmediato, digest diario)
+4. Mi Perfil (actualmente disperso)
+text
+👤 MI PERFIL                               [/admin/profile]
+   │
+   ├─ Tab: Información Personal
+   │  ├─ Nombre, email, foto
+   │  ├─ Cambiar contraseña
+   │  ├─ Configurar MFA
+   │  └─ Sesiones activas
+   │
+   ├─ Tab: Preferencias
+   │  ├─ Idioma de interfaz
+   │  ├─ Zona horaria
+   │  ├─ Tema (claro/oscuro)
+   │  └─ Notificaciones
+   │
+   └─ Tab: Actividad Reciente
+      ├─ Mis últimas acciones
+      ├─ Documentos subidos
+      ├─ Casos validados
+      └─ Tareas completadas
+5. Soporte y Ayuda (actualmente existe /admin/support)
+text
+💬 SOPORTE Y AYUDA                         [/admin/support]
+   │
+   ├─ 📞 Solicitar Soporte                 [/admin/support/new]
+   │  ├─ Formulario de contacto
+   │  ├─ Adjuntar capturas
+   │  └─ Ver mis solicitudes anteriores
+   │
+   ├─ 📚 Documentación                     [/admin/help]
+   │  ├─ Guías de uso
+   │  ├─ FAQs
+   │  ├─ Tutoriales en video
+   │  └─ Referencia API (si aplica)
+   │
+   └─ ℹ️ Acerca de                         [/admin/about]
+      ├─ Versión de la plataforma
+      ├─ Estado del sistema (status page)
+      └─ Changelog
+🟢 Páginas NUEVAS que habría que crear
+1. Dashboard Hero por Rol (personalizado)
+Ruta: /admin/dashboard (actual es muy genérico)
+
+Qué falta:
+
+Adaptar widgets según rol:
+
+Técnico: Mis tareas, casos asignados, alertas IA, QA rápida.
+
+Supervisor: Estado del equipo, casos críticos, KPIs.
+
+Admin: Salud del sistema, uso, facturación, governance.
+
+2. Centro de Notificaciones
+Ruta nueva: /admin/notifications
+
+Qué falta:
+
+Actualmente no hay una página dedicada para ver historial de notificaciones.
+
+Necesitas:
+
+Lista de notificaciones con estado (leída/no leída).
+
+Link a contexto (caso, tarea, documento).
+
+Preferencias de notificación.
+
+3. Timeline/Historial Unificado de Entidad
+Mejora en: /admin/cases/:id (tab Timeline)
+
+Qué falta:
+
+Actualmente el timeline está disperso o no existe.
+
+Necesitas agregar eventos de:
+
+auditingestion, applicationlogs, workflowlogs, humanvalidations, llmreports, collaborationcomments.
+
+Vista ordenada cronológicamente con:
+
+Icono por tipo de evento.
+
+Actor (usuario/IA/sistema).
+
+Descripción human-friendly.
+
+Link a detalle.
+
+4. Trace Técnico por correlationId
+Ruta nueva: /admin/operations/trace?correlationId=xxx
+
+Qué falta:
+
+Vista end-to-end de una request/flujo:
+
+Todos los logs con ese correlationId.
+
+Ordenados cronológicamente.
+
+Con duración, source, action, details.
+
+Para diagnóstico técnico profundo.
+
+5. Centro de IA - Dashboard Agregado
+Ruta nueva: /admin/ai (hub principal)
+
+Qué falta:
+
+Actualmente cada motor IA está suelto.
+
+Necesitas un dashboard que muestre:
+
+Resumen de todos los motores (RAG, insights, predictive, workflows).
+
+Métricas clave agregadas.
+
+Acceso rápido a cada motor.
+
+6. Audit Trail de Configuración
+Ruta nueva: /admin/audit/config-changes
+
+Qué falta:
+
+Historial de cambios en configuraciones sensibles:
+
+Tenant, límites, prompts, workflows, governance.
+
+Con before/after, quién, cuándo, motivo.
+
+7. Data Lifecycle y Compliance
+Ruta nueva: /admin/security/data-lifecycle
+
+Qué falta:
+
+Vista de:
+
+Política de retención activa.
+
+Próximas purgas programadas.
+
+Historial de limpieza (logs, blobs, audits).
+
+Borrado de tenant (GDPR).
+
+📋 Resumen: Qué falta vs qué sobra
+✅ Utilidades actuales que SÍ están cubiertas en el nuevo esquema:
+Documentos (my-documents, knowledge-assets, spaces).
+
+Casos/pedidos (entities/cases).
+
+Checklists.
+
+Validaciones.
+
+Informes LLM.
+
+Workflows de caso.
+
+AI Workflows.
+
+Tareas (workflow-tasks).
+
+RAG evaluations.
+
+Insights, predictive.
+
+Prompts.
+
+Billing, usage.
+
+Users, organizations.
+
+Permissions.
+
+Ingest.
+
+Logs.
+
+❌ Utilidades actuales que FALTABAN (ahora añadidas):
+Seguridad y Auditoría completa (permisos, roles, audit trail, sesiones).
+
+Operaciones (ingest jobs, observability, SLAs, mantenimiento, logs técnicos).
+
+Notificaciones (centro + preferencias).
+
+Mi Perfil (completo con preferencias y actividad).
+
+Soporte (ya existía, pero ahora integrado mejor).
+
+🆕 Páginas NUEVAS necesarias:
+Dashboard personalizado por rol.
+
+Centro de Notificaciones (/admin/notifications).
+
+Timeline unificado por entidad (en detalle de caso).
+
+Trace técnico por correlationId (/admin/operations/trace).
+
+Centro de IA - Dashboard agregado (/admin/ai).
+
+Audit de cambios de configuración (/admin/audit/config-changes).
+
+Data Lifecycle (/admin/security/data-lifecycle).
+
+Con esto, el esquema quedaría completo y cubriría todas las funcionalidades actuales + las necesarias para alcanzar "grado bancario" en trazabilidad, seguridad y UX.
+
+
+
+
+ Te paso el árbol completo final, integrado con todo lo que hemos hablado.
+
+🏗️ ABD Platform - Arquitectura de Información COMPLETA
+📐 Principios de diseño
+Organización por tarea y rol, no por módulo técnico
+
+Hubs temáticos para agrupar funcionalidad relacionada
+
+Separación clara: Acción cotidiana → Configuración → Operaciones/Diagnóstico
+
+Contexto persistente: breadcrumbs, timeline, sidebar con acciones rápidas
+
+Dashboards "hero" como primera vista en páginas de detalle
+
+Trazabilidad bancaria: audit trails, before/after, correlationId end-to-end
+
+🎯 ESTRUCTURA GLOBAL DE NAVEGACIÓN
+text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         NAVEGACIÓN PRINCIPAL                             │
+│                      (Adaptada por rol del usuario)                      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+📊 DASHBOARD (personalizado por rol)
+═══════════════════════════════════════════════════════════════════════════
+
+   🔹 Vista TÉCNICO                         [/admin/dashboard?role=technical]
+   │  ├─ Mis tareas pendientes (high priority)
+   │  ├─ Casos asignados a mí
+   │  ├─ Alertas IA (riesgos detectados, predicciones críticas)
+   │  ├─ QA Rápida (playground)
+   │  └─ Documentos recientes
+   │
+   🔹 Vista SUPERVISOR/MANAGER               [/admin/dashboard?role=supervisor]
+   │  ├─ Estado del equipo (tareas, casos por técnico)
+   │  ├─ Casos críticos/bloqueados
+   │  ├─ KPIs de rendimiento (tiempo por estado, tasa de éxito)
+   │  ├─ Insights IA del día
+   │  └─ Distribución de carga
+   │
+   🔹 Vista ADMIN                            [/admin/dashboard?role=admin]
+      ├─ Salud del sistema (uptime, errores, SLAs)
+      ├─ Uso y facturación (tokens, storage, límites)
+      ├─ Alertas de governance (decisiones bloqueadas)
+      ├─ Jobs de ingest (pending/failed)
+      └─ Usuarios activos y sesiones
+
+═══════════════════════════════════════════════════════════════════════════
+📁 DOCUMENTOS Y CONOCIMIENTO
+═══════════════════════════════════════════════════════════════════════════
+
+   ├─ 📂 Mis Documentos                     [/admin/documents/my]
+   │  │
+   │  ├─ Subir documento (drag&drop o modal)
+   │  ├─ Lista con filtros:
+   │  │  ├─ Tipo de documento
+   │  │  ├─ Fecha de subida
+   │  │  ├─ Estado de ingest (procesado/pendiente/error)
+   │  │  └─ Búsqueda por nombre
+   │  │
+   │  ├─ Vista: Lista | Grid (con previews)
+   │  │
+   │  └─ Acciones por documento:
+   │     ├─ Ver/Descargar
+   │     ├─ Ver chunks RAG
+   │     ├─ Reindexar (si falló)
+   │     ├─ Compartir (crear espacio o invitar)
+   │     └─ Eliminar (soft delete)
+   │
+   ├─ 📚 Base de Conocimiento               [/admin/knowledge]
+   │  │
+   │  ├─ Todos los documentos del tenant
+   │  ├─ Filtros avanzados:
+   │  │  ├─ Tipo, industria, ambiente (USER/TENANT/INDUSTRY/GLOBAL)
+   │  │  ├─ Estado de ingest
+   │  │  ├─ Tiene chunks / No tiene chunks
+   │  │  └─ Búsqueda semántica
+   │  │
+   │  ├─ Vista: Lista | Grid
+   │  │
+   │  └─ Acciones masivas:
+   │     ├─ Reindexar seleccionados
+   │     ├─ Cambiar ambiente
+   │     └─ Eliminar seleccionados
+   │
+   ├─ 👥 Espacios Colaborativos             [/admin/spaces]
+   │  │
+   │  ├─ Lista de espacios:
+   │  │  ├─ Mis espacios (owner/member)
+   │  │  ├─ Públicos del tenant
+   │  │  └─ Archivados
+   │  │
+   │  ├─ Crear espacio nuevo
+   │  │
+   │  └─ Detalle de espacio                 [/admin/spaces/:id]
+   │     │
+   │     ├─ Tab: Documentos
+   │     │  ├─ Subir a este espacio
+   │     │  ├─ Lista de documentos
+   │     │  └─ Búsqueda en espacio
+   │     │
+   │     ├─ Tab: Miembros
+   │     │  ├─ Lista de usuarios con acceso
+   │     │  ├─ Roles (viewer/editor/admin)
+   │     │  ├─ Invitar nuevo miembro
+   │     │  └─ Eliminar miembro
+   │     │
+   │     ├─ Tab: Invitaciones Pendientes
+   │     │  ├─ Invitaciones enviadas
+   │     │  └─ Reenviar/Cancelar
+   │     │
+   │     └─ Tab: Configuración
+   │        ├─ Nombre, descripción
+   │        ├─ Privacidad (privado/público tenant)
+   │        └─ Archivar/Eliminar espacio
+   │
+   └─ ⚙️ Configuración de Documentos        [/admin/documents/config]
+      │
+      ├─ Tab: Tipos de Documento
+      │  ├─ Lista de tipos (predefinidos + custom)
+      │  ├─ Crear/editar tipo
+      │  └─ Campos metadata por tipo
+      │
+      └─ Tab: Reglas de Clasificación
+         ├─ Auto-clasificación por nombre/contenido
+         └─ Reglas de routing (ambiente, industria)
+
+═══════════════════════════════════════════════════════════════════════════
+🔍 CASOS Y ANÁLISIS (vertical ascensores/pedidos)
+═══════════════════════════════════════════════════════════════════════════
+
+   ├─ 📋 Todos los Casos                    [/admin/cases]
+   │  │
+   │  ├─ Lista de casos/pedidos/entidades
+   │  ├─ Filtros avanzados:
+   │  │  ├─ Estado de workflow
+   │  │  ├─ Asignado a (técnico)
+   │  │  ├─ Cliente
+   │  │  ├─ Rango de fechas
+   │  │  ├─ Nivel de riesgo IA (bajo/medio/alto/crítico)
+   │  │  └─ Búsqueda por identificador
+   │  │
+   │  ├─ Vista: Tabla | Kanban (por estados)
+   │  │
+   │  └─ Acciones masivas:
+   │     ├─ Exportar seleccionados
+   │     └─ Cambiar asignación
+   │
+   ├─ ⏳ Pendientes de Validación           [/admin/cases?status=review]
+   │  └─ Vista filtrada: casos en estado "revisión"
+   │
+   ├─ 📊 Informes Generados                 [/admin/reports]
+   │  │
+   │  ├─ Lista de informes LLM generados
+   │  ├─ Filtros:
+   │  │  ├─ Por caso
+   │  │  ├─ Por técnico
+   │  │  ├─ Fecha generación
+   │  │  └─ Estado (borrador/enviado)
+   │  │
+   │  └─ Acciones:
+   │     ├─ Ver informe
+   │     ├─ Descargar PDF
+   │     └─ Reenviar
+   │
+   └─ 📄 Detalle de Caso                    [/admin/cases/:id]
+      │
+      │  ┌──────────────────────────────────────────────────────┐
+      │  │          LAYOUT DE PÁGINA DE DETALLE                 │
+      │  ├──────────────────────────────────────────────────────┤
+      │  │  [Breadcrumb: Casos > {identifier}]                  │
+      │  │  [Header: Nombre caso + Estado + Acciones rápidas]   │
+      │  │                                                       │
+      │  │  ┌─────────────────────┬────────────────────────┐   │
+      │  │  │                     │                        │   │
+      │  │  │   CONTENIDO         │   SIDEBAR DERECHO      │   │
+      │  │  │   (Tabs)            │   (siempre visible)    │   │
+      │  │  │                     │                        │   │
+      │  │  │                     │  • Timeline eventos    │   │
+      │  │  │                     │  • Acciones rápidas    │   │
+      │  │  │                     │  • Comentarios         │   │
+      │  │  │                     │                        │   │
+      │  │  └─────────────────────┴────────────────────────┘   │
+      │  └──────────────────────────────────────────────────────┘
+      │
+      ├─ Tab: 📊 Resumen (DASHBOARD HERO - vista por defecto)
+      │  │
+      │  ├─ Card: Estado Actual
+      │  │  ├─ Estado workflow actual
+      │  │  ├─ Siguiente acción sugerida
+      │  │  └─ Asignado a (técnico)
+      │  │
+      │  ├─ Card: Alertas y Riesgos IA
+      │  │  ├─ Nivel de riesgo global (score 0-100)
+      │  │  ├─ Riesgos críticos detectados
+      │  │  ├─ Confianza del análisis IA
+      │  │  └─ Predicciones de mantenimiento (si aplica)
+      │  │
+      │  ├─ Card: Tareas Pendientes
+      │  │  ├─ Lista de WorkflowTasks asociadas
+      │  │  └─ Acción: Ir a tarea
+      │  │
+      │  ├─ Card: Progreso Checklist
+      │  │  ├─ % completado
+      │  │  ├─ Items OK / Review / Rejected
+      │  │  └─ Acción: Ir a checklist
+      │  │
+      │  └─ Acciones Rápidas (botones grandes)
+      │     ├─ ✅ Validar caso
+      │     ├─ 📝 Generar informe
+      │     ├─ 🔄 Cambiar estado
+      │     └─ 💬 Añadir comentario
+      │
+      ├─ Tab: 📋 Datos Generales
+      │  ├─ Identificador, cliente, fecha recepción
+      │  ├─ Metadata del caso
+      │  └─ Editar (si permisos)
+      │
+      ├─ Tab: ✅ Checklist Técnico
+      │  │
+      │  ├─ Items auto-generados por IA (extractor + classifier)
+      │  ├─ Agrupados por categoría
+      │  ├─ Validación por item:
+      │  │  ├─ OK / Necesita revisión / Rechazado
+      │  │  ├─ Notas del técnico
+      │  │  └─ Confianza IA
+      │  │
+      │  ├─ Añadir item manual
+      │  └─ Guardar validación
+      │
+      ├─ Tab: 🤖 Análisis IA
+      │  │
+      │  ├─ Texto extraído del pedido (originalText)
+      │  ├─ Patrones detectados (detectedPatterns)
+      │  ├─ Hallazgos de riesgo (findings):
+      │  │  ├─ Componente
+      │  │  ├─ Descripción
+      │  │  ├─ Severidad
+      │  │  └─ Confianza
+      │  │
+      │  ├─ Score global de confianza
+      │  └─ Ver trace de análisis (correlationId)
+      │
+      ├─ Tab: 📎 Documentos Adjuntos
+      │  │
+      │  ├─ Lista de PDFs relacionados
+      │  ├─ Subir nuevo documento
+      │  ├─ Ver/Descargar
+      │  └─ Ver chunks RAG de cada documento
+      │
+      ├─ Tab: ✍️ Validaciones
+      │  │
+      │  ├─ Historial de validaciones humanas
+      │  ├─ Estado general (Aprobado/Rechazado/Parcial)
+      │  ├─ Items validados por el técnico
+      │  ├─ Observaciones
+      │  ├─ Tiempo de validación
+      │  └─ Técnico que validó
+      │
+      ├─ Tab: 📊 Informes
+      │  │
+      │  ├─ Informes LLM generados para este caso
+      │  ├─ Generar nuevo informe (botón)
+      │  ├─ Ver informe (HTML)
+      │  ├─ Descargar PDF
+      │  └─ Estado (borrador/enviado)
+      │
+      ├─ Sidebar: 🕒 Timeline (siempre visible)
+      │  │
+      │  │  Eventos ordenados cronológicamente:
+      │  │
+      │  ├─ 🔵 Ingest
+      │  │  └─ "Documento subido por Juan Pérez"
+      │  │
+      │  ├─ 🟢 Análisis IA
+      │  │  └─ "Análisis completado: 3 riesgos detectados"
+      │  │
+      │  ├─ 🟡 Cambio de estado workflow
+      │  │  └─ "Estado cambiado a 'En revisión' por María López"
+      │  │
+      │  ├─ 🟣 Validación humana
+      │  │  └─ "Validado como APROBADO por Técnico A"
+      │  │
+      │  

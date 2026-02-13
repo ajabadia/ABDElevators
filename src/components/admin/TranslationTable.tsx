@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
     Sparkles,
     Save,
@@ -16,7 +16,7 @@ import { ContentCard } from "@/components/ui/content-card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useApiMutation } from '@/hooks/useApiMutation';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
@@ -49,6 +49,7 @@ export function TranslationTable({
     const [editingKey, setEditingKey] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState('');
     const [editingLocale, setEditingLocale] = useState<string | null>(null);
+    const isBatchingRef = useRef(false);
 
     const updateMutation = useApiMutation<{ locale: string; translations: Record<string, string> }>({
         endpoint: (data) => `/api/admin/i18n/${data.locale}`,
@@ -63,9 +64,21 @@ export function TranslationTable({
     const aiTranslateMutation = useApiMutation({
         endpoint: '/api/admin/i18n/auto-translate',
         method: 'POST',
-        onSuccess: () => {
+        onSuccess: (data: any) => {
             onRefresh();
-            toast({ title: tNotif('aiSuccessTitle'), description: tNotif('aiSuccessDesc') });
+            // Si estamos en modo batch, no mostrar toast individual por cada chunk
+            if (!isBatchingRef.current) {
+                const count = data?.count || 0;
+                toast.success(tNotif('aiSuccessTitle'), {
+                    description: `${tNotif('aiSuccessDesc')} (${count} llaves procesadas)`
+                });
+            }
+        },
+        onError: (err) => {
+            console.error('[i18n-ai] ❌ Error en autotraducción:', err);
+            toast.error('Error de IA', {
+                description: typeof err === 'string' ? err : 'No se pudo completar la traducción automática'
+            });
         }
     });
 
@@ -105,6 +118,14 @@ export function TranslationTable({
         setEditingLocale(locale);
     };
 
+    const handleAiTranslateSingle = (key: string) => {
+        aiTranslateMutation.mutate({
+            sourceLocale: primaryLocale,
+            targetLocale: secondaryLocale,
+            keys: [key]
+        });
+    };
+
     const handleSave = () => {
         if (!editingKey || !editingLocale) return;
         updateMutation.mutate({
@@ -113,18 +134,53 @@ export function TranslationTable({
         });
     };
 
-    const handleAiTranslateAllMissing = () => {
+    const handleAiTranslateAllMissing = async () => {
         const missingKeys = filteredKeys.filter(key => !secondaryFlat[key]);
         if (missingKeys.length === 0) {
-            toast({ title: tNotif('upToDateTitle'), description: tNotif('upToDateDesc') });
+            toast.info(tNotif('upToDateTitle'), { description: tNotif('upToDateDesc') });
             return;
         }
 
-        aiTranslateMutation.mutate({
-            sourceLocale: primaryLocale,
-            targetLocale: secondaryLocale,
-            keys: missingKeys.slice(0, 50) // Limitar a 50 por seguridad
-        });
+        const CHUNK_SIZE = 25;
+        const totalChunks = Math.ceil(missingKeys.length / CHUNK_SIZE);
+        const toastId = toast.loading(`Iniciando IA: 0/${missingKeys.length}...`);
+
+        isBatchingRef.current = true;
+        let successfulCount = 0;
+
+        try {
+            for (let i = 0; i < missingKeys.length; i += CHUNK_SIZE) {
+                const chunk = missingKeys.slice(i, i + CHUNK_SIZE);
+                const currentBatch = Math.floor(i / CHUNK_SIZE) + 1;
+
+                toast.loading(
+                    `Traduciendo lote ${currentBatch}/${totalChunks} (${chunk.length} llaves)...`,
+                    { id: toastId }
+                );
+
+                const result = await aiTranslateMutation.mutate({
+                    sourceLocale: primaryLocale,
+                    targetLocale: secondaryLocale,
+                    keys: chunk
+                });
+
+                if (result?.success) {
+                    successfulCount += (result.count || 0);
+                } else {
+                    console.warn(`Lote ${currentBatch} falló.`);
+                }
+            }
+
+            toast.success(`Traducción completada`, {
+                id: toastId,
+                description: `Se tradujeron ${successfulCount} llaves correctamente.`
+            });
+        } catch (error) {
+            console.error('Error en batch:', error);
+            toast.error('Error durante la traducción masiva', { id: toastId });
+        } finally {
+            isBatchingRef.current = false;
+        }
     };
 
     return (
@@ -151,7 +207,7 @@ export function TranslationTable({
                                     ) : (
                                         <Sparkles className="w-3 h-3 mr-1" />
                                     )}
-                                    {tTable('autoTranslateBtn')}
+                                    {tTable('autoTranslateBtn')} (IA)
                                 </Button>
                             </th>
                         </tr>
@@ -237,7 +293,24 @@ export function TranslationTable({
                                                         </span>
                                                     )}
                                                 </span>
-                                                <Edit3 className="w-3 h-3 text-slate-300 opacity-0 group-hover/cell:opacity-100 transition-opacity" />
+                                                <div className="flex gap-1 opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                                    {!secondaryFlat[key] && primaryFlat[key] && (
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-6 w-6 text-teal-600 hover:bg-teal-50"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAiTranslateSingle(key);
+                                                            }}
+                                                            disabled={aiTranslateMutation.isLoading}
+                                                            title="Traducir esta clave con IA"
+                                                        >
+                                                            <Sparkles className="w-3 h-3" />
+                                                        </Button>
+                                                    )}
+                                                    <Edit3 className="w-3 h-3 text-slate-300 self-center" />
+                                                </div>
                                             </div>
                                         )}
                                     </td>

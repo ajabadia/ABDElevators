@@ -9,7 +9,10 @@ export type FeatureFlag =
     | 'GRAPH_RELATIONS'    // Enables Neo4j/Graph logic
     | 'DEMO_MODE_UI'       // Enables Industry Switcher in Header
     | 'EXPLAINABLE_AI'     // Enables "Reasoning" fields in RAG UI
-    | 'ENFORCE_MFA_ADMIN'; // Enforce mandatory MFA for privileged users (Phase 120.1)
+    | 'ENFORCE_MFA_ADMIN'  // Enforce mandatory MFA for privileged users (Phase 120.1)
+    | 'USE_INTERNAL_STORAGE_FOR_INGEST' // Phase 131: GridFS-first, Cloudinary async
+    | 'LAB_FEATURES'       // Phase 132.1: Experimental features for testing
+    | 'DEBUG_TOOLS';      // Phase 132.1: Internal debugging tools (UI)
 
 // Default State (Production Safe)
 const DEFAULT_FLAGS: Record<FeatureFlag, boolean> = {
@@ -17,7 +20,10 @@ const DEFAULT_FLAGS: Record<FeatureFlag, boolean> = {
     'GRAPH_RELATIONS': false,
     'DEMO_MODE_UI': true,
     'EXPLAINABLE_AI': true,
-    'ENFORCE_MFA_ADMIN': false  // HOTFIX: Disabled to unblock login loop
+    'ENFORCE_MFA_ADMIN': false,  // HOTFIX: Disabled to unblock login loop
+    'USE_INTERNAL_STORAGE_FOR_INGEST': true,
+    'LAB_FEATURES': false,
+    'DEBUG_TOOLS': false
 };
 
 export const FeatureFlags = {
@@ -39,5 +45,13 @@ export const FeatureFlags = {
     /**
      * Get all active flags (for client-side hydration)
      */
-    getAll: () => DEFAULT_FLAGS
+    getAll: () => DEFAULT_FLAGS,
+
+    /**
+     * Phase 131: Check if new ingest pipeline is enabled
+     * GridFS-first, Cloudinary async
+     */
+    isIngestPipelineV2Enabled: (): boolean => {
+        return FeatureFlags.isEnabled('USE_INTERNAL_STORAGE_FOR_INGEST');
+    }
 };

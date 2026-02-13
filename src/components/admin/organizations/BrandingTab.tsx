@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Palette, Upload, Loader2, Building, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 
 interface BrandingTabProps {
     config: TenantConfig | null;
@@ -83,6 +83,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                     setConfig({
                                                         ...config,
                                                         branding: {
+                                                            autoDarkMode: config.branding?.autoDarkMode ?? true,
                                                             ...(config.branding || {}),
                                                             logo: data.asset
                                                         }
@@ -107,7 +108,14 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                     </Label>
                                     {config?.branding?.logo?.url && (
                                         <Button variant="ghost" className="text-destructive hover:bg-destructive/10"
-                                            onClick={() => setConfig(prev => prev ? { ...prev, branding: { ...prev.branding, logo: undefined } } : null)}
+                                            onClick={() => setConfig(prev => prev ? {
+                                                ...prev,
+                                                branding: {
+                                                    autoDarkMode: prev.branding?.autoDarkMode ?? true,
+                                                    ...prev.branding,
+                                                    logo: undefined
+                                                }
+                                            } : null)}
                                         >
                                             <Trash2 size={16} />
                                         </Button>
@@ -155,6 +163,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                         setConfig({
                                                             ...config,
                                                             branding: {
+                                                                autoDarkMode: config.branding?.autoDarkMode ?? true,
                                                                 ...(config.branding || {}),
                                                                 favicon: data.asset
                                                             }
@@ -178,7 +187,14 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         </Label>
                                         {config?.branding?.favicon?.url && (
                                             <Button variant="ghost" className="text-destructive h-8 px-2 hover:bg-destructive/10"
-                                                onClick={() => setConfig(prev => prev ? { ...prev, branding: { ...prev.branding, favicon: undefined } } : null)}
+                                                onClick={() => setConfig(prev => prev ? {
+                                                    ...prev,
+                                                    branding: {
+                                                        autoDarkMode: prev.branding?.autoDarkMode ?? true,
+                                                        ...prev.branding,
+                                                        favicon: undefined
+                                                    }
+                                                } : null)}
                                             >
                                                 <Trash2 size={14} />
                                             </Button>
@@ -204,6 +220,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             onChange={(e) => setConfig(prev => prev ? {
                                                 ...prev,
                                                 branding: {
+                                                    autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                     ...(prev.branding || {}),
                                                     colors: { ...(prev.branding?.colors || {}), primary: e.target.value }
                                                 }
@@ -216,6 +233,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         onChange={(e) => setConfig(prev => prev ? {
                                             ...prev,
                                             branding: {
+                                                autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                 ...(prev.branding || {}),
                                                 colors: { ...(prev.branding?.colors || {}), primary: e.target.value }
                                             }
@@ -238,6 +256,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             onChange={(e) => setConfig(prev => prev ? {
                                                 ...prev,
                                                 branding: {
+                                                    autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                     ...(prev.branding || {}),
                                                     colors: { ...(prev.branding?.colors || {}), accent: e.target.value }
                                                 }
@@ -250,6 +269,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         onChange={(e) => setConfig(prev => prev ? {
                                             ...prev,
                                             branding: {
+                                                autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                 ...(prev.branding || {}),
                                                 colors: { ...(prev.branding?.colors || {}), accent: e.target.value }
                                             }
@@ -294,6 +314,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                 onChange={(e) => setConfig(prev => prev ? {
                                                     ...prev,
                                                     branding: {
+                                                        autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                         ...(prev.branding || {}),
                                                         colors: { ...(prev.branding?.colors || {}), primaryDark: e.target.value }
                                                     }
@@ -306,6 +327,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             onChange={(e) => setConfig(prev => prev ? {
                                                 ...prev,
                                                 branding: {
+                                                    autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                     ...(prev.branding || {}),
                                                     colors: { ...(prev.branding?.colors || {}), primaryDark: e.target.value }
                                                 }
@@ -328,6 +350,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                 onChange={(e) => setConfig(prev => prev ? {
                                                     ...prev,
                                                     branding: {
+                                                        autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                         ...(prev.branding || {}),
                                                         colors: { ...(prev.branding?.colors || {}), accentDark: e.target.value }
                                                     }
@@ -340,6 +363,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             onChange={(e) => setConfig(prev => prev ? {
                                                 ...prev,
                                                 branding: {
+                                                    autoDarkMode: prev.branding?.autoDarkMode ?? true,
                                                     ...(prev.branding || {}),
                                                     colors: { ...(prev.branding?.colors || {}), accentDark: e.target.value }
                                                 }

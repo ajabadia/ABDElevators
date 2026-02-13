@@ -22,7 +22,9 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 1. **Detección de Hardcoding**: Buscar textos literales en JSX o atributos (`placeholder`, `title`, etc.).
 2. **Estructura de Namespacing**: 
    - No usar llaves planas. Usar jerarquía: `[namespace].[component/page].[key]`.
-   - Ejemplo: `admin.logs.table.timestamp`.
+   - **REGLA DE ESTRUCTURA**: Secciones globales (ej: `spaces`, `security`, `search`, `admin`) DEBEN residir dentro del objeto raíz `"common"` para garantizar un namespacing consistente (`common.spaces.*`).
+   - **PREVENCIÓN DE COLISIONES**: No puede existir una llave que sea a la vez un string y un objeto padre. Ej: No tener `common.spaces: "..."` si existen `common.spaces.title`. Esto causa `TypeError` en el frontend.
+   - Ejemplo: `common.spaces.table.title`.
 3. **Verificación de hook**: Asegurar uso de `useTranslations('namespace')` para scoping correcto.
 4. **Terminología Profesional**: 
    - **CRÍTICO**: Asegurar que NO se usen términos técnicos de desarrollo como "RAG", "Vector", "Explorer", "Agentic", "Simulator".
@@ -69,7 +71,7 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 - **REGLA DE ORO #2 (TERMINOLOGÍA PROFESIONAL)**: 
   - ❌ "RAG", "Vector Search", "Explorer".
   - ✅ "Inteligencia Técnica", "Búsqueda Semántica", "Buscador".
-- **REGLA DE ORO #3 (PRESENTACIÓN DE ERRORES)**: Los errores no son solo logs. El usuario DEBE verlos mediante Toasts (acciones) o Badges (datos).
+- **REGLA DE ORO #3 (PRESENTACIÓN DE ERRORES)**: Los errores no son solo logs. El usuario DEBE verlos mediante Toasts (acciones) o Badges (datos). Si el error es crítico para el negocio o la seguridad, DEBE registrarse además vía `AuditTrailService`.
 
 ## Output (formato exacto)
 1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y/Error)" y "Gravedad".

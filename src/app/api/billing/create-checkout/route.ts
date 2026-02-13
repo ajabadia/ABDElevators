@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
             tenantConfig.name
         );
 
-        // Actualizar tenant con stripe_customer_id si no lo tenía
-        if (!tenantConfig.subscription?.stripe_customer_id) {
+        // Actualizar tenant con stripeCustomerId si no lo tenía
+        if (!tenantConfig.subscription?.stripeCustomerId) {
             await TenantService.updateConfig(tenantId, {
                 subscription: {
                     ...tenantConfig.subscription,
-                    stripe_customer_id: customerId,
+                    stripeCustomerId: customerId,
                 },
             });
         }

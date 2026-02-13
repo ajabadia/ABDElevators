@@ -14,7 +14,7 @@ export const InsightSchema = z.object({
     description: z.string(),
     impact: z.string(),
     suggestion: z.string(),
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type Insight = z.infer<typeof InsightSchema>;

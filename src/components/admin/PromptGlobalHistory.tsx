@@ -9,12 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useApiList } from '@/hooks/useApiList';
+import { useTranslations } from 'next-intl';
 
 interface PromptGlobalHistoryProps {
     onClose: () => void;
 }
 
 export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClose }) => {
+    const t = useTranslations('admin.prompts');
     const [search, setSearch] = useState('');
 
     // 1. Gestión de datos con hook genérico
@@ -53,10 +55,10 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                             <div className="p-2 bg-teal-500/10 rounded-xl">
                                 <History className="w-6 h-6 text-teal-400" />
                             </div>
-                            <h2 className="text-2xl font-black text-white tracking-tight">Audit Log Global</h2>
+                            <h2 className="text-2xl font-black text-white tracking-tight">{t('history.title')}</h2>
                         </div>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mt-2 ml-1">
-                            Seguimiento maestro de cambios en directivas de IA
+                            {t('history.subtitle')}
                         </p>
                     </div>
                     <button
@@ -72,14 +74,14 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
                         <input
-                            placeholder="Buscar por prompt, clave o motivo del cambio..."
+                            placeholder={t('history.search')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-800 rounded-2xl text-xs py-3 pl-12 focus:ring-2 ring-teal-500/20 outline-none transition-all text-white"
                         />
                     </div>
-                    <Badge variant="outline" className="h-10 px-4 rounded-xl border-slate-800 bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
-                        {filtered.length} Registros
+                    <Badge variant="outline" className="h-10 px-4 rounded-xl border-slate-800 bg-slate-950 text-slate-400 font-bold uppercase text-[10px]">
+                        {filtered.length} {t('history.records')}
                     </Badge>
                 </div>
 
@@ -107,13 +109,13 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                                             </Badge>
                                             <h4 className="text-sm font-black text-white">{entry.promptName}</h4>
                                             <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded-full text-slate-400 font-mono">
-                                                V{entry.version}
+                                                {t('history.version')}{entry.version}
                                             </span>
                                         </div>
                                         <div className="flex items-start gap-2 bg-slate-900/50 p-3 rounded-2xl border border-slate-800/50">
                                             <Clock size={14} className="text-slate-500 mt-0.5 shrink-0" />
                                             <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                                                "{entry.changeReason || 'Sin motivo especificado'}"
+                                                "{entry.changeReason || t('history.no_reason')}"
                                             </p>
                                         </div>
                                     </div>
@@ -121,7 +123,7 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                                     <div className="flex flex-row md:flex-col gap-4 md:gap-2 text-[10px] md:border-l border-slate-800 md:pl-6 min-w-[150px]">
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <User size={12} className="text-teal-500/50" />
-                                            <span className="font-bold">{entry.changedBy?.split('@')[0] || 'Sistema'}</span>
+                                            <span className="font-bold">{entry.changedBy?.split('@')[0] || t('history.system')}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <Calendar size={12} className="text-teal-500/50" />
@@ -140,7 +142,7 @@ export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClos
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 text-slate-600 gap-4 border-2 border-dashed border-slate-800 rounded-[2.5rem]">
                             <Code size={48} className="opacity-10" />
-                            <p className="text-sm font-bold tracking-tight">No se encontraron registros en el historial global</p>
+                            <p className="text-sm font-bold tracking-tight">{t('history.no_records')}</p>
                         </div>
                     )}
                 </div>

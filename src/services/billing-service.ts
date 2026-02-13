@@ -4,6 +4,7 @@ import { logEvento } from '../lib/logger';
 import { AppError } from '../lib/errors';
 import { TenantSubscription } from '../lib/schemas/billing';
 import Stripe from 'stripe';
+import crypto from 'crypto';
 
 /**
  * 💸 BillingService: Orquestación de Stripe y Procesamiento de Webhooks (Phase 120.2)
@@ -18,7 +19,7 @@ export class BillingService {
 
         try {
             const config = await TenantService.getConfig(tenantId);
-            const customerId = (config.subscription as TenantSubscription)?.stripeCustomerId;
+            const customerId = (config.subscription as TenantSubscription)?.stripeCustomerId || undefined;
 
             const session = await createCheckoutSession({
                 tenantId,
@@ -83,7 +84,7 @@ export class BillingService {
         const inv = invoice as any;
         if (!inv.subscription) return;
         const subscriptionId = typeof inv.subscription === 'string' ? inv.subscription : inv.subscription.id;
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
         const tenantId = (subscription.metadata as any).tenantId;
         if (!tenantId) return;
 
@@ -98,7 +99,7 @@ export class BillingService {
         const inv = invoice as any;
         if (!inv.subscription) return;
         const subscriptionId = typeof inv.subscription === 'string' ? inv.subscription : inv.subscription.id;
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
         const tenantId = (subscription.metadata as any).tenantId;
         if (!tenantId) return;
 

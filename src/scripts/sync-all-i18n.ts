@@ -13,8 +13,8 @@ async function sync() {
 
     try {
         // Importación dinámica para evitar hoisting en ESM y asegurar que dotenv ya corrió
-        const { TranslationService } = await import('./src/lib/translation-service');
-        const { connectDB } = await import('./src/lib/db');
+        const { TranslationService } = await import('../lib/translation-service');
+        const { connectDB } = await import('../lib/db');
 
         await connectDB();
         console.log('📡 Conexión a DB establecida.');

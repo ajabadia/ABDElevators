@@ -21,7 +21,8 @@ export const PROMPTS = {
     REGLAS:
     1. Mantén los placeholders como {name}, {count}, {{variable}}.
     2. Usa terminología técnica precisa para el sector de {{vertical}}.
-    3. Responde ÚNICAMENTE con un objeto JSON válido.
+    3. Responde ÚNICAMENTE con un objeto JSON válido. NO incluyas bloques de código markdown (\`\`\`json), ni explicaciones, ni texto adicional. SOLO el JSON plano.
+    4. Si no estás seguro de un término técnico, mantén el sentido de ingeniería mecánica/eléctrica.
     
     LLAVES A TRADUCIR:
     {{translationsToProcess}}`,
@@ -223,5 +224,24 @@ export const PROMPTS = {
     1. No inventes información fuera del snippet.
     2. Si los datos no son suficientes, responde "Información no disponible en el fragmento".
     3. usa un tono profesional y técnico.
-    4. Formatea la respuesta con Markdown.`
+    4. Formatea la respuesta con Markdown.`,
+
+  CHUNKING_LLM_CUTTER: `Eres un experto en segmentación de documentos técnicos.
+    Analiza el siguiente fragmento de documento y divídelo en chunks semánticamente independientes.
+
+    REGLAS:
+    1. Cada chunk debe poder entenderse de forma independiente
+    2. Mantén entre 500-3000 caracteres por chunk
+    3. Agrupa contenido relacionado juntos
+    4. Si el fragmento es muy largo, divídelo por cambios de tema natural
+
+    FORMATO JSON DE SALIDA:
+    {
+      "chunks": [
+        { "texto": "...", "titulo": "...", "tipo": "tema|subtema" }
+      ]
+    }
+
+    FRAGMENTO:
+    {{text}}`
 };

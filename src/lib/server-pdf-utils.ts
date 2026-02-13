@@ -10,6 +10,19 @@ interface LLMReportPDFData {
     date: Date;
     technician: string;
     locale?: string;
+    branding?: {
+        logo?: { url?: string };
+        colors?: {
+            primary?: string;
+            accent?: string;
+        };
+    };
+    reportConfig?: {
+        disclaimer?: string;
+        signatureText?: string;
+        footerText?: string;
+        includeSources?: boolean;
+    };
 }
 
 /**
@@ -19,6 +32,11 @@ interface LLMReportPDFData {
 export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer> {
     const start = Date.now();
     const locale = data.locale || 'es';
+
+    // Corporate style tokens (Fallback to platform defaults)
+    const brandColor = data.branding?.colors?.primary || '#0d9488'; // Teal-600 default
+    const accentColor = data.branding?.colors?.accent || '#0d9488';
+    const logoUrl = data.branding?.logo?.url;
 
     // Fetch dynamic translations (Phase 96 - Dynamic i18n Reports)
     const messages = await TranslationService.getMessages(locale, data.tenantId);
@@ -47,8 +65,20 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
     let y = 20;
 
     // Header
-    doc.setFillColor(13, 148, 136); // Teal-600
+    const rgbPrimary = brandColor.startsWith('#') ? hexToRgb(brandColor) : { r: 13, g: 148, b: 136 };
+    doc.setFillColor(rgbPrimary.r, rgbPrimary.g, rgbPrimary.b);
     doc.rect(0, 0, pageWidth, 40, 'F');
+
+    // Logo if available
+    if (logoUrl) {
+        try {
+            // Nota: En un entorno real de servidor, jsPDF necesita la imagen en base64 o fetch
+            // Por simplicidad en este MVP asumimos que el logoUrl es accesible o dejamos placeholder
+            // doc.addImage(logoUrl, 'PNG', margin, 5, 15, 15);
+        } catch (e) {
+            console.error("Error adding logo to PDF", e);
+        }
+    }
 
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
@@ -71,7 +101,10 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    const accentRgb = accentColor.startsWith('#') ? hexToRgb(accentColor) : { r: 13, g: 148, b: 136 };
+    doc.setTextColor(accentRgb.r, accentRgb.g, accentRgb.b);
     doc.text(`${t.client}: ${data.client}`, margin, y);
+    doc.setTextColor(51, 65, 85);
     y += 5;
 
     const formattedDate = data.date.toLocaleString(locale === 'es' ? 'es-ES' : 'en-US', {
@@ -91,7 +124,7 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
     const lines = data.content.split('\n');
 
     for (const line of lines) {
-        if (y > pageHeight - 20) {
+        if (y > pageHeight - 30) { // Mayor margen para el footer dinámico
             doc.addPage();
             y = 20;
         }
@@ -99,16 +132,19 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
         if (line.startsWith('# ')) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(16);
+            doc.setTextColor(rgbPrimary.r, rgbPrimary.g, rgbPrimary.b);
             doc.text(line.substring(2), margin, y);
             y += 10;
         } else if (line.startsWith('## ')) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
+            doc.setTextColor(accentRgb.r, accentRgb.g, accentRgb.b);
             doc.text(line.substring(3), margin, y);
             y += 8;
         } else if (line.startsWith('### ')) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
+            doc.setTextColor(rgbPrimary.r, rgbPrimary.g, rgbPrimary.b);
             doc.text(line.substring(4), margin, y);
             y += 6;
         } else if (line.trim() === '') {
@@ -116,11 +152,12 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
         } else {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
 
             const cleanLine = line.replace(/\*\*/g, '');
             const wrappedText = doc.splitTextToSize(cleanLine, contentWidth);
 
-            if (y + (wrappedText.length * 5) > pageHeight - 20) {
+            if (y + (wrappedText.length * 5) > pageHeight - 30) {
                 doc.addPage();
                 y = 20;
             }
@@ -128,6 +165,30 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
             doc.text(wrappedText, margin, y);
             y += (wrappedText.length * 5) + 2;
         }
+    }
+
+    // Disclaimer & Signature (Phase 64)
+    if (y > pageHeight - 50) {
+        doc.addPage();
+        y = 25;
+    }
+
+    y += 10;
+    if (data.reportConfig?.signatureText) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text(data.reportConfig.signatureText, margin, y);
+        y += 5;
+        doc.line(margin, y, margin + 60, y);
+        y += 15;
+    }
+
+    if (data.reportConfig?.disclaimer) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184); // Slate-400
+        const wrappedDisclaimer = doc.splitTextToSize(data.reportConfig.disclaimer, contentWidth);
+        doc.text(wrappedDisclaimer, margin, y);
     }
 
     // Footer
@@ -141,8 +202,9 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
             .replace('{current}', i.toString())
             .replace('{total}', totalPages.toString());
 
+        const footerNote = data.reportConfig?.footerText || t.automaticFootnote;
         doc.text(
-            `${pageLabel} | ${t.automaticFootnote}`,
+            `${pageLabel} | ${footerNote}`,
             pageWidth / 2,
             pageHeight - 10,
             { align: 'center' }
@@ -156,9 +218,21 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
         action: 'GENERATE_PDF',
         message: `PDF generated on server for ${data.identifier} (Locale: ${locale})`,
         correlationId: 'pdf-gen-' + Date.now(),
-        details: { durationMs: duration, pages: totalPages }
+        details: { durationMs: duration, pages: totalPages, branded: !!data.branding }
     });
 
     const pdfOutput = doc.output('arraybuffer');
     return Buffer.from(pdfOutput);
+}
+
+/**
+ * Helper to convert hex to RGB
+ */
+function hexToRgb(hex: string) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : { r: 13, g: 148, b: 136 };
 }

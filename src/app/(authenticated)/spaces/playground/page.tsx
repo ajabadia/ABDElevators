@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 import { SpaceNavigator } from "@/components/spaces/SpaceNavigator";
 import { QuickQAPanel } from "@/components/spaces/QuickQAPanel";
 import { Space } from "@/lib/schemas/spaces";

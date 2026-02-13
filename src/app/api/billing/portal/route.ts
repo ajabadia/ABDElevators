@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         }
         const tenantConfig = await TenantService.getConfig(tenantId);
 
-        const customerId = tenantConfig.subscription?.stripe_customer_id;
+        const customerId = tenantConfig.subscription?.stripeCustomerId;
         if (!customerId) {
             throw new AppError('NOT_FOUND', 404, 'No se encontró un customer de Stripe para este tenant');
         }

@@ -126,7 +126,7 @@ export default function AdminPromptsPage() {
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
-            toast({ title: t('messages.promote_success') || 'Promoted', description: t('messages.promote_desc') || "The prompt has been promoted to Production." });
+            toast({ title: t('messages.promote_success'), description: t('messages.promote_desc') });
         } catch (err: any) {
             toast({ title: "Error", description: err.message, variant: "destructive" });
         }
@@ -146,7 +146,7 @@ export default function AdminPromptsPage() {
                             variant="outline"
                             className="rounded-xl border-slate-200 dark:border-slate-800"
                         >
-                            <History className="w-4 h-4 mr-2" /> {t('actions.history') || 'Global History'}
+                            <History className="w-4 h-4 mr-2" /> {t('actions.history')}
                         </Button>
                         {environment === 'STAGING' && modal.isOpen && modal.data && (
                             <Button
@@ -154,7 +154,7 @@ export default function AdminPromptsPage() {
                                 variant="outline"
                                 className="rounded-xl border-amber-200 bg-amber-50 dark:bg-amber-900/10 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/20"
                             >
-                                <Rocket className="w-4 h-4 mr-2" /> {t('actions.promote') || 'Promote to Production'}
+                                <Rocket className="w-4 h-4 mr-2" /> {t('actions.promote')}
                             </Button>
                         )}
                         <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
@@ -180,7 +180,7 @@ export default function AdminPromptsPage() {
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <input
-                                        placeholder={t('search_placeholder') || "Search by name, key or description..."}
+                                        placeholder={t('search_placeholder')}
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
@@ -192,7 +192,7 @@ export default function AdminPromptsPage() {
                                         size="icon"
                                         onClick={clearFilters}
                                         className="rounded-xl text-slate-400 hover:text-rose-500"
-                                        title={t('actions.clear_filters') || "Clear filters"}
+                                        title={t('actions.clear_filters')}
                                     >
                                         <X size={18} />
                                     </Button>
@@ -209,7 +209,7 @@ export default function AdminPromptsPage() {
                                             : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
                                     )}
                                 >
-                                    {t('filters.all') || 'ALL'} ({prompts.length})
+                                    {t('filters.all')} ({prompts.length})
                                 </button>
                                 {CATEGORIES.map(cat => (
                                     <button
@@ -240,7 +240,7 @@ export default function AdminPromptsPage() {
                                         onChange={e => setTenantFilter(e.target.value)}
                                         className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
                                     >
-                                        <option value="all">{t('filters.organization') || 'Organization'}</option>
+                                        <option value="all">{t('filters.organization')}</option>
                                         {uniqueTenants.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
@@ -251,7 +251,7 @@ export default function AdminPromptsPage() {
                                     onChange={e => setIndustryFilter(e.target.value)}
                                     className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
                                 >
-                                    <option value="all">{t('filters.industry') || 'Industry'}</option>
+                                    <option value="all">{t('filters.industry')}</option>
                                     <option value="GENERIC">Genérico</option>
                                     <option value="ELEVATORS">Ascensores</option>
                                     <option value="LEGAL">Legal</option>
@@ -340,7 +340,7 @@ export default function AdminPromptsPage() {
                             ) : (
                                 <div className="p-20 text-center opacity-40">
                                     <Search size={40} className="mx-auto mb-4" />
-                                    <p className="text-sm font-bold tracking-tight">{t('messages.no_prompts') || 'No prompts found'}</p>
+                                    <p className="text-sm font-bold tracking-tight">{t('messages.no_prompts')}</p>
                                 </div>
                             )}
                         </div>
@@ -352,7 +352,7 @@ export default function AdminPromptsPage() {
                         </div>
                         <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Multi-Vertical RAG</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                            {t('info.multi_vertical') || 'Prompts now support industry dimensions. The system will select the most specific available prompt for the detected vertical.'}
+                            {t('info.multi_vertical')}
                         </p>
                     </div>
                 </div>
@@ -379,9 +379,9 @@ export default function AdminPromptsPage() {
                                     <Sparkles size={32} className="text-slate-300 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('editor_placeholder_title') || 'Multi-Vertical Master Control'}</h3>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('editor_placeholder_title')}</h3>
                                     <p className="text-xs text-slate-500 max-w-xs mt-2 mx-auto font-medium">
-                                        {t('editor_placeholder_desc') || 'Select a prompt engineering to configure specialized responses for each business vertical.'}
+                                        {t('editor_placeholder_desc')}
                                     </p>
                                 </div>
                                 <Button
@@ -389,7 +389,7 @@ export default function AdminPromptsPage() {
                                     variant="outline"
                                     className="mt-6 rounded-2xl border-dashed border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
                                 >
-                                    <Plus size={16} className="mr-2" /> {t('actions.create_first') || 'Create First Dynamic Prompt'}
+                                    <Plus size={16} className="mr-2" /> {t('actions.create_first')}
                                 </Button>
                             </motion.div>
                         )}

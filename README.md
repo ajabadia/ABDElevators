@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 4.3.3 - ENTERPRISE PROFESSIONAL)
+# ABD Multi-Industry RAG Platform (Vision 4.5.0 - ENTERPRISE SAAS)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v4.3.3** despliega la visión de "Enterprise SaaS Transformation" (Phase 120), con una optimización exhaustiva de los módulos de **Billing**, **Permissions** y **Knowledge Assets**, alcanzando la plena compatibilidad con **React 19** y los estándares de **Vercel React Best Practices**.
+Esta versión **v4.5.0** despliega la visión de "Enterprise SaaS Transformation" (Phase 132 & 133), incorporando **Gobernanza Bancaria**, **Dashboards Unificados por Rol** y un **Centro de Inteligencia Centralizado**. Incluye optimización completa de módulos de **Billing**, **Permissions** y **Knowledge Assets**, alcanzando la plena compatibilidad con **React 19** y los estándares de **Vercel React Best Practices**.
 
 ## 🚀 Inicio Rápido
 
@@ -157,6 +157,10 @@ src/
   - ✅ **Deep Observability (OTel)**: Trazabilidad distribuida con OpenTelemetry para monitoreo fino del pipeline RAG (Phase 120.3).
   - ✅ **Advanced Checklist Management**: Motor de configuración de reglas industriales para validación técnica (Phase 105.x).
   - ✅ **i18n Multi-tier Performance Cache**: Sistema de sincronización atómica entre JSON L4, MongoDB y Redis local.
+  - ✅ **Unified Role-Based Dashboards**: Experiencia de usuario totalmente rediseñada con hubs centrales para Técnicos, Admins y Operaciones (Phase 133).
+  - ✅ **Banking-Grade Governance**: Sistema de auditoría forense inmutable, control de políticas centralizado y trazabilidad total de decisiones IA (Phase 132).
+  - ✅ **Unified Knowledge Hub**: Gestión consolidada de Documentos, Espacios y Activos en una sola interfaz reactiva (Phase 133).
+  - ✅ **Multi-level Chunking (Phase 134)**: Sistema graduable para PDFs con niveles Simple (Bajo), Semántico (Medio) y LLM (Alto) para optimizar precisión y costo.
 
 ## 🔧 Scripts Disponibles
 

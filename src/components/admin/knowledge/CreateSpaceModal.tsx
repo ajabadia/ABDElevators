@@ -50,10 +50,10 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const mutation = useApiMutation<any, { success: boolean; spaceId: string }>(
-        '/api/admin/spaces',
-        'POST'
-    );
+    const mutation = useApiMutation<any, { success: boolean; spaceId: string }>({
+        endpoint: '/api/admin/spaces',
+        method: 'POST'
+    });
 
     useEffect(() => {
         if (!isOpen) {

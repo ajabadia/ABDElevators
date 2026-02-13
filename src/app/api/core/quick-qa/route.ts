@@ -3,10 +3,9 @@ import { z } from 'zod';
 import { callGeminiStream } from '@/lib/llm';
 import { AppError, ValidationError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { GuardianPermissions } from '@/lib/guardian-types';
 import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
-import { PromptService } from '@/services/PromptService';
+import { PromptService } from '@/lib/prompt-service';
 import crypto from 'crypto';
 
 const QuickQASchema = z.object({
@@ -47,21 +46,21 @@ export async function POST(req: NextRequest) {
         });
 
         // 3. Get Prompt from Governance Service (Regla de Oro #4)
-        const systemPrompt = await PromptService.getPrompt(
+        const { text: systemPromptText } = await PromptService.getRenderedPrompt(
             'QUICK_QA_EPHEMERAL',
-            user.tenantId,
             {
-                snippet: body.snippet,
-                context: body.context || "No context provided",
-                question: body.question
-            }
+                snippet: validated.snippet,
+                context: validated.context || "No context provided",
+                question: validated.question
+            },
+            user.tenantId
         );
 
         // 4. Call Gemini with Stream (Streaming)
-        const stream = await callGeminiStream(systemPrompt, user.tenantId, {
+        const stream = await callGeminiStream(systemPromptText, user.tenantId, {
             correlationId,
             temperature: 0.2, // More precise for technical snippets
-            model: 'gemini-2.5-flash'
+            model: 'gemini-1.5-flash'
         });
 
         const response = new Response(new ReadableStream({
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'Validación fallida', details: error.errors }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'Validación fallida', details: error.issues }, { status: 400 });
         }
         if (error instanceof AppError) {
             return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });

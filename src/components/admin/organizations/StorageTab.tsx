@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Cloud, Server, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 
 interface StorageTabProps {
     config: TenantConfig | null;

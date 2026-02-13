@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 
 interface FeaturesTabProps {
     config: TenantConfig | null;

@@ -16,7 +16,7 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = generateUUID();
     try {
@@ -37,7 +37,7 @@ export async function GET(
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = generateUUID();
     try {
@@ -77,7 +77,7 @@ export async function POST(
  */
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = generateUUID();
     try {

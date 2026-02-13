@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ContentCard } from "@/components/ui/content-card";
 import { Shield, Badge } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 
 interface SecurityCenterCardProps {
     config: TenantConfig | null;

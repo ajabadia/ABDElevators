@@ -4,6 +4,8 @@ import { KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
 import { ValidationError, AppError } from '@/lib/errors';
 import { IngestOptions } from '../ingest-service';
 import { logEvento } from '@/lib/logger';
+import { FeatureFlags } from '@/lib/feature-flags';
+import { GridFSUtils } from '@/lib/gridfs-utils';
 
 import { IngestPrepareResult } from './types';
 
@@ -19,16 +21,61 @@ export class IngestPreparer {
         const industry = metadata.industry || 'ELEVATORS';
         const spaceId = metadata.spaceId; // 🌌 Phase 125.2
 
-        // 1. Critical Size Validation
-        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+        // 1. Critical Size Validation (Phase 131.6: Large File Support)
+        const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
         // @ts-ignore
         const fileSize = file.size || 0;
         if (fileSize > MAX_FILE_SIZE) {
-            throw new ValidationError(`File too large. Max size is 50MB. Received: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
+            throw new ValidationError(`File too large. Max size is 250MB. Received: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
+        }
+
+        // Phase 131.6: Warn for large files (>100MB) - use streaming
+        const USE_STREAMING_THRESHOLD = 100 * 1024 * 1024; // 100MB - use streaming above this
+        const useStreaming = fileSize > USE_STREAMING_THRESHOLD;
+
+        if (useStreaming) {
+            await logEvento({
+                level: 'WARN',
+                source: 'INGEST_PREPARER',
+                action: 'LARGE_FILE_DETECTED',
+                message: `Large file detected (${(fileSize / 1024 / 1024).toFixed(2)}MB). Using streaming mode.`,
+                correlationId,
+                tenantId
+            });
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
+
+        // Phase 131: Check if new pipeline is enabled
+        const isV2Enabled = FeatureFlags.isIngestPipelineV2Enabled();
+
+        // Phase 131: Save to GridFS first (for processing buffer)
+        let blobId: string | undefined;
+        if (isV2Enabled) {
+            try {
+                blobId = await GridFSUtils.saveForProcessing(buffer, tenantId, 'pending', correlationId);
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_PREPARER',
+                    action: 'GRIDFS_SAVE_SUCCESS',
+                    message: `File saved to GridFS for processing: ${blobId}`,
+                    correlationId,
+                    tenantId
+                });
+            } catch (gridfsError) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'INGEST_PREPARER',
+                    action: 'GRIDFS_SAVE_FAILED',
+                    message: `Failed to save to GridFS, continuing with Cloudinary only: ${gridfsError}`,
+                    correlationId,
+                    tenantId,
+                    details: { error: (gridfsError as Error).message }
+                });
+                // Continue without GridFS - Cloudinary-only mode
+            }
+        }
 
         // Enforcement of Rule #11 (Using SecureCollection indirectly via getTenantCollection)
         const session = options.session;
@@ -189,7 +236,7 @@ export class IngestPreparer {
         };
 
         // 3. Initial Registry
-        const docMetadata = {
+        const docMetadata: any = {
             tenantId: scope === 'TENANT' ? tenantId : 'global',
             industry,
             filename: file.name,
@@ -207,10 +254,17 @@ export class IngestPreparer {
             documentTypeId: metadata.documentTypeId,
             scope,
             spaceId, // 🌌 Phase 125.2
+            chunkingLevel: metadata.chunkingLevel || 'bajo', // Phase 134
             environment,
             createdAt: new Date(),
             updatedAt: new Date(),
         };
+
+        // Phase 131: Add blobId if GridFS save was successful
+        if (isV2Enabled && blobId) {
+            docMetadata.blobId = blobId;
+            docMetadata.hasStorage = true; // GridFS storage is available
+        }
 
         const result = await knowledgeAssetsCollection.insertOne(KnowledgeAssetSchema.parse(docMetadata));
 
@@ -227,7 +281,9 @@ export class IngestPreparer {
                 source: 'ADMIN_INGEST',
                 scope,
                 duration_ms: Date.now() - start,
-                deduplicated: isBlobDeduplicated // Audit if it was deduplicated
+                deduplicated: isBlobDeduplicated, // Audit if it was deduplicated
+                blobId: blobId || null, // Phase 131: GridFS blob ID
+                pipelineV2: isV2Enabled // Phase 131: Track which pipeline was used
             }
         }));
 

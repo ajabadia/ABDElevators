@@ -3,13 +3,15 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { IngestAuditSchema } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { FeatureFlags } from '@/lib/feature-flags';
 import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
 import { IngestPreparer } from './ingest/IngestPreparer';
 import { IngestAnalyzer } from './ingest/IngestAnalyzer';
 import { IngestIndexer } from './ingest/IngestIndexer';
-import { getSignedUrl } from '@/lib/cloudinary';
+import { getSignedUrl, uploadPDFToCloudinary } from '@/lib/cloudinary';
 import { GraphExtractionService } from './graph-extraction-service';
+import { GridFSUtils } from '@/lib/gridfs-utils';
 
 export interface IngestOptions {
     file: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
@@ -21,6 +23,7 @@ export interface IngestOptions {
         industry?: string;
         ownerUserId?: string; // For USER scope
         spaceId?: string; // 🌌 Phase 125.2: Target Space
+        chunkingLevel?: 'bajo' | 'medio' | 'alto'; // Phase 134
     };
     tenantId: string;
     userEmail: string;
@@ -97,40 +100,72 @@ export class IngestService {
             );
         };
 
+        // Phase 131: Check feature flag early (accessible throughout function)
+        const isV2Enabled = FeatureFlags.isIngestPipelineV2Enabled();
+
         try {
             await updateProgress(5);
 
-            // Fetch from Cloudinary
-            if (!asset.cloudinaryUrl) {
-                throw new AppError('EXTERNAL_SERVICE_ERROR', 503, `Missing Cloudinary URL for asset ${assetId}. Record may be corrupted.`);
-            }
+            // Phase 131: Fetch buffer - Feature flag controlled
+            let buffer: Buffer;
 
-            // Generate a SIGNED URL for secure internal fetch
-            const signedUrl = getSignedUrl(asset.cloudinaryPublicId || asset.cloudinary_public_id, 'raw');
-
+            // Log feature flag status
             await logEvento({
                 level: 'INFO',
                 source: 'INGEST_SERVICE',
-                action: 'FETCH_START',
-                message: `Fetching file from Cloudinary using signed URL...`,
+                action: 'PIPELINE_VERSION',
+                message: `Ingest pipeline v2 enabled: ${isV2Enabled}`,
                 correlationId,
-                tenantId: asset.tenantId
+                tenantId: asset.tenantId,
+                details: { isV2Enabled, hasBlobId: !!asset.blobId, hasCloudinaryUrl: !!asset.cloudinaryUrl }
             });
 
-            const response = await fetch(signedUrl);
-            if (!response.ok) {
-                throw new Error(`Cloudinary fetch failed: [${response.status} ${response.statusText}] for URL: ${asset.cloudinaryUrl}`);
+            if (isV2Enabled && asset.blobId) {
+                // Phase 131: Try to fetch from GridFS first
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_SERVICE',
+                    action: 'BLOB_FETCH_START',
+                    message: `Fetching file from GridFS blob: ${asset.blobId}`,
+                    correlationId,
+                    tenantId: asset.tenantId
+                });
+
+                try {
+                    buffer = await GridFSUtils.getForProcessing(asset.blobId, correlationId);
+                    await logEvento({
+                        level: 'INFO',
+                        source: 'INGEST_SERVICE',
+                        action: 'BLOB_FETCH_SUCCESS',
+                        message: `File fetched from GridFS (${buffer.length} bytes).`,
+                        correlationId,
+                        tenantId: asset.tenantId
+                    });
+                } catch (blobError) {
+                    await logEvento({
+                        level: 'WARN',
+                        source: 'INGEST_SERVICE',
+                        action: 'BLOB_FETCH_FAILED',
+                        message: `GridFS blob not found, falling back to Cloudinary: ${asset.blobId}`,
+                        correlationId,
+                        tenantId: asset.tenantId,
+                        details: { blobError: (blobError as Error).message }
+                    });
+                    // Fallback to Cloudinary
+                    buffer = await this.fetchFromCloudinary(asset, correlationId);
+                }
+            } else {
+                // Legacy: Fetch from Cloudinary directly
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_SERVICE',
+                    action: 'CLOUDFINARY_FETCH_START',
+                    message: `No blobId found, fetching from Cloudinary (legacy path)`,
+                    correlationId,
+                    tenantId: asset.tenantId
+                });
+                buffer = await this.fetchFromCloudinary(asset, correlationId);
             }
-            const buffer = Buffer.from(await response.arrayBuffer());
-
-            await logEvento({
-                level: 'INFO',
-                source: 'INGEST_SERVICE',
-                action: 'FETCH_SUCCESS',
-                message: `File fetched successfully (${buffer.length} bytes).`,
-                correlationId,
-                tenantId: asset.tenantId
-            });
 
             await updateProgress(15);
 
@@ -172,7 +207,8 @@ export class IngestService {
                 analysis.detectedLang,
                 correlationId,
                 workerSession,
-                updateProgress
+                updateProgress,
+                asset.chunkingLevel // Phase 134
             );
             await logEvento({
                 level: 'INFO',
@@ -228,6 +264,71 @@ export class IngestService {
                 details: { source: 'ASYNC_WORKER', chunks: successCount, duration_ms: Date.now() - start }
             }));
 
+            // Phase 131: Mark chunks as created
+            await knowledgeAssetsCollection.updateOne(
+                { _id: assetId },
+                {
+                    $set: {
+                        hasChunks: true,
+                        indexingError: null,
+                        updatedAt: new Date()
+                    }
+                }
+            );
+
+            // Phase 131: Upload to Cloudinary (non-blocking, after chunks) - Only if v2 enabled
+            if (isV2Enabled) {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_SERVICE',
+                    action: 'CLOUDFINARY_ASYNC_START',
+                    message: `Starting async upload to Cloudinary (v2 pipeline)`,
+                    correlationId,
+                    tenantId: asset.tenantId
+                });
+
+                this.uploadToCloudinaryAsync(buffer, asset, correlationId).then(async (cloudinaryResult) => {
+                    if (cloudinaryResult.success) {
+                        await knowledgeAssetsCollection.updateOne(
+                            { _id: assetId },
+                            {
+                                $set: {
+                                    hasStorage: true,
+                                    cloudinaryUrl: cloudinaryResult.url,
+                                    cloudinaryPublicId: cloudinaryResult.publicId,
+                                    storageError: null,
+                                    updatedAt: new Date()
+                                }
+                            }
+                        );
+                    }
+                }).catch(async (uploadError) => {
+                    await logEvento({
+                        level: 'WARN',
+                        source: 'INGEST_SERVICE',
+                        action: 'CLOUDFINARY_UPLOAD_FAILED',
+                        message: `Failed to upload to Cloudinary after indexing: ${uploadError}`,
+                        correlationId,
+                        tenantId: asset.tenantId
+                    });
+                    await knowledgeAssetsCollection.updateOne(
+                        { _id: assetId },
+                        {
+                            $set: {
+                                storageError: (uploadError as Error).message,
+                                updatedAt: new Date()
+                            }
+                        }
+                    );
+                });
+            } else {
+                // Legacy mode
+                await knowledgeAssetsCollection.updateOne(
+                    { _id: assetId },
+                    { $set: { hasStorage: true, hasChunks: true, updatedAt: new Date() } }
+                );
+            }
+
             return { success: true, correlationId, message: "Processed successfully", chunks: successCount };
 
         } catch (error: any) {
@@ -237,6 +338,107 @@ export class IngestService {
                 { $set: { ingestionStatus: 'FAILED', error: error.message, updatedAt: new Date() } }
             );
             throw error;
+        }
+    }
+
+    // ============================================================================
+    // Phase 131: Helper Methods for Cloudinary Decoupling
+    // ============================================================================
+
+    /**
+     * Fetch file buffer from Cloudinary (legacy fallback)
+     */
+    private static async fetchFromCloudinary(
+        asset: any,
+        correlationId: string
+    ): Promise<Buffer> {
+        if (!asset.cloudinaryUrl) {
+            throw new AppError('EXTERNAL_SERVICE_ERROR', 503, `Missing Cloudinary URL for asset. Record may be corrupted.`);
+        }
+
+        const signedUrl = getSignedUrl(asset.cloudinaryPublicId || asset.cloudinary_public_id, 'raw');
+
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_SERVICE',
+            action: 'CLOUDFINARY_FETCH_START',
+            message: `Fetching file from Cloudinary using signed URL...`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
+
+        const response = await fetch(signedUrl);
+        if (!response.ok) {
+            throw new Error(`Cloudinary fetch failed: [${response.status} ${response.statusText}] for URL: ${asset.cloudinaryUrl}`);
+        }
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        await logEvento({
+            level: 'INFO',
+            source: 'INGEST_SERVICE',
+            action: 'CLOUDFINARY_FETCH_SUCCESS',
+            message: `File fetched from Cloudinary (${buffer.length} bytes).`,
+            correlationId,
+            tenantId: asset.tenantId
+        });
+
+        return buffer;
+    }
+
+    /**
+     * Upload buffer to Cloudinary (non-blocking, after chunks created)
+     * Phase 131: Called after indexing to avoid blocking chunk creation
+     */
+    private static async uploadToCloudinaryAsync(
+        buffer: Buffer,
+        asset: any,
+        correlationId: string
+    ): Promise<{ success: boolean; url?: string; publicId?: string; error?: string }> {
+        try {
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'CLOUDFINARY_UPLOAD_START',
+                message: `Uploading file to Cloudinary (non-blocking)...`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+
+            const result = await uploadPDFToCloudinary(
+                buffer,
+                asset.filename,
+                asset.tenantId
+            );
+
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_SERVICE',
+                action: 'CLOUDFINARY_UPLOAD_SUCCESS',
+                message: `File uploaded to Cloudinary: ${result.publicId}`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+
+            return {
+                success: true,
+                url: result.secureUrl,
+                publicId: result.publicId
+            };
+        } catch (error) {
+            const err = error as Error;
+            await logEvento({
+                level: 'ERROR',
+                source: 'INGEST_SERVICE',
+                action: 'CLOUDFINARY_UPLOAD_ERROR',
+                message: `Failed to upload to Cloudinary: ${err.message}`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+
+            return {
+                success: false,
+                error: err.message
+            };
         }
     }
 

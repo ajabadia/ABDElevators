@@ -45,7 +45,7 @@ export class CollectionService {
         const collection = await getTenantCollection<UserCollection>(this.COLLECTION, session);
 
         // SecureCollection handles filter by tenantId and ownerUserId if session is present
-        return await collection.find({ ownerUserId: userId }).toArray();
+        return await collection.find({ ownerUserId: userId });
     }
 
     /**
@@ -76,9 +76,9 @@ export class CollectionService {
     static async deleteCollection(collectionId: string, userId: string, session?: any) {
         const collection = await getTenantCollection<UserCollection>(this.COLLECTION, session);
 
-        const result = await collection.deleteOne({ _id: new ObjectId(collectionId), ownerUserId: userId });
+        const result = await collection.deleteOne({ _id: new ObjectId(collectionId), ownerUserId: userId }) as any;
 
-        if (result.deletedCount === 0) {
+        if (result.matchedCount === 0 && result.deletedCount === 0) {
             throw new AppError('NOT_FOUND', 404, 'Collection not found or access denied');
         }
 

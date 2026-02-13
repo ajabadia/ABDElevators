@@ -19,58 +19,10 @@ import { StorageTab } from "@/components/admin/organizations/StorageTab";
 import { FeaturesTab } from "@/components/admin/organizations/FeaturesTab";
 import { BillingTab } from "@/components/admin/organizations/BillingTab";
 import { SecurityCenterCard } from "@/components/admin/organizations/SecurityCenterCard";
+import { ReportConfigTab } from "@/components/admin/organizations/ReportConfigTab";
+import { TenantConfig } from "@/lib/schemas";
 
-export interface TenantConfig {
-    tenantId: string;
-    name: string;
-    industry: 'ELEVATORS' | 'LEGAL' | 'MEDICAL' | 'GENERIC';
-    storage: {
-        provider: 'cloudinary' | 'google_drive' | 's3';
-        settings: {
-            folder_prefix?: string;
-            bucket_name?: string;
-            region?: string;
-        };
-        quota_bytes: number;
-    };
-    branding?: {
-        logo?: { url?: string; publicId?: string };
-        favicon?: { url?: string; publicId?: string };
-        colors?: {
-            primary?: string;
-            secondary?: string;
-            accent?: string;
-            primaryDark?: string;
-            accentDark?: string;
-        };
-        autoDarkMode?: boolean;
-        companyName?: string;
-    };
-    billing?: {
-        fiscalName?: string;
-        taxId?: string;
-        shippingAddress?: {
-            line1?: string;
-            city?: string;
-            postalCode?: string;
-            country?: string;
-        };
-        billingAddress?: {
-            differentFromShipping: boolean;
-            line1?: string;
-            city?: string;
-            postalCode?: string;
-            country?: string;
-        };
-        recepcion?: {
-            canal: 'EMAIL' | 'POSTAL' | 'IN_APP' | 'XML_EDI';
-            modo: 'PDF' | 'XML' | 'EDI' | 'CSV' | 'PAPER';
-            email?: string;
-        };
-    };
-}
-
-export default function TenantsPage() {
+export default function OrganizationsPage() {
     const { toast } = useToast();
     const [config, setConfig] = useState<TenantConfig | null>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -202,6 +154,12 @@ export default function TenantsPage() {
                         >
                             <CreditCard size={16} className="mr-2" /> Facturación
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="reports"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                        >
+                            Reportes
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="p-8 space-y-8">
@@ -222,6 +180,10 @@ export default function TenantsPage() {
 
                     <TabsContent value="billing" className="p-8 space-y-12">
                         <BillingTab config={config} setConfig={setConfig} usageStats={usageStats} />
+                    </TabsContent>
+
+                    <TabsContent value="reports" className="p-8 space-y-8">
+                        <ReportConfigTab config={config} setConfig={setConfig} />
                     </TabsContent>
                 </Tabs>
             </ContentCard>

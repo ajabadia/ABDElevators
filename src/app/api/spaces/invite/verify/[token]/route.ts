@@ -6,10 +6,10 @@ import { logEvento } from '@/lib/logger';
 
 export async function GET(
     req: Request,
-    { params }: { params: { token: string } }
+    { params }: { params: Promise<{ token: string }> }
 ) {
     const correlationId = generateUUID();
-    const { token } = params;
+    const { token } = await params;
 
     try {
         const invitation = await SpaceInvitationService.validateToken(token);

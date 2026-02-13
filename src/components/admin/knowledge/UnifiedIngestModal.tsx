@@ -101,10 +101,11 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         }
     }, [toast]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
         onDrop,
         accept: { "application/pdf": [".pdf"] },
         multiple: false,
+        maxSize: 250 * 1024 * 1024, // 250MB
     });
 
     const handleUpload = async () => {
@@ -237,6 +238,14 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                     </div>
                                 )}
                             </div>
+
+                            {/* File too large error */}
+                            {fileRejections.length > 0 && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                                    <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
+                                    <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.'}</p>
+                                </div>
+                            )}
 
                             {/* Base Metadata */}
                             <div className="grid grid-cols-2 gap-4">

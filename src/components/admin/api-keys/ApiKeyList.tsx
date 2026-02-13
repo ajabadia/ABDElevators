@@ -16,6 +16,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
     const { toast } = useToast();
     const t = useTranslations('admin.api_keys');
     const format = useFormatter();
+    const now = new Date();
 
     if (keys.length === 0) {
         return (
@@ -81,13 +82,13 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                         <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {t('created', {
-                                distance: format.relativeTime(new Date(key.createdAt))
+                                distance: format.relativeTime(new Date(key.createdAt), now)
                             })}
                         </div>
                         {key.lastUsedAt && (
                             <div className="text-teal-400">
                                 {t('last_used', {
-                                    distance: format.relativeTime(new Date(key.lastUsedAt))
+                                    distance: format.relativeTime(new Date(key.lastUsedAt), now)
                                 })}
                             </div>
                         )}

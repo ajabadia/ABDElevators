@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { auth } from '@/lib/auth';
 import { SpaceInvitationService } from '@/services/space-invitation-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         const { token } = AcceptSchema.parse(body);
 
         const invitation = await SpaceInvitationService.validateToken(token);
-        await SpaceInvitationService.acceptInvitation(token);
+        await SpaceInvitationService.acceptInvitation(token, session.user.id);
 
         // TODO: Logic to actually grant access (e.g., adding user to a collaborators array in Space document or similar)
         // For now, we just mark the invitation as accepted.

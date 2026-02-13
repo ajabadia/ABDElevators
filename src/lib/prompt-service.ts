@@ -232,6 +232,23 @@ export class PromptService {
             }
         );
 
+        // Auditoría Unificada (Phase 132.3)
+        const { AuditTrailService } = await import('./services/audit-trail-service');
+        await AuditTrailService.logConfigChange({
+            actorType: 'USER',
+            actorId: changedBy,
+            tenantId: prompt.tenantId,
+            action: 'UPDATE_PROMPT',
+            entityType: 'PROMPT',
+            entityId: promptId,
+            changes: {
+                before: { version: prompt.version, template: prompt.template },
+                after: { version: prompt.version + 1, template: updates.template }
+            },
+            reason: changeReason,
+            correlationId: auditMetadata?.correlationId || promptId
+        } as any);
+
         await logEvento({
             level: 'INFO',
             source: 'PROMPT_SERVICE',

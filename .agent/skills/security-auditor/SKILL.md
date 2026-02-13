@@ -55,3 +55,4 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
 - **FAIL-CLOSED**: Si no se puede verificar la seguridad de un flujo, se considera vulnerable por defecto.
 - **ZOD-FIRST**: La ausencia de validación formal es un fallo de gravedad "MEDIA/ALTA".
 - **ENCRYPTION-BY-DEFAULT**: Datos de identidad o financieros deben estar cifrados en DB.
+- **AUDIT-SECURITY-EVENTS**: Intentos de acceso no autorizados, bloqueos de MFA o violaciones de integridad detectadas DEBEN registrarse vía `AuditTrailService.record(...)` con source `SECURITY_EVENT`.

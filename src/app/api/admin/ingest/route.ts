@@ -44,11 +44,30 @@ export async function POST(req: NextRequest) {
             scope: (formData.get('scope') as string) || 'TENANT',
             industry: (formData.get('industry') as string) || 'ELEVATORS',
             ownerUserId: (formData.get('ownerUserId') as string) || undefined,
+            chunkingLevel: (formData.get('chunkingLevel') as string) || 'bajo',
         };
 
         // Rule #2: Zod First
         if (!file) {
             throw new ValidationError('No file provided');
+        }
+
+        // Phase 131.6: Early size validation
+        const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
+        const fileSize = file.size || 0;
+        if (fileSize > MAX_FILE_SIZE) {
+            throw new ValidationError(`File too large. Max size is 250MB. Received: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
+        }
+
+        if (fileSize > 100 * 1024 * 1024) {
+            await logEvento({
+                level: 'WARN',
+                source: 'API_INGEST',
+                action: 'LARGE_FILE_UPLOAD',
+                message: `Large file upload: ${file.name} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`,
+                correlationId,
+                tenantId: session.user.tenantId
+            });
         }
 
         const LocalIngestMetadataSchema = z.object({
@@ -58,6 +77,7 @@ export async function POST(req: NextRequest) {
             scope: z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT'),
             industry: z.string().default('ELEVATORS'),
             ownerUserId: z.string().optional().nullable().transform(v => v === "" ? undefined : v ?? undefined),
+            chunkingLevel: z.enum(['bajo', 'medio', 'alto']).default('bajo'),
         });
         const metadata = LocalIngestMetadataSchema.parse(metadataRaw);
 

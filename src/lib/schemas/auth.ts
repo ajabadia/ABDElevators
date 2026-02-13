@@ -21,6 +21,19 @@ export const UserInviteSchema = z.object({
 });
 export type UserInvite = z.infer<typeof UserInviteSchema>;
 
+export const CreateUserSchema = z.object({
+    email: z.string().email('Email inválido'),
+    firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+    lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+    role: z.nativeEnum(UserRole),
+    jobTitle: z.string().optional(),
+    activeModules: z.array(z.string()).optional(),
+    tenantId: z.string().optional(),
+    industry: IndustryTypeSchema.optional(),
+});
+
+export const AdminUpdateUserSchema = CreateUserSchema.partial();
+
 export const AcceptInviteSchema = z.object({
     token: z.string(),
     password: z.string().min(8),
@@ -37,6 +50,7 @@ export const BulkInviteItemSchema = z.object({
 
 export const BulkInviteRequestSchema = z.object({
     invitations: z.array(BulkInviteItemSchema).min(1, 'Se requiere al menos una invitación'),
+    expiresInDays: z.number().int().min(1).max(30).default(7),
 });
 export type BulkInviteItem = z.infer<typeof BulkInviteItemSchema>;
 export type BulkInviteRequest = z.infer<typeof BulkInviteRequestSchema>;
@@ -226,6 +240,13 @@ export const TenantConfigSchema = z.object({
         }).optional(),
         autoDarkMode: z.boolean().default(true),
         companyName: z.string().optional(),
+    }).optional(),
+    reportConfig: z.object({
+        disclaimer: z.string().optional(),
+        signatureText: z.string().optional(),
+        includeSources: z.boolean().default(true),
+        contactInfo: z.string().optional(),
+        footerText: z.string().optional(),
     }).optional(),
     active: z.boolean().default(true),
     billing: z.object({

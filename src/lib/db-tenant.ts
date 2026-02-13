@@ -290,6 +290,9 @@ export async function getTenantCollection<T extends Document>(
         collectionName === 'application_logs' ||
         collectionName === 'usage_logs' ||
         collectionName === 'audit_trails' ||
+        collectionName === 'audit_config_changes' ||
+        collectionName === 'audit_admin_ops' ||
+        collectionName === 'audit_data_access' ||
         collectionName === 'notification_templates' ||
         collectionName === 'notifications' ||
         collectionName === 'notification_configs'

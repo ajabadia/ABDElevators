@@ -11,6 +11,9 @@ import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { useTranslations } from "next-intl";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InvitationsTable } from "@/components/admin/InvitationsTable";
+import { Users, UserPlus } from "lucide-react";
 
 // Nuevos componentes y hooks genéricos
 import { useApiList } from "@/hooks/useApiList";
@@ -154,24 +157,53 @@ export default function UsuariosPage() {
                 )}
             />
 
-            <ContentCard noPadding={true}>
-                <CardHeader className="border-b border-slate-100 dark:border-slate-800">
-                    <CardTitle>{t("registered_title")}</CardTitle>
-                    <CardDescription>
-                        {isSuperAdmin
-                            ? t("registered_desc_global", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })
-                            : t("registered_desc", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <DataTable
-                        data={users || []}
-                        columns={columns}
-                        isLoading={isLoading}
-                        emptyMessage={t("empty_message")}
-                    />
-                </CardContent>
-            </ContentCard>
+            <Tabs defaultValue="active" className="w-full">
+                <div className="flex items-center justify-between mb-4">
+                    <TabsList className="bg-slate-100 p-1 rounded-lg">
+                        <TabsTrigger value="active" className="flex items-center gap-2 px-6">
+                            <Users className="w-4 h-4" />
+                            {t("tabs.active")}
+                        </TabsTrigger>
+                        <TabsTrigger value="pending" className="flex items-center gap-2 px-6">
+                            <UserPlus className="w-4 h-4" />
+                            {t("tabs.pending")}
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="active">
+                    <ContentCard noPadding={true}>
+                        <CardHeader className="border-b border-slate-100 dark:border-slate-800">
+                            <CardTitle>{t("registered_title")}</CardTitle>
+                            <CardDescription>
+                                {isSuperAdmin
+                                    ? t("registered_desc_global", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })
+                                    : t("registered_desc", { count: users?.length || 0, suffix: (users?.length || 0) !== 1 ? 's' : '' })}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <DataTable
+                                data={users || []}
+                                columns={columns}
+                                isLoading={isLoading}
+                                emptyMessage={t("empty_message")}
+                            />
+                        </CardContent>
+                    </ContentCard>
+                </TabsContent>
+
+                <TabsContent value="pending">
+                    <ContentCard noPadding={true}>
+                        <CardHeader className="border-b border-slate-100 dark:border-slate-800">
+                            <CardTitle>{t("invitations.title")}</CardTitle>
+                            <CardDescription>{t("invitations.desc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <InvitationsTable />
+                        </CardContent>
+                    </ContentCard>
+                </TabsContent>
+            </Tabs>
 
             {/* CREACIÓN DINÁMICA (System Engine) */}
             <DynamicFormModal

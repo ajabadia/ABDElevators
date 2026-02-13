@@ -93,7 +93,10 @@ export async function POST(
             maxTokens: 2000
         });
 
-        // 6. Generate Server PDF (Vision 2.0 - Phase 6.6.1)
+        // 6. Get Tenant Config for Branding & Templates (Phase 64)
+        const tenant = await db.collection('tenants').findOne({ tenantId });
+
+        // 7. Generate Server PDF (Vision 2.0 - Phase 6.6.1)
         const locale = req.headers.get('accept-language')?.split(',')[0].split('-')[0] || 'es';
 
         const pdfBuffer = await generateServerPDF({
@@ -103,7 +106,9 @@ export async function POST(
             tenantId,
             date: new Date(),
             technician: session.user.name || 'Sistema',
-            locale
+            locale,
+            branding: tenant?.branding as any,
+            reportConfig: tenant?.reportConfig as any
         });
 
         // 7. Upload to Cloudinary

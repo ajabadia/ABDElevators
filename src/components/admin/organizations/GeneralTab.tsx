@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Info } from "lucide-react";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 
 interface GeneralTabProps {
     config: TenantConfig | null;

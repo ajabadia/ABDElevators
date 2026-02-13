@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Receipt, Mail, MapPin, Building, Shield, Info, CreditCard, Check, AlertTriangle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
 import { Progress } from "@/components/ui/progress";
 import { PLANS, PlanTier } from '@/lib/plans';
 import { useToast } from "@/hooks/use-toast";

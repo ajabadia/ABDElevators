@@ -104,8 +104,11 @@ try {
   - `source`: identificador del módulo (ej. `API_USER_DOCS`, `API_KEYS`)
   - `action`: verbo claro (CREATE, UPDATE, DELETE, CALL_ERROR, PERFORMANCE_SLA_VIOLATION)
   - `details`: IDs de recursos, tenantId, tamaños, parámetros clave
-- [ ] Para cambios de configuración/seguridad, añade `AuditService.record(...)`
-- [ ] Incluye `correlationId` generado con `crypto.randomUUID()` o `AuditService.generateCorrelationId()`
+- [ ] Para cambios de configuración, seguridad o administración, usa `AuditTrailService` (`src/lib/services/audit-trail-service`):
+  - `logConfigChange`: Para cambios en settings, planes, o governance.
+  - `logAdminOp`: Para operaciones manuales, scripts de mantenimiento o seeds.
+  - `logDataAccess`: Para acceso a datos sensibles (PII, Reports).
+- [ ] Incluye `actorType` ('USER' | 'IA' | 'SYSTEM'), `actorId`, `reason` (obligatorio en cambios críticos) y `correlationId`.
 
 ### ✅ Observabilidad y Uso
 - [ ] Para operaciones RAG/LLM/vector search:
@@ -150,8 +153,9 @@ try {
 
 ### ✅ Audit Trail
 - [ ] Para cambios de estado importantes (FSM de ingesta, casos, relaciones):
-  - Genera `correlationId` con `AuditService.generateCorrelationId()`
-  - Registra `AuditService.record` en cada cambio relevante
+  - Genera `correlationId` con `crypto.randomUUID()`
+  - Registra `AuditTrailService.record` o método específico en cada cambio relevante
+  - Asegura que se captura el estado previo (`before`) y posterior (`after`) para auditorías de diferencia.
 
 ### ✅ Errores
 - [ ] Usa clases de error del dominio (`ExternalServiceError`, `NotFoundError`, etc.)
@@ -245,8 +249,9 @@ const t = await getTranslations('knowledgeAssets');
 - [ ] Incluye **siempre** `tenantId` cuando tenga sentido multi-tenant
 
 ### ✅ Audit Trail
-- [ ] Para cambios de configuración (tipos de documentos, taxonomías, permisos, relaciones):
-  - Registra entrada en `audit_trail` vía `AuditService.record`
+- [ ] Para cambios de configuración (tipos de documentos, taxonomías, permisos, relaciones, configuraciones de tenant):
+  - Registra entrada en el trail de auditoría unificado vía `AuditTrailService.logConfigChange`.
+  - Especifica el `reason` del cambio si la interfaz lo permite o es una acción de administración.
 
 ### ✅ Métricas de Uso
 - [ ] Para nuevas capacidades de RAG/LLM:

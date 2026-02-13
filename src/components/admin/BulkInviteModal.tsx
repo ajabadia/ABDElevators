@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
     Loader2, Mail, Upload, FileType, CheckCircle2,
     AlertCircle, X, Download, HelpCircle, ChevronDown,
-    ChevronUp, Info, ExternalLink
+    ChevronUp, Info, ExternalLink, Clock
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import * as Papa from "papaparse";
@@ -44,6 +44,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
     const [invites, setInvites] = useState<ParsedInvite[]>([]);
     const [isParsing, setIsParsing] = useState(false);
     const [showInstructions, setShowInstructions] = useState(false);
+    const [expiresInDays, setExpiresInDays] = useState(7);
 
     const sampleData = [
         { email: "ingeniero@empresa.com", role: UserRole.ENGINEERING },
@@ -176,7 +177,10 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
             return;
         }
 
-        bulkInvite({ invitations: validInvites });
+        bulkInvite({
+            invitations: validInvites,
+            expiresInDays
+        });
     };
 
     const handleClose = () => {
@@ -224,15 +228,29 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
                             <Download className="h-3 w-3 mr-1" /> Excel
                         </Button>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowInstructions(!showInstructions)}
-                        className={`h-8 text-xs ${showInstructions ? 'text-teal-600 bg-teal-50' : 'text-slate-500'}`}
-                    >
-                        <HelpCircle className="h-3 w-3 mr-1" />
-                        {showInstructions ? t("hide_help") : t("instructions")}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 border-r pr-4 border-slate-200">
+                            <Clock className="h-3.5 w-3.5 text-slate-500" />
+                            <select
+                                value={expiresInDays}
+                                onChange={(e) => setExpiresInDays(Number(e.target.value))}
+                                className="text-xs bg-transparent border-none focus:ring-0 cursor-pointer font-medium text-slate-700"
+                            >
+                                <option value={1}>1 {tCommon("days.one")}</option>
+                                <option value={7}>7 {tCommon("days.other")}</option>
+                                <option value={30}>30 {tCommon("days.other")}</option>
+                            </select>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowInstructions(!showInstructions)}
+                            className={`h-8 text-xs ${showInstructions ? 'text-teal-600 bg-teal-50' : 'text-slate-500'}`}
+                        >
+                            <HelpCircle className="h-3 w-3 mr-1" />
+                            {showInstructions ? t("hide_help") : t("instructions")}
+                        </Button>
+                    </div>
                 </div>
 
                 {showInstructions && (

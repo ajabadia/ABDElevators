@@ -149,6 +149,19 @@ export const DocumentTypeSchema = z.object({
 });
 export type DocumentType = z.infer<typeof DocumentTypeSchema>;
 
+// Phase 131: Extended Ingestion Status for granular retry
+export const IngestionStatusEnum = z.enum([
+    'PENDING',
+    'QUEUED',
+    'PROCESSING',
+    'COMPLETED',
+    'FAILED',
+    'STORED_NO_INDEX',    // Cloudinary OK, indexing pending
+    'INDEXED_NO_STORAGE', // Chunks OK, Cloudinary upload failed
+    'PARTIAL'             // Both present but inconsistent
+]);
+export type IngestionStatus = z.infer<typeof IngestionStatusEnum>;
+
 export const KnowledgeAssetSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
@@ -160,10 +173,21 @@ export const KnowledgeAssetSchema = z.object({
     revisionDate: z.date(),
     language: z.string().default('es'), // Idioma principal detectado
     status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
-    ingestionStatus: z.enum(['PENDING', 'QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED']).default('PENDING'),
+    ingestionStatus: IngestionStatusEnum.default('PENDING'),
     progress: z.number().min(0).max(100).default(0), // Porcentaje de avance
     attempts: z.number().default(0), // Reintentos realizados
     error: z.string().optional(), // Para registrar errores asíncronos
+
+    // Phase 131: Storage & Indexing Flags
+    hasStorage: z.boolean().default(false),    // Cloudinary upload successful
+    hasChunks: z.boolean().default(false),     // Chunks created successfully
+    storageError: z.string().optional(),       // Error message from Cloudinary upload
+    indexingError: z.string().optional(),       // Error message from indexing
+    blobId: z.string().optional(),              // GridFS blob ID for internal processing
+
+    // Phase 134: Chunking Level
+    chunkingLevel: z.enum(['bajo', 'medio', 'alto']).default('bajo'), // Nivel de chunking seleccionado
+
     cloudinaryUrl: z.string().optional(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
@@ -178,6 +202,7 @@ export const KnowledgeAssetSchema = z.object({
     contextHeader: z.any().optional(), // Metadata de contexto del documento
     spaceId: z.string().optional(), // Reference to the NEW Space entity (Phase 125.2)
     correlationId: z.string().optional(), // Added for tracing
+    environment: AppEnvironmentEnum.optional(), // Added for tracing environment (Phase 131)
 });
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
 

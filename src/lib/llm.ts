@@ -81,6 +81,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
                 action: 'EMBED_ERROR',
                 message: `Fallo en embedding Gemini: ${(error as Error).message}`,
                 correlationId,
+                tenantId,
                 stack: (error as Error).stack
             });
             throw new ExternalServiceError('Error generating embedding with Gemini', error as Error);
@@ -150,6 +151,7 @@ export async function callGeminiMini(
                 action: 'CALL_ERROR',
                 message: `Error en Gemini Mini (${modelName}): ${error.message}`,
                 correlationId,
+                tenantId,
                 stack: error.stack
             });
 
@@ -207,6 +209,16 @@ export async function callGeminiStream(
         } catch (error: any) {
             span.recordException(error);
             console.error(`[AI STREAM ERROR]`, error.message);
+
+            await logEvento({
+                level: 'ERROR',
+                source: 'GEMINI_STREAM',
+                action: 'STREAM_ERROR',
+                message: `Error en streaming Gemini: ${error.message}`,
+                correlationId,
+                tenantId,
+                stack: error.stack
+            });
             throw error;
         } finally {
             span.end();

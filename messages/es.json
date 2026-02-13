@@ -74,7 +74,10 @@
                 "notifications": "Notificaciones",
                 "profile": "Perfil",
                 "settings": "Configuración",
-                "i18n": "Gobernanza i18n"
+                "i18n": "Gobernanza i18n",
+                "knowledgeHub": "Centro de Conocimiento",
+                "aiHub": "Centro de IA",
+                "document_library": "Librería de Documentos"
             },
             "search": {
                 "title": "Asistente Técnico",
@@ -144,6 +147,85 @@
             "next": "Siguiente",
             "page_info": "Página {current} de {total}",
             "total_items": "{total} documentos en total"
+        },
+        "spaces": {
+            "title": "Espacios de Trabajo",
+            "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
+            "tabs": {
+                "quick_qa": "Quick Q&A",
+                "personal": "Mi Espacio",
+                "collections": "Colecciones"
+            },
+            "placeholders": {
+                "personal_title": "Gestión de Documentos Personales",
+                "personal_desc": "Próximamente: Sube y gestiona tus propios archivos PDF.",
+                "collections_title": "Colecciones Inteligentes",
+                "collections_desc": "Próximamente: Organiza documentos en carpetas por proyecto o tema."
+            },
+            "admin": {
+                "title": "Gestión de Espacios",
+                "search_placeholder": "Buscar espacios...",
+                "new_space": "Nuevo Espacio",
+                "manage": "Gestionar",
+                "table": {
+                    "space": "Espacio",
+                    "type": "Tipo",
+                    "visibility": "Visibilidad",
+                    "status": "Estado",
+                    "created": "Creado",
+                    "actions": "Acciones"
+                },
+                "types": {
+                    "global": "Global",
+                    "industry": "Industria",
+                    "tenant": "Tenant",
+                    "team": "Equipo",
+                    "personal": "Personal"
+                },
+                "status": {
+                    "active": "Activo",
+                    "inactive": "Inactivo"
+                }
+            },
+            "quick_qa": {
+                "title": "Quick Q&A",
+                "desc": "Pega texto técnico, notas o especificaciones para consultar sin persistencia.",
+                "snippet_label": "Fragmento de Texto (Snippet)",
+                "snippet_badge": "Efímero",
+                "snippet_placeholder": "Pega aquí el contenido a analizar...",
+                "context_label": "Contexto Adicional (Opcional)",
+                "context_placeholder": "Ej: Instrucciones específicas, versión de software...",
+                "clear_all": "Limpiar Todo",
+                "promote": "Promocionar a Documento",
+                "chat_title": "Chat Efímero",
+                "chat_welcome_title": "Haz una pregunta sobre el texto",
+                "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
+                "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
+                "status_loading": "Consultando información...",
+                "promote_success": "Snippet guardado como Documento persistente",
+                "promote_error": "Error al promocionar",
+                "conn_error": "Error de conexión",
+                "validation_error": "Debes pegar un texto y escribir una pregunta",
+                "ia_error": "Error al consultar a la IA"
+            }
+        },
+        "search": {
+            "title": "Búsqueda Conversacional",
+            "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+            "analyzing": "Analizando...",
+            "sources_label": "Fuentes encontradas:",
+            "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+            "input_placeholder": "Escribe tu pregunta aquí...",
+            "suggested_questions": "Preguntas sugeridas",
+            "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+            "copy": "Copiar respuesta",
+            "regenerate": "Regenerate respuesta",
+            "feedback_positive": "Útil",
+            "feedback_negative": "No útil"
+        },
+        "enterpriseSecurity": {
+            "title": "Seguridad de grado empresarial",
+            "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
         }
     },
     "knowledge_assets": {
@@ -188,7 +270,30 @@
         },
         "retry_success": "Reintento iniciado",
         "retry_desc": "El documento se está procesando nuevamente.",
+        "tabs": {
+            "active": "Usuarios Activos",
+            "pending": "Invitaciones Pendientes"
+        },
+        "invitations": {
+            "title": "Invitaciones Pendientes",
+            "desc": "Gestiona y revoca las invitaciones que aún no han sido aceptadas.",
+            "empty": "No hay invitaciones pendientes",
+            "revoke_confirm": "¿Estás seguro de que deseas revocar la invitación para {email}?",
+            "table": {
+                "email": "Email",
+                "role": "Rol",
+                "status": "Estado",
+                "expiry": "Expira"
+            },
+            "status": {
+                "pending": "Pendiente",
+                "accepted": "Aceptada",
+                "expired": "Expirada",
+                "revoked": "Revocada"
+            }
+        },
         "delete_confirm": "¿Estás seguro de eliminar este documento? Esta acción es irreversible.",
+        "delete_user_confirm": "¿Estás seguro de eliminar a {name}?",
         "spaces": {
             "title": "Espacios de Trabajo",
             "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
@@ -469,7 +574,9 @@
         "contact_title": "¿Preguntas legales?",
         "contact_desc": "Nuestro equipo legal está disponible para aclaraciones.",
         "contact_button": "Contactar Legal",
-        "privacy_button": "Ver Privacy Policy"
+        "privacy_button": "Ver Privacy Policy",
+        "s1_warning": "Si no está de acuerdo con alguna parte de estos términos, no debe utilizar el Servicio.",
+        "s1_intro": "Al acceder y utilizar la Plataforma ABD RAG, usted acepta cumplir y estar sujeto a los siguientes términos y condiciones. Por favor, léalos detenidamente."
     },
     "privacy": {
         "title": "Política de Privacidad",
@@ -558,15 +665,21 @@
         "dropzone": {
             "active": "Suelta el archivo aquí...",
             "idle": "Arrastra un manual PDF aquí o haz clic para seleccionar",
-            "format": "Solo archivos PDF (Max 50MB)",
-            "selected": "Archivo seleccionado"
+            "format": "Solo archivos PDF (Max 250MB)",
+            "selected": "Archivo seleccionado",
+            "max_size": "Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse."
         },
         "fields": {
             "type": "Tipo de Componente",
             "version": "Versión Doc.",
             "scope": "Alcance del Conocimiento",
             "industry": "Industria / Sector",
-            "placeholder": "Seleccionar..."
+            "placeholder": "Seleccionar...",
+            "chunking_label": "Nivel de Chunking",
+            "chunking_low": "Simple (Bajo) - Rápido, bloques fijos",
+            "chunking_medium": "Semántico (Medio) - IA detecta cambios de tema",
+            "chunking_high": "LLM (Alto) - Segmentación inteligente profunda",
+            "chunking_placeholder": "Seleccionar nivel..."
         },
         "pii_label": "Desidentificación de Datos (PII)",
         "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
@@ -671,25 +784,76 @@
         }
     },
     "admin": {
-        "api_docs": {
-            "title": "Portal de Documentación API",
-            "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
-            "card_title": "Especificación de Plataforma RAG ABD",
-            "loading": "Iniciando Portal Técnico...",
-            "error_loading": "No se pudo cargar la definición de la API."
-        },
-        "configurator": {
-            "new_title": "Nueva Configuración",
-            "editor_tab": "Editor",
-            "preview_tab": "Vista Previa",
-            "loading": "Cargando Configuración...",
-            "save_success": "Configuración guardada correctamente",
-            "save_error": "Error al guardar la configuración"
-        },
         "prompts": {
-            "title": "Gobernanza de Prompt Engineering",
-            "subtitle": "Gestiona los prompts maestros para los motores RAG y agentes IA.",
-            "new_prompt": "Nuevo Prompt Maestro",
+            "title": "Gobernanza de Prompts",
+            "subtitle": "Gestiona las directivas maestras y el comportamiento de la IA por industria.",
+            "new_prompt": "Nuevo Prompt",
+            "search_placeholder": "Buscar por clave, nombre o categoría...",
+            "editor_placeholder_title": "Editor de Prompts Maestros",
+            "editor_placeholder_desc": "Selecciona un prompt de la lista o crea uno nuevo para empezar a editar.",
+            "actions": {
+                "history": "Historial Global",
+                "promote": "Promover a PROD",
+                "clear_filters": "Limpiar Filtros",
+                "create_first": "Crear mi primer Prompt",
+                "save": "Guardar Prompt",
+                "saving": "Guardando...",
+                "cancel": "Cancelar",
+                "edit": "Editar",
+                "view": "Ver",
+                "delete": "Eliminar",
+                "rollback": "Restaurar",
+                "simulate": "Simular"
+            },
+            "filters": {
+                "all": "Todos los Prompts",
+                "organization": "Filtrar por Organización",
+                "industry": "Filtrar por Industria"
+            },
+            "messages": {
+                "no_prompts": "No se encontraron prompts con los filtros actuales.",
+                "save_success": "Prompt guardado correctamente",
+                "promote_success": "Promovido con éxito",
+                "promote_desc": "El prompt ha sido copiado al entorno de producción.",
+                "error_saving": "Error al guardar el prompt",
+                "error_loading": "Error al cargar la lista de prompts",
+                "delete_success": "Prompt archivado correctamente.",
+                "create_success": "Nuevo prompt registrado en el sistema."
+            },
+            "info": {
+                "multi_vertical": "Los prompts marcados como 'ELEVATORS' solo afectan a esa industria."
+            },
+            "editor": {
+                "metadata": "Metadatos",
+                "configuration": "Configuración",
+                "simulation": "Simulación",
+                "key": "Clave",
+                "name": "Nombre",
+                "industry": "Industria (Vertical)",
+                "model": "Modelo",
+                "category": "Categoría",
+                "template": "Plantilla",
+                "variables": "Variables del Sistema",
+                "change_reason": "Motivo del cambio",
+                "rollback_confirm": "¿Estás seguro de que deseas restaurar esta versión?",
+                "placeholder": {
+                    "key": "EJ: ANALISIS_TECNICO",
+                    "name": "Nombre descriptivo",
+                    "template": "Escribe aquí la directiva de la IA..."
+                }
+            },
+            "history": {
+                "title": "Audit Log Global",
+                "subtitle": "Seguimiento maestro de cambios en directivas de IA",
+                "search": "Buscar por prompt, clave o motivo...",
+                "no_records": "No se encontraron registros en el historial",
+                "version": "V",
+                "by": "Por",
+                "date": "Fecha",
+                "reason": "Motivo",
+                "system": "Sistema",
+                "records": "admin.prompts.history.records-----"
+            },
             "tabs": {
                 "active": "Prompts Activos",
                 "testing": "Testing / Borradores"
@@ -707,80 +871,20 @@
                 "version": "Versión",
                 "last_modified": "Última Modificación",
                 "status": "Estado Actual"
-            },
-            "messages": {
-                "save_success": "Versión del prompt sincronizada en DB con éxito.",
-                "delete_success": "Prompt archivado correctamente.",
-                "create_success": "Nuevo prompt registrado en el sistema."
-            }
-        },
-        "support": {
-            "title": "Consola de Soporte Industrial",
-            "subtitle": "Gestiona consultas técnicas y derivaciones del sistema.",
-            "stats": {
-                "open": "Tickets Abiertos",
-                "pending": "Esperando Respuesta",
-                "resolved": "Resueltos (30d)"
-            },
-            "status": {
-                "OPEN": "Abierto",
-                "IN_PROGRESS": "En Progreso",
-                "RESOLVED": "Resuelto",
-                "CLOSED": "Cerrado"
-            },
-            "priority": {
-                "LOW": "Baja",
-                "MEDIUM": "Media",
-                "HIGH": "Crítica",
-                "URGENT": "Urgente"
-            },
-            "actions": {
-                "assign": "Asignar a...",
-                "reply": "Responder a Cliente",
-                "resolve": "Marcar como Resuelto",
-                "close": "Cerrar Permanentemente"
-            }
-        },
-        "jobs": {
-            "title": "Reliability Dashboard",
-            "subtitle": "Infraestructura BullMQ & Gestión de Dead Letter Queue (DLQ).",
-            "monitor": "Agent Monitor",
-            "status": {
-                "active": "Activo",
-                "waiting": "En espera",
-                "completed": "Completado",
-                "failed": "Fallido (DLQ)",
-                "delayed": "Retrasado"
-            },
-            "table": {
-                "id": "ID de Trabajo",
-                "type": "Tipo de Proceso",
-                "status": "Estado Actual",
-                "duration": "Tiempo Ejecución",
-                "failed_reason": "Traza de Error"
-            },
-            "actions": {
-                "retry": "Reintento Manual",
-                "delete": "Purgar de la Cola",
-                "details": "Ver Stack Trace"
-            },
-            "messages": {
-                "retry_success": "Reubicación en cola activa exitosa.",
-                "delete_success": "Trabajo purgado del sistema."
             }
         },
         "dashboard": {
-            "title": "Control Global",
             "subtitle": "Visión consolidada de toda la infraestructura.",
             "search": {
                 "title": "Búsqueda",
                 "highlight": "Inteligente",
-                "subtitle": "Accede a la red de activos de conocimiento técnico de tu organización.",
-                "engine_title": "Motor RAG Industrial",
                 "engine_desc": "Nuestro sistema procesa miles de fragmentos de documentación técnica de forma privada para tu organización. Utilizamos Gemini 2.0 para sintetizar respuestas basadas exclusivamente en tus activos, manteniendo la trazabilidad total a la fuente original.",
                 "privacy_title": "Privacidad Garantizada",
+                "subtitle": "Accede a la red de activos de conocimiento técnico de tu organización.",
+                "engine_title": "Motor RAG Industrial",
                 "privacy_desc": "Tus búsquedas y documentos están aislados por Tenant. Ninguna otra organización puede acceder a tus consultas ni a los resultados generados por el motor de IA."
             },
+            "title": "Control Global",
             "tabs": {
                 "overview": "Vista General",
                 "intelligence": "Inteligencia",
@@ -790,17 +894,28 @@
                 "reliability": "Resilience",
                 "security": "Security"
             },
-            "userDashboardTitle": "Dashboard",
-            "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",
-            "warRoomToggle": "Toggle War Room Mode",
-            "liveFeed": "Live Feed",
             "metrics": {
                 "tenants": "Total Tenants",
-                "activeUsers": "Usuarios Activos",
-                "documents": "Documentos",
+                "iaSearches": "IA Searches",
                 "cases": "Pedidos / Casos",
-                "iaSearches": "IA Searches"
+                "activeUsers": "Usuarios Activos",
+                "documents": "Documentos"
             },
+            "timeline": {
+                "title": "Historial del Caso",
+                "loading": "Cargando historial...",
+                "empty": "No hay eventos registrados.",
+                "error": "Error al cargar historial: {message}",
+                "actor": "Actor",
+                "types": {
+                    "IA": "Inteligencia Artificial",
+                    "HUMAN": "Operador Humano",
+                    "SYSTEM": "Sistema",
+                    "INGEST": "Motor de Ingesta"
+                }
+            },
+            "liveFeed": "Live Feed",
+            "warRoomToggle": "Toggle War Room Mode",
             "charts": {
                 "consumptionTitle": "Consumo de IA y Almacenamiento",
                 "labels": {
@@ -809,43 +924,29 @@
                     "searches": "Búsquedas Vectoriales"
                 }
             },
+            "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",
+            "userDashboardTitle": "Dashboard",
+            "plan": {
+                "active": "ACTIVE",
+                "title": "Estado del Plan",
+                "manageBtn": "Gestionar Suscripción",
+                "renewal": "Renovación automática"
+            },
             "distribution": {
                 "title": "Distribución por Sector"
-            },
-            "plan": {
-                "title": "Estado del Plan",
-                "active": "ACTIVE",
-                "renewal": "Renovación automática",
-                "manageBtn": "Gestionar Suscripción"
             },
             "activity": {
                 "title": "Actividad Reciente del Sistema",
                 "empty": "No hay actividad reciente registrada."
             }
         },
-        "spaces": {
-            "title": "Gestión de Espacios",
-            "highlight": "Jerárquica",
-            "subtitle": "Configura la organización de tu base de conocimiento por industrias, equipos y tenants.",
-            "new": "Nuevo Espacio",
-            "search_placeholder": "Buscar espacios...",
-            "types": {
-                "GLOBAL": "Global",
-                "INDUSTRY": "Industria",
-                "TENANT": "Tenant",
-                "TEAM": "Equipo",
-                "PERSONAL": "Personal"
-            },
-            "visibility": {
-                "PUBLIC": "Público",
-                "INTERNAL": "Interno",
-                "PRIVATE": "Privado",
-                "RESTRICTED": "Restringido"
-            },
-            "status": {
-                "active": "Activo",
-                "inactive": "Inactivo"
-            }
+        "configurator": {
+            "loading": "Cargando Configuración...",
+            "save_success": "Configuración guardada correctamente",
+            "save_error": "Error al guardar la configuración",
+            "new_title": "Nueva Configuración",
+            "editor_tab": "Editor",
+            "preview_tab": "Vista Previa"
         },
         "roi": {
             "title": "Retorno de Inversión (ROI)",
@@ -855,15 +956,15 @@
             "time_saved": "Tiempo Ahorrado",
             "time_saved_desc": "Horas totales liberadas de tareas de búsqueda manual.",
             "compliance": "Cumplimiento EN 81-20",
-            "compliance_desc": "Pedidos que cumplen 100% con la normativa vigente.",
-            "accuracy": "Precisión de la IA",
             "accuracy_desc": "Fidelidad de las extracciones frente a revisiones manuales.",
             "hours": "horas",
             "cost_savings": "Equivalente en Coste Operativo",
             "cost_basis": "*Basado en un coste promedio de $50/hora por técnico e ingeniero.",
-            "breakdown": "Desglose",
-            "ai_analysis": "Análisis IA",
+            "accuracy": "Precisión de la IA",
             "docs": "docs",
+            "ai_analysis": "Análisis IA",
+            "breakdown": "Desglose",
+            "compliance_desc": "Pedidos que cumplen 100% con la normativa vigente.",
             "searches": "Búsquedas",
             "ops": "ops",
             "dedup": "Smart Dedup",
@@ -876,13 +977,13 @@
             "title": "Automation Studio",
             "subtitle": "Orquestación de acciones autónomas basadas en IA y Grafos.",
             "loading": "Automation Studio cargando...",
+            "empty_desc": "Crea tu primer flujo para que el sistema empiece a gestionar alertas y actualizaciones de forma autónoma.",
             "new_flow": "Nuevo Flujo Autónomo",
             "empty_title": "No hay automatizaciones activas",
-            "empty_desc": "Crea tu primer flujo para que el sistema empiece a gestionar alertas y actualizaciones de forma autónoma.",
             "create_example": "Crear Workflow de Ejemplo",
+            "id": "ID",
             "status_active": "ACTIVO",
             "status_paused": "PAUSADO",
-            "id": "ID",
             "trigger": "Disparador",
             "when_detects": "Cuando el sistema detecta",
             "where": "donde",
@@ -941,63 +1042,69 @@
             "tabs": {
                 "metrics": "Métricas de Uso",
                 "billing": "Facturas y Pagos"
-            }
-        },
-        "metrics": {
-            "reports": {
-                "label": "Informes / Pedidos",
-                "desc": "Informes generados"
             },
-            "tokens": {
-                "label": "IA Generativa",
-                "desc": "Tokens Gemini consumidos"
+            "metrics": {
+                "reports": {
+                    "label": "Informes / Pedidos",
+                    "desc": "Informes generados"
+                },
+                "tokens": {
+                    "label": "IA Generativa",
+                    "desc": "Tokens Gemini consumidos"
+                },
+                "storage": {
+                    "label": "Almacenamiento",
+                    "desc": "Espacio en Cloudinary"
+                },
+                "search": {
+                    "label": "RAG Search",
+                    "desc": "Búsquedas vectoriales"
+                }
             },
-            "storage": {
-                "label": "Almacenamiento",
-                "desc": "Espacio en Cloudinary"
+            "savings": {
+                "title": "Ahorro Inteligente por Deduplicación",
+                "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
+                "tokens": "Tokens Ahorrados",
+                "efficiency": "Eficiencia de Ingesta"
             },
-            "search": {
-                "label": "RAG Search",
-                "desc": "Búsquedas vectoriales"
-            }
-        },
-        "savings": {
-            "title": "Ahorro Inteligente por Deduplicación",
-            "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
-            "tokens": "Tokens Ahorrados",
-            "efficiency": "Eficiencia de Ingesta"
-        },
-        "multilingual": {
-            "title": "Búsquedas Multilingües",
-            "label": "Vectores Latentes (Shadow)"
-        },
-        "charts": {
-            "tokens_title": "Tendencia de Consumo AI",
-            "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
-        },
-        "billing": {
-            "title": "Datos de Facturación",
-            "desc": "Configura los datos fiscales para tus facturas.",
-            "fields": {
-                "fiscal_name": "Razón Social",
-                "tax_id": "CIF/NIF",
-                "address": "Dirección"
+            "multilingual": {
+                "title": "Búsquedas Multilingües",
+                "label": "Vectores Latentes (Shadow)"
             },
-            "not_configured": "No configurado",
-            "edit": "Editar Datos",
-            "dialog": {
-                "title": "Editar Datos Fiscales",
-                "desc": "Estos datos aparecerán en tu próxima factura.",
-                "fiscal_name_label": "Razón Social (Empresa)",
-                "tax_id_label": "CIF / VAT ID",
-                "address_label": "Dirección Fiscal",
-                "saving": "Guardando...",
-                "save": "Guardar Cambios"
+            "activity": {
+                "title": "Registro de Actividad",
+                "limit": "Últimos 20 eventos",
+                "table": {
+                    "date": "Fecha",
+                    "type": "Tipo",
+                    "resource": "Recurso",
+                    "amount": "Cantidad"
+                }
+            },
+            "billing": {
+                "title": "Datos de Facturación",
+                "fields": {
+                    "fiscal_name": "Razón Social",
+                    "address": "Dirección",
+                    "tax_id": "CIF/NIF"
+                },
+                "desc": "Configura los datos fiscales para tus facturas.",
+                "not_configured": "No configurado",
+                "edit": "Editar Datos",
+                "dialog": {
+                    "title": "Editar Datos Fiscales",
+                    "desc": "Estos datos aparecerán en tu próxima factura.",
+                    "fiscal_name_label": "Razón Social (Empresa)",
+                    "tax_id_label": "CIF / VAT ID",
+                    "address_label": "Dirección Fiscal",
+                    "saving": "Guardando...",
+                    "save": "Guardar Cambios"
+                }
             },
             "invoice": {
                 "title": "Próxima Factura",
-                "closing": "Cierre estimado: {date}",
                 "tier_estimate": "Estimación Pro Tier",
+                "closing": "Cierre estimado: {date}",
                 "download_preview": "Descargar Preview PDF",
                 "generating": "Generando PDF...",
                 "success": "Factura Descargada",
@@ -1014,28 +1121,24 @@
             "format": {
                 "zero_bytes": "0 Bytes"
             },
+            "charts": {
+                "tokens_title": "Tendencia de Consumo AI",
+                "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
+            },
             "contracts": {
                 "title": "Gestión de Contratos ('Casos')",
                 "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
-                "metadata": {
-                    "title": "Gestión de Contratos y Casos | Admin",
-                    "description": "Administración de planes, límites y overrides por tenant con control de cuotas industrial."
-                },
                 "table": {
-                    "tenant": "Organización",
+                    "tenant": "Tenant",
                     "plan": "Plan Base",
-                    "override": "Personalización",
+                    "override": "Override",
                     "usage": "Uso (Tokens / Storage)",
                     "mrr": "MRR (Est.)",
                     "status": "Estado",
                     "actions": "Acciones",
                     "loading": "Cargando contratos...",
                     "empty": "No se encontraron resultados",
-                    "search_placeholder": "Buscar tenant...",
-                    "loading_error": "Error al cargar contratos",
-                    "unlimited": "∞",
-                    "custom_badge": "Personalizado",
-                    "open_menu": "Abrir menú de acciones"
+                    "search_placeholder": "Buscar tenant..."
                 },
                 "status": {
                     "active": "ACTIVO",
@@ -1043,38 +1146,25 @@
                     "blocked": "BLOQUEADO"
                 },
                 "actions": {
-                    "edit": "Editar Contrato / Límites",
-                    "invoices": "Ver Facturas",
-                    "upcoming_title": "Próximamente",
-                    "upcoming_desc": "Historial de facturas en fase de desarrollo."
+                    "edit": "Editar Contrato",
+                    "invoices": "Ver Facturas"
                 },
                 "edit": {
-                    "title": "Editar Configuración de Contrato",
-                    "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
-                    "plan_label": "Plan de Suscripción",
-                    "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
-                    "plans": {
-                        "free": "Prueba Gratuita",
-                        "basic": "Básico Business",
-                        "pro": "Profesional",
-                        "enterprise": "Corporativo"
-                    },
-                    "overrides_title": "Límites Personalizados (Overrides)",
-                    "tokens_label": "Límite de Tokens (Mes)",
-                    "tokens_desc": "0 para usar el valor por defecto del plan.",
-                    "storage_label": "Límite de Almacenamiento (Bytes)",
-                    "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
-                    "spaces_tenant_label": "Límite Espacios (Tenant)",
-                    "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
-                    "spaces_user_label": "Límite Espacios (Usuario)",
-                    "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)",
-                    "warning_title": "Cambio Crítico de Cuotas",
-                    "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+                    "title": "Editar Contrato",
+                    "description": "Configuración personalizada para {name} ({id})",
+                    "plan_label": "Plan Base",
+                    "plan_desc": "El plan define las tarifas base y funcionalidades.",
+                    "overrides_title": "Overrides (Límites Personalizados)",
+                    "tokens_label": "Límite Tokens Mensuales",
+                    "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
+                    "storage_label": "Límite Almacenamiento (Bytes)",
+                    "storage_desc": "1 GB = 1073741824 Bytes.",
+                    "warning_title": "Atención",
+                    "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
                     "save": "Guardar Cambios",
-                    "cancel": "Cancelar",
-                    "success": "Contrato Actualizado",
-                    "success_desc": "Se ha guardado la configuración para {name}",
-                    "error_updating": "Error al actualizar el contrato"
+                    "cancel": "cancelar",
+                    "success": "Contrato actualizado",
+                    "success_desc": "Se han aplicado los cambios para {name}"
                 }
             }
         },
@@ -1103,8 +1193,8 @@
             "table": {
                 "timestamp": "Fecha/Hora",
                 "level": "Nivel",
-                "source": "Origen",
                 "message": "Mensaje",
+                "source": "Origen",
                 "entity": "Entidad/Usuario",
                 "trace": "Traza de Correlación",
                 "context": "Contexto",
@@ -1113,19 +1203,18 @@
             "badges": {
                 "unknown": "Desconocido",
                 "prompt": "Prompt AI",
-                "billing": "Facturación",
                 "storage": "Almacenamiento",
+                "billing": "Facturación",
                 "ingest": "Ingesta",
                 "config": "Configuración",
-                "audit_log": "LOG DE AUDITORÍA",
-                "modified": "MODIFICADO"
+                "modified": "MODIFICADO",
+                "audit_log": "LOG DE AUDITORÍA"
             },
             "status": {
                 "loading": "Cargando registros...",
                 "no_results": "No se encontraron registros con los filtros actuales."
             },
             "detail": {
-                "analyze_diff": "Analizar Diff",
                 "close": "Cerrar",
                 "message": "Mensaje Detallado",
                 "stack": "Stack Trace (Error)",
@@ -1137,6 +1226,7 @@
                 "next": "Estado Nuevo",
                 "initial_creation": "Creación Inicial",
                 "initial_desc": "Esta entrada representa la creación del objeto. No hay estado previo.",
+                "analyze_diff": "Analizar Diff",
                 "snapshot": "Snapshot Completo del Objeto",
                 "responsable": "Responsable",
                 "ip_origin": "IP Origen",
@@ -1146,50 +1236,16 @@
                 "admin_auth": "Autoridad Admin",
                 "secure_agent": "AGENTE SEGURO"
             },
-            "page": {
-                "title": "Registros del Sistema",
-                "subtitle": "Supervisa la salud del sistema y auditoría de cumplimiento."
-            },
             "levels": {
                 "all": "TODOS",
                 "error": "ERROR",
                 "warn": "WARN",
                 "info": "INFO",
                 "debug": "DEBUG"
-            }
-        },
-        "knowledge": {
-            "title": "Gestión del",
-            "highlight": "Corpus Técnico",
-            "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
-            "tabs": {
-                "assets": "Gestión de Activos",
-                "explorer": "Explorador Semántico",
-                "audit": "Auditoría de Ingesta"
             },
-            "actions": {
-                "upload": "Ingestar Documento",
-                "refresh": "Refrescar Corpus"
-            },
-            "assets": {
-                "table": {
-                    "file": "Documento",
-                    "type": "Tipo / Industria",
-                    "status": "Estado Ingesta",
-                    "date": "Fecha",
-                    "actions": "Acciones"
-                },
-                "status": {
-                    "pending": "Pendiente",
-                    "processing": "Procesando",
-                    "completed": "Completado",
-                    "failed": "Fallido"
-                },
-                "actions": {
-                    "retry": "Reintentar Ingesta",
-                    "delete": "Eliminar Activo",
-                    "view_chunks": "Ver Fragmentos"
-                }
+            "page": {
+                "title": "Registros del Sistema",
+                "subtitle": "Supervisa la salud del sistema y auditoría de cumplimiento."
             }
         },
         "workflows": {
@@ -1216,8 +1272,8 @@
                 "report_export_failed_desc": "No se ha podido generar el informe PDF.",
                 "industry": "Industria",
                 "industries": {
-                    "elevators": "ASCENSORES",
                     "legal": "LEGAL / COMPLIANCE",
+                    "elevators": "ASCENSORES",
                     "banking": "BANCA / FINTECH",
                     "healthcare": "SANIDAD / PHARMA"
                 },
@@ -1226,16 +1282,15 @@
                 "export_report": "Exportar Informe Técnico",
                 "exit_analysis": "Salir del Análisis",
                 "perf_analysis": "Análisis de Rendimiento",
-                "hide_logs": "Ocultar Logs",
                 "show_logs": "Mostrar Logs",
-                "duplicate": "Duplicar",
+                "save": "Guardar Workflow",
+                "hide_logs": "Ocultar Logs",
                 "delete": "Borrar",
-                "save": "Guardar Workflow"
+                "duplicate": "Duplicar"
             },
             "library": {
                 "triggers": "Triggers",
                 "actions": "Acciones",
-                "logic": "Lógica y Flujo",
                 "nodes": {
                     "checklist_failed": "Fallo de Checklist",
                     "event_trigger": "Disparador de Evento",
@@ -1252,14 +1307,15 @@
                     "wait_5s": "Esperar 5s",
                     "loop": "Bucle Iterador",
                     "foreach": "Para cada Elemento"
-                }
+                },
+                "logic": "Lógica y Flujo"
             },
             "properties": {
-                "title": "Propiedades del Nodo",
                 "node_type": "{type} Nodo",
-                "main_label": "Etiqueta Principal",
                 "wait_config": "Configuración de Espera",
                 "duration": "Duración",
+                "main_label": "Etiqueta Principal",
+                "title": "Propiedades del Nodo",
                 "units": {
                     "ms": "ms",
                     "s": "seg",
@@ -1272,11 +1328,11 @@
                 "label_placeholder": "Label visual",
                 "loop_config": "Configuración de Bucle",
                 "data_source": "Origen de Datos (Variable/Array)",
-                "data_source_placeholder": "ej: results.items",
                 "iterations": "Iteraciones Máximas",
+                "data_source_placeholder": "ej: results.items",
                 "extra_features": "Características Adicionales",
-                "add": "AÑADIR",
                 "property": "Propiedad",
+                "add": "AÑADIR",
                 "value": "Valor",
                 "no_features": "Sin características personalizadas.",
                 "apply": "APLICAR CAMBIOS",
@@ -1284,8 +1340,8 @@
             },
             "logs": {
                 "title": "Registros de Ejecución",
-                "live": "En Vivo",
                 "no_logs": "No hay ejecuciones recientes registradas.",
+                "live": "En Vivo",
                 "table": {
                     "status": "Estado",
                     "node": "Nodo",
@@ -1305,6 +1361,121 @@
                 "error_transition": "Error al ejecutar la transición",
                 "no_actions": "No hay acciones disponibles para tu rol en este estado.",
                 "comment_placeholder": "Añade un comentario (opcional)..."
+            }
+        },
+        "knowledge": {
+            "title": "Gestión del",
+            "highlight": "Corpus Técnico",
+            "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
+            "explorer_h2": "Documentación Técnica",
+            "explorer_subtitle": "Explora la biblioteca de documentos o realiza consultas a la Inteligencia Artificial.",
+            "tabs": {
+                "explorer": "Explorador Semántico",
+                "ai": "Consulta IA",
+                "assets": "Gestión de Activos",
+                "audit": "Auditoría de Ingesta"
+            },
+            "actions": {
+                "export": "Exportar Chunks",
+                "refresh": "Refrescar Corpus",
+                "sim_btn": "Simular Búsqueda",
+                "upload": "Ingestar Documento"
+            },
+            "stats": {
+                "total": "Total Chunks",
+                "arch": "Arquitectura",
+                "langs": "Idiomas Indexados",
+                "backend": "Estado Backend",
+                "synced": "Sincronizado con Atlas"
+            },
+            "simulator": {
+                "title": "Simulador de Análisis / Depurador",
+                "subtitle": "Simula una consulta real para ver qué información recuperaría el motor híbrido y con qué grado de relevancia.",
+                "placeholder": "Escribe una consulta técnica (ej: 'fallo en circuito de seguridad A3')..."
+            },
+            "filters": {
+                "title": "Filtros de Exploración",
+                "query_placeholder": "Buscar texto, modelo o archivo...",
+                "lang_label": "Idioma",
+                "lang_all": "Todos los idiomas",
+                "type_label": "Tipo de Indexación",
+                "type_all": "Todo el contenido",
+                "type_original": "Originales",
+                "type_shadow": "Shadow Chunks (Traducciones)"
+            },
+            "view": {
+                "showing": "Mostrando {count} de {total} fragmentos encontrados",
+                "loading": "Cargando vectores...",
+                "empty_title": "No se encontraron fragmentos",
+                "empty_subtitle": "Intenta ajustar los filtros de búsqueda.",
+                "chunk_shadow": "Shadow",
+                "chunk_original": "Original",
+                "chunk_model": "Modelo",
+                "chunk_type": "Tipo",
+                "auto_trans": "Traducción Automática",
+                "dual_mechanism": "Mecanismo Dual-Index",
+                "prev": "Anterior",
+                "dual_desc": "Este fragmento permite encontrar el documento original buscando en Español, aunque el manual sea Alemán/Inglés.",
+                "next": "Siguiente"
+            },
+            "brain": {
+                "title": "Asistente de Inteligencia Técnica",
+                "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad.",
+                "investigating": "El agente está investigando...",
+                "investigating_desc": "Recuperando documentos, validando contra alucinaciones y redactando solución.",
+                "submit": "Consultar",
+                "show_trace": "Ver razonamiento de la IA",
+                "manual_label": "Manual Técnico",
+                "verified_badge": "Respuesta Verificada",
+                "trace_footer": "Conclusión generada tras verificación multietapa.",
+                "sources_title": "Fuentes Técnicas Utilizadas",
+                "hide_trace": "Ocultar proceso",
+                "trace_title": "Proceso de Pensamiento Agéntico",
+                "placeholder": "Ej: ¿Protocolo de rescate en manual Otis 2000?",
+                "thinking": "Pensando...",
+                "score_label": "Puntuación",
+                "examples": {
+                    "torque": {
+                        "title": "Consultar Torque",
+                        "desc": "Verificar valores oficiales de manuales.",
+                        "query": "¿Cuál es el par de apriete para cables de tracción Otis?"
+                    },
+                    "safety": {
+                        "title": "Seguridad Foso",
+                        "desc": "Protocolos de seguridad críticos.",
+                        "query": "Procedimiento de bypass puerta de foso Schindler"
+                    },
+                    "quantum": {
+                        "title": "Puertas Quantum",
+                        "desc": "Ajustes precisos de componentes.",
+                        "query": "Configuración potenciómetro Quantum P1"
+                    }
+                }
+            },
+            "brain_federated": {
+                "title": "Inteligencia Colectiva (Federada)",
+                "investigating": "Investigando patrones globales...",
+                "match": "COINCIDENCIA"
+            },
+            "assets": {
+                "table": {
+                    "file": "Documento",
+                    "type": "Tipo / Industria",
+                    "status": "Estado Ingesta",
+                    "date": "Fecha",
+                    "actions": "Acciones"
+                },
+                "status": {
+                    "pending": "Pendiente",
+                    "processing": "Procesando",
+                    "completed": "Completado",
+                    "failed": "Fallido"
+                },
+                "actions": {
+                    "retry": "Reintentar Ingesta",
+                    "delete": "Eliminar Activo",
+                    "view_chunks": "Ver Fragmentos"
+                }
             }
         },
         "rag_quality": {
@@ -1327,6 +1498,16 @@
                     "label": "Context Precision",
                     "desc": "Calidad de los fragmentos recuperados por el motor vectorial."
                 }
+            },
+            "history": {
+                "title": "Historial de Consultas Evaluadas",
+                "desc": "Auditoría de calidad y seguimiento del pensamiento (Trace) de la IA.",
+                "empty": "No hay evaluaciones registradas aún.",
+                "empty_desc": "Usa el buscador RAG para generar datos de calidad.",
+                "show_trace": "Ver Pensamiento Agente (Trace) ↓",
+                "hide_trace": "Ocultar Trace ↑",
+                "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
+                "trace_end": "--- FIN DEL TRACE ---"
             },
             "trace": {
                 "title": "Diagnóstico de Decisión IA",
@@ -1352,16 +1533,6 @@
                     "close": "Cerrar Diagnóstico",
                     "audit": "Auditar Decisión"
                 }
-            },
-            "history": {
-                "title": "Historial de Consultas Evaluadas",
-                "desc": "Auditoría de calidad y seguimiento del pensamiento (Trace) de la IA.",
-                "empty": "No hay evaluaciones registradas aún.",
-                "empty_desc": "Usa el buscador RAG para generar datos de calidad.",
-                "show_trace": "Ver Pensamiento Agente (Trace) ↓",
-                "hide_trace": "Ocultar Trace ↑",
-                "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
-                "trace_end": "--- FIN DEL TRACE ---"
             }
         },
         "guardian": {
@@ -1378,11 +1549,6 @@
                 "highlight": "Guardian V3",
                 "subtitle": "Gestión centralizada de políticas de acceso y control de seguridad.",
                 "new_policy": "Nueva Política",
-                "filter": "Filtrar",
-                "metadata": {
-                    "title": "Matriz de Permisos | Guardian V3",
-                    "description": "Gestión centralizada de políticas de acceso y control de seguridad industrial."
-                },
                 "stats": {
                     "total": "Total Políticas",
                     "total_desc": "Políticas activas en el sistema",
@@ -1399,23 +1565,28 @@
                     "actions": "Acciones",
                     "effect": "Efecto",
                     "status": "Estado",
-                    "loading": "Cargando matriz de seguridad...",
                     "empty": "No se encontraron políticas.",
+                    "loading": "Cargando matriz de seguridad...",
                     "active": "ACTIVA",
                     "inactive": "INACTIVA",
                     "loading_error": "Error al cargar la matriz de permisos",
                     "network_error": "Error de red al conectar con el servicio Guardian"
+                },
+                "filter": "Filtrar",
+                "metadata": {
+                    "title": "Matriz de Permisos | Guardian V3",
+                    "description": "Gestión centralizada de políticas de acceso y control de seguridad industrial."
                 }
             },
             "groups": {
                 "title": "Jerarquía de Grupos",
                 "highlight": "Estructura Org.",
-                "subtitle": "Organiza usuarios en roles y grupos con herencia de permisos.",
                 "new_root": "Nuevo Grupo Raíz",
+                "subtitle": "Organiza usuarios en roles y grupos con herencia de permisos.",
                 "stats": {
-                    "total": "Total Grupos",
                     "depth": "Profundidad Máxima",
                     "depth_desc": "Niveles de herencia activos",
+                    "total": "Total Grupos",
                     "orphan": "Grupos Huérfanos",
                     "orphan_desc": "Sin conexión a la raíz"
                 },
@@ -1424,8 +1595,8 @@
                     "loading": "Cargando estructura de grupos...",
                     "empty": "No hay grupos definidos.",
                     "policies": "{count} políticas asociadas",
-                    "loading_error": "Error al cargar la jerarquía de grupos",
-                    "network_error": "Error de red al conectar con el servicio de Identidad"
+                    "network_error": "Error de red al conectar con el servicio de Identidad",
+                    "loading_error": "Error al cargar la jerarquía de grupos"
                 },
                 "sidebar": {
                     "engine_title": "Motor de Herencia",
@@ -1469,12 +1640,8 @@
                 }
             },
             "audit": {
-                "title": "Audit",
-                "highlight": "Logs",
-                "subtitle": "Registro histórico de todas las decisiones de acceso tomadas por el Guardian.",
-                "search_placeholder": "Filtrar logs por usuario, recurso o política...",
                 "last_24h": "Últimas 24h",
-                "export": "Exportar Logs",
+                "highlight": "Logs",
                 "table": {
                     "title": "Actividad de Guardian",
                     "desc": "Decisiones de acceso en tiempo real.",
@@ -1484,9 +1651,13 @@
                     "decision": "Decisión",
                     "policy": "Política Coincidente",
                     "loading": "Cargando registros...",
-                    "empty": "No hay logs disponibles.",
-                    "end_of_trail": "Fin del historial de auditoría"
-                }
+                    "end_of_trail": "Fin del historial de auditoría",
+                    "empty": "No hay logs disponibles."
+                },
+                "search_placeholder": "Filtrar logs por usuario, recurso o política...",
+                "title": "Audit",
+                "subtitle": "Registro histórico de todas las decisiones de acceso tomadas por el Guardian.",
+                "export": "Exportar Logs"
             }
         },
         "intelligence": {
@@ -1531,8 +1702,8 @@
             "registered_desc_global": "{count} usuario{suffix} accesibles",
             "empty_message": "No se encontraron usuarios registrados.",
             "table": {
-                "security": "Seguridad",
                 "actions": "Acciones",
+                "security": "Seguridad",
                 "mfa_active": "MFA Activo",
                 "no_mfa": "Sin MFA"
             },
@@ -1557,17 +1728,324 @@
                 "sending": "Enviando...",
                 "success_title": "Procesamiento completado",
                 "success_desc": "Éxito: {success}, Fallidos: {failed}",
-                "error_no_valid": "No hay invitaciones válidas para enviar",
                 "excel_read_error": "Error al leer Excel",
+                "error_no_valid": "No hay invitaciones válidas para enviar",
                 "csv_read_error": "Error al leer CSV",
                 "table": {
                     "email": "Email",
                     "role": "Rol",
                     "status": "Estado",
                     "no_email": "Sin email",
-                    "missing_email": "Falta email",
-                    "invalid_email": "Email inválido"
+                    "invalid_email": "Email inválido",
+                    "missing_email": "Falta email"
                 }
+            }
+        },
+        "i18n": {
+            "page": {
+                "highlight": "Internacionalización",
+                "title": "Gobernanza i18n",
+                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+                "syncBtn": "Sincronizar DB",
+                "newKeyBtn": "Nueva Llave",
+                "searchPlaceholder": "Busca por llave o texto...",
+                "filterMissing": "Ver solo faltantes",
+                "syncToDbBtn": "Sincronización hacia BD",
+                "syncToFileBtn": "Sincronización hacia archivos JSON"
+            },
+            "table": {
+                "save": "Guardar",
+                "empty": "Vacío",
+                "cancel": "Cancelar",
+                "noResults": "No se encontraron traducciones para los filtros aplicados.",
+                "secondaryLabel": "COMPARACIÓN",
+                "primaryLabel": "PRINCIPAL",
+                "missing": "Faltante",
+                "keyHeader": "LLAVE TÉCNICA",
+                "autoTranslateBtn": "AUTO-TRADUCIR"
+            },
+            "languages": {
+                "es": "Español",
+                "en": "Inglés"
+            },
+            "notifications": {
+                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
+                "aiSuccessTitle": "IA: Traducción Completada",
+                "upToDateTitle": "Todo al día",
+                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
+                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+                "saveSuccess": "Traducción actualizada correctamente.",
+                "syncSuccessTitle": "Sincronización Exitosa"
+            }
+        },
+        "user_dashboard": {
+            "stats": {
+                "accuracy": "Respuestas Precisas",
+                "documents": "Documentos Subizados",
+                "time": "Tiempo Promedio",
+                "queries": "Consultas Realizadas",
+                "change_week": "+{count} esta semana",
+                "change_today": "+{count} hoy",
+                "change_month": "+{percent}% vs. mes pasado",
+                "change_faster": "-{time} más rápido"
+            },
+            "welcome": "Bienvenido, {name}",
+            "subtitle": "¿Qué te gustaría hacer hoy?",
+            "actions": {
+                "upload": {
+                    "title": "Subir Manual Técnico",
+                    "desc": "Añade PDFs, esquemas o documentos de mantenimiento"
+                },
+                "search": {
+                    "desc": "Pregunta sobre procedimientos, códigos de error o especificaciones",
+                    "title": "Buscar Información"
+                },
+                "history": {
+                    "title": "Historial de Consultas",
+                    "desc": "Revisa tus búsquedas anteriores y respuestas guardadas"
+                }
+            },
+            "sections": {
+                "activity": "Actividad Reciente",
+                "help": "Centro de Ayuda",
+                "view_all": "Ver todo el historial",
+                "contact": "Contactar Soporte"
+            },
+            "empty": {
+                "title": "Aún no hay actividad",
+                "desc": "Sube tu primer documento o haz una consulta para empezar."
+            },
+            "help": {
+                "search": {
+                    "desc": "Tips para consultas más precisas",
+                    "title": "Hacer mejores preguntas"
+                },
+                "upload": {
+                    "title": "¿Cómo subo documentos?",
+                    "desc": "Guía paso a paso para cargar PDFs"
+                }
+            }
+        },
+        "api_docs": {
+            "card_title": "Especificación de Plataforma RAG ABD",
+            "title": "Portal de Documentación API",
+            "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
+            "loading": "Iniciando Portal Técnico...",
+            "error_loading": "No se pudo cargar la definición de la API."
+        },
+        "billing": {
+            "alerts": {
+                "blocked": "Bloqueo Activo: {details}"
+            },
+            "contracts": {
+                "status": {
+                    "trial": "PRUEBA",
+                    "active": "ACTIVO",
+                    "past_due": "VENCIDO",
+                    "blocked": "BLOQUEADO"
+                },
+                "title": "Gestión de Contratos ('Casos')",
+                "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
+                "metadata": {
+                    "title": "Gestión de Contratos y Casos | Admin",
+                    "description": "Administración de planes, límites y overrides por tenant con control de cuotas industrial."
+                },
+                "table": {
+                    "tenant": "Organización",
+                    "plan": "Plan Base",
+                    "override": "Personalización",
+                    "usage": "Uso (Tokens / Storage)",
+                    "mrr": "MRR (Est.)",
+                    "status": "Estado",
+                    "actions": "Acciones",
+                    "loading": "Cargando contratos...",
+                    "empty": "No se encontraron resultados",
+                    "search_placeholder": "Buscar tenant...",
+                    "loading_error": "Error al cargar contratos",
+                    "unlimited": "∞",
+                    "custom_badge": "Personalizado",
+                    "open_menu": "Abrir menú de acciones"
+                },
+                "actions": {
+                    "edit": "Editar Contrato / Límites",
+                    "invoices": "Ver Facturas",
+                    "upcoming_title": "Próximamente",
+                    "upcoming_desc": "Historial de facturas en fase de desarrollo."
+                },
+                "edit": {
+                    "title": "Editar Configuración de Contrato",
+                    "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
+                    "plan_label": "Plan de Suscripción",
+                    "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+                    "plans": {
+                        "free": "Prueba Gratuita",
+                        "basic": "Básico Business",
+                        "pro": "Profesional",
+                        "enterprise": "Corporativo"
+                    },
+                    "overrides_title": "Límites Personalizados (Overrides)",
+                    "tokens_label": "Límite de Tokens (Mes)",
+                    "tokens_desc": "0 para usar el valor por defecto del plan.",
+                    "storage_label": "Límite de Almacenamiento (Bytes)",
+                    "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+                    "warning_title": "Cambio Crítico de Cuotas",
+                    "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+                    "save": "Guardar Cambios",
+                    "cancel": "Cancelar",
+                    "success": "Contrato Actualizado",
+                    "success_desc": "Se ha guardado la configuración para {name}",
+                    "error_updating": "Error al actualizar el contrato",
+                    "spaces_tenant_label": "Límite Espacios (Tenant)",
+                    "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
+                    "spaces_user_label": "Límite Espacios (Usuario)",
+                    "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)"
+                }
+            },
+            "title": "Datos de Facturación",
+            "desc": "Configura los datos fiscales para tus facturas.",
+            "fields": {
+                "fiscal_name": "Razón Social",
+                "tax_id": "CIF/NIF",
+                "address": "Dirección"
+            },
+            "not_configured": "No configurado",
+            "edit": "Editar Datos",
+            "dialog": {
+                "title": "Editar Datos Fiscales",
+                "desc": "Estos datos aparecerán en tu próxima factura.",
+                "fiscal_name_label": "Razón Social (Empresa)",
+                "tax_id_label": "CIF / VAT ID",
+                "address_label": "Dirección Fiscal",
+                "saving": "Guardando...",
+                "save": "Guardar Cambios"
+            },
+            "invoice": {
+                "title": "Próxima Factura",
+                "closing": "Cierre estimado: {date}",
+                "tier_estimate": "Estimación Pro Tier",
+                "download_preview": "Descargar Preview PDF",
+                "generating": "Generando PDF...",
+                "success": "Factura Descargada",
+                "success_desc": "El PDF se ha generado correctamente.",
+                "error": "Error",
+                "error_desc": "No se pudo generar la factura."
+            },
+            "subscription": {
+                "title": "Plan de Suscripción"
+            },
+            "format": {
+                "zero_bytes": "0 Bytes"
+            }
+        },
+        "metrics": {
+            "reports": {
+                "label": "Informes / Pedidos",
+                "desc": "Informes generados"
+            },
+            "tokens": {
+                "label": "IA Generativa",
+                "desc": "Tokens Gemini consumidos"
+            },
+            "storage": {
+                "label": "Almacenamiento",
+                "desc": "Espacio en Cloudinary"
+            },
+            "search": {
+                "label": "RAG Search",
+                "desc": "Búsquedas vectoriales"
+            }
+        },
+        "savings": {
+            "title": "Ahorro Inteligente por Deduplicación",
+            "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
+            "tokens": "Tokens Ahorrados",
+            "efficiency": "Eficiencia de Ingesta"
+        },
+        "multilingual": {
+            "title": "Búsquedas Multilingües",
+            "label": "Vectores Latentes (Shadow)"
+        },
+        "charts": {
+            "tokens_title": "Tendencia de Consumo AI",
+            "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
+        },
+        "spaces": {
+            "title": "Gestión de Espacios",
+            "highlight": "Jerárquica",
+            "subtitle": "Configura la organización de tu base de conocimiento por industrias, equipos y tenants.",
+            "new": "Nuevo Espacio",
+            "search_placeholder": "Buscar espacios...",
+            "types": {
+                "GLOBAL": "Global",
+                "INDUSTRY": "Industria",
+                "TENANT": "Tenant",
+                "TEAM": "Equipo",
+                "PERSONAL": "Personal"
+            },
+            "visibility": {
+                "PUBLIC": "Público",
+                "INTERNAL": "Interno",
+                "PRIVATE": "Privado",
+                "RESTRICTED": "Restringido"
+            },
+            "status": {
+                "active": "Activo",
+                "inactive": "Inactivo"
+            }
+        },
+        "support": {
+            "title": "Consola de Soporte Industrial",
+            "subtitle": "Gestiona consultas técnicas y derivaciones del sistema.",
+            "stats": {
+                "open": "Tickets Abiertos",
+                "pending": "Esperando Respuesta",
+                "resolved": "Resueltos (30d)"
+            },
+            "status": {
+                "OPEN": "Abierto",
+                "IN_PROGRESS": "En Progreso",
+                "RESOLVED": "Resuelto",
+                "CLOSED": "Cerrado"
+            },
+            "priority": {
+                "LOW": "Baja",
+                "MEDIUM": "Media",
+                "HIGH": "Crítica",
+                "URGENT": "Urgente"
+            },
+            "actions": {
+                "assign": "Asignar a...",
+                "reply": "Responder a Cliente",
+                "resolve": "Marcar como Resuelto",
+                "close": "Cerrar Permanentemente"
+            }
+        },
+        "jobs": {
+            "title": "Reliability Dashboard",
+            "subtitle": "Infraestructura BullMQ & Gestión de Dead Letter Queue (DLQ).",
+            "monitor": "Agent Monitor",
+            "status": {
+                "active": "Activo",
+                "waiting": "En espera",
+                "completed": "Completado",
+                "failed": "Fallido (DLQ)",
+                "delayed": "Retrasado"
+            },
+            "table": {
+                "id": "ID de Trabajo",
+                "type": "Tipo de Proceso",
+                "status": "Estado Actual",
+                "duration": "Tiempo Ejecución",
+                "failed_reason": "Traza de Error"
+            },
+            "actions": {
+                "retry": "Reintento Manual",
+                "delete": "Purgar de la Cola",
+                "details": "Ver Stack Trace"
+            },
+            "messages": {
+                "retry_success": "Reubicación en cola activa exitosa.",
+                "delete_success": "Trabajo purgado del sistema."
             }
         },
         "api_keys": {
@@ -1594,41 +2072,6 @@
             "revoke_success": "Llave revocada con éxito",
             "error_name": "Asigne un nombre a la llave",
             "error_permissions": "Seleccione al menos un permiso"
-        },
-        "i18n": {
-            "page": {
-                "title": "Gobernanza i18n",
-                "highlight": "Internacionalización",
-                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
-                "syncBtn": "Sincronizar DB",
-                "newKeyBtn": "Nueva Llave",
-                "searchPlaceholder": "Busca por llave o texto...",
-                "filterMissing": "Ver solo faltantes"
-            },
-            "languages": {
-                "es": "Español",
-                "en": "Inglés"
-            },
-            "table": {
-                "keyHeader": "LLAVE TÉCNICA",
-                "primaryLabel": "PRINCIPAL",
-                "secondaryLabel": "COMPARACIÓN",
-                "autoTranslateBtn": "AUTO-TRADUCIR",
-                "save": "Guardar",
-                "cancel": "Cancelar",
-                "empty": "Vacío",
-                "missing": "Faltante",
-                "noResults": "No se encontraron traducciones para los filtros aplicados."
-            },
-            "notifications": {
-                "aiSuccessTitle": "IA: Traducción Completada",
-                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
-                "upToDateTitle": "Todo al día",
-                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
-                "syncSuccessTitle": "Sincronización Exitosa",
-                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
-                "saveSuccess": "Traducción actualizada correctamente."
-            }
         }
     },
     "feature_pages": {
@@ -2080,6 +2523,140 @@
             "typeError": "Por favor selecciona un archivo de imagen.",
             "successTitle": "Foto actualizada",
             "successDesc": "Tu foto de perfil se ha actualizado correctamente."
+        },
+        "i18n": {
+            "page": {
+                "title": "Gobernanza i18n",
+                "highlight": "Internacionalización",
+                "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+                "syncBtn": "Sincronizar DB",
+                "newKeyBtn": "Nueva Llave",
+                "searchPlaceholder": "Busca por llave o texto..."
+            },
+            "languages": {
+                "es": "Español",
+                "en": "Inglés"
+            },
+            "table": {
+                "keyHeader": "LLAVE TÉCNICA",
+                "primaryLabel": "PRINCIPAL",
+                "secondaryLabel": "COMPARACIÓN",
+                "autoTranslateBtn": "AUTO-TRADUCIR",
+                "save": "Guardar",
+                "cancel": "Cancelar",
+                "empty": "Vacío",
+                "missing": "Faltante",
+                "noResults": "No se encontraron traducciones para los filtros aplicados."
+            },
+            "notifications": {
+                "aiSuccessTitle": "IA: Traducción Completada",
+                "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
+                "upToDateTitle": "Todo al día",
+                "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
+                "syncSuccessTitle": "Sincronización Exitosa",
+                "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+                "saveSuccess": "Traducción actualizada correctamente."
+            }
+        },
+        "search": {
+            "title": "Búsqueda Conversacional",
+            "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+            "analyzing": "Analizando...",
+            "sources_label": "Fuentes encontradas:",
+            "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+            "input_placeholder": "Escribe tu pregunta aquí...",
+            "suggested_questions": "Preguntas sugeridas",
+            "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+            "copy": "Copiar respuesta",
+            "regenerate": "Regenerate respuesta",
+            "feedback_positive": "Útil",
+            "feedback_negative": "No útil",
+            "spaces": {
+                "title": "Espacios de Conocimiento",
+                "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+                "tabs": {
+                    "quick_qa": "Consulta Rápida",
+                    "personal": "Mis Espacios",
+                    "collections": "Colecciones"
+                },
+                "placeholders": {
+                    "personal_title": "Espacios Personales",
+                    "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+                    "collections_title": "Colecciones",
+                    "collections_desc": "Agrupa documentos relacionados en colecciones temáticas"
+                },
+                "admin": {
+                    "table": {
+                        "space": "Espacio",
+                        "type": "Tipo",
+                        "visibility": "Visibilidad",
+                        "status": "Estado",
+                        "created": "Creado",
+                        "actions": "Acciones"
+                    },
+                    "types": {
+                        "global": "Global",
+                        "industry": "Industrial",
+                        "tenant": "Tenant",
+                        "team": "Equipo",
+                        "personal": "Personal"
+                    },
+                    "status": {
+                        "active": "Activo",
+                        "inactive": "Inactivo"
+                    },
+                    "search_placeholder": "Buscar espacios...",
+                    "new_space": "Nuevo Espacio",
+                    "manage": "Gestionar"
+                }
+            },
+            "security": {
+                "title": "Seguridad de grado empresarial",
+                "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
+            }
+        },
+        "spaces": {
+            "title": "Espacios de Conocimiento",
+            "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+            "tabs": {
+                "quick_qa": "Consulta Rápida",
+                "personal": "Mis Espacios",
+                "collections": "Colecciones"
+            },
+            "placeholders": {
+                "personal_title": "Espacios Personales",
+                "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+                "collections_title": "Colecciones",
+                "collections_desc": "Agrupa documentos relacionados en colecciones temáticas"
+            },
+            "admin": {
+                "table": {
+                    "space": "Espacio",
+                    "type": "Tipo",
+                    "visibility": "Visibilidad",
+                    "status": "Estado",
+                    "created": "Creado",
+                    "actions": "Acciones"
+                },
+                "types": {
+                    "global": "Global",
+                    "industry": "Industrial",
+                    "tenant": "Tenant",
+                    "team": "Equipo",
+                    "personal": "Personal"
+                },
+                "status": {
+                    "active": "Activo",
+                    "inactive": "Inactivo"
+                },
+                "search_placeholder": "Buscar espacios...",
+                "new_space": "Nuevo Espacio",
+                "manage": "Gestionar"
+            }
+        },
+        "enterpriseSecurity": {
+            "title": "Seguridad de grado empresarial",
+            "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
         }
     },
     "search": {
@@ -2092,8 +2669,47 @@
         "suggested_questions": "Preguntas sugeridas",
         "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
         "copy": "Copiar respuesta",
-        "regenerate": "Regenerar respuesta",
+        "regenerate": "Regenerate respuesta",
         "feedback_positive": "Útil",
         "feedback_negative": "No útil"
+    },
+    "spaces": {
+        "title": "Espacios de Conocimiento",
+        "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+        "tabs": {
+            "quick_qa": "Consulta Rápida",
+            "personal": "Mis Espacios",
+            "collections": "Colecciones"
+        },
+        "placeholders": {
+            "personal_title": "Espacios Personales",
+            "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+            "collections_title": "Colecciones",
+            "collections_desc": "Agrupa documentos relacionados en colecciones temáticas"
+        },
+        "admin": {
+            "table": {
+                "space": "Espacio",
+                "type": "Tipo",
+                "visibility": "Visibilidad",
+                "status": "Estado",
+                "created": "Creado",
+                "actions": "Acciones"
+            },
+            "types": {
+                "global": "Global",
+                "industry": "Industrial",
+                "tenant": "Tenant",
+                "team": "Equipo",
+                "personal": "Personal"
+            },
+            "status": {
+                "active": "Activo",
+                "inactive": "Inactivo"
+            },
+            "search_placeholder": "Buscar espacios...",
+            "new_space": "Nuevo Espacio",
+            "manage": "Gestionar"
+        }
     }
 }

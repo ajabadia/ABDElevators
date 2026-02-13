@@ -139,6 +139,85 @@
             "ticket_not_found": "Support ticket not found or already archived.",
             "validation_error": "Input validation failed. Please check the provided data.",
             "internal_error": "An unexpected system error occurred. Reference: {id}"
+        },
+        "search": {
+            "title": "Conversational Search",
+            "placeholder": "What do you need to know about your documents?",
+            "analyzing": "Analyzing...",
+            "sources_label": "Sources found:",
+            "error_message": "Sorry, there was an error processing your query.",
+            "input_placeholder": "Type your question here...",
+            "suggested_questions": "Suggested questions",
+            "disclaimer": "AI can make mistakes. Verify important information.",
+            "copy": "Copy answer",
+            "regenerate": "Regenerate answer",
+            "feedback_positive": "Helpful",
+            "feedback_negative": "Not helpful"
+        },
+        "spaces": {
+            "title": "Workspaces",
+            "subtitle": "Manage your personal documents, collections and quick queries.",
+            "tabs": {
+                "quick_qa": "Quick Q&A",
+                "personal": "My Space",
+                "collections": "Collections"
+            },
+            "placeholders": {
+                "personal_title": "Personal Document Management",
+                "personal_desc": "Coming soon: Upload and manage your own PDF files.",
+                "collections_title": "Smart Collections",
+                "collections_desc": "Coming soon: Organize documents in folders by project or topic."
+            },
+            "admin": {
+                "title": "Spaces Management",
+                "search_placeholder": "Search spaces...",
+                "new_space": "New Space",
+                "manage": "Manage",
+                "table": {
+                    "space": "Space",
+                    "type": "Type",
+                    "visibility": "Visibility",
+                    "status": "Status",
+                    "created": "Created",
+                    "actions": "Actions"
+                },
+                "types": {
+                    "global": "Global",
+                    "industry": "Industry",
+                    "tenant": "Tenant",
+                    "team": "Team",
+                    "personal": "Personal"
+                },
+                "status": {
+                    "active": "Active",
+                    "inactive": "Inactive"
+                }
+            },
+            "quick_qa": {
+                "title": "Quick Q&A",
+                "desc": "Paste technical text, notes or specifications to query without persistence.",
+                "snippet_label": "Text Fragment (Snippet)",
+                "snippet_badge": "Ephemeral",
+                "snippet_placeholder": "Paste content here to analyze...",
+                "context_label": "Additional Context (Optional)",
+                "context_placeholder": "Ex: Specific instructions, software version...",
+                "clear_all": "Clear All",
+                "promote": "Promote to Document",
+                "chat_title": "Ephemeral Chat",
+                "chat_welcome_title": "Ask a question about the text",
+                "chat_welcome_desc": "The assistant will respond using only the provided snippet.",
+                "chat_input_placeholder": "Write your question about the fragment...",
+                "status_loading": "Querying information...",
+                "promote_success": "Snippet saved as persistent Document",
+                "promote_error": "Error promoting",
+                "conn_error": "Connection error",
+                "validation_error": "You must paste text and write a question",
+                "ia_error": "Error querying AI"
+            }
+        },
+        "enterpriseSecurity": {
+            "title": "Enterprise-grade security",
+            "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
         }
     },
     "knowledge_assets": {
@@ -243,6 +322,28 @@
                     "active": "Active",
                     "inactive": "Inactive"
                 }
+            }
+        },
+        "tabs": {
+            "active": "Active Users",
+            "pending": "Pending Invitations"
+        },
+        "invitations": {
+            "title": "Pending Invitations",
+            "desc": "Manage and revoke invitations that haven't been accepted yet.",
+            "empty": "No pending invitations",
+            "revoke_confirm": "Are you sure you want to revoke the invitation for {email}?",
+            "table": {
+                "email": "Email",
+                "role": "Role",
+                "status": "Status",
+                "expiry": "Expiry"
+            },
+            "status": {
+                "pending": "Pending",
+                "accepted": "Accepted",
+                "expired": "Expired",
+                "revoked": "Revoked"
             }
         }
     },
@@ -562,14 +663,20 @@
             "active": "Drop file here...",
             "idle": "Drag a PDF manual here or click to select",
             "format": "PDF files only (Max 50MB)",
-            "selected": "File selected"
+            "selected": "File selected",
+            "max_size": "Max 250MB. Very large files may take longer to process."
         },
         "fields": {
             "type": "Component Type",
             "version": "Doc. Version",
             "scope": "Knowledge Scope",
             "industry": "Industry / Sector",
-            "placeholder": "Select..."
+            "placeholder": "Select...",
+            "chunking_label": "Chunking Level",
+            "chunking_low": "Simple (Low) - Fast, fixed blocks",
+            "chunking_medium": "Semantic (Medium) - AI detects topic changes",
+            "chunking_high": "LLM (High) - Deep intelligent segmentation",
+            "chunking_placeholder": "Select level..."
         },
         "pii_label": "Data De-identification (PII)",
         "pii_desc": "Protect sensitive data by removing it before processing.",
@@ -824,6 +931,9 @@
             "activity": {
                 "title": "Recent System Activity",
                 "empty": "No recent activity recorded."
+            },
+            "timeline": {
+                "actor": "Actor"
             }
         },
         "spaces": {
@@ -910,7 +1020,8 @@
                 "inactive": "INACTIVE"
             },
             "mutation": {
-                "delete_success": "Configuration deleted successfully."
+                "delete_success": "Configuration deleted successfully.",
+                "confirm_delete": "Are you sure you want to delete the configuration \"{name}\"?"
             },
             "cards": {
                 "categorization": {
@@ -943,6 +1054,92 @@
             "tabs": {
                 "metrics": "Usage Metrics",
                 "billing": "Invoices & Payments"
+            },
+            "metrics": {
+                "reports": {
+                    "label": "Reports / Orders",
+                    "desc": "Reports generated"
+                },
+                "tokens": {
+                    "label": "Generative AI",
+                    "desc": "Gemini tokens consumed"
+                },
+                "storage": {
+                    "label": "Storage",
+                    "desc": "Cloudinary space"
+                },
+                "search": {
+                    "label": "RAG Search",
+                    "desc": "Vector searches"
+                }
+            },
+            "savings": {
+                "title": "Smart Deduplication Savings",
+                "desc": "Thanks to MD5 hashing technology, we avoid re-processing identical documents.",
+                "tokens": "Tokens Saved",
+                "efficiency": "Ingestion Efficiency"
+            },
+            "multilingual": {
+                "title": "Multilingual Searches",
+                "label": "Latent Vectors (Shadow)"
+            },
+            "activity": {
+                "title": "Activity Log",
+                "limit": "Last 20 events",
+                "table": {
+                    "date": "Date",
+                    "resource": "Resource",
+                    "type": "Type",
+                    "amount": "Amount"
+                }
+            },
+            "billing": {
+                "title": "Billing Data",
+                "desc": "Configure the fiscal data for your invoices.",
+                "fields": {
+                    "fiscal_name": "Fiscal Name",
+                    "tax_id": "VAT ID / Tax ID",
+                    "address": "Address"
+                },
+                "not_configured": "Not configured",
+                "edit": "Edit Data",
+                "dialog": {
+                    "title": "Edit Fiscal Data",
+                    "desc": "This data will appear in your next invoice.",
+                    "fiscal_name_label": "Fiscal Name (Company)",
+                    "tax_id_label": "VAT ID / Tax ID",
+                    "address_label": "Fiscal Address",
+                    "saving": "Saving...",
+                    "save": "Save Changes"
+                }
+            },
+            "invoice": {
+                "title": "Next Invoice",
+                "closing": "Estimated closing: {date}",
+                "tier_estimate": "Pro Tier Estimate",
+                "download_preview": "Download Preview PDF",
+                "generating": "Generating PDF...",
+                "success": "Invoice Downloaded",
+                "success_desc": "The PDF has been generated successfully.",
+                "error": "Error",
+                "error_desc": "Could not generate the invoice."
+            },
+            "subscription": {
+                "title": "Subscription Plan"
+            },
+            "alerts": {
+                "blocked": "Active Block: {details}"
+            },
+            "format": {
+                "zero_bytes": "0 Bytes"
+            },
+            "charts": {
+                "tokens_title": "AI Consumption Trends"
+            },
+            "contracts": {
+                "edit": {
+                    "warning_title": "Atention"
+                }
             }
         },
         "metrics": {
@@ -1689,6 +1886,54 @@
                 "syncSuccessDesc": "Local files have been dumped to the database.",
                 "saveSuccess": "Translation updated successfully."
             }
+        },
+        "user_dashboard": {
+            "welcome": "Welcome, {name}",
+            "subtitle": "What would you like to do today?",
+            "stats": {
+                "accuracy": "Precise Answers",
+                "documents": "Uploaded Documents",
+                "queries": "Queries Performed",
+                "time": "Average Time",
+                "change_week": "+{count} this week",
+                "change_month": "+{percent}% vs. last month",
+                "change_today": "+{count} today",
+                "change_faster": "-{time} faster"
+            },
+            "actions": {
+                "upload": {
+                    "desc": "Add PDFs, diagrams, or maintenance documents",
+                    "title": "Upload Technical Manual"
+                },
+                "search": {
+                    "title": "Search Information",
+                    "desc": "Ask about procedures, error codes, or specifications"
+                },
+                "history": {
+                    "title": "Inquiry History",
+                    "desc": "Review your previous searches and saved answers"
+                }
+            },
+            "sections": {
+                "view_all": "View all history",
+                "contact": "Contact Support",
+                "activity": "Recent Activity",
+                "help": "Help Center"
+            },
+            "empty": {
+                "title": "No activity yet",
+                "desc": "Upload your first document or perform a query to get started."
+            },
+            "help": {
+                "search": {
+                    "desc": "Tips for more accurate queries",
+                    "title": "Asking better questions"
+                },
+                "upload": {
+                    "title": "How do I upload documents?",
+                    "desc": "Step-by-step guide to uploading PDFs"
+                }
+            }
         }
     },
     "feature_pages": {
@@ -2135,20 +2380,105 @@
             "typeError": "Please select an image file.",
             "successTitle": "Photo updated",
             "successDesc": "Your profile photo has been updated successfully."
+        },
+        "i18n": {
+            "page": {
+                "title": "i18n Governance",
+                "highlight": "Internationalization",
+                "subtitle": "Master translation management and AI-assisted localization.",
+                "syncBtn": "Sync DB",
+                "newKeyBtn": "New Key",
+                "searchPlaceholder": "Search by key or text..."
+            },
+            "languages": {
+                "es": "Spanish",
+                "en": "English"
+            },
+            "table": {
+                "keyHeader": "TECHNICAL KEY",
+                "primaryLabel": "PRIMARY",
+                "secondaryLabel": "COMPARISON",
+                "autoTranslateBtn": "AUTO-TRANSLATE",
+                "save": "Save",
+                "cancel": "Cancel",
+                "empty": "Empty",
+                "missing": "Missing",
+                "noResults": "No translations found for the applied filters."
+            },
+            "notifications": {
+                "aiSuccessTitle": "AI: Translation Completed",
+                "aiSuccessDesc": "Missing translations generated and saved successfully.",
+                "upToDateTitle": "Up to date",
+                "upToDateDesc": "No pending translations between selected locales.",
+                "syncSuccessTitle": "Sync Successful",
+                "syncSuccessDesc": "Local files have been dumped to the database.",
+                "saveSuccess": "Translation updated successfully."
+            }
+        },
+        "search": {
+            "title": "Conversational Search",
+            "placeholder": "What do you need to know about your documents?",
+            "analyzing": "Analyzing...",
+            "sources_label": "Sources found:",
+            "error_message": "Sorry, there was an error processing your query.",
+            "input_placeholder": "Type your question here...",
+            "suggested_questions": "Suggested questions",
+            "disclaimer": "AI can make mistakes. Verify important information.",
+            "copy": "Copy answer",
+            "regenerate": "Regenerate answer",
+            "feedback_positive": "Helpful",
+            "feedback_negative": "Not helpful",
+            "spaces": {
+                "admin": {
+                    "status": {
+                        "active": "Active",
+                        "inactive": "Inactive"
+                    }
+                }
+            }
+        },
+        "spaces": {
+            "title": "Knowledge Spaces",
+            "subtitle": "Organize and collaborate in specific work contexts",
+            "tabs": {
+                "quick_qa": "Quick Q&A",
+                "personal": "My Spaces",
+                "collections": "Collections"
+            },
+            "placeholders": {
+                "personal_title": "Personal Spaces",
+                "personal_desc": "Create private spaces to organize your knowledge",
+                "collections_title": "Collections",
+                "collections_desc": "Group related documents into thematic collections"
+            },
+            "admin": {
+                "table": {
+                    "space": "Space",
+                    "type": "Type",
+                    "visibility": "Visibility",
+                    "status": "Status",
+                    "created": "Created",
+                    "actions": "Actions"
+                },
+                "types": {
+                    "global": "Global",
+                    "industry": "Industry",
+                    "tenant": "Tenant",
+                    "team": "Team",
+                    "personal": "Personal"
+                },
+                "status": {
+                    "active": "Active",
+                    "inactive": "Inactive"
+                },
+                "search_placeholder": "Search spaces...",
+                "new_space": "New Space",
+                "manage": "Manage"
+            }
+        },
+        "enterpriseSecurity": {
+            "title": "Enterprise-grade security",
+            "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
         }
-    },
-    "search": {
-        "title": "Conversational Search",
-        "placeholder": "What do you need to know about your documents?",
-        "analyzing": "Analyzing...",
-        "sources_label": "Sources found:",
-        "error_message": "Sorry, there was an error processing your query.",
-        "input_placeholder": "Type your question here...",
-        "suggested_questions": "Suggested questions",
-        "disclaimer": "AI can make mistakes. Verify important information.",
-        "copy": "Copy answer",
-        "regenerate": "Regenerate answer",
-        "feedback_positive": "Helpful",
-        "feedback_negative": "Not helpful"
     }
 }

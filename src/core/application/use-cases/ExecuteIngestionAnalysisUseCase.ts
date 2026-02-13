@@ -10,6 +10,7 @@ import { TenantTier } from '@/types/tiers';
 import { UserRole } from '@/types/roles';
 import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
 import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
+import { AppEnvironment } from '@/lib/schemas/core';
 
 export interface ExecuteIngestionAnalysisInput {
     docId: string;
@@ -22,7 +23,7 @@ export interface ExecuteIngestionAnalysisInput {
         permissionGroups?: string[];
         permissionOverrides?: string[];
     };
-    environment: string;
+    environment: AppEnvironment;
     maskPii: boolean;
     job?: any;
 }
@@ -79,7 +80,7 @@ export class ExecuteIngestionAnalysisUseCase {
             // 2. Update Status to PROCESSING
             await this.knowledgeRepo.updateStatus(docId, 'PROCESSING', {
                 attempts: currentAttempts,
-                environment: environment as any
+                environment
             });
 
             await updateProgress(5);

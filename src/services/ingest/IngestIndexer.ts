@@ -1,4 +1,4 @@
-import { chunkText } from '@/lib/chunk-utils';
+import { ChunkingOrchestrator } from '@/lib/chunking/ChunkingOrchestrator';
 import { generateEmbedding } from '@/lib/llm';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { DocumentChunkSchema } from '@/lib/schemas';
@@ -17,15 +17,27 @@ export class IngestIndexer {
         lang: string,
         correlationId: string,
         session?: any,
-        onProgress?: (percent: number) => Promise<void>
+        onProgress?: (percent: number) => Promise<void>,
+        chunkingLevel: 'bajo' | 'medio' | 'alto' = 'bajo' // Phase 134
     ) {
         // Phase 2: Import observability utilities
         const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
         const { withLLMRetry } = await import('@/lib/llm-retry');
         const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
-        const textChunks = await chunkText(text);
+
+        const textChunks = await ChunkingOrchestrator.chunk({
+            tenantId: asset.tenantId,
+            correlationId,
+            level: chunkingLevel,
+            text,
+            metadata: {
+                industry,
+                filename: asset.filename
+            }
+        });
+
         const allChunks = [
-            ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc, page: undefined })),
+            ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc.text, page: undefined })),
             ...visualFindings.map(vf => ({
                 type: 'VISUAL' as const,
                 text: vf.technical_description,

@@ -1,0 +1,4525 @@
+Hay varias mejoras transversales que te darían bastante retorno sin cambiar el modelo funcional.
+​
+
+1. Clarificar dominios y nombres
+Separar explícitamente módulos por dominio:
+
+lib/workflows/case-workflow-engine.ts vs lib/workflows/ai-workflow-engine.ts.
+​
+
+lib/intelligence/* (PredictiveEngine, InsightEngine, IntelligenceDashboard) ya va bien; consolida todo lo “analítico” ahí.
+​
+
+Evitar nombres genéricos como Entity, GenericCase o results en interfaces; usa sufijos de dominio (EntityDocument, SearchResult, MaintenancePrediction).
+​
+
+2. Normalizar manejo de errores API
+Tienes mezcla de:
+
+Endpoints que usan handleApiError(error, source, correlationId).
+​
+
+Otros que responden manualmente con NextResponse.json({ code, message }).
+​
+
+Mejora:
+
+Usa siempre handleApiError en rutas nuevas y migra gradualmente las antiguas, para que todos devuelvan el mismo envelope (success, error, code, etc.).
+​
+
+3. Unificar contratos de logging
+logEvento ya es el centro, pero hay console.log dispersos en motores y engines.
+​
+
+Mejor:
+
+Reemplazar console.log relevantes por logEvento con source consistente (AIWORKFLOWENGINE, GRAPHENGINE, PREDICTIVEENGINE, etc.).
+​
+
+Dejar console.log solo en scripts CLI bajo scripts/ o detrás de un if (process.env.NODE_ENV !== "production").
+
+4. Reforzar multi‑tenant en todos los paths
+En algunos sitios usas getTenantCollection (bien), en otros connectDB directo + db.collection("entities") con filtros manuales de tenantId.
+​
+
+Riesgo: olvidar el filtro en una ruta nueva.
+
+Mejora:
+
+Para colecciones multi‑tenant “core” (entities, cases, workflows, checklist, humanvalidations, etc.), intenta pasar siempre por getTenantCollection.
+
+Reserva connectDB + collection “raw” solo para colecciones globales o scripts de mantenimiento.
+
+5. Tipar mejor el “payload” de IA
+Motores como PredictiveEngine, InsightEngine, RiskAnalysisNode intercambian blobs any (signals, patterns, findings) sin tipos fuertes.
+​
+
+Mejora incremental:
+
+Define interfaces ligeras:
+
+RiskFinding, GraphPattern, FailureSignal.
+
+Usa esos tipos en vez de any para evitar errores tontos en campos (ej. riskScore vs score).
+
+6. Cohesión en los repositorios
+Las interfaces ICaseRepository, IEntityRepository, IWorkflowRepository, IKnowledgeRepository están bien, pero mezclan operaciones bastante distintas.
+​
+
+Sugerencia:
+
+Que cada repositorio tenga solo operaciones de su agregado:
+
+IEntityRepository.updateResult → renombrar a algo como updateAnalysisResult o mover a un IAnalysisRepository si crece.
+​
+
+Evitar “repositorios dios” con demasiadas responsabilidades.
+
+7. Reducir duplicación de lógica SLA
+Varios endpoints repiten patrón:
+
+const start = Date.now();
+
+al final: medir, log SLAEXCEEDED.
+​
+
+Mejora:
+
+Pequeño helper:
+
+ts
+async function withSla<T>(
+  source: string,
+  action: string,
+  slaMs: number,
+  correlationId: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const start = Date.now();
+  try {
+    return await fn();
+  } finally {
+    const durationMs = Date.now() - start;
+    if (durationMs > slaMs) {
+      await logEvento({
+        level: "WARN",
+        source,
+        action: "SLA_VIOLATION",
+        message: `${action} took ${durationMs}ms (SLA ${slaMs}ms)`,
+        correlationId,
+        details: { durationMs },
+      });
+    }
+  }
+}
+Y lo usas en endpoints pesados (checklist, reportes, vector search).
+
+8. Limpieza de scripts y rutas “debug”
+Tienes rutas tipo api/_check, _write, scripts de verificación, etc., muy útiles pero potencialmente peligrosos en producción.
+​
+
+Mejora:
+
+Asegúrate de:
+
+Están detrás de un secreto (HEALTHCHECKSECRET) o sólo en NODE_ENV !== "production".
+​
+
+Están claramente marcados y agrupados (app/api/_debug/* o scripts/).
+
+9. Consolidar i18n de UI y workflows
+Ya tienes TranslationService + TranslationSchema + endpoints api/admin/i18n*.
+​
+
+Próximo paso:
+
+Empezar a sustituir label literales en WorkflowDefinition y ChecklistConfig por labelKey + resolver texto en una única capa de i18n (como comentamos antes).
+
+Eso te permite luego per‑tenant/per‑industria sin tocar código.
+
+10. Documentar explícitamente los “contratos” de dominio
+Varias piezas tienen comentarios de fase, pero no un contrato de alto nivel:
+
+Qué es exactamente un Pedido, una Entidad, un Caso, un KnowledgeAsset, etc.
+​
+
+Una simple DOMAIN.md o carpeta docs/domain/ con 5–6 páginas breves te va a ahorrar mucha carga cognitiva cuando empieces a extender a otros verticales (legal, banca).
+
+Si quieres, puedo elegir una de estas áreas (por ejemplo, unificar WorkflowTask + bandeja + motores) y proponerte un plan de refactor paso a paso, con orden de migración para minimizar riesgos.
+
+Para unificar WorkflowTask + bandeja + motores sin romper nada, yo lo haría en 5 pasos pequeños.
+
+1. Definir el modelo único de WorkflowTask
+Primero introduces un único schema/tipo y lo usas como “fuente de verdad” en el servicio y en los motores.
+​
+
+ts
+// lib/schemas/workflow-task.ts
+import z from "zod";
+import { UserRole } from "types/roles";
+
+export const WorkflowTaskStatusSchema = z.enum([
+  "PENDING",
+  "INPROGRESS",
+  "COMPLETED",
+  "REJECTED",
+  "CANCELLED",
+]);
+export type WorkflowTaskStatus = z.infer<typeof WorkflowTaskStatusSchema>;
+
+export const WorkflowTaskSchema = z.object({
+  _id: z.any().optional(),
+  tenantId: z.string(),
+
+  caseId: z.string().optional(),          // id de caso/entidad
+  entitySlug: z.string().optional(),      // tipo lógico (pedido, contrato,...)
+
+  type: z.string(),                       // DOCUMENT_REVIEW, TECHNICAL_VALIDATION...
+  title: z.string(),
+  description: z.string().optional(),
+
+  assignedRole: z.nativeEnum(UserRole).optional(),
+  assignedUserId: z.string().optional(),
+
+  status: WorkflowTaskStatusSchema,
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
+
+  // Enlaces con workflows
+  source: z.enum(["CASE_WORKFLOW", "AI_WORKFLOW", "MANUAL"]).default("CASE_WORKFLOW"),
+  workflowId: z.string().optional(),
+  nodeId: z.string().optional(),
+
+  // Reglas de negocio asociadas
+  checklistConfigId: z.string().optional(),
+  riskScore: z.number().min(0).max(100).optional(),
+
+  metadata: z.record(z.any()).default({}),
+
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().default(new Date()),
+  completedAt: z.date().optional(),
+  completedBy: z.string().optional(),     // userId
+});
+export type WorkflowTask = z.infer<typeof WorkflowTaskSchema>;
+Paso 1 concreto:
+
+Crear este schema.
+
+Actualizar WorkflowTaskService para que:
+
+listTasks devuelva WorkflowTask[] parseados con WorkflowTaskSchema.
+​
+
+getTaskById use WorkflowTaskSchema.parse(task).
+​
+
+updateStatus siga igual pero garantizando que status es WorkflowTaskStatus.
+​
+
+Con esto no rompes nada de UI, solo haces más fuerte el contrato de backend.
+
+2. Adaptar WorkflowTaskService y API de bandeja
+2.1. Servicio
+Refinas WorkflowTaskService para usar el tipo único y filtros coherentes.
+​
+
+ts
+// lib/workflow-task-service.ts (ajustado)
+import { WorkflowTaskSchema, WorkflowTaskStatus } from "lib/schemas/workflow-task";
+
+export class WorkflowTaskService {
+  private static COLLECTION = "workflowtasks";
+
+  static async listTasks(
+    tenantId: string,
+    status?: WorkflowTaskStatus,
+    assignedRole?: UserRole,
+    caseId?: string
+  ): Promise<WorkflowTask[]> {
+    const collection = await getTenantCollection(this.COLLECTION);
+    const query: any = { tenantId };
+    if (status) query.status = status;
+    if (assignedRole) query.assignedRole = assignedRole;
+    if (caseId) query.caseId = caseId;
+
+    const docs = await (collection as any)
+      .find(query)
+      .sort({ priority: -1, createdAt: -1 })
+      .toArray();
+
+    return docs.map((d: any) => WorkflowTaskSchema.parse(d));
+  }
+
+  static async getTaskById(id: string, tenantId: string): Promise<WorkflowTask> {
+    const collection = await getTenantCollection(this.COLLECTION);
+    const task = await collection.findOne({ _id: new ObjectId(id), tenantId });
+    if (!task) throw new AppError("NOTFOUND", 404, "Tarea no encontrada");
+    return WorkflowTaskSchema.parse(task);
+  }
+
+  static async updateStatus(params: {
+    id: string;
+    tenantId: string;
+    userId: string;
+    userName: string;
+    status: WorkflowTaskStatus;
+    notes?: string;
+    correlationId: string;
+  }) {
+    const { id, tenantId, userId, userName, status, notes, correlationId } =
+      params;
+
+    const collection = await getTenantCollection(this.COLLECTION);
+    const task = await this.getTaskById(id, tenantId);
+
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
+    };
+    if (status === "COMPLETED") {
+      updateData.completedAt = new Date();
+      updateData.completedBy = userId;
+    }
+    if (notes) {
+      updateData["metadata.resolutionNotes"] = notes;
+    }
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id), tenantId },
+      { $set: updateData }
+    );
+    if (result.modifiedCount === 0) {
+      throw new AppError("DATABASEERROR", 500, "Error al actualizar la tarea");
+    }
+
+    await logEvento({
+      level: "INFO",
+      source: "WORKFLOWTASKSERVICE",
+      action: "TASK_STATUS_UPDATED",
+      message: `Tarea ${id} marcada como ${status} por ${userName}`,
+      correlationId,
+      tenantId,
+      details: {
+        taskId: id,
+        previousStatus: task.status,
+        nextStatus: status,
+      },
+    });
+
+    return { success: true, taskId: id, status };
+  }
+}
+2.2. API de bandeja
+La API GET /api/admin/workflow-tasks ya usa WorkflowTaskService.listTasks; solo asegúrate de:
+
+Tipar status usando el enum (WorkflowTaskStatusSchema).
+
+Devolver siempre el shape WorkflowTask.
+
+3. Unificar creación de tareas desde motores
+Ahora ajustas ambos motores para crear tareas siguiendo el mismo contrato:
+
+3.1. CaseWorkflowEngine
+En WorkflowEngine.executeTransition, donde ahora haces:
+
+ts
+await tasksCollection.insertOne({
+  tenantId,
+  caseId: String(caso._id),
+  type: "DOCUMENTREVIEW",
+  title: `Revisión requerida para estado ${nextState.label}`,
+  description: ...,
+  assignedRole: nextState.rolesallowed.includes("COMPLIANCE")
+    ? "COMPLIANCE"
+    : "REVIEWER",
+  status: "PENDING",
+  priority: "MEDIUM",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});
+Lo sustituyes por algo conforme al schema:
+
+ts
+const task: WorkflowTask = WorkflowTaskSchema.parse({
+  tenantId,
+  caseId: String(caso._id),
+  entitySlug: "cases",
+  type: "DOCUMENT_REVIEW",
+  title: `Revisión requerida para estado ${nextState.label}`,
+  description:
+    "El caso ha avanzado y requiere validación formal según el workflow.",
+  assignedRole: nextState.rolesallowed.includes(UserRole.COMPLIANCE)
+    ? UserRole.COMPLIANCE
+    : UserRole.REVIEWER,
+  status: "PENDING",
+  priority: "MEDIUM",
+  source: "CASE_WORKFLOW",
+  workflowId: definition.id?.toString(),
+  metadata: {
+    fromState: caso.status,
+    toState: toState,
+  },
+});
+await tasksCollection.insertOne(task as any);
+3.2. AIWorkflowEngine
+En la acción humantask del motor IA, donde ya creas algo muy parecido, lo adaptas:
+​
+
+ts
+const task: WorkflowTask = WorkflowTaskSchema.parse({
+  tenantId,
+  caseId: data.id ?? data.caseId ?? "unlinked-case",
+  entitySlug: action.params.entitySlug ?? "entities",
+  type: action.params.taskType ?? "DOCUMENT_REVIEW",
+  title: action.params.title,
+  description:
+    action.params.description ??
+    "Revisión humana generada por AI Workflow",
+  assignedRole: action.params.assignedRole ?? UserRole.ADMIN,
+  status: "PENDING",
+  priority: action.params.priority ?? "MEDIUM",
+  source: "AI_WORKFLOW",
+  workflowId,
+  nodeId: action.nodeId,
+  checklistConfigId: action.params.checklistConfigId,
+  riskScore: data.riskScore,
+  metadata: {
+    correlationId,
+    triggerData: data,
+  },
+});
+await taskCollection.insertOne(task as any);
+Con esto las tareas tienen siempre el mismo shape, independientemente de qué motor las generó.
+
+4. Alinear la bandeja de tareas (UI)
+En el frontend (p. ej. WorkflowTaskInbox):
+
+Asumir que el backend ya devuelve WorkflowTask normalizado.
+​
+
+Aprovechar nuevos campos:
+
+Mostrar source (icono distinto para AI vs case).
+
+Mostrar workflowId / nodeId para debug/analytics.
+
+Filtrar por assignedRole, status, caseId usando listTasks de la API.
+
+Ejemplo simplificado:
+
+ts
+type WorkflowTask = z.infer<typeof WorkflowTaskSchema>;
+
+const res = await fetch("/api/admin/workflow-tasks?status=PENDING");
+const { tasks }: { tasks: WorkflowTask[] } = await res.json();
+
+// En UI: columna “Origen” → task.source, columna “Prioridad”, etc.
+No hace falta un refactor grande de UI si ya consumías la colección workflowtasks; solo añades campos opcionales.
+
+5. Orden de migración para minimizar riesgos
+Introducir schema y tipos
+
+Añadir WorkflowTaskSchema y WorkflowTaskStatusSchema.
+
+No tocar aún motores.
+
+Actualizar WorkflowTaskService y API
+
+Hacer que listTasks/getTaskById/updateStatus usen el schema, pero sigan soportando documentos antiguos (campos extra ignorados).
+​
+
+Refactor motores para escribir tareas nuevas ya “canonical”
+
+Cambiar CaseWorkflowEngine.executeTransition para usar WorkflowTaskSchema.parse al construir la tarea.
+
+Cambiar AIWorkflowEngine (acción humantask) igual.
+​
+
+Adaptar UI según haga falta
+
+Leer campos nuevos (source, type, priority) para mejorar la bandeja, pero no es obligatorio para que funcione.
+
+Limpieza opcional
+
+Script de migración (offline) para tareas antiguas:
+
+Rellenar source donde falte (CASE_WORKFLOW por defecto).
+
+Normalizar type (DOCUMENTREVIEW → DOCUMENT_REVIEW).
+
+Añadir índices útiles en workflowtasks:
+
+{ tenantId: 1, status: 1, assignedRole: 1, createdAt: -1 }.
+
+Con este plan, la unificación de WorkflowTask + bandeja + motores es incremental: primero refuerzas el contrato, luego haces que todos los productores lo respeten, y la UI simplemente se beneficia de datos más coherentes.
+
+
+
+Hay tres patrones principales que deberías unificar: APIs que ya usan handleApiError, otras que hacen manejo manual “medio bien” y algunas que devuelven estructuras totalmente distintas.
+​
+
+Te marco las que conviene cambiar, agrupadas por estado.
+
+1. Endpoints que YA usan handleApiError (OK, referencia)
+Estos no hace falta tocarlos; son el modelo a seguir:
+
+Permisos / Guardian:
+
+api/admin/permissions/policies (GET, POST).
+​
+
+api/admin/permissions/roles (GET, POST).
+​
+
+api/admin/spaces/[id] (GET, PATCH, DELETE).
+​
+
+api/admin/spaces/[id]/invitations.
+​
+
+Prompts:
+
+api/admin/prompts (GET, POST).
+​
+
+api/admin/prompts/history.
+​
+
+api/admin/prompts/test.
+​
+
+api/admin/prompts/[id]/versions (GET, POST).
+​
+
+api/admin/prompts/[id] (PATCH).
+​
+
+RAG / métricas:
+
+api/admin/rag-evaluations.
+​
+
+api/user/search (POST).
+​
+
+api/user/dashboard.
+​
+
+api/user/stats.
+​
+
+Validation / workflows:
+
+api/entities/[id]/validate (POST, GET).
+​
+
+api/entities/[id]/generate-report (POST, GET).
+​
+
+api/workflow/transition (POST).
+​
+
+Comments / collaboration:
+
+api/entities/[id]/comments (GET, POST).
+​
+
+Spaces:
+
+api/admin/spaces (GET, POST).
+​
+
+Estos son tu “estándar”.
+
+2. Endpoints que YA tienen try/catch pero NO usan handleApiError (prioridad alta)
+Conviene que todos deleguen en handleApiError(source, correlationId) para tener mismo envelope (success, error.code, etc.).
+​
+
+2.1. Checklists
+POST /api/entities/[id]/checklist
+
+Ahora: hace logging manual y devuelve:
+
+AppError → NextResponse.json({ error: error.message, code: error.name }, status X).
+
+Cualquier otro → envuelve en ExternalServiceError y devuelve { error, code }.
+​
+
+Mejora: sustituir el bloque catch por:
+
+ts
+catch (error) {
+  const durationMs = Date.now() - start;
+  await logEvento(...); // mantén los logs
+  return handleApiError(error, "APICHECKLISTPOST", correlationId);
+}
+PATCH /api/entities/[id]/checklist
+
+Ya termina en return handleApiError(error, APICHECKLISTPATCH, correlationId); → OK.
+​
+
+POST /api/entities/[id]/checklist/validate
+
+Hace if z.ZodError → 400, if AppError → 4xx/5xx, y el resto → { error: "Internal Server Error" }.
+​
+
+Mejora: usa handleApiError y deja solo el caso Zod si quieres un mensaje más explícito:
+
+ts
+catch (error) {
+  const durationMs = Date.now() - start;
+  await logEvento(...);
+  if (error instanceof z.ZodError) {
+    return NextResponse.json(
+      { success: false, error: "VALIDATIONERROR", details: error.issues },
+      { status: 400 }
+    );
+  }
+  return handleApiError(error, "CHECKLISTVALIDATION", correlationId);
+}
+2.2. Vector search de entidad
+GET /api/entities/[id]/vector-search
+
+Ahora:
+
+!session → NextResponse.json({ error: "No autorizado" }, 401).
+
+AppError → { code: error.code, message }.
+
+Resto → { code: "INTERNALERROR", message: "Error interno en búsqueda vectorial" }.
+​
+
+Mejora: unificar todo con handleApiError:
+
+ts
+if (!session) throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+...
+catch (error) {
+  await logEvento(...);
+  return handleApiError(error, "APIVECTORSEARCH", correlationId);
+}
+2.3. Guardian / simulador de permisos
+POST /api/admin/guardian/check
+
+Ahora:
+
+ZodError → { error: "Invalid input" }.
+
+AppError → { error: error.message }.
+
+Resto → { error: "Internal server error" }.
+​
+
+Mejora: usar handleApiError para todo excepto Zod:
+
+ts
+catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json(
+      { success: false, error: "VALIDATIONERROR", details: error.issues },
+      { status: 400 }
+    );
+  }
+  return handleApiError(error, "APIGUARDIANCHECK", correlationId);
+}
+2.4. Federated patterns
+POST /api/admin/federated/validate-pattern
+
+session sin auth → NextResponse.json({ error: "Unauthorized" }).
+
+Zod → { error: "Invalid input" }.
+
+AppError solo en un path; resto → { error: "Internal Server Error" }.
+​
+
+Mejora: igual que Guardian:
+
+ts
+if (!session?.user) throw new AppError("UNAUTHORIZED", 401, "Unauthorized");
+...
+catch (error) {
+  if (error instanceof z.ZodError) ...
+  return handleApiError(error, "APIFEDERATEDVALIDATE", correlationId);
+}
+2.5. Federated search pública
+POST /api/v1/federated/search-global-patterns
+
+!session / !query / error → JSON manual con error y 4xx/500.
+​
+
+Mejora: igual, lanzar AppError en validaciones y delegar el resto:
+
+ts
+if (!session) throw new AppError("UNAUTHORIZED", 401, "Unauthorized");
+if (!query) throw new ValidationError("Query required");
+...
+catch (error) {
+  return handleApiError(error, "APIFEDERATEDSEARCH", correlationId);
+}
+2.6. Observability SLIs
+GET /api/admin/observability/slis
+
+Ya usa AppError pero el catch final hace new AppError(INTERNALERROR, 500, error.message).toJSON.
+​
+
+Mejor cambiar a handleApiError(error, "APIADMINSLICALC", correlationId).
+
+3. Endpoints con manejo manual y envelope distinto (prioridad media)
+No rompen tanto, pero devuelven estructuras inconsistentes (success false vs solo error, etc.).
+​
+
+Algunos ejemplos claros:
+
+api/admin/spaces (GET/POST) ya devuelve success true/false y propios códigos, pero el catch también construye manualmente el JSON para errores no AppError.
+​
+
+Podrías simplificar a handleApiError para el caso genérico, manteniendo solo el branch ZodError.
+
+api/user/preferences (GET/POST) en el módulo de preferencias:
+
+Usa AppError pero el catch devuelve { success: false, message }, no el formato de AppError.toJSON.
+​
+
+Idealmente: return handleApiError(error, "APIUSERPREFERENCES", correlationId).
+
+api/technical/ragchat:
+
+En errores de LLM o RAG, devuelve { success: false, error: "Ocurrió un error..." } sin code.
+​
+
+Si quieres unificar, cambia esos throw/return a AppError y usa handleApiError.
+
+api/technical/entities/analyze:
+
+AppError → error.toJSON.
+
+Resto → new AppError(INTERNALERROR, 500, "Error procesando la entidad RAG").toJSON.
+​
+
+Esto ya está bastante alineado, pero podrías centralizar con handleApiError.
+
+4. Plan concreto de refactor
+Fase 1 – Endpoints críticos de negocio
+
+POST /api/entities/[id]/checklist.
+
+POST /api/entities/[id]/checklist/validate.
+
+GET /api/entities/[id]/vector-search.
+
+POST /api/admin/guardian/check.
+
+POST /api/admin/federated/validate-pattern.
+
+POST /api/v1/federated/search-global-patterns.
+​
+
+Fase 2 – Observabilidad y auxiliares
+
+GET /api/admin/observability/slis.
+
+api/technical/ragchat, api/admin/observability/* adicionales si los vas consolidando.
+​
+
+Fase 3 – Limpieza de “manual JSON”
+
+Rutas de preferencias usuario, judge, debug, etc., para que todo acabe pasando por handleApiError salvo casos Zod.
+​
+
+Si quieres, en el siguiente paso puedo escribirte un snippet “plantilla” de catch estándar (con Zod + AppError + resto) para que lo copies/pegues en todos los endpoints y el refactor sea casi mecánico.
+
+Usa este patrón de plantilla para los catch de tus rutas:
+
+ts
+import { AppError, handleApiError } from "lib/errors";
+import { logEvento } from "lib/logger";
+import { ZodError } from "zod";
+
+const SOURCE = "APINAME"; // p.ej. "APICHECKLISTPOST"
+
+export async function handler(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const start = Date.now();
+
+  try {
+    // ... lógica normal ...
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+
+    // Logging estructurado (opcional, pero recomendable)
+    await logEvento({
+      level: error instanceof AppError ? "WARN" : "ERROR",
+      source: SOURCE,
+      action: "ERROR",
+      message: error.message ?? "Unexpected error",
+      correlationId,
+      details: {
+        durationMs,
+        name: error.name,
+        stack: error.stack,
+      },
+    });
+
+    // 1) Validación Zod explícita (si quieres mensaje más rico)
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "VALIDATIONERROR",
+          message: "Invalid input",
+          details: error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 2) Resto de casos centralizados
+    return handleApiError(error, SOURCE, correlationId);
+  }
+}
+Solo tienes que:
+
+Ajustar SOURCE por endpoint, por ejemplo:
+
+APICHECKLISTPOST
+
+APICHECKLISTVALIDATE
+
+APIVECTORSEARCH
+
+APIGUARDIANCHECK
+
+APIFEDERATEDVALIDATE
+
+APIFEDERATEDSEARCH.
+​
+
+Mantener tu logEvento específico del endpoint (si ya tienes uno) antes del bloque if (error instanceof ZodError).
+
+
+Ahora mismo logEvento lo usas bastante bien, pero con ligeras variaciones de campos, nombres y niveles según el endpoint. Unificar contratos de logging te facilitaría observabilidad, SLIs y correlación de eventos.
+​
+
+Te propongo tres cosas: un contrato único, convenciones de nombres y algunos ejemplos aplicados.
+
+1. Contrato estándar de logEvento
+Define un tipo común y asegúrate de que todos los sitios lo respetan:
+
+ts
+// lib/logger.ts
+
+export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
+
+export interface AppLogEvent {
+  level: LogLevel;
+  source: string;        // Módulo/sistema: REPORTENDPOINT, WORKFLOWENGINE, RAGSERVICE...
+  action: string;        // Acción concreta: GET, CREATE, EXECUTEWORKFLOW...
+  message: string;       // Mensaje humano corto
+  correlationId?: string;
+  tenantId?: string;
+  userId?: string;
+  entityId?: string;     // opcional, cuando aplica
+  workflowId?: string;   // opcional
+  nodeId?: string;       // opcional (workflows)
+  durationMs?: number;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+    code?: string;
+  };
+  details?: Record<string, any>;
+}
+
+export async function logEvento(event: AppLogEvent): Promise<void> {
+  // implementación actual, adaptada al nuevo shape
+}
+En la práctica:
+
+Todos los logs deberían rellenar siempre:
+
+level, source, action, message.
+
+Y, cuando los tengas, también:
+
+correlationId, tenantId, userId, durationMs, entityId, workflowId, nodeId.
+​
+
+2. Convenciones de nombres
+2.1. source
+Usa un nombre corto, estable por módulo:
+
+Endpoints HTTP:
+
+CHECKLISTENDPOINT
+
+VALIDATIONENDPOINT
+
+REPORTENDPOINT
+
+APIWORKFLOWTASKS
+
+APIADMINSPACES
+
+APIPROMPTS
+
+RAGSERVICE
+
+OBSERVABILITYSLIS.
+​
+
+Motores/servicios:
+
+WORKFLOWENGINE (case workflows)
+
+AIWORKFLOWENGINE (AI workflows)
+
+INSIGHTENGINE
+
+PREDICTIVEENGINE
+
+ENTITYENGINE
+
+GRAPHENGINE
+
+GUARDIAN
+
+GOVERNANCEENGINE.
+​
+
+2.2. action
+Conviene limitarlo a un conjunto pequeño de verbos/patrones:
+
+Peticiones HTTP:
+
+GET, LIST, CREATE, UPDATE, DELETE, PATCH.
+
+Sufijos específicos: GENERATE_REPORT, VALIDATE, EXECUTE_TRANSITION.
+​
+
+Motores:
+
+EXECUTEWORKFLOW
+
+TRIGGER_EVALUATION
+
+HUMAN_TASK_CREATED
+
+STATETRANSITION
+
+GENERATEINSIGHTS
+
+GENERATEFORECAST
+
+FAILOVERTRIGGERED.
+​
+
+Errores y SLA:
+
+ERROR, INTERNALERROR
+
+SLAEXCEEDED o SLAVIOLATION (elige uno y úsalo siempre).
+​
+
+3. Plantilla para logs de éxito y error
+3.1. Éxito en endpoint
+Ejemplo aplicado a POST /api/entities/[id]/generate-report:
+​
+
+ts
+const durationMs = Date.now() - start;
+await logEvento({
+  level: "INFO",
+  source: "REPORTENDPOINT",
+  action: "GENERATE_REPORT",
+  message: `Informe LLM generado para entidad ${entityId}`,
+  correlationId,
+  tenantId,
+  entityId,
+  userId: session.user.id,
+  durationMs,
+  details: {
+    reportId: result.insertedId.toString(),
+    reportLength: reportText.length,
+  },
+});
+
+if (durationMs > 5000) {
+  await logEvento({
+    level: "WARN",
+    source: "REPORTENDPOINT",
+    action: "SLAEXCEEDED",
+    message: `Generación de informe tardó ${durationMs}ms (SLA 5000ms)`,
+    correlationId,
+    tenantId,
+    entityId,
+    durationMs,
+  });
+}
+3.2. Error en endpoint
+Mismo endpoint, bloque catch (antes de handleApiError):
+​
+
+ts
+const durationMs = Date.now() - start;
+await logEvento({
+  level: "ERROR",
+  source: "REPORTENDPOINT",
+  action: "GENERATE_REPORT",
+  message: "Error al generar informe LLM",
+  correlationId,
+  tenantId,
+  entityId,
+  durationMs,
+  error: {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+    code: error.code,
+  },
+});
+Luego return handleApiError(error, "REPORTENDPOINT", correlationId);.
+
+4. Motores y servicios: misma estructura
+4.1. CaseWorkflowEngine
+Cuando haces una transición:
+​
+
+ts
+await logEvento({
+  level: "INFO",
+  source: "WORKFLOWENGINE",
+  action: "STATETRANSITION",
+  message: `Entity ${caseId} moved to ${toState} by role ${role}`,
+  correlationId,
+  tenantId: caso.tenantId,
+  entityId: caseId,
+  durationMs: undefined, // si lo mides
+  details: {
+    from: caso.status,
+    to: toState,
+    role,
+  },
+});
+Cuando generas una tarea de workflow:
+​
+
+ts
+await logEvento({
+  level: "INFO",
+  source: "WORKFLOWENGINE",
+  action: "HUMAN_TASK_CREATED",
+  message: `WorkflowTask generated for case ${caseId}`,
+  correlationId,
+  tenantId: caso.tenantId,
+  entityId: caseId,
+  details: {
+    taskId: insertedId.toString(),
+    state: toState,
+  },
+});
+4.2. AIWorkflowEngine
+Cuando ejecutas un workflow IA:
+​
+
+ts
+await logEvento({
+  level: "INFO",
+  source: "AIWORKFLOWENGINE",
+  action: "EXECUTEWORKFLOW",
+  message: `Executed workflow ${wf.name} for tenant ${tenantId}`,
+  correlationId,
+  tenantId,
+  workflowId: wf.id.toString(),
+  durationMs: duration,
+});
+En caso de error:
+
+ts
+await logEvento({
+  level: "ERROR",
+  source: "AIWORKFLOWENGINE",
+  action: "EXECUTEWORKFLOW",
+  message: `Error processing event for workflow ${wf.name}`,
+  correlationId,
+  tenantId,
+  workflowId: wf.id.toString(),
+  error: {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  },
+});
+5. Donde ahora hay console.log
+En varios engines tienes trazas tipo console.log("WorkflowEngine Branching LOW CONFIDENCE path...").
+​
+
+Sustituye por logs de nivel DEBUG:
+
+ts
+await logEvento({
+  level: "DEBUG",
+  source: "AIWORKFLOWENGINE",
+  action: "BRANCH_DECISION",
+  message: "Branching LOW CONFIDENCE path",
+  correlationId,
+  details: {
+    workflowId,
+    nodeId: action.nodeId,
+    confidence,
+    threshold,
+  },
+});
+Y si quieres seguir pudiendo desactivar estos logs, puedes añadir una simple condición:
+
+ts
+if (process.env.LOG_LEVEL === "DEBUG") {
+  await logEvento(...);
+}
+6. Plan corto de refactor
+Definir el tipo AppLogEvent en lib/logger.ts y adaptar implementación actual a ese shape.
+​
+
+Elegir naming canónico:
+
+Lista cerrada de source (por módulo) y action (por tipo de operación).
+
+Reemplazar console.log relevantes en:
+
+WorkflowEngine (case).
+
+AIWorkflowEngine.
+
+InsightEngine, PredictiveEngine, GraphEngine, CrossVerticalEngine.
+​
+
+Unificar logs de SLA:
+
+Siempre source: <ENDPOINT>, action: "SLAEXCEEDED", durationMs, correlationId.
+
+Revisar endpoints críticos para que todos rellenen al menos { level, source, action, message, correlationId, durationMs }.
+
+Te pongo CHECKLISTENDPOINT y REPORTENDPOINT reescritos con logging unificado y manejo de errores consistente.
+
+1. CHECKLISTENDPOINT (GET /apipedidos/[id]/checklist)
+ts
+// app/api/pedidos/[id]/checklist/route.ts
+import { NextResponse } from "next/server";
+import { z, ZodError } from "zod";
+import { v4 as uuidv4 } from "uuid";
+import { auth } from "lib/auth";
+import { extractChecklist } from "lib/checklist-extractor";
+import { autoClassify, smartSort } from "lib/checklist-auto-classifier";
+import {
+  ChecklistItem,
+  ChecklistConfig,
+  ExtractedChecklistSchema,
+} from "lib/schemas";
+import {
+  AppError,
+  ValidationError,
+  ExternalServiceError,
+  handleApiError,
+} from "lib/errors";
+import { logEvento } from "lib/logger";
+import { getRelevantDocuments } from "lib/rag-service";
+import { getChecklistConfigById } from "lib/configs";
+import { connectDB } from "lib/db";
+import { ObjectId } from "mongodb";
+
+const ParamsSchema = z.object({
+  id: z.string(),
+  configid: z.string().optional(),
+  refresh: z.preprocess((val) => val ?? false, z.boolean().optional()),
+});
+
+const SOURCE = "CHECKLISTENDPOINT";
+
+export async function GET(request: Request, context: { params: { id: string } }) {
+  const correlationId = uuidv4();
+  const start = Date.now();
+
+  try {
+    const session = await auth();
+    if (!session) {
+      throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+    }
+    const tenantId = session.user.tenantId;
+    if (!tenantId) {
+      throw new AppError("FORBIDDEN", 403, "Tenant ID no encontrado en la sesión");
+    }
+
+    // Parse params
+    const url = new URL(request.url);
+    const rawConfigId = url.searchParams.get("configid");
+    const rawRefresh = url.searchParams.get("refresh");
+
+    const parsed = ParamsSchema.safeParse({
+      id: context.params.id,
+      configid: rawConfigId ?? undefined,
+      refresh: rawRefresh ?? undefined,
+    });
+    if (!parsed.success) {
+      throw new ValidationError("Invalid query parameters", parsed.error);
+    }
+    const { id: entityId, configid, refresh } = parsed.data;
+
+    // Tenant isolation & entity check
+    const db = await connectDB();
+    const entity = await db.collection("entities").findOne({
+      _id: new ObjectId(entityId),
+    });
+    if (!entity) {
+      throw new AppError("NOTFOUND", 404, `Entidad ${entityId} no encontrada`);
+    }
+    if (entity.tenantId && entity.tenantId !== tenantId) {
+      await logEvento({
+        level: "WARN",
+        source: SOURCE,
+        action: "CROSSTENANTACCESSATTEMPT",
+        message: `Intento de acceso cruzado Entidad ${entityId} por Tenant ${tenantId}`,
+        correlationId,
+        tenantId,
+        entityId,
+        details: {
+          resourceTenant: entity.tenantId,
+        },
+      });
+      throw new AppError(
+        "FORBIDDEN",
+        403,
+        "No tienes permiso para acceder a esta entidad"
+      );
+    }
+
+    // 1. Load checklist configuration
+    const config: ChecklistConfig = await getChecklistConfigById(
+      configid ?? "default",
+      correlationId
+    );
+
+    // 2. Check persistence layer
+    const existingChecklist = await db.collection("extractedchecklists").findOne({
+      entityId: entityId.toString(),
+    });
+
+    let finalItems: ChecklistItem[];
+
+    if (existingChecklist && !refresh) {
+      finalItems = existingChecklist.items.map((item: any) => {
+        const validation =
+          existingChecklist.validations?.[item.id] ??
+          Object.values(existingChecklist.validations || {}).find(
+            (v: any) => v.itemId === item.id
+          );
+        return { ...item, ...validation };
+      });
+    } else {
+      // 3. Retrieve relevant documents
+      const docs = await getRelevantDocuments(entityId, tenantId, {
+        topK: 15,
+        correlationId,
+      });
+
+      // 4. Extract checklist items via LLM
+      const checklistItemsRaw = await extractChecklist(
+        docs.slice(0, 5),
+        tenantId,
+        correlationId
+      );
+
+      // 5. Autoclassify
+      const classifiedItems: ChecklistItem[] = checklistItemsRaw.map(
+        (item: ChecklistItem) => {
+          const categoryId = autoClassify(item, config, correlationId);
+          return { ...item, categoryId };
+        }
+      );
+
+      // Smart sort
+      finalItems = smartSort(classifiedItems, config, correlationId);
+
+      // 6. Merge with existing validations if refreshing
+      let validations = existingChecklist?.validations ?? {};
+      if (existingChecklist && refresh) {
+        finalItems = finalItems.map((item) => {
+          const existingValidation = Object.values(validations).find(
+            (v: any) => v.itemId === item.id
+          );
+          return existingValidation ? { ...item, ...existingValidation } : item;
+        });
+      }
+
+      // 7. Save snapshot
+      const extracted = ExtractedChecklistSchema.parse({
+        entityId: entityId.toString(),
+        tenantId,
+        items: finalItems,
+        validations,
+        updatedAt: new Date(),
+        createdAt: existingChecklist?.createdAt ?? new Date(),
+      });
+
+      await db.collection("extractedchecklists").updateOne(
+        { entityId: entityId.toString() },
+        {
+          $set: extracted,
+          $setOnInsert: { createdAt: new Date() },
+        },
+        { upsert: true }
+      );
+    }
+
+    // Logging success
+    const durationMs = Date.now() - start;
+    await logEvento({
+      level: "INFO",
+      source: SOURCE,
+      action: "GET",
+      message: `Returned ${finalItems.length} checklist items for entity ${entityId}`,
+      correlationId,
+      tenantId,
+      entityId,
+      durationMs,
+      details: {
+        configName: config.name,
+        refresh: !!refresh,
+        fromCache: !refresh && !!existingChecklist,
+      },
+    });
+
+    if (durationMs > 5000) {
+      await logEvento({
+        level: "WARN",
+        source: SOURCE,
+        action: "SLAEXCEEDED",
+        message: `Checklist generado pero excedió SLA ${durationMs}ms`,
+        correlationId,
+        tenantId,
+        entityId,
+        durationMs,
+      });
+    }
+
+    return NextResponse.json(
+      { success: true, items: finalItems, correlationId },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: error instanceof AppError ? "WARN" : "ERROR",
+      source: SOURCE,
+      action: "ERROR",
+      message: "Failed to generate checklist",
+      correlationId,
+      durationMs,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      },
+    });
+
+    if (error instanceof ZodError || error instanceof ValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "VALIDATIONERROR",
+          message: "Invalid input",
+          details: error.issues ?? error.message,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof ExternalServiceError || error instanceof AppError) {
+      return handleApiError(error, SOURCE, correlationId);
+    }
+
+    const wrapped = new ExternalServiceError(
+      "Unexpected error in checklist endpoint",
+      error as Error
+    );
+    return handleApiError(wrapped, SOURCE, correlationId);
+  }
+}
+2. REPORTENDPOINT (POST /apientities/[id]/generate-report)
+ts
+// app/api/entities/[id]/generate-report/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "lib/auth";
+import { connectDB } from "lib/db";
+import { ObjectId } from "mongodb";
+import {
+  AppError,
+  handleApiError,
+} from "lib/errors";
+import { logEvento } from "lib/logger";
+import { callGemini } from "lib/llm";
+import { generateServerPDF } from "lib/server-pdf-utils";
+import { uploadLLMReport } from "lib/cloudinary";
+import { PromptService } from "lib/prompt-service";
+import { UsageService } from "lib/usage-service";
+import crypto from "crypto";
+
+const SOURCE = "REPORTENDPOINT";
+
+export async function POST(
+  req: NextRequest,
+  params: { params: { id: string } }
+) {
+  const start = Date.now();
+  const correlationId = crypto.randomUUID();
+
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+    }
+    const entityId = params.params.id;
+    const tenantId = session.user.tenantId;
+
+    const db = await connectDB();
+
+    // 1. Verify entity exists and is validated
+    const entity = await db.collection("entities").findOne({
+      _id: new ObjectId(entityId),
+      tenantId,
+    });
+    if (!entity) {
+      throw new AppError("NOTFOUND", 404, "Entidad no encontrada");
+    }
+    if (!entity.isValidated) {
+      throw new AppError(
+        "VALIDATIONERROR",
+        400,
+        "La entidad debe estar validada antes de generar el informe"
+      );
+    }
+
+    // 2. Latest approved human validation
+    const validation = await db.collection("humanvalidations").findOne(
+      {
+        entityId,
+        tenantId,
+        generalStatus: "APROBADO",
+      },
+      { sort: { timestamp: -1 } }
+    );
+    if (!validation) {
+      throw new AppError(
+        "NOTFOUND",
+        404,
+        "No se encontró una validación aprobada para esta entidad"
+      );
+    }
+
+    // 3. Vector search results (sources)
+    const searchResults = await db
+      .collection("searchresults")
+      .find({ entityId })
+      .limit(10)
+      .toArray();
+
+    // 4. Build variables for the prompt
+    const validatedItems = validation.items
+      .map(
+        (item: any) =>
+          `- ${item.field}: ${item.correctedValue ?? item.originalValue} (${item.status})`
+      )
+      .join("\n");
+
+    const sources = searchResults
+      .map(
+        (r: any, idx: number) =>
+          `${idx + 1}. ${r.source} - Score ${r.score?.toFixed(2)}`
+      )
+      .join("\n");
+
+    const text = await PromptService.getRenderedPrompt("REPORTGENERATOR", {
+      identifier: entity.identifier ?? "N/A",
+      client: entity.client ?? "No especificado",
+      receivedAt: entity.receivedAt ?? "No especificada",
+      validatedItems,
+      observations: validation.observations ?? "Sin observaciones adicionales",
+      sources,
+      tenantId,
+    });
+
+    // 5. Generate report with Gemini
+    const reportText = await callGemini(text, tenantId, correlationId, {
+      temperature: 0.3,
+      maxTokens: 2000,
+    });
+
+    // 6. Tenant config for branding/templates
+    const tenant = await db.collection("tenants").findOne({ tenantId });
+
+    // 7. Generate Server PDF
+    const locale =
+      req.headers
+        .get("accept-language")
+        ?.split(",")[0]
+        .split("-")[0] ?? "es";
+
+    const pdfBuffer = await generateServerPDF({
+      identifier: entity.identifier ?? "N/A",
+      client: entity.client ?? "SN",
+      content: reportText,
+      tenantId,
+      date: new Date(),
+      technician: session.user.name ?? "Sistema",
+      locale,
+      branding: tenant?.branding as any,
+      reportConfig: tenant?.reportConfig as any,
+    });
+
+    // 8. Upload PDF to Cloudinary
+    const { secureUrl: pdfUrl, publicId } = await uploadLLMReport(
+      pdfBuffer,
+      `report_${entity.identifier}_${Date.now()}.pdf`,
+      tenantId
+    );
+
+    // 9. Save report to DB
+    const reportDoc = {
+      entityId,
+      tenantId,
+      validationId: validation.id,
+      generatedBy: session.user.id,
+      technicianName: session.user.name,
+      content: reportText,
+      pdfUrl,
+      cloudinaryPublicId: publicId,
+      metadata: {
+        model: "gemini-2.0-flash",
+        tokensUsed: Math.round(reportText.length / 4), // aproximado
+        temperature: 0.3,
+      },
+      timestamp: new Date(),
+    };
+
+    const result = await db.collection("llmreports").insertOne(reportDoc);
+
+    // 10. Track usage
+    await UsageService.trackLLM(tenantId, 1, "REPORTGENERATION", correlationId);
+
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "INFO",
+      source: SOURCE,
+      action: "REPORTGENERATED",
+      message: `Informe LLM generado para entidad ${entityId}`,
+      correlationId,
+      tenantId,
+      entityId,
+      userId: session.user.id,
+      durationMs,
+      details: {
+        reportId: result.insertedId.toString(),
+        reportLength: reportText.length,
+      },
+    });
+
+    if (durationMs > 5000) {
+      await logEvento({
+        level: "WARN",
+        source: SOURCE,
+        action: "SLAEXCEEDED",
+        message: `Generación de informe tardó ${durationMs}ms (SLA 5000ms)`,
+        correlationId,
+        tenantId,
+        entityId,
+        durationMs,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        reportId: result.insertedId.toString(),
+        content: reportText,
+        pdfUrl,
+        metadata: reportDoc.metadata,
+        correlationId,
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "ERROR",
+      source: SOURCE,
+      action: "REPORTERROR",
+      message: error.message ?? "Error al generar informe",
+      correlationId,
+      durationMs,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      },
+    });
+
+    return handleApiError(error, SOURCE, correlationId);
+  }
+}
+Estos dos ejemplos te dan el patrón completo:
+
+source y action coherentes.
+
+durationMs, tenantId, entityId, userId cuando aplica.
+
+SLAEXCEEDED con la misma forma.
+
+catch que loguea y delega en handleApiError.
+
+
+
+Hay tres frentes claros para reforzar el multi‑tenant: qué colecciones usan connectDB “raw”, dónde se inyecta tenantId, y cómo manejas los modos defaulttenant/GLOBAL.
+​
+
+1. Regla de oro: siempre getTenantCollection salvo excepciones
+Actualmente tienes mezcla de:
+
+getTenantCollection("entities", session) (bien, aislamiento centralizado).
+​
+
+const db = await connectDB(); db.collection("entities").findOne({ _id, tenantId }) (filtrado manual).
+​
+
+Recomendación práctica:
+
+Para colecciones multi‑tenant “de negocio”:
+
+entities, cases, workflowdefinitions, workflowtasks, knowledgeassets, documentchunks, ragevaluations, spaces, spaceinvitations, aicorrections, aipolicies, etc.
+​
+
+Usa siempre getTenantCollection(nombre, session | user) y deja que el filtro por tenantId lo haga la SecureCollection.
+
+Reserva connectDB + collection(...) solo para:
+
+Datos globales (tenantconfigs, jobs de ingest externos).
+
+Scripts CLI (scripts/*.ts).
+
+Casos muy específicos donde de verdad necesitas cruzar tenants (y entonces sé explícito).
+
+Ejemplo de refactor en endpoints que ahora mezclan:
+
+ts
+// Antes (validate)
+const db = await connectDB();
+const entity = await db.collection("entities").findOne({
+  _id: new ObjectId(entityId),
+  tenantId: validated.tenantId,
+});
+
+// Después
+const collection = await getTenantCollection("entities", session);
+const entity = await collection.findOne({ _id: new ObjectId(entityId) });
+Así eliminas el riesgo de olvidarte tenantId en una query.
+
+2. Revisar paths que “bypassean” tenant
+Casos donde estás fijando tenants a mano o usando defaults:
+
+tenantId session.user.tenantId || process.env.SINGLETENANTID || "defaulttenant" en varios endpoints de core (graph, insights, predictive, cross‑vertical).
+​
+
+IngestService.executeAnalysis abre knowledgeassets en getTenantCollection("knowledgeassets", { user: { tenantId: "platformmaster", role: SUPERADMIN } }).
+​
+
+Scripts que escriben tenantId: abdglobal o tenantId: defaulttenant directamente (seeding, fixes).
+​
+
+Acciones:
+
+Endpoints core (apicore*)
+
+Decide un modelo claro:
+
+Si son multi‑tenant por sesión, usa siempre session.user.tenantId y elimina defaulttenant salvo en entorno demo explícito.
+
+Si realmente son cross‑tenant (solo SUPERADMIN), entonces:
+
+Exige role === SUPERADMIN.
+
+Usa un parámetro explícito ?tenantId=... y valida que sea uno permitido.
+
+Ejemplo en GET apicoregraph:
+
+ts
+const session = await auth();
+if (!session?.user) throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+const tenantId = session.user.tenantId;
+const graph = await GraphEngine.getInstance().getTenantGraph(tenantId);
+Servicios internos “worker”
+
+En IngestService.executeAnalysis, ahora usas asset.tenantId al extraer y al indexar, lo cual está bien.
+​
+
+Asegúrate de que todas las writes derivadas (chunks, graph, audits) usan ese asset.tenantId, no un hard‑coded platformmaster.
+
+Si necesitas un pseudo‑usuario worker:
+
+ts
+const workerSession = {
+  user: {
+    id: "system-worker",
+    email: options.userEmail ?? "system@abd.com",
+    tenantId: asset.tenantId,
+    role: "ADMIN",
+  },
+};
+const chunksCollection = await getTenantCollection("documentchunks", workerSession);
+Global / master tenants (abdglobal, GLOBAL, platformmaster)
+
+Documenta explícitamente:
+
+abdglobal: tenant “plataforma” para tipos globales (document‑types, prompts globales, etc.).
+​
+
+GLOBAL como scope lógico, no valor de tenantId en colecciones multi‑tenant.
+
+Cuando creas documentos globales (p.ej. DocumentType global), sé consistente:
+
+ts
+rawCol.insertOne({ ...validated, tenantId: "abdglobal", scope: "GLOBAL" });
+3. Endpoints concretos a endurecer
+Algunos puntos donde reforzar el patrón:
+
+3.1. Technical RAG chat
+POST apitechnical/ragchat:
+
+Ya compruebas session y tenantId, pero luego llamas a servicios que usan connectDB y collection directamente.
+​
+
+Revisa que toda lectura/escritura relacionada (logs, usage) use el tenantId de sesión, no valores por defecto.
+
+3.2. User dashboard / stats
+GET api/user/dashboard y GET api/user/stats:
+
+Usan connectDB con filtros { tenantId } → OK.
+​
+
+Asegúrate de que:
+
+No hay caminos donde tenantId venga de query (solo de sesión).
+
+connectLogsDB también filtra por tenantId cuando lees applicationlogs.
+​
+
+3.3. Preferences y colecciones de usuario
+GET/POST api/user/preferences:
+
+getTenantCollectionUserv2("users", session, "AUTH") → Multi‑tenant correcto, y además filtras por email.
+​
+
+UserCollectionsService (colecciones personales):
+
+Métodos como getUserCollections, addAssetsToCollection, deleteCollection usan getTenantCollection y filtran ownerUserId.
+​
+
+Aquí ya estás haciendo “tenant + owner”, que es el patrón ideal.
+
+4. Meter multi‑tenant también en Neo4j / grafos
+Ya lo haces casi siempre, pero merece la pena consolidar:
+
+En GraphEngine.syncEntityToGraph y GraphEngine.getTenantGraph:
+
+Los nodos y relaciones incluyen tenantId y las queries filtran WHERE tenantId = $tenantId.
+​
+
+En GraphExtractionService y GraphRetrievalService:
+
+persistInNeo4j siempre hace tenantId: $tenantId y las consultas de búsqueda también filtran por tenant.
+​
+
+Recomendación:
+
+Añadir un pequeño helper para asegurarte de que nadie llama a runCypher sin tenantId:
+
+ts
+export async function runTenantCypher(
+  tenantId: string,
+  query: string,
+  params: Record<string, any> = {}
+) {
+  return runCypher(query, { tenantId, ...params });
+}
+Y usarlo en todos los servicios de grafo (GraphEngine, InsightEngine, PredictiveEngine, GraphExtractionService, GraphRetrievalService).
+​
+
+5. Plan de refactor incremental
+Catalogar colecciones multi‑tenant “core”
+
+Lista: entities, cases, workflowdefinitions, workflowtasks, knowledgeassets, documentchunks, ragevaluations, spaces, spaceinvitations, aicorrections, aipolicies, workflowanalytics, usagelogs.
+​
+
+Fase 1 – Endpoints de negocio
+
+Cambiar cualquier uso de connectDB().collection("entities" | "cases" | "humanvalidations" | "llmreports") en rutas de:
+
+entities/* (validate, generate-report, checklist).
+
+workflow/*, admin/workflows/*.
+
+Sustituir por getTenantCollection(nombre, session) + filtros sin tenantId manual.
+
+Fase 2 – Servicios técnicos
+
+Revisar TechnicalEntitiesAnalyzeAPI, TechnicalRAGChat, IngestService, RagEvaluationService, etc., para que todos pasen tenantId explícito y no usen defaults salvo donde está documentado.
+​
+
+Fase 3 – Core / grafos / core APIs
+
+Normalizar apicore* para:
+
+Usar session.user.tenantId o exigir SUPERADMIN + tenantId explícito en query.
+
+Eliminar defaulttenant salvo en modo demo.
+
+
+e los dejo refactorizados a patrón multi‑tenant fuerte: POST /api/entities/[id]/validate y POST /api/technical/ragchat.
+
+1. POST /api/entities/[id]/validate
+Objetivo: no usar connectDB directo para colecciones multi‑tenant y evitar pasar tenantId “a mano” en todos los queries.
+
+ts
+// app/api/entities/[id]/validate/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "lib/auth";
+import { getTenantCollection } from "lib/db-tenant";
+import { ObjectId } from "mongodb";
+import { ValidationSchema } from "lib/schemas";
+import { AppError, handleApiError } from "lib/errors";
+import { logEvento } from "lib/logger";
+import crypto from "crypto";
+
+const SOURCE = "VALIDATIONENDPOINT";
+
+export async function POST(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const start = Date.now();
+  const correlationId = crypto.randomUUID();
+
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+    }
+    const tenantId = session.user.tenantId;
+    const userId = session.user.id;
+    const technicianName = session.user.name;
+
+    const entityId = context.params.id;
+
+    const body = await req.json();
+
+    // 1. Zod Validation + inyección de tenant y usuario
+    const validated = ValidationSchema.parse({
+      ...body,
+      entityId,
+      tenantId,
+      validatedBy: userId,
+      technicianName,
+    });
+
+    // 2. Colecciones multi‑tenant via SecureCollection
+    const entitiesCollection = await getTenantCollection("entities", session);
+    const validationsCollection = await getTenantCollection(
+      "humanvalidations",
+      session
+    );
+
+    // 3. Verificar que la entidad existe y pertenece al tenant
+    const entity = await entitiesCollection.findOne({
+      _id: new ObjectId(entityId),
+    } as any);
+
+    if (!entity) {
+      throw new AppError("NOTFOUND", 404, "Entidad no encontrada");
+    }
+
+    // 4. Guardar validación en audit trail
+    const result = await validationsCollection.insertOne({
+      ...validated,
+      timestamp: new Date(),
+    } as any);
+
+    // 5. Actualizar entidad si está totalmente aprobada
+    if (validated.generalStatus === "APPROVED") {
+      await entitiesCollection.updateOne(
+        { _id: new ObjectId(entityId) } as any,
+        {
+          $set: {
+            isValidated: true,
+            validatedBy: userId,
+            validatedAt: new Date(),
+          },
+        } as any
+      );
+    }
+
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "INFO",
+      source: SOURCE,
+      action: "VALIDATIONSAVED",
+      message: `Validación ${validated.generalStatus} para entidad ${entityId}`,
+      correlationId,
+      tenantId,
+      entityId,
+      userId,
+      durationMs,
+      details: {
+        generalStatus: validated.generalStatus,
+        validatedItems: validated.items.length,
+        validationTime: validated.validationTime,
+      },
+    });
+
+    if (durationMs > 300) {
+      await logEvento({
+        level: "WARN",
+        source: SOURCE,
+        action: "SLAEXCEEDED",
+        message: `Validación tardó ${durationMs}ms (SLA 300ms)`,
+        correlationId,
+        tenantId,
+        entityId,
+        durationMs,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        validationId: result.insertedId.toString(),
+        generalStatus: validated.generalStatus,
+        correlationId,
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "ERROR",
+      source: SOURCE,
+      action: "ERROR",
+      message: error.message ?? "Error al guardar validación",
+      correlationId,
+      durationMs,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      },
+    });
+
+    return handleApiError(error, SOURCE, correlationId);
+  }
+}
+Cambios clave:
+
+entities y humanvalidations via getTenantCollection(..., session) en vez de connectDB + tenantId manual.
+​
+
+tenantId y userId solo se inyectan una vez a nivel de schema/insert, no en todos los filtros.
+
+Logging con source y action unificados.
+
+2. POST /api/technical/ragchat
+Objetivo: reforzar multi‑tenant y errores para un endpoint técnico que ya usa sesión pero responde de forma manual.
+
+ts
+// app/api/technical/ragchat/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "lib/auth";
+import { AgenticRAGService } from "lib/langgraph-rag";
+import { logEvento } from "lib/logger";
+import { AppError, handleApiError } from "lib/errors";
+import crypto from "crypto";
+
+const SOURCE = "TECHNICALRAGCHATAPI";
+
+export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const start = Date.now();
+
+  try {
+    // 1. Auth + Tenant
+    const session = await auth();
+    if (!session?.user) {
+      throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+    }
+    const tenantId = session.user.tenantId;
+    if (!tenantId) {
+      throw new AppError(
+        "FORBIDDEN",
+        403,
+        "Tenant ID no encontrado en la sesión"
+      );
+    }
+
+    // 2. Body
+    const { question, messages = [], stream = false } = await req.json();
+    if (!question && messages.length === 0) {
+      throw new AppError(
+        "VALIDATIONERROR",
+        400,
+        "La pregunta o el historial son obligatorios"
+      );
+    }
+
+    const effectiveQuestion =
+      question ?? messages[messages.length - 1].content ?? "";
+
+    await logEvento({
+      level: "INFO",
+      source: SOURCE,
+      action: stream ? "QUERYSTREAMSTART" : "QUERYSTART",
+      message: `Agentic query started: ${effectiveQuestion.substring(0, 50)}...`,
+      correlationId,
+      tenantId,
+      userId: session.user.id,
+    });
+
+    // 3. Modo streaming (SSE)
+    if (stream) {
+      const encoder = new TextEncoder();
+      const generator = AgenticRAGService.runStream(
+        effectiveQuestion,
+        tenantId,
+        correlationId,
+        messages
+      );
+
+      const streamResponse = new ReadableStream({
+        async pull(controller) {
+          try {
+            const { value, done } = await generator.next();
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(value)}\n\n`)
+            );
+          } catch (err) {
+            controller.error(err);
+          }
+        },
+      });
+
+      const durationMs = Date.now() - start;
+      if (durationMs > 10000) {
+        await logEvento({
+          level: "WARN",
+          source: SOURCE,
+          action: "SLAEXCEEDED",
+          message: `Slow RAG query ${durationMs}ms (SLA 10000ms)`,
+          correlationId,
+          tenantId,
+          durationMs,
+        });
+      }
+
+      return new Response(streamResponse, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // 4. Modo no‑streaming
+    const result = await AgenticRAGService.run(
+      effectiveQuestion,
+      tenantId,
+      correlationId,
+      messages
+    );
+
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "INFO",
+      source: SOURCE,
+      action: "QUERYSUCCESS",
+      message: "Agentic RAG query completed",
+      correlationId,
+      tenantId,
+      userId: session.user.id,
+      durationMs,
+      details: {
+        documents: result.documents?.length ?? 0,
+      },
+    });
+
+    if (durationMs > 10000) {
+      await logEvento({
+        level: "WARN",
+        source: SOURCE,
+        action: "SLAEXCEEDED",
+        message: `Slow RAG query ${durationMs}ms (SLA 10000ms)`,
+        correlationId,
+        tenantId,
+        durationMs,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        answer: result.generation,
+        documents: result.documents,
+        trace: result.trace,
+        correlationId,
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+
+    await logEvento({
+      level: "ERROR",
+      source: SOURCE,
+      action: "QUERYERROR",
+      message: error.message ?? "Error en consulta Agentic RAG",
+      correlationId,
+      durationMs,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      },
+    });
+
+    return handleApiError(error, SOURCE, correlationId);
+  }
+}
+Cambios clave:
+
+tenantId siempre de sesión, sin defaults ni logs sueltos.
+​
+
+Errores uniformes con AppError + handleApiError.
+
+Logs con source, action, durationMs, tenantId, userId, reutilizables en observabilidad.
+
+
+Ahora mismo muchos motores de IA usan any para payloads como predicciones, riesgos, patrones de grafo, etc., lo que hace frágil la lógica de workflows y logging. La idea es introducir unos pocos tipos base y usarlos en todos los puntos de entrada/salida de IA.
+​
+
+1. Definir tipos base de “hallazgos” de IA
+Crea un módulo tipo lib/types/intelligence.ts:
+
+ts
+// lib/types/intelligence.ts
+
+export type InsightType = "warning" | "info" | "success" | "critical";
+export type InsightCategory = "ANOMALY" | "PREDICTIVE" | "GENERAL";
+
+export interface BaseFinding {
+  id: string;                    // slug único
+  title?: string;
+  description?: string;
+  riskScore?: number;            // 0–100
+  confidence?: number;           // 0–1
+  category?: InsightCategory | string;
+  source?: string;               // extraction, riskanalysis, predictive, etc.
+}
+
+/**
+ * Insight consumido por el usuario (InsightEngine).
+ */
+export interface Insight extends BaseFinding {
+  type: InsightType;
+  suggestion: string;
+  impact: string;                // Bajo/Medio/Alto, o texto breve
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Predicción de mantenimiento (PredictiveEngine).
+ */
+export interface MaintenancePrediction extends BaseFinding {
+  component: string;
+  urgency: "low" | "medium" | "high" | "critical";
+  prediction: string;
+  reasoning: string;
+  nextAction: string;
+}
+
+/**
+ * “Riesgo” micro a nivel de pedido/componente (RiskAnalysisNode, AgentEngine).
+ */
+export interface RiskFinding extends BaseFinding {
+  entityId?: string;
+  component?: string;
+  severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  tags?: string[];
+}
+
+/**
+ * Señales crudas de fallo que alimentan PredictiveEngine.extractFailureSignals.
+ */
+export interface FailureSignal {
+  component: string;
+  signal: string;
+  rawRisk: number;   // 0–100 antes de IA
+  tenantId: string;
+}
+
+/**
+ * Patrones de grafo que InsightEngine analiza.
+ */
+export interface GraphPattern {
+  name: string;         // e.g. "loaddistribution"
+  data: Record<string, any>[];
+  tenantId: string;
+}
+Con esto:
+
+InsightEngine trabajará con Insight[] en vez de any[].
+​
+
+PredictiveEngine con MaintenancePrediction[] y FailureSignal[].
+​
+
+Los nodos del agente (risk analysis) con RiskFinding[] en el estado.
+
+2. Tipar InsightEngine y PredictiveEngine
+2.1. InsightEngine
+Ahora parsea la respuesta LLM a Insight vía Zod, pero luego la trata como any. Cámbialo a:
+​
+
+ts
+// core/engine/InsightEngine.ts
+import { Insight } from "lib/types/intelligence";
+
+export class InsightEngine {
+  // ...
+
+  public async generateInsights(
+    tenantId: string,
+    correlationId: string
+  ): Promise<Insight[]> {
+    // 1. extraer patrones
+    const patterns: GraphPattern[] = await this.extractGraphPatterns(tenantId);
+    if (patterns.length === 0) {
+      return [
+        {
+          id: "no-data",
+          type: "info",
+          category: "GENERAL",
+          title: "Datos insuficientes",
+          description:
+            "Aún no hay suficientes conexiones en el grafo para generar insights profundos.",
+          impact: "Bajo",
+          suggestion:
+            "Continúa analizando pedidos para enriquecer el mapa semántico.",
+          source: "insight-engine",
+        },
+      ];
+    }
+
+    // 2. LLM → insights
+    const prompt = /* ... prompt actual ... */;
+    const aiResponse = await callGeminiMini(prompt, tenantId, correlationId, {
+      temperature: 0.4,
+    });
+
+    const jsonMatch = aiResponse.match(/```json([\s\S]+?)```/);
+    if (!jsonMatch) return [];
+
+    const parsedArray = JSON.parse(jsonMatch[1]);
+    const insights = parsedArray as Insight[];
+
+    // 3. Trigger workflows IA
+    const workflow = WorkflowEngine.getInstance();
+    for (const insight of insights) {
+      await workflow.processEvent("ON_INSIGHT", insight, tenantId, correlationId);
+    }
+
+    await logEvento({
+      level: "INFO",
+      source: "INSIGHTENGINE",
+      action: "GENERATEINSIGHTS",
+      message: `Generated ${insights.length} insights for tenant ${tenantId}`,
+      correlationId,
+      tenantId,
+      details: { patternCount: patterns.length },
+    });
+
+    return insights;
+  }
+}
+2.2. PredictiveEngine
+Ahora castéas con MaintenancePrediction pero sin tipo compartido. Usa el interface:
+​
+
+ts
+// core/engine/PredictiveEngine.ts
+import { MaintenancePrediction, FailureSignal } from "lib/types/intelligence";
+
+export class PredictiveEngine {
+  // ...
+
+  public async getMaintenanceForecast(
+    tenantId: string,
+    correlationId: string
+  ): Promise<MaintenancePrediction[]> {
+    const signals: FailureSignal[] = await this.extractFailureSignals(tenantId);
+    if (signals.length === 0) return [];
+
+    const prompt = /* ... */;
+
+    const aiResponse = await callGeminiMini(prompt, tenantId, correlationId, {
+      temperature: 0.3,
+    });
+    const jsonMatch = aiResponse.match(/```json([\s\S]+?)```/);
+    if (!jsonMatch) return [];
+
+    const predictions = JSON.parse(jsonMatch[1]) as MaintenancePrediction[];
+
+    const workflow = WorkflowEngine.getInstance();
+    for (const pred of predictions) {
+      await workflow.processEvent(
+        "ON_PREDICTION",
+        pred,
+        tenantId,
+        correlationId
+      );
+    }
+
+    await logEvento({
+      level: "INFO",
+      source: "PREDICTIVEENGINE",
+      action: "GENERATEFORECAST",
+      message: `Generated ${predictions.length} predictions for tenant ${tenantId}`,
+      correlationId,
+      tenantId,
+    });
+
+    return predictions;
+  }
+
+  private async extractFailureSignals(
+    tenantId: string
+  ): Promise<FailureSignal[]> {
+    // reutiliza el tipo FailureSignal para las consultas Cypher
+    // ...
+  }
+}
+3. Tipar el estado del agente y los nodos de riesgo
+En el AgentState y nodos tienes findings: Annotation<any> y dentro mezclas resultados de extracción, riesgo, federated, etc.
+​
+
+Cambios:
+
+findings → Annotation<RiskFinding> (o BaseFinding si quieres mezclar más tipos).
+
+En extractionNode, tipa lo que devuelves como RiskFinding[] con source: "extraction".
+
+En riskAnalysisNode, lo mismo pero source: "riskanalysis" y campos concretos (severity, component...).
+
+Ejemplo simplificado para el nodo de riesgo:
+
+ts
+// dentro de riskAnalysisNode
+import { RiskFinding } from "lib/types/intelligence";
+
+async function riskAnalysisNode(state: AgentStateType): Promise<Partial<AgentStateType>> {
+  const { contextchunks, findings, tenantId, correlacionid } = state;
+  // ...
+  const result = await callGeminiMini(renderedPrompt, tenantId!, correlacionid!);
+  try {
+    const parsed = JSON.parse(result.match(/```json([\s\S]+?)```/)[1]) as {
+      riesgos: RiskFinding[];
+      confidence: number;
+    };
+
+    const newFindings: RiskFinding[] = parsed.riesgos.map((r) => ({
+      ...r,
+      source: "riskanalysis",
+    }));
+
+    return {
+      findings: newFindings,
+      confidencescore: parsed.confidence ?? 0.5,
+      messages: [
+        {
+          role: "assistant",
+          content: `Análisis de riesgos completado. Confianza ${parsed.confidence}`,
+        },
+      ],
+    };
+  } catch {
+    return {
+      messages: [
+        { role: "assistant", content: "Error procesando el análisis de riesgos." },
+      ],
+    };
+  }
+}
+Así, cualquier otro componente que consuma state.findings sabe que tiene un array de RiskFinding con campos bien definidos.
+
+4. Conectar con AIWorkflowEngine
+Si tipas processEvent así:
+
+ts
+type WorkflowEventPayload = Insight | MaintenancePrediction | RiskFinding | BaseFinding;
+
+public async processEvent(
+  eventType: WorkflowTriggerType,
+  data: WorkflowEventPayload,
+  tenantId: string,
+  correlationId: string
+)
+Entonces los triggers pueden usar condiciones seguras:
+
+riskScore, confidence para predicciones y riesgos.
+
+category, type para insights.
+
+Y en BRANCH:
+
+ts
+case "BRANCH": {
+  const risk = (data as any).riskScore ?? 0;
+  const confidence = (data as any).confidence ?? 1;
+  // mejor:
+  // if ("riskScore" in data) { ... }
+  // if ("confidence" in data) { ... }
+}
+El TS te ayuda a no mezclar campos (score vs riskScore, confidencescore vs confidence).
+
+5. Plan corto de refactor
+Crear lib/types/intelligence.ts con BaseFinding, Insight, RiskFinding, MaintenancePrediction, FailureSignal, GraphPattern.
+​
+
+Actualizar:
+
+InsightEngine → devolver Insight[].
+
+PredictiveEngine → devolver MaintenancePrediction[], usar FailureSignal[].
+
+Actualizar AgentState y nodos de extracción/riesgo para usar RiskFinding[].
+
+Cambiar firma de AIWorkflowEngine.processEvent a un union de estos tipos y ajustar BRANCH/HUMAN_TASK/logs para usar campos bien nombrados.
+
+Con esto, todo el “payload” IA deja de ser any, y puedes evolucionar prompts y workflows con mucha más seguridad.
+
+Lo ideal es tener 3–4 contratos de dominio bien definidos en texto (MD) que describan entidades, casos, conocimiento y workflows, alineados con lo que ya tienes en código.
+​
+
+Te propongo estructura y contenido concreto para una carpeta docs/domain/.
+
+1. docs/domain/ENTITY.md – Entidades de negocio
+Rol: explicar qué es una Entidad en tu sistema (pedido/caso técnico) y su contrato estable.
+
+Contenido sugerido
+text
+# ENTITY – Contrato de dominio
+
+## Definición
+
+Una **Entidad** representa un objeto de negocio analizado por el sistema (pedido de revisión, instalación, contrato, etc.).  
+En el vertical de ascensores se corresponde con `pedidos`/`entities` en MongoDB.
+
+## Campos principales (añadir tabla si quieres)
+
+- `id` / `_id` (ObjectId, string en API)
+- `tenantId` (string) – aislamiento multi-tenant
+- `identifier` (string) – referencia humana (nº de pedido)
+- `status` (string) – estado de workflow actual (ingresado, analizando, revision, completado)
+- `isValidated` (boolean) – si tiene una validación humana general aprobada
+- `metadata` (objeto) – información auxiliar no estructurada
+- `detectedPatterns` (array) – patrones detectados por el agente
+- `metadata.risks` (array de RiskFinding) – riesgos detectados por IA
+- `confidencescore` (number 0–1) – confianza global del análisis
+
+## Invariantes
+
+- `tenantId` nunca es null.
+- `status` siempre pertenece a la definición de workflow activa para el tenant.
+- `isValidated = true` ⇒ existe al menos un registro en `humanvalidations` con `generalStatus = "APPROVED"` y `entityId` igual.
+
+## Relación con otros contratos
+
+- Validaciones humanas: `HUMAN_VALIDATION.md`
+- Checklists: `CHECKLIST.md`
+- Workflows de estado: `WORKFLOW_CASE.md`
+- Informes LLM: `REPORT.md`
+2. docs/domain/WORKFLOW_CASE.md – Workflows de estado (WorkflowEngine)
+Rol: describir el contrato de Case Workflow (no el IA).
+
+text
+# WORKFLOW_CASE – Flujo de estados
+
+## Definición
+
+Un **Case Workflow** orquesta las transiciones de estado de una entidad/caso.  
+Se define en `workflowdefinitions` y se ejecuta a través de `WorkflowEngine.executeTransition`.
+
+## Elementos
+
+### Estado
+
+- `id` (string) – slug del estado (`ingresado`, `analizando`, `revision`, `completado`)
+- `label` (string) – texto visible
+- `color` (string) – UI
+- `rolesAllowed` (string[]) – roles que pueden ver/operar en este estado
+- `requiresValidation` (boolean, opcional) – genera una `WorkflowTask` de validación al entrar
+- `isInitial` / `isFinal` (boolean)
+
+### Transición
+
+- `from` (stateId)
+- `to` (stateId)
+- `label` (string)
+- `requiredRoles` (string[])
+- `conditions` (objeto)
+  - `checklistComplete` (bool)
+  - `minDocuments` (number)
+  - `requireComment` (bool)
+  - `requireSignature` (bool)
+- `actions` (string[]) – acciones secundarias (ej: `notifyadmin`, `notifyuser`)
+
+## Reglas
+
+- Una transición solo es válida si:
+  - Existe en `workflowdefinitions.transitions`.
+  - `role` del usuario ∈ `requiredRoles`.
+  - `role` ∈ `nextState.rolesAllowed`.
+  - Condiciones cumplidas (checklist, documentos, comentario, firma).
+
+## Efectos
+
+- Actualizar `entities.status`.
+- Añadir entrada al historial de transiciones.
+- Si `nextState.requiresValidation = true` ⇒ crear `WorkflowTask` (`WORKFLOW_TASK.md`).
+3. docs/domain/WORKFLOW_AI.md – Workflows IA (AIWorkflowEngine)
+Rol: documentar contrato de AI Workflows para disparadores automáticos.
+
+text
+# WORKFLOW_AI – Flujos de automatización IA
+
+## Definición
+
+Un **AI Workflow** es una definición de automatización basada en eventos IA (insights, predicciones, riesgos).  
+Se guarda en `aiworkflows` y se ejecuta mediante `AIWorkflowEngine.processEvent`.
+
+## Trigger
+
+- `type`: `"ON_PREDICTION" | "ON_INSIGHT" | "ON_RISK" | "ON_EVENT"`
+- `condition` (opcional):
+  - `field`: nombre de campo en el payload (ej: `riskScore`, `confidence`)
+  - `operator`: `gt | lt | eq | contains`
+  - `value`: valor de comparación
+
+## Acción
+
+Acciones soportadas (contrato mínimo):
+
+- `BRANCH`: usa `riskScore`/`confidence` para decidir ruta lógica.
+- `HUMAN_TASK`: crea una `WorkflowTask` vinculada a la entidad/caso actual.
+- `DELAY`: pausa el flujo.
+- `NOTIFY`: genera notificación (UI/log/email).
+- `LOG`: registra evento de alerta automatizada.
+- `UPDATE_ENTITY`: modifica campos de una entidad (`entitySlug`, `idField`, `updates`).
+
+## Payloads de evento
+
+AIWorkflowEngine espera payloads tipados:
+
+- `Insight`
+- `MaintenancePrediction`
+- `RiskFinding`
+(ver `INTELLIGENCE.md`)
+
+## Garantías
+
+- No se ejecutan acciones `UPDATE_ENTITY` si `GovernanceEngine.evaluateAction` indica bloqueo.
+- Toda ejecución se registra en `workflowanalytics` (`WorkflowAnalyticsService`) con:
+  - `workflowId`, `nodeId`, `status`, `durationMs`, `tenantId`, `correlationId`.
+4. docs/domain/CHECKLIST.md – Checklist extraído + catálogo
+text
+# CHECKLIST – Catálogo y extracción
+
+## Catálogo (ChecklistConfig)
+
+Define la “plantilla” ideal:
+
+- `ChecklistConfig`:
+  - `id`, `tenantId`, `name`
+  - `categories`: `ChecklistCategory[]` (id, name, keywords, priority)
+  - `items`: `ChecklistItemTemplate[]` (id, categoryId, label, required, description)
+
+No depende de una entidad concreta.
+
+## Checklist extraído (ExtractedChecklist)
+
+Representa lo que el sistema ha generado para una entidad:
+
+- `ExtractedChecklist`:
+  - `entityId`, `tenantId`, `configId`
+  - `items`: `ExtractedChecklistItem[]`
+    - `id` (hash estable de contenido)
+    - `description`
+    - `categoryId`
+    - `source`: `"RAG" | "LLM" | "MANUAL"`
+    - `confidence`, `confidenceLevel`
+  - `validations`: `Record<itemId, ItemValidation>`
+
+## ItemValidation
+
+- `itemId` – referencia a `ExtractedChecklistItem.id`
+- `status`: `"PENDING" | "OK" | "REVIEW" | "REJECTED"`
+- `notes`, `technicianId`, `technicianName`, `updatedAt`
+
+## Flujo
+
+1. RAG + LLM generan lista de items (`extractChecklist`).
+2. `autoClassify` asigna `categoryId` según `ChecklistConfig`.
+3. `smartSort` ordena por prioridad de categoría.
+4. Se guarda/actualiza en `extractedchecklists`.
+5. Validaciones por item se actualizan vía `/checklist/validate`.
+5. docs/domain/HUMAN_VALIDATION.md – Validación global
+text
+# HUMAN_VALIDATION – Validación humana global
+
+## Definición
+
+Una **Human Validation** es la decisión global de un técnico sobre una entidad.
+
+Se almacena en `humanvalidations`.
+
+## Estructura
+
+- `entityId`, `tenantId`
+- `validatedBy` (userId)
+- `technicianName`
+- `items`: `ValidationItem[]`
+  - `field`
+  - `originalValue`
+  - `correctedValue`
+  - `status`: `"APPROVED" | "CORRECTED | "REJECTED"`
+  - `comment`
+- `generalStatus`: `"APPROVED" | "REJECTED" | "PARTIAL" | "NEEDS_CHANGES"`
+- `validationTime` (segundos)
+- `observations`
+- `checklistSnapshotId` (opcional)
+- `timestamp`
+
+## Reglas
+
+- Si `generalStatus = "APPROVED"`:
+  - `entities.isValidated = true`
+  - `entities.validatedBy`, `entities.validatedAt` se rellenan.
+- Una entidad puede tener múltiples validaciones históricas; solo la última aprobada cuenta para `isValidated`.
+6. docs/domain/INTELLIGENCE.md – Payloads IA
+text
+# INTELLIGENCE – Contratos de payload IA
+
+## BaseFinding
+
+- `id`, `title`, `description`
+- `riskScore?` (0–100)
+- `confidence?` (0–1)
+- `category?`
+- `source?` (extraction, riskanalysis, predictive, etc.)
+
+## Insight
+
+Usado por `InsightEngine`:
+
+- Extiende `BaseFinding`
+- `type`: `warning | info | success | critical`
+- `impact`: texto
+- `suggestion`: texto accionable
+- `metadata?`
+
+## MaintenancePrediction
+
+Usado por `PredictiveEngine`:
+
+- Extiende `BaseFinding`
+- `component`
+- `urgency`: `low | medium | high | critical`
+- `prediction`
+- `reasoning`
+- `nextAction`
+
+## RiskFinding
+
+Usado por el agente de análisis:
+
+- Extiende `BaseFinding`
+- `entityId?`
+- `component?`
+- `severity?`: `LOW | MEDIUM | HIGH | CRITICAL`
+- `tags?`: string[]
+Con estos documentos:
+
+Cualquiera puede entender qué espera cada motor/endpoints sin leer código.
+
+Puedes alinear Zod schemas y tipos TS con estos contratos, y usar los MD como referencia para prompts, UI y validaciones.
+
+
+Para consolidar i18n de UI y workflows tienes que unificar tres cosas: origen de textos, claves de traducción y cómo se representan en los workflows.
+​
+
+1. Origen único de textos: TranslationService + next-intl
+Ya tienes:
+
+UI: next-intl (useTranslations, getTranslations) con JSON por locale (messages/es.json, messages/en.json).
+​
+
+Backoffice i18n: AdminI18nPage + I18nService que lee/escribe traducciones desde DB y sincroniza con ficheros.
+​
+
+Consolidación:
+
+Usa SIEMPRE claves namespace.key en UI (nada de literales).
+
+En backend/workflows define un TranslationService ligero:
+
+ts
+// lib/translation-service.ts
+export class TranslationService {
+  static async t(
+    key: string,
+    locale: string,
+    params?: Record<string, string | number>
+  ): Promise<string> {
+    // 1) Buscar en coleccion translations por (tenantId?, locale, key)
+    // 2) Si no hay, fallback a JSON local de messages/locale.json
+    // 3) Aplicar parámetros tipo {name}, {value}
+  }
+}
+Workflows y motores siempre llaman a este servicio (no usan literales).
+
+2. Claves únicas para workflows y tareas
+Introduce un pequeño “diccionario” de claves de dominio para workflows:
+
+ts
+// lib/i18n/workflow-keys.ts
+
+export const WORKFLOW_KEYS = {
+  // Estados de casos
+  STATE_INGRESADO: "workflow.case.state.ingresado",
+  STATE_ANALIZANDO: "workflow.case.state.analizando",
+  STATE_REVISION: "workflow.case.state.revision",
+  STATE_COMPLETADO: "workflow.case.state.completado",
+
+  // Transiciones
+  TRANSITION_ANALIZAR: "workflow.case.transition.analizar",
+  TRANSITION_ENVIAR_REVISION: "workflow.case.transition.enviarRevision",
+  TRANSITION_CERRAR: "workflow.case.transition.cerrar",
+
+  // Tasks
+  TASK_DOCUMENT_REVIEW_TITLE: "workflow.task.documentReview.title",
+  TASK_DOCUMENT_REVIEW_DESC: "workflow.task.documentReview.description",
+};
+En los documentos de workflow (workflowdefinitions):
+
+Guarda state.id = "ANALIZANDO" y no el label en español.
+
+Para mostrar en UI:
+
+ts
+const t = useTranslations();
+const label = t(`workflow.case.state.${state.id.toLowerCase()}`);
+En WorkflowEngine / AIWorkflowEngine cuando generas títulos de tareas:
+
+ts
+const locale = session.user.locale ?? "es";
+
+const title = await TranslationService.t(
+  WORKFLOW_KEYS.TASK_DOCUMENT_REVIEW_TITLE,
+  locale,
+  { state: nextState.label ?? nextState.id }
+);
+const description = await TranslationService.t(
+  WORKFLOW_KEYS.TASK_DOCUMENT_REVIEW_DESC,
+  locale,
+  { entityId: caseId }
+);
+Así UI y tareas comparten exactamente las mismas claves.
+
+3. Multi‑tenant + i18n
+La capa de i18n ya está preparada para multi‑tenant:
+​
+
+translations en DB: key, locale, tenantId, namespace, value.
+​
+
+I18nService.syncToDb(locale, messages, tenantId) escribe por tenant.
+​
+
+Consolidación de workflows:
+
+Los labels de workflows no deben ir “hardcoded” por tenant.
+
+En cada definición de workflow:
+
+Guarda name, description neutrales o en idioma base (ej. inglés).
+
+El UI utiliza claves: admin.workflows.name.${workflowKey}.
+
+Si un tenant quiere textos propios:
+
+Los gestiona desde AdminI18nPage usando las mismas claves.
+
+4. Checklists, validaciones e informes multi‑idioma
+4.1. Checklist
+ChecklistConfig define categorías e items en idioma base (ej. inglés).
+​
+
+UI renderiza usando claves:
+
+checklist.category.${categoryId}
+
+checklist.item.${itemTemplateId}
+
+Cuando el LLM genere descripciones libres en castellano para items extraídos, guárdalas como description y no las traduzcas (son texto técnico contextual); solo el marco (títulos, botones) viene de i18n.
+
+4.2. Informes LLM
+En REPORTENDPOINT ya usas PromptService que escoge plantilla según tenant.
+​
+
+Consolidación:
+
+En lugar de mezclar castellano/inglés en plantilla:
+
+PromptService recibe locale y selecciona prompt apropiado (REPORTGENERATOR_ES / _EN), con el mismo contrato.
+
+El PDF usa claves:
+
+reports.title, reports.details, reports.automaticFootnote en messages/*.
+​
+
+5. Plan de pasos cortos
+Introducir TranslationService en backend para evitar literales y concentrar fallbacks JSON/DB.
+​
+
+Definir workflow-* keys en un fichero central y sustituir todos los labels de estados, transiciones y tareas por esas claves en:
+
+WorkflowEngine
+
+AIWorkflowEngine
+
+WorkflowTaskService
+
+Actualizar UI para:
+
+Obtener labels de estados/transiciones via t("workflow.case.state.X") en vez de state.label.
+
+Extender I18n Admin:
+
+Añadir filtro de namespace workflow y checklist para gestionar esas claves desde la página de i18n.
+​
+
+Añadir locale a sesión/tenant si no lo tienes ya, y pasarlo siempre que generes tareas, notificaciones o informes.
+
+
+Conviene separar scripts de diagnóstico/seed (CLI) de las rutas HTTP de “debug”, y aplicar la misma regla de seguridad a todas.
+​
+
+1. Rutas HTTP “debug” a revisar
+Marca estas rutas para limpieza o endurecimiento:
+
+GET /api/debug/db-detailed (DEBUGDB Iniciando prueba de conexión...).
+​
+
+GET /api/debug/env (--- ENV CHECK ---, imprime MONGODBURI, etc.).
+​
+
+GET /api/debug/auth (“Debug Auth Endpoint”, devuelve sesión, cookies y headers).
+​
+
+GET /api/debug/session (devuelve tenantId, user, rawSession).
+​
+
+GET /api/seed?secret=elevator-nuke-seed (wipe y reseed de usuarios con contraseñas conocidas).
+​
+
+Plan:
+
+En producción:
+
+O bien eliminar físicamente estas rutas.
+
+O envolverlas en:
+
+if (process.env.NODE_ENV !== "development") return NextResponse.json({ error: "Not found" }, { status: 404 }).
+
+Y, si las mantienes, exigir SUPERADMIN + secret en header, nunca en query.
+
+Ejemplo de endurecimiento para seed:
+
+ts
+if (process.env.NODE_ENV !== "development") {
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
+}
+
+const session = await auth();
+if (!session || session.user.role !== "SUPERADMIN") {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+2. Rutas “core” que son más diagnóstico que producto
+Estas están casi en medio: útiles, pero muy verbosas/abiertas.
+​
+
+GET /api/core/governance/audit – lista logs de decisiones IA sin paginación ni filtros.
+​
+
+GET /api/core/graph y POST /api/core/graph/sync – devuelven mapa semántico completo y fuerzan sync.
+​
+
+GET /api/core/insights – insights IA con INSIGHTCACHE.
+​
+
+GET /api/core/predictive-maintenance – tablero de mantenimiento predictivo.
+​
+
+Acciones:
+
+Asegurar:
+
+auth() + rol mínimo (ADMIN / SUPERADMIN).
+
+Filtros de tenant sin defaulttenant salvo en modo demo.
+
+Añadir hard‑limit paginación o recorte de payload para graph/insights.
+
+Para /graph/sync, exigir rol alto y quizás un featureFlag tipo ENABLE_GRAPH_SYNC_API.
+
+3. Scripts CLI de diagnóstico y limpieza
+Tienes muchos scripts .ts/.js en scripts/ o similar:
+​
+
+Debug/diagnóstico:
+
+env.ts, raw-only.js, visible-prompts.ts, workflows.ts, logs.ts, docs.ts, docs-structure.ts, ingestion-state.ts, debug-ingest.ts, recent-assets.ts, etc.
+​
+
+Limpiezas específicas:
+
+broken-ingestion.ts, ingest-zombies.ts, cleanup.ts de document types, etc.
+​
+
+Casos muy concretos de un bug (persistent-500*.ts, error-v*.js, diagnostic*.js, recent-ingest.ts...).
+​
+
+Sugerencia de limpieza:
+
+Mover a scripts/archive/ los que son de un bug puntual (persistent‑500, Real Decreto, etc.).
+
+Mantener solo 4–5 scripts genéricos:
+
+scripts/db/ensure-indexes.ts (ya existe).
+​
+
+scripts/db/diagnose-ingestion.ts (unifica ingestion-state, broken-ingestion, ingest-zombies).
+
+scripts/db/diagnose-prompts.ts (unifica visible-prompts, prompt-counts, prompts-*).
+
+scripts/db/diagnose-logs.ts (unifica los varios logs.ts/save-logs.ts).
+
+Documentar en scripts/README.md:
+
+Qué hace cada uno.
+
+“Solo usar en entorno de staging/desarrollo”.
+
+Comando pnpm script-name.
+
+4. Reglas de seguridad para cualquier ruta “debug”
+Cuando quieras conservar alguna ruta de soporte, aplica este patrón:
+
+ts
+if (process.env.NODE_ENV === "production") {
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
+}
+
+const session = await auth();
+if (!session?.user || session.user.role !== "SUPERADMIN") {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+Y nunca:
+
+Exponer process.env.* completos en respuesta (ENV CHECK solo en local).
+​
+
+Exponer cookies y headers tal cual al cliente (Debug Auth Endpoint).
+​
+
+5. Orden de ataque
+Buscar y marcar rutas que contienen:
+
+Debug Auth Endpoint, DEBUGDB, ENV CHECK, seed access.
+​
+
+Decidir:
+
+Eliminar vs. proteger con NODE_ENV !== "production".
+
+Agrupar scripts de CLI:
+
+Renombrar y mover a scripts/db/*.
+
+Añadir README de scripts para saber qué es seguro ejecutar en qué entorno.
+
+
+
+Tienes varias implementaciones parciales de SLA (duración, umbral, log de violación) repartidas por servicios, sobre todo en Gemini, ingest y QA.
+​
+
+1. Dónde está hoy la lógica SLA duplicada
+Quick QA marca SLAs lentos manualmente (if duration > 2000 logEvento SLAVIOLATION).
+​
+
+generateEmbedding compara duración con 1000 ms y loguea SLAVIOLATION con detalles.
+​
+
+IngestTracer mantiene su propio mapa de SLATHRESHOLDS por fase (PREPARE, ANALYZE, INDEX, TOTAL) y loguea SLAVIOLATION cuando durationMs > thresholdMs.
+​
+
+Otros sitios usan durationMs y logs “lento” sin un contrato común.
+​
+
+El patrón se repite: medir, comparar con umbral hard‑coded, logear violación con logEvento.
+
+2. Extraer un SLAService central
+Crea un servicio pequeño en lib/sla-service.ts con configuraciones por service y operation:
+
+ts
+// lib/sla-service.ts
+import { logEvento } from "./logger";
+
+export interface SLAConfig {
+  thresholdMs: number;           // P95 target
+  severity?: "WARN" | "ERROR";
+}
+
+const SLA_REGISTRY: Record<string, SLAConfig> = {
+  // Ingest pipeline
+  "ingest.PREPARE": { thresholdMs: 2000 },
+  "ingest.ANALYZE": { thresholdMs: 30000 },
+  "ingest.INDEX": { thresholdMs: 15000 },
+  "ingest.TOTAL": { thresholdMs: 60000 },
+
+  // LLM calls
+  "llm.EMBEDDING": { thresholdMs: 1000 },
+  "llm.MINI": { thresholdMs: 2000 },
+  "llm.PRO": { thresholdMs: 5000 },
+
+  // API endpoints
+  "api.QUICKQA": { thresholdMs: 2000 },
+  // ...
+};
+
+export async function checkSLA(
+  key: string,
+  actualMs: number,
+  context: {
+    correlationId: string;
+    tenantId?: string;
+    userId?: string;
+    details?: Record<string, any>;
+  } = { correlationId: "unknown" }
+) {
+  const config = SLA_REGISTRY[key];
+  if (!config) return;
+
+  const { thresholdMs, severity = "WARN" } = config;
+  if (actualMs <= thresholdMs) return;
+
+  await logEvento({
+    level: severity,
+    source: "SLAMONITOR",
+    action: "SLAVIOLATION",
+    message: `SLA ${key} exceeded: ${actualMs}ms vs ${thresholdMs}ms`,
+    correlationId: context.correlationId,
+    tenantId: context.tenantId,
+    userId: context.userId,
+    details: {
+      key,
+      actualMs,
+      thresholdMs,
+      excessMs: actualMs - thresholdMs,
+      ...context.details,
+    },
+  });
+}
+Opcional: cargar SLA_REGISTRY desde process.env o una colección slaconfig por tenant si quieres que sea configurable.
+
+3. Reemplazar lógica local por SLAService
+Ejemplos de sustitución:
+
+3.1. generateEmbedding
+Antes:
+
+calcula duration, y si duration > 1000 loguea SLAVIOLATION con lógica ad‑hoc.
+​
+
+Después:
+
+ts
+const duration = Date.now() - start;
+span.setAttribute("genai.durationms", duration);
+
+await checkSLA("llm.EMBEDDING", duration, {
+  correlationId,
+  tenantId,
+  details: { textLength: text.length },
+});
+3.2. QuickQASchema API (api/core/quick-qa)
+Antes:
+
+mide duration y si > 2000 loguea SLAVIOLATION manual.
+​
+
+Después:
+
+ts
+const duration = Date.now() - start;
+await checkSLA("api.QUICKQA", duration, {
+  correlationId,
+  tenantId: user.tenantId,
+  userId: user.id,
+  details: { path: "/api/core/quick-qa" },
+});
+3.3. IngestTracer
+Actualmente:
+
+guarda spanStartTimes y llama a un logSLAViolation privado, que hace básicamente lo mismo.
+​
+
+Refactor:
+
+Mantén spanStartTimes y la atribución en spans, pero delega el log a checkSLA:
+
+ts
+private static async logSLAViolation(
+  spanName: string,
+  context: SpanContext,
+  actualMs: number,
+  thresholdMs: number
+) {
+  await checkSLA(`ingest.${spanName}`, actualMs, {
+    correlationId: context.correlationId,
+    tenantId: context.tenantId,
+    userId: context.userId,
+    details: { fileHash: context.fileHash, phase: spanName },
+  });
+}
+Y/o incluso elimina este método y llama directamente a checkSLA donde ya tienes durationMs y thresholdMs.
+
+4. Hacer visible el SLA en el dashboard
+Ya expones slaviolations30d en AuditMetrics del dashboard admin.
+​
+
+Para cerrar el círculo:
+
+Asegúrate de que todos los logs de violaciones vienen de SLAMONITOR/SLAVIOLATION con un key.
+
+En el agregador que calcula slaviolations30d, filtra source = SLAMONITOR y agrupa por details.key para poder mostrar:
+
+total violaciones.
+
+top 3 keys que más violan (ej. llm.EMBEDDING, ingest.ANALYZE).
+
+Así reduces duplicación de lógica y a la vez haces que cualquier sitio nuevo que mida SLA simplemente llame a checkSLA con un key bien definido.
+
+
+
+Ahora mismo tienes mucha lógica muy coherente dentro de cada repo, pero poca cohesión transversal entre “capas” y proyectos; compensa consolidando en torno a un “núcleo de dominio” y un patrón de monorepo ligero.
+​
+
+1. Ejes de cohesión que ya existen
+Dominio fuerte y repetido:
+
+Tenants, casos/entidades, checklists, ingestion jobs, prompts, workflows IA, SLA, billing, logs.
+​
+
+Infra compartida, pero repartida:
+
+logEvento, getTenantCollection/SecureCollection, UsageService, TenantService, TranslationService, EnvironmentService, EmailService.
+​
+
+Scripts CLI que conocen demasiado del dominio, pero viven aparte en scripts/*.ts mezclando concerns (env, ingestion, prompts, billing, logs).
+​
+
+Esto sugiere un “core” de dominio que debería ser un paquete y no un conjunto de archivos sueltos replicados entre repos.
+
+2. Propuesta de estructura base (monorepo lógico)
+Aunque despliegues por separado, te conviene organizar mentalmente (o realmente) así:
+
+apps/
+
+apps/web – Next.js UI (admin + técnico).
+
+apps/api – API routes, endpoints edge/server.
+
+packages/
+
+packages/domain – tipos y reglas de negocio:
+
+Tipos: Tenant, Entity/Case, Checklist*, Workflow*, UsageLog, Invoice, SLAKey, IndustryType.
+​
+
+Mapeos: mapEntityToCase, mapCaseToEntity.
+​
+
+packages/platform-core – servicios “puros”:
+
+TenantService, UsageService, BillingService, EnvironmentService, DomainRouter, checklist extractor/auto-classifier, SLAService.
+​
+
+packages/infrastructure – acceso a recursos:
+
+libdb (connectDB, connectAuthDB, connectLogsDB), getTenantCollection y SecureCollection.
+​
+
+logger (logEvento), email-service, cloudinary-service.
+​
+
+packages/tooling – CLI reusables:
+
+ensure-indexes, sync-i18n, diagnósticos de ingestion/prompts/logs.
+​
+
+Puedes simular esto sin cambiar repos físicos aún: reagrupa carpetas internas como si fueran paquetes y reduce imports cruzados “a mano”.
+
+3. Reglas de uso entre capas
+Define dependencias unidireccionales:
+
+packages/domain no importa nada de infra ni de servicios; solo tipos y funciones puras.
+
+packages/platform-core importa domain y infrastructure, pero nunca apps/*.
+
+apps/* importa platform-core y domain, pero nunca accede directamente a libdb, Cloudinary o Resend; todo pasa por servicios core.
+​
+
+Ejemplo de refactor concreto:
+
+Hoy: un endpoint de checklist importa directo connectDB, extractChecklist, autoClassify, smartSort, logEvento.
+​
+
+Después:
+
+packages/platform-core/src/checklist-service.ts expone:
+
+ts
+export async function generateChecklistForEntity(entityId, tenantId, correlationId) { ... }
+El endpoint solo hace auth, parse de query y llama a ChecklistService.
+
+4. Cohesión de scripts y herramientas
+Ahora mismo scripts/ mezcla:
+
+Debug de entorno/DB (env.ts, raw-only.js, minimal.ts).
+​
+
+Debug de ingestion (ingestion-state.ts, broken-ingestion.ts, failed-asset.ts, fetch.js, error-details.js).
+​
+
+Debug de prompts (visible-prompts.ts, prompts-raw.ts, prompts-grouped.ts, api-response.ts).
+​
+
+i18n (all-i18n.ts, logs.ts que synca TranslationService).
+​
+
+Agrupa por bounded context:
+
+scripts/db/* – conectividad, índices, legacy/new docs.
+​
+
+scripts/ingestion/* – estado, retry, limpieza, dumps de errores.
+​
+
+scripts/prompts/* – inspección, conteos y metadata.
+​
+
+scripts/i18n/* – sync, detección de duplicados.
+​
+
+scripts/billing/* – circuit-breaker, invoice diagnostics.
+​
+
+Y que todos usen:
+
+packages/infrastructure para DB/auth/env.
+
+packages/platform-core para lógica (TenantService, TranslationService, IngestService, BillingService).
+​
+
+Así los scripts dejan de “romper” capas y se vuelven clientes más del núcleo.
+
+5. Pasos incrementales
+Crear packages/domain (o carpeta src/domain) con:
+
+Tipos compartidos actuales (IndustryType, GenericCase, Checklist*, UsageLog, TenantConfig, Invoice).
+​
+
+Funciones puras como mapEntityToCase/mapCaseToEntity y enums de workflows.
+​
+
+Mover servicios transversales a un módulo (platform-core):
+
+TenantService, UsageService, BillingService, EnvironmentService, DomainRouter, ChecklistExtractor/AutoClassifier, SLAService que definimos antes.
+​
+
+Encapsular acceso a infra:
+
+Re-exportar getTenantCollection, logEvento, EmailService, Cloudinary desde infrastructure, y consumirlos solo desde servicios core.
+​
+
+Normalizar scripts:
+
+Que todos importen connectDB/TenantService/TranslationService desde el nuevo layout, y borrar duplicados específicos de bug que ya no aportan.
+​
+
+Documentar en ARCHITECTURE.md:
+
+Diagrama muy breve de capas y reglas de import para no volver a crear dependencias circulares.
+
+Con esto, aunque mantengas varios repos físicos, el núcleo de dominio + servicios se vuelve consistente y reutilizable, y reduces el “código tribal” que ahora está repartido en scripts, endpoints y utilidades.
+
+
+1. Reglas de Oro y contratos “oficiales”
+Tienes las “Reglas de Oro”, fases y patrones (Zod primero, logEvento, multi‑tenant, SLA, masking PII) repartidos por muchos servicios, pero no viven en un contrato único.
+​
+
+Pendiente razonable:
+
+Un ARCHITECTURE.md corto que fije:
+
+Reglas de Oro numeradas (validación, logging, SLA, masking, retry, multi‑tenant).
+
+Mapa de bounded contexts (ingest, RAG, workflows, billing, i18n, guardian/governance).
+
+Un docs/domain/*.md para los motores clave:
+
+Ingest pipeline (Preparer, Analyzer, Indexer, Tracer).
+
+RAG (search, reranker, query expansion, semantic cache).
+
+Guardian/Governance (límites, cuotas, decisiones bloqueadas).
+
+Eso cierra la parte de documentación explícita de arquitectura.
+
+2. Cohesión de observabilidad y gobernanza
+Ya tienes muchas piezas potentes pero algo distribuidas:
+
+logEvento con hashing PII y multi‑DB logs.
+​
+
+IngestTracer con spans, hashing y SLAs propios.
+​
+
+QuotaService, LimitsService, BillingService, UsageService con reglas algo solapadas.
+​
+
+Guardian/GovernanceEngine para decisiones de IA y auditoría.
+​
+
+Pendiente interesante:
+
+Unificar estas capas en un “Policy & Observability core”:
+
+SLAService (que ya esbozamos) para evitar lógica SLA duplicada.
+
+PolicyService que sea la puerta única a:
+
+QuotaService (uso/límites).
+
+GovernanceEngine (permitir/bloquear acciones IA/updates).
+
+Guardian (permisos de usuario).
+
+Exponer métricas consolidadas para el dashboard:
+
+Violaciones SLA por key.
+
+Eventos de bloqueo de cuota/governance.
+
+PII masking counts (PIIMasker).
+​
+
+Con esto, “cumplimiento y calidad de servicio” queda cohesionado, no fragmentado.
+
+3. Guardian/governance y dominios IA
+La parte de IA está muy bien, pero falta un cierre de cohesión:
+
+Tienes:
+
+PromptManager/PromptService con versiones y sombra.
+​
+
+Domain Router (detector de industria), Language Detector, Reranker, Query Expansion, RAGJudge, SelfCorrect, etc.
+​
+
+Guardian/GovernanceEngine y audit de decisiones IA.
+​
+
+Lo que falta:
+
+Unificar estos motores en un AI Orchestrator de alto nivel que defina:
+
+“Pipelines” estándar: TECHNICAL_QA, REPORT_GENERATION, CHECKLIST_EXTRACTION.
+
+Para cada pipeline: qué prompts, qué motores (RAG, reranker, judge, self‑correct), qué reglas de governance se aplican y qué SLAs.
+
+Documentarlo en docs/ai/PIPELINES.md para que no solo viva en el código.
+
+Si haces esas tres cosas (contratos/Reglas de Oro escritos, núcleo de Policy/Observability, y AI Orchestrator documentado), lo demás que hemos tocado (i18n, workflows, SLA, limpieza de debug, cohesión de repos) queda bastante bien cerrado.
+
+
+La idea es que todo lo de “calidad, límites y gobierno de IA” deje de estar troceado por servicios y pase a tres bloques claros: reglas/contratos, policy+observabilidad y orquestación IA.
+​
+
+1. Reglas de Oro y contratos escritos
+Ahora las reglas están implícitas en el código y comentarios de “Phase X”: Zod en todos los endpoints, logEvento, multi‑tenant con SecureCollection, masking PII, SLA, etc.
+​
+
+Ampliación concreta:
+
+Documento corto docs/ARCHITECTURE.md con:
+
+Reglas de Oro numeradas:
+
+Ro1: Validación Zod en los límites (APIs, servicios externos).
+
+Ro2: Logging estructurado con logEvento, correlationId, tenantId y hashing de PII.
+​
+
+Ro3: Aislamiento multi‑tenant obligatorio vía getTenantCollection/SecureCollection.
+​
+
+Ro4: SLA y métricas de duración (todas las operaciones críticas pasan por SLAService).
+
+Ro5: PII Masker antes de almacenar texto “externo” (ingestión, QA libre).
+​
+
+Ro6: Retries LLM con withLLMRetry y logging de backoff.
+​
+
+Diagrama verbal de bounded contexts:
+
+Ingest (fileblobs, knowledgeassets, ingestion jobs, auditIngestion).
+​
+
+RAG (documentchunks, vector search, reranker, expansions, judge).
+​
+
+Workflows (case workflows, AI workflows, tasks).
+​
+
+Billing/Limits (UsageService, QuotaService, BillingService, PLANS).
+​
+
+Governance/Guardian (permisos, decisiones IA, audit logs).
+​
+
+Contratos de dominio complementarios:
+
+docs/domain/INGEST.md, RAG.md, GOVERNANCE.md, LIMITS.md describiendo:
+
+Inputs/outputs de cada motor.
+
+Colecciones implicadas.
+
+Qué reglas de oro les aplican (por ejemplo: “toda ingestión pasa por PIIMasker y auditIngestion”).
+
+Esto convierte tus patrones implícitos en referencia explícita para ti y cualquier colaborador.
+
+2. Núcleo Policy & Observability
+Hoy tienes piezas fuertes pero separadas:
+
+UsageService y QuotaService para uso y cuotas.
+​
+
+BillingService y PLANS para planes y costes.
+​
+
+checkLLMLimit/enforceLimits y middlewares de API.
+​
+
+GovernanceEngine con audit log de decisiones IA.
+​
+
+Guardian para permisos de usuario.
+​
+
+Lógica SLA dispersa + logEvento + PIIMasker.
+​
+
+La ampliación es juntar eso en un Policy & Observability core:
+
+PolicyService
+
+Una fachada única:
+
+ts
+// PolicyService.ts
+export class PolicyService {
+  static async checkUsage(tenantId, metric, amount, context) { ... }
+  static async evaluateAIAction(tenantId, action, payload, context) { ... }
+  static async enforcePermission(user, resource, operation) { ... }
+}
+Por dentro:
+
+Delegas a QuotaService/UsageService para límites.
+
+Llamas a GovernanceEngine para acciones IA sensibles (actualizar entidad, lanzar workflow automático).
+
+Usas Guardian para permisos RBAC.
+
+Siempre logueas una decisión estructurada (POLICYSERVICE/DECISION) con motivo y contexto.
+​
+
+SLAService + métricas unificadas
+
+SLAService.checkSLA(key, durationMs, context) como acordamos.
+
+Todas las rutas y motores críticos llaman a esto, no loguean SLA manual.
+
+En el agregador de métricas (dashboard admin), calculas:
+
+Número de violaciones por key y tenant.
+
+Percentiles de duración por key.
+
+Correlación con tokens/uso (salen de UsageService).
+​
+
+Observability “end‑to‑end”
+
+Estándarizar correlationId:
+
+En API se crea si no existe y se pasa a:
+
+logEvento.
+
+UsageService.
+
+IngestTracer / RAG / LLM.
+
+GovernanceEngine.
+
+Que cualquier log crítico (errores, SLA, bloqueos, masking PII) tenga:
+
+source, action, tenantId, correlationId, details.key/metric, etc.
+​
+
+Con esto, una única decisión (“este request ha fallado o ha sido bloqueado”) se ve coherente en logs, límites, billing y paneles.
+
+3. AI Orchestrator y pipelines
+Tienes muchas piezas IA muy buenas:
+
+RAG: vector search (VectorSearchService), chunking, reranker, judge, self‑correct.
+​
+
+Checklists: extractor + classifier.
+​
+
+Informes: PromptService con prompts versionados, sombra, etc.
+​
+
+Motores IA: InsightEngine, PredictiveEngine, AIWorkflowEngine, agentEngine (análisis de pedido).
+​
+
+Gobierno: GovernanceEngine y audit de decisiones.
+​
+
+La ampliación es definir pipelines IA declarativos, en algo tipo docs/ai/PIPELINES.md + código:
+
+3.1. Definir pipelines nombrados
+Por ejemplo:
+
+PIPELINE_TECH_QA
+
+PIPELINE_REPORT
+
+PIPELINE_CHECKLIST
+
+PIPELINE_PRED_MAINT
+
+PIPELINE_AGENT_ANALYSIS
+
+Para cada pipeline defines:
+
+Origen de contexto:
+
+RAG.search con filtros (tenant, industria).
+
+entity.originalText.
+
+Sub‑módulos:
+
+RERANKER: sí/no, modelo.
+
+SELF_CORRECT: sí/no.
+
+JUDGE (RAGJudge) para medir faithfulness.
+
+MASK_PII: antes de guardar logs o outputs.
+
+Prompts:
+
+Claves de PromptService que usa (CHECKLISTEXTRACTION, REPORTGENERATOR, etc.).
+
+SLAs:
+
+SLA keys (ej. api.QUICKQA, llm.MINI, ingest.ANALYZE).
+
+Policies:
+
+Qué decisiones pasan por PolicyService.evaluateAIAction (ej. escribir en entities, lanzar workflow IA).
+
+3.2. Implementar un “AI Orchestrator” fino
+Un servicio AIPipelineOrchestrator (en tu platform-core) que tenga algo así:
+
+ts
+export type PipelineName =
+  | "TECH_QA"
+  | "REPORT"
+  | "CHECKLIST"
+  | "PRED_MAINT"
+  | "AGENT_ANALYSIS";
+
+export class AIPipelineOrchestrator {
+  static async run(name: PipelineName, input: any, context: PipelineContext) { ... }
+}
+Dentro seleccionas el pipeline por nombre y orchestrate:
+
+Pre‑procesado (RAG, filtros).
+
+Llamadas LLM (callGeminiMini/Pro/Stream).
+
+Check de governance si va a modificar datos o lanzar workflows.
+
+Logging y SLA.
+
+Los endpoints (api/...) se simplifican a:
+
+Autenticación/permiso.
+
+parse/validación input.
+
+AIPipelineOrchestrator.run("CHECKLIST", { entityId }, ctx).
+
+3.3. Documentar los pipelines
+docs/ai/PIPELINES.md:
+
+Para cada pipeline:
+
+Diagrama textual de pasos.
+
+Inputs/outputs.
+
+Modelos implicados.
+
+SLAs y métricas clave.
+
+Reglas de governance (ej: “nunca auto‑cierra casos, solo genera tareas”).
+
+Esto te da:
+
+Cohesión conceptual: IA no son “motores sueltos”, son pipelines con nombre.
+
+Un sitio claro donde tocar cuando añadas:
+
+Nuevo vertical.
+
+Nuevo check de compliance.
+
+Cambio de modelo.
+
+
+
+
+
+Te dejo directamente los esqueletos listos para copiar/pegar y rellenar.
+
+1. docs/ARCHITECTURE.md
+text
+# ABD Platform – Arquitectura y Reglas de Oro
+
+## 1. Visión general
+
+La plataforma ABD es un sistema multi-tenant de análisis documental y RAG, con flujos de ingestión, QA técnica, generación de informes y automatizaciones IA por vertical (ascensores, legal, banca, etc.).[file:34]
+
+Componentes principales:
+
+- Frontend Next.js (UI técnico + admin).
+- API / core backend (Next API routes + servicios de dominio).
+- Motores IA (Ingest, RAG, Insights, Predictivo, Agente de análisis, Workflows IA).[file:34]
+- Infraestructura (MongoDB MAIN/AUTH/LOGS, Cloudinary, Stripe, Email, i18n, logging).[file:34]
+
+---
+
+## 2. Reglas de Oro
+
+### Ro1 – Validación en los límites
+
+- Toda entrada externa se valida con Zod (APIs, colas, LLM outputs).
+- Los servicios internos reciben datos tipados (Typescript) o ya validados.[file:34]
+
+### Ro2 – Logging estructurado con PII protegida
+
+- Todos los eventos relevantes usan `logEvento` con:
+  - `level`, `source`, `action`, `message`, `correlationId`, `tenantId`, `details`.[file:34]
+- Emails/IP y PII se hashean/masked antes de persistir en `applicationlogs`.[file:34]
+
+### Ro3 – Aislamiento Multi-tenant
+
+- Ningún código accede directamente a `db.collection(...)`.
+- Todas las operaciones pasan por `getTenantCollection` y `SecureCollection`.[file:34]
+- SuperAdmin solo bypass en colecciones permitidas (configuración global, traducciones, espacios especiales).[file:34]
+
+### Ro4 – SLA y tiempos de respuesta
+
+- Operaciones críticas miden duración y llaman a `SLAService.checkSLA(key, durationMs, context)`.
+- Las violaciones se loguean como `SLAMONITOR/SLAVIOLATION` y se agregan en dashboards.[file:34]
+
+### Ro5 – Masking de PII en contenidos
+
+- Textos externos (PDFs, QA libre, emails) pasan por `PIIMasker.mask` antes de almacenamiento o logging prolongado.[file:34]
+- Metadata de PII (tipos y recuentos) se registra para auditoría, no el dato bruto.
+
+### Ro6 – Retries y resiliencia LLM
+
+- Llamadas LLM se envuelven en `withLLMRetry` o `executeWithResilience` con backoff y timeouts.[file:34]
+- Cada intento se registra (`LLMRETRY/RETRYATTEMPT`, `RETRYSUCCESS`, `RETRYEXHAUSTED`).[file:34]
+
+---
+
+## 3. Bounded Contexts
+
+### 3.1. Ingest
+
+- Colecciones: `fileblobs`, `knowledgeassets`, `auditingestion`, `documentchunks`.[file:34]
+- Servicios: IngestPreparer, IngestWorker, IngestTracer, PIIMasker.[file:34]
+- Reglas clave:
+  - Siempre auditar ingest en `auditingestion`.
+  - Aplicar PIIMasker antes de logs largos.
+  - Trazas con `correlationId` y `assetId`.[file:34]
+
+### 3.2. RAG
+
+- Colecciones: `documentchunks`, `spaces`, `ragqueries` (si aplica).[file:34]
+- Servicios: `VectorSearchService`, chunker, query expansion, reranker, RAGJudge.[file:34]
+- Reglas:
+  - Filtro por `tenantId`, `industry`, `environment`.
+  - Métricas de precisión (`UsageService.trackContextPrecision`).[file:34]
+
+### 3.3. Workflows
+
+- Case workflows: estados de casos/entidades (`entities`, `cases`, `workflowdefinitions`).[file:34]
+- AI workflows: automatizaciones basadas en eventos IA (`aiworkflows`, `workflowanalytics`).[file:34]
+
+### 3.4. Billing & Limits
+
+- Planes: `PLANS`, `BillingService`, `QuotaService`, `UsageService`.[file:34]
+- Métricas: tokens, storage, vector searches, API requests, reports.[file:34]
+
+### 3.5. Governance & Guardian
+
+- `Guardian` para permisos (RBAC).
+- `GovernanceEngine` para decisiones IA bloqueadas/permitidas y audit logs.[file:34]
+
+---
+
+## 4. Capas y dependencias
+
+- `domain` (tipos y lógica pura) → no depende de infra.
+- `platform-core` (servicios) → depende de `domain` e `infrastructure`.
+- `apps` (web, api) → dependen de `platform-core` y `domain`, nunca de infra directamente.[file:34]
+
+---
+
+## 5. Observabilidad
+
+- Trazabilidad end-to-end con `correlationId`.
+- Logs estructurados en `applicationlogs` (DB LOGS).
+- Métricas SLA, uso, errores y governance expuestas en dashboard admin.[file:34]
+2. Interfaces PolicyService y SLAService
+ts
+// packages/platform-core/policy/PolicyService.ts
+import { QuotaService } from "./QuotaService";
+import { GovernanceEngine } from "./GovernanceEngine";
+import { GuardianPermissions, enforcePermission } from "lib/guardian-guard";
+import { logEvento } from "lib/logger";
+
+export interface PolicyContext {
+  correlationId: string;
+  tenantId: string;
+  userId?: string;
+  userRole?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
+export type UsageMetric = "TOKENS" | "STORAGE" | "SEARCHES" | "APIREQUESTS";
+
+export interface UsageDecision {
+  allowed: boolean;
+  reason?: string;
+  current: number;
+  limit: number;
+  percentage: number;
+}
+
+export class PolicyService {
+  static async checkUsage(
+    tenantId: string,
+    metric: UsageMetric,
+    amount: number,
+    ctx: PolicyContext
+  ): Promise<UsageDecision> {
+    const decision = await QuotaService.evaluateQuota(tenantId, metric, amount);
+    await logEvento({
+      level: decision.status === "BLOCKED" ? "ERROR" : "INFO",
+      source: "POLICYSERVICE",
+      action: "USAGECHECK",
+      message: `Usage check for ${metric}: ${decision.status}`,
+      correlationId: ctx.correlationId,
+      tenantId,
+      userId: ctx.userId,
+      details: { metric, amount, ...decision },
+    });
+    return {
+      allowed: decision.status !== "BLOCKED",
+      reason: decision.reason,
+      current: decision.current,
+      limit: decision.limit,
+      percentage: decision.percentage,
+    };
+  }
+
+  static async enforcePermission(
+    permission: keyof typeof GuardianPermissions,
+    ctx: PolicyContext
+  ): Promise<{ user: any }> {
+    const user = await enforcePermission(permission);
+    await logEvento({
+      level: "INFO",
+      source: "POLICYSERVICE",
+      action: "PERMISSIONCHECK",
+      message: `Permission ${permission} granted`,
+      correlationId: ctx.correlationId,
+      tenantId: ctx.tenantId,
+      userId: user.id,
+    });
+    return { user };
+  }
+
+  static async evaluateAIAction(
+    tenantId: string,
+    action: string,
+    payload: any,
+    ctx: PolicyContext
+  ): Promise<{ allowed: boolean; reason?: string }> {
+    const engine = GovernanceEngine.getInstance();
+    const result = await engine.evaluateAction(tenantId, action, payload, ctx);
+
+    await logEvento({
+      level: result.allowed ? "INFO" : "WARN",
+      source: "POLICYSERVICE",
+      action: "AIACTION",
+      message: `AI action ${action} => ${result.allowed ? "ALLOWED" : "BLOCKED"}`,
+      correlationId: ctx.correlationId,
+      tenantId,
+      userId: ctx.userId,
+      details: { action, reason: result.reason, rules: result.rulesApplied },
+    });
+
+    return { allowed: result.allowed, reason: result.reason };
+  }
+}
+ts
+// packages/platform-core/observability/SLAService.ts
+import { logEvento } from "lib/logger";
+
+export interface SLAConfig {
+  thresholdMs: number;
+  severity?: "WARN" | "ERROR";
+}
+
+const SLA_REGISTRY: Record<string, SLAConfig> = {
+  // Ingest
+  "ingest.PREPARE": { thresholdMs: 2000 },
+  "ingest.ANALYZE": { thresholdMs: 30000 },
+  "ingest.INDEX": { thresholdMs: 15000 },
+  "ingest.TOTAL": { thresholdMs: 60000 },
+
+  // LLM
+  "llm.EMBEDDING": { thresholdMs: 1000 },
+  "llm.MINI": { thresholdMs: 2000 },
+  "llm.PRO": { thresholdMs: 5000 },
+
+  // APIs
+  "api.QUICKQA": { thresholdMs: 2000 },
+  "api.REPORT": { thresholdMs: 5000 },
+  "api.CHECKLIST": { thresholdMs: 3000 },
+};
+
+export interface SLAContext {
+  correlationId: string;
+  tenantId?: string;
+  userId?: string;
+  details?: Record<string, any>;
+}
+
+export async function checkSLA(
+  key: string,
+  actualMs: number,
+  ctx: SLAContext
+): Promise<void> {
+  const config = SLA_REGISTRY[key];
+  if (!config) return;
+
+  const { thresholdMs, severity = "WARN" } = config;
+  if (actualMs <= thresholdMs) return;
+
+  await logEvento({
+    level: severity,
+    source: "SLAMONITOR",
+    action: "SLAVIOLATION",
+    message: `SLA ${key} exceeded: ${actualMs}ms > ${thresholdMs}ms`,
+    correlationId: ctx.correlationId,
+    tenantId: ctx.tenantId,
+    userId: ctx.userId,
+    details: {
+      key,
+      actualMs,
+      thresholdMs,
+      excessMs: actualMs - thresholdMs,
+      ...ctx.details,
+    },
+  });
+}
+Uso típico en una ruta:
+
+ts
+const start = Date.now();
+// ... lógica ...
+const duration = Date.now() - start;
+await checkSLA("api.QUICKQA", duration, {
+  correlationId,
+  tenantId: user.tenantId,
+  userId: user.id,
+  details: { path: "/api/core/quick-qa" },
+});
+3. docs/ai/PIPELINES.md
+text
+# Pipelines IA – ABD Platform
+
+Este documento describe los pipelines IA estándar, sus pasos, prompts, SLAs y reglas de gobernanza.[file:34]
+
+## 1. PIPELINE_TECH_QA (Quick QA técnica)
+
+### 1.1. Objetivo
+
+Responder preguntas técnicas puntuales sobre un fragmento de texto o contexto RAG, sin persistencia (modo efímero).[file:34]
+
+### 1.2. Entradas
+
+- `snippet` (opcional): texto libre proporcionado por el usuario.
+- `question`: pregunta del usuario.
+- `tenantId`, `userId`, `correlationId`.[file:34]
+
+### 1.3. Pasos
+
+1. Permisos:
+   - `PolicyService.enforcePermission("knowledge.read")`.
+2. Rate limiting / cuotas:
+   - `PolicyService.checkUsage(tenantId, "APIREQUESTS", 1)`.
+3. Preparar prompt:
+   - `PromptService.getPrompt("QUICKQAEPHEMERAL", tenantId, industry, session)`.
+4. Llamada LLM:
+   - `callGeminiStream` o `callGeminiMini` según endpoint.[file:34]
+5. SLA:
+   - `checkSLA("api.QUICKQA", durationMs, ctx)`.[file:34]
+6. Logging:
+   - `logEvento(APIQUICKQA/START, SLAVIOLATION si aplica, UNHANDLEDERROR en fallos)`. [file:34]
+
+### 1.4. Prompts
+
+- `QUICKQAEPHEMERAL` (por tenant/industria), con variables:
+  - `snippet`, `context` (opcional), `question`.[file:34]
+
+### 1.5. SLA y métricas
+
+- SLA objetivo: 2 segundos P95.
+- Métricas:
+  - `durationMs` por pipeline.
+  - Tokens usados (`UsageService.trackLLM`).[file:34]
+
+### 1.6. Governance
+
+- No puede modificar entidades ni lanzar workflows.
+- Solo lectura RAG, si se usa contexto.
+
+---
+
+## 2. PIPELINE_CHECKLIST (Extracción de checklist de pedido)
+
+### 2.1. Objetivo
+
+Dado un pedido/entidad, extraer una checklist técnica y clasificarla por categorías, con posibilidad de persistir y validar por técnico.[file:34]
+
+### 2.2. Entradas
+
+- `entityId`, `tenantId`, `correlationId`.
+- Opcional: `configId` de `ChecklistConfig`.[file:34]
+
+### 2.3. Pasos
+
+1. Auth:
+   - `PolicyService.enforcePermission("technical.read")`.
+2. Cargar entidad y config:
+   - `getTenantCollection("entities")`.
+   - `getChecklistConfigById(configId ?? "default")`. [file:34]
+3. RAG:
+   - `getRelevantDocuments(entity)` para documentos asociados.[file:34]
+4. Extractor IA:
+   - `extractChecklist(docs, tenantId, correlationId)` (LLM miniprompt).[file:34]
+5. Auto-clasificación:
+   - `autoClassify` + `smartSort`.[file:34]
+6. Persistencia:
+   - `extractedchecklists` con snapshot de items y validaciones (si procede).
+   - **Si se actualizan campos de entidad o se crean tareas**, pasar antes por `PolicyService.evaluateAIAction("CHECKLIST_UPDATE", ...)`.
+7. SLA:
+   - `checkSLA("api.CHECKLIST", duration, ctx)`.
+
+### 2.4. Prompts
+
+- `CHECKLISTEXTRACTION` (por tenant/industria).[file:34]
+
+### 2.5. SLA y métricas
+
+- Objetivo: 3 segundos P95 para checklist.
+- Logs: `CHECKLISTEXTRACTOR/EXTRACT`, `CHECKLISTAUTOCLASSIFIER/SMARTSORT` con duración.[file:34]
+
+### 2.6. Governance
+
+- Opcional: bloquear creación automática de tareas si governance dice NO.
+- Audit trail de cambios importantes sobre entidad.
+
+---
+
+## 3. PIPELINE_REPORT (Generación de informe técnico)
+
+### 3.1. Objetivo
+
+Generar informe técnico estructurado para una entidad, apto para PDF y revisión.[file:34]
+
+### 3.2. Entradas
+
+- `entityId`, `tenantId`, `correlationId`, `locale`.
+
+### 3.3. Pasos
+
+1. Auth:
+   - `PolicyService.enforcePermission("reports.generate")`.
+2. Cargar entidad, checklist y hallazgos IA:
+   - `entities`, `extractedchecklists`, riesgos (`metadata.risks`).[file:34]
+3. Selección de prompt según locale:
+   - `PromptService.getPrompt("REPORTGENERATOR_ES" | "_EN", tenantId, industry)`.
+4. LLM Pro:
+   - `callGeminiPro` con contexto estructurado.[file:34]
+5. Post-proceso:
+   - Aplicar PIIMasker si el informe se guarda en logs o demo.
+   - Generar PDF y subir con `uploadLLMReport` (Cloudinary).[file:34]
+6. SLA:
+   - `checkSLA("api.REPORT", duration, ctx)`.
+7. Logging & Billing:
+   - `UsageService.trackReportGeneration(tenantId, entityId)`. [file:34]
+
+### 3.4. Governance
+
+- Evaluar con `PolicyService.evaluateAIAction("REPORT_GENERATION", payload)` si el informe va a ser enviado al cliente final automáticamente.
+
+---
+
+## 4. PIPELINE_PRED_MAINT (Mantenimiento predictivo)
+
+### 4.1. Objetivo
+
+Generar predicciones de mantenimiento para equipos o instalaciones.[file:34]
+
+### 4.2. Pasos
+
+1. Auth:
+   - `PolicyService.enforcePermission("predictive.read")`.
+2. Datos:
+   - Históricos de incidencias, sensores (cuando existan), informes previos.[file:34]
+3. Motor:
+   - `PredictiveEngine.getMaintenanceForecast(tenantId, correlationId)`. [file:34]
+4. SLA:
+   - SLA específico (`"api.PRED_MAINT"`) si lo defines.
+5. Governance:
+   - Si se crean tareas o workflows automáticos, usar `AIWorkflowEngine` + `PolicyService.evaluateAIAction("PRED_MAINT_ACTION", ...)`.[file:34]
+
+---
+
+## 5. PIPELINE_AGENT_ANALYSIS (Análisis completo de pedido)
+
+### 5.1. Objetivo
+
+Ejecutar el motor agéntico para analizar un pedido con streaming de pasos y hallazgos.[file:34]
+
+### 5.2. Entradas
+
+- `entityId`, `tenantId`, `correlationId`.
+
+### 5.3. Pasos
+
+1. Auth:
+   - `PolicyService.enforcePermission("technical.read")`.
+2. Cargar entidad y texto:
+   - `entities` (`originalText`).[file:34]
+3. Ejecutar `agentEngine.stream` con `initialState`.[file:34]
+4. Actualizar entidad:
+   - Guardar `detectedPatterns`, `metadata.risks`, `confidencescore`, `status analyzed`. [file:34]
+   - Antes de modificar, `PolicyService.evaluateAIAction("AGENT_UPDATE_ENTITY", { entityId, risks, confidence })`.
+5. Notificaciones:
+   - Si `risks` severos y confianza baja, notificar via `NotificationService`.[file:34]
+6. Billing:
+   - `UsageService.trackReportGeneration(tenantId, entityId)`.[file:34]
+
+### 5.4. SLA
+
+- Opcional: SLA agregada (“TOTAL”) o por step del grafo.
+
+---
+
+## 4. AIPipelineOrchestrator (esqueleto)
+
+```ts
+// packages/platform-core/ai/AIPipelineOrchestrator.ts
+import { PolicyService, PolicyContext } from "../policy/PolicyService";
+import { checkSLA } from "../observability/SLAService";
+// Importar servicios específicos: RAG, Checklist, Reports, Predictive, Agent, etc.
+
+export type PipelineName =
+  | "TECH_QA"
+  | "CHECKLIST"
+  | "REPORT"
+  | "PRED_MAINT"
+  | "AGENT_ANALYSIS";
+
+export interface PipelineRunContext extends PolicyContext {
+  pipeline: PipelineName;
+}
+
+export class AIPipelineOrchestrator {
+  static async run(
+    name: PipelineName,
+    input: any,
+    ctx: PipelineRunContext
+  ): Promise<any> {
+    const start = Date.now();
+
+    try {
+      switch (name) {
+        case "TECH_QA":
+          return await this.runTechQA(input, ctx);
+        case "CHECKLIST":
+          return await this.runChecklist(input, ctx);
+        case "REPORT":
+          return await this.runReport(input, ctx);
+        case "PRED_MAINT":
+          return await this.runPredMaint(input, ctx);
+        case "AGENT_ANALYSIS":
+          return await this.runAgentAnalysis(input, ctx);
+        default:
+          throw new Error(`Unknown pipeline: ${name}`);
+      }
+    } finally {
+      const duration = Date.now() - start;
+      await checkSLA(`pipeline.${name}`, duration, {
+        correlationId: ctx.correlationId,
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        details: { pipeline: name },
+      });
+    }
+  }
+
+  private static async runTechQA(input: any, ctx: PipelineRunContext) {
+    // Aquí solo orquestas: permisos, prompts, llamada LLM, etc.
+    // La lógica concreta puede vivir en un TechQAService.
+  }
+
+  private static async runChecklist(input: any, ctx: PipelineRunContext) {
+    // Llamar a ChecklistService.generateForEntity(...)
+  }
+
+  private static async runReport(input: any, ctx: PipelineRunContext) {
+    // Llamar a ReportService.generate(...)
+  }
+
+  private static async runPredMaint(input: any, ctx: PipelineRunContext) {
+    // Llamar a PredictiveEngine wrapper.
+  }
+
+  private static async runAgentAnalysis(input: any, ctx: PipelineRunContext) {
+    // Llamar a AgentAnalysisService / agentEngine wrapper.
+  }
+}
+Con estos bloques tienes:
+
+Documento de arquitectura y reglas.
+
+Núcleo de policy + SLA coherente.
+
+Diseño de pipelines IA y un orquestador para centralizar la lógica.
+
+
+Sí, dos cosas que complementarían muy bien todo lo anterior.
+
+1. “Safety net” de demos y entornos
+Tienes bastante código enfocado a debug, seeds, scripts puntuales y modos demo. Consolidar esto ayuda a no romper producción:
+​
+
+Bandera clara de modo demo:
+
+process.env.ABD_DEMO_MODE = "true" y checks centralizados.
+
+Reglas en demo:
+
+Seeds y wipes solo disponibles en demo.
+
+Limitación de features sensibles (borrar assets, cambiar billing real).
+
+Un DemoService pequeño que:
+
+Exponga helpers para crear tenants demo, usuarios y datos de ejemplo.
+
+Centralice textos y disclaimers “modo demo”.
+
+Esto reduce riesgo de que un “atajo de demo” se cuele en entorno real.
+
+2. Hardening de data lifecycle y limpieza
+Con ingest, RAG y logs, a la larga acumulas mucha basura histórica. Merece la pena:
+​
+
+Definir políticas de retención:
+
+Logs de aplicación: p.ej. 90 días en applicationlogs (luego archivado o borrado).
+
+auditingestion: mantener estados finales, purge de intermedios antiguos.
+
+fileblobs huérfanos: limpieza periódica (tienes scripts, pero puedes formalizarlo).
+​
+
+Un DataLifecycleService que:
+
+Ejecute tareas de limpieza programables (cron Vercel / scheduler).
+
+Use logs estructurados para saber qué se ha borrado, por qué y cuándo.
+
+Documento corto docs/COMPLIANCE-DATA.md:
+
+Qué guardas, cuánto tiempo y cómo se puede borrar (tenant-level delete, usuario, documento).
+
+Con esto cierras la parte de “vida del dato” y reduces deuda futura de almacenamiento y compliance.
+
+
+
+
+Para endurecer bien el ciclo de vida de datos puedes combinar política clara, servicios reutilizables y scripts/cron bien acotados.
+
+1. Política de retención por tipo de dato
+Define primero “qué pasa” con cada cosa, aunque luego lo implementes por fases:
+
+Logs (applicationlogs, usagelogs, audittrails):
+
+Retención corta (p.ej. 90 días) en la base principal de logs.
+​
+
+Opcionalmente export a almacenamiento frío (S3, etc.) antes de borrar.
+
+Ingest:
+
+auditingestion: conservar solo últimos N meses o solo estados finales; limpiar registros de intentos si ya hay estado COMPLETED/FAILED antiguo.
+​
+
+documentchunks: cuando un knowledgeasset se borra o expira, purgar chunks asociados.
+​
+
+fileblobs: eliminar blobs huérfanos que ya no referencie ningún asset.
+​
+
+Contenido usuario:
+
+userdocuments, knowledgeassets: soportar “soft delete” y “hard delete” (ya tienes soft delete en SecureCollection).
+​
+
+Definir si hay expiración automática (por tenant o espacio).
+
+Datos sensibles extra:
+
+Snapshots de informes LLM, checklist extraídos antiguos, etc. (decidir si se purgan tras X tiempo o X versiones).
+
+Todo esto lo escribes en docs/COMPLIANCE-DATA.md (alto nivel, sin entrar aún en código).
+
+2. DataLifecycleService
+Un servicio central para que todo lo que “limpia/borran” vaya por el mismo sitio.
+
+ts
+// packages/platform-core/compliance/DataLifecycleService.ts
+import { getTenantCollection } from "lib/db-tenant";
+import { logEvento } from "lib/logger";
+
+interface LifecycleContext {
+  correlationId: string;
+  initiatedBy: "SYSTEM_CRON" | "ADMIN" | "TENANT_DELETE";
+  tenantId?: string;
+}
+
+export class DataLifecycleService {
+  // 1) Purgar logs antiguos
+  static async purgeOldLogs(days: number, ctx: LifecycleContext) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    const logsColl = await getTenantCollection("applicationlogs", undefined, "LOGS");
+    const res = await logsColl.deleteMany(
+      { timestamp: { $lt: cutoff } },
+      { hardDelete: true }
+    );
+
+    await logEvento({
+      level: "INFO",
+      source: "DATALIFECYCLE",
+      action: "PURGE_LOGS",
+      message: `Purge logs older than ${days} days`,
+      correlationId: ctx.correlationId,
+      tenantId: ctx.tenantId,
+      details: { deletedCount: res.deletedCount },
+    });
+  }
+
+  // 2) Limpiar fileblobs huérfanos
+  static async purgeOrphanBlobs(ctx: LifecycleContext) {
+    const blobs = await (await getTenantCollection("fileblobs"))
+      .find({ refCount: { $lte: 0 } }, { includeDeleted: true })
+      .toArray();
+
+    if (!blobs.length) return;
+
+    const ids = blobs.map((b: any) => b._id);
+    const coll = await getTenantCollection("fileblobs");
+    const res = await coll.deleteMany({ _id: { $in: ids } }, { hardDelete: true });
+
+    await logEvento({
+      level: "INFO",
+      source: "DATALIFECYCLE",
+      action: "PURGE_ORPHAN_BLOBS",
+      message: "Purged orphan fileblobs",
+      correlationId: ctx.correlationId,
+      details: { candidates: blobs.length, deleted: res.deletedCount },
+    });
+  }
+
+  // 3) Compactar/auditar auditingestion
+  static async cleanupAuditIngestion(days: number, ctx: LifecycleContext) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    const coll = await getTenantCollection("auditingestion");
+    const res = await coll.deleteMany(
+      {
+        createdAt: { $lt: cutoff },
+        // ejemplo: solo borrar si status es terminal
+        status: { $in: ["COMPLETED", "FAILED"] },
+      },
+      { hardDelete: true }
+    );
+
+    await logEvento({
+      level: "INFO",
+      source: "DATALIFECYCLE",
+      action: "CLEANUP_AUDITINGESTION",
+      message: "Cleaned old ingestion audit entries",
+      correlationId: ctx.correlationId,
+      details: { deleted: res.deletedCount, cutoff },
+    });
+  }
+
+  // 4) Borrado duro de tenant completo (GDPR-like)
+  static async hardDeleteTenant(tenantId: string, ctx: LifecycleContext) {
+    // Aquí centralizas la lista de colecciones por tenant:
+    const collections = [
+      "entities",
+      "cases",
+      "knowledgeassets",
+      "fileblobs",
+      "documentchunks",
+      "auditingestion",
+      "usagelogs",
+      "applicationlogs",
+      "contactrequests",
+      "spaces",
+      // etc.
+    ];
+
+    for (const name of collections) {
+      const coll = await getTenantCollection(name);
+      await coll.deleteMany({ tenantId }, { hardDelete: true });
+    }
+
+    await logEvento({
+      level: "WARN",
+      source: "DATALIFECYCLE",
+      action: "TENANT_HARD_DELETE",
+      message: `Tenant ${tenantId} hard-deleted`,
+      correlationId: ctx.correlationId,
+      tenantId,
+    });
+  }
+}
+Clave: usar siempre logEvento con DATALIFECYCLE como source para tener trazabilidad.
+​
+
+3. Cron / tareas programadas
+Encapsula las tareas en un endpoint/cmd muy explícito, por ejemplo:
+
+3.1. Endpoint para cron (Vercel cron / scheduler)
+ts
+// app/api/cron/data-lifecycle/route.ts
+import { NextResponse } from "next/server";
+import { DataLifecycleService } from "platform-core/compliance/DataLifecycleService";
+
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (process.env.NODE_ENV === "production") {
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  const correlationId = `cron-lifecycle-${Date.now()}`;
+
+  await DataLifecycleService.purgeOldLogs(90, {
+    correlationId,
+    initiatedBy: "SYSTEM_CRON",
+  });
+
+  await DataLifecycleService.purgeOrphanBlobs({
+    correlationId,
+    initiatedBy: "SYSTEM_CRON",
+  });
+
+  await DataLifecycleService.cleanupAuditIngestion(90, {
+    correlationId,
+    initiatedBy: "SYSTEM_CRON",
+  });
+
+  return NextResponse.json({ success: true, correlationId });
+}
+Similar a tu cron de stuck-jobs, pero para limpieza de datos.
+​
+
+3.2. Scripts manuales
+Para tareas “manuales” (migraciones, limpieza puntual):
+
+Reutilizas DataLifecycleService.
+
+En scripts/db/lifecycle-purge-old.ts llamas a esos métodos y escribes en consola, pero los logs se siguen registrando en applicationlogs.
+
+4. Soporte a soft delete vs hard delete
+Tu SecureCollection ya implementa soft delete añadiendo deletedAt. Aprovecha eso:
+​
+
+Regla:
+
+Operaciones de usuario (UI) → soft delete por defecto.
+
+Lifecycle / cumplimiento (cron, GDPR) → hardDelete: true.
+
+Para ciertas colecciones de alto volumen (logs, audit), puedes saltarte soft delete y borrar directo en lifecycle.
+
+Esto te da margen para recuperar cosas borradas “por error” pero permite purgar de verdad cuando toque.
+
+5. Documento docs/COMPLIANCE-DATA.md
+Esqueleto para dejar por escrito la política:
+
+text
+# Data Lifecycle & Compliance – ABD Platform
+
+## 1. Tipos de datos
+
+- **Contenido técnico**: PDFs, informes, checklist, entidades/casos.
+- **Metadatos de uso**: tokens, búsquedas, almacenamiento (UsageService).[file:34]
+- **Logs**: applicationlogs, usagelogs, audittrails, auditingestion.[file:34]
+- **Identidad y permisos**: users, tenants, roles, espacios.[file:34]
+
+---
+
+## 2. Retención
+
+- Logs de aplicación (`applicationlogs`):
+  - Retención estándar: 90 días.
+  - Pasado ese plazo, eliminación via `DataLifecycleService.purgeOldLogs`.
+- Usage / billing:
+  - `usagelogs`: 12 meses (para facturación y análisis ROI).[file:34]
+- Ingest:
+  - `auditingestion`: 6–12 meses, solo estados finales.
+  - `fileblobs` huérfanos: limpieza semanal.
+- Contenido:
+  - `knowledgeassets` y `userdocuments`: sin expiración automática; se borran bajo petición del usuario o tenant.
+  - Posibilidad de expiración por tenant configurable en el futuro.
+
+---
+
+## 3. Derecho al olvido / borrado de tenant
+
+- Borrado de usuario:
+  - Anonimización de identificadores en logs (ya se hace hashing de email/IP).[file:34]
+  - Opcional: marcar contenido del usuario como huérfano o transferido a admin.
+- Borrado de tenant:
+  - `DataLifecycleService.hardDeleteTenant(tenantId)`:
+    - Elimina entidades, documentos, knowledgeassets, logs y auditingestion asociados.
+    - Registra evento `TENANT_HARD_DELETE` en logs externos (si aplica).
+
+---
+
+## 4. Seguridad y auditoría de la limpieza
+
+- Todas las operaciones de lifecycle:
+  - Se registran con `source = DATALIFECYCLE`, `initiatedBy`, `correlationId`.
+- En modo producción:
+  - Los jobs programados requieren `CRON_SECRET` y se ejecutan solo desde entorno controlado.
+- No se expone ningún endpoint de “borrado masivo” sin proteger por rol alto + secreto de infraestructura.
+Con esto tienes:
+
+Políticas claras por tipo de dato.
+
+Servicio central (DataLifecycleService) que concentra la lógica de limpieza.
+
+Cron/CLI que usan ese servicio en vez de scripts ad‑hoc desconectados.
+
+Documentación que te ayuda con compliance y te recuerda “por qué” borra cada cosa.

@@ -88,18 +88,34 @@ export type ContactRequest = z.infer<typeof ContactRequestSchema>;
 
 export const AuditTrailSchema = z.object({
     _id: z.any().optional(),
-    userId: z.string(),
+    actorType: z.enum(['USER', 'IA', 'SYSTEM']).default('USER'),
+    actorId: z.string(), // ID del usuario o agente
     tenantId: z.string(),
     action: z.string(), // e.g., "RESET_ONBOARDING", "UPDATE_SETTING"
-    entityType: z.enum(['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT']),
+    entityType: z.enum(['USER', 'TENANT', 'SYSTEM', 'DOCUMENT', 'PROMPT', 'BILLING', 'GOVERNANCE']),
     entityId: z.string(),
+    source: z.enum(['CONFIG_CHANGE', 'ADMIN_OP', 'DATA_ACCESS', 'SECURITY_EVENT', 'WORKFLOW']).default('CONFIG_CHANGE'),
     changes: z.object({
         before: z.any().nullable(),
         after: z.any().nullable()
-    }),
+    }).optional(),
+    reason: z.string().optional(), // Requerido para cambios críticos en servicios
     correlationId: z.string(),
     ip: z.string().optional(),
     userAgent: z.string().optional(),
     timestamp: z.date().default(() => new Date()),
 });
 export type AuditTrail = z.infer<typeof AuditTrailSchema>;
+
+export const UsageSummarySchema = z.object({
+    _id: z.any().optional(),
+    tenantId: z.string(),
+    period: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
+    startDate: z.date(),
+    endDate: z.date(),
+    metrics: z.record(z.string(), z.number()), // e.g. { LLM_TOKENS: 50000, STORAGE_BYTES: 1024560 }
+    metadata: z.record(z.string(), z.any()).optional(),
+    createdAt: z.date().default(() => new Date()),
+});
+export type UsageSummary = z.infer<typeof UsageSummarySchema>;
+

@@ -25,6 +25,7 @@ import { CreateI18nKeyModal } from '@/components/admin/CreateI18nKeyModal';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 /**
  * AdminI18nPage: Gestión Maestra de Traducciones (Fase 62)
@@ -82,12 +83,71 @@ export default function AdminI18nPage() {
         autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
     });
 
-    const syncMutation = useApiMutation({
+    const syncToDbMutation = useApiMutation({
         endpoint: '/api/admin/i18n/sync',
         method: 'POST',
-        onSuccess: () => {
+        onSuccess: (data: any) => {
+            console.log('[i18n-sync] ✅ syncToDb success:', data);
             refetchPrimary();
             refetchSecondary();
+
+            // Show detailed toast (Smart-Merge aware)
+            const added = data?.added || 0;
+            const updated = data?.updated || 0;
+            const total = added + updated;
+            const keys = data?.keysAdded || [];
+
+            if (total === 0) {
+                toast.info('Sincronización completada', {
+                    description: 'No se detectaron discrepancias entre JSON y BD.'
+                });
+            } else {
+                const sampleKeys = Array.isArray(keys) ? keys.slice(0, 5).join(' | ') : '';
+                const remaining = (Array.isArray(keys) && keys.length > 5) ? ` (+${keys.length - 5} más)` : '';
+                toast.success(`Sincronización exitosa`, {
+                    description: `${added} nuevas, ${updated} actualizadas. [${sampleKeys}${remaining}]`
+                });
+            }
+        },
+        onError: (err) => {
+            console.error('[i18n-sync] ❌ syncToDb error:', err);
+            toast.error('Error de sincronización', {
+                description: typeof err === 'string' ? err : 'Error al sincronizar con la base de datos'
+            });
+        }
+    });
+
+    const syncToFileMutation = useApiMutation({
+        endpoint: '/api/admin/i18n/sync',
+        method: 'POST',
+        onSuccess: (data: any) => {
+            console.log('[i18n-sync] ✅ syncToFile success:', data);
+            refetchPrimary();
+            refetchSecondary();
+
+            // Show detailed toast (Smart-Merge aware)
+            const added = data?.added || 0;
+            const updated = data?.updated || 0;
+            const total = added + updated;
+            const keys = data?.keysAdded || [];
+
+            if (total === 0) {
+                toast.info('Exportación completada', {
+                    description: 'Los archivos JSON ya están sincronizados con la BD.'
+                });
+            } else {
+                const sampleKeys = Array.isArray(keys) ? keys.slice(0, 5).join(' | ') : '';
+                const remaining = (Array.isArray(keys) && keys.length > 5) ? ` (+${keys.length - 5} más)` : '';
+                toast.success(`Exportación exitosa`, {
+                    description: `${added} nuevas, ${updated} actualizadas en JSON. [${sampleKeys}${remaining}]`
+                });
+            }
+        },
+        onError: (err) => {
+            console.error('[i18n-sync] ❌ syncToFile error:', err);
+            toast.error('Error de exportación', {
+                description: typeof err === 'string' ? err : 'Error al exportar a archivos locales'
+            });
         }
     });
 
@@ -107,11 +167,22 @@ export default function AdminI18nPage() {
                         <Button
                             variant="outline"
                             className="rounded-xl border-slate-200 dark:border-slate-800"
-                            onClick={() => syncMutation.mutate({ locale: primaryLocale })}
-                            disabled={syncMutation.isLoading}
+                            onClick={() => syncToDbMutation.mutate({ locale: primaryLocale, direction: 'to-db' })}
+                            disabled={syncToDbMutation.isLoading}
+                            title="Sincronizar desde archivos JSON hacia la Base de Datos"
                         >
-                            <RefreshCw className={`w-4 h-4 mr-2 ${syncMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncBtn')}
+                            <RefreshCw className={`w-4 h-4 mr-2 ${syncToDbMutation.isLoading ? 'animate-spin' : ''}`} />
+                            {t('page.syncToDbBtn') || 'JSON→BD'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="rounded-xl border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400"
+                            onClick={() => syncToFileMutation.mutate({ locale: primaryLocale, direction: 'to-file' })}
+                            disabled={syncToFileMutation.isLoading}
+                            title="Exportar desde la Base de Datos hacia archivos JSON"
+                        >
+                            <FileJson className={`w-4 h-4 mr-2 ${syncToFileMutation.isLoading ? 'animate-spin' : ''}`} />
+                            {t('page.syncToFileBtn') || 'BD→JSON'}
                         </Button>
                         <Button
                             onClick={() => setIsCreateModalOpen(true)}

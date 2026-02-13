@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
                 const token = crypto.randomBytes(32).toString('hex');
                 const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + 7);
+                expiresAt.setDate(expiresAt.getDate() + (validated.expiresInDays || 7));
 
                 const newInvitation = {
                     email,

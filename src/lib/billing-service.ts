@@ -116,6 +116,22 @@ export class BillingService {
             correlationId: `change-plan-${Date.now()}`
         });
 
+        // 4. Auditoría Extendida (Phase 132.3)
+        const { AuditTrailService } = await import('./services/audit-trail-service');
+        await AuditTrailService.logConfigChange({
+            actorType: 'SYSTEM',
+            actorId: 'system-billing',
+            tenantId,
+            action: 'BILLING_PLAN_CHANGE',
+            entityType: 'BILLING',
+            entityId: tenantId,
+            changes: {
+                before: currentConfig.subscription?.planSlug,
+                after: tier
+            },
+            correlationId: `change-plan-${Date.now()}`
+        } as any);
+
         return { success: true, creditApplied: false };
     }
 
@@ -258,6 +274,22 @@ export class BillingService {
             { tenantId },
             { $set: { subscription: validated, updatedAt: new Date() } }
         );
+
+        // Auditoría Unificada (Phase 132.3)
+        const { AuditTrailService } = await import('./services/audit-trail-service');
+        await AuditTrailService.logConfigChange({
+            actorType: 'USER',
+            actorId: updatedBy,
+            tenantId,
+            action: 'MANUAL_SUBSCRIPTION_UPDATE',
+            entityType: 'BILLING',
+            entityId: tenantId,
+            changes: {
+                before: currentSub,
+                after: validated
+            },
+            correlationId: `manual_${Date.now()}`
+        } as any);
 
         await logEvento({
             level: 'INFO',
