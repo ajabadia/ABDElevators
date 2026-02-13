@@ -51,7 +51,7 @@ export function UserEfficiencyStats() {
             <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-3">
                 <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                        <Activity className="h-4 w-4" /> Actividad Mensual
+                        <Activity className="h-4 w-4" aria-hidden="true" /> Actividad Mensual
                     </span>
                     {stats.efficiencyScore > 80 && (
                         <span className="text-amber-500 flex items-center gap-1 text-[10px] bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">

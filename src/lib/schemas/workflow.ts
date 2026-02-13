@@ -73,22 +73,10 @@ export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 /**
  * ⚡ FASE 97: Multi-Vertical Workflow Engine - Task Schema
  */
-export const WorkflowTaskSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    caseId: z.string(), // ID del Entity/Caso asociado
-    type: z.enum(['DOCUMENT_REVIEW', 'SECURITY_SIGNATURE', 'TECHNICAL_VALIDATION', 'COMPLIANCE_CHECK']).default('DOCUMENT_REVIEW'),
-    title: z.string(),
-    description: z.string().optional(),
-    assignedRole: z.nativeEnum(UserRole),
-    assignedUserId: z.string().optional(),
-    status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']).default('PENDING'),
-    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
-    metadata: z.record(z.string(), z.any()).default({}),
-    dueDate: z.date().optional(),
-    completedAt: z.date().optional(),
-    completedBy: z.string().optional(), // UserId
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
-});
-export type WorkflowTask = z.infer<typeof WorkflowTaskSchema>;
+/**
+ * ⚡ FASE 97: Multi-Vertical Workflow Engine - Task Schema
+ * @deprecated Use src/lib/schemas/workflow-task.ts instead
+ */
+export { WorkflowTaskSchema } from './workflow-task';
+export type { WorkflowTask } from './workflow-task';
+

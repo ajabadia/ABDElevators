@@ -19,7 +19,7 @@ Este documento relaciona las rutas del sistema con sus funcionalidades principal
 ## 👤 Panel de Usuario (Authenticated)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/profile` | Dashboard personal, estadísticas de uso y avatar. | - |
+| `/profile` | Dashboard personal, estadísticas de uso y avatar. | 2026-02-13 10:00 |
 | `/dashboard` | **NEW** Dashboard Principal (Role-Based Dispatcher). | 2026-02-13 |
 | `/my-documents` | Repositorio personal de archivos analizados. | - |
 | `/search` | Búsqueda Inteligente Conversacional sobre manuales técnicos. | 2026-02-08 |
