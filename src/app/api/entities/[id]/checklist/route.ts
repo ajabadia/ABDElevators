@@ -77,7 +77,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         }
 
         // ----- 1️⃣ Load checklist configuration -----
-        const config: ChecklistConfig = await getChecklistConfigById(config_id ?? "default", correlationId);
+        const config: ChecklistConfig = await getChecklistConfigById(config_id ?? "default", session, correlationId);
 
         // ----- 2️⃣ Check Persistence Layer -----
         const existingChecklist = await db.collection('extracted_checklists').findOne({

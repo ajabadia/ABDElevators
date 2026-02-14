@@ -44,11 +44,13 @@ export const ValidationStatusSchema = z.enum([
 export const ItemValidationSchema = z.object({
     itemId: z.string(), // Refers to ChecklistItemConfigSchema.id
     status: ValidationStatusSchema.default('PENDING'),
+    validationSource: z.enum(['HUMAN', 'AI', 'AUTO']).default('HUMAN'), // ⚡ FASE 129.4
     value: z.any().optional(), // The actual input value (boolean, text response, etc.)
     comments: z.string().optional(),
     evidenceUrls: z.array(z.string()).optional(), // Photos/Docs
-    validatedBy: z.string().optional(), // UserId
+    validatedBy: z.string().optional(), // UserId or AgentId
     validatedAt: z.coerce.date().optional(),
+    aiConfidence: z.number().min(0).max(1).optional(), // If validationSource is 'AI'
 });
 
 export const ExtractedChecklistSchema = z.object({

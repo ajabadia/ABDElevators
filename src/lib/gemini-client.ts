@@ -31,12 +31,17 @@ export function mapModelName(model: string): string {
         return 'gemini-3-pro';
     }
 
-    // Soporte para Gemini 2.5 (Working models per documentation)
-    if (m.includes('gemini-2.5')) {
+    // Soporte para Gemini 2.x/1.x (Working models per diagnostic script)
+    // El script de diagnóstico confirmó que gemini-2.5-flash es el único que responde OK (Success).
+    // gemini-1.5-* devuelve 404 y gemini-2.0-* devuelve 429 (Quota 0).
+    if (m.includes('gemini-2.0') || m.includes('gemini-2.5')) {
         return 'gemini-2.5-flash';
     }
+    if (m.includes('gemini-1.5')) {
+        return 'gemini-2.5-flash'; // Forzamos 2.5-flash ya que 1.5 dio 404
+    }
 
-    // Fallback estable prioritario según Documentación/MODELOS_DISPONIBLES.md
+    // Fallback absoluto estable confirmado
     return 'gemini-2.5-flash';
 }
 

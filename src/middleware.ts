@@ -100,19 +100,22 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             hostname.includes('127.0.0.1');
 
         const scriptSrc = isDev
-            ? "'self' 'unsafe-inline' 'unsafe-eval' https: http:"
-            : `'self' 'nonce-${nonce}' 'strict-dynamic' https: http:`;
+            ? "'self' 'unsafe-inline' 'unsafe-eval' https: http: blob:"
+            : `'self' 'nonce-${nonce}' 'strict-dynamic' https: http: blob:`;
 
         const cspHeader = `
             default-src 'self';
             script-src ${scriptSrc};
-            style-src 'self' 'unsafe-inline';
+            script-src-elem 'self' 'unsafe-inline' https: http: blob:;
+            style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+            style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
             img-src 'self' data: https://res.cloudinary.com blob:;
             font-src 'self' data:;
-            connect-src 'self' https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com;
+            connect-src 'self' https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com https://cdn.jsdelivr.net;
             frame-ancestors 'none';
             object-src 'none';
             base-uri 'self';
+            worker-src 'self' blob:;
         `.replace(/\s{2,}/g, ' ').trim();
 
         response.headers.set("Content-Security-Policy", cspHeader);

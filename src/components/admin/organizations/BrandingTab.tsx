@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Palette, Upload, Loader2, Building, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TenantConfig } from '@/lib/schemas';
+import { useTranslations } from "next-intl";
 
 interface BrandingTabProps {
     config: TenantConfig | null;
@@ -15,6 +16,12 @@ interface BrandingTabProps {
 }
 
 export function BrandingTab({ config, setConfig }: BrandingTabProps) {
+    const t = useTranslations('admin.organizations.branding');
+    const tLogo = useTranslations('admin.organizations.branding.logo');
+    const tFavicon = useTranslations('admin.organizations.branding.favicon');
+    const tColors = useTranslations('admin.organizations.branding.colors');
+    const tAutoDark = useTranslations('admin.organizations.branding.autoDarkMode');
+    const tPreview = useTranslations('admin.organizations.branding.preview');
     const { toast } = useToast();
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
@@ -36,25 +43,25 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
             <div className="space-y-8">
                 <div className="flex items-center gap-4">
                     <div className="h-10 w-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
-                        <Palette size={20} />
+                        <Palette size={20} aria-hidden="true" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-slate-900">Personalización de Marca</h3>
-                        <p className="text-slate-500 text-sm">Define los colores corporativos y activos visuales.</p>
+                        <h3 className="text-xl font-bold text-slate-900">{t('title')}</h3>
+                        <p className="text-slate-500 text-sm">{t('subtitle')}</p>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div className="space-y-4">
-                        <Label className="text-slate-700 font-semibold">Logotipo de Organización</Label>
+                        <Label className="text-slate-700 font-semibold">{tLogo('title')}</Label>
                         <div className="flex items-center gap-8 p-8 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 transition-colors group">
                             <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 relative overflow-hidden group">
-                                {isUploadingLogo ? (
-                                    <Loader2 className="animate-spin text-teal-600" size={32} />
+                            {isUploadingLogo ? (
+                                    <Loader2 className="animate-spin text-teal-600" size={32} aria-hidden="true" />
                                 ) : config?.branding?.logo?.url ? (
                                     <img src={config.branding.logo.url} alt="Logo preview" className="object-contain max-w-[90%] max-h-[90%]" />
                                 ) : (
-                                    <Building size={40} className="text-slate-200" />
+                                    <Building size={40} className="text-slate-200" aria-hidden="true" />
                                 )}
                             </div>
                             <div className="flex-1 space-y-4">
@@ -88,10 +95,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                             logo: data.asset
                                                         }
                                                     });
-                                                    toast({ title: "Logo actualizado", description: "El branding se ha guardado correctamente." });
+                                                    toast({ title: tLogo('success'), description: tLogo('successDesc') });
                                                 }
                                             } catch (err) {
-                                                toast({ title: "Error", description: "Fallo al subir el logo", variant: "destructive" });
+                                                toast({ title: tLogo('error'), description: tLogo('errorDesc'), variant: "destructive" });
                                             } finally {
                                                 setIsUploadingLogo(false);
                                             }
@@ -101,7 +108,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         <Button variant="outline" size="sm" asChild disabled={isUploadingLogo}>
                                             <span>
                                                 {isUploadingLogo ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Upload size={16} className="mr-2" />}
-                                                Subir Logo
+                                                {tLogo('uploadButton')}
                                                 {isUploadingLogo && '...'}
                                             </span>
                                         </Button>
@@ -121,12 +128,12 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         </Button>
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-400">Dimensiones mín: 400x400px. Fondo transparente recomendado (PNG).</p>
+                                <p className="text-[11px] text-slate-400">{tLogo('dimensions')}</p>
                             </div>
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-slate-100">
-                            <Label className="text-slate-700 font-semibold">Favicon / Icono de Pestaña</Label>
+                            <Label className="text-slate-700 font-semibold">{tFavicon('title')}</Label>
                             <div className="flex items-center gap-8 p-6 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 transition-colors group">
                                 <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 relative overflow-hidden">
                                     {isUploadingFavicon ? (
@@ -168,10 +175,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                                 favicon: data.asset
                                                             }
                                                         });
-                                                        toast({ title: "Favicon actualizado", description: "El icono de pestaña se ha guardado correctamente." });
-                                                    }
-                                                } catch (err) {
-                                                    toast({ title: "Error", description: "Fallo al subir el favicon", variant: "destructive" });
+                                                    toast({ title: tFavicon('success'), description: tFavicon('successDesc') });
+                                                }
+                                            } catch (err) {
+                                                toast({ title: tFavicon('error'), description: tFavicon('errorDesc'), variant: "destructive" });
                                                 } finally {
                                                     setIsUploadingFavicon(false);
                                                 }
@@ -181,7 +188,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             <Button variant="outline" size="sm" asChild disabled={isUploadingFavicon}>
                                                 <span>
                                                     {isUploadingFavicon ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Upload size={14} className="mr-2" />}
-                                                    Subir Favicon
+                                                    {tFavicon('uploadButton')}
                                                 </span>
                                             </Button>
                                         </Label>
@@ -200,14 +207,14 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                             </Button>
                                         )}
                                     </div>
-                                    <p className="text-[10px] text-slate-400">Archivos .ico, .png o .svg. Recomendado 32x32px.</p>
+                                    <p className="text-[10px] text-slate-400">{tFavicon('dimensions')}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-8">
                             <div className="space-y-3">
-                                <Label className="text-slate-700 font-semibold">Color Primario (Light Mode)</Label>
+                                <Label className="text-slate-700 font-semibold">{tColors('primary')}</Label>
                                 <div className="flex gap-3">
                                     <div
                                         className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
@@ -243,7 +250,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                 </div>
                             </div>
                             <div className="space-y-3">
-                                <Label className="text-slate-700 font-semibold">Color Acento (Light Mode)</Label>
+                                <Label className="text-slate-700 font-semibold">{tColors('accent')}</Label>
                                 <div className="flex gap-3">
                                     <div
                                         className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
@@ -293,15 +300,15 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                 } : null)}
                             />
                             <div className="flex flex-col">
-                                <Label htmlFor="auto-dark-mode" className="text-sm font-bold">Modo Oscuro Automático</Label>
-                                <span className="text-[10px] text-slate-500">Calcula automáticamente variantes legibles para el tema oscuro.</span>
+                                <Label htmlFor="auto-dark-mode" className="text-sm font-bold">{tAutoDark('title')}</Label>
+                                <span className="text-[10px] text-slate-500">{tAutoDark('desc')}</span>
                             </div>
                         </div>
 
                         {config?.branding?.autoDarkMode === false && (
                             <div className="grid grid-cols-2 gap-8 animate-in slide-in-from-top-2 duration-300 bg-slate-50/50 p-6 rounded-2xl border border-dashed border-slate-200">
                                 <div className="space-y-3">
-                                    <Label className="text-slate-700 font-semibold">Primario (Dark Mode Override)</Label>
+                                    <Label className="text-slate-700 font-semibold">{tColors('primaryDark')}</Label>
                                     <div className="flex gap-3">
                                         <div
                                             className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
@@ -337,7 +344,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    <Label className="text-slate-700 font-semibold">Acento (Dark Mode Override)</Label>
+                                    <Label className="text-slate-700 font-semibold">{tColors('accentDark')}</Label>
                                     <div className="flex gap-3">
                                         <div
                                             className="w-12 h-12 rounded-xl ring-2 ring-slate-100 shadow-inner shrink-0 cursor-pointer overflow-hidden border-2 border-white"
@@ -381,7 +388,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
             <div className="space-y-6">
                 <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200 space-y-6">
                     <div className="flex justify-between items-center">
-                        <h4 className="font-bold text-slate-800 text-sm tracking-wider uppercase">Live Preview App</h4>
+                        <h4 className="font-bold text-slate-800 text-sm tracking-wider uppercase">{tPreview('title')}</h4>
                         <div className="flex items-center gap-2 bg-white p-1 rounded-full border shadow-sm">
                             <Button
                                 variant="ghost"
@@ -389,7 +396,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                 className={cn("h-7 px-3 rounded-full text-[10px] font-bold", !isPreviewDark ? "bg-slate-900 text-white" : "text-slate-500")}
                                 onClick={() => setIsPreviewDark(false)}
                             >
-                                CLARO
+                                {tPreview('light')}
                             </Button>
                             <Button
                                 variant="ghost"
@@ -397,7 +404,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                 className={cn("h-7 px-3 rounded-full text-[10px] font-bold", isPreviewDark ? "bg-slate-900 text-white" : "text-slate-500")}
                                 onClick={() => setIsPreviewDark(true)}
                             >
-                                OSCURO
+                                {tPreview('dark')}
                             </Button>
                         </div>
                     </div>
@@ -434,7 +441,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                         </div>
                     </div>
                     <p className="text-center text-xs text-slate-400">
-                        {isPreviewDark ? "Vista previa en Modo Oscuro (colores auto-optimizados)." : "Vista previa en Modo Claro (colores originales)."}
+                        {isPreviewDark ? tPreview('darkDesc') : tPreview('lightDesc')}
                     </p>
                 </div>
             </div>

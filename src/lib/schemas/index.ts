@@ -20,6 +20,8 @@ export * from './notifications';
 export * from './prompts';
 export * from './spaces';
 export * from './collaboration';
+export * from './checklist';
+export * from './workshop';
 // The instruction to add 'spaceId' to 'KnowledgeAssetSchema' cannot be applied directly here
 // as 'KnowledgeAssetSchema' is defined within the './knowledge' module, not in this 'index.ts' file.
 // This file only re-exports modules.

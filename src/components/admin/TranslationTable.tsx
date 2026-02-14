@@ -141,7 +141,7 @@ export function TranslationTable({
             return;
         }
 
-        const CHUNK_SIZE = 25;
+        const CHUNK_SIZE = 40; // Aumentado de 10 a 40 para optimizar la cuota de 20 peticiones/día
         const totalChunks = Math.ceil(missingKeys.length / CHUNK_SIZE);
         const toastId = toast.loading(`Iniciando IA: 0/${missingKeys.length}...`);
 
@@ -151,10 +151,10 @@ export function TranslationTable({
         try {
             for (let i = 0; i < missingKeys.length; i += CHUNK_SIZE) {
                 const chunk = missingKeys.slice(i, i + CHUNK_SIZE);
-                const currentBatch = Math.floor(i / CHUNK_SIZE) + 1;
+                const currentBatchNumber = Math.floor(i / CHUNK_SIZE) + 1;
 
                 toast.loading(
-                    `Traduciendo lote ${currentBatch}/${totalChunks} (${chunk.length} llaves)...`,
+                    `Traduciendo lote ${currentBatchNumber}/${totalChunks} (${chunk.length} llaves)...`,
                     { id: toastId }
                 );
 
@@ -167,7 +167,14 @@ export function TranslationTable({
                 if (result?.success) {
                     successfulCount += (result.count || 0);
                 } else {
-                    console.warn(`Lote ${currentBatch} falló.`);
+                    console.warn(`Lote ${currentBatchNumber} falló. Deteniendo proceso.`);
+                    toast.error(`Proceso interrumpido: El lote ${currentBatchNumber} falló.`, { id: toastId });
+                    break; // DETENER SI FALLA UNO (Solicitud del usuario)
+                }
+
+                // Cooldown Conservador extremo para evitar 429 de Gemini
+                if (i + CHUNK_SIZE < missingKeys.length) {
+                    await new Promise(r => setTimeout(r, 12000));
                 }
             }
 

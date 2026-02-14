@@ -21,7 +21,7 @@ export default function ConfigsChecklistPage() {
         <PageContainer>
             <PageHeader
                 title={t('title')}
-                highlight="Dinámicos"
+                highlight={t('highlight')}
                 subtitle={t('subtitle')}
                 actions={
                     <Link
@@ -29,7 +29,7 @@ export default function ConfigsChecklistPage() {
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium"
                     >
                         <ArrowLeft size={16} />
-                        Volver al Panel
+                        {t('backToPanel')}
                     </Link>
                 }
             />

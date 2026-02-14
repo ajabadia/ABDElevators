@@ -95,9 +95,9 @@ export default function ProfilePage() {
                             {!user?.mfaEnabled && (user?.rol === 'ADMIN' || user?.rol === 'SUPER_ADMIN') && FeatureFlags.isEnabled('ENFORCE_MFA_ADMIN') && (
                                 <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-900 shadow-sm animate-in zoom-in-95 duration-300">
                                     <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle className="text-xs font-black uppercase tracking-tight text-amber-700">Acceso Restringido</AlertTitle>
+                                    <AlertTitle className="text-xs font-black uppercase tracking-tight text-amber-700">{t('mfaRequiredTitle')}</AlertTitle>
                                     <AlertDescription className="text-[11px] leading-tight">
-                                        Tu rol requiere <strong>MFA obligatorio</strong>. Serás redirigido al intentar acceder a rutas de administración hasta que lo actives.
+                                        {t('mfaRequiredDesc')}
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -105,11 +105,11 @@ export default function ProfilePage() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <span className="text-sm font-medium">{t('password')}</span>
-                                    <p className="text-[10px] text-muted-foreground italic">Actualizada recientemente</p>
+                                    <p className="text-[10px] text-muted-foreground italic">{t('recentlyUpdated')}</p>
                                 </div>
                                 <Dialog open={showPasswordForm} onOpenChange={setShowPasswordForm}>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm" className="h-7 text-xs">Gestionar</Button>
+                                        <Button variant="outline" size="sm" className="h-7 text-xs">{t('manage')}</Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
@@ -140,11 +140,11 @@ export default function ProfilePage() {
                                             setShowMfaForm(show);
                                             if (!show) fetchProfile();
                                         }}>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline" size="sm" className="h-7 text-xs px-3">
-                                                    {user?.mfaEnabled ? 'Desactivar' : 'Activar'}
-                                                </Button>
-                                            </DialogTrigger>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="h-7 text-xs px-3">
+                                                {user?.mfaEnabled ? t('deactivate') : t('activate')}
+                                            </Button>
+                                        </DialogTrigger>
                                             <DialogContent className="sm:max-w-2xl bg-white dark:bg-slate-950 max-h-[90vh] overflow-y-auto">
                                                 <DialogHeader>
                                                     <DialogTitle>{t('mfa')}</DialogTitle>

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
-import { AppError, handleApiError } from '@/lib/errors';
+import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { UserRole } from '@/types/roles';
 
@@ -38,17 +38,14 @@ async function getHandler(
             throw new AppError('FORBIDDEN', 403, 'Rol no permitido para ver detalles de caso');
         }
 
-        const tenantId = session.user.tenantId;
-        const db = await connectDB();
-
-        // Buscar en colección 'entities' (que unifica Pedidos/Casos)
-        const entity = await db.collection('entities').findOne({
-            _id: new ObjectId(id),
-            tenantId
+        // Buscar en colección 'entities' con aislamiento automático
+        const collection = await getTenantCollection<any>('entities', session);
+        const entity = await collection.findOne({
+            _id: new ObjectId(id)
         });
 
         if (!entity) {
-            throw new AppError('NOT_FOUND', 404, 'Caso no encontrado');
+            throw new NotFoundError('Caso no encontrado');
         }
 
         return NextResponse.json({

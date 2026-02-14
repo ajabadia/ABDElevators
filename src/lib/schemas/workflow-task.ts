@@ -13,7 +13,8 @@ export const WorkflowTaskTypeSchema = z.enum([
     'TECHNICAL_VALIDATION',
     'COMPLIANCE_CHECK',
     'RISK_ASSESSMENT',
-    'DATA_ENTRY'
+    'DATA_ENTRY',
+    'WORKFLOW_DECISION' // ⚡ FASE 127: LLM-driven workflow decisions
 ]);
 
 export const WorkflowTaskStatusSchema = z.enum([
@@ -30,6 +31,15 @@ export const WorkflowTaskPrioritySchema = z.enum([
     'HIGH',
     'CRITICAL'
 ]);
+
+// ⚡ FASE 127: LLM Proposal Schema for HITL
+export const LLMProposalSchema = z.object({
+    suggestedNextState: z.string().optional(),
+    suggestedAction: z.enum(['APPROVE', 'REJECT', 'ESCALATE']).optional(),
+    score: z.number().min(0).max(1).optional(),
+    reason: z.string().optional(),
+    rawOutputId: z.string().optional(), // Reference to full LLM output in logs
+});
 
 export const WorkflowTaskSchema = z.object({
     _id: z.string().optional(), // MongoDB ObjectIds are strings in JSON
@@ -50,8 +60,18 @@ export const WorkflowTaskSchema = z.object({
     priority: WorkflowTaskPrioritySchema.default('MEDIUM'),
 
     // Context & Linkage
-    metadata: z.record(z.string(), z.any()).default({}), // Flexible metadata
+    metadata: z.object({
+        workflowId: z.string().optional(),
+        nodeLabel: z.string().optional(),
+        correlationId: z.string().optional(),
+        // ⚡ FASE 127: LLM Proposal for HITL
+        llmProposal: LLMProposalSchema.optional(),
+    }).catchall(z.any()).default({}), // Allow additional fields while enforcing structure
     checklistConfigId: z.string().optional(), // Link to granular checklist definitions
+
+    // Aggregated Data (Optional)
+    caseContext: z.any().optional(),
+
 
     // Lifecycle
     dueDate: z.coerce.date().optional(),

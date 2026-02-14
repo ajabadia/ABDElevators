@@ -14,13 +14,16 @@ import {
     RefreshCw,
     Activity,
     Server,
-    FileText
+    FileText,
+    ArrowUpRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { useApiItem } from '@/hooks/useApiItem';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 interface GlobalStats {
     totalTenants: number;
@@ -49,6 +52,12 @@ interface GlobalStats {
 }
 
 export function PlatformAnalytics() {
+    const t = useTranslations('admin.analytics.explorer');
+    const tKpi = useTranslations('admin.analytics.explorer.kpi');
+    const tQuality = useTranslations('admin.analytics.explorer.quality');
+    const tSystem = useTranslations('admin.analytics.explorer.system');
+    const tAdopters = useTranslations('admin.analytics.explorer.adopters');
+
     const { data: stats, isLoading, refresh } = useApiItem<GlobalStats>({
         endpoint: '/api/admin/global-stats',
         dataKey: 'global'
@@ -58,10 +67,10 @@ export function PlatformAnalytics() {
         return (
             <div className="flex flex-col items-center justify-center p-20 space-y-6 bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-200">
                 <div className="relative">
-                    <RefreshCw className="animate-spin text-teal-600 h-12 w-12" />
+                    <RefreshCw className="animate-spin text-teal-600 h-12 w-12" aria-hidden="true" />
                     <div className="absolute inset-0 blur-xl bg-teal-500/20 animate-pulse" />
                 </div>
-                <p className="text-slate-500 font-black tracking-[0.2em] uppercase text-[10px] animate-pulse">Sincronizando Métricas Globales...</p>
+                <p className="text-slate-500 font-black tracking-[0.2em] uppercase text-[10px] animate-pulse">{t('loading')}</p>
             </div>
         );
     }
@@ -70,73 +79,69 @@ export function PlatformAnalytics() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50">
                 <div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
-                        <TrendingUp className="text-teal-600 w-7 h-7" />
-                        Insights de Plataforma
+                        <TrendingUp className="text-teal-600 w-7 h-7" aria-hidden="true" />
+                        {t('title')}
                     </h2>
-                    <p className="text-slate-500 font-medium mt-1 text-sm">Análisis en tiempo real de la infraestructura y el ecosistema RAG.</p>
+                    <p className="text-slate-500 font-medium mt-1 text-sm">{t('subtitle')}</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => refresh()} className="h-10 w-10 p-0 rounded-full hover:bg-slate-100">
-                        <RefreshCw size={18} className="text-slate-400" />
+                        <RefreshCw size={18} className="text-slate-400" aria-hidden="true" />
                     </Button>
                     <Badge variant="outline" className="bg-slate-900 px-4 py-2 border-slate-700 shadow-sm text-[10px] font-black tracking-widest text-teal-400 gap-3 rounded-xl uppercase">
                         <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)]" />
-                        Live Status: OK
+                        {t('liveStatus')}
                     </Badge>
                 </div>
             </div>
 
-            {/* Top KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { title: "Tenants Activos", value: stats.totalTenants, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
-                    { title: "Usuarios Únicos", value: stats.totalUsers, icon: Users, color: "text-teal-600", bg: "bg-teal-50" },
-                    { title: "MAU (30d)", value: stats.mau, icon: Activity, color: "text-indigo-600", bg: "bg-indigo-50" },
-                    { title: "MRR Estimado", value: `$${stats.mrr.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { title: tKpi('activeTenants'), value: stats.totalTenants, icon: Building2, color: "text-blue-600", bg: "bg-blue-50" },
+                    { title: tKpi('uniqueUsers'), value: stats.totalUsers, icon: Users, color: "text-teal-600", bg: "bg-teal-50" },
+                    { title: tKpi('mau'), value: stats.mau, icon: Activity, color: "text-indigo-600", bg: "bg-indigo-50" },
+                    { title: tKpi('mrr'), value: `$${stats.mrr.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
                 ].map((kpi, i) => (
                     <Card key={i} className="border-none shadow-sm hover:shadow-xl hover:translate-y-[-4px] transition-all duration-300 rounded-3xl overflow-hidden bg-white">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">{kpi.title}</CardTitle>
                             <div className={`p-2.5 rounded-xl ${kpi.bg}`}>
-                                <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+                                <kpi.icon className={`h-4 w-4 ${kpi.color}`} aria-hidden="true" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-black text-slate-900 tracking-tighter">{kpi.value}</div>
                             <div className="flex items-center gap-1.5 mt-2">
-                                <TrendingUp size={10} className="text-emerald-500" />
+                                <TrendingUp size={10} className="text-emerald-500" aria-hidden="true" />
                                 <span className="text-[10px] text-emerald-600 font-black">+14.2%</span>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter opacity-60">vs mes ant.</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter opacity-60">{t('growth')}</span>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
-            {/* Performance & Quality */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* RAG Quality */}
                 <Card className="lg:col-span-2 border-none shadow-2xl overflow-hidden bg-slate-900 text-white rounded-[2.5rem] relative">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full -mr-32 -mt-32 blur-[80px]" />
 
                     <CardHeader className="pb-8 relative z-10">
                         <CardTitle className="text-xl font-black flex items-center gap-3 tracking-tight">
-                            <ShieldCheck className="text-teal-400 w-6 h-6" />
-                            RAG Performance Quality (P100)
+                            <ShieldCheck className="text-teal-400 w-6 h-6" aria-hidden="true" />
+                            {tQuality('title')}
                         </CardTitle>
-                        <CardDescription className="text-slate-400 font-medium">Evaluación heurística automatizada sobre las últimas 100 inferencias.</CardDescription>
+                        <CardDescription className="text-slate-400 font-medium">{tQuality('subtitle')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8 relative z-10">
                         {stats.performance.rag_quality_avg ? (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pb-6">
                                 {[
-                                    { label: "Faithfulness", value: stats.performance.rag_quality_avg.avgFaithfulness, color: "bg-teal-500" },
-                                    { label: "Relevance", value: stats.performance.rag_quality_avg.avgRelevance, color: "bg-blue-500" },
-                                    { label: "Precision", value: stats.performance.rag_quality_avg.avgPrecision, color: "bg-indigo-500" },
+                                    { label: tQuality('faithfulness'), value: stats.performance.rag_quality_avg.avgFaithfulness, color: "bg-teal-500" },
+                                    { label: tQuality('relevance'), value: stats.performance.rag_quality_avg.avgRelevance, color: "bg-blue-500" },
+                                    { label: tQuality('precision'), value: stats.performance.rag_quality_avg.avgPrecision, color: "bg-indigo-500" },
                                 ].map((m, i) => (
                                     <div key={i} className="space-y-4">
                                         <div className="flex justify-between items-end">
@@ -149,50 +154,49 @@ export function PlatformAnalytics() {
                             </div>
                         ) : (
                             <div className="py-14 text-center text-slate-500 font-bold italic border-2 border-dashed border-slate-800 rounded-[2rem]">
-                                Datos insuficientes para generar informe de calidad.
+                                {tQuality('noData')}
                             </div>
                         )}
 
                         <div className="pt-8 border-t border-slate-800 flex flex-wrap gap-6">
                             <div className="bg-slate-800/40 p-5 rounded-[1.5rem] flex-1 min-w-[150px] border border-slate-800 group hover:border-rose-500/30 transition-all">
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Violaciones SLA (30d)</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{t('sla')}</p>
                                 <div className="flex items-end gap-2">
                                     <p className={stats.performance.sla_violations_30d > 0 ? "text-3xl font-black text-rose-500" : "text-3xl font-black text-teal-400"}>
                                         {stats.performance.sla_violations_30d}
                                     </p>
-                                    <span className="text-[10px] text-slate-600 font-bold mb-1.5 uppercase">Incidentes</span>
+                                    <span className="text-[10px] text-slate-600 font-bold mb-1.5 uppercase">{t('slaUnit')}</span>
                                 </div>
                             </div>
                             <div className="bg-slate-800/40 p-5 rounded-[1.5rem] flex-1 min-w-[150px] border border-slate-800 group hover:border-amber-500/30 transition-all">
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Errores Críticos (30d)</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">{t('errors')}</p>
                                 <div className="flex items-end gap-2">
                                     <p className={stats.performance.errors_30d > 10 ? "text-3xl font-black text-rose-500" : "text-3xl font-black text-amber-500"}>
                                         {stats.performance.errors_30d}
                                     </p>
-                                    <span className="text-[10px] text-slate-600 font-bold mb-1.5 uppercase">Logs</span>
+                                    <span className="text-[10px] text-slate-600 font-bold mb-1.5 uppercase">{t('errorsUnit')}</span>
                                 </div>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Operations Load */}
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white group overflow-hidden">
                     <CardHeader className="pb-6">
                         <CardTitle className="text-lg font-black flex items-center gap-2 text-slate-800">
-                            <Server className="text-slate-300" /> Carga del Sistema
+                            <Server className="text-slate-300" aria-hidden="true" /> {tSystem('title')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-5">
                             {[
-                                { icon: FileText, label: "Total Pedidos", value: stats.totalCases.toLocaleString(), color: "text-slate-400" },
-                                { icon: Search, label: "Búsquedas RAG", value: stats.usage.searches.toLocaleString(), color: "text-teal-400" },
-                                { icon: Zap, label: "Ahorro Deduplicación", value: `+${Math.round(stats.usage.savings / 1000)}k tkn`, color: "text-amber-500", highlight: true },
+                                { icon: FileText, label: tSystem('totalOrders'), value: stats.totalCases.toLocaleString(), color: "text-slate-400" },
+                                { icon: Search, label: tSystem('ragSearch'), value: stats.usage.searches.toLocaleString(), color: "text-teal-400" },
+                                { icon: Zap, label: tSystem('deduplication'), value: `+${Math.round(stats.usage.savings / 1000)}k tkn`, color: "text-amber-500", highlight: true },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all">
                                     <div className="flex items-center gap-3">
-                                        <item.icon size={18} className={item.color} />
+                                        <item.icon size={18} className={item.color} aria-hidden="true" />
                                         <span className="text-xs font-bold text-slate-600 uppercase tracking-tight">{item.label}</span>
                                     </div>
                                     <span className={`text-sm font-black tabular-nums ${item.highlight ? 'text-teal-600' : 'text-slate-900'}`}>{item.value}</span>
@@ -203,11 +207,11 @@ export function PlatformAnalytics() {
                         <div className="pt-4">
                             <div className="flex items-center gap-4 text-rose-600 bg-rose-50/50 p-5 rounded-[1.5rem] border border-rose-100 shadow-inner group-hover:scale-[1.02] transition-transform">
                                 <div className="p-2 bg-rose-100 rounded-xl">
-                                    <AlertTriangle size={20} className="animate-pulse" />
+                                    <AlertTriangle size={20} className="animate-pulse" aria-hidden="true" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Anomalía Detectada</p>
-                                    <p className="text-xs font-bold text-rose-800/70 mt-0.5">Incremento 12% latencia en Tier 2 (US-East)</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest">{t('anomaly.title')}</p>
+                                    <p className="text-xs font-bold text-rose-800/70 mt-0.5">{t('anomaly.desc')}</p>
                                 </div>
                             </div>
                         </div>
@@ -215,13 +219,11 @@ export function PlatformAnalytics() {
                 </Card>
             </div>
 
-            {/* Industrial Distribution & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
-                {/* Industry Breakdown */}
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
                     <CardHeader className="p-8 pb-4">
                         <CardTitle className="text-lg font-black flex items-center gap-3 text-slate-800">
-                            <BarChart3 className="text-teal-500" /> Distribución Industrial
+                            <BarChart3 className="text-teal-500" aria-hidden="true" /> {t('industrial.title')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-8 pt-0">
@@ -251,11 +253,10 @@ export function PlatformAnalytics() {
                     </CardContent>
                 </Card>
 
-                {/* Recent Tenants */}
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                     <CardHeader className="p-8 pb-4">
                         <CardTitle className="text-lg font-black flex items-center gap-3 text-slate-800">
-                            <Building2 className="text-blue-500" /> New Adopters
+                            <Building2 className="text-blue-500" aria-hidden="true" /> {tAdopters('title')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -276,7 +277,7 @@ export function PlatformAnalytics() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Incorporación</p>
+                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">{tAdopters('onboarding')}</p>
                                         <p className="text-xs font-mono font-bold text-slate-500">{new Date(t.creado).toLocaleDateString()}</p>
                                     </div>
                                 </div>
@@ -284,7 +285,7 @@ export function PlatformAnalytics() {
                         </div>
                         <div className="p-6 bg-slate-50/50 flex justify-center border-t border-slate-100">
                             <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-teal-600 gap-2">
-                                Ver Todos los Tenants <ArrowUpRight size={12} />
+                                {tAdopters('viewAll')} <ArrowUpRight size={12} aria-hidden="true" />
                             </Button>
                         </div>
                     </CardContent>
@@ -293,6 +294,3 @@ export function PlatformAnalytics() {
         </div>
     );
 }
-
-import { Button } from '@/components/ui/button';
-import { ArrowUpRight } from 'lucide-react';

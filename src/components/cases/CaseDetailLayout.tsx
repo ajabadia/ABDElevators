@@ -4,7 +4,6 @@ import React from "react";
 import { PageContainer } from "@/components/ui/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
     Clock,
     FileText,
@@ -14,16 +13,16 @@ import {
     Printer,
     ArrowLeft,
     CheckCircle2,
-    AlertCircle,
     Building,
     MapPin
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EntityTimeline } from "@/components/admin/EntityTimeline";
+import { EntityTimeline } from "@/components/admin/timeline/EntityTimeline";
 import { useTranslations } from "next-intl";
+import { CaseWorkflowController } from "./CaseWorkflowController";
 
 interface CaseDetailLayoutProps {
-    caseData: any; // Type strictly if possible
+    caseData: any;
     timelineData?: any[];
     children: React.ReactNode;
     isLoading?: boolean;
@@ -31,7 +30,7 @@ interface CaseDetailLayoutProps {
 
 export function CaseDetailLayout({ caseData, timelineData, children, isLoading }: CaseDetailLayoutProps) {
     const router = useRouter();
-    const t = useTranslations('cases'); // Ensure this namespace exists or fallback
+    const t = useTranslations('cases');
 
     if (isLoading) {
         return <div className="p-8 text-center">Loading case details...</div>;
@@ -52,7 +51,7 @@ export function CaseDetailLayout({ caseData, timelineData, children, isLoading }
                         </Button>
                         <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
                         <span className="text-sm font-mono text-slate-500">#{caseData.numeroPedido || caseData._id.slice(-6)}</span>
-                        <Badge variant={caseData.status === 'completed' ? 'success' : 'default'}>
+                        <Badge variant={caseData.status === 'completed' ? 'outline' : 'default'}>
                             {caseData.status}
                         </Badge>
                     </div>
@@ -83,19 +82,10 @@ export function CaseDetailLayout({ caseData, timelineData, children, isLoading }
                             <Button variant="outline" size="sm">
                                 <Printer className="w-4 h-4 mr-2" /> Reporte
                             </Button>
-                            <Button size="sm" className="bg-primary hover:bg-primary/90">
-                                <CheckCircle2 className="w-4 h-4 mr-2" /> Aprobar Fase
-                            </Button>
                             <Button variant="ghost" size="icon">
                                 <MoreVertical className="w-4 h-4" />
                             </Button>
                         </div>
-                    </div>
-
-                    {/* Navigation Tabs */}
-                    <div className="mt-8">
-                        {/* We assume usages of Tabs in children using these triggers */}
-                        {/* Alternatively, we can render TabsList here if we control the state */}
                     </div>
                 </div>
             </div>
@@ -107,8 +97,11 @@ export function CaseDetailLayout({ caseData, timelineData, children, isLoading }
                     {children}
                 </div>
 
-                {/* Right Sidebar (Context & Timeline) */}
+                {/* Right Sidebar (Context & Workflow & Timeline) */}
                 <div className="space-y-6">
+                    {/* ⚡ FASE 127: Intelligent Workflow Control */}
+                    <CaseWorkflowController caseId={caseData._id} />
+
                     <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                         <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-400" /> Línea de Tiempo
@@ -116,8 +109,6 @@ export function CaseDetailLayout({ caseData, timelineData, children, isLoading }
                         {timelineData ? (
                             <EntityTimeline
                                 entityId={caseData._id}
-                                initialEvents={timelineData}
-                                compact={true}
                             />
                         ) : (
                             <p className="text-sm text-slate-500">Cargando historia...</p>

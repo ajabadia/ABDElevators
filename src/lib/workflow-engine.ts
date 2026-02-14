@@ -18,7 +18,7 @@ export interface TransitionRequest {
  * Motor de Workflows Avanzado (Visión 2.0 - Fase 7.2)
  * Orquestador dinámico de transiciones de estado multi-tenant.
  */
-export class WorkflowEngine {
+export class LegacyCaseWorkflowEngine {
     /**
      * Gets the active workflow definition for a tenant and entity type.
      */

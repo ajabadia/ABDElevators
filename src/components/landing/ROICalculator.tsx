@@ -1,13 +1,15 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calculator, DollarSign, Clock, Users, FileText, ArrowRight } from "lucide-react";
 import { SectionHeading } from "./SectionHeading";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function ROICalculator() {
+    const t = useTranslations('Landing.ROI');
+
     // Default values
     const [technicians, setTechnicians] = useState([5]);
     const [ordersPerTech, setOrdersPerTech] = useState([20]);
@@ -18,8 +20,8 @@ export function ROICalculator() {
     const [hoursSaved, setHoursSaved] = useState(0);
 
     // Constants based on RAG efficiency
-    // Assuming RAG saves ~30 mins (0.5h) per complex complex order analysis vs manual
-    const HOURS_SAVED_PER_ORDER = 0.5;
+    // Sync with UsageService.TIME_PER_ANALYSIS_MIN (20 min)
+    const HOURS_SAVED_PER_ORDER = 20 / 60;
 
     useEffect(() => {
         const totalOrdersMonth = technicians[0] * ordersPerTech[0];
@@ -41,9 +43,9 @@ export function ROICalculator() {
 
             <div className="container mx-auto px-4 relative z-10">
                 <SectionHeading
-                    badge="ROI CALCULATOR"
-                    title="Calculate Your Potential Savings"
-                    description="See how much your team could save by automating technical analysis with ABD RAG Platform."
+                    badge={t('badge')}
+                    title={t('title')}
+                    description={t('description')}
                 />
 
                 <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
@@ -59,7 +61,7 @@ export function ROICalculator() {
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2 text-slate-200 font-medium">
                                     <Users className="w-5 h-5 text-teal-400" />
-                                    <span>Number of Technicians</span>
+                                    <span>{t('num_techs')}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-white">{technicians[0]}</span>
                             </div>
@@ -71,7 +73,7 @@ export function ROICalculator() {
                                 step={1}
                                 className="py-4"
                             />
-                            <p className="text-xs text-slate-500">Field technicians or engineers analyzing orders.</p>
+                            <p className="text-xs text-slate-500">{t('num_techs_desc')}</p>
                         </div>
 
                         {/* Orders Slider */}
@@ -79,7 +81,7 @@ export function ROICalculator() {
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2 text-slate-200 font-medium">
                                     <FileText className="w-5 h-5 text-teal-400" />
-                                    <span>Orders per Tech / Month</span>
+                                    <span>{t('orders_month')}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-white">{ordersPerTech[0]}</span>
                             </div>
@@ -91,7 +93,7 @@ export function ROICalculator() {
                                 step={1}
                                 className="py-4"
                             />
-                            <p className="text-xs text-slate-500">Average number of technical specs analyzed per person.</p>
+                            <p className="text-xs text-slate-500">{t('orders_month_desc')}</p>
                         </div>
 
                         {/* Hourly Cost Slider */}
@@ -99,7 +101,7 @@ export function ROICalculator() {
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-2 text-slate-200 font-medium">
                                     <DollarSign className="w-5 h-5 text-teal-400" />
-                                    <span>Avg. Hourly Internal Cost (€)</span>
+                                    <span>{t('hourly_cost')}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-white">{hourlyCost[0]}€</span>
                             </div>
@@ -111,7 +113,7 @@ export function ROICalculator() {
                                 step={5}
                                 className="py-4"
                             />
-                            <p className="text-xs text-slate-500">Fully loaded cost per hour (salary + overhead).</p>
+                            <p className="text-xs text-slate-500">{t('hourly_cost_desc')}</p>
                         </div>
                     </motion.div>
 
@@ -127,36 +129,34 @@ export function ROICalculator() {
                                 <Calculator className="w-32 h-32 text-teal-500" />
                             </div>
 
-                            <h3 className="text-slate-400 font-medium mb-2 uppercase tracking-wide">Estimated Annual Savings</h3>
+                            <h3 className="text-slate-400 font-medium mb-2 uppercase tracking-wide">{t('annual_savings')}</h3>
                             <div className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400 mb-4">
-                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(annualSavings)}
+                                {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(annualSavings)}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-slate-700/50">
                                 <div className="text-center">
                                     <div className="flex items-center justify-center gap-2 text-slate-400 mb-1">
                                         <Clock className="w-4 h-4" />
-                                        <span className="text-sm">Hours Saved / Year</span>
+                                        <span className="text-sm">{t('hours_saved_year')}</span>
                                     </div>
-                                    <div className="text-2xl font-bold text-white">{new Intl.NumberFormat('en-US').format(hoursSaved)} h</div>
+                                    <div className="text-2xl font-bold text-white">{new Intl.NumberFormat('es-ES').format(hoursSaved)} h</div>
                                 </div>
                                 <div className="text-center">
                                     <div className="flex items-center justify-center gap-2 text-slate-400 mb-1">
                                         <FileText className="w-4 h-4" />
-                                        <span className="text-sm">Orders Analyzed</span>
+                                        <span className="text-sm">{t('orders_analyzed')}</span>
                                     </div>
-                                    <div className="text-2xl font-bold text-white">{new Intl.NumberFormat('en-US').format(technicians[0] * ordersPerTech[0] * 12)}</div>
+                                    <div className="text-2xl font-bold text-white">{new Intl.NumberFormat('es-ES').format(technicians[0] * ordersPerTech[0] * 12)}</div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-6">
-                            <h4 className="font-semibold text-white mb-2">How is this calculated?</h4>
-                            <p className="text-slate-400 text-sm mb-4">
-                                We estimate that ABD RAG AI reduces the time to analyze a complex technical specification by approximately <strong>30 minutes per order</strong> compared to manual review, drastically reducing error rates and "back-and-forth" clarifications.
-                            </p>
+                            <h4 className="font-semibold text-white mb-2">{t('how_calculated_title')}</h4>
+                            <p className="text-slate-400 text-sm mb-4" dangerouslySetInnerHTML={{ __html: t('how_calculated_desc') }} />
                             <Button className="w-full sm:w-auto bg-white text-slate-900 hover:bg-slate-200">
-                                START YOUR FREE TRIAL <ArrowRight className="w-4 h-4 ml-2" />
+                                {t('cta')} <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
                         </div>
                     </motion.div>

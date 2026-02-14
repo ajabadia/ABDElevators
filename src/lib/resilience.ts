@@ -22,7 +22,7 @@ import { logEvento } from './logger';
 const retryPolicy = retry(handleAll, {
     maxAttempts: 3,
     backoff: new ExponentialBackoff({
-        initialDelay: 500,
+        initialDelay: 2000,
         maxDelay: 5000,
     })
 });

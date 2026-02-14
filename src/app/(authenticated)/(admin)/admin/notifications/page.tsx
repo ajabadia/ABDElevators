@@ -1,3 +1,5 @@
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,10 +16,23 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, FileText, Settings, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationsDashboardPage() {
+    const session = await auth();
+
+    if (session?.user?.role !== 'SUPER_ADMIN') {
+        redirect('/dashboard');
+    }
+
+    const t = await getTranslations('admin.notifications.page');
+    const tKpi = await getTranslations('admin.notifications.kpi');
+    const tTable = await getTranslations('admin.notifications.table');
+    const tStatus = await getTranslations('admin.notifications.status');
+    const tValidation = await getTranslations('admin.notifications.validation');
+
     const db = await connectDB();
 
     // 1. Estadísticas Rápidas (Real-time counts)
@@ -38,21 +53,21 @@ export default async function NotificationsDashboardPage() {
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Centro de <span className="text-teal-600">Notificaciones</span>
+                        {t('title')}
                     </h1>
-                    <p className="text-slate-500 mt-1">Gestiona las comunicaciones, plantillas y el estado del sistema.</p>
+                    <p className="text-slate-500 mt-1">{t('subtitle')}</p>
                 </div>
                 <div className="flex gap-4">
                     <Link href="/admin/notifications/templates">
                         <Button variant="outline" className="gap-2">
                             <FileText className="h-4 w-4" />
-                            Gestionar Plantillas
+                            {t('manageTemplates')}
                         </Button>
                     </Link>
                     <Link href="/admin/notifications/settings">
                         <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
                             <Settings className="h-4 w-4" />
-                            Configuración de Canales
+                            {t('channelSettings')}
                         </Button>
                     </Link>
                 </div>
@@ -62,32 +77,32 @@ export default async function NotificationsDashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Enviados</CardTitle>
+                        <CardTitle className="text-sm font-medium">{tKpi('totalSent')}</CardTitle>
                         <Bell className="h-4 w-4 text-slate-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalSent.toLocaleString()}</div>
-                        <p className="text-xs text-slate-500">Notificaciones exitosas</p>
+                        <p className="text-xs text-slate-500">{tKpi('totalSentDesc')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Facturación</CardTitle>
+                        <CardTitle className="text-sm font-medium">{tKpi('billing')}</CardTitle>
                         <AlertTriangle className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalBilling.toLocaleString()}</div>
-                        <p className="text-xs text-slate-500">Alertas de límites/pagos</p>
+                        <p className="text-xs text-slate-500">{tKpi('billingDesc')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Errores</CardTitle>
+                        <CardTitle className="text-sm font-medium">{tKpi('errors')}</CardTitle>
                         <AlertTriangle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-red-600">{totalErrors.toLocaleString()}</div>
-                        <p className="text-xs text-slate-500">Fallos de envío o sistema</p>
+                        <p className="text-xs text-slate-500">{tKpi('errorsDesc')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -95,17 +110,17 @@ export default async function NotificationsDashboardPage() {
             {/* Logs Recientes */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Últimas Notificaciones</CardTitle>
+                    <CardTitle>{tTable('recent')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Estado</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead>Título</TableHead>
-                                <TableHead>Destinatario</TableHead>
-                                <TableHead>Hace</TableHead>
+                                <TableHead>{tTable('status')}</TableHead>
+                                <TableHead>{tTable('type')}</TableHead>
+                                <TableHead>{tTable('title')}</TableHead>
+                                <TableHead>{tTable('recipient')}</TableHead>
+                                <TableHead>{tTable('ago')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -113,13 +128,13 @@ export default async function NotificationsDashboardPage() {
                                 <TableRow key={log._id.toString()}>
                                     <TableCell>
                                         {log.level === 'ERROR' ? (
-                                            <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Error</Badge>
+                                            <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> {tStatus('error')}</Badge>
                                         ) : log.emailSent ? (
                                             <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 gap-1">
-                                                <CheckCircle className="h-3 w-3" /> Enviado
+                                                <CheckCircle className="h-3 w-3" /> {tStatus('sent')}
                                             </Badge>
                                         ) : (
-                                            <Badge variant="secondary" className="gap-1"><Info className="h-3 w-3" /> In-App</Badge>
+                                            <Badge variant="secondary" className="gap-1"><Info className="h-3 w-3" /> {tStatus('inApp')}</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">{log.type}</TableCell>
@@ -133,7 +148,7 @@ export default async function NotificationsDashboardPage() {
                                                 try {
                                                     return formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: es });
                                                 } catch (e) {
-                                                    return 'Fecha inválida';
+                                                    return tValidation('invalidDate');
                                                 }
                                             })()
                                         ) : 'N/A'}

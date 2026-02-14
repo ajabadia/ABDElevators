@@ -56,9 +56,10 @@ export class WorkflowTaskService {
         userName: string;
         status: WorkflowTask['status'];
         notes?: string;
+        metadata?: Record<string, any>;
         correlationId: string;
     }) {
-        const { id, tenantId, userId, userName, status, notes, correlationId } = params;
+        const { id, tenantId, userId, userName, status, notes, metadata, correlationId } = params;
         const collection = await getTenantCollection(this.COLLECTION);
 
         const task = await this.getTaskById(id, tenantId);
@@ -75,6 +76,13 @@ export class WorkflowTaskService {
 
         if (notes) {
             updateData['metadata.resolution_notes'] = notes;
+        }
+
+        // ⚡ FASE 128.3: Generic metadata update (e.g. workshop checklist)
+        if (metadata) {
+            for (const [key, value] of Object.entries(metadata)) {
+                updateData[`metadata.${key}`] = value;
+            }
         }
 
         const result = await collection.updateOne(
@@ -97,6 +105,8 @@ export class WorkflowTaskService {
             details: { taskId: id, previousStatus: task.status, nextStatus: status }
         });
 
-        return { success: true, taskId: id, status };
+        // ⚡ FASE 127: Return complete task for HITL integration
+        const updatedTask = await this.getTaskById(id, tenantId);
+        return { success: true, taskId: id, status, task: updatedTask };
     }
 }

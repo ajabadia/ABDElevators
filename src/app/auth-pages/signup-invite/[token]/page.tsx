@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, UserPlus, Shield, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface InviteInfo {
     email: string;
@@ -16,6 +17,7 @@ interface InviteInfo {
 }
 
 export default function SignupInvitePage({ params }: { params: Promise<{ token: string }> }) {
+    const t = useTranslations('auth.signup');
     const { token } = use(params);
     const router = useRouter();
 
@@ -44,10 +46,10 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                 if (res.ok && data.valid) {
                     setInviteInfo(data.invite);
                 } else {
-                    setError(data.error?.message || "La invitación no es válida o ha expirado.");
+                    setError(data.error?.message || t('invalidInvite'));
                 }
             } catch (err) {
-                setError("Error al conectar con el servidor.");
+                setError(t('serverError'));
             } finally {
                 setVerifying(false);
                 setLoading(false);
@@ -62,7 +64,7 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
         setError(null);
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Las contraseñas no coinciden.");
+            setError(t('passwordMismatch'));
             return;
         }
 
@@ -88,10 +90,10 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                     router.push('/login');
                 }, 3000);
             } else {
-                setError(data.error?.message || "Error al crear la cuenta.");
+                setError(data.error?.message || t('acceptError'));
             }
         } catch (err) {
-            setError("Error de red. Intenta de nuevo.");
+            setError(t('networkError'));
         } finally {
             setIsSubmitting(false);
         }
@@ -102,7 +104,7 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
                     <Loader2 className="h-10 w-10 animate-spin text-teal-600 mx-auto mb-4" />
-                    <p className="text-slate-600 font-medium">Verificando invitación segura...</p>
+                    <p className="text-slate-600 font-medium">{t('verifying')}</p>
                 </div>
             </div>
         );
@@ -116,14 +118,14 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                         <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                             <AlertCircle className="h-8 w-8 text-red-600" />
                         </div>
-                        <CardTitle className="text-2xl font-bold text-slate-800">Invitación Inválida</CardTitle>
+                        <CardTitle className="text-2xl font-bold text-slate-800">{t('invalidInvite')}</CardTitle>
                         <CardDescription className="text-slate-500 mt-2">
                             {error}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button asChild className="w-full bg-slate-800">
-                            <Link href="/">Ir al Inicio</Link>
+                            <Link href="/">{t('backToHome')}</Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -138,9 +140,9 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                     <div className="mx-auto w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
                         <CheckCircle2 className="h-12 w-12 text-teal-600" />
                     </div>
-                    <CardTitle className="text-3xl font-bold text-teal-900 mb-2">¡Cuenta Creada!</CardTitle>
+                    <CardTitle className="text-3xl font-bold text-teal-900 mb-2">{t('successTitle')}</CardTitle>
                     <p className="text-teal-700 text-lg mb-8">
-                        Tu perfil ha sido configurado correctamente. Redirigiendo al inicio de sesión...
+                        {t('successMessage')}
                     </p>
                     <Loader2 className="h-6 w-6 animate-spin text-teal-600 mx-auto" />
                 </Card>
@@ -156,10 +158,10 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                         <UserPlus className="text-white h-8 w-8" />
                     </div>
                     <h1 className="text-3xl font-extrabold text-slate-900 font-outfit">
-                        Completar <span className="text-teal-600">Registro</span>
+                        {t('title')}
                     </h1>
                     <p className="text-slate-500 mt-2">
-                        Has sido invitado a unirte a la plataforma
+                        {t('subtitle')}
                     </p>
                 </div>
 
@@ -199,32 +201,32 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                             <CardContent className="pt-6">
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="firstName">First Name</Label>
+                                    <div className="space-y-2">
+                                            <Label htmlFor="firstName">{t('firstName')}</Label>
                                             <Input
                                                 id="firstName"
                                                 required
                                                 value={formData.firstName}
                                                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                                 className="h-11"
-                                                placeholder="Ej: Juan"
+                                                placeholder={t('firstName')}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="lastName">Last Name</Label>
+                                            <Label htmlFor="lastName">{t('lastName')}</Label>
                                             <Input
                                                 id="lastName"
                                                 required
                                                 value={formData.lastName}
                                                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                                 className="h-11"
-                                                placeholder="Ej: Pérez"
+                                                placeholder={t('lastName')}
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="password">Nueva Contraseña</Label>
+                                        <Label htmlFor="password">{t('password')}</Label>
                                         <div className="relative">
                                             <Input
                                                 id="password"
@@ -239,17 +241,15 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-3 top-3 text-slate-400"
+                                                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                                             >
                                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                             </button>
                                         </div>
-                                        <p className="text-[10px] text-slate-500 italic">
-                                            Mín. 8 caracteres, una mayúscula y un número.
-                                        </p>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                                        <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
                                         <Input
                                             id="confirmPassword"
                                             type="password"
@@ -276,10 +276,10 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                Creando cuenta...
+                                                {t('creatingAccount')}
                                             </>
                                         ) : (
-                                            "Completar Registro"
+                                            t('createAccount')
                                         )}
                                     </Button>
                                 </form>
@@ -289,7 +289,7 @@ export default function SignupInvitePage({ params }: { params: Promise<{ token: 
                 </div>
 
                 <p className="text-center text-xs text-slate-400 mt-8">
-                    Al registrarte, aceptas nuestros <Link href="/terms" className="underline">Términos de Servicio</Link> y <Link href="/privacy" className="underline">Política de Privacidad</Link>.
+                    {t('termsPrefix')} <Link href="/terms" className="underline">{t('termsLink')}</Link> {t('and')} <Link href="/privacy" className="underline">{t('privacyLink')}</Link>.
                 </p>
             </div>
         </div>

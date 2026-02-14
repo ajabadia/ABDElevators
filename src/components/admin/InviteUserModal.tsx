@@ -24,6 +24,7 @@ import { Loader2, Mail, Shield } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { UserRole } from "@/types/roles";
+import { useTranslations } from "next-intl";
 
 interface InviteUserModalProps {
     open: boolean;
@@ -32,6 +33,7 @@ interface InviteUserModalProps {
 }
 
 export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalProps) {
+    const t = useTranslations("admin.users.invite_modal");
     const { data: session } = useSession();
     const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
@@ -41,7 +43,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
     const [formData, setFormData] = useState({
         email: "",
         rol: UserRole.TECHNICAL as UserRole,
-        tenantId: "", // Solo para SuperAdmins
+        tenantId: "",
     });
 
     const { mutate: inviteUser, isLoading: loading } = useApiMutation({
@@ -50,8 +52,8 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
         onSuccess: () => {
             setInvited(true);
             toast({
-                title: "Invitación enviada",
-                description: `Se ha enviado un email a ${formData.email}`,
+                title: t('success_title'),
+                description: `${t('success_description')} ${formData.email}`,
             });
         }
     });
@@ -81,9 +83,9 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                     <div className="mx-auto w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center mb-4">
                         <Mail className="h-6 w-6 text-teal-600" />
                     </div>
-                    <DialogTitle className="text-center text-2xl font-bold text-slate-800">Invitar Colaborador</DialogTitle>
+                    <DialogTitle className="text-center text-2xl font-bold text-slate-800">{t('title')}</DialogTitle>
                     <DialogDescription className="text-center text-slate-500">
-                        Envía una invitación segura por correo electrónico. El usuario podrá configurar su propio nombre y contraseña.
+                        {t('description')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -93,29 +95,29 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                             <div className="inline-flex items-center justify-center w-10 h-10 bg-teal-100 rounded-full mb-3">
                                 <Mail className="h-5 w-5 text-teal-600" />
                             </div>
-                            <h3 className="text-lg font-bold text-teal-900 mb-1">¡Invitación Enviada!</h3>
+                            <h3 className="text-lg font-bold text-teal-900 mb-1">{t('success_title')}</h3>
                             <p className="text-sm text-teal-700">
-                                Hemos enviado un enlace de registro seguro a<br />
+                                {t('success_description')}<br />
                                 <strong className="text-teal-900">{formData.email}</strong>
                             </p>
                             <p className="text-xs text-teal-600 mt-4 italic">
-                                El enlace es válido por 7 días.
+                                {t('success_validity')}
                             </p>
                         </div>
                         <Button onClick={handleClose} className="w-full bg-teal-600 hover:bg-teal-700">
-                            Entendido
+                            {t('understood')}
                         </Button>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-5 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-slate-700 font-semibold">Correo Electrónico</Label>
+                            <Label htmlFor="email" className="text-slate-700 font-semibold">{t('email_label')}</Label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="usuario@empresa.com"
+                                    placeholder={t('email_placeholder')}
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -125,7 +127,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="rol" className="text-slate-700 font-semibold">Rol Asignado</Label>
+                            <Label htmlFor="rol" className="text-slate-700 font-semibold">{t('role_label')}</Label>
                             <div className="relative">
                                 <Shield className="absolute left-3 top-3 h-4 w-4 text-slate-400 z-10" />
                                 <Select
@@ -136,10 +138,10 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {isSuperAdmin && <SelectItem value={UserRole.SUPER_ADMIN}>Super Administrador</SelectItem>}
-                                        <SelectItem value={UserRole.ADMIN}>Administrador de Organización</SelectItem>
-                                        <SelectItem value={UserRole.TECHNICAL}>Técnico Operativo</SelectItem>
-                                        <SelectItem value={UserRole.ENGINEERING}>Ingeniería de Proyectos</SelectItem>
+                                        {isSuperAdmin && <SelectItem value={UserRole.SUPER_ADMIN}>{t('roles.super_admin')}</SelectItem>}
+                                        <SelectItem value={UserRole.ADMIN}>{t('roles.admin')}</SelectItem>
+                                        <SelectItem value={UserRole.TECHNICAL}>{t('roles.technical')}</SelectItem>
+                                        <SelectItem value={UserRole.ENGINEERING}>{t('roles.engineering')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -149,11 +151,11 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
                             <div className="space-y-2">
                                 <Label htmlFor="tenantId" className="text-orange-600 font-bold flex items-center gap-2">
                                     <Shield className="h-4 w-4" />
-                                    Tenant ID (Solo SuperAdmin)
+                                    {t('tenant_label')}
                                 </Label>
                                 <Input
                                     id="tenantId"
-                                    placeholder="ej: tenant-xxxx"
+                                    placeholder={t('tenant_placeholder')}
                                     required
                                     value={formData.tenantId}
                                     onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
@@ -164,16 +166,16 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
 
                         <DialogFooter className="pt-2">
                             <Button type="button" variant="ghost" onClick={handleClose} className="text-slate-500">
-                                Cancelar
+                                {t('cancel')}
                             </Button>
                             <Button type="submit" disabled={loading} className="bg-teal-600 hover:bg-teal-700 min-w-[140px] shadow-lg shadow-teal-600/20">
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Enviando...
+                                        {t('sending')}
                                     </>
                                 ) : (
-                                    "Enviar Invitación"
+                                    t('submit')
                                 )}
                             </Button>
                         </DialogFooter>

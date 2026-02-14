@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { SpaceNavigator } from "@/components/spaces/SpaceNavigator";
@@ -20,13 +21,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function SpacesPlaygroundPage() {
+    const t = useTranslations('spaces.playground');
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
 
     return (
         <PageContainer>
             <PageHeader
-                title="Spaces Playground"
-                subtitle="Explora la jerarquía de espacios y prueba el análisis efímero."
+                title={t('title')}
+                subtitle={t('subtitle')}
                 icon={<Layers className="w-6 h-6 text-primary" />}
             />
 
@@ -41,20 +43,20 @@ export default function SpacesPlaygroundPage() {
                     {selectedSpace && (
                         <Card className="bg-card/30 backdrop-blur-sm border-border/40 shadow-xl animate-in fade-in slide-in-from-left-2">
                             <CardHeader className="p-4 pb-2">
-                                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-primary" /> Detalles del Espacio
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-0 space-y-3">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Nombre</p>
-                                    <p className="text-xs font-bold">{selectedSpace.name}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Ruta</p>
-                                    <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border/50 font-mono text-primary">
-                                        {selectedSpace.materializedPath}
-                                    </code>
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <Info className="w-4 h-4 text-primary" /> {t('details')}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 space-y-3">
+                            <div className="space-y-1">
+                                <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">{t('name')}</p>
+                                <p className="text-xs font-bold">{selectedSpace.name}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">{t('path')}</p>
+                                <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border/50 font-mono text-primary">
+                                    {selectedSpace.materializedPath}
+                                </code>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 h-5">
@@ -74,10 +76,10 @@ export default function SpacesPlaygroundPage() {
                     <Tabs defaultValue="qa" className="w-full h-full flex flex-col">
                         <TabsList className="w-fit bg-muted/30 backdrop-blur-md border border-border/40 p-1 mb-4">
                             <TabsTrigger value="qa" className="flex items-center gap-2 text-xs">
-                                <MessageSquare className="w-4 h-4" /> Quick Q&A
+                                <MessageSquare className="w-4 h-4" /> {t('tabs.qa')}
                             </TabsTrigger>
                             <TabsTrigger value="settings" className="flex items-center gap-2 text-xs">
-                                <Settings className="w-4 h-4" /> Configuración
+                                <Settings className="w-4 h-4" /> {t('tabs.settings')}
                             </TabsTrigger>
                         </TabsList>
 
@@ -90,15 +92,15 @@ export default function SpacesPlaygroundPage() {
                         <TabsContent value="settings">
                             <Card className="bg-card/40 backdrop-blur-xl border-border/50">
                                 <CardHeader>
-                                    <CardTitle>Configuración del Espacio</CardTitle>
+                                    <CardTitle>{t('settings.title')}</CardTitle>
                                     <CardDescription>
-                                        Próximamente: Administración de permisos, invitaciones y cuotas específicas.
+                                        {t('settings.description')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="h-60 flex items-center justify-center opacity-30 select-none">
                                     <div className="text-center space-y-4">
                                         <Share2 className="w-16 h-16 mx-auto" />
-                                        <p className="text-sm font-bold uppercase tracking-[0.3em]">Módulo en Desarrollo</p>
+                                        <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('settings.moduleInDevelopment')}</p>
                                     </div>
                                 </CardContent>
                             </Card>

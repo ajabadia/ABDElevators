@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Info } from "lucide-react";
 import { TenantConfig } from '@/lib/schemas';
+import { useTranslations } from "next-intl";
 
 interface GeneralTabProps {
     config: TenantConfig | null;
@@ -19,11 +20,15 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ config, setConfig }: GeneralTabProps) {
+    const t = useTranslations('admin.organizations.general');
+    const tComp = useTranslations('admin.organizations.general.compliance');
+    const tInd = useTranslations('admin.organizations.general.industries');
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="space-y-6">
                 <div className="space-y-2">
-                    <Label htmlFor="tenantId">ID de Organización</Label>
+                    <Label htmlFor="tenantId">{t('tenantId')}</Label>
                     <Input
                         id="tenantId"
                         value={config?.tenantId}
@@ -32,7 +37,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="name">Nombre Comercial</Label>
+                    <Label htmlFor="name">{t('name')}</Label>
                     <Input
                         id="name"
                         value={config?.name}
@@ -40,20 +45,20 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="industry">Industria / Dominio</Label>
+                    <Label htmlFor="industry">{t('industry')}</Label>
                     <Select
                         value={config?.industry}
                         onValueChange={(val: any) => setConfig(prev => prev ? { ...prev, industry: val } : null)}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecciona industria" />
+                            <SelectValue placeholder={t('industryPlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ELEVATORS">Elevadores y Elevación</SelectItem>
-                            <SelectItem value="LEGAL">Legal / Despachos</SelectItem>
-                            <SelectItem value="MEDICAL">Médico / Salud</SelectItem>
-                            <SelectItem value="IT">Tecnología / IT</SelectItem>
-                            <SelectItem value="GENERIC">Genérico / Otros</SelectItem>
+                            <SelectItem value="ELEVATORS">{tInd('ELEVATORS')}</SelectItem>
+                            <SelectItem value="LEGAL">{tInd('LEGAL')}</SelectItem>
+                            <SelectItem value="MEDICAL">{tInd('MEDICAL')}</SelectItem>
+                            <SelectItem value="IT">{tInd('IT')}</SelectItem>
+                            <SelectItem value="GENERIC">{tInd('GENERIC')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -62,21 +67,21 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
             <div className="space-y-6">
                 <div className="bg-slate-900 text-white rounded-2xl p-6 space-y-4">
                     <h4 className="text-primary font-bold flex items-center gap-2">
-                        <Info size={18} />
-                        Estado de Cumplimiento
+                        <Info size={18} aria-hidden="true" />
+                        {tComp('title')}
                     </h4>
                     <div className="space-y-4 text-sm text-slate-300">
                         <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                            <span>Aislamiento de Datos</span>
-                            <Badge className="bg-primary/20 text-primary border-primary/30">Activo</Badge>
+                            <span>{tComp('dataIsolation')}</span>
+                            <Badge className="bg-primary/20 text-primary border-primary/30">{tComp('active')}</Badge>
                         </div>
                         <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                            <span>Región de Datos</span>
-                            <span className="text-white">EU-West (Zaragoza/Frankfurt)</span>
+                            <span>{tComp('dataRegion')}</span>
+                            <span className="text-white">{tComp('regionValue')}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span>Cifrado</span>
-                            <Badge className="bg-primary/20 text-primary border-primary/30">AES-256</Badge>
+                            <span>{tComp('encryption')}</span>
+                            <Badge className="bg-primary/20 text-primary border-primary/30">{tComp('encryptionValue')}</Badge>
                         </div>
                     </div>
                 </div>

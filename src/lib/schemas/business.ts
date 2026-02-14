@@ -79,7 +79,7 @@ export type Entity = z.infer<typeof EntitySchema>;
  * ✅ FASE 6.4: Checklist and Human Validation Schemas
  */
 
-export const ChecklistCategorySchema = z.object({
+export const LegacyChecklistCategorySchema = z.object({
     id: z.string(),
     name: z.string(),
     color: z.string().optional(),
@@ -87,9 +87,9 @@ export const ChecklistCategorySchema = z.object({
     priority: z.number().default(1),
     icon: z.string().optional(),
 });
-export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
+export type LegacyChecklistCategory = z.infer<typeof LegacyChecklistCategorySchema>;
 
-export const ChecklistItemSchema = z.object({
+export const LegacyChecklistItemSchema = z.object({
     id: z.string(),
     categoryId: z.string().nullable().optional(),
     description: z.string().min(1),
@@ -99,20 +99,20 @@ export const ChecklistItemSchema = z.object({
     confidenceLevel: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
     ragReference: z.string().optional(),
 });
-export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+export type LegacyChecklistItem = z.infer<typeof LegacyChecklistItemSchema>;
 
-export const ChecklistConfigSchema = z.object({
+export const LegacyChecklistConfigSchema = z.object({
     _id: z.any().optional(),
     name: z.string(),
-    categories: z.array(ChecklistCategorySchema).default([]),
-    items: z.array(ChecklistItemSchema).default([]),
+    categories: z.array(LegacyChecklistCategorySchema).default([]),
+    items: z.array(LegacyChecklistItemSchema).default([]),
     workflowOrder: z.array(z.string()).default([]),
     isActive: z.boolean().default(true),
     tenantId: z.string(),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
-export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
+export type LegacyChecklistConfig = z.infer<typeof LegacyChecklistConfigSchema>;
 
 export const ValidationItemSchema = z.object({
     field: z.string(),
@@ -137,22 +137,22 @@ export const ValidationSchema = z.object({
 });
 export type Validation = z.infer<typeof ValidationSchema>;
 
-export const ItemValidationSchema = z.object({
+export const LegacyItemValidationSchema = z.object({
     itemId: z.string(),
     status: z.enum(['OK', 'REVIEW', 'PENDING']).default('PENDING'),
     notes: z.string().optional(),
     technicianId: z.string().optional(),
     updatedAt: z.date().default(() => new Date()),
 });
-export type ItemValidation = z.infer<typeof ItemValidationSchema>;
+export type LegacyItemValidation = z.infer<typeof LegacyItemValidationSchema>;
 
-export const ExtractedChecklistSchema = z.object({
+export const LegacyExtractedChecklistSchema = z.object({
     _id: z.any().optional(),
     entityId: z.string(),
     tenantId: z.string(),
-    items: z.array(ChecklistItemSchema),
-    validations: z.record(z.string(), ItemValidationSchema).default({}),
+    items: z.array(LegacyChecklistItemSchema),
+    validations: z.record(z.string(), LegacyItemValidationSchema).default({}),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
 });
-export type ExtractedChecklist = z.infer<typeof ExtractedChecklistSchema>;
+export type LegacyExtractedChecklist = z.infer<typeof LegacyExtractedChecklistSchema>;

@@ -106,6 +106,18 @@ export class WorkflowService {
     }
 
     /**
+     * Obtiene una definición por ID.
+     */
+    static async getDefinitionById(id: string) {
+        const collection = await getTenantCollection('workflow_definitions');
+        try {
+            return await collection.findOne({ _id: new ObjectId(id) }) as WorkflowDefinition | null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
      * Inicializa un workflow por defecto para un nuevo Tenant (Seeding).
      */
     static async seedDefaultWorkflow(tenantId: string, industry: any, correlationId: string) {

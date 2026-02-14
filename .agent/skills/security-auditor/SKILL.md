@@ -41,6 +41,11 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
    - `X-Content-Type-Options: nosniff`.
    - `X-Frame-Options: DENY`.
 
+### 5. Multi-tenant Hardening (Regla de Oro #11)
+1. **Secure Access**: En API Routes o Server Actions, verifica que el acceso a colecciones se realice vía `getTenantCollection` o directamente con la instancia de `SecureCollection`.
+   - ❌ **RED FLAG**: Uso de `db.collection('name')` directamente (Evita el aislamiento automático y el Soft Delete).
+   - ✅ **CORRECTO**: `const col = await getTenantCollection('name', session);`.
+
 ## Output (formato exacto)
 1. **Status de Seguridad Técnica**: `[SEGURO | VULNERABLE | RIESGO_DETECTADO]`.
 2. **Checklist de Vulnerabilidades**:
@@ -48,6 +53,7 @@ description: Audita vulnerabilidades técnicas (Inyecciones, Sesiones, Headers, 
    - [ ] Sesión / Auth
    - [ ] Fuga de PII / Sensibles
    - [ ] Rate Limit / Headers
+   - [ ] Multi-tenant Isolation (Rule #11)
 3. **Hallazgos**: Tabla con "Línea", "Categoría" y "Riesgo".
 4. **Corrección Sugerida**: Código específico para mitigar el riesgo.
 

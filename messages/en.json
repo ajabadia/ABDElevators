@@ -446,6 +446,8 @@
         "f20_desc": "Organize your tenant knowledge into isolated silos with independent access control. Perfect for departmental or project-specific documents.",
         "f21_title": "Space-Restricted API Keys",
         "f21_desc": "Create granular API integrations that only have access to specific spaces. Guaranteed security for external IoT or CRM clients.",
+        "f22_title": "Industrial Price Simulator",
+        "f22_desc": "Calculate with surgical precision the prorated impact of plan changes (Stripe Integration) before confirming any subscription.",
         "learn_more": "Learn more"
     },
     "solutions": {
@@ -780,7 +782,129 @@
             }
         }
     },
+    "Landing": {
+        "ROI": {
+            "badge": "ROI CALCULATOR",
+            "title": "Calculate Your Potential Savings",
+            "description": "See how much your team could save by automating technical analysis with ABD RAG Platform.",
+            "num_techs": "Number of Technicians",
+            "num_techs_desc": "Field technicians or engineers analyzing orders.",
+            "orders_month": "Orders per Tech / Month",
+            "orders_month_desc": "Average number of technical specs analyzed per person.",
+            "hourly_cost": "Avg. Hourly Internal Cost (€)",
+            "hourly_cost_desc": "Fully loaded cost per hour (salary + overhead).",
+            "annual_savings": "Estimated Annual Savings",
+            "hours_saved_year": "Hours Saved / Year",
+            "orders_analyzed": "Orders Analyzed",
+            "how_calculated_title": "How is this calculated?",
+            "how_calculated_desc": "We estimate that ABD RAG reduces the time to analyze a complex technical specification by approximately <strong>20 minutes per order</strong> compared to manual review.",
+            "cta": "START YOUR FREE TRIAL"
+        }
+    },
     "admin": {
+        "billing": {
+            "title": "Billing Data",
+            "desc": "Configure the fiscal data for your invoices.",
+            "fields": {
+                "fiscal_name": "Fiscal Name",
+                "tax_id": "VAT ID / Tax ID",
+                "address": "Address"
+            },
+            "not_configured": "Not configured",
+            "edit": "Edit Data",
+            "dialog": {
+                "title": "Edit Fiscal Data",
+                "desc": "This data will appear in your next invoice.",
+                "fiscal_name_label": "Fiscal Name (Company)",
+                "tax_id_label": "VAT ID / Tax ID",
+                "address_label": "Fiscal Address",
+                "saving": "Saving...",
+                "save": "Save Changes"
+            },
+            "invoice": {
+                "title": "Next Invoice",
+                "closing": "Estimated closing: {date}",
+                "tier_estimate": "Pro Tier Estimate",
+                "download_preview": "Download Preview PDF",
+                "generating": "Generating PDF...",
+                "success": "Invoice Downloaded",
+                "success_desc": "The PDF has been generated successfully.",
+                "error": "Error",
+                "error_desc": "Could not generate the invoice."
+            },
+            "subscription": {
+                "title": "Subscription Plan"
+            },
+            "alerts": {
+                "blocked": "Active Block: {details}"
+            },
+            "format": {
+                "zero_bytes": "0 Bytes"
+            },
+            "contracts": {
+                "title": "Contract Management",
+                "subtitle": "Administration of plans, limits, and overrides per organization.",
+                "metadata": {
+                    "title": "Contract & Case Management | Admin",
+                    "description": "Administration of plans, limits, and overrides per tenant with industrial quota control."
+                },
+                "table": {
+                    "tenant": "Organization",
+                    "plan": "Plan / Tier",
+                    "override": "Personalization",
+                    "usage": "Resource Consumption",
+                    "mrr": "MRR (Est.)",
+                    "status": "Status",
+                    "actions": "Actions",
+                    "search_placeholder": "Search by name or tenant ID...",
+                    "loading": "Synchronizing contracts...",
+                    "empty": "No contracts found.",
+                    "loading_error": "Error loading contracts",
+                    "unlimited": "∞",
+                    "custom_badge": "Custom",
+                    "open_menu": "Open actions menu"
+                },
+                "status": {
+                    "active": "ACTIVE",
+                    "past_due": "PAST DUE",
+                    "blocked": "BLOCKED"
+                },
+                "actions": {
+                    "edit": "Edit Contract / Limits",
+                    "invoices": "View Invoices",
+                    "upcoming_title": "Coming Soon",
+                    "upcoming_desc": "Invoice history is currently under development."
+                },
+                "edit": {
+                    "title": "Edit Contract Configuration",
+                    "description": "Adjust the tier and custom limits for {name} (ID: {id}).",
+                    "plan_label": "Subscription Plan",
+                    "plan_desc": "The plan defines base quotas and default pricing.",
+                    "plans": {
+                        "free": "Free Trial",
+                        "basic": "Basic Business",
+                        "pro": "Professional",
+                        "enterprise": "Enterprise"
+                    },
+                    "overrides_title": "Limit Overrides (Custom Values)",
+                    "tokens_label": "Token Limit (Month)",
+                    "tokens_desc": "0 to use plan default value.",
+                    "storage_label": "Storage Limit (Bytes)",
+                    "storage_desc": "Storage override in bytes (0 = plan default)",
+                    "spaces_tenant_label": "Space Limit (Tenant)",
+                    "spaces_tenant_desc": "TOTAL spaces limit in the tenant (0 = plan default)",
+                    "spaces_user_label": "Space Limit (User)",
+                    "spaces_user_desc": "Spaces limit per each user (0 = plan default)",
+                    "warning_title": "Critical Quota Change",
+                    "warning_desc": "Changing these limits directly affects the client's operational capacity and their next invoice.",
+                    "cancel": "Cancel",
+                    "save": "Save Changes",
+                    "success": "Contract Updated",
+                    "success_desc": "The configuration for {name} has been saved successfully.",
+                    "error_updating": "Error updating contract"
+                }
+            }
+        },
         "api_docs": {
             "title": "API Documentation Portal",
             "subtitle": "Interactive technical specification (OAS 3.0) for integrators.",
@@ -898,7 +1022,79 @@
                 "governance": "Governance",
                 "search": "Semantic",
                 "reliability": "Resilience",
-                "security": "Security"
+                "security": "Security",
+                "workflows": "Workflows"
+            },
+            "workflows": {
+                "title": "Workflow Designer",
+                "syncing": "Syncing Workflow Engine...",
+                "loadError": "Load Error",
+                "loadErrorDesc": "Could not retrieve workflow definition: {error}",
+                "backToHub": "Back to AI Hub",
+                "back": "Back",
+                "publish": "Publish Workflow",
+                "saveSuccess": "Configuration Saved",
+                "saveSuccessDesc": "The workflow has been successfully updated.",
+                "tabs": {
+                    "states": "States",
+                    "transitions": "Transitions",
+                    "config": "Master Config"
+                },
+                "states": {
+                    "title": "Process States",
+                    "id": "State ID",
+                    "label": "Label",
+                    "color": "Color (Hex)",
+                    "newState": "New State",
+                    "iaLayer": "Intelligence Layer (LLM)",
+                    "promptKey": "Prompt Key",
+                    "schemaKey": "Output Schema"
+                },
+                "transitions": {
+                    "title": "Transition Configuration",
+                    "from": "From",
+                    "to": "To",
+                    "label": "Action / Label",
+                    "strategy": "Decision Strategy",
+                    "add": "Add Transition",
+                    "strategies": {
+                        "user": "👤 User (Manual)",
+                        "llm_direct": "🤖 LLM Direct (Auto)",
+                        "llm_suggest": "🧠 IA + HITL (Suggested)",
+                        "human": "🛡️ Human Only"
+                    },
+                    "routing": {
+                        "promptKey": "Routing Prompt Key",
+                        "branches": "{count} Branches Configured"
+                    }
+                },
+                "config": {
+                    "global": "Global Strategy",
+                    "identity": "Workflow Identity",
+                    "name": "Internal Name",
+                    "environment": "Environment",
+                    "version": "Version",
+                    "publication": "Publication Parameters",
+                    "active": "Active Status",
+                    "activeDesc": "Available for new cases",
+                    "default": "Default Workflow",
+                    "defaultDesc": "Automatically assigned"
+                }
+            },
+            "caseWorkflow": {
+                "currentStatus": "Current Status",
+                "pending": "Pending",
+                "iaIntelligence": "Process Intelligence",
+                "recommended": "RECOMMENDED",
+                "risk": "Risk: {level}",
+                "confidence": "{value}% Confidence",
+                "iaDescription": "The system can automatically analyze documentation for this state.",
+                "runAnalysis": "Run Intelligent Analysis",
+                "availableActions": "Available Actions",
+                "analysisComplete": "AI Analysis Complete",
+                "riskDetected": "Risk detected: {level}",
+                "statusUpdated": "Phase Updated",
+                "statusUpdatedDesc": "The case has advanced to: {to}"
             },
             "userDashboardTitle": "Dashboard",
             "userDashboardSubtitle": "Performance and consumption metrics of your organization.",
@@ -985,6 +1181,27 @@
             "no_data": "No ROI data available for this period.",
             "info": "Info"
         },
+        "workflow_tasks": {
+            "title": "Task Collaboration Hub",
+            "highlight": "Workflow Governance",
+            "subtitle": "Management and validation of critical tasks automated by the industrial engine.",
+            "stats": {
+                "pending": "Pending",
+                "inReview": "In Review",
+                "completedToday": "Completed today",
+                "avgTime": "Avg time"
+            },
+            "inbox": {
+                "pending": "Pending",
+                "inProgress": "In Progress",
+                "completed": "Completed",
+                "all": "All",
+                "searchPlaceholder": "Search by case or title...",
+                "loading": "Syncing tenant tasks...",
+                "emptyTitle": "No tasks found",
+                "emptyDescription": "There are no tasks matching the current filters. All compliance validations are up to date."
+            }
+        },
         "automation": {
             "title": "Automation Studio",
             "subtitle": "Orchestration of autonomous actions based on AI and Graphs.",
@@ -1009,6 +1226,8 @@
         "checklists": {
             "title": "Available Checklists",
             "subtitle": "Manage classification and ordering rules for your checklists.",
+            "highlight": "Dynamic",
+            "backToPanel": "Back to Panel",
             "new_config": "New Configuration",
             "empty_message": "No checklist configurations created yet.",
             "table": {
@@ -1042,6 +1261,42 @@
                 "error_title": "System Error",
                 "error_desc": "Could not retrieve the requested configuration from the database.",
                 "back_button": "Back to Dashboard"
+            }
+        },
+        "compliance": {
+            "title": "Compliance Center",
+            "highlight": "GDPR and Data",
+            "subtitle": "Manage data portability, backups, and legal destruction evidence.",
+            "dataPortability": {
+                "title": "Data Portability (Backup)",
+                "description": "Download a full copy of your organization's knowledge assets, including metadata and logs, in a portable JSON format.",
+                "whatsIncluded": "What's included?",
+                "item1": "Users and Profiles",
+                "item2": "Knowledge Assets Metadata",
+                "item3": "Ingestion and RAG Configs",
+                "item4": "Audit Logs"
+            },
+            "rightToBeForgotten": {
+                "title": "Right to be Forgotten",
+                "description": "Tools for GDPR compliance and permanent data destruction evidence.",
+                "alertTitle": "Permanent Destruction",
+                "alertDescription": "Deleting a tenant is irreversible. Use the Ephemeral Clean-up script for bulk deletions. This tool generates the Legal Certificate required for GDPR audits."
+            },
+            "buttons": {
+                "downloadBackup": "Download Full Backup (.zip)",
+                "generatingZip": "Generating ZIP...",
+                "generateCertificate": "Generate Deletion Certificate (PDF)",
+                "signingPdf": "Signing PDF...",
+                "requestDeletion": "Request Permanent Tenant Deletion"
+            },
+            "toasts": {
+                "backupDownloaded": "Backup Downloaded",
+                "backupSuccess": "Your knowledge package has been successfully exported.",
+                "certificateGenerated": "Certificate Generated",
+                "certificateSuccess": "The legal evidence PDF has been downloaded.",
+                "error": "Error",
+                "backupError": "Could not generate backup.",
+                "certificateError": "Could not generate certificate."
             }
         },
         "consumption": {
@@ -1142,6 +1397,194 @@
                 }
             }
         },
+        "analytics": {
+            "page": {
+                "title": "Global Metrics",
+                "subtitle": "Analytical perspective on platform performance and RAG ecosystem."
+            },
+            "explorer": {
+                "loading": "Synchronizing Global Metrics...",
+                "title": "Platform Insights",
+                "subtitle": "Real-time analysis of infrastructure and RAG ecosystem.",
+                "liveStatus": "Live Status: OK",
+                "kpi": {
+                    "activeTenants": "Active Tenants",
+                    "uniqueUsers": "Unique Users",
+                    "mau": "MAU (30d)",
+                    "mrr": "Estimated MRR"
+                },
+                "growth": "+14.2% vs last month",
+                "quality": {
+                    "title": "RAG Performance Quality (P100)",
+                    "subtitle": "Automated heuristic evaluation on the last 100 inferences.",
+                    "faithfulness": "Faithfulness",
+                    "relevance": "Relevance",
+                    "precision": "Precision",
+                    "noData": "Insufficient data to generate quality report."
+                },
+                "sla": "SLA Violations (30d)",
+                "slaUnit": "Incidents",
+                "errors": "Critical Errors (30d)",
+                "errorsUnit": "Logs",
+                "system": {
+                    "title": "System Load",
+                    "totalOrders": "Total Orders",
+                    "ragSearch": "RAG Searches",
+                    "deduplication": "Deduplication Savings"
+                },
+                "anomaly": {
+                    "title": "Anomaly Detected",
+                    "desc": "12% latency increase in Tier 2 (US-East)"
+                },
+                "industrial": {
+                    "title": "Industrial Distribution"
+                },
+                "adopters": {
+                    "title": "New Adopters",
+                    "onboarding": "Onboarding",
+                    "viewAll": "View All Tenants"
+                }
+            }
+        },
+        "notifications": {
+            "page": {
+                "title": "Notification Center",
+                "subtitle": "Manage communications, templates, and system status.",
+                "manageTemplates": "Manage Templates",
+                "channelSettings": "Channel Settings"
+            },
+            "kpi": {
+                "totalSent": "Total Sent",
+                "totalSentDesc": "Successful notifications",
+                "billing": "Billing",
+                "billingDesc": "Limit/payment alerts",
+                "errors": "Errors",
+                "errorsDesc": "Send or system failures"
+            },
+            "table": {
+                "recent": "Recent Notifications",
+                "status": "Status",
+                "type": "Type",
+                "title": "Title",
+                "recipient": "Recipient",
+                "ago": "Ago"
+            },
+            "status": {
+                "error": "Error",
+                "sent": "Sent",
+                "inApp": "In-App"
+            },
+            "templates": {
+                "title": "Email Templates",
+                "subtitle": "Customize the base HTML and legal texts for each notification type.",
+                "active": "Active",
+                "inactive": "Inactive",
+                "pending": "Pending",
+                "languagesConfigured": "languages configured",
+                "updated": "Updated:",
+                "configure": "Configure",
+                "fallbackMessage": "This notification uses the system generic fallback. Configure it to customize it.",
+                "createTemplate": "Create Template"
+            },
+            "settings": {
+                "form": {
+                    "title": "Communication Preferences",
+                    "subtitle": "Configure how and what notifications your organization receives.",
+                    "saveBtn": "Save Changes",
+                    "saving": "Saving...",
+                    "saveSuccess": "Configuration saved",
+                    "saveSuccessDesc": "Your notification preferences have been updated successfully.",
+                    "saveError": "Error saving",
+                    "saveErrorDesc": "Could not update the configuration. Please check the data.",
+                    "connectionError": "Connection error",
+                    "connectionErrorDesc": "A problem occurred while trying to connect to the server.",
+                    "loading": "Loading configuration...",
+                    "loadError": "Error loading configuration",
+                    "generalTitle": "General Settings",
+                    "generalDesc": "Global settings for the notification system.",
+                    "fallbackEmail": "Fallback Email (Default)",
+                    "fallbackPlaceholder": "alerts@yourcompany.com",
+                    "fallbackHelp": "This email will receive notifications if there are no specific recipients defined for an event.",
+                    "channelsTitle": "Channels and Status",
+                    "eventActive": "Active Event",
+                    "eventActiveDesc": "Enable/disable this type of notification.",
+                    "enabledChannels": "Enabled channels",
+                    "emailChannel": "Email",
+                    "inAppChannel": "In-App Notifications (Bell)",
+                    "recipientsTitle": "Specific Recipients",
+                    "recipientsDesc": "Who will receive alerts for this specific event.",
+                    "newEmailPlaceholder": "new@email.com",
+                    "emailCol": "Email",
+                    "actionCol": "Action",
+                    "noRecipients": "No specific recipients. The tenant fallback or affected user will be used.",
+                    "customNoteTitle": "Text Injection (Optional)",
+                    "customNoteDesc": "This text will appear in the footer of emails of this type for all your users.",
+                    "customNotePlaceholder": "E.g.: Remember to upload the payment receipt to the HR shared folder."
+                }
+            },
+            "events": {
+                "SYSTEM": "System Messages",
+                "ANALYSIS_COMPLETE": "Analysis Completed",
+                "RISK_ALERT": "Risk Alerts",
+                "BILLING_EVENT": "Billing and Quotas",
+                "SECURITY_ALERT": "Security and Access"
+            },
+            "validation": {
+                "invalidDate": "Invalid date"
+            }
+        },
+        "documentTypes": {
+            "page": {
+                "title": "Document Types",
+                "subtitle": "Configure technical document categories for RAG."
+            },
+            "table": {
+                "name": "Name",
+                "scope": "Scope",
+                "description": "Description",
+                "status": "Status",
+                "created": "Created",
+                "actions": "Actions",
+                "industries": "Industries"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "scope": {
+                "GLOBAL": "Global (All Tenants)",
+                "INDUSTRY": "Industry Specific",
+                "TENANT": "Tenant Specific"
+            },
+            "form": {
+                "newType": "New Type",
+                "editTitle": "Edit Document Type",
+                "createTitle": "Create New Document Type",
+                "name": "Name",
+                "namePlaceholder": "Ex: Controller, Motor, etc.",
+                "description": "Description",
+                "descriptionPlaceholder": "Optional",
+                "scope": "Scope (SuperAdmin)",
+                "scopeTenant": "Tenant Specific",
+                "scopeGlobal": "Global (All Tenants)",
+                "scopeIndustry": "Industry Specific",
+                "industries": "Industries (Multi-select)",
+                "industriesHelp": "Hold Ctrl/Cmd to select multiple.",
+                "cancel": "Cancel",
+                "saveChanges": "Save Changes",
+                "create": "Create",
+                "saving": "Saving...",
+                "creating": "Creating..."
+            },
+            "empty": "No document types configured.",
+            "deleteConfirm": "Are you sure you want to delete this document type?",
+            "toast": {
+                "created": "Document type created successfully",
+                "updated": "Document type updated successfully",
+                "deleted": "Document type deleted"
+            },
+            "all": "All"
+        },
         "metrics": {
             "reports": {
                 "label": "Reports / Orders",
@@ -1174,111 +1617,58 @@
             "tokens_title": "AI Consumption Trends",
             "tokens_desc": "Visualization of token consumption and cache efficiency over the last 15 days."
         },
-        "billing": {
-            "title": "Billing Data",
-            "desc": "Configure the fiscal data for your invoices.",
-            "fields": {
-                "fiscal_name": "Fiscal Name",
-                "tax_id": "VAT ID / Tax ID",
-                "address": "Address"
-            },
-            "not_configured": "Not configured",
-            "edit": "Edit Data",
-            "dialog": {
-                "title": "Edit Fiscal Data",
-                "desc": "This data will appear in your next invoice.",
-                "fiscal_name_label": "Fiscal Name (Company)",
-                "tax_id_label": "VAT ID / Tax ID",
-                "address_label": "Fiscal Address",
-                "saving": "Saving...",
-                "save": "Save Changes"
-            },
-            "invoice": {
-                "title": "Next Invoice",
-                "closing": "Estimated closing: {date}",
-                "tier_estimate": "Pro Tier Estimate",
-                "download_preview": "Download Preview PDF",
-                "generating": "Generating PDF...",
-                "success": "Invoice Downloaded",
-                "success_desc": "The PDF has been generated successfully.",
-                "error": "Error",
-                "error_desc": "Could not generate the invoice."
-            },
-            "subscription": {
-                "title": "Subscription Plan"
-            },
-            "alerts": {
-                "blocked": "Active Block: {details}"
-            },
-            "format": {
-                "zero_bytes": "0 Bytes"
-            },
-            "contracts": {
-                "title": "Contract Management",
-                "subtitle": "Administration of plans, limits, and overrides per organization.",
-                "metadata": {
-                    "title": "Contract & Case Management | Admin",
-                    "description": "Administration of plans, limits, and overrides per tenant with industrial quota control."
-                },
-                "table": {
-                    "tenant": "Organization",
-                    "plan": "Plan / Tier",
-                    "override": "Personalization",
-                    "usage": "Resource Consumption",
-                    "mrr": "MRR (Est.)",
-                    "status": "Status",
-                    "actions": "Actions",
-                    "search_placeholder": "Search by name or tenant ID...",
-                    "loading": "Synchronizing contracts...",
-                    "empty": "No contracts found.",
-                    "loading_error": "Error loading contracts",
-                    "unlimited": "∞",
-                    "custom_badge": "Custom",
-                    "open_menu": "Open actions menu"
-                },
-                "status": {
-                    "active": "ACTIVE",
-                    "past_due": "PAST DUE",
-                    "blocked": "BLOCKED"
-                },
-                "actions": {
-                    "edit": "Edit Contract / Limits",
-                    "invoices": "View Invoices",
-                    "upcoming_title": "Coming Soon",
-                    "upcoming_desc": "Invoice history is currently under development."
-                },
-                "edit": {
-                    "title": "Edit Contract Configuration",
-                    "description": "Adjust the tier and custom limits for {name} (ID: {id}).",
-                    "plan_label": "Subscription Plan",
-                    "plan_desc": "The plan defines base quotas and default pricing.",
-                    "plans": {
-                        "free": "Free Trial",
-                        "basic": "Basic Business",
-                        "pro": "Professional",
-                        "enterprise": "Enterprise"
-                    },
-                    "overrides_title": "Limit Overrides (Custom Values)",
-                    "tokens_label": "Token Limit (Month)",
-                    "tokens_desc": "0 to use plan default value.",
-                    "storage_label": "Storage Limit (Bytes)",
-                    "storage_desc": "Storage override in bytes (0 = plan default)",
-                    "spaces_tenant_label": "Space Limit (Tenant)",
-                    "spaces_tenant_desc": "TOTAL spaces limit in the tenant (0 = plan default)",
-                    "spaces_user_label": "Space Limit (User)",
-                    "spaces_user_desc": "Spaces limit per each user (0 = plan default)",
-                    "warning_title": "Critical Quota Change",
-                    "warning_desc": "Changing these limits directly affects the client's operational capacity and their next invoice.",
-                    "cancel": "Cancel",
-                    "save": "Save Changes",
-                    "success": "Contract Updated",
-                    "success_desc": "The configuration for {name} has been saved successfully.",
-                    "error_updating": "Error updating contract"
-                }
-            }
-        },
         "logs": {
             "title": "Logs & Audit Explorer",
+            "explorer": {
+                "title": "Log Explorer",
+                "subtitle": "Real-time technical monitoring of the platform.",
+                "autoRefreshOn": "Auto-refresh ON",
+                "autoRefreshOff": "Auto-refresh OFF",
+                "refresh": "Refresh",
+                "searchLabel": "Quick Search",
+                "searchPlaceholder": "Message, action or correlation_id...",
+                "levelLabel": "Level",
+                "levelAll": "All levels",
+                "table": {
+                    "time": "Time",
+                    "level": "Level",
+                    "sourceAction": "Source / Action",
+                    "message": "Message",
+                    "action": "Action"
+                },
+                "loading": "Loading logs...",
+                "noResults": "No logs found with current filters.",
+                "showing": "Showing {count} of hundreds of events.",
+                "page": "Page {current} of {total}",
+                "levels": {
+                    "ERROR": "Error",
+                    "WARN": "Warning",
+                    "INFO": "Info",
+                    "DEBUG": "Debug"
+                }
+            },
+            "detail": {
+                "analyze_diff": "Analyze Diff",
+                "close": "Close",
+                "message": "Detailed Message",
+                "stack": "Stack Trace (Error)",
+                "json": "Technical Details (JSON)",
+                "integrity": "Integrity Verification",
+                "diff_title": "Entity Changes",
+                "property": "Property",
+                "previous": "Previous State",
+                "next": "New State",
+                "initial_creation": "Initial Creation",
+                "initial_desc": "This entry represents the creation of the object. No previous state.",
+                "snapshot": "Full Object Snapshot",
+                "responsable": "Responsible",
+                "ip_origin": "Origin IP",
+                "correlation": "Correlation",
+                "view_trace": "View Trace",
+                "user_agent": "User Agent Context",
+                "admin_auth": "Admin Authority",
+                "secure_agent": "SECURE AGENT"
+            },
             "stats": {
                 "total": "Total Logs",
                 "recent": "last 100",
@@ -1322,28 +1712,6 @@
             "status": {
                 "loading": "Loading logs...",
                 "no_results": "No logs found with current filters."
-            },
-            "detail": {
-                "analyze_diff": "Analyze Diff",
-                "close": "Close",
-                "message": "Detailed Message",
-                "stack": "Stack Trace (Error)",
-                "json": "Technical Details (JSON)",
-                "integrity": "Integrity Verification",
-                "diff_title": "Entity Changes",
-                "property": "Property",
-                "previous": "Previous State",
-                "next": "New State",
-                "initial_creation": "Initial Creation",
-                "initial_desc": "This entry represents the creation of the object. No previous state.",
-                "snapshot": "Full Object Snapshot",
-                "responsable": "Responsible",
-                "ip_origin": "Origin IP",
-                "correlation": "Correlation",
-                "view_trace": "View Trace",
-                "user_agent": "User Agent Context",
-                "admin_auth": "Admin Authority",
-                "secure_agent": "SECURE AGENT"
             },
             "page": {
                 "title": "System Logs",
@@ -1770,6 +2138,14 @@
             "table": {
                 "title": "Global Knowledge Registry",
                 "desc": "Moderate and review patterns discovered by the Sovereign Engine.",
+                "problemVector": "Problem Vector",
+                "solutionVector": "Solution Vector",
+                "confidence": "Confidence",
+                "validations": "Validations",
+                "keywords": "Keywords",
+                "actions": "Actions",
+                "archive_confirm": "Are you sure you want to archive this pattern? It will no longer appear in RAG searches.",
+                "empty": "No autonomous patterns discovered yet.",
                 "archive_success": "Pattern archived successfully",
                 "archive_error": "Failed to archive pattern",
                 "fetch_error": "Failed to load intelligence data"
@@ -1825,6 +2201,40 @@
                     "missing_email": "Missing email",
                     "invalid_email": "Invalid email"
                 }
+            },
+            "invite_modal": {
+                "title": "Invite Collaborator",
+                "description": "Send a secure invitation via email. The user will be able to set their own name and password.",
+                "success_title": "Invitation Sent!",
+                "success_description": "We've sent a secure registration link to",
+                "success_validity": "The link is valid for 7 days.",
+                "email_label": "Email Address",
+                "email_placeholder": "user@company.com",
+                "role_label": "Assigned Role",
+                "tenant_label": "Tenant ID (SuperAdmin only)",
+                "tenant_placeholder": "e.g: tenant-xxxx",
+                "cancel": "Cancel",
+                "sending": "Sending...",
+                "submit": "Send Invitation",
+                "understood": "Got it",
+                "roles": {
+                    "super_admin": "Super Administrator",
+                    "admin": "Organization Administrator",
+                    "technical": "Operational Technician",
+                    "engineering": "Project Engineering"
+                }
+            },
+            "reset_password": {
+                "confirm": "Reset password for {email}?",
+                "success": "New temporary password: {password}"
+            },
+            "tabs": {
+                "active": "Active Users",
+                "pending": "Pending Invitations"
+            },
+            "invitations": {
+                "title": "Pending Invitations",
+                "desc": "Manage and revoke invitations that haven't been accepted yet."
             }
         },
         "api_keys": {
@@ -1884,7 +2294,17 @@
                 "upToDateDesc": "No pending translations between selected locales.",
                 "syncSuccessTitle": "Sync Successful",
                 "syncSuccessDesc": "Local files have been dumped to the database.",
-                "saveSuccess": "Translation updated successfully."
+                "saveSuccess": "Translation updated successfully.",
+                "syncCompletedTitle": "Sync completed",
+                "syncNoChanges": "No discrepancies detected between JSON and DB.",
+                "syncSuccessDetail": "{added} new, {updated} updated.",
+                "syncErrorTitle": "Sync error",
+                "syncErrorDesc": "Error syncing with database",
+                "exportCompletedTitle": "Export completed",
+                "exportNoChanges": "JSON files are already synced with DB.",
+                "exportSuccessDetail": "{added} new, {updated} updated in JSON.",
+                "exportErrorTitle": "Export error",
+                "exportErrorDesc": "Error exporting to local files"
             }
         },
         "user_dashboard": {
@@ -2317,7 +2737,13 @@
             "securityCenter": "Security Center",
             "securityCenterSubtitle": "Password, MFA, and Active Sessions",
             "password": "Password",
-            "mfa": "Multi-Factor Authentication"
+            "mfa": "Multi-Factor Authentication",
+            "manage": "Manage",
+            "recentlyUpdated": "Recently updated",
+            "mfaRequiredTitle": "Access Restricted",
+            "mfaRequiredDesc": "Your role requires mandatory MFA. You will be redirected when trying to access admin routes until you activate it.",
+            "activate": "Activate",
+            "deactivate": "Deactivate"
         },
         "security": {
             "password": {
@@ -2380,6 +2806,65 @@
             "typeError": "Please select an image file.",
             "successTitle": "Photo updated",
             "successDesc": "Your profile photo has been updated successfully."
+        },
+        "support": {
+            "page": {
+                "title": "Support Center",
+                "subtitle": "Consult our agentic AI or manage your support tickets.",
+                "newTicket": "New Ticket",
+                "aiSearch": "AI Query",
+                "myTickets": "My Tickets",
+                "searchPlaceholder": "Search by subject or ID (e.g., #22901)...",
+                "records": "Records",
+                "noTickets": "No active tickets",
+                "noTicketsDesc": "Your history is clean. If you have any technical questions or issues, we are here to help.",
+                "createFirst": "Create my first ticket",
+                "viewConversation": "View Conversation"
+            },
+            "new": {
+                "back": "Back to my tickets",
+                "title": "Open New Issue",
+                "subtitle": "Describe your problem in detail so we can help you better.",
+                "category": "Category",
+                "priority": "Priority",
+                "subject": "Subject",
+                "subjectPlaceholder": "e.g., Error uploading PDF...",
+                "description": "Detailed Description",
+                "descriptionPlaceholder": "Describe the steps to reproduce the problem...",
+                "descriptionHint": "Be as specific as possible to speed up resolution.",
+                "submit": "Submit Ticket",
+                "cancel": "Cancel",
+                "error": "Error",
+                "errorFields": "Fill in all required fields",
+                "errorCreate": "Could not create the ticket. Please try again.",
+                "success": "Ticket Created",
+                "successDesc": "We have sent you a confirmation email."
+            },
+            "category": {
+                "TECHNICAL": "Technical Support",
+                "BILLING": "Billing & Payments",
+                "ACCESS": "User Access",
+                "FEATURE_REQUEST": "Feature Request",
+                "OTHER": "Other"
+            },
+            "priority": {
+                "LOW": "Low - General inquiry",
+                "MEDIUM": "Medium - Minor issue",
+                "HIGH": "High - Partial blockage",
+                "CRITICAL": "Critical - System down"
+            },
+            "detail": {
+                "notFound": "Ticket not found",
+                "backToSupport": "Back to support center",
+                "opened": "Opened",
+                "initialDescription": "Initial Description",
+                "yourReply": "Your Reply",
+                "technicalSupport": "Technical Support",
+                "replyPlaceholder": "Write a response for the technical team...",
+                "replyHint": "Your response will go directly to our level 2 engineers.",
+                "sendMessage": "Send Message",
+                "messageSent": "Message sent successfully"
+            }
         },
         "i18n": {
             "page": {
@@ -2473,12 +2958,572 @@
                 },
                 "search_placeholder": "Search spaces...",
                 "new_space": "New Space",
-                "manage": "Manage"
+                "manage": "Manage",
+                "createModal": {
+                    "title": "Create New Space",
+                    "name": "Name",
+                    "namePlaceholder": "e.g., Sales Department",
+                    "slug": "Slug (Unique)",
+                    "slugPlaceholder": "e.g., sales-global",
+                    "description": "Description",
+                    "descriptionPlaceholder": "Purpose of this space...",
+                    "type": "Space Type",
+                    "typePlaceholder": "Select type",
+                    "visibility": "Visibility",
+                    "visibilityPlaceholder": "Select visibility",
+                    "industry": "Industry",
+                    "industryPlaceholder": "Select industry",
+                    "isDefault": "Default Space",
+                    "isDefaultDesc": "New assets will be assigned here if not specified.",
+                    "allowQuickQA": "Allow Quick Q&A",
+                    "allowQuickQADesc": "Enables ephemeral chat on documents in this space.",
+                    "cancel": "Cancel",
+                    "submit": "Create Space",
+                    "submitting": "Creating..."
+                },
+                "visibility": {
+                    "INTERNAL": "Internal (Auth Required)",
+                    "PUBLIC": "Public (Read Only)",
+                    "PRIVATE": "Private (Invite Only)",
+                    "RESTRICTED": "Restricted (Admin Only)"
+                },
+                "toast": {
+                    "createSuccess": "Space created successfully",
+                    "createError": "Error creating space"
+                }
+            },
+            "aiHub": {
+                "title": "Artificial Intelligence Center",
+                "subtitle": "Monitoring, evaluation and orchestration of generative models.",
+                "tabs": {
+                    "ragQuality": "RAG Quality",
+                    "workflows": "Orchestration & Workflows",
+                    "predictive": "Predictive",
+                    "playground": "Playground"
+                },
+                "sections": {
+                    "ragQuality": {
+                        "title": "RAG Quality Evaluation (RAGAS)",
+                        "subtitle": "Metrics of fidelity, relevance and context accuracy in real time."
+                    },
+                    "workflows": {
+                        "title": "Flow Editor",
+                        "subtitle": "Design autonomous agents and visual processing pipelines."
+                    },
+                    "predictive": {
+                        "title": "Predictive Analysis",
+                        "subtitle": "Module under construction. Predictions for spare parts and maintenance will appear here."
+                    },
+                    "playground": {
+                        "title": "Prompt Playground",
+                        "subtitle": "Secure environment to test and refine prompts before deploying to production via PromptService."
+                    }
+                }
+            },
+            "organizations": {
+                "page": {
+                    "title": "Organization Settings",
+                    "subtitle": "Manage data isolation, visual identity and storage quotas.",
+                    "refresh": "Refresh",
+                    "save": "Save Changes",
+                    "error": "Error",
+                    "errorTenantId": "Missing tenantId",
+                    "saveSuccess": "Organization configuration updated successfully.",
+                    "saveError": "Could not save the configuration."
+                },
+                "tabs": {
+                    "general": "General",
+                    "branding": "Identity & Branding",
+                    "storage": "Storage",
+                    "features": "Modules",
+                    "billing": "Billing",
+                    "reports": "Reports"
+                },
+                "general": {
+                    "tenantId": "Organization ID",
+                    "name": "Commercial Name",
+                    "industry": "Industry / Domain",
+                    "industryPlaceholder": "Select industry",
+                    "compliance": {
+                        "title": "Compliance Status",
+                        "dataIsolation": "Data Isolation",
+                        "dataRegion": "Data Region",
+                        "encryption": "Encryption",
+                        "active": "Active",
+                        "regionValue": "EU-West (Zaragoza/Frankfurt)",
+                        "encryptionValue": "AES-256"
+                    },
+                    "industries": {
+                        "ELEVATORS": "Elevators & Lifting",
+                        "LEGAL": "Legal / Law Firms",
+                        "MEDICAL": "Medical / Health",
+                        "IT": "Technology / IT",
+                        "GENERIC": "Generic / Other"
+                    }
+                },
+                "storage": {
+                    "provider": "Infrastructure Provider",
+                    "cloudinary": "Cloudinary",
+                    "cloudinaryDesc": "Optimal for PDFs and images with CDN.",
+                    "awsS3": "AWS S3",
+                    "comingSoon": "COMING SOON",
+                    "folderPrefix": "Root Directory (Storage Isolation)",
+                    "folderPrefixDesc": "Determines the base folder in the cloud for this tenant.",
+                    "quota": {
+                        "title": "Maximum Disk Quota",
+                        "desc": "Limit of processed documents.",
+                        "currentUsage": "Current Usage (Cloudinary / Storage)",
+                        "warning": "When exceeding the quota, access to new analysis requests will be blocked."
+                    }
+                },
+                "features": {
+                    "features": {
+                        "ragSearch": "Semantic RAG Search",
+                        "geminiAnalysis": "Intelligent Analysis (Gemini)",
+                        "auditReviews": "Audit Reviews",
+                        "whiteLabel": "White Label Branding",
+                        "multiLanguage": "Advanced Multi-language",
+                        "customAgents": "Custom Agents"
+                    },
+                    "status": {
+                        "active": "Active",
+                        "locked": "Locked",
+                        "planned": "Planned"
+                    }
+                },
+                "branding": {
+                    "title": "Brand Customization",
+                    "subtitle": "Define corporate colors and visual assets.",
+                    "logo": {
+                        "title": "Organization Logo",
+                        "upload": "Upload Logo",
+                        "uploadButton": "Upload Logo",
+                        "remove": "Remove",
+                        "dimensions": "Min dimensions: 400x400px. Transparent background recommended (PNG).",
+                        "success": "Logo updated",
+                        "successDesc": "Branding has been saved correctly.",
+                        "error": "Error",
+                        "errorDesc": "Failed to upload logo"
+                    },
+                    "favicon": {
+                        "title": "Favicon",
+                        "upload": "Upload Favicon",
+                        "uploadButton": "Upload Favicon",
+                        "dimensions": "Files .ico, .png or .svg. Recommended 32x32px.",
+                        "success": "Favicon updated",
+                        "successDesc": "Tab icon has been saved correctly.",
+                        "error": "Error",
+                        "errorDesc": "Failed to upload favicon"
+                    },
+                    "colors": {
+                        "primary": "Primary Color (Light Mode)",
+                        "accent": "Accent Color (Light Mode)",
+                        "primaryDark": "Primary (Dark Mode Override)",
+                        "accentDark": "Accent (Dark Mode Override)"
+                    },
+                    "autoDarkMode": {
+                        "title": "Automatic Dark Mode",
+                        "desc": "Automatically calculates readable variants for dark theme."
+                    },
+                    "preview": {
+                        "title": "Live Preview App",
+                        "light": "LIGHT",
+                        "dark": "DARK",
+                        "lightDesc": "Light Mode preview (original colors).",
+                        "darkDesc": "Dark Mode preview (auto-optimized colors)."
+                    }
+                },
+                "billing": {
+                    "currentPlan": "Current Plan",
+                    "planActive": "Active",
+                    "freeTrial": "You are enjoying the free trial period.",
+                    "subscription": "Subscription renewed monthly.",
+                    "changePlan": "Change Plan",
+                    "plansTitle": "Plans and Pricing",
+                    "plansDesc": "Select the plan that best fits your needs.",
+                    "planCurrent": "Current Plan",
+                    "contactSupport": "Contact Support",
+                    "selectPlan": "Select",
+                    "perMonth": "/month",
+                    "usage": {
+                        "tokens": "AI Tokens (Generative)",
+                        "storage": "Storage (RAG)",
+                        "searches": "Vector Searches",
+                        "apiCalls": "API Calls"
+                    },
+                    "fiscal": {
+                        "title": "Fiscal Identity",
+                        "name": "Business Name / Fiscal Name",
+                        "namePlaceholder": "Ex: ABD Elevators S.L.",
+                        "taxId": "CIF / NIF / VAT ID",
+                        "taxIdPlaceholder": "Ex: B12345678"
+                    },
+                    "reception": {
+                        "title": "Invoice Reception",
+                        "channel": "Preferred Channel",
+                        "channelEmail": "Email",
+                        "channelPostal": "Postal Mail",
+                        "channelInApp": "In-App Download Only",
+                        "channelXmlEdi": "XML / EDI Exchange",
+                        "email": "Billing Email",
+                        "emailPlaceholder": "billing@company.com",
+                        "format": "File Format",
+                        "formatPdf": "PDF (Digitally Signed)",
+                        "formatXml": "XML Facturae",
+                        "formatCsv": "CSV / Excel",
+                        "formatPaper": "Paper (Physical)"
+                    },
+                    "shippingAddress": {
+                        "title": "Shipping Address",
+                        "line1": "Street and Number",
+                        "city": "City",
+                        "postalCode": "Postal Code",
+                        "country": "Country"
+                    },
+                    "billingAddress": {
+                        "title": "Billing Address",
+                        "sameAsShipping": "Same as shipping address."
+                    },
+                    "edi": {
+                        "title": "Electronic Invoice Certification",
+                        "desc": "We comply with the Create and Grow Law for secure XML invoice exchange.",
+                        "button": "EDI Information"
+                    },
+                    "usageStatus": {
+                        "limit": "Limit",
+                        "overage": "Overage"
+                    },
+                    "simulation": {
+                        "title": "Plan Change Simulation",
+                        "creditApplied": "Applied credit from current plan",
+                        "newPlanCost": "New plan cost (prorated)",
+                        "totalDueNow": "Total due today",
+                        "currency": "Currency",
+                        "nextBillingDate": "Next Billing Date"
+                    }
+                },
+                "security": {
+                    "title": "Security and Trust Center",
+                    "subtitle": "Tenant isolation validated through continuous synthetic auditing.",
+                    "auditLink": "View Audit Chunks",
+                    "certify": "Certify GDPR",
+                    "certTitle": "GDPR Compliance Certificate",
+                    "certDesc": "Regulatory compliance report for {organization}.",
+                    "status": {
+                        "title": "Processing Status",
+                        "value": "COMPLIANT"
+                    },
+                    "dataLocation": {
+                        "title": "Data Location",
+                        "value": "EU-WEST-1 (Frankfurt)"
+                    },
+                    "encryption": {
+                        "title": "Encryption at Rest",
+                        "value": "AES-256-GCM"
+                    },
+                    "logRetention": {
+                        "title": "Log Retention",
+                        "value": "90 Days (Anonymized)"
+                    },
+                    "gdprNote": "This tenant complies with the requirements of the General Data Protection Regulation (GDPR) EU 2016/679.",
+                    "downloadBtn": "Download PDF Report",
+                    "downloadSuccess": {
+                        "title": "Report downloaded",
+                        "desc": "The compliance PDF has been saved to your device."
+                    }
+                },
+                "reports": {
+                    "title": "Report Templates",
+                    "subtitle": "Customize the format and legal content of your industrial reports.",
+                    "disclaimer": {
+                        "title": "Legal Disclaimer (Report Footer)",
+                        "placeholder": "Ex: This report is confidential and has been generated through AI processes...",
+                        "desc": "This text will appear at the end of each generated report."
+                    },
+                    "signature": {
+                        "title": "Signature Text",
+                        "placeholder": "Ex: Signed: Engineering Manager"
+                    },
+                    "footer": {
+                        "title": "Custom Footer Note",
+                        "placeholder": "Ex: © 2026 ABDElevators Industrial Division"
+                    },
+                    "includeSources": {
+                        "title": "Include RAG Sources",
+                        "desc": "Shows original documentation fragments in the report."
+                    },
+                    "preview": "Structural Preview"
+                },
+                "storageUsage": {
+                    "metric": "Real-time consumption metric",
+                    "used": "Used"
+                }
+            }
+        }
+    },
+    "aiHub": {
+        "title": "AI Hub",
+        "subtitle": "Boost your productivity with agentic AI tools and intelligent orchestration.",
+        "tabs": {
+            "ragQuality": "RAG Quality",
+            "workflows": "Workflows",
+            "predictive": "Predictive",
+            "playground": "Playground"
+        },
+        "sections": {
+            "ragQuality": {
+                "title": "RAG Quality Evaluation",
+                "subtitle": "Monitor precision and relevance of generated responses."
+            },
+            "workflows": {
+                "title": "Workflow Orchestration",
+                "subtitle": "Configure and monitor autonomous agents for complex tasks."
+            },
+            "predictive": {
+                "title": "Predictive Maintenance",
+                "subtitle": "Pattern analysis for real-time failure prevention."
+            },
+            "playground": {
+                "title": "AI Playground",
+                "subtitle": "Experiment with models and prompts in a safe environment."
+            }
+        }
+    },
+    "myDocuments": {
+        "title": "My Documents",
+        "subtitle": "Personal space for your manuals, notes and technical files.",
+        "titleAlt": "My Files",
+        "subtitleAlt": "Your personal repository of manuals and technical files.",
+        "upload": {
+            "button": "Upload File",
+            "title": "Upload New Personal Document",
+            "submit": "Upload",
+            "cancel": "Cancel",
+            "file": "File",
+            "filePdf": "PDF File",
+            "description": "Description (Optional)",
+            "descriptionPlaceholder": "Ex: Manual for project 123",
+            "type": "Document Type",
+            "typePlaceholder": "Select type...",
+            "save": "Save File",
+            "uploading": "Uploading...",
+            "errorSize": "File is too large (Max 10MB)",
+            "successTitle": "Success",
+            "successDesc": "Your document has been saved and processed.",
+            "successGeneric": "Document uploaded successfully.",
+            "errorTitle": "Upload Error",
+            "errorDesc": "Could not upload the file. Check the size or format."
+        },
+        "table": {
+            "name": "Name",
+            "description": "Description",
+            "size": "Size",
+            "date": "Date",
+            "actions": "Actions",
+            "download": "Download",
+            "delete": "Delete",
+            "empty": "You haven't uploaded any personal documents yet.",
+            "noResults": "No documents found.",
+            "file": "File",
+            "loading": "Loading your files...",
+            "loadingRepo": "Loading personal repository..."
+        },
+        "storage": {
+            "title": "Storage",
+            "totalFiles": "Total files",
+            "usage": "{{used}} GB of {{total}} GB used"
+        },
+        "search": "Search in my documents...",
+        "confirmDelete": "Do you want to delete this file from your personal repository?",
+        "deleteSuccess": "The file has been deleted.",
+        "deleteSuccessTitle": "Document deleted"
+    },
+    "technical": {
+        "entities": {
+            "title": "Analysis",
+            "subtitle": "Agentic processing and technical validation of specifications (System Engine).",
+            "newAnalysis": "New Analysis",
+            "dropPdf": "Drop the order PDF here",
+            "clickBrowse": "Click to browse",
+            "pdfFormat": "Order PDF (Max 10MB)",
+            "analyze": "Analyze Order",
+            "processing": "Processing...",
+            "backToNew": "← Back to New Analysis",
+            "recents": "Recents",
+            "searchPlaceholder": "Search orders...",
+            "patterns": "Patterns",
+            "noRecents": "No orders have been analyzed recently.",
+            "features": {
+                "autoDetect": "Automatic detection of models and components.",
+                "crossRef": "Intelligent cross-referencing with active manuals.",
+                "checklist": "AI-generated compatibility checklist."
+            },
+            "toast": {
+                "processed": "processed",
+                "startingBrain": "Starting agentic brain for technical analysis...",
+                "error": "Error",
+                "couldNotProcess": "Could not process the order",
+                "fatalError": "Fatal error",
+                "connectionFailure": "Connection failure",
+                "retrievalError": "Could not retrieve final results"
             }
         },
-        "enterpriseSecurity": {
-            "title": "Enterprise-grade security",
-            "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
+        "graphs": {
+            "title": "Semantic Knowledge",
+            "highlight": "Graph",
+            "subtitle": "Visualize the network of logical connections captured by the intelligent engine.",
+            "whatIs": "What is this Graph?",
+            "description": "Unlike a traditional database, the Knowledge Graph understands how orders relate to technicians and regulations.",
+            "nodes": {
+                "title": "Nodes",
+                "desc": "Physical entities (Elevators, People, Papers)."
+            },
+            "edges": {
+                "title": "Edges",
+                "desc": "Logical relationships (\"This order COMPLIES with this regulation\")."
+            }
+        },
+        "validation": {
+            "title": "Technical Validation",
+            "entityLabel": "Entity",
+            "status": "Status",
+            "completed": "Validation Completed",
+            "completedDesc": "The validation has been saved successfully in the system.",
+            "viewEntity": "View Entity",
+            "noRagResults": "No RAG Results",
+            "noRagDesc": "No results found from previous analysis. Do you want to start the agentic brain to analyze this order now?",
+            "startAgent": "Start Agentic Reasoning",
+            "loadingEngine": "Loading validation engine..."
+        }
+    },
+    "settings": {
+        "page": {
+            "title": "System Settings",
+            "subtitle": "Manage your profile, interface preferences, and governance options.",
+            "profile": "User Profile",
+            "interface": "Interface & Display",
+            "security": "Security & Permissions",
+            "history": "Change History",
+            "onboarding": {
+                "title": "Welcome Tour",
+                "description": "Restart the interactive tour to discover all features.",
+                "reset": "Reset Tour",
+                "resetting": "Resetting..."
+            },
+            "theme": {
+                "title": "Visual Theme",
+                "light": "Light",
+                "dark": "Dark",
+                "system": "System"
+            },
+            "securitySection": {
+                "title": "Security and Access",
+                "description": "Status of global security policies."
+            },
+            "mfa": {
+                "label": "MFA Mandatory (Admin)",
+                "description": "Force administrators to configure MFA to access critical routes.",
+                "active": "Active (Phase 120.1)",
+                "configurable": "Configurable via FEATURE_ENFORCE_MFA_ADMIN"
+            },
+            "securityPolicy": {
+                "title": "Security Policy",
+                "description": "If this flag is active and you don't have MFA configured, you will be automatically redirected to your profile from any administration route."
+            },
+            "audit": {
+                "title": "Traceability and Audit",
+                "description": "Total transparency about structural changes.",
+                "bankGrade": "Your account has bank-grade audit logging. All configuration changes are recorded with user signature and correlation_id."
+            }
+        }
+    },
+    "spaces": {
+        "playground": {
+            "title": "Spaces Playground",
+            "subtitle": "Explore the space hierarchy and test ephemeral analysis.",
+            "details": "Space Details",
+            "name": "Name",
+            "path": "Path",
+            "type": "Type",
+            "created": "Created",
+            "tabs": {
+                "qa": "Quick Q&A",
+                "settings": "Settings"
+            },
+            "settings": {
+                "title": "Space Settings",
+                "description": "Coming soon: Permission management, invitations and specific quotas.",
+                "moduleInDevelopment": "Module in Development"
+            },
+            "qa": {
+                "title": "Quick Q&A",
+                "description": "Test analysis without prior ingestion.",
+                "inputLabel": "Paste your technical text here",
+                "analyze": "Analyze"
+            }
+        }
+    },
+    "auth": {
+        "signup": {
+            "title": "Complete Your Registration",
+            "subtitle": "Create your account to join the team",
+            "verifying": "Verifying invitation...",
+            "invalidInvite": "The invitation is invalid or has expired.",
+            "serverError": "Error connecting to the server.",
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "password": "Password",
+            "confirmPassword": "Confirm Password",
+            "showPassword": "Show password",
+            "hidePassword": "Hide password",
+            "passwordMismatch": "Passwords do not match.",
+            "creatingAccount": "Creating account...",
+            "createAccount": "Create Account",
+            "successTitle": "Account Created!",
+            "successMessage": "Your account has been created successfully. Redirecting to login...",
+            "acceptError": "Error creating account.",
+            "networkError": "Network error. Please try again.",
+            "invitedBy": "You've been invited by {tenant}",
+            "role": "Assigned role: {role}",
+            "backToHome": "Go to Home",
+            "termsPrefix": "By signing up, you agree to our",
+            "termsLink": "Terms of Service",
+            "and": "and",
+            "privacyLink": "Privacy Policy"
+        },
+        "error": {
+            "configuration": {
+                "title": "Configuration Error",
+                "message": "There is a problem with the server configuration. Contact us if the problem persists."
+            },
+            "accessDenied": {
+                "title": "Access Denied",
+                "message": "You don't have permission to sign in."
+            },
+            "verification": {
+                "title": "Link Expired",
+                "message": "The sign in link is no longer valid. Please try again."
+            },
+            "default": {
+                "title": "Authentication Error",
+                "message": "An unexpected error occurred while signing in."
+            },
+            "backToLogin": "Back to Login"
+        }
+    },
+    "error": {
+        "page": {
+            "title": "Oops, something went wrong",
+            "defaultMessage": "An unexpected error has occurred on the platform.",
+            "technicalDetails": "Technical Details",
+            "supportMessage": "If the problem persists, please contact our technical support team with the error code above.",
+            "home": "Home",
+            "retry": "Retry"
+        },
+        "rateLimit": {
+            "title": "Too Many Requests",
+            "message": "You've made too many requests. Please wait a moment before trying again.",
+            "waitMessage": "Please wait {seconds} seconds before trying again."
         }
     }
 }

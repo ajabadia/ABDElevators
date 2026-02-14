@@ -24,6 +24,7 @@ import { useApiMutation } from "@/hooks/useApiMutation";
 import { SpaceSchema, SpaceType, SpaceVisibility } from "@/lib/schemas/spaces";
 import { useI18nToast } from "@/hooks/use-i18n-toast";
 import { IndustryType } from "@/lib/schemas/core";
+import { useTranslations } from "next-intl";
 
 interface CreateSpaceModalProps {
     isOpen: boolean;
@@ -32,6 +33,9 @@ interface CreateSpaceModalProps {
 }
 
 export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModalProps) {
+    const t = useTranslations("spaces.admin.createModal");
+    const tVis = useTranslations("spaces.admin.visibility");
+    const tToast = useTranslations("spaces.admin.toast");
     const { success: toastSuccess, error: toastError } = useI18nToast();
 
     const [formData, setFormData] = useState({
@@ -79,7 +83,6 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
         setErrors({});
 
         try {
-            // Validate with Zod before processing
             const result = SpaceSchema.omit({
                 _id: true,
                 createdAt: true,
@@ -101,11 +104,11 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
 
             await mutation.mutate(result.data);
 
-            toastSuccess("success_key_placeholder", { name: formData.name }); // TODO: add real key to es.json if needed
+            toastSuccess(tToast("createSuccess"), { name: formData.name });
             onSuccess?.();
             onClose();
         } catch (err: any) {
-            toastError("error_key_placeholder");
+            toastError(tToast("createError"));
         }
     };
 
@@ -113,15 +116,15 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Crear Nuevo Espacio</DialogTitle>
+                    <DialogTitle>{t('title')}</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Nombre</Label>
+                        <Label htmlFor="name">{t('name')}</Label>
                         <Input
                             id="name"
-                            placeholder="Ej: Departamento de Ventas"
+                            placeholder={t('namePlaceholder')}
                             value={formData.name}
                             onChange={(e) => {
                                 const name = e.target.value;
@@ -136,10 +139,10 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="slug">Slug (Único)</Label>
+                        <Label htmlFor="slug">{t('slug')}</Label>
                         <Input
                             id="slug"
-                            placeholder="ej: ventas-global"
+                            placeholder={t('slugPlaceholder')}
                             value={formData.slug}
                             onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                         />
@@ -147,10 +150,10 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="description">Descripción</Label>
+                        <Label htmlFor="description">{t('description')}</Label>
                         <Textarea
                             id="description"
-                            placeholder="Propósito de este espacio..."
+                            placeholder={t('descriptionPlaceholder')}
                             value={formData.description}
                             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         />
@@ -158,13 +161,13 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Tipo de Espacio</Label>
+                            <Label>{t('type')}</Label>
                             <Select
                                 value={formData.type}
                                 onValueChange={(v) => setFormData(prev => ({ ...prev, type: v as SpaceType }))}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Seleccionar tipo" />
+                                    <SelectValue placeholder={t('typePlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="TENANT">Tenant (Compartido)</SelectItem>
@@ -177,19 +180,19 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Visibilidad</Label>
+                            <Label>{t('visibility')}</Label>
                             <Select
                                 value={formData.visibility}
                                 onValueChange={(v) => setFormData(prev => ({ ...prev, visibility: v as SpaceVisibility }))}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Seleccionar visibilidad" />
+                                    <SelectValue placeholder={t('visibilityPlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="INTERNAL">Interno (Auth Requerida)</SelectItem>
-                                    <SelectItem value="PUBLIC">Público (Solo Lectura)</SelectItem>
-                                    <SelectItem value="PRIVATE">Privado (Solo Invitados)</SelectItem>
-                                    <SelectItem value="RESTRICTED">Restringido (Admin Only)</SelectItem>
+                                    <SelectItem value="INTERNAL">{tVis('INTERNAL')}</SelectItem>
+                                    <SelectItem value="PUBLIC">{tVis('PUBLIC')}</SelectItem>
+                                    <SelectItem value="PRIVATE">{tVis('PRIVATE')}</SelectItem>
+                                    <SelectItem value="RESTRICTED">{tVis('RESTRICTED')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -197,13 +200,13 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
 
                     {formData.type === 'INDUSTRY' && (
                         <div className="grid gap-2">
-                            <Label>Industria</Label>
+                            <Label>{t('industry')}</Label>
                             <Select
                                 value={formData.industry}
                                 onValueChange={(v) => setFormData(prev => ({ ...prev, industry: v as IndustryType }))}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Seleccionar industria" />
+                                    <SelectValue placeholder={t('industryPlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ELEVATORS">Ascensores</SelectItem>
@@ -226,9 +229,9 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
                             }))}
                         />
                         <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="isDefault" className="cursor-pointer">Espacio por Defecto</Label>
+                            <Label htmlFor="isDefault" className="cursor-pointer">{t('isDefault')}</Label>
                             <p className="text-[10px] text-muted-foreground leading-tight">
-                                Los nuevos assets se asignarán aquí si no se especifica otro.
+                                {t('isDefaultDesc')}
                             </p>
                         </div>
                     </div>
@@ -243,19 +246,19 @@ export function CreateSpaceModal({ isOpen, onClose, onSuccess }: CreateSpaceModa
                             }))}
                         />
                         <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="allowQuickQA" className="cursor-pointer">Permitir Quick Q&A</Label>
+                            <Label htmlFor="allowQuickQA" className="cursor-pointer">{t('allowQuickQA')}</Label>
                             <p className="text-[10px] text-muted-foreground leading-tight">
-                                Habilita el chat efímero sobre documentos en este espacio.
+                                {t('allowQuickQADesc')}
                             </p>
                         </div>
                     </div>
 
                     <DialogFooter className="pt-4">
                         <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isLoading}>
-                            Cancelar
+                            {t('cancel')}
                         </Button>
                         <Button type="submit" disabled={mutation.isLoading}>
-                            {mutation.isLoading ? "Creando..." : "Crear Espacio"}
+                            {mutation.isLoading ? t('submitting') : t('submit')}
                         </Button>
                     </DialogFooter>
                 </form>

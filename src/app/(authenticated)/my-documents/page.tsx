@@ -41,6 +41,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from "next-intl";
 
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -58,6 +59,10 @@ interface PersonalDocument {
 }
 
 export default function MyDocumentsPage() {
+    const t = useTranslations('myDocuments');
+    const tUpload = useTranslations('myDocuments.upload');
+    const tTable = useTranslations('myDocuments.table');
+    const tStorage = useTranslations('myDocuments.storage');
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [description, setDescription] = useState("");
@@ -93,15 +98,15 @@ export default function MyDocumentsPage() {
         endpoint: '/api/auth/knowledge-assets',
         onSuccess: () => {
             toast({
-                title: "Documento subido",
-                description: "El archivo se ha guardado correctamente.",
+                title: tUpload('successTitle'),
+                description: tUpload('successDesc'),
             });
             uploadModal.close();
             refresh();
         },
         onError: (err) => {
             toast({
-                title: "Error",
+                title: t('error') || 'Error',
                 description: err,
                 variant: "destructive",
             });
@@ -111,17 +116,17 @@ export default function MyDocumentsPage() {
     const deleteMutation = useApiMutation({
         endpoint: (id) => `/api/auth/knowledge-assets/${id}`,
         method: 'DELETE',
-        confirmMessage: '¿Deseas eliminar este archivo de tu repositorio personal?',
+        confirmMessage: t('confirmDelete'),
         onSuccess: () => {
             toast({
-                title: "Documento eliminado",
-                description: "El archivo ha sido borrado.",
+                title: t('deleteSuccessTitle'),
+                description: t('deleteSuccess'),
             });
             refresh();
         },
         onError: (err) => {
             toast({
-                title: "Error",
+                title: t('error') || 'Error',
                 description: err,
                 variant: "destructive",
             });
@@ -166,7 +171,7 @@ export default function MyDocumentsPage() {
         return (
             <div className="flex flex-col items-center justify-center py-40 text-slate-400">
                 <Loader2 className="animate-spin mb-4 h-10 w-10 text-teal-600" />
-                <p className="animate-pulse">Cargando repositorio personal...</p>
+                <p className="animate-pulse">{tTable('loadingRepo')}</p>
             </div>
         );
     }
@@ -177,10 +182,10 @@ export default function MyDocumentsPage() {
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        Mis <span className="text-teal-600">Archivos</span>
+                        {t('titleAlt')}
                     </h1>
                     <p className="text-slate-500 mt-1">
-                        Tu repositorio personal de manuales y archivos técnicos.
+                        {t('subtitleAlt')}
                     </p>
                 </div>
                 <Button
@@ -188,28 +193,28 @@ export default function MyDocumentsPage() {
                     className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
                 >
                     <Plus size={18} />
-                    Subir Archivo
+                    {tUpload('button')}
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="md:col-span-1 border-none shadow-md bg-slate-900 text-white">
                     <CardHeader>
-                        <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-widest">Almacenamiento</CardTitle>
+                        <CardTitle className="text-sm font-medium text-slate-400 uppercase tracking-widest">{tStorage('title')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center gap-3">
                             <HardDrive className="text-teal-400" size={24} />
                             <div>
                                 <p className="text-2xl font-bold">{documents.length}</p>
-                                <p className="text-xs text-slate-500">Archivos totales</p>
+                                <p className="text-xs text-slate-500">{tStorage('totalFiles')}</p>
                             </div>
                         </div>
                         <div className="space-y-1">
                             <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                                 <div className="bg-teal-500 h-full w-[15%]"></div>
                             </div>
-                            <p className="text-[10px] text-slate-500 text-right">0.8 GB de 5 GB usados</p>
+                            <p className="text-[10px] text-slate-500 text-right">{tStorage('usage', { used: '0.8', total: '5' })}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -219,7 +224,7 @@ export default function MyDocumentsPage() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <Input
-                                placeholder="Buscar en mis documentos..."
+                                placeholder={t('search')}
                                 className="pl-10 border-slate-200 dark:border-slate-700 focus:ring-teal-500/20"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,21 +235,21 @@ export default function MyDocumentsPage() {
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                                 <Loader2 className="animate-spin mb-4" size={40} />
-                                <p>Cargando tus archivos...</p>
+                                <p>{tTable('loading')}</p>
                             </div>
                         ) : filteredDocs.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                                 <FileIcon size={48} className="mb-4 opacity-20" />
-                                <p>No se encontraron documentos.</p>
+                                <p>{tTable('noResults')}</p>
                             </div>
                         ) : (
                             <Table>
                                 <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                                     <TableRow>
-                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">Archivo</TableHead>
-                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">Fecha</TableHead>
-                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">Tamaño</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-900 dark:text-slate-100">Acciones</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('file')}</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('date')}</TableHead>
+                                        <TableHead className="font-bold text-slate-900 dark:text-slate-100">{tTable('size')}</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-900 dark:text-slate-100">{tTable('actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -314,17 +319,17 @@ export default function MyDocumentsPage() {
             <Dialog open={uploadModal.isOpen} onOpenChange={uploadModal.setIsOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Subir Nuevo Documento</DialogTitle>
+                        <DialogTitle>{tUpload('title')}</DialogTitle>
                         <DialogDescription>
-                            El archivo se guardará en tu repositorio personal.
+                            {tUpload('successDesc')}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleUpload} className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="tipo">Tipo de Documento</Label>
+                            <Label htmlFor="tipo">{tUpload('type')}</Label>
                             <Select value={documentTypeId} onValueChange={setDocumentTypeId}>
                                 <SelectTrigger id="tipo" className="border-slate-200">
-                                    <SelectValue placeholder="Seleccionar tipo..." />
+                                    <SelectValue placeholder={tUpload('typePlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {documentTypes.map((t) => (
@@ -336,7 +341,7 @@ export default function MyDocumentsPage() {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="file">Archivo PDF</Label>
+                            <Label htmlFor="file">{tUpload('filePdf')}</Label>
                             <Input
                                 id="file"
                                 type="file"
@@ -346,25 +351,25 @@ export default function MyDocumentsPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="desc">Descripción (Opcional)</Label>
+                            <Label htmlFor="desc">{tUpload('description')}</Label>
                             <Input
                                 id="desc"
-                                placeholder="Ej: Manual de la obra 123"
+                                placeholder={tUpload('descriptionPlaceholder')}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
                         </div>
                         <DialogFooter className="pt-4">
                             <Button type="button" variant="outline" onClick={() => uploadModal.close()}>
-                                Cancelar
+                                {tUpload('cancel')}
                             </Button>
                             <Button type="submit" disabled={isUploading || !file} className="bg-teal-600 hover:bg-teal-700">
                                 {isUploading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Subiendo...
+                                        {tUpload('uploading')}
                                     </>
-                                ) : "Guardar Archivo"}
+                                ) : tUpload('save')}
                             </Button>
                         </DialogFooter>
                     </form>

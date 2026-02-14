@@ -267,9 +267,14 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                                         <div className="space-y-2">
                                             <Label className="text-slate-400 text-xs">{t('editor.model')}</Label>
                                             <select value={formData.model || 'gemini-2.5-flash'} onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))} className="w-full bg-slate-950 border-slate-800 text-teal-500 font-bold rounded-xl h-11 px-3 text-sm focus:border-teal-500/50 outline-none">
-                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                                <option value="gemini-3-pro">Gemini 3 Pro</option>
-                                                <option value="gemini-3-pro-image">Gemini 3 Pro (Image)</option>
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (OK)</option>
+                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                                <option value="gemini-flash-latest">Gemini Flash Latest</option>
+                                                <option value="gemini-pro-latest">Gemini Pro Latest</option>
+                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                                <option value="gemini-3-pro-preview">Gemini 3 Pro (Preview)</option>
                                             </select>
                                         </div>
                                     </div>

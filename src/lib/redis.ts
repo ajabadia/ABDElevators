@@ -1,9 +1,12 @@
 import { Redis } from '@upstash/redis';
 import IORedis from 'ioredis';
 
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+const hasLocal = !!process.env.REDIS_URL;
+
+if (!hasUpstash && !hasLocal) {
     if (process.env.NODE_ENV === 'production') {
-        throw new Error('REDIS_ERROR: UPSTASH_REDIS_REST_URL o UPSTASH_REDIS_REST_TOKEN no configurados');
+        throw new Error('REDIS_ERROR: No se ha configurado ninguna instancia de Redis (REDIS_URL o UPSTASH_*)');
     } else {
         console.warn('⚠️ [REDIS] URL o Token no configurados. Las funcionalidades de cache estarán desactivadas.');
     }

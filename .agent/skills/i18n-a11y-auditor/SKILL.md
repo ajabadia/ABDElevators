@@ -56,9 +56,10 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 
 ### Fase 4: Ejecución de Mejoras
 1. **Inyección de i18n**: Sustituir textos hardcodeados por `t('clave')`.
-2. **Actualización de Diccionarios**: 
+2. **Actualización de Diccionarios y Sanitización**: 
    - Añadir claves a `messages/es.json` y `messages/en.json`.
-   - **MANDATORIO**: Tras añadir claves, DEBES sincronizar con la base de datos y limpiar la caché de Redis ejecutando:
+   - **LIMPIEZA OBLIGATORIA**: Tras cualquier edición (manual o por IA), DEBES verificar la integridad del archivo ejecutando un script de validación o un simple `JSON.parse` para asegurar que no se hayan creado bloques duplicados.
+   - **MANDATORIO**: Tras añadir claves y validar el JSON, DEBES sincronizar con la base de datos y limpiar la caché de Redis ejecutando:
      ```bash
      npx tsx scripts/force-sync-i18n.ts [locale]
      ```
@@ -72,6 +73,7 @@ description: Audita y corrige la implementación de internacionalización (i18n)
   - ❌ "RAG", "Vector Search", "Explorer".
   - ✅ "Inteligencia Técnica", "Búsqueda Semántica", "Buscador".
 - **REGLA DE ORO #3 (PRESENTACIÓN DE ERRORES)**: Los errores no son solo logs. El usuario DEBE verlos mediante Toasts (acciones) o Badges (datos). Si el error es crítico para el negocio o la seguridad, DEBE registrarse además vía `AuditTrailService`.
+- **REGLA DE ORO #4 (SALUD DEL DICCIONARIO)**: NUNCA permitas que crezcan bloques redundantes. Si detectas que el archivo JSON tiene una estructura irregular o se comporta de forma inconsistente, sánitizalo inmediatamente (`JSON.parse` -> `JSON.stringify`) antes de realizar cualquier cambio adicional.
 
 ## Output (formato exacto)
 1. **Informe de Auditoría**: Tabla con "Problema", "Tipo (i18n/a11y/Error)" y "Gravedad".

@@ -21,7 +21,13 @@ export type ErrorCode =
   | 'USER_UPDATE_FAILED'
   | 'MFA_ENABLE_FAILED'
   | 'MFA_DISABLE_FAILED'
-  | 'LIMIT_EXCEEDED';
+  | 'LIMIT_EXCEEDED'
+  | 'LLM_INVALID_RESPONSE'
+  | 'PROMPT_NOT_FOUND'
+  | 'TRANSITION_ERROR'
+  | 'WORKFLOW_NOT_FOUND'
+  | 'TENANT_MISMATCH'
+  | 'RESOURCE_BUSY';
 
 export class AppError extends Error {
   constructor(

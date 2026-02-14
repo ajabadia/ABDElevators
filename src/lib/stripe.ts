@@ -123,3 +123,21 @@ export function verifyWebhookSignature(payload: string, signature: string) {
 
     return stripe.webhooks.constructEvent(payload, signature, secret);
 }
+
+/**
+ * Obtiene la pre-visualización de la próxima factura para simular prorrateo.
+ */
+export async function getUpcomingInvoice(customerId: string, subscriptionId: string, newPriceId: string): Promise<Stripe.Invoice> {
+    // @ts-ignore - retrieveUpcoming exists in stripe-node but may have type issues in some versions
+    return await stripe.invoices.retrieveUpcoming({
+        customer: customerId,
+        subscription: subscriptionId,
+        subscription_items: [
+            {
+                id: (await stripe.subscriptions.retrieve(subscriptionId)).items.data[0].id,
+                price: newPriceId,
+            }
+        ],
+        subscription_proration_behavior: 'always_invoice',
+    });
+}

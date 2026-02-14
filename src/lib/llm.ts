@@ -279,7 +279,13 @@ export async function callGemini(
                 }
             });
 
-            const result = await model.generateContent(prompt);
+            const result = await executeWithResilience(
+                'GEMINI_CALL',
+                'GENERATE_CONTENT',
+                () => model.generateContent(prompt),
+                correlationId,
+                tenantId
+            );
             const text = result.response.text();
 
             const duration = Date.now() - start;
@@ -296,7 +302,7 @@ export async function callGemini(
         } catch (error) {
             span.recordException(error as Error);
             span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
-            throw new ExternalServiceError('Error generating text with Gemini', error as Error);
+            throw new ExternalServiceError(`Gemini API Error: ${(error as Error).message}`, error as Error);
         } finally {
             span.end();
         }

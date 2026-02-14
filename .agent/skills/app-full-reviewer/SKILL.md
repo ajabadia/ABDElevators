@@ -46,6 +46,7 @@ Combina la lógica de permisos con la robustez técnica:
 1. **Permisos (Skill: guardian-auditor)**:
    - **Área Privada**: Verifica `enforcePermission`, `requireRole` (incluyendo nuevos roles V3) y aislamiento de tenant.
 2. **Seguridad Técnica (Skill: security-auditor)**:
+   - **Regla de Oro #11**: Verifica el uso de `SecureCollection` / `getTenantCollection` para aislamiento total. ❌ **RED FLAG**: `db.collection()` directo.
    - **Inyecciones**: Verifica validación Zod en todos los inputs.
    - **Privacidad**: Verifica encriptación de campos sensibles y máscara de PII.
    - **Infra**: Verifica rate limiting y headers de seguridad (CSP).
@@ -76,11 +77,14 @@ Combina la lógica de permisos con la robustez técnica:
 1. Verifica el uso de la arquitectura de dos capas (DB + Master Fallback).
 2. Asegura que los prompts sigan la Regla de Oro #4 (Trazabilidad con `correlationId`).
 3. Valida que el prompt esté centralizado y no hardcodeado.
+4. **Tipado IA (Fase 130.5)**: Verifica que los payloads de IA usen tipos desde `@/types/ai`.
 
 ### Fase 5: Auditoría de Higiene y Deuda Técnica (Skill: hygiene-reviewer)
 
 1. Escanea patrones de error recurrentes.
-2. Aplica refactorizaciones automáticas.
+2. **Workflows (Fase 129.1)**: Verifica migración de `WorkflowEngine` legacy a especializados (`AI`/`Case`).
+3. **Errors (Fase 130.2)**: Verifica el uso de `handleApiError` en catches.
+4. Aplica refactorizaciones automáticas.
 
 ### Fase 5.5: Auditoría de Rendimiento Enterprise (Skill: react-best-practices)
 

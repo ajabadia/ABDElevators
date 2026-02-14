@@ -7,6 +7,7 @@ import { DataTable, Column } from "@/components/ui/data-table";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, ThumbsUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface GlobalPatternsTableProps {
     patterns: FederatedPattern[];
@@ -14,16 +15,17 @@ interface GlobalPatternsTableProps {
 }
 
 export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTableProps) {
+    const t = useTranslations('admin.intelligence.table');
 
     const handleArchive = (id: string) => {
-        if (confirm('Are you sure you want to archive this pattern? It will no longer appear in RAG searches.')) {
+        if (confirm(t('archive_confirm'))) {
             onArchive(id);
         }
     };
 
     const columns: Column<FederatedPattern>[] = [
         {
-            header: "Problem Vector",
+            header: t('problemVector'),
             accessorKey: "problemVector",
             cell: (p) => (
                 <span className="font-medium text-xs text-muted-foreground line-clamp-2" title={p.problemVector}>
@@ -32,7 +34,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
             )
         },
         {
-            header: "Solution Vector",
+            header: t('solutionVector'),
             accessorKey: "solutionVector",
             cell: (p) => (
                 <span className="text-xs line-clamp-2" title={p.solutionVector}>
@@ -41,7 +43,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
             )
         },
         {
-            header: "Confidence",
+            header: t('confidence'),
             accessorKey: "confidenceScore",
             cell: (p) => (
                 <Badge variant={p.confidenceScore > 0.9 ? 'default' : 'secondary'}>
@@ -50,7 +52,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
             )
         },
         {
-            header: "Validations",
+            header: t('validations'),
             accessorKey: "validationCount",
             cell: (p) => (
                 <div className="flex items-center gap-1">
@@ -60,7 +62,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
             )
         },
         {
-            header: "Keywords",
+            header: t('keywords'),
             accessorKey: "keywords",
             cell: (p) => (
                 <div className="flex flex-wrap gap-1">
@@ -71,7 +73,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
             )
         },
         {
-            header: "Actions",
+            header: t('actions'),
             cell: (p) => (
                 <div className="flex justify-end">
                     <Button
@@ -92,7 +94,7 @@ export function GlobalPatternsTable({ patterns, onArchive }: GlobalPatternsTable
         <DataTable
             data={patterns}
             columns={columns}
-            emptyMessage="No autonomous patterns discovered yet."
+            emptyMessage={t('empty')}
         />
     );
 }

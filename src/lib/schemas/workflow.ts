@@ -27,6 +27,14 @@ export const WorkflowStateSchema = z.object({
     can_edit: z.boolean().default(true), // ¿Se pueden editar datos en este estado?
     requires_validation: z.boolean().default(false), // ¿Bloquea el flujo hasta validación humana?
     roles_allowed: z.array(z.string()).default(['ADMIN', 'TECHNICAL']),
+    // ⚡ FASE 128: Checklist Integrada
+    checklistConfigId: z.string().optional(), // ID de la configuración de checklist a usar en este estado
+    // ⚡ FASE 127: LLM Node Configuration
+    llmNode: z.object({
+        promptKey: z.string(),           // Key for PromptService (e.g., 'WORKFLOW_NODE_ANALYZER')
+        schemaKey: z.string(),           // Zod schema key for validating LLM output
+        enabled: z.boolean().default(false),
+    }).optional(),
 });
 export type WorkflowState = z.infer<typeof WorkflowStateSchema>;
 
@@ -43,6 +51,16 @@ export const WorkflowTransitionSchema = z.object({
         require_comment: z.boolean().default(false),
     }).optional(),
     actions: z.array(z.string()).optional(), // ej: ['notify_admin', 'generate_pdf', 'webhook_call']
+    // ⚡ FASE 127: LLM Decision Strategy (optional for backward compatibility)
+    decisionStrategy: z.enum(['USER', 'LLM_DIRECT', 'LLM_SUGGEST_HUMAN_APPROVE', 'HUMAN_ONLY']).default('USER').optional(),
+    llmRouting: z.object({
+        promptKey: z.string(),           // Key for routing decision prompt
+        branches: z.array(z.object({
+            value: z.string(),           // LLM output value to match (e.g., 'HIGH_RISK')
+            to: z.string(),              // Target state ID
+            label: z.string(),           // Human-readable label
+        })),
+    }).optional(),
 });
 export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>;
 
@@ -57,6 +75,8 @@ export const WorkflowDefinitionSchema = z.object({
     initial_state: z.string(),
     is_default: z.boolean().default(false),
     active: z.boolean().default(true),
+    // ⚡ FASE 127: Workflow Status (draft/active/archived)
+    status: z.enum(['draft', 'active', 'archived']).default('active'),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
     version: z.number().default(1), // Optimistic Locking
     visual: z.object({

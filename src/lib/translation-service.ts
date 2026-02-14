@@ -44,7 +44,7 @@ export class TranslationService {
     }
 
     /**
-     * Usa IA para traducir automáticamente llaves faltantes.
+     * Usa IA para traducir automáticamente llaves faltantes en lotes controlados.
      */
     static async autoTranslate(params: {
         sourceLocale: string;
@@ -64,23 +64,26 @@ export class TranslationService {
         const flatSource = this.nestToFlat(sourceMessages);
         const flatTarget = this.nestToFlat(targetMessages);
 
-        const keysToProcess = keys
-            .filter(key => {
-                const hasSource = !!flatSource[key];
-                const hasTarget = !!flatTarget[key];
-                if (!hasSource) console.log(`[i18n-ai] ⚠️ Saltando '${key}': No existe en origen (${sourceLocale})`);
-                if (hasTarget) console.log(`[i18n-ai] ℹ️ Saltando '${key}': Ya existe en destino (${targetLocale})`);
-                return hasSource && !hasTarget;
-            })
-            .map(key => `"${key}": "${flatSource[key]}"`)
-            .join('\n');
+        const allValidKeys = keys.filter(key => {
+            const hasSource = !!flatSource[key];
+            const hasTarget = !!flatTarget[key];
+            if (!hasSource) console.log(`[i18n-ai] ⚠️ Saltando '${key}': No existe en origen (${sourceLocale})`);
+            if (hasTarget) console.log(`[i18n-ai] ℹ️ Saltando '${key}': Ya existe en destino (${targetLocale})`);
+            return hasSource && !hasTarget;
+        });
 
-        if (!keysToProcess) {
+        if (allValidKeys.length === 0) {
             console.log(`[i18n-ai] ℹ️ Nada nuevo que traducir de ${sourceLocale} a ${targetLocale}`);
             return { success: true, count: 0 };
         }
 
-        // 2. Obtener Prompt Dinámico (Fase standard del proyecto)
+        const keysToProcess = allValidKeys
+            .map(key => `"${key}": "${flatSource[key]}"`)
+            .join('\n');
+
+        console.log(`[i18n-ai] 🚀 Traduciendo ${allValidKeys.length} llaves de ${sourceLocale} a ${targetLocale}`);
+
+        // 2. Obtener Prompt Dinámico
         let prompt: string;
         let model: string = 'gemini-2.5-flash';
 
@@ -97,18 +100,17 @@ export class TranslationService {
             prompt = PROMPTS.I18N_AUTO_TRANSLATE
                 .replace(/{{sourceLocale}}/g, sourceLocale)
                 .replace(/{{targetLocale}}/g, targetLocale)
-                .replace(/{{translationsToProcess}}/g, keysToProcess) // Use keysToProcess variable
+                .replace(/{{translationsToProcess}}/g, keysToProcess)
                 .replace(/{{vertical}}/g, 'Elevators & Technical Intelligence');
         }
 
         const response = await callGemini(prompt, tenantId, correlationId, { temperature: 0.1, model });
 
         try {
-            // Limpiar posible markdown y errores comunes de JSON
             const jsonStr = this.cleanJsonString(response);
             const translatedMap = JSON.parse(jsonStr);
 
-            // 3. Persistir resultados con tenantId para evitar registros huérfanos
+            // 3. Persistir resultados con tenantId
             const operations = Object.entries(translatedMap).map(([key, value]) => ({
                 updateOne: {
                     filter: { key, locale: targetLocale, tenantId },
@@ -120,7 +122,7 @@ export class TranslationService {
                             isObsolete: false,
                             lastUpdated: new Date(),
                             updatedBy: 'AI_GEMINI',
-                            tenantId // 🚨 CRÍTICO: Asegurar persistencia del tenant
+                            tenantId
                         }
                     },
                     upsert: true
@@ -130,8 +132,9 @@ export class TranslationService {
             if (operations.length > 0) {
                 await collection.bulkWrite(operations);
 
-                // Invalidación de caché global y por tenant
-                const keysToDel = await redis.keys(`i18n:*:${targetLocale}`);
+                // Invalidación de caché estratégica
+                const cacheKeyPattern = `i18n:*:${targetLocale}`;
+                const keysToDel = await redis.keys(cacheKeyPattern);
                 if (keysToDel.length > 0) {
                     await redis.del(...keysToDel);
                 }
@@ -139,7 +142,7 @@ export class TranslationService {
 
             return { success: true, count: operations.length };
         } catch (error: any) {
-            console.error('[TranslationService] AI Parse Error:', error);
+            console.error(`[TranslationService] AI Parse Error:`, error);
             console.error('[TranslationService] Raw Response was:', response);
             throw new AppError('EXTERNAL_SERVICE_ERROR', 500, `Fallo al procesar traducción de IA: ${error.message}`);
         }

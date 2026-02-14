@@ -5,6 +5,7 @@ import { logEvento } from "@/lib/logger";
 import { PromptService } from "@/lib/prompt-service";
 import { MongoDBSaver } from "@/lib/agent-persistence";
 import { FederatedKnowledgeService } from "@/lib/federated-knowledge-service";
+import { AIModelFinding, AIRiskFinding, AIFinding } from "@/types/ai";
 
 /**
  * Representa el estado del agente durante el proceso de análisis.
@@ -45,7 +46,7 @@ export const AgentState = Annotation.Root({
     /**
      * Hallazgos específicos (modelos, riesgos, etc)
      */
-    findings: Annotation<any[]>({
+    findings: Annotation<AIFinding[]>({
         reducer: (x, y) => x.concat(y),
         default: () => [],
     }),
@@ -102,7 +103,12 @@ async function extractionNode(state: AgentStateType) {
     const models = await extractModelsWithGemini(text, tenantId!, correlacion_id!);
 
     return {
-        findings: models.map((m: any) => ({ ...m, source: 'extraction' })),
+        findings: models.map((m: any) => ({
+            type: m.type,
+            model: m.model,
+            confidence: m.confidence || 0.9,
+            source: 'extraction' as const
+        }) as AIModelFinding),
         messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')}` }]
     };
 }
@@ -117,7 +123,8 @@ async function retrievalNode(state: AgentStateType) {
     // Si tenemos queries específicas del crítico, las usamos. Si no, usamos las basadas en modelos.
     const queries = search_queries.length > 0
         ? [search_queries[search_queries.length - 1]]
-        : findings.filter(f => f.source === 'extraction').map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model}`);
+        : (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
+            .map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model}`);
 
     let allChunks: RagResult[] = [];
 
@@ -146,7 +153,8 @@ async function riskAnalysisNode(state: AgentStateType) {
 
     const context = context_chunks.map(c => c.text).join('\n---\n');
     const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector}\n  SOLUTION: ${p.solutionVector}`).join('\n') || 'No global patterns found.';
-    const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
+    const models = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
+        .map(f => f.model).join(', ');
 
     // Renderizar prompt dinámico de riesgo para agente
     const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
@@ -164,7 +172,10 @@ async function riskAnalysisNode(state: AgentStateType) {
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
         return {
-            findings: (parsed.riesgos || []).map((r: any) => ({ ...r, source: 'risk_analysis' })),
+            findings: (parsed.riesgos || []).map((r: any) => ({
+                ...r,
+                source: 'risk_analysis' as const
+            }) as AIRiskFinding),
             confidence_score: parsed.confidence || 0.5,
             messages: [{ role: 'assistant', content: `Análisis de riesgos completado. Confianza: ${parsed.confidence}` }]
         };
@@ -232,7 +243,8 @@ async function federatedDiscoveryNode(state: AgentStateType) {
     const { findings, tenantId, correlationId: correlacion_id } = state;
 
     // Usamos los modelos detectados para buscar patrones globales
-    const queries = findings.filter(f => f.source === 'extraction').map(m => `${m.type} ${m.model}`);
+    const queries = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
+        .map(m => `${m.type} ${m.model}`);
 
     let allInsights: any[] = [];
 

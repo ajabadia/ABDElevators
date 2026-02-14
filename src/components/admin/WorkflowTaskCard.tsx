@@ -11,7 +11,8 @@ import {
     PauseCircle,
     Shield,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    Brain
 } from 'lucide-react';
 import { WorkflowTask } from '@/lib/schemas';
 import { format } from 'date-fns';
@@ -83,6 +84,12 @@ export function WorkflowTaskCard({ task, onUpdate }: WorkflowTaskCardProps) {
                                 <StatusIcon className={cn("w-4 h-4", task.status === 'PENDING' ? "text-amber-500" : "text-sidebar-primary")} />
                                 {task.title}
                             </CardTitle>
+                            {task.metadata?.llmProposal && (
+                                <Badge variant="secondary" className="bg-teal-50 text-teal-700 border-teal-200 text-[9px] h-4 gap-1 px-1.5 flex w-fit items-center">
+                                    <Brain className="w-2.5 h-2.5" />
+                                    AI SUGGESTION
+                                </Badge>
+                            )}
                             <p className="text-xs text-muted-foreground line-clamp-1">{task.description}</p>
                         </div>
                         <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-wider h-5 px-1.5 shrink-0", priorityConfig[task.priority])}>

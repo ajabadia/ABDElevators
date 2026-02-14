@@ -50,7 +50,7 @@ export function SpaceManager() {
                 const { label, icon: Icon, variant } = config[type] || config.TENANT;
                 return (
                     <Badge variant={variant} className="flex items-center gap-1 h-5 text-[10px]">
-                        <Icon className="w-3 h-3" />
+                        <Icon className="w-3 h-3" aria-hidden="true" />
                         {label}
                     </Badge>
                 );
@@ -111,7 +111,7 @@ export function SpaceManager() {
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                         placeholder={t("search_placeholder")}
                         className="pl-8 h-9 text-sm"
@@ -120,7 +120,7 @@ export function SpaceManager() {
                     />
                 </div>
                 <Button onClick={() => setIsCreateModalOpen(true)} className="h-9">
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
                     {t("new_space")}
                 </Button>
             </div>

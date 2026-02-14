@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { agentEngine } from '@/lib/agent-engine';
-import { connectDB } from '@/lib/db';
+import { OrderAnalysisEngine as agentEngine } from '@/core/engine';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { AccessControlService } from '@/lib/access-control';
 import { UsageService } from '@/lib/usage-service';
 import crypto from 'crypto';
@@ -42,10 +42,9 @@ export async function GET(
                 await AccessControlService.checkUsageLimits(tenantId, 'REPORTS');
 
                 // 3. Obtener la entidad para tener el texto inicial
-                const db = await connectDB();
-                const entity = await db.collection('entities').findOne({
-                    _id: new ObjectId(id),
-                    tenantId
+                const collection = await getTenantCollection<any>('entities', session);
+                const entity = await collection.findOne({
+                    _id: new ObjectId(id)
                 });
 
                 if (!entity) {
@@ -95,15 +94,14 @@ export async function GET(
                     const riesgos = (finalState.findings || [])
                         .filter((f: any) => f.source === 'risk_analysis');
 
-                    await db.collection('entities').updateOne(
+                    await collection.updateOne(
                         { _id: new ObjectId(id) },
                         {
                             $set: {
                                 detectedPatterns: detectedPatterns,
                                 "metadata.risks": riesgos,
                                 confidence_score: finalState.confidence_score || 0,
-                                status: 'analyzed',
-                                updatedAt: new Date()
+                                status: 'analyzed'
                             }
                         }
                     );

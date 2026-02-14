@@ -1,4 +1,4 @@
-# ABD Multi-Industry RAG Platform (Vision 4.5.0 - ENTERPRISE SAAS)
+# ABD Multi-Industry RAG Platform (Vision 4.5.1 - ENTERPRISE SAAS)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
@@ -117,12 +117,14 @@ src/
 - **🛡️ Enterprise Governance**: Granular permissions (Guardian V3), PII masking, and full audit trail for SOC2 compliance.
 - **⚡ Industrial Ingestion**: High-performance pipeline with MD5 deduplication, asynchronous processing (BullMQ), and self-healing.
 - **📊 Advanced Analytics**: ROI tracking, RAG evaluation (LLM Judge), and real-time usage metrics via Admin Dashboard.
+  - ✅ **Industrial Price Simulator (Phase 83)**: Accurate proration calculation for plan upgrades/downgrades via Stripe Integration.
   - ✅ **Multi-Vertical Intelligence**: Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis (Vision 2026).
   - ✅ **Infinite Memory & Streaming**: Ingesta en streaming y de-duplicación inteligente para gestionar bibliotecas técnicas ilimitadas.
   - ✅ **Vercel Serverless Stability Path**: Polyfill de DOMMatrix y workers agnósticos al entorno para evitar crashes en despliegues cloud.
   - ✅ **Task Collaboration Hub**: Centro de gestión de tareas y validación humana integrada en el flujo de trabajo con trazabilidad total.
   - ✅ **Automation Studio (Visual Workflow Editor)**: Editor canvas infinito para diseñar flujos agénticos complejos con nodos de decisión, loops y esperas.
   - ✅ **Turing-complete Workflow Logic**: Motor de estados avanzado con soporte para bifurcaciones (Switch), retardos (Wait) e iteraciones (Loop).
+  - ✅ **Specialized Engine Architecture (Phase 129)**: Separación de `AIWorkflowEngine` y `CaseWorkflowEngine` para máxima escalabilidad y mantenimiento atómico.
   - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) con editor dinámico, **lazy loading con filtros de namespace** y patrón TODOS optimizado.
   - ✅ **Real-time Execution Monitoring**: Panel "Mission Control" integrado en el canvas para seguimiento en vivo de cada paso del proceso.
   - ✅ **Predictive Observability & Alerting**: Monitoreo proactivo de anomalías en flujos de trabajo con detección de picos de error (>15%) y latencia.
@@ -140,7 +142,7 @@ src/
   - ✅ **Bank-Grade Hardening (RBAC)**: Unificación total del modelo de permisos mediante Enum `UserRole` y helper `requireRole()`, eliminando ambigüedades en APIs y UI.
   - ✅ **Atomic Data Integrity**: Deduplicación por hash MD5 nativa en MongoDB con protección contra condiciones de carrera durante la ingesta masiva.
   - ✅ **Dynamic CSP (Nonces)**: Implementación de Content Security Policy dinámica basada en nonces para una protección XSS de vanguardia.
-  - ✅ **Multi-tenant Isolation**: Aislamiento lógico de datos y configuraciones por organización/industria garantizado por índices compuestos.
+  - ✅ **Multi-tenant Isolation & Hardening**: Aislamiento lógico estricto garantizado por `SecureCollection` y enrutamiento multi-cluster automatizado (Regla de Oro #11).
   - ✅ **Causal AI Auto-Correction**: Agentic loop that assesses juror feedback to refine hallucinated or incomplete responses with causal reasoning (Phase 86).
   - ✅ **DB Consistency Auditor**: Automated enforcement of multi-cluster routing (`AUTH`, `LOGS`, `MAIN`) to prevent cross-tenant data leaks and ensure structural integrity.
   - ✅ **Accessibility Compliance (WCAG 2.1 AA)**: Declaración oficial de accesibilidad y tests automatizados de grado industrial integrados en el pipeline de desarrollo.
@@ -160,6 +162,7 @@ src/
   - ✅ **Unified Role-Based Dashboards**: Experiencia de usuario totalmente rediseñada con hubs centrales para Técnicos, Admins y Operaciones (Phase 133).
   - ✅ **Banking-Grade Governance**: Sistema de auditoría forense inmutable, control de políticas centralizado y trazabilidad total de decisiones IA (Phase 132).
   - ✅ **Unified Knowledge Hub**: Gestión consolidada de Documentos, Espacios y Activos en una sola interfaz reactiva (Phase 133).
+   - ✅ **Workshop Order Intelligence (Phase 128)**: Módulo vertical de Taller con ingesta de pedidos por IA, checklists dinámicos y sugerencia contextual de manuales (RAG).
   - ✅ **Multi-level Chunking (Phase 134)**: Sistema graduable para PDFs con niveles Simple (Bajo), Semántico (Medio) y LLM (Alto) para optimizar precisión y costo.
 
 ## 🔧 Scripts Disponibles

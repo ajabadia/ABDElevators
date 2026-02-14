@@ -11,8 +11,8 @@ import { CreditCard, Save } from "lucide-react";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 
-// Sub-components
 import { GeneralTab } from "@/components/admin/organizations/GeneralTab";
 import { BrandingTab } from "@/components/admin/organizations/BrandingTab";
 import { StorageTab } from "@/components/admin/organizations/StorageTab";
@@ -23,6 +23,8 @@ import { ReportConfigTab } from "@/components/admin/organizations/ReportConfigTa
 import { TenantConfig } from "@/lib/schemas";
 
 export default function OrganizationsPage() {
+    const t = useTranslations('admin.organizations.page');
+    const tTabs = useTranslations('admin.organizations.tabs');
     const { toast } = useToast();
     const [config, setConfig] = useState<TenantConfig | null>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -51,7 +53,6 @@ export default function OrganizationsPage() {
         }
     }, [config?.tenantId]);
 
-    // 1. Carga de datos con useApiList
     const {
         data: tenants,
         isLoading,
@@ -61,22 +62,20 @@ export default function OrganizationsPage() {
         dataKey: 'tenants',
         onSuccess: (data) => {
             if (data.length > 0 && !config) {
-                // Seleccionar el primero por defecto o buscar por sesión si fuera necesario
                 setConfig(data[0]);
             }
         }
     });
 
-    // 2. Acción de guardado con useApiMutation
     const { mutate: saveConfig, isLoading: isSaving } = useApiMutation({
         endpoint: '/api/admin/tenants',
-        successMessage: 'Configuración de la organización actualizada correctamente.',
+        successMessage: t('saveSuccess'),
         onSuccess: () => refreshTenants(),
         onError: (err) => {
             console.error("Save config error:", err);
             toast({
-                title: 'Error al guardar',
-                description: typeof err === 'string' ? err : 'No se pudo guardar la configuración.',
+                title: t('error'),
+                description: typeof err === 'string' ? err : t('saveError'),
                 variant: 'destructive',
             });
         }
@@ -85,7 +84,7 @@ export default function OrganizationsPage() {
     const handleSave = () => {
         if (config) {
             if (!config.tenantId) {
-                toast({ title: 'Error', description: 'Falta tenantId', variant: 'destructive' });
+                toast({ title: t('error'), description: t('errorTenantId'), variant: 'destructive' });
                 return;
             }
             saveConfig(config);
@@ -103,19 +102,19 @@ export default function OrganizationsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Configuración de Organización"
-                highlight="Organización"
-                subtitle="Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento."
+                title={t('title')}
+                highlight=""
+                subtitle={t('subtitle')}
                 actions={
                     <>
-                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>Refrescar</Button>
+                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>{t('refresh')}</Button>
                         <Button
                             onClick={handleSave}
                             className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
                             disabled={isSaving}
                         >
-                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} />}
-                            Guardar Cambios
+                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} aria-hidden="true" />}
+                            {t('save')}
                         </Button>
                     </>
                 }
@@ -128,37 +127,37 @@ export default function OrganizationsPage() {
                             value="general"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            General
+                            {tTabs('general')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="branding"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Identidad y Branding
+                            {tTabs('branding')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="storage"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Almacenamiento
+                            {tTabs('storage')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="features"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Módulos
+                            {tTabs('features')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="billing"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            <CreditCard size={16} className="mr-2" /> Facturación
+                            <CreditCard size={16} className="mr-2" aria-hidden="true" /> {tTabs('billing')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="reports"
                             className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Reportes
+                            {tTabs('reports')}
                         </TabsTrigger>
                     </TabsList>
 

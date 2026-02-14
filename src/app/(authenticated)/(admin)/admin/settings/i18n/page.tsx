@@ -98,21 +98,21 @@ export default function AdminI18nPage() {
             const keys = data?.keysAdded || [];
 
             if (total === 0) {
-                toast.info('Sincronización completada', {
-                    description: 'No se detectaron discrepancias entre JSON y BD.'
+                toast.info(t('notifications.syncCompletedTitle'), {
+                    description: t('notifications.syncNoChanges')
                 });
             } else {
                 const sampleKeys = Array.isArray(keys) ? keys.slice(0, 5).join(' | ') : '';
                 const remaining = (Array.isArray(keys) && keys.length > 5) ? ` (+${keys.length - 5} más)` : '';
-                toast.success(`Sincronización exitosa`, {
-                    description: `${added} nuevas, ${updated} actualizadas. [${sampleKeys}${remaining}]`
+                toast.success(t('notifications.syncSuccessTitle'), {
+                    description: `${t('notifications.syncSuccessDetail', { added, updated })} [${sampleKeys}${remaining}]`
                 });
             }
         },
         onError: (err) => {
             console.error('[i18n-sync] ❌ syncToDb error:', err);
-            toast.error('Error de sincronización', {
-                description: typeof err === 'string' ? err : 'Error al sincronizar con la base de datos'
+            toast.error(t('notifications.syncErrorTitle'), {
+                description: typeof err === 'string' ? err : t('notifications.syncErrorDesc')
             });
         }
     });
@@ -132,21 +132,21 @@ export default function AdminI18nPage() {
             const keys = data?.keysAdded || [];
 
             if (total === 0) {
-                toast.info('Exportación completada', {
-                    description: 'Los archivos JSON ya están sincronizados con la BD.'
+                toast.info(t('notifications.exportCompletedTitle'), {
+                    description: t('notifications.exportNoChanges')
                 });
             } else {
                 const sampleKeys = Array.isArray(keys) ? keys.slice(0, 5).join(' | ') : '';
                 const remaining = (Array.isArray(keys) && keys.length > 5) ? ` (+${keys.length - 5} más)` : '';
-                toast.success(`Exportación exitosa`, {
-                    description: `${added} nuevas, ${updated} actualizadas en JSON. [${sampleKeys}${remaining}]`
+                toast.success(t('notifications.exportCompletedTitle'), {
+                    description: `${t('notifications.exportSuccessDetail', { added, updated })} [${sampleKeys}${remaining}]`
                 });
             }
         },
         onError: (err) => {
             console.error('[i18n-sync] ❌ syncToFile error:', err);
-            toast.error('Error de exportación', {
-                description: typeof err === 'string' ? err : 'Error al exportar a archivos locales'
+            toast.error(t('notifications.exportErrorTitle'), {
+                description: typeof err === 'string' ? err : t('notifications.exportErrorDesc')
             });
         }
     });

@@ -18,6 +18,8 @@ import { Progress } from "@/components/ui/progress";
 import { PLANS, PlanTier } from '@/lib/plans';
 import { useToast } from "@/hooks/use-toast";
 
+import { useTranslations } from 'next-intl';
+
 interface BillingTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
@@ -25,8 +27,43 @@ interface BillingTabProps {
 }
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
+    const t = useTranslations('admin.organizations.billing');
     const { toast } = useToast();
     const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+    // Estados para la simulación de precio
+    const [simulation, setSimulation] = useState<any>(null);
+    const [isSimulating, setIsSimulating] = useState(false);
+    const [selectedTier, setSelectedTier] = useState<PlanTier | null>(null);
+
+    const handleSimulate = async (tier: PlanTier) => {
+        if (tier === currentTier) return;
+
+        setIsSimulating(true);
+        setSelectedTier(tier);
+        setSimulation(null);
+
+        try {
+            const res = await fetch('/api/billing/simulate-change', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newTier: tier })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error en la simulación');
+
+            setSimulation(data.simulation);
+        } catch (error: any) {
+            toast({
+                title: 'Error de Simulación',
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setIsSimulating(false);
+        }
+    };
 
     const handleUpgrade = async (tier: PlanTier) => {
         setIsCheckingOut(true);
@@ -98,23 +135,26 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                         <DialogTitle>Planes y Precios</DialogTitle>
                                         <DialogDescription>Selecciona el plan que mejor se adapte a tus necesidades.</DialogDescription>
                                     </DialogHeader>
-                                    <div className="grid grid-cols-3 gap-4 pt-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                                         {(Object.keys(PLANS) as PlanTier[]).map((tier) => {
                                             const plan = PLANS[tier];
                                             const isCurrent = tier === currentTier;
+                                            const isSelected = selectedTier === tier;
+
                                             return (
                                                 <div key={tier} className={cn(
-                                                    "border rounded-xl p-6 relative flex flex-col",
-                                                    isCurrent ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-200"
+                                                    "border rounded-xl p-6 relative flex flex-col transition-all",
+                                                    isCurrent ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-200",
+                                                    isSelected && !isCurrent ? "border-primary bg-primary/5 ring-2 ring-primary" : ""
                                                 )}>
                                                     {isCurrent && (
                                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
-                                                            Actual
+                                                            {t('planActive')}
                                                         </div>
                                                     )}
                                                     <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                                                     <div className="text-3xl font-bold mb-4">
-                                                        {plan.price_monthly}€ <span className="text-sm font-normal text-slate-500">/mes</span>
+                                                        {plan.price_monthly}€ <span className="text-sm font-normal text-slate-500">{t('perMonth')}</span>
                                                     </div>
                                                     <ul className="space-y-2 mb-6 flex-1">
                                                         {plan.features.map((f, i) => (
@@ -125,16 +165,72 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                                         ))}
                                                     </ul>
                                                     <Button
-                                                        disabled={isCurrent || isCheckingOut || tier === 'FREE'}
-                                                        variant={isCurrent ? "outline" : "default"}
-                                                        onClick={() => tier !== 'FREE' && handleUpgrade(tier)}
+                                                        disabled={isCurrent || isCheckingOut || tier === 'FREE' || isSimulating}
+                                                        variant={isCurrent ? "outline" : (isSelected ? "default" : "outline")}
+                                                        onClick={() => tier !== 'FREE' && handleSimulate(tier)}
                                                     >
-                                                        {isCurrent ? "Plan Actual" : (tier === 'FREE' ? "Contactar Soporte" : "Seleccionar")}
+                                                        {isCurrent ? t('planCurrent') : (tier === 'FREE' ? t('contactSupport') : (isSelected ? t('selectPlan') : t('selectPlan')))}
                                                     </Button>
                                                 </div>
                                             );
                                         })}
                                     </div>
+
+                                    {/* Resultados de la Simulación */}
+                                    {(isSimulating || simulation) && selectedTier && (
+                                        <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-primary/20 animate-in fade-in slide-in-from-top-4">
+                                            <div className="flex items-center gap-2 mb-6 text-primary">
+                                                <Zap fill="currentColor" size={20} />
+                                                <h4 className="text-lg font-bold">{t('simulation.title')}</h4>
+                                            </div>
+
+                                            {isSimulating ? (
+                                                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                                    <p className="text-sm text-slate-500 italic">Calculando prorrateo exacto con Stripe...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                        <div className="space-y-1 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-[10px] text-slate-500 uppercase font-black spacing tracking-tighter">{t('simulation.creditApplied')}</p>
+                                                            <p className="text-2xl font-bold text-green-600">-{simulation.creditApplied / 100}€</p>
+                                                        </div>
+                                                        <div className="space-y-1 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-[10px] text-slate-500 uppercase font-black spacing tracking-tighter">{t('simulation.newPlanCost')}</p>
+                                                            <p className="text-2xl font-bold text-slate-900">{simulation.newPlanCost / 100}€</p>
+                                                        </div>
+                                                        <div className="space-y-1 p-4 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
+                                                            <p className="text-[10px] opacity-80 uppercase font-black spacing tracking-tighter">{t('simulation.totalDueNow')}</p>
+                                                            <p className="text-3xl font-black">{simulation.totalDueNow / 100}€</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                            <Info size={14} />
+                                                            <span>
+                                                                <strong>{t('simulation.nextBillingDate')}:</strong> {new Date(simulation.nextBillingDate).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        <Button
+                                                            size="lg"
+                                                            className="w-full sm:w-auto px-12"
+                                                            onClick={() => handleUpgrade(selectedTier!)}
+                                                            disabled={isCheckingOut}
+                                                        >
+                                                            {isCheckingOut ? (
+                                                                <span className="flex items-center gap-2">
+                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                                    Procesando...
+                                                                </span>
+                                                            ) : "Confirmar y Suscribirse"}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </DialogContent>
                             </Dialog>
                         </div>

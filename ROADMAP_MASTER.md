@@ -12,7 +12,7 @@
 - **Core Status:** ✅ **RESOLVED** - Ingestion Pipeline Cloudinary Decoupling Complete (Phase 131 COMPLETED)
 - **Compliance Status:** 🏛️ **FASE 132 COMPLETED** - Banking-Grade Compliance & Enterprise Maturity (Doc 2304)
 - **UX Status:** 🎨 **FASE 133 COMPLETED** - Information Architecture & UX Redesign (Doc 2305)
-- **Recent Ship:** Enterprise Spaces & Billing Integration, API Keys Hardening (Multi-tenant, i18n, Logging), Multilingual/Keyword Space Filtering, React 19 Readiness.
+- **Recent Ship:** Phase 133.7 Billing & Usage Unification (Consolidated BillingService, Unified Usage API, Live Usage Dashboard with ROI metrics), Enterprise Spaces & Billing Integration, API Keys Hardening (Multi-tenant, i18n, Logging), Multilingual/Keyword Space Filtering, React 19 Readiness.
 - **Project Status:** **High-Performance Industrial Platform (v4.5.0 - Enterprise SaaS Edition + Unified UX + Governance + Compliance).**
 - **Critical Issue:** ✅ PHASE 131 RESOLVED - Cloudinary 401 blocking chunk creation (Doc 2303)
 - **Architecture Review:** FASE 129-133 (Workflow Refinement + Cross-Cutting Concerns + Ingestion Resilience + Enterprise Maturity + UX Redesign based on Docs 2301-2305)
@@ -133,6 +133,24 @@
 - [X] **Code Refactoring:** Unificación de lógica de preparación en `IngestPreparer` eliminando 53 líneas de código duplicado.
 
 ---
+
+#### 💸 FASE 133.7: BILLING & UNIFIED USAGE REFACTORING (COMPLETADO ✅)
+**Objetivo:** Consolidar servicios de facturación, eliminar `any` types, y crear dashboard de consumo unificado con datos reales.
+
+- [X] **BillingService Consolidation:** Fusión de dos archivos duplicados (`src/services/` + `src/lib/`) en una única fuente canónica con Stripe webhooks integrados.
+- [X] **Strict TypeScript Enforcement:** Eliminación de 14x `any` types en `billing-service.ts` y `quota-service.ts`; reemplazados por interfaces tipadas (`TenantConfigCustomLimits`, `BillingFiscalData`).
+- [X] **Unified Usage API:** Nuevo endpoint `GET /api/admin/billing/usage` combinando `QuotaService.getTenantUsageStats()` + `UsageService.getTenantROI()` en paralelo con SLA monitoring (500ms).
+- [X] **Live Usage Dashboard:** `/admin/billing/usage` con datos reales (tokens, almacenamiento, búsquedas, usuarios), métricas ROI (ahorro de horas, coste estimado, eficiencia), y alertas dinámicas por estado de cuota.
+- [X] **Billing Plan View:** `/admin/billing/plan` con comparación visual de tiers.
+- [X] **Invoice History:** `/admin/billing/invoices` con historial de facturas.
+- [X] **Logger Integration:** Nuevo source `BILLING_SERVICE` en `AppLogEvent`.
+- [X] **Reusable Components:** `UsageChart` (Recharts) y `QuotaProgress` (Progress bar con umbrales).
+
+**Archivos Clave:**
+- `src/lib/billing-service.ts` — Servicio unificado (Stripe + Invoices + Plan Management)
+- `src/app/api/admin/billing/usage/route.ts` — API de consumo unificado
+- `src/app/(authenticated)/(admin)/admin/billing/usage/page.tsx` — Dashboard de consumo
+- `src/lib/quota-service.ts` — Limpieza de tipos
 
 ### 🚧 FUTURE PHASES (PENDING DEVELOPMENT)
 
@@ -513,7 +531,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 #### 💰 FASE 80: CONVERSIÓN & ONBOARDING (QUICK WINS)
 **Objetivo:** Reducir fricción de entrada y demostrar valor inmediato (ROI).
 
-- [ ] **ROI Calculator**: Implementar calculadora interactiva en Landing Page. <!-- ref: Documentación/09/gaps funcionales.md:5 -->
+- [x] **ROI Calculator**: Implementar calculadora interactiva en Landing Page. <!-- ref: Documentación/09/gaps funcionales.md:5 -->
 - [X] **Interactive Sandbox Demo**: Simulador "Sube tu PDF" limitado para usuarios no registrados (Fase 110 ✅). <!-- ref: Documentación/09/gaps funcionales.md:4 -->
 - [X] **Magic Links (Passwordless)**: Opción de login sin contraseña vía email (Fase 111 ✅). <!-- ref: Documentación/09/gaps funcionales.md:13 -->
 - [X] **Post-Invite Onboarding Wizard**: Flujo guiado de 3 pasos tras el primer login (Phase 96.4 ✅). <!-- ref: Documentación/09/gaps funcionales.md:11 -->
@@ -539,7 +557,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 #### 🧪 FASE 83: BACKEND REFINEMENT & SIMULATION TOOLS
 **Objetivo:** Mejorar herramientas administrativas y precisión del motor de prompts.
 
-- [ ] **Upgrade/Downgrade Price Simulator**: Cálculo exacto de pro-rata antes de cambiar suscripción. <!-- ref: Documentación/09/gaps funcionales.md:66 -->
+- [X] **Upgrade/Downgrade Price Simulator**: Cálculo exacto de pro-rata antes de cambiar suscripción. (Phase 83 ✅) <!-- ref: Documentación/09/gaps funcionales.md:66 -->
 - [X] **A/B Prompt Testing Engine**: Herramienta para comparar performance de diferentes system prompts en un set de control. (Phase 83 ✅)
 - [X] **Admin Session Simulator (Impersonation)**: Capacidad de SuperAdmin para ver la interfaz como un usuario específico (sin contraseña). (Phase 83 ✅)
 - [x] **Dry-run Test Button**: Probar cambios en prompts sobre documentos reales sin guardar resultados permanentes. (Phase 83 ✅)
@@ -822,7 +840,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     - [ ] Refactorizar `WorkflowTaskInbox` para mostrar razonamiento de IA y permitir "Approve/Override". <!-- ref: 2202.txt:531 -->
     - [ ] Implementar `WorkflowLLMNodeService` para execution de pasos automáticos con validación manual diferida. <!-- ref: 2202.txt:358 -->
 
-#### 🏭 FASE 128: INDUSTRIAL WORKFLOWS & HITL REFINEMENT (PLANNED 🎯)
+#### 🏭 FASE 128: INDUSTRIAL WORKFLOWS & HITL REFINEMENT (IN PROGRESS 🚀)
 **Objetivo:** Integración profunda de ChecklistConfig con Workflows para flujos industriales especializados y seguridad multi-tenant reforzada.
 **Referencia:** [Doc 2203.txt](file:///d:/desarrollos/ABDElevators/Documentación/22/2203.txt)
 
@@ -836,36 +854,36 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     - [ ] Extender `WorkflowTaskInbox` para renderizar items dinámicos por parte/manual. <!-- ref: 2203.txt:412 -->
     - [ ] Implementar lógica de validación cruzada (Operario vs Revisor) en tareas de workflow. <!-- ref: 2203.txt:477 -->
 
-#### 🏗️ FASE 129: WORKFLOW ARCHITECTURE REFINEMENT & SCHEMA STANDARDIZATION
-**Objetivo:** Resolver deuda técnica crítica en arquitectura de workflows, estandarizar schemas de checklist/validación y eliminar duplicidades de código.
-**Referencia:** [Doc 2301.txt](file:///d:/desarrollos/ABDElevators/Documentación/23/2301.txt)
+[ ]### FASE 129: Refactorización a Motores Especializados (Core Engine Separation) [COMPLETED ✅]
+> [!NOTE]
+> Separación del `WorkflowEngine` monolítico en motores especializados para reducir la complejidad ciclomática y mejorar el mantenimiento.
 
-- [ ] **129.1: Workflow Engine Separation & Renaming** `[HIGH RISK]`
-    - [ ] Renombrar `WorkflowEngine` (AI events) → `AIWorkflowEngine` (processEvent)
-    - [ ] Renombrar `WorkflowEngine` (Case states) → `CaseWorkflowEngine` (executeTransition)
-    - [ ] Crear `index.ts` exportando ambos motores claramente diferenciados
-    - [ ] Actualizar todos los imports en el codebase
-    - [ ] Limpiar scripts de verificación legacy o marcarlos como "legacy tests"
+- [x] 129.1: Separación de `AIWorkflowEngine` vs `CaseWorkflowEngine` [x]
+- [x] 129.2: Implementación de Fachada `LegacyCaseWorkflowEngine` para compatibilidad [x]
+- [x] 129.3: Migración de API Routes de Pedidos / Casos al nuevo motor [x]
+- [x] 129.4: Consolidación de tipos en `src/core/engine/types.ts` [x]
+- [x] 129.5: Auditoría y actualización de Skills existentes para alineación arquitectónica [x]
+ Limpiar scripts de verificación legacy o marcarlos como "legacy tests"
 
-- [ ] **129.2: Unified WorkflowTask Schema** `[TECHNICAL DEBT]`
-    - [ ] Definir `WorkflowTaskSchema` (Zod) común en `lib/schemas/workflow-task.ts`
-    - [ ] Campos estándar: id, tenantId, caseId, entitySlug, type, title, description, assignedRole, status, priority, checklistConfigId, source, metadata
-    - [ ] Unificar payloads ad-hoc de ambos motores (AIWorkflowEngine + CaseWorkflowEngine)
-    - [ ] Actualizar `WorkflowTaskInbox` para trabajar con schema unificado
+- [x] **129.2: Unified WorkflowTask Schema** [COMPLETED ✅]
+    - [x] Definir `WorkflowTaskSchema` (Zod) común en `lib/schemas/workflow-task.ts` [x]
+    - [x] Campos estándar: id, tenantId, caseId, entitySlug, type, title, description, assignedRole, status, priority, checklistConfigId, source, metadata [x]
+    - [x] Unificar payloads ad-hoc de ambos motores (AIWorkflowEngine + CaseWorkflowEngine) [x]
+    - [x] Actualizar `WorkflowTaskInbox` para trabajar con schema unificado [x]
 
-- [ ] **129.3: Checklist Schema Standardization** `[TECHNICAL DEBT]`
-    - [ ] Crear `ChecklistConfigSchema` con categorías e items de catálogo
-    - [ ] Crear `ExtractedChecklistItemSchema` con ID estable (hash, no UUID)
-    - [ ] Crear `ItemValidationSchema` para validaciones por ítem (PENDING | OK | REVIEW | REJECTED)
-    - [ ] Crear `ExtractedChecklistSchema` como snapshot de items + validations
-    - [ ] Eliminar duplicación de estado entre `entities.metadata.checklist` y `extractedchecklists`
-    - [ ] Usar `extractedchecklists.validations` como única fuente de verdad
+- [x] **129.3: Checklist Schema Standardization** [COMPLETED ✅]
+    - [x] Crear `ChecklistConfigSchema` con categorías e items de catálogo [x]
+    - [x] Crear `ExtractedChecklistItemSchema` con ID estable (hash, no UUID) [x]
+    - [x] Crear `ItemValidationSchema` para validaciones por ítem (PENDING | OK | REVIEW | REJECTED) [x]
+    - [x] Crear `ExtractedChecklistSchema` como snapshot de items + validations [x]
+    - [x] Eliminar duplicación de estado entre `entities.metadata.checklist` y `extractedchecklists` [x]
+    - [x] Usar `extractedchecklists.validations` como única fuente de verdad [x]
 
-- [ ] **129.4: Validation Schema Unification**
-    - [ ] Normalizar `ValidationSchema` (humanvalidations) con estados: APPROVED | REJECTED | NEEDS_CHANGES | IN_PROGRESS
-    - [ ] Alinear items con `ItemValidationSchema` (mismo tipo)
-    - [ ] Agregar `checklistSnapshotId` para trazabilidad de versión de checklist validada
-    - [ ] Actualizar endpoints `/api/entities/[id]/validate` y `/api/entities/[id]/checklist/validate`
+- [x] **129.4: Validation Schema Unification** [COMPLETED ✅]
+    - [x] Normalizar `ValidationSchema` (humanvalidations) con estados: APPROVED | REJECTED | NEEDS_CHANGES | IN_PROGRESS [x]
+    - [x] Alinear items con `ItemValidationSchema` (mismo tipo) [x]
+    - [x] Agregar `checklistSnapshotId` para trazabilidad de versión de checklist validada [x]
+    - [x] Actualizar endpoints `/api/entities/[id]/validate` e `/api/entities/[id]/checklist/validate` [x]
 
 - [ ] **129.5: Repository Interface Segregation**
     - [ ] Separar `IWorkflowRepository` → `IAIWorkflowRepository` + `ICaseWorkflowRepository`
@@ -890,253 +908,18 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     - [ ] Implementar discriminated union en `WorkflowActionSchema`
     - [ ] Agregar `labelKey` a estados/transiciones de WorkflowDefinition para i18n
 
-#### 🏗️ FASE 130: ARCHITECTURAL HYGIENE & CROSS-CUTTING CONCERNS
-**Objetivo:** Aplicar 10 mejoras transversales de alto retorno sin cambiar el modelo funcional, enfocándose en naming, logging, multi-tenant y cohesión.
-**Referencia:** [Doc 2302.txt](file:///d:/desarrollos/ABDElevators/Documentación/23/2302.txt)
+### FASE 130: Architectural Hardening & Performance Monitoring [COMPLETED ✅]
+> [!IMPORTANT]
+> Blindaje técnico de la plataforma mediante gobernanza multi-tenant estricta y monitoreo de SLAs.
 
-- [ ] **130.1: Domain Naming & Semantic Clarity** `[TECHNICAL DEBT]`
-    - [ ] Renombrar `Entity` → `EntityDocument` (distinguir de modelo de negocio)
-    - [ ] Renombrar `GenericCase` → sufijos de dominio explícitos
-    - [ ] Renombrar `results` → `SearchResult`, `MaintenancePrediction`, etc.
-    - [ ] Separar módulos por dominio: `lib/workflows/case-workflow-engine.ts` vs `lib/workflows/ai-workflow-engine.ts`
-    - [ ] Consolidar `lib/intelligence/*` (PredictiveEngine, InsightEngine, IntelligenceDashboard)
-
-- [ ] **130.2: API Error Handling Standardization** `[TECHNICAL DEBT]`
-    - [ ] Migrar endpoints checklist (POST/PATCH) a `handleApiError`
-    - [ ] Migrar `/api/entities/[id]/vector-search` a patrón estándar
-    - [ ] Migrar `/api/admin/guardian/check` a `handleApiError`
-    - [ ] Migrar `/api/admin/federated/validate-pattern` a `handleApiError`
-    - [ ] Migrar `/api/v1/federated/search-global-patterns` a `handleApiError`
-    - [ ] Crear plantilla de catch estándar (Zod + AppError + handleApiError)
-    - [ ] **Endpoints OK (referencia):** permissions, prompts, rag-evaluations, user/search, workflow/transition
-
-- [ ] **130.3: Logging Contracts Unification** `[TECHNICAL DEBT]`
-    - [ ] Definir tipo `AppLogEvent` en `lib/logger.ts` con campos estándar
-    - [ ] Establecer convenciones: `source` (CHECKLISTENDPOINT, WORKFLOWENGINE), `action` (GET, EXECUTEWORKFLOW, SLAEXCEEDED)
-    - [ ] Reemplazar todos los `console.log` en motores por `logEvento` con niveles DEBUG/INFO
-    - [ ] Unificar logs de SLA: siempre `source: <ENDPOINT>, action: "SLAEXCEEDED"`
-    - [ ] Agregar flag `LOG_LEVEL=DEBUG` para controlar logs verbose
-    - [ ] **Implementar helper SLA:** `withSla<T>(source, action, slaMs, correlationId, fn)`
-
-- [ ] **130.4: Multi-tenant Hardening** `[HIGH RISK]`
-    - [ ] Regla de oro: Siempre `getTenantCollection` salvo excepciones documentadas
-    - [ ] Refactorizar endpoints de negocio: entities/*, workflow/*, admin/workflows/*
-    - [ ] Eliminar `connectDB` + filtro manual `tenantId` en colecciones multi-tenant
-    - [ ] Normalizar APIs core (`/api/core/*`): usar `session.user.tenantId` o exigir SUPERADMIN + tenantId explícito
-    - [ ] Eliminar `defaulttenant` salvo modo demo explícito
-    - [ ] Documentar tenants especiales: `abdglobal` (plataforma), `GLOBAL` (scope lógico)
-    - [ ] Implementar `runTenantCypher(tenantId, query, params)` para Neo4j
-    - [ ] **Colecciones core a proteger:** entities, cases, workflowdefinitions, workflowtasks, knowledgeassets, documentchunks, ragevaluations, spaces
-
-- [ ] **130.5: IA Payload Typing** `[TECHNICAL DEBT]`
-    - [ ] Definir interfaces fuertes: `RiskFinding`, `GraphPattern`, `FailureSignal`
-    - [ ] Reemplazar `any` en PredictiveEngine, InsightEngine, RiskAnalysisNode
-    - [ ] Unificar naming de campos (`riskScore` vs `score`) con tipos explícitos
-    - [ ] Crear `BaseFinding` interface para compartir entre motores IA
-
-- [ ] **130.6: Repository Cohesion & Segregation** `[TECHNICAL DEBT]`
-    - [ ] Refinar `ICaseRepository`, `IEntityRepository`, `IWorkflowRepository`, `IKnowledgeRepository`
-    - [ ] Mover `IEntityRepository.updateResult` → `IAnalysisRepository.updateAnalysisResult`
-    - [ ] Evitar "repositorios dios" - cada uno debe tener solo operaciones de su agregado
-    - [ ] Separar operaciones de lectura/escritura analíticas vs transaccionales
-
-- [ ] **130.7: SLA Logic Deduplication** `[TECHNICAL DEBT]`
-    - [ ] Crear helper genérico `withSla<T>()` para medición automática
-    - [ ] Aplicar en endpoints pesados: checklist, reportes, vector-search, federated
-    - [ ] Estandarizar logging de violaciones SLA
-    - [ ] Agregar métricas automáticas de duración en todos los logs de endpoint
-
-- [ ] **130.8: Debug Routes & Scripts Cleanup** `[HIGH RISK]`
-    - [ ] Agrupar rutas debug en `app/api/_debug/*`
-    - [ ] Proteger con `HEALTHCHECKSECRET` o `NODE_ENV !== "production"`
-    - [ ] Mover scripts CLI a `scripts/` con documentación clara
-    - [ ] Eliminar/deprecar rutas `_check`, `_write` no usadas en producción
-    - [ ] Marcar scripts de verificación como "legacy" o "diagnostics-only"
-
-- [ ] **130.9: i18n Consolidation** `[TECHNICAL DEBT]`
-    - [ ] Crear `labelKey` en `WorkflowDefinition.states` y `WorkflowDefinition.transitions`
-    - [ ] Crear `titleKey` y `descriptionKey` en `WorkflowTask`
-    - [ ] Implementar `resolveLabel(tenantId, key, locale, fallback)` centralizado
-    - [ ] Sustituir labels literales en `ChecklistConfig` por claves i18n
-    - [ ] Permitir configuración per-tenant/per-industry sin cambiar código
-
-- [ ] **130.10: Domain Contracts Documentation** `[TECHNICAL DEBT]`
-    - [ ] Crear `docs/domain/DEFAULT.md` con definiciones de dominio
-    - [ ] Documentar: Pedido, Entidad, Caso, KnowledgeAsset, WorkflowTask
-    - [ ] Incluir diagramas de relación entre agregados
-    - [ ] Documentar contratos de API públicos y eventos de dominio
-    - [ ] Facilitar onboarding de desarrolladores y extensión a nuevos verticales
-
-- [ ] **130.11: WorkflowTask Unification (5-Step Migration)** `[HIGH PRIORITY]`
-    - [ ] **Paso 1:** Definir `WorkflowTaskSchema` único en `lib/schemas/workflow-task.ts`
-    - [ ] **Paso 2:** Actualizar `WorkflowTaskService` para usar schema parseado
-    - [ ] **Paso 3:** Unificar creación de tareas: `CaseWorkflowEngine` + `AIWorkflowEngine`
-    - [ ] **Paso 4:** Alinear UI `WorkflowTaskInbox` con nuevos campos (`source`, `type`, `priority`)
-    - [ ] **Paso 5:** Script de migración para tareas antiguas (source, type normalizado)
-    - [ ] **Índices a crear:** `{ tenantId: 1, status: 1, assignedRole: 1, createdAt: -1 }`
-
-#### ✅ FASE 131: INGESTION PIPELINE RESILIENCE & CLOUDINARY DECOUPLING `[COMPLETED]`
-**Objetivo:** Eliminar dependencia crítica de Cloudinary para procesamiento de documentos, implementar estados parciales y retry granular.
-**Referencia:** [Doc 2303..txt](file:///d:/desarrollos/ABDElevators/Documentación/23/2303..txt)
-**Status:** COMPLETED ✅ - Pipeline resiliente con GridFS storage
-
-**Problema Actual:**
-- Documentos suben a Cloudinary correctamente
-- Worker obtiene 401 Unauthorized al intentar fetch del PDF
-- No se crean chunks → ingestionStatus = FAILED
-- No hay mecanismo de recuperación parcial
-
-- [X] **131.1: Diagnóstico y Validación** `[CRITICAL - IMMEDIATE]`
-    - [X] Verificar estado de assets fallidos en knowledgeassets (cloudinaryUrl, publicId, error)
-    - [X] Ejecutar script de prueba: getSignedUrl + fetch con credenciales actuales
-    - [X] Confirmar que CLOUDINARY_CLOUD_NAME/API_KEY/SECRET son correctos
-    - [X] Verificar resource_type: "raw" es consistente en upload y read
-    - [X] Documentar configuración Cloudinary requerida (no strict transformations)
-
-- [X] **131.2: Estados Parciales de Ingesta** `[CRITICAL]`
-    - [X] Extender `KnowledgeAsset` con flags booleanos:
-        - `hasStorage`: boolean (Cloudinary OK)
-        - `hasChunks`: boolean (documentchunks creados)
-    - [X] Extender `ingestionStatus` enum con estados parciales:
-        - `STORED_NO_INDEX`: Cloudinary OK, falta indexar
-        - `INDEXED_NO_STORAGE`: chunks OK, falta Cloudinary
-        - `PARTIAL`: storage + chunks inconsistentes
-    - [X] Crear `storageError` y `indexingError` campos separados
-    - [X] Actualizar UI para mostrar estados parciales con indicadores visuales
-
-- [X] **131.3: Arquitectura Desacoplada - Storage ≠ Processing** `[CRITICAL]`
-    - [X] Modificar `POST /api/admin/ingest`:
-        - Guardar PDF en storage interno (fileblobs/GridFS) ANTES de encolar
-        - Encolar job con `{ docId, blobId }` (no depende de Cloudinary)
-        - Subida a Cloudinary en paralelo (no bloquea análisis)
-    - [X] Modificar `IngestService.executeAnalysis`:
-        - Leer buffer desde storage interno usando `blobId` (no fetch desde Cloudinary)
-        - Ejecutar `IngestAnalyzer.analyze()` desde buffer local
-        - Ejecutar `IngestIndexer.index()` para crear chunks
-        - Solo AL FINAL: si Cloudinary falló, marcar `INDEXED_NO_STORAGE`
-    - [X] Eliminar "round-trip" innecesario: subir → descargar → procesar
-
-- [X] **131.4: Retry Granular por Componente** `[HIGH PRIORITY]`
-    - [X] Crear endpoint `POST /api/admin/ingest/:docId/retry`:
-        - Si `hasStorage=true && hasChunks=false`: Re-ejecutar análisis + indexado
-        - Si `hasStorage=false && hasChunks=true`: Re-subir a Cloudinary desde storage
-        - Si ambos false: Flujo completo de nuevo
-    - [X] Implementar `IngestService.retryStorage(docId)`: Subir a Cloudinary desde blob interno
-    - [X] Implementar `IngestService.retryIndexing(docId)`: Analizar desde blob interno
-    - [X] UI: Botón "Reintentar Indexación" / "Reintentar Storage" según estado
-
-- [X] **131.5: Storage Interno - FileBlob Infrastructure** `[HIGH PRIORITY]`
-    - [X] Extender `FileBlobManager` para persistencia temporal/procesamiento:
-        - `saveForProcessing(fileBuffer, tenantId, docId)` → returns blobId
-        - `getForProcessing(blobId)` → returns buffer/stream
-        - `deleteAfterProcessing(blobId)` (opcional, para limpieza)
-    - [X] Configurar TTL automático para blobs de procesamiento (ej. 24h)
-    - [X] Asegurar que blobs usan el mismo almacenamiento que fileblobs existente
-    - [X] Implementar fallback a Cloudinary si blob no existe (backward compatibility)
-
-- [X] **131.6: Manejo de Archivos Grandes (>100MB)** `[MEDIUM PRIORITY]`
-    - [X] Implementar límite de tamaño para vía estándar: 250 MB
-    - [X] Para archivos grandes:
-        - [X] Streaming mode detection para archivos >100MB
-        - [X] Logging de advertencias para archivos grandes
-    - [X] Documentar límites en UI y mensajes de error amigables
-    - [ ] Considerar compresión/processing previo para reducir tamaño
-
-- [ ] **131.7: Observabilidad y Alertas** `[HIGH PRIORITY]`
-    - [ ] Logging detallado en cada fase:
-        - `INGEST_API: UPLOAD_START → UPLOAD_COMPLETE`
-        - `INGEST_WORKER: ANALYSIS_START → ANALYSIS_SUCCESS/FAIL`
-        - `INGEST_WORKER: INDEXING_START → INDEXING_SUCCESS/FAIL`
-        - `INGEST_WORKER: STORAGE_UPLOAD_START → STORAGE_UPLOAD_SUCCESS/FAIL`
-    - [ ] Métricas por tenant:
-        - Tasa de éxito/fallo por fase
-        - Tiempo promedio por fase
-        - Documentos en estados parciales
-    - [ ] Alertas automáticas:
-        - >10% de ingestas en FAILED en 1h
-        - >50 documentos en INDEXED_NO_STORAGE (Cloudinary caído)
-        - Tiempo de procesamiento > SLA (5 min)
-
-- [ ] **131.8: UI/UX - Estados de Ingesta Visibles** `[MEDIUM PRIORITY]`
-    - [ ] Actualizar `KnowledgeAssetsTable` para mostrar:
-        - Icono diferente por estado (✅ COMPLETED, ⚠️ PARTIAL, ❌ FAILED)
-        - Tooltip con detalle: "Storage OK, Indexing Pending"
-        - Botón de acción contextual según estado
-    - [ ] Crear página de detalle `/admin/ingest/:docId`:
-        - Timeline visual: Upload → Storage → Analysis → Indexing
-        - Logs específicos del documento
-        - Botones de retry específicos por fase
-    - [ ] Notificaciones al usuario cuando ingesta completa (COMPLETED o PARTIAL)
-
-- [ ] **131.9: Validación y Testing** `[HIGH PRIORITY]`
-    - [ ] Test de integración: Simular fallo Cloudinary → verificar chunks se crean igual
-    - [ ] Test de integración: Simular fallo análisis → verificar retry funciona
-    - [ ] Test de carga: 100 documentos concurrentes, verificar no hay race conditions
-    - [ ] Test de grandes archivos: 150MB, 500MB, 1GB (si aplica)
-    - [ ] Validar backward compatibility: documentos existentes sin blobId
-
-- [ ] **131.10: Rollback Plan** `[CRITICAL]`
-    - [ ] Mantener fallback a fetch desde Cloudinary si blobId no existe
-    - [ ] Feature flag `USE_INTERNAL_STORAGE_FOR_INGEST` (default: true)
-    - [ ] Documentar procedimiento de rollback en caso de emergencia
-    - [ ] Script de recuperación: Reprocesar documentos en estado FAILED desde último checkpoint
-
-**Impacto Esperado:**
-- ✅ Ingesta resiliente: Cloudinary puede fallar sin bloquear indexación
-- ✅ Retry granular: No requiere resubir documentos
-- ✅ Mejor UX: Estados visibles y acciones contextuales
-- ✅ Preparado para grandes volúmenes: Arquitectura escalable
-- ✅ Menor costo: Elimina round-trip innecesario a Cloudinary
-
-**Métricas de Éxito:**
-- Tasa de éxito de ingesta > 95% (vs actual < 50%)
-- Tiempo de procesamiento reducido 30% (sin fetch de Cloudinary)
-- Cero documentos en estado FAILED sin posibilidad de retry
-- < 1% de documentos en estados parciales después de 24h
-
-#### 🏛️ FASE 132: ENTERPRISE SaaS MATURITY & BANKING-GRADE COMPLIANCE `[COMPLETED]`
-**Objetivo:** Elevar la plataforma de "proyecto experto" a "SaaS enterprise/bancario" mediante formalización de políticas, hardening operativo y trazabilidad forense.
-**Referencia:** [Doc 2304.txt](file:///d:/desarrollos/ABDElevators/Documentación/23/2304.txt)
-**Target:** Grado bancario/seguro ( compliance audit-proof )
-**Status:** COMPLETED ✅ - Gobernanza, Auditoría y SLA Monitoring activos.
-
-**Problema Actual:**
-- Base técnica sólida pero "sabor a proyecto experto" más que SaaS maduro
-- Especificaciones en código/comentarios, no docs versionados
-- Rutas debug/seed expuestas en producción
-- Compliance "de facto", no documentado ni audit-proof
-- Logs técnicos excelentes pero sin traducción a eventos de negocio
-- Sin timeline unificado por entidad/caso
-
----
-
-##### 132.1: Hardening Operativo y Seguridad `[CRITICAL]` - COMPLETED ✅
-
-**Rutas y Scripts Debug:**
-- [ ] Inventariar todas las rutas `/api/debug/*`, `/api/_check`, `/api/_write`
-- [ ] Eliminar o mover a entorno interno (VPN/CLI tooling):
-  - [ ] `seed de usuarios` → script CLI con logging audit_admin_ops
-  - [ ] `env check` → healthcheck interno, no expuesto
-  - [ ] `debug auth/session` → herramienta interna con auth fuerte
-- [ ] Agregar middleware de protección: `HEALTHCHECK_SECRET` + `NODE_ENV !== 'production'`
-- [ ] Documentar: "Ningún endpoint debug accesible en producción"
-
-**Separación de Entornos:**
-- [ ] Crear feature flags claros: `DEMO_MODE`, `LAB_FEATURES`, `DEBUG_TOOLS`
-- [ ] Asegurar que seeds, scripts puntuales, diagnósticos solo corren en dev/staging
-- [ ] Validar en CI/CD que no se despliegan endpoints debug
-
-**Eliminación de Puertas Traseras:**
-- [ ] Quitar endpoints de reset DB, nuke-scripts accesibles vía HTTP
-- [ ] Scripts potentes (ingestión masiva, reparaciones) como CLI tooling con:
-  - [ ] Logging de quién ejecuta, en qué entorno, con qué parámetros
-  - [ ] Aprobación de segundo admin para operaciones destructivas
-
----
-
-##### 132.2: Formalización de Contratos y Documentación `[HIGH PRIORITY]`
-
-**Domain Contracts Versionados:**
+- [x] 130.1: Unificación de esquemas de transición y estados [x]
+- [x] 130.2: Estandarización de `handleApiError` en todas las APIs de Gestión [x]
+- [x] 130.3: Implementación de decoradores `withSla` para monitoreo de performance [x]
+- [x] 130.4: Hardening Multi-tenant (Regla de Oro #11) con `SecureCollection` [x]
+- [x] 130.5: Unificación de tipado de AI Payloads (`AIModelFinding`, `AIRiskFinding`) [x]
+- [x] 130.6: Refuerzo de Seguridad: State-Driven MFA y protección XSS via Nonces [x]
+- [x] 130.7: Implementación de `DB Consistency Auditor` (Automated Multi-cluster Routing) [x]
+ados:**
 - [x] Crear `/docs/domain/CONTRACTS.md`:
   - [x] Entidades: Pedido, Caso, KnowledgeAsset, WorkflowTask
   - [x] Workflows: estados, transiciones, reglas de negocio
@@ -1593,6 +1376,25 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - [x] Audit log de IA
 - [x] Configurar políticas
 
+
+##### 128.0: Workshop Order Vertical `[COMPLETED]`
+
+**Objetivo:** Crear el flujo de entrada de pedidos de taller con asistencia de IA y validación humana.
+
+**Accesos:** `/admin/workshop`
+
+**📝 Nuevo Pedido** `/admin/workshop/orders/new`
+- [x] Formulario de entrada (Texto/PDF)
+- [x] Extracción de piezas con IA (Gemini 2.0)
+- [x] Identificación de manuales sugeridos (RAG)
+- [x] Creación de WorkflowTask asociado
+
+**✅ Checklists Dinámicos** `/admin/workflow-tasks`
+- [x] Renderizado de checklist basado en configuración
+- [x] Sistema de validación (Pass/Fail/NA)
+- [x] Internacionalización (i18n) completa
+- [x] Soporte para contexto de caso en validaciones
+
 ---
 
 ##### 133.5: Mis Tareas - Bandeja Mejorada `[HIGH PRIORITY]`
@@ -1635,14 +1437,14 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 ---
 
-##### 133.7: Facturación y Uso Unificado `[MEDIUM PRIORITY]`
+##### 133.7: Facturación y Uso Unificado `[IN PROGRESS 🏗️]`
 
 **Problema:** Billing y usage separados, usuario quiere ver "uso vs límite vs pago" juntos
 
 **Nueva Estructura:** `/admin/billing`
 
 **📊 Uso Actual** `/admin/billing/usage`
-- [ ] Dashboard métricas en tiempo real:
+- [/] Dashboard métricas en tiempo real:
   - Tokens LLM (usado/límite)
   - Storage (GB usado/límite)
   - Vector searches
