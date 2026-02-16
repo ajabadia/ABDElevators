@@ -90,6 +90,12 @@ export function WorkflowTaskCard({ task, onUpdate }: WorkflowTaskCardProps) {
                                     AI SUGGESTION
                                 </Badge>
                             )}
+                            {task.metadata?.source === 'LLM_FALLBACK' && (
+                                <Badge variant="secondary" className="bg-red-50 text-red-700 border-red-200 text-[9px] h-4 gap-1 px-1.5 flex w-fit items-center">
+                                    <AlertCircle className="w-2.5 h-2.5" />
+                                    AI FALLBACK
+                                </Badge>
+                            )}
                             <p className="text-xs text-muted-foreground line-clamp-1">{task.description}</p>
                         </div>
                         <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-wider h-5 px-1.5 shrink-0", priorityConfig[task.priority])}>

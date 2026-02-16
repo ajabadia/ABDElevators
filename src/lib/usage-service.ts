@@ -314,18 +314,14 @@ export class UsageService {
      */
     static async getUserMetrics(userId: string, tenantId: string) {
         try {
-            const db = await connectDB();
-
-            // 1. Validaciones Realizadas (Calidad)
-            // Asumiendo que existe colección 'validations' basada en ValidationSchema
-            const validationsColl = db.collection('validations');
+            const validationsColl = await getTenantCollection('validations');
             const validationsCount = await validationsColl.countDocuments({
                 tenantId: tenantId,
                 validatedBy: userId
             });
 
             // 2. Tickets Creados (Soporte)
-            const ticketsColl = db.collection('tickets');
+            const ticketsColl = await getTenantCollection('tickets');
             const ticketsCreated = await ticketsColl.countDocuments({
                 tenantId: tenantId,
                 createdBy: userId

@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
+import { resolveI18nKey, INDUSTRY_MAP, WORKFLOW_STRATEGY_MAP } from '@/lib/i18n-key-map';
 
 interface WorkflowDesignerProps {
     initialWorkflow: WorkflowDefinition;
@@ -121,7 +122,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
                     </h2>
                     <div className="flex items-center gap-2">
                         <Badge variant="outline" className="font-mono text-[10px] uppercase opacity-60">
-                            {workflow.industry} | {workflow.entityType}
+                            {t(resolveI18nKey(INDUSTRY_MAP, workflow.industry))} | {workflow.entityType}
                         </Badge>
                         <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 uppercase text-[10px] font-bold">
                             V{workflow.version} {workflow.active ? 'ACTIVE' : 'INACTIVE'}
@@ -356,10 +357,10 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="USER" className="text-xs font-bold">{t('transitions.strategies.user')}</SelectItem>
-                                                <SelectItem value="LLM_DIRECT" className="text-xs font-bold">{t('transitions.strategies.llm_direct')}</SelectItem>
-                                                <SelectItem value="LLM_SUGGEST_HUMAN_APPROVE" className="text-xs font-bold">{t('transitions.strategies.llm_suggest')}</SelectItem>
-                                                <SelectItem value="HUMAN_ONLY" className="text-xs font-bold">{t('transitions.strategies.human')}</SelectItem>
+                                                <SelectItem value="USER" className="text-xs font-bold">{t(resolveI18nKey(WORKFLOW_STRATEGY_MAP, 'USER'))}</SelectItem>
+                                                <SelectItem value="LLM_DIRECT" className="text-xs font-bold">{t(resolveI18nKey(WORKFLOW_STRATEGY_MAP, 'LLM_DIRECT'))}</SelectItem>
+                                                <SelectItem value="LLM_SUGGEST_HUMAN_APPROVE" className="text-xs font-bold">{t(resolveI18nKey(WORKFLOW_STRATEGY_MAP, 'LLM_SUGGEST_HUMAN_APPROVE'))}</SelectItem>
+                                                <SelectItem value="HUMAN_ONLY" className="text-xs font-bold">{t(resolveI18nKey(WORKFLOW_STRATEGY_MAP, 'HUMAN_ONLY'))}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

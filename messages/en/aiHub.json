@@ -9,7 +9,7 @@
   },
   "sections": {
     "ragQuality": {
-      "title": "RAG Quality Evaluation",
+      "title": "Technical Intelligence Evaluation",
       "subtitle": "Monitor precision and relevance of generated responses."
     },
     "workflows": {

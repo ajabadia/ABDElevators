@@ -1,0 +1,42 @@
+{
+    "trace": {
+        "title": "Technical Trace",
+        "subtitle": "End-to-end visualization of system requests and processes.",
+        "search_placeholder": "Filter by message, action, or source...",
+        "events": "Events",
+        "duration": "Duration",
+        "start_time": "Start",
+        "end_state": "Final Status",
+        "status_error": "WITH ERRORS",
+        "status_success": "SUCCESSFUL",
+        "loading": "Loading trace...",
+        "no_logs_title": "No logs found",
+        "no_logs_desc": "Verify the Correlation ID:",
+        "show_details": "View technical details",
+        "hide_details": "Hide details",
+        "filter_all": "All",
+        "filter_errors": "Errors",
+        "search_button": "Search",
+        "input_placeholder": "Ex: 550e8400-e29b-41d4-a716-446655440000",
+        "payload_inspector": "Payload Inspector",
+        "end_of_trace": "End of trace"
+    },
+    "audit": {
+        "title": "Configuration Audit",
+        "subtitle": "History of sensitive changes in system configuration.",
+        "zone_title": "High Sensitivity Zone",
+        "zone_desc": "This record is immutable. Any change in Prompts, Feature Flags, or Global Configuration is permanently recorded here for compliance reasons (SOC2/GDPR).",
+        "empty_state": "No configuration change history recorded.",
+        "table": {
+            "date": "Date",
+            "actor": "Actor",
+            "action": "Action",
+            "target": "Target",
+            "changes": "Changes",
+            "changes_count": "{count} changes",
+            "reason_title": "CHANGE REASON",
+            "before": "BEFORE",
+            "after": "AFTER"
+        }
+    }
+}

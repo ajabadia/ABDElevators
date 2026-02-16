@@ -26,8 +26,6 @@ export async function POST(
         }
 
         const { id } = await params;
-        const db = await connectAuthDB();
-
         const authDb = await connectAuthDB();
         const usuario = await authDb.collection('users').findOne({
             _id: new ObjectId(id)
@@ -37,8 +35,8 @@ export async function POST(
             throw new NotFoundError('Usuario no encontrado');
         }
 
-        // Generar nueva contraseña temporal
-        const tempPassword = `temp${Math.random().toString(36).slice(-8)}`;
+        // Generar nueva contraseña temporal criptográficamente segura
+        const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         await authDb.collection('users').updateOne(
@@ -59,9 +57,11 @@ export async function POST(
             details: { usuario_id: id }
         });
 
+        // IMPORTANTE: No devolvemos la contraseña en la respuesta JSON por seguridad.
+        // El admin debe comunicarla por otro canal o el sistema debe enviar un email (Fase posterior).
         return NextResponse.json({
             success: true,
-            temp_password: tempPassword,
+            passwordResetDone: true
         });
     } catch (error: any) {
         if (error instanceof AppError) {

@@ -12,12 +12,15 @@ import { NodeLibrary } from './NodeLibrary';
 import { NodePropertiesEditor } from './NodePropertiesEditor';
 import { ExecutionLogsPanel } from './ExecutionLogsPanel';
 import { useWorkflow } from './WorkflowContext';
+import { SimulationResultsPanel } from './SimulationResultsPanel';
+import { runWorkflowSimulation, SimulationResult } from '@/lib/simulation-engine';
 import { TriggerNode } from './CustomNodes/TriggerNode';
 import { ActionNode } from './CustomNodes/ActionNode';
 import { ConditionNode } from './CustomNodes/ConditionNode';
 import { SwitchNode } from './CustomNodes/SwitchNode';
 import { WaitNode } from './CustomNodes/WaitNode';
 import { LoopNode } from './CustomNodes/LoopNode';
+import { SubflowNode } from './CustomNodes/SubflowNode';
 
 const nodeTypes = {
     trigger: TriggerNode,
@@ -26,6 +29,7 @@ const nodeTypes = {
     switch: SwitchNode,
     wait: WaitNode,
     loop: LoopNode,
+    subflow: SubflowNode,
 };
 
 export function CanvasArea() {
@@ -46,7 +50,12 @@ export function CanvasArea() {
         showLogs,
         activeWorkflowId,
         setShowLogs,
-        snapToGrid
+        snapToGrid,
+        isSimulating,
+        simResults,
+        showSimulation,
+        setShowSimulation,
+        handleRunSimulation // Added from context
     } = useWorkflow();
 
     return (
@@ -85,6 +94,14 @@ export function CanvasArea() {
                     <ExecutionLogsPanel
                         workflowId={activeWorkflowId}
                         onClose={() => setShowLogs(false)}
+                    />
+                )}
+
+                {(showSimulation || isSimulating) && (
+                    <SimulationResultsPanel
+                        results={simResults}
+                        isRunning={isSimulating}
+                        onClose={() => setShowSimulation(false)}
                     />
                 )}
             </div>

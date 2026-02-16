@@ -13,6 +13,7 @@ import { useApiList } from '@/hooks/useApiList';
 import { useFilterState } from '@/hooks/useFilterState';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTranslations } from 'next-intl';
+import { resolveI18nKey, ACTIVITY_TYPE_MAP } from '@/lib/i18n-key-map';
 
 // Definición de tipos para los logs
 interface LogEntry {
@@ -308,7 +309,7 @@ export default function LogExplorer() {
                                 <div className="col-span-1">{getLevelBadge(log.level)}</div>
                                 <div className="col-span-2 flex flex-col">
                                     <span className="font-bold text-slate-700 dark:text-slate-300 truncate" title={log.source}>{log.source}</span>
-                                    <span className="text-[10px] text-slate-400 truncate">{log.action}</span>
+                                    <span className="text-[10px] text-slate-400 truncate">{t(resolveI18nKey(ACTIVITY_TYPE_MAP, log.action))}</span>
                                 </div>
                                 <div className="col-span-5 text-slate-600 dark:text-slate-400 break-words leading-relaxed font-sans">
                                     {log.message}
@@ -340,7 +341,9 @@ export default function LogExplorer() {
                                         <Badge className={cn("h-5 text-[9px] gap-1 px-2 border-transparent", details.color)}>
                                             {details.icon} {details.label}
                                         </Badge>
-                                        <div className="mt-1 text-[9px] font-black text-slate-400 uppercase tracking-tighter truncate">{audit.action}</div>
+                                        <div className="mt-1 text-[9px] font-black text-slate-400 uppercase tracking-tighter truncate">
+                                            {t(resolveI18nKey(ACTIVITY_TYPE_MAP, audit.action))}
+                                        </div>
                                     </div>
                                     <div className="col-span-3 flex flex-col">
                                         <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{audit.promptName || `ID: ${audit.tenantId}`}</span>

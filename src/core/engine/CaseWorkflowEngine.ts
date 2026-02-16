@@ -116,6 +116,25 @@ export class CaseWorkflowEngine {
                         correlationId,
                         details: { caseId, stateId: targetState, llmOutput },
                     });
+
+                    // ⚡ FASE 165.5: If LLM failed and returned fallback, create a task for manual check
+                    if (llmOutput.source === 'LLM_FALLBACK') {
+                        await WorkflowTaskService.createTask({
+                            tenantId,
+                            caseId,
+                            type: 'DOCUMENT_REVIEW', // Or a general REVIEW type
+                            title: `Manual Review Required: LLM Failure in ${targetState}`,
+                            description: `The LLM node failed for this state. Reason: ${llmOutput.reason}. A manual review of the automated analysis is required.`,
+                            assignedRole: UserRole.TECHNICAL,
+                            priority: 'MEDIUM',
+                            metadata: {
+                                stateId: targetState,
+                                correlationId,
+                                error: llmOutput.reason
+                            },
+                            correlationId,
+                        });
+                    }
                 } catch (llmError: any) {
                     await logEvento({
                         level: 'ERROR',
@@ -233,7 +252,7 @@ export class CaseWorkflowEngine {
                     });
 
                     // Execute transition
-                    return await this.executeTransition(
+                    const result = await this.executeTransition(
                         caseId,
                         nextState,
                         tenantId,
@@ -241,6 +260,23 @@ export class CaseWorkflowEngine {
                         userRoles,
                         correlationId
                     );
+
+                    // ⚡ FASE 165.5: If nextState was a fallback to manual review, ensure we log it clearly
+                    if (nextState === 'PENDING_MANUAL_REVIEW') {
+                        await WorkflowTaskService.createTask({
+                            tenantId,
+                            caseId,
+                            type: 'WORKFLOW_DECISION',
+                            title: `Manual Routing Required for ${caseData.identifier || caseId}`,
+                            description: `The LLM failed to decide the next branch from ${currentState}. Manual routing required.`,
+                            assignedRole: UserRole.ADMIN,
+                            priority: 'HIGH',
+                            metadata: { currentState, correlationId, source: 'LLM_FALLBACK' },
+                            correlationId
+                        });
+                    }
+
+                    return result;
                 }
 
                 if (transition.decisionStrategy === 'LLM_SUGGEST_HUMAN_APPROVE' && transition.llmRouting) {

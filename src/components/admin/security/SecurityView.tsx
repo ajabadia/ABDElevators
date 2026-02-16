@@ -1,49 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditLogTable } from "./AuditLogTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, UserCog, History } from "lucide-react";
+import { ShieldCheck, UserCog, History, DatabaseZap } from "lucide-react";
 
+/**
+ * SecurityView Component
+ * Centralizing professional security governance and audit trails.
+ * @version 1.1 - Added i18n support and Lifecycle tab.
+ */
 export function SecurityView() {
+    const t = useTranslations("security_hub");
+
     return (
         <Tabs defaultValue="audit" className="w-full space-y-4">
-            <TabsList>
-                <TabsTrigger value="permissions">
-                    <ShieldCheck className="w-4 h-4 mr-2" />
-                    Permisos y Roles
+            <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <TabsTrigger value="permissions" className="gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    {t("tabs.permissions")}
                 </TabsTrigger>
-                <TabsTrigger value="audit">
-                    <History className="w-4 h-4 mr-2" />
-                    Auditoría
+                <TabsTrigger value="audit" className="gap-2">
+                    <History className="w-4 h-4" />
+                    {t("tabs.audit")}
                 </TabsTrigger>
-                <TabsTrigger value="sessions">
-                    <UserCog className="w-4 h-4 mr-2" />
-                    Sesiones
+                <TabsTrigger value="sessions" className="gap-2">
+                    <UserCog className="w-4 h-4" />
+                    {t("tabs.sessions")}
+                </TabsTrigger>
+                <TabsTrigger value="lifecycle" className="gap-2">
+                    <DatabaseZap className="w-4 h-4" />
+                    {t("tabs.lifecycle")}
                 </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="permissions">
+            <TabsContent value="permissions" className="animate-in fade-in slide-in-from-bottom-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Gestión de Roles (Guardian)</CardTitle>
+                        <CardTitle>{t("permissions.title")}</CardTitle>
                         <CardDescription>
-                            Configure los roles y permisos de acceso para su organización.
+                            {t("permissions.description")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground border-dashed border-2 m-6 rounded-lg">
-                        Próximamente: Editor visual de políticas Guardian.
+                        {t("permissions.placeholder")}
                     </CardContent>
                 </Card>
             </TabsContent>
 
-            <TabsContent value="audit">
+            <TabsContent value="audit" className="animate-in fade-in slide-in-from-bottom-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Registro de Auditoría</CardTitle>
+                        <CardTitle>{t("audit.title")}</CardTitle>
                         <CardDescription>
-                            Historial inmutable de acciones realizadas en el sistema.
+                            {t("audit.description")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -52,16 +63,30 @@ export function SecurityView() {
                 </Card>
             </TabsContent>
 
-            <TabsContent value="sessions">
+            <TabsContent value="sessions" className="animate-in fade-in slide-in-from-bottom-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Sesiones Activas</CardTitle>
+                        <CardTitle>{t("sessions.title")}</CardTitle>
                         <CardDescription>
-                            Supervise y gestione las sesiones de usuario activas.
+                            {t("sessions.description")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground border-dashed border-2 m-6 rounded-lg">
-                        Próximamente: Gestor de sesiones.
+                        {t("sessions.placeholder")}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="lifecycle" className="animate-in fade-in slide-in-from-bottom-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t("lifecycle.title")}</CardTitle>
+                        <CardDescription>
+                            {t("lifecycle.description")}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground border-dashed border-2 m-6 rounded-lg">
+                        {t("lifecycle.placeholder")}
                     </CardContent>
                 </Card>
             </TabsContent>

@@ -16,13 +16,9 @@ const UpdateStatusSchema = z.object({
     metadata: z.record(z.string(), z.any()).optional(), // ⚡ FASE 128.3: Allow dynamic metadata update
 });
 
-/**
- * PATCH /api/admin/workflow-tasks/[id]
- * Updates the status of a specific task.
- */
 export async function PATCH(
     req: NextRequest,
-    params: { params: Promise<{ id: string }> } // Fix type signature while we are at it or keep valid
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = crypto.randomUUID();
 
@@ -32,14 +28,13 @@ export async function PATCH(
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const { id } = await params.params; // Next.js 15 param handling pattern varies, sticking to simple destructure if previously worked or fix if needed. 
-        // Wait, the file signature was `req: NextRequest, { params }: { params: Promise<{ id: string }> }`.
+        const { id } = await params;
 
         const body = await req.json();
         const validated = UpdateStatusSchema.parse(body);
 
         const result = await WorkflowTaskService.updateStatus({
-            id: (await params.params).id,
+            id,
             tenantId: session.user.tenantId,
             userId: session.user.id,
             userName: session.user.name || session.user.email || 'Unknown User',

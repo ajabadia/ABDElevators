@@ -4,12 +4,24 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity, BrainCircuit, Zap, ChevronRight } from 'lucide-react';
+import {
+    ShieldCheck, Target, Search, AlertCircle, FileText, Activity,
+    BrainCircuit, Zap, ChevronRight, BarChart3
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslations, useLocale } from 'next-intl';
 import { DecisionTraceDialog } from './intelligence/DecisionTraceDialog';
-import { Button } from '@/components/ui/button';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Legend
+} from 'recharts';
 
 interface RagMetricStats {
     faithfulness: number;
@@ -34,6 +46,7 @@ interface RagEvaluation {
 
 export default function RagQualityDashboard() {
     const [stats, setStats] = useState<RagMetricStats | null>(null);
+    const [trends, setTrends] = useState<any[]>([]);
     const [evaluations, setEvaluations] = useState<RagEvaluation[]>([]);
     const [criticalEntities, setCriticalEntities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -56,8 +69,10 @@ export default function RagQualityDashboard() {
                 const criticalData = await criticalRes.json();
 
                 if (metricsData.success) {
-                    setStats(metricsData.stats);
-                    setEvaluations(metricsData.evaluations);
+                    // Fix: API returns 'metrics' and 'trends', not 'stats'
+                    setStats(metricsData.metrics);
+                    setTrends(metricsData.trends || []);
+                    setEvaluations(metricsData.evaluations || []);
                 }
                 if (criticalData.success) {
                     setCriticalEntities(criticalData.pedidos || []);
@@ -210,6 +225,60 @@ export default function RagQualityDashboard() {
                 </Card>
             </div>
 
+            {/* Trends Chart (Restored from Legacy) */}
+            {trends.length > 0 && (
+                <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <BarChart3 className="w-5 h-5 text-slate-500" />
+                            Evolución de Calidad
+                        </CardTitle>
+                        <CardDescription>Tendencia histórica de métricas RAG en los últimos análisis.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={trends}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis
+                                    dataKey="_id"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#64748b' }}
+                                />
+                                <YAxis
+                                    domain={[0, 1]}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#64748b' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                />
+                                <Legend />
+                                <Line
+                                    type="monotone"
+                                    dataKey="faithfulness"
+                                    name={t('metrics.faithfulness.label') || "Faithfulness"}
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: '#3b82f6' }}
+                                    activeDot={{ r: 6 }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="relevance"
+                                    name={t('metrics.relevance.label') || "Relevance"}
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: '#10b981' }}
+                                    activeDot={{ r: 6 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* List of Evaluations */}
             <Card className="border-none shadow-sm bg-white dark:bg-slate-900">
                 <CardHeader>
@@ -316,3 +385,4 @@ export default function RagQualityDashboard() {
         </div>
     );
 }
+

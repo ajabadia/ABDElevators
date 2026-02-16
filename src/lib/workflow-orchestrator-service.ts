@@ -8,15 +8,17 @@ import { WorkflowDefinition, WorkflowDefinitionSchema } from './schemas/workflow
 import { PromptService } from './prompt-service';
 import { PROMPTS } from './prompts';
 import { logEvento } from './logger';
-import { AppError } from './errors';
+import { safeParseLlmJson } from './safe-llm-json';
+import { AppError, ValidationError } from './errors';
 import { callGeminiMini } from './llm';
+import { validateWorkflowDefinition } from './workflow-definition-validator';
 
 // Zod schemas for LLM outputs
 const WorkflowSuggestionSchema = z.object({
     action: z.enum(['USE_EXISTING', 'PROPOSE_NEW']),
     workflowId: z.string().optional(),
     reason: z.string(),
-    confidence: z.number().min(0).max(1),
+    confidence: z.number().min(0).max(1).transform(v => Math.round(v * 100) / 100),
 });
 
 const WorkflowProposalSchema = z.object({
@@ -103,12 +105,11 @@ export class WorkflowOrchestratorService {
                 );
                 renderedPrompt = text;
             } catch (err) {
-                console.warn(`[WorkflowOrchestrator] ⚠️ Fallback to Master Prompt for WORKFLOW_ROUTER:`, err);
                 await logEvento({
                     level: 'WARN',
                     source: 'WORKFLOW_ORCHESTRATOR',
                     action: 'PROMPT_FALLBACK',
-                    message: 'Using master fallback for WORKFLOW_ROUTER',
+                    message: `Fallback to Master Prompt for WORKFLOW_ROUTER: ${err instanceof Error ? err.message : 'Unknown error'}`,
                     tenantId,
                     details: { error: err instanceof Error ? err.message : 'Unknown error' },
                     correlationId,
@@ -129,14 +130,14 @@ export class WorkflowOrchestratorService {
                 { correlationId, temperature: 0.3, model: 'gemini-2.0-flash-exp' }
             );
 
-            // Parse and validate response
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                throw new AppError('LLM_INVALID_RESPONSE', 500, 'LLM did not return valid JSON');
-            }
-
-            const parsed = JSON.parse(jsonMatch[0]);
-            const validated = WorkflowSuggestionSchema.parse(parsed);
+            // Parse and validate response using resilient utility
+            const validated = await safeParseLlmJson({
+                raw: text,
+                schema: WorkflowSuggestionSchema,
+                source: 'WORKFLOW_ORCHESTRATOR',
+                correlationId,
+                tenantId
+            });
 
             await logEvento({
                 level: 'INFO',
@@ -202,12 +203,11 @@ export class WorkflowOrchestratorService {
                 );
                 renderedPrompt = text;
             } catch (err) {
-                console.warn(`[WorkflowOrchestrator] ⚠️ Fallback to Master Prompt for WORKFLOW_GENERATOR:`, err);
                 await logEvento({
                     level: 'WARN',
                     source: 'WORKFLOW_ORCHESTRATOR',
                     action: 'PROMPT_FALLBACK',
-                    message: 'Using master fallback for WORKFLOW_GENERATOR',
+                    message: `Fallback to Master Prompt for WORKFLOW_GENERATOR: ${err instanceof Error ? err.message : 'Unknown error'}`,
                     tenantId,
                     details: { error: err instanceof Error ? err.message : 'Unknown error' },
                     correlationId,
@@ -227,14 +227,14 @@ export class WorkflowOrchestratorService {
                 { correlationId, temperature: 0.4, model: 'gemini-2.0-flash-exp' }
             );
 
-            // Parse and validate response
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                throw new AppError('LLM_INVALID_RESPONSE', 500, 'LLM did not return valid JSON');
-            }
-
-            const parsed = JSON.parse(jsonMatch[0]);
-            const validated = WorkflowProposalSchema.parse(parsed);
+            // Parse and validate response using resilient utility
+            const validated = await safeParseLlmJson({
+                raw: text,
+                schema: WorkflowProposalSchema,
+                source: 'WORKFLOW_ORCHESTRATOR',
+                correlationId,
+                tenantId
+            });
 
             // Build complete WorkflowDefinition (as draft)
             const workflowDefinition: Partial<WorkflowDefinition> = {
@@ -270,6 +270,21 @@ export class WorkflowOrchestratorService {
                 updatedAt: new Date(),
             };
 
+            // ⚡ FASE 165.4: Validate the proposed definition before proceeding
+            const validation = validateWorkflowDefinition(workflowDefinition, {
+                industry: (industry?.toUpperCase() || 'ELEVATORS'),
+                environment: 'PRODUCTION',
+                tenantId,
+                correlationId
+            });
+
+            if (!validation.valid) {
+                throw new ValidationError('Generated workflow definition is invalid', {
+                    errors: validation.errors,
+                    warnings: validation.warnings,
+                });
+            }
+
             await logEvento({
                 level: 'INFO',
                 source: 'WORKFLOW_ORCHESTRATOR',
@@ -280,6 +295,7 @@ export class WorkflowOrchestratorService {
                     name: validated.name,
                     stateCount: validated.states.length,
                     transitionCount: validated.transitions.length,
+                    warnings: validation.warnings.length
                 },
                 correlationId,
             });

@@ -26,12 +26,10 @@ export async function GET(request: Request) {
         const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entityType);
 
         if (!definition) {
-            // Si no hay definición propia, intentamos devolver la default (seeding rápido si es admin)
-            // Por ahora solo lanzamos error si no existe, el admin debería haber inicializado.
-            throw new AppError('NOT_FOUND', 404, `No hay un workflow activo para ${entityType}`);
+            return NextResponse.json({ success: true, definition: null, seeded: false });
         }
 
-        return NextResponse.json({ definition });
+        return NextResponse.json({ success: true, definition });
 
     } catch (error) {
         return handleApiError(error, 'API_GET_ACTIVE_WORKFLOW', correlationId);

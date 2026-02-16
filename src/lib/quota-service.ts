@@ -146,8 +146,8 @@ export class QuotaService {
                 const usersDb = await getTenantCollection('users'); // Simplified, normally in auth db
                 return await usersDb.countDocuments({ tenantId, active: true });
             case 'SPACES_TENANT':
-                const mainDb = await (await import('@/lib/db')).connectDB();
-                return await mainDb.collection('spaces').countDocuments({ tenantId });
+                const spacesDb = await getTenantCollection('spaces');
+                return await spacesDb.countDocuments({ tenantId });
             case 'SPACES_USER':
                 // Note: user specific current usage is handled in SpaceService since it needs userId
                 return 0;

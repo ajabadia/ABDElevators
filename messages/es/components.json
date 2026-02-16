@@ -1,0 +1,30 @@
+{
+  "Timeline": {
+    "loading": "Cargando historial...",
+    "empty": "No hay eventos registrados."
+  },
+  "FilterBar": {
+    "search_placeholder": "Buscar...",
+    "filter_by": "Filtrar por",
+    "apply": "Aplicar",
+    "reset": "Limpiar",
+    "date_range": "Rango de fechas"
+  },
+  "ActionSidebar": {
+    "close": "Cerrar panel",
+    "actions": "Acciones Disponibles"
+  },
+  "TabNavigation": {
+    "more": "Más"
+  },
+  "ContextBreadcrumb": {
+    "home": "Inicio",
+    "admin": "Administración",
+    "back": "Volver"
+  },
+  "HeroCard": {
+    "trend_up": "Tendencia al alza",
+    "trend_down": "Tendencia a la baja",
+    "trend_neutral": "Sin cambios"
+  }
+}

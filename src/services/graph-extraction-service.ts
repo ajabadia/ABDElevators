@@ -14,7 +14,8 @@ const GraphDataSchema = z.object({
     relations: z.array(z.object({
         source: z.string(),
         type: z.string(),
-        target: z.string()
+        target: z.string(),
+        weight: z.number().min(0).max(1).optional().default(0.5)
     }))
 });
 
@@ -114,8 +115,9 @@ export class GraphExtractionService {
             await runQuery(
                 `MATCH (a { id: $source, tenantId: $tenantId }), (b { id: $target, tenantId: $tenantId })
                  MERGE (a)-[r:${rel.type}]->(b)
-                 ON CREATE SET r.createdAt = datetime()`,
-                { source: rel.source, target: rel.target, tenantId }
+                 ON CREATE SET r.createdAt = datetime(), r.weight = $weight
+                 ON MATCH SET r.weight = $weight`,
+                { source: rel.source, target: rel.target, tenantId, weight: rel.weight }
             );
         }
     }

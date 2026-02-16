@@ -157,7 +157,7 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'Admin Spaces',
                 nameKey: 'items.admin_spaces',
-                href: '/admin/spaces',
+                href: '/admin/knowledge?tab=spaces',
                 icon: Shield,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             }
@@ -225,10 +225,11 @@ export const menuSections: MenuSection[] = [
             {
                 name: 'System Logs',
                 nameKey: 'items.logs',
-                href: '/admin/logs',
+                href: '/admin/operations/logs',
                 icon: Activity,
                 roles: [UserRole.SUPER_ADMIN]
             },
+
             {
                 name: 'Global Analytics',
                 nameKey: 'items.analytics',
@@ -243,6 +244,20 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/workflow-tasks',
                 icon: CheckSquare,
                 roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER]
+            },
+            {
+                name: 'Security Hub',
+                nameKey: 'items.securityHub',
+                href: '/admin/security',
+                icon: ShieldCheck,
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+            },
+            {
+                name: 'Operations Hub',
+                nameKey: 'items.operationsHub',
+                href: '/admin/operations',
+                icon: Activity,
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
             },
             {
                 name: 'Guardian Console',

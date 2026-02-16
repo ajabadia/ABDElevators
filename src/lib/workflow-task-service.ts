@@ -35,6 +35,19 @@ export class WorkflowTaskService {
     }
 
     /**
+     * Lista tareas creadas por un usuario específico.
+     */
+    static async listByCreator(tenantId: string, userId: string) {
+        const collection = await getTenantCollection(this.COLLECTION);
+        return await collection.find({
+            tenantId,
+            'metadata.createdBy': userId
+        }, {
+            sort: { createdAt: -1 }
+        });
+    }
+
+    /**
      * Obtiene una tarea por ID verificando el tenant.
      */
     static async getTaskById(id: string, tenantId: string) {
@@ -139,7 +152,10 @@ export class WorkflowTaskService {
             assignedRole: params.assignedRole,
             priority: params.priority,
             status: 'PENDING',
-            metadata: params.metadata || {},
+            metadata: {
+                ...params.metadata,
+                createdBy: params.metadata?.createdBy // Assumes caller passes it if available, or we inject it
+            },
             createdAt: new Date(),
             updatedAt: new Date()
         };

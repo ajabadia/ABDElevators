@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 interface PageHeaderProps {
     title: string;
@@ -11,6 +13,8 @@ interface PageHeaderProps {
     icon?: React.ReactNode;
     /** Optional children to render below the title/subtitle (extra header content) */
     children?: React.ReactNode;
+    /** Optional URL to navigate back to */
+    backHref?: string;
     className?: string;
 }
 
@@ -21,6 +25,7 @@ export function PageHeader({
     actions,
     icon,
     children,
+    backHref,
     className
 }: PageHeaderProps) {
     // If highlight is provided, we try to find it in the title to wrap it.
@@ -30,22 +35,33 @@ export function PageHeader({
     return (
         <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6", className)}>
             <div className="space-y-1">
-                <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-                    {icon ? (
-                        <div className="shrink-0">{icon}</div>
-                    ) : (
-                        <span className="bg-primary w-1.5 h-8 rounded-full shrink-0" />
+                <div className="flex items-center gap-3">
+                    {backHref && (
+                        <Link
+                            href={backHref}
+                            className="p-2 hover:bg-muted rounded-full transition-colors group mr-1"
+                            title="Volver"
+                        >
+                            <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
+                        </Link>
                     )}
-                    {title}
-                    {highlight && <span className="text-primary ml-1">{highlight}</span>}
-                </h1>
+                    <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                        {icon ? (
+                            <div className="shrink-0">{icon}</div>
+                        ) : (
+                            <span className="bg-primary w-1.5 h-8 rounded-full shrink-0" />
+                        )}
+                        {title}
+                        {highlight && <span className="text-primary ml-1">{highlight}</span>}
+                    </h1>
+                </div>
                 {subtitle && (
-                    <p className="text-slate-500 dark:text-slate-400 pl-8 md:pl-0">
+                    <p className={cn("text-slate-500 dark:text-slate-400 pl-8 md:pl-0", backHref && "ml-9 md:ml-0")}>
                         {subtitle}
                     </p>
                 )}
                 {children && (
-                    <div className="pt-2 pl-8 md:pl-0">
+                    <div className={cn("pt-2 pl-8 md:pl-0", backHref && "ml-9 md:ml-0")}>
                         {children}
                     </div>
                 )}

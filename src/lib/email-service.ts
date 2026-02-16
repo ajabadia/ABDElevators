@@ -174,3 +174,42 @@ export async function sendNewInvoiceNotification(params: {
         html,
     });
 }
+
+/**
+ * Sends a scheduled report with PDF attachment.
+ */
+export async function sendReportDelivery(params: {
+    to: string;
+    reportName: string;
+    templateType: string;
+    generatedAt: Date;
+    pdfBuffer: Buffer;
+    fileName: string;
+}): Promise<void> {
+    const { to, reportName, templateType, generatedAt, pdfBuffer, fileName } = params;
+
+    // Dynamic import to avoid circular dependencies if any, though here it's fine.
+    // Ideally imports should be at top, but for this append operation:
+    const { renderReportDeliveryEmail } = await import('./emails/report-delivery');
+
+    const resend = getResend();
+
+    const html = renderReportDeliveryEmail({
+        reportName,
+        templateType,
+        generatedAt
+    });
+
+    await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'ABD RAG Platform <noreply@abdrag.com>',
+        to,
+        subject: `📊 Informe Disponible: ${reportName}`,
+        html,
+        attachments: [
+            {
+                filename: fileName,
+                content: pdfBuffer,
+            }
+        ]
+    });
+}

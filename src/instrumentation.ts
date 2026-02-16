@@ -28,8 +28,12 @@ export async function register() {
         const enableWorker = process.env.ENABLE_WORKER === 'true';
 
         if (!isVercel || enableWorker) {
-            await import('./lib/workers/ingest-worker');
-            console.log('[INSTRUMENTATION] Ingest Worker started');
+            try {
+                await import('./lib/workers/ingest-worker');
+                console.log('[INSTRUMENTATION] Ingest Worker started');
+            } catch (err) {
+                console.error('[INSTRUMENTATION] Ingest Worker failed to start:', err);
+            }
         } else {
             console.warn('[INSTRUMENTATION] Ingest Worker skipped (Vercel Environment)');
         }

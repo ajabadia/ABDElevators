@@ -18,6 +18,8 @@ const GraphState = Annotation.Root({
     retry_count: Annotation<number>(),
     tenantId: Annotation<string>(),
     correlationId: Annotation<string>(),
+    industry: Annotation<string>(),
+    environment: Annotation<string>(),
     is_grounded: Annotation<boolean>(),
     is_useful: Annotation<boolean>(),
     trace: Annotation<string[]>({
@@ -36,7 +38,7 @@ export class AgenticRAGService {
      * Nodo: Recuperación de Documentos
      */
     private static async retrieve(state: typeof GraphState.State) {
-        const { question, tenantId, correlationId } = state;
+        const { question, tenantId, correlationId, environment, industry } = state;
 
         try {
             await logEvento({
@@ -47,11 +49,18 @@ export class AgenticRAGService {
                 correlationId
             });
 
-            const docs = await hybridSearch(question, tenantId, correlationId, 3);
+            const docs = await hybridSearch(
+                question,
+                tenantId,
+                correlationId,
+                3,
+                environment,
+                industry
+            );
 
             return {
                 documents: docs,
-                trace: [`RETRIEVAL: Found ${docs.length} chunks.`]
+                trace: [`RETRIEVAL: Found ${docs.length} chunks in ${industry}/${environment}.`]
             };
         } catch (error: any) {
             console.error("[AgenticRAGService] Error in retrieve node:", error);
@@ -97,7 +106,7 @@ export class AgenticRAGService {
      * Nodo: Generación de Respuesta
      */
     private static async generate(state: typeof GraphState.State) {
-        const { question, documents, tenantId, correlationId, history } = state;
+        const { question, documents, tenantId, correlationId, history, industry } = state;
         const context = documents.length > 0
             ? documents.map(d => d.text).join("\n\n---\n\n")
             : "No relevant documents found in the corpus.";
@@ -113,7 +122,7 @@ export class AgenticRAGService {
                 {
                     question,
                     context: context,
-                    industry: 'ELEVATORS',
+                    industry: industry || 'ELEVATORS',
                     history: history ? JSON.stringify(history) : "[]"
                 },
                 tenantId
@@ -221,18 +230,27 @@ export class AgenticRAGService {
     /**
      * Compila e invoca el flujo agéntico devolviendo un flujo de eventos (docs, trace, generation stream)
      */
-    public static async *runStream(question: string, tenantId: string, correlationId: string, history: any[] = []) {
+    public static async *runStream(
+        question: string,
+        tenantId: string,
+        correlationId: string,
+        history: any[] = [],
+        industry: string = 'ELEVATORS',
+        environment: string = 'PRODUCTION'
+    ) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
         // 1. Flush headers immediately to prevent browser timeouts (Phase 96 Stability)
         yield { type: 'connected', data: { correlationId } };
 
-        const result = await app.invoke({
+        const resultState = await app.invoke({
             question,
             history,
             tenantId,
             correlationId,
+            industry,
+            environment,
             retry_count: 0,
             documents: [],
             generation: "",
@@ -242,11 +260,11 @@ export class AgenticRAGService {
         });
 
         // 2. Emitir documentos y traza primero
-        yield { type: 'docs', data: result.documents };
-        yield { type: 'trace', data: result.trace };
+        yield { type: 'docs', data: resultState.documents };
+        yield { type: 'trace', data: resultState.trace };
 
         // 3. Circuit Breaker: Si no hay documentos, no llamar al LLM (ahorrar tokens y evitar alucinaciones/crash)
-        if (result.documents.length === 0) {
+        if (resultState.documents.length === 0) {
             const noDocsMessage = "No he encontrado información relevante en la base de conocimiento para responder a tu pregunta.\n\nPor favor, asegúrate de que has subido los manuales técnicos correspondientes a la plataforma.";
 
             // Simular streaming de la respuesta estática para mantener UX consistente
@@ -259,7 +277,7 @@ export class AgenticRAGService {
         }
 
         // 4. Obtener el prompt de generación para hacer el streaming real de la respuesta
-        const context = result.documents.map((d: any) => d.text).join("\n\n---\n\n");
+        const context = resultState.documents.map((d: any) => d.text).join("\n\n---\n\n");
 
         const promptKey = history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
 
@@ -267,18 +285,18 @@ export class AgenticRAGService {
         let model: string = 'gemini-1.5-flash';
 
         try {
-            const result = await PromptService.getRenderedPrompt(
+            const rendered = await PromptService.getRenderedPrompt(
                 promptKey,
                 {
                     question,
                     context,
-                    industry: 'ELEVATORS',
+                    industry: resultState.industry || 'ELEVATORS',
                     history: JSON.stringify(history)
                 },
                 tenantId
             );
-            genPrompt = result.text;
-            model = result.model;
+            genPrompt = rendered.text;
+            model = rendered.model;
         } catch (err) {
             console.warn(`[AgenticRAGService.runStream] ⚠️ Fallback to Master Prompt (${promptKey}):`, err);
             const masterTemplate = (PROMPTS as any)[promptKey];
@@ -302,12 +320,20 @@ export class AgenticRAGService {
     /**
      * Ejecuta el flujo agéntico completo (Blocking)
      */
-    public static async run(question: string, tenantId: string, correlationId: string, history: any[] = []) {
+    public static async run(
+        question: string,
+        tenantId: string,
+        correlationId: string,
+        history: any[] = [],
+        industry: string = 'ELEVATORS',
+        environment: string = 'PRODUCTION'
+    ) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
         const result = await app.invoke({
             question, history, tenantId, correlationId, retry_count: 0,
+            industry, environment,
             documents: [], generation: "", is_grounded: false, is_useful: false, trace: []
         });
 

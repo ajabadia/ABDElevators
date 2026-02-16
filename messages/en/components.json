@@ -1,0 +1,30 @@
+{
+    "Timeline": {
+        "loading": "Loading history...",
+        "empty": "No events recorded."
+    },
+    "FilterBar": {
+        "search_placeholder": "Search...",
+        "filter_by": "Filter by",
+        "apply": "Apply",
+        "reset": "Clear",
+        "date_range": "Date range"
+    },
+    "ActionSidebar": {
+        "close": "Close panel",
+        "actions": "Available Actions"
+    },
+    "TabNavigation": {
+        "more": "More"
+    },
+    "ContextBreadcrumb": {
+        "home": "Home",
+        "admin": "Admin",
+        "back": "Back"
+    },
+    "HeroCard": {
+        "trend_up": "Trending up",
+        "trend_down": "Trending down",
+        "trend_neutral": "No change"
+    }
+}

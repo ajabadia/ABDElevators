@@ -5,6 +5,11 @@ import path from 'path';
 // Load .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
+if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Este script NO debe ejecutarse en producción. Abortando.');
+    process.exit(1);
+}
+
 const MONGODB_URI = process.env.MONGODB_URI;
 const DATABASE_NAME = 'ABDElevators';
 const COLLECTION_NAME = 'translations';

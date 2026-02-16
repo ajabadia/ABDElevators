@@ -66,6 +66,8 @@
       "intelligence": "Active Intelligence",
       "governance_console": "Guardian Console",
       "workflow_tasks": "Workflow Tasks",
+      "securityHub": "Security Hub",
+      "operationsHub": "Operations Hub",
       "notifications": "Notifications",
       "profile": "Profile",
       "settings": "Settings",

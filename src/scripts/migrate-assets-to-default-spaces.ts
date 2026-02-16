@@ -8,6 +8,11 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
+if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Este script NO debe ejecutarse en producción. Abortando.');
+    process.exit(1);
+}
+
 async function migrate() {
     console.log("--- START ASSET MIGRATION TO SPACES ---");
 

@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 4.5.1 - UX CONSOLIDATED)
+# ABD Multi-Industry RAG Platform (Vision 4.7.2 - RESILIENCE & HARDENING)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v4.5.1** consolida la **Transformación de UX** (Phase 133), unificando la experiencia administrativa en **Hubs Centralizados** (Tasks, Security, Settings, Operations). Incluye optimización de esquemas Zod, corrección de continuidad en API Keys y eliminación completa de rutas legacy.
+Esta versión **v4.7.2** introduce el **Hardening de Resiliencia Agéntica** (Phase 165), con mecanismos de auto-recuperación de JSON, validación estricta de definiciones de flujos y orquestación Human-in-the-loop avanzada ante fallos de IA. Consolida también el **Motor de Reportes Industriales** (Phase 160.1).
 
 ## 🚀 Inicio Rápido
 
@@ -165,7 +165,9 @@ src/
    - ✅ **Workshop Order Intelligence (Phase 128)**: Módulo vertical de Taller con ingesta de pedidos por IA, checklists dinámicos y sugerencia contextual de manuales (RAG).
   - ✅ **Unified Admin Hubs (Phase 133)**: Reorganización total del panel de administración en Hubs temáticos (Tasks, Security, Settings, Operations) para reducir la carga cognitiva.
   - ✅ **Multi-level Chunking (Phase 134)**: Implementación de sistema de segmentación por niveles: Simple (Caracteres), Semántico (Embeddings) y Cognitivo (LLM) para optimizar costos y precisión RAG.
-  - ✅ **Graph RAG Explorer (Phase 136)**: Interfaz visual interactiva para navegar el Grafo de Conocimiento (Neo4j), inspeccionar nodos y descubrir relaciones ocultas en tiempo real.
+  - ✅ **Graph RAG Explorer (Phase 136/150/155)**: Interfaz visual interactiva para navegar y **curar profesionalmente** el Grafo de Conocimiento (Neo4j), con soporte para fusión de nodos (Merging) y borrado masivo.
+- ✅ **Enterprise i18n Governance (Phase 155)**: Localización completa del área administrativa con soporte dinámico para ES/EN y traducción asistida por IA.
+- ✅ **Industrial Reporting Engine (Phase 160)**: Motor de generación de PDFs basado en templates declarativos (Inspección, Auditoría, Calidad RAG) con persistencia y firma digital.
 
 ## 🔧 Scripts Disponibles
 

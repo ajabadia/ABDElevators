@@ -451,7 +451,7 @@
   "knowledge": {
     "title": "Gestión del",
     "highlight": "Corpus Técnico",
-    "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
+    "subtitle": "Sube y gestiona los manuales que alimentan el sistema de Inteligencia Técnica.",
     "tabs": {
       "assets": "Gestión de Activos",
       "explorer": "Explorador Semántico",
@@ -509,11 +509,11 @@
       "type_shadow": "Shadow Chunks (Traducciones)"
     },
     "view": {
-      "showing": "Mostrando {count} de {total} fragmentos encontrados",
-      "loading": "Cargando vectores...",
+      "showing": "Mostrando {count} de {total} fragmentos técnicos encontrados",
+      "loading": "Cargando inteligencia técnica...",
       "empty_title": "No se encontraron fragmentos",
       "empty_subtitle": "Intenta ajustar los filtros de búsqueda.",
-      "chunk_shadow": "Shadow",
+      "chunk_shadow": "Traducción",
       "chunk_original": "Original",
       "chunk_model": "Modelo",
       "chunk_type": "Tipo",
@@ -525,7 +525,7 @@
     },
     "brain": {
       "title": "Asistente de Inteligencia Técnica",
-      "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad.",
+      "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad técnica.",
       "placeholder": "Ej: ¿Protocolo de rescate en manual Otis 2000?",
       "thinking": "Pensando...",
       "submit": "Consultar",
@@ -601,6 +601,7 @@
       "export_report": "Exportar Informe Técnico",
       "exit_analysis": "Salir del Análisis",
       "perf_analysis": "Análisis de Rendimiento",
+      "simulate": "Simular Rendimiento",
       "hide_logs": "Ocultar Logs",
       "show_logs": "Mostrar Logs",
       "duplicate": "Duplicar",
@@ -627,7 +628,8 @@
         "wait": "Espera / Delay",
         "wait_5s": "Esperar 5s",
         "loop": "Bucle Iterador",
-        "foreach": "Para cada Elemento"
+        "foreach": "Para cada Elemento",
+        "subflow": "Sub-workflow"
       }
     },
     "properties": {
@@ -650,6 +652,10 @@
       "data_source": "Origen de Datos (Variable/Array)",
       "data_source_placeholder": "ej: results.items",
       "iterations": "Iteraciones Máximas",
+      "subflow_config": "Configuración de Sub-flujo",
+      "select_subflow": "Seleccionar Workflow",
+      "select_placeholder": "Elegir flujo...",
+      "edit_subflow": "Editar Sub-flujo Seleccionado",
       "extra_features": "Características Adicionales",
       "add": "AÑADIR",
       "property": "Propiedad",
@@ -1300,67 +1306,38 @@
   },
   "billing": {
     "contracts": {
+      "title": "Contratos",
+      "subtitle": "Gestiona tus contratos de servicio y documentos legales.",
+      "metadata": {
+        "title": "Contratos - Facturación",
+        "description": "Ver y gestionar tus contratos."
+      },
       "table": {
-        "loading_error": "Error al cargar contratos",
-        "search_placeholder": "Buscar tenant...",
-        "tenant": "Organización",
-        "plan": "Plan Base",
-        "override": "Personalización",
-        "usage": "Uso (Tokens / Storage)",
-        "mrr": "MRR (Est.)",
+        "search_placeholder": "Buscar contratos...",
+        "tenant": "Inquilino",
+        "plan": "Plan",
+        "override": "Override",
+        "usage": "Uso",
+        "mrr": "MRR",
         "status": "Estado",
         "actions": "Acciones",
         "loading": "Cargando contratos...",
-        "empty": "No se encontraron resultados",
-        "custom_badge": "Personalizado",
-        "unlimited": "∞",
-        "open_menu": "Abrir menú de acciones"
-      },
-      "actions": {
-        "edit": "Editar Contrato / Límites",
-        "upcoming_title": "Próximamente",
-        "upcoming_desc": "Historial de facturas en fase de desarrollo.",
-        "invoices": "Ver Facturas"
-      },
-      "edit": {
-        "error_updating": "Error al actualizar el contrato",
-        "success": "Contrato Actualizado",
-        "success_desc": "Se ha guardado la configuración para {name}",
-        "title": "Editar Configuración de Contrato",
-        "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
-        "plan_label": "Plan de Suscripción",
-        "plans": {
-          "free": "Prueba Gratuita",
-          "basic": "Básico Business",
-          "pro": "Profesional",
-          "enterprise": "Corporativo"
-        },
-        "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
-        "overrides_title": "Límites Personalizados (Overrides)",
-        "tokens_label": "Límite de Tokens (Mes)",
-        "tokens_desc": "0 para usar el valor por defecto del plan.",
-        "storage_label": "Límite de Almacenamiento (Bytes)",
-        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
-        "spaces_tenant_label": "Límite Espacios (Tenant)",
-        "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
-        "spaces_user_label": "Límite Espacios (Usuario)",
-        "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)",
-        "warning_title": "Cambio Crítico de Cuotas",
-        "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
-        "cancel": "Cancelar",
-        "save": "Guardar Cambios"
-      },
-      "title": "Gestión de Contratos ('Casos')",
-      "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
-      "metadata": {
-        "title": "Gestión de Contratos y Casos | Admin",
-        "description": "Administración de planes, límites y overrides por tenant con control de cuotas industrial."
+        "loading_error": "No se pudieron cargar los contratos",
+        "empty": "No se encontraron contratos",
+        "custom_badge": "PERSONALIZADO",
+        "unlimited": "Ilimitado",
+        "open_menu": "Abrir menú"
       },
       "status": {
         "active": "ACTIVO",
-        "blocked": "BLOQUEADO",
         "past_due": "VENCIDO",
-        "trial": "PRUEBA"
+        "blocked": "BLOQUEADO"
+      },
+      "actions": {
+        "edit": "Editar Contrato",
+        "invoices": "Ver Facturas",
+        "upcoming_title": "Próxima Funcionalidad",
+        "upcoming_desc": "Esta funcionalidad estará disponible pronto."
       }
     },
     "fields": {
@@ -1401,11 +1378,68 @@
     "alerts": {
       "blocked": "Bloqueo Activo: {details}"
     },
-    "page": {
-      "title": "Facturación & Consumo",
-      "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
-      "metadata_title": "Facturación y Consumo | ABD RAG Platform",
-      "metadata_desc": "Gestión de recursos y facturación SaaS."
+    "invoices": {
+      "title": "Facturas",
+      "subtitle": "Historial de pagos y facturas descargables.",
+      "history_title": "Historial de Facturación",
+      "history_desc": "Todas las facturas emitidas para tu organización.",
+      "table": {
+        "id": "ID Factura",
+        "date": "Fecha",
+        "amount": "Importe",
+        "status": "Estado",
+        "actions": "Acciones",
+        "download": "PDF"
+      },
+      "status": {
+        "PAID": "PAGADO",
+        "PENDING": "PENDIENTE"
+      }
+    },
+    "plan": {
+      "title": "Tu Plan",
+      "subtitle": "Gestiona tu nivel de suscripción y capacidades.",
+      "current_badge": "Plan Actual",
+      "month": "/mes",
+      "actions": {
+        "current": "Tu Plan Actual",
+        "contact": "Contactar Ventas",
+        "upgrade": "Mejorar Plan"
+      },
+      "features": {
+        "reports": "Informes/mes",
+        "storage": "Almacenamiento",
+        "support": "Soporte",
+        "users": "Usuarios",
+        "rag": "RAG Avanzado",
+        "unlimited": "Ilimitado",
+        "sla": "SLA Garantizado",
+        "account_manager": "Gestor de Cuenta",
+        "sso": "SSO & Audit Logs",
+        "on_premise": "Opción On-premise"
+      }
+    }
+  },
+  "billing_hub": {
+    "title": "Centro de Facturación",
+    "subtitle": "Visión consolidada de métricas de uso, contratos y facturas recurrentes.",
+    "sections": {
+      "usage": {
+        "title": "Métricas de Uso",
+        "description": "Revisión en tiempo real de consumo de tokens, almacenamiento y búsquedas."
+      },
+      "contracts": {
+        "title": "Gestión de Contratos",
+        "description": "Administración de planes corporativos, límites y personalizaciones por cliente."
+      },
+      "invoices": {
+        "title": "Facturas y Pagos",
+        "description": "Historial detallado de facturación y seguimiento de pagos pendientes."
+      },
+      "plan": {
+        "title": "Estado del Plan",
+        "description": "Configuración del plan base y cuotas industriales de la organización."
+      }
     }
   },
   "documentTypes": {
@@ -1794,5 +1828,124 @@
       "active": "Activo",
       "inactive": "Inactivo"
     }
+  },
+  "reports": {
+    "hub": {
+      "title": "Centro de Informes",
+      "subtitle": "Generación y gestión de informes técnicos industriales",
+      "generateNew": "Generar Nuevo Informe",
+      "noReports": "No hay informes generados recientemente.",
+      "download": "Descargar PDF",
+      "share": "Compartir",
+      "tableHeaders": {
+        "name": "Nombre del Informe",
+        "type": "Tipo",
+        "date": "Fecha",
+        "technician": "Técnico",
+        "actions": "Acciones"
+      }
+    },
+    "templates": {
+      "audit": "Auditoría de Cumplimiento",
+      "inspection": "Inspección Técnica",
+      "ragQuality": "Calidad RAG",
+      "entityLlm": "Análisis de Entidad (LLM)",
+      "workflow": "Rendimiento de Workflow"
+    },
+    "generate": {
+      "title": "Configurar Nuevo Informe",
+      "selectTemplate": "Seleccionar Plantilla",
+      "dateRange": "Rango de Fechas",
+      "includeSources": "Incluir Fuentes",
+      "generating": "Generando Informe...",
+      "success": "Informe generado exitosamente",
+      "error": "Error al generar el informe"
+    },
+    "schedules": {
+      "title": "Programación de Informes",
+      "subtitle": "Automatice la generación y envío de informes periódicos.",
+      "create": "Nueva Programación",
+      "edit": "Editar Programación",
+      "list": {
+        "name": "Nombre",
+        "template": "Plantilla",
+        "frequency": "Frecuencia",
+        "nextRun": "Próxima Ejecución",
+        "recipients": "Destinatarios",
+        "status": "Estado",
+        "enabled": "Activo",
+        "disabled": "Inactivo"
+      },
+      "form": {
+        "name": "Nombre de la Tarea",
+        "template": "Tipo de Informe",
+        "recipients": "Correos Destinatarios (separar por comas)",
+        "frequency": "Frecuencia de Envío",
+        "cron": "Expresión Cron Personalizada",
+        "cron_help": "Ejemplo: 0 8 * * 1 (Lunes a las 8:00)",
+        "freq_options": {
+          "daily": "Diario (08:00)",
+          "weekly": "Semanal (Lunes 08:00)",
+          "monthly": "Mensual (Día 1 08:00)",
+          "custom": "Personalizado"
+        }
+      },
+      "toast": {
+        "created": "Programación creada correctamente",
+        "updated": "Programación actualizada",
+        "deleted": "Programación eliminada"
+      }
+    }
+  },
+  "billing_usage": {
+    "title": "Consumo y Métricas",
+    "subtitle": "Monitoriza el uso de recursos de tu plan en tiempo real.",
+    "export_report": "Exportar Informe",
+    "manage_plan": "Gestionar Plan",
+    "tokens": {
+      "title": "Inteligencia Técnica (Tokens)",
+      "limit": "de {limit} disponibles"
+    },
+    "storage": {
+      "title": "Almacenamiento",
+      "limit": "de {limit} disponibles"
+    },
+    "searches": {
+      "title": "Búsquedas Semánticas",
+      "limit": "de {limit} disponibles"
+    },
+    "users": {
+      "title": "Usuarios Activos",
+      "limit": "de {limit} permitidos"
+    },
+    "roi": {
+      "title": "ROI Estimado (30 días)",
+      "description": "Ahorro acumulado por automatización IA vs. gestión manual",
+      "saved_hours": "Horas Ahorradas",
+      "estimated_savings": "Ahorro Estimado",
+      "efficiency": "Eficiencia",
+      "breakdown": {
+        "analysis": "Análisis: {count}",
+        "searches": "Búsquedas: {count}",
+        "dedup": "Dedup: {count}"
+      }
+    },
+    "plan_status": {
+      "title": "Estado del Plan",
+      "subscription": "Suscripción: {status}",
+      "current_plan": "Plan Actual",
+      "manage": "Gestionar Suscripción"
+    },
+    "alerts": {
+      "critical_title": "Atención: Cuota cercana al límite",
+      "blocked": "El recurso \"{resource}\" ha superado tu cuota. Actualiza tu plan para continuar.",
+      "warning": "El recurso \"{resource}\" está al {percentage}% de uso. Considera actualizar tu plan.",
+      "ok_title": "Todo en orden",
+      "ok_description": "Tu consumo está dentro de los límites del plan. Sin riesgo de bloqueo este mes.",
+      "error_title": "Error cargando métricas",
+      "retry": "Reintentar",
+      "error_unexpected": "Respuesta inesperada del servidor"
+    },
+    "loading_label": "Cargando métricas de uso"
   }
 }

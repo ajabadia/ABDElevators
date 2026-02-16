@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { addEdge, Connection, Node, Edge, ReactFlowInstance } from "@xyflow/react";
+import dagre from 'dagre';
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +12,7 @@ interface UseNodeOperationsProps {
     setSelectedNode: (node: Node | null) => void;
     reactFlowInstance: ReactFlowInstance | null;
     reactFlowWrapper: React.RefObject<HTMLDivElement | null>;
+    edges: Edge[]; // Added for auto-layout
 }
 
 export function useNodeOperations({
@@ -18,7 +20,8 @@ export function useNodeOperations({
     setEdges,
     setSelectedNode,
     reactFlowInstance,
-    reactFlowWrapper
+    reactFlowWrapper,
+    edges
 }: UseNodeOperationsProps) {
     const { toast } = useToast();
     const t = useTranslations('admin.workflows.canvas');
@@ -150,6 +153,41 @@ export function useNodeOperations({
         return Array.from(cycles);
     }, []);
 
+    const autoLayout = useCallback((direction: 'TB' | 'LR' = 'TB') => {
+        setNodes((nds) => {
+            const eds = edges; // We need edges to calculate layout
+
+            const dagreGraph = new dagre.graphlib.Graph();
+            dagreGraph.setDefaultEdgeLabel(() => ({}));
+            dagreGraph.setGraph({ rankdir: direction });
+
+            const nodeWidth = 200;
+            const nodeHeight = 80;
+
+            nds.forEach((node) => {
+                dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+            });
+
+            eds.forEach((edge: Edge) => {
+                dagreGraph.setEdge(edge.source, edge.target);
+            });
+
+            dagre.layout(dagreGraph);
+
+            return nds.map((node) => {
+                const nodeWithPosition = dagreGraph.node(node.id);
+                return {
+                    ...node,
+                    position: {
+                        x: nodeWithPosition.x - nodeWidth / 2,
+                        y: nodeWithPosition.y - nodeHeight / 2,
+                    },
+                };
+            });
+        });
+        toast({ title: t('align_success' as any), description: "Auto-layout complete" });
+    }, [setNodes, edges, toast, t]);
+
     return {
         onConnect,
         onNodeClick,
@@ -158,6 +196,7 @@ export function useNodeOperations({
         onDrop,
         deleteSelection,
         alignNodes,
+        autoLayout,
         detectCycles
     };
 }

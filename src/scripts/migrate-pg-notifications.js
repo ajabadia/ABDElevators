@@ -2,6 +2,11 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config({ path: '.env.local' });
 
+if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Este script NO debe ejecutarse en producción. Abortando.');
+    process.exit(1);
+}
+
 async function migrate() {
     const mainClient = new MongoClient(process.env.MONGODB_URI);
     const authClient = new MongoClient(process.env.MONGODB_AUTH_URI);

@@ -6,8 +6,12 @@ import { Button } from '@/components/ui/button';
 import { QuotaProgress } from '@/components/admin/billing/QuotaProgress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Download, ExternalLink, AlertTriangle, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { Info, Download, AlertTriangle, TrendingUp, Clock, DollarSign, LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -91,9 +95,60 @@ function formatNumber(n: number): string {
     return n.toLocaleString();
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
+// ── Local Components ───────────────────────────────────────────────────────
+
+interface MetricCardProps {
+    title: string;
+    value: string;
+    subtext: string;
+    used: number;
+    limit: number;
+    unit?: string;
+}
+
+function MetricCard({ title, value, subtext, used, limit, unit }: MetricCardProps) {
+    return (
+        <Card className="animate-in fade-in zoom-in-95 duration-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{value}</div>
+                <p className="text-xs text-muted-foreground">{subtext}</p>
+                <QuotaProgress label="" used={used} limit={limit} unit={unit || ""} className="mt-3" />
+            </CardContent>
+        </Card>
+    );
+}
+
+interface RoiStatProps {
+    icon: LucideIcon;
+    value: string;
+    label: string;
+    variant: 'primary' | 'success' | 'info';
+}
+
+function RoiStat({ icon: Icon, value, label, variant }: RoiStatProps) {
+    const variants = {
+        primary: "bg-primary/5 border-primary/10 text-primary",
+        success: "bg-green-500/5 border-green-500/10 text-green-600 dark:text-green-400",
+        info: "bg-blue-500/5 border-blue-500/10 text-blue-600 dark:text-blue-400"
+    };
+
+    return (
+        <div className={cn("flex flex-col items-center p-4 rounded-lg border", variants[variant])}>
+            <Icon className="h-5 w-5 mb-2" aria-hidden="true" />
+            <span className="text-2xl font-bold">{value}</span>
+            <span className="text-xs text-muted-foreground text-center mt-1">{label}</span>
+        </div>
+    );
+}
+
+// ── Main Page Component ────────────────────────────────────────────────────
 
 export default function BillingUsagePage() {
+    const t = useTranslations('admin.billing_usage');
     const router = useRouter();
     const [data, setData] = useState<UsageApiResponse['data'] | null>(null);
     const [loading, setLoading] = useState(true);
@@ -112,14 +167,14 @@ export default function BillingUsagePage() {
             if (json.success) {
                 setData(json.data);
             } else {
-                throw new Error('Respuesta inesperada del servidor');
+                throw new Error(t('alerts.error_unexpected'));
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error cargando datos');
+            setError(err instanceof Error ? err.message : t('alerts.error_title'));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         void fetchUsageData();
@@ -128,36 +183,40 @@ export default function BillingUsagePage() {
     // ── Loading Skeleton ───────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="space-y-6 p-6" role="status" aria-label="Cargando métricas de uso">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <Skeleton className="h-8 w-64" />
-                        <Skeleton className="h-4 w-96 mt-2" />
+            <PageContainer className="animate-in fade-in duration-500">
+                <div className="space-y-6" role="status" aria-label={t('loading_label')}>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <Skeleton className="h-8 w-64" />
+                            <Skeleton className="h-4 w-96 mt-2" />
+                        </div>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        {[1, 2, 3, 4].map(i => (
+                            <Card key={i}>
+                                <CardHeader className="pb-2"><Skeleton className="h-4 w-24" /></CardHeader>
+                                <CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-2 w-full mt-3" /></CardContent>
+                            </Card>
+                        ))}
                     </div>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {[1, 2, 3, 4].map(i => (
-                        <Card key={i}>
-                            <CardHeader className="pb-2"><Skeleton className="h-4 w-24" /></CardHeader>
-                            <CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-2 w-full mt-3" /></CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </div>
+            </PageContainer>
         );
     }
 
     // ── Error State ────────────────────────────────────────────────────────
     if (error || !data) {
         return (
-            <div className="space-y-6 p-6">
-                <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Error cargando métricas</AlertTitle>
-                    <AlertDescription>{error || 'No se pudieron cargar los datos.'}</AlertDescription>
-                </Alert>
-                <Button onClick={() => void fetchUsageData()}>Reintentar</Button>
-            </div>
+            <PageContainer className="animate-in fade-in duration-500">
+                <div className="space-y-6">
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{t('alerts.error_title')}</AlertTitle>
+                        <AlertDescription>{error || t('alerts.ok_description')}</AlertDescription>
+                    </Alert>
+                    <Button onClick={() => void fetchUsageData()}>{t('alerts.retry')}</Button>
+                </div>
+            </PageContainer>
         );
     }
 
@@ -171,168 +230,143 @@ export default function BillingUsagePage() {
         .sort((a, b) => b[1].percentage - a[1].percentage);
 
     return (
-        <div className="space-y-6 p-6">
+        <PageContainer className="animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Consumo y Métricas</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Monitoriza el uso de recursos de tu plan en tiempo real.
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => router.push('/admin/billing/plan')}>
-                        Gestionar Plan
-                    </Button>
-                    <Button onClick={() => window.print()}>
-                        <Download className="mr-2 h-4 w-4" /> Exportar Informe
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title={t('title')}
+                subtitle={t('subtitle')}
+                action={
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => router.push('/admin/billing/plan')}>
+                            {t('manage_plan')}
+                        </Button>
+                        <Button onClick={() => window.print()}>
+                            <Download className="mr-2 h-4 w-4" /> {t('export_report')}
+                        </Button>
+                    </div>
+                }
+            />
 
             {/* KPI Cards — Usage Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Tokens LLM</CardTitle>
-                        <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatNumber(usage.tokens)}</div>
-                        <p className="text-xs text-muted-foreground">
-                            de {formatNumber(usage.limits.tokens)} disponibles
-                        </p>
-                        <QuotaProgress label="" used={usage.tokens} limit={usage.limits.tokens} unit="" className="mt-3" />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Almacenamiento</CardTitle>
-                        <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatBytes(usage.storage)}</div>
-                        <p className="text-xs text-muted-foreground">
-                            de {formatBytesLimit(usage.limits.storage)} disponibles
-                        </p>
-                        <QuotaProgress label="" used={storageUsedGB} limit={storageLimitGB === Infinity ? -1 : storageLimitGB} unit="GB" className="mt-3" />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Búsquedas RAG</CardTitle>
-                        <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatNumber(usage.searches)}</div>
-                        <p className="text-xs text-muted-foreground">
-                            de {formatNumber(usage.limits.searches)} disponibles
-                        </p>
-                        <QuotaProgress label="" used={usage.searches} limit={usage.limits.searches} unit="" className="mt-3" />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
-                        <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatNumber(usage.users)}</div>
-                        <p className="text-xs text-muted-foreground">
-                            de {formatNumber(usage.limits.users)} permitidos
-                        </p>
-                        <QuotaProgress label="" used={usage.users} limit={usage.limits.users} unit="" className="mt-3" />
-                    </CardContent>
-                </Card>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
+                <MetricCard
+                    title={t('tokens.title')}
+                    value={formatNumber(usage.tokens)}
+                    subtext={t('tokens.limit', { limit: formatNumber(usage.limits.tokens) })}
+                    used={usage.tokens}
+                    limit={usage.limits.tokens}
+                />
+                <MetricCard
+                    title={t('storage.title')}
+                    value={formatBytes(usage.storage)}
+                    subtext={t('storage.limit', { limit: formatBytesLimit(usage.limits.storage) })}
+                    used={storageUsedGB}
+                    limit={storageLimitGB === Infinity ? -1 : storageLimitGB}
+                    unit="GB"
+                />
+                <MetricCard
+                    title={t('searches.title')}
+                    value={formatNumber(usage.searches)}
+                    subtext={t('searches.limit', { limit: formatNumber(usage.limits.searches) })}
+                    used={usage.searches}
+                    limit={usage.limits.searches}
+                />
+                <MetricCard
+                    title={t('users.title')}
+                    value={formatNumber(usage.users)}
+                    subtext={t('users.limit', { limit: formatNumber(usage.limits.users) })}
+                    used={usage.users}
+                    limit={usage.limits.users}
+                />
             </div>
 
             {/* ROI + Plan Status */}
-            <div className="grid gap-6 md:grid-cols-7">
+            <div className="grid gap-6 md:grid-cols-7 mt-6">
                 {/* ROI Card */}
-                <div className="col-span-4">
-                    <Card>
+                <div className="col-span-1 md:col-span-4">
+                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <CardHeader>
-                            <CardTitle>ROI Estimado (30 días)</CardTitle>
+                            <CardTitle>{t('roi.title')}</CardTitle>
                             <CardDescription>
-                                Ahorro acumulado por automatización IA vs. gestión manual
+                                {t('roi.description')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="flex flex-col items-center p-4 rounded-lg bg-primary/5 border border-primary/10">
-                                    <Clock className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
-                                    <span className="text-2xl font-bold text-primary">{roi.roi.totalSavedHours}h</span>
-                                    <span className="text-xs text-muted-foreground text-center mt-1">Horas Ahorradas</span>
-                                </div>
-                                <div className="flex flex-col items-center p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                                    <DollarSign className="h-5 w-5 text-emerald-600 mb-2" aria-hidden="true" />
-                                    <span className="text-2xl font-bold text-emerald-600">
-                                        ${roi.roi.estimatedCostSavings.toLocaleString()}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground text-center mt-1">Ahorro Estimado</span>
-                                </div>
-                                <div className="flex flex-col items-center p-4 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                                    <TrendingUp className="h-5 w-5 text-blue-600 mb-2" aria-hidden="true" />
-                                    <span className="text-2xl font-bold text-blue-600">{roi.efficiencyScore}%</span>
-                                    <span className="text-xs text-muted-foreground text-center mt-1">Eficiencia</span>
-                                </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <RoiStat
+                                    icon={Clock}
+                                    value={`${roi.roi.totalSavedHours}h`}
+                                    label={t('roi.saved_hours')}
+                                    variant="primary"
+                                />
+                                <RoiStat
+                                    icon={DollarSign}
+                                    value={`$${roi.roi.estimatedCostSavings.toLocaleString()}`}
+                                    label={t('roi.estimated_savings')}
+                                    variant="success"
+                                />
+                                <RoiStat
+                                    icon={TrendingUp}
+                                    value={`${roi.roi.efficiencyScore}%`}
+                                    label={t('roi.efficiency')}
+                                    variant="info"
+                                />
                             </div>
-                            <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                                <div>Análisis: {roi.metrics.analysisCount}</div>
-                                <div>Búsquedas: {roi.metrics.vectorSearches}</div>
-                                <div>Dedup: {roi.metrics.dedupEvents}</div>
+                            <div className="mt-6 grid grid-cols-3 gap-2 text-xs text-muted-foreground border-t pt-4">
+                                <div className="text-center">{t('roi.breakdown.analysis', { count: roi.metrics.analysisCount })}</div>
+                                <div className="text-center border-l border-r">{t('roi.breakdown.searches', { count: roi.metrics.vectorSearches })}</div>
+                                <div className="text-center">{t('roi.breakdown.dedup', { count: roi.metrics.dedupEvents })}</div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Plan Status + Advice */}
-                <div className="col-span-3 space-y-6">
-                    <Card>
+                <div className="col-span-1 md:col-span-3 space-y-6">
+                    <Card className="bg-card/50 backdrop-blur-sm border-border animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
                         <CardHeader>
-                            <CardTitle>Estado del Plan</CardTitle>
+                            <CardTitle>{t('plan_status.title')}</CardTitle>
                             <CardDescription>
-                                Suscripción: <span className="font-semibold capitalize">{usage.status}</span>
+                                {t('plan_status.subscription', { status: usage.status })}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <span className="font-medium">Plan Actual</span>
+                                <span className="font-medium">{t('plan_status.current_plan')}</span>
                                 <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold ring-1 ring-primary/20">
                                     {usage.tier}
                                 </span>
                             </div>
-                            <Button variant="outline" className="w-full justify-between" onClick={() => router.push('/admin/billing/plan')}>
-                                Gestionar Suscripción <ExternalLink className="h-4 w-4" />
+                            <Button variant="outline" className="w-full justify-between group" onClick={() => router.push('/admin/billing/plan')}>
+                                {t('plan_status.manage')} <TrendingUp className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </Button>
                         </CardContent>
                     </Card>
 
-                    {criticalMetrics.length > 0 ? (
-                        <Alert variant="destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle>Atención: Cuota cercana al límite</AlertTitle>
-                            <AlertDescription>
-                                {criticalMetrics[0][1].status === 'BLOCKED'
-                                    ? `El recurso "${criticalMetrics[0][0]}" ha superado tu cuota. Actualiza tu plan para continuar.`
-                                    : `El recurso "${criticalMetrics[0][0]}" está al ${criticalMetrics[0][1].percentage.toFixed(0)}% de uso. Considera actualizar tu plan.`
-                                }
-                            </AlertDescription>
-                        </Alert>
-                    ) : (
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle>Todo en orden</AlertTitle>
-                            <AlertDescription>
-                                Tu consumo está dentro de los límites del plan. Sin riesgo de bloqueo este mes.
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                    <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+                        {criticalMetrics.length > 0 ? (
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>{t('alerts.critical_title')}</AlertTitle>
+                                <AlertDescription>
+                                    {criticalMetrics[0][1].status === 'BLOCKED'
+                                        ? t('alerts.blocked', { resource: criticalMetrics[0][0] })
+                                        : t('alerts.warning', { resource: criticalMetrics[0][0], percentage: criticalMetrics[0][1].percentage.toFixed(0) })
+                                    }
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <Alert className="bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400">
+                                <Info className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <AlertTitle>{t('alerts.ok_title')}</AlertTitle>
+                                <AlertDescription>
+                                    {t('alerts.ok_description')}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 }

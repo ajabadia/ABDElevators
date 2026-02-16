@@ -109,9 +109,14 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             throw new ValidationError('Email already registered');
         }
 
-        // Generate temporary password
-        const tempPassword = `temp${Math.random().toString(36).slice(-8)}`;
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        // Generate cryptographically secure temporary password (never returned to client)
+        // This is just a placeholder because MongoDB requires a password field
+        const secureRandomPass = crypto.randomBytes(32).toString('hex');
+        const hashedPassword = await bcrypt.hash(secureRandomPass, 12);
+
+        // Generate activation token for secure password setup
+        const activationToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(activationToken).digest('hex');
 
         // If Admin, force their tenantId. If SuperAdmin, potentially from body
         const tenantId = isSuperAdmin && body.tenantId
@@ -128,7 +133,10 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             activeModules: validated.activeModules || ['TECHNICAL', 'RAG'],
             tenantId: tenantId || process.env.SINGLE_TENANT_ID,
             industry: body.industry || session.user.industry || 'ELEVATORS',
-            active: true,
+            isActive: true,
+            mustChangePassword: true,
+            activationToken: hashedToken,
+            activationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
             createdAt: new Date(),
             updatedAt: new Date(),
         };
@@ -145,15 +153,19 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             level: 'INFO',
             source: 'API_ADMIN_USERS',
             action: 'CREATE_USER',
-            message: `User created: ${validated.email} in tenant ${tenantId}`,
+            message: `User created: ${validated.email} in tenant ${tenantId}. Activation flow initiated.`,
             correlationId,
             details: { email: validated.email, role: validated.role, tenantId }
         });
 
+        // Determine base URL for activation link (in production this should be the public URL)
+        const baseUrl = process.env.NEXTAUTH_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+        const activationLink = `${baseUrl}/auth-pages/activate?token=${activationToken}`;
+
         return NextResponse.json({
             success: true,
             userId: result.insertedId,
-            tempPassword,
+            activationLink,
         });
     } catch (error: any) {
         if (error.name === 'ZodError') {

@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { logEvento } from '@/lib/logger';
-import { TranslationService } from '@/lib/translation-service';
+import { ReportTemplate, ReportData } from './schemas/report-template';
 
 interface LLMReportPDFData {
     identifier: string;
@@ -28,21 +28,223 @@ interface LLMReportPDFData {
 
 /**
  * Generates a PDF on the server from the content of an LLM report.
- * Designed to run in Node.js environments (Vercel).
+ * Legacy wrapper for backward compatibility.
  */
 export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer> {
+    return renderMarkdownToPDF(data);
+}
+
+/**
+ * ReportEngine: Generates a PDF based on a structured Template.
+ */
+export async function generateTemplatedReport(
+    template: ReportTemplate,
+    data: ReportData,
+    options: { locale?: string } = {}
+): Promise<Buffer> {
+    const start = Date.now();
+    const locale = options.locale || 'es';
+
+    // Branding resolution
+    const brandColor = data.branding?.colors?.primary || template.defaultConfig?.primaryColor || '#0d9488';
+    const accentColor = data.branding?.colors?.accent || brandColor;
+    // const logoUrl = data.branding?.logo?.url;
+
+    const doc = new jsPDF({
+        orientation: template.defaultConfig?.orientation || 'p',
+        unit: 'mm',
+        format: 'a4',
+        putOnlyUsedFonts: true
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+    let y = 20;
+
+    // --- Header ---
+    const rgbPrimary = hexToRgb(brandColor);
+    doc.setFillColor(rgbPrimary.r, rgbPrimary.g, rgbPrimary.b);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text(data.title.toUpperCase(), margin, 18);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    if (data.subtitle) doc.text(data.subtitle.toUpperCase(), margin, 25);
+
+    const metaText = `Tenant: ${data.tenantId} | Date: ${data.date.toLocaleDateString(locale)}`;
+    doc.text(metaText, margin, 32);
+
+    y = 55;
+
+    // --- Sections Rendering ---
+    for (const section of template.sections) {
+        // Page Break Logic
+        if (section.layout?.breakPageBefore && y > 60) {
+            doc.addPage();
+            y = 20;
+        } else if (y > pageHeight - 40) {
+            doc.addPage();
+            y = 20;
+        }
+
+        // Section Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        const rgbAccent = hexToRgb(accentColor);
+        doc.setTextColor(rgbAccent.r, rgbAccent.g, rgbAccent.b);
+        doc.text(section.title, margin, y);
+        y += 8;
+
+        if (section.description) {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text(section.description, margin, y);
+            y += 8;
+        }
+
+        // Section Content by Type
+        const sectionData = section.dataSource ? data.data[section.dataSource] : null;
+
+        if (section.type === 'TEXT') {
+            if (typeof sectionData === 'string') {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                const splitText = doc.splitTextToSize(sectionData, contentWidth);
+
+                if (y + (splitText.length * 5) > pageHeight - 20) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.text(splitText, margin, y);
+                y += (splitText.length * 5) + 10;
+            }
+        } else if (section.type === 'METRICS_GRID') {
+            if (Array.isArray(sectionData)) {
+                const cols = section.layout?.columns || 2;
+                const colWidth = contentWidth / cols;
+                let maxHeightInRow = 0;
+
+                sectionData.forEach((metric: any, index: number) => {
+                    const colIndex = index % cols;
+                    const x = margin + (colIndex * colWidth);
+
+                    if (colIndex === 0 && index > 0) {
+                        y += maxHeightInRow + 10;
+                        maxHeightInRow = 0;
+                        if (y > pageHeight - 30) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                    }
+
+                    // Metric Box
+                    doc.setFillColor(248, 250, 252); // Slate-50
+                    doc.setDrawColor(226, 232, 240); // Slate-200
+                    doc.roundedRect(x, y, colWidth - 5, 20, 2, 2, 'FD');
+
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(metric.label?.toUpperCase() || '', x + 4, y + 6);
+
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(30, 41, 59);
+                    doc.text(String(metric.value || '-'), x + 4, y + 14);
+
+                    maxHeightInRow = 20;
+                });
+                y += maxHeightInRow + 15;
+            }
+        } else if (section.type === 'DATA_TABLE') {
+            if (Array.isArray(sectionData) && sectionData.length > 0) {
+                // Simple manual table rendering
+                const headers = Object.keys(sectionData[0]);
+                const colWidth = contentWidth / headers.length;
+
+                // Header Row
+                doc.setFillColor(241, 245, 249);
+                doc.rect(margin, y, contentWidth, 8, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(71, 85, 105);
+
+                headers.forEach((header, i) => {
+                    doc.text(header.toUpperCase(), margin + (i * colWidth) + 2, y + 5);
+                });
+                y += 8;
+
+                // Data Rows
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(51, 65, 85);
+
+                sectionData.forEach((row: any, i) => {
+                    if (y > pageHeight - 20) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    if (i % 2 === 0) {
+                        doc.setFillColor(255, 255, 255);
+                    } else {
+                        doc.setFillColor(248, 250, 252);
+                        doc.rect(margin, y - 5, contentWidth, 8, 'F');
+                    }
+
+                    headers.forEach((header, colIndex) => {
+                        const cellText = String(row[header] || '').substring(0, 30); // Truncate
+                        doc.text(cellText, margin + (colIndex * colWidth) + 2, y);
+                    });
+                    y += 6;
+                });
+                y += 10;
+            }
+        }
+    }
+
+    // --- Footer & Disclaimer ---
+    if (template.defaultConfig?.includeSources) { // Reusing flag for Footer logic
+        // ... Similar footer logic ...
+    }
+
+    const duration = Date.now() - start;
+    await logEvento({
+        level: 'INFO',
+        source: 'REPORT_ENGINE',
+        action: 'GENERATE_TEMPLATED_PDF',
+        message: `Generated report ${template.name}`,
+        correlationId: `rep-${Date.now()}`,
+        details: { duration, sections: template.sections.length }
+    });
+
+    return Buffer.from(doc.output('arraybuffer'));
+}
+
+/**
+ * Internal Worker: Generates PDF from Markdown (Logic moved from original function)
+ */
+async function renderMarkdownToPDF(data: LLMReportPDFData): Promise<Buffer> {
     const start = Date.now();
     const locale = data.locale || 'es';
 
     // Corporate style tokens (Fallback to platform defaults)
-    // Priority: Report-specific Color > Branding Primary Color > Default Teal
     const brandColor = data.reportConfig?.primaryColor || data.branding?.colors?.primary || '#0d9488';
     const accentColor = data.branding?.colors?.accent || brandColor;
     const logoUrl = data.branding?.logo?.url;
 
-    // Fetch dynamic translations (Phase 96 - Dynamic i18n Reports)
-    const messages = await TranslationService.getMessages(locale, data.tenantId);
-    const t = messages.common?.reports || {
+    // Use existing locale variable from top of function
+    // Removed server-side TranslationService usage for client compatibility
+
+    // Default messages if not provided (Phase 160.1 Fix)
+    const t = {
         title: "Análisis Técnico Avanzado",
         subtitle: "Documento de Evaluación Técnica Asistida",
         details: "Detalles del Informe",
@@ -74,9 +276,7 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
     // Logo if available
     if (logoUrl) {
         try {
-            // Nota: En un entorno real de servidor, jsPDF necesita la imagen en base64 o fetch
-            // Por simplicidad en este MVP asumimos que el logoUrl es accesible o dejamos placeholder
-            // doc.addImage(logoUrl, 'PNG', margin, 5, 15, 15);
+            // Placeholder for logo logic
         } catch (e) {
             console.error("Error adding logo to PDF", e);
         }
@@ -169,7 +369,7 @@ export async function generateServerPDF(data: LLMReportPDFData): Promise<Buffer>
         }
     }
 
-    // Disclaimer & Signature (Phase 64)
+    // Disclaimer & Signature
     if (y > pageHeight - 50) {
         doc.addPage();
         y = 25;

@@ -8,6 +8,7 @@ export default function LogsPage() {
             <PageHeader
                 title="Logs Técnicos"
                 subtitle="Registro detallado de eventos y errores del sistema."
+                backHref="/admin/operations"
             />
             <AuditLogTable />
         </PageContainer>

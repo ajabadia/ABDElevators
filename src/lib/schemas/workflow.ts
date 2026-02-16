@@ -37,6 +37,13 @@ export const WorkflowStateSchema = z.object({
         temperature: z.number().default(0.7),
         auto_transition: z.boolean().default(false),
     }).optional(),
+    // ⚡ FASE 160.2: Sub-flow Support
+    subflowId: z.string().optional(),
+    // ⚡ FASE 160.2: Simulation Metadata
+    simulationData: z.object({
+        cost_est: z.number().default(0),
+        time_est: z.number().default(0),
+    }).optional(),
 });
 export type WorkflowState = z.infer<typeof WorkflowStateSchema>;
 
@@ -53,6 +60,8 @@ export const WorkflowTransitionSchema = z.object({
         require_comment: z.boolean().default(false),
     }).optional(),
     actions: z.array(z.string()).optional(), // ej: ['notify_admin', 'generate_pdf', 'webhook_call']
+    // ⚡ FASE 160.2: Simulation Probabilities
+    probability: z.number().min(0).max(1).default(1),
     // ⚡ FASE 127: LLM Decision Strategy (optional for backward compatibility)
     decisionStrategy: z.enum(['USER', 'LLM_DIRECT', 'LLM_SUGGEST_HUMAN_APPROVE', 'HUMAN_ONLY']).default('USER').optional(),
     llmRouting: z.object({

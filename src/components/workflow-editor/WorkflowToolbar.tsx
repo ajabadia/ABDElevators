@@ -3,7 +3,8 @@
 import React from 'react';
 import {
     Rocket, Plus, Save, AreaChart, Activity, Copy, Trash2, Loader2,
-    AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, Grid3X3
+    AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, Grid3X3,
+    ZoomIn, ZoomOut, Maximize, Lock, Unlock, Zap
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,7 @@ import {
 import { useWorkflow } from './WorkflowContext';
 
 export function WorkflowToolbar() {
-    const t = useTranslations('admin.workflows.canvas');
+    const t = useTranslations('workflows.canvas');
     const {
         workflowName,
         currentVersion,
@@ -48,8 +49,12 @@ export function WorkflowToolbar() {
         setNodes,
         setEdges,
         alignNodes,
+        autoLayout,
         snapToGrid,
-        setSnapToGrid
+        setSnapToGrid,
+        reactFlowInstance,
+        handleRunSimulation,
+        isSimulating
     } = useWorkflow();
 
     const selectedCount = nodes.filter((n: any) => n.selected).length;
@@ -113,43 +118,84 @@ export function WorkflowToolbar() {
             </div>
 
             {/* Right Toolbar (Actions) */}
-            <div className="absolute top-4 right-4 z-10 flex gap-2">
-                {/* Alignment & Grid Tools */}
-                <div className="flex bg-white border border-slate-200 rounded-md shadow-sm mr-2 p-1 gap-1">
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                {/* Editor Utilities Group */}
+                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
                     <button
                         onClick={() => setSnapToGrid(!snapToGrid)}
                         className={cn(
-                            "p-1.5 rounded transition-colors",
-                            snapToGrid ? "bg-teal-50 text-teal-600" : "text-slate-400 hover:bg-slate-50"
+                            "p-2 rounded-md transition-all",
+                            snapToGrid ? "bg-teal-50 text-teal-600" : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                         )}
-                        title="Snap to Grid"
+                        title={snapToGrid ? "Disable Snap to Grid" : "Enable Snap to Grid"}
+                        aria-label={snapToGrid ? "Disable grid alignment" : "Enable grid alignment"}
                     >
-                        <Grid3X3 size={16} />
+                        <Grid3X3 size={16} aria-hidden="true" />
                     </button>
-                    <div className="w-px h-full bg-slate-100 mx-1" />
+                    <div className="w-px h-4 bg-slate-200 self-center mx-1" />
                     <button
                         onClick={() => alignNodes('horizontal')}
                         disabled={selectedCount < 2}
-                        className="p-1.5 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-colors"
-                        title="Align Horizontal"
+                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-teal-600 disabled:opacity-30 rounded-md transition-all"
+                        title="Align Selected Nodes Horizontally"
+                        aria-label="Align selected nodes horizontally"
                     >
-                        <AlignHorizontalJustifyCenter size={16} />
+                        <AlignHorizontalJustifyCenter size={16} aria-hidden="true" />
                     </button>
                     <button
                         onClick={() => alignNodes('vertical')}
                         disabled={selectedCount < 2}
-                        className="p-1.5 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-teal-600 disabled:opacity-30 rounded-md transition-all"
+                        title="Align Selected Nodes Vertically"
+                        aria-label="Align selected nodes vertically"
                     >
-                        <AlignVerticalJustifyCenter size={16} />
+                        <AlignVerticalJustifyCenter size={16} aria-hidden="true" />
+                    </button>
+                    <div className="w-px h-4 bg-slate-200 self-center mx-1" />
+                    <button
+                        onClick={() => autoLayout('TB')}
+                        className="p-2 text-teal-600 hover:bg-teal-50 rounded-md transition-all"
+                        title="Auto-organize Layout (Vertical Tree)"
+                        aria-label="Apply automatic vertical layout"
+                    >
+                        <Zap size={16} aria-hidden="true" />
                     </button>
                 </div>
 
-                {/* Undo/Redo Controls */}
-                <div className="flex bg-white border border-slate-200 rounded-md shadow-sm mr-2">
+                {/* View Controls Group */}
+                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
+                    <button
+                        onClick={() => reactFlowInstance?.zoomIn()}
+                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        title="Zoom In"
+                        aria-label="Increase zoom level"
+                    >
+                        <ZoomIn size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                        onClick={() => reactFlowInstance?.zoomOut()}
+                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        title="Zoom Out"
+                        aria-label="Decrease zoom level"
+                    >
+                        <ZoomOut size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                        onClick={() => reactFlowInstance?.fitView()}
+                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        title="Reset View / Fit Content"
+                        aria-label="Fit entire workflow into view"
+                    >
+                        <Maximize size={16} aria-hidden="true" />
+                    </button>
+                </div>
+
+                {/* History Controls */}
+                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
                     <button
                         onClick={() => undo(setNodes, setEdges)}
                         disabled={!canUndo}
-                        className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-colors border-r border-slate-100"
+                        className="p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 rounded-md transition-all"
                         title="Undo (Ctrl+Z)"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" /></svg>
@@ -157,77 +203,95 @@ export function WorkflowToolbar() {
                     <button
                         onClick={() => redo(setNodes, setEdges)}
                         disabled={!canRedo}
-                        className="p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+                        className="p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 rounded-md transition-all"
                         title="Redo (Ctrl+Shift+Z)"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" /></svg>
                     </button>
                 </div>
 
-                {isAnalysisMode && (
-                    <button
-                        onClick={exportReport}
-                        className="bg-white text-teal-700 border border-teal-200 px-4 py-2 rounded-md flex items-center gap-2 hover:bg-teal-50 transition-all shadow-sm font-bold text-xs uppercase tracking-wider"
+                {/* Main Action Group */}
+                <div className="flex items-center gap-1.5 ml-2">
+                    {isAnalysisMode && (
+                        <Button
+                            onClick={exportReport}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 border-teal-200 text-teal-700 hover:bg-teal-50 font-bold text-[10px] uppercase tracking-wider"
+                            disabled={isAnalyticsLoading}
+                        >
+                            <Save className="w-3.5 h-3.5 mr-1.5" />
+                            {t('export_report')}
+                        </Button>
+                    )}
+
+                    <Button
+                        onClick={toggleAnalysisMode}
+                        variant={isAnalysisMode ? "default" : "outline"}
+                        size="sm"
+                        className={cn(
+                            "h-9 font-bold text-[10px] uppercase tracking-wider",
+                            isAnalysisMode ? "bg-teal-600 hover:bg-teal-700" : "text-slate-600"
+                        )}
                         disabled={isAnalyticsLoading}
                     >
-                        <Save size={16} />
-                        {t('export_report')}
-                    </button>
-                )}
-                <button
-                    onClick={toggleAnalysisMode}
-                    className={cn(
-                        "px-4 py-2 rounded-md flex items-center gap-2 transition-all shadow-sm font-bold text-xs uppercase tracking-wider",
-                        isAnalysisMode
-                            ? "bg-teal-600 text-white hover:bg-teal-700"
-                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                        {isAnalyticsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <AreaChart className="w-3.5 h-3.5 mr-1.5" />}
+                        {isAnalysisMode ? t('exit_analysis') : t('perf_analysis')}
+                    </Button>
+
+                    {!isAnalysisMode && (
+                        <Button
+                            onClick={handleRunSimulation}
+                            size="sm"
+                            className="h-9 bg-purple-600 hover:bg-purple-700 font-bold text-[10px] uppercase tracking-wider"
+                            disabled={isSimulating}
+                        >
+                            {isSimulating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Activity className="w-3.5 h-3.5 mr-1.5" />}
+                            {t('simulate')}
+                        </Button>
                     )}
-                    disabled={isAnalyticsLoading}
-                >
-                    {isAnalyticsLoading ? <Loader2 className="animate-spin" size={16} /> : <AreaChart size={16} />}
-                    {isAnalysisMode ? t('exit_analysis') : t('perf_analysis')}
-                </button>
-                {!isAnalysisMode && (
-                    <button
-                        onClick={() => setShowLogs(!showLogs)}
-                        className={cn(
-                            "px-4 py-2 rounded-md flex items-center gap-2 transition-all shadow-sm font-bold text-xs uppercase tracking-wider",
-                            showLogs
-                                ? "bg-teal-600 text-white hover:bg-teal-700"
-                                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                        )}
+
+                    {!isAnalysisMode && (
+                        <div className="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                            <button
+                                onClick={() => setShowLogs(!showLogs)}
+                                className={cn(
+                                    "p-2 rounded-md transition-all",
+                                    showLogs ? "bg-teal-600 text-white" : "text-slate-500 hover:bg-slate-50"
+                                )}
+                                title={showLogs ? t('hide_logs') : t('show_logs')}
+                                aria-label={showLogs ? t('hide_logs') : t('show_logs')}
+                            >
+                                <Activity size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                                onClick={handleDuplicate}
+                                className="p-2 text-slate-500 hover:bg-slate-50 rounded-md transition-all"
+                                title={t('duplicate')}
+                                aria-label={t('duplicate')}
+                            >
+                                <Copy size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                                onClick={() => deleteSelection(nodes, edges)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-all"
+                                title={t('delete')}
+                                aria-label={t('delete')}
+                            >
+                                <Trash2 size={16} aria-hidden="true" />
+                            </button>
+                        </div>
+                    )}
+
+                    <Button
+                        onClick={onSave}
+                        size="sm"
+                        className="h-9 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-4"
                     >
-                        <Activity size={16} />
-                        {showLogs ? t('hide_logs') : t('show_logs')}
-                    </button>
-                )}
-                {!isAnalysisMode && (
-                    <>
-                        <button
-                            onClick={handleDuplicate}
-                            className="bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-md flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm font-bold text-xs uppercase tracking-wider"
-                            title={t('duplicate')}
-                        >
-                            <Copy size={16} className="text-slate-400" />
-                            {t('duplicate')}
-                        </button>
-                        <button
-                            onClick={() => deleteSelection(nodes, edges)}
-                            className="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-md flex items-center gap-2 hover:bg-red-100 transition-all shadow-sm font-bold text-xs uppercase tracking-wider"
-                            title={t('delete')}
-                        >
-                            <Trash2 size={16} />
-                            {t('delete')}
-                        </button>
-                    </>
-                )}
-                <button
-                    onClick={onSave}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-sm font-bold text-xs uppercase tracking-wider"
-                >
-                    <Save size={16} />
-                    {t('save')}
-                </button>
+                        <Save className="w-3.5 h-3.5 mr-1.5" />
+                        {t('save')}
+                    </Button>
+                </div>
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, requireRole } from '@/lib/auth';
+import { TicketService } from '@/lib/ticket-service';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
@@ -19,36 +20,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
         }
 
-        const db = await connectDB();
-
-        // Get ticket
-        const ticket = await db.collection('tickets').findOne({ _id: new ObjectId(id) });
-
-        if (!ticket) {
-            throw new NotFoundError('api.errors.ticket_not_found');
-        }
-
-        // Multi-Tenant Security (Phase 70 RBAC)
-        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(session.user.role as UserRole);
-
-        if (isSupport) {
-            // Admin must have access to the ticket's tenant
-            const allowedTenants = session.user.role === UserRole.SUPER_ADMIN
-                ? null // SuperAdmin sees everything
-                : [
-                    session.user.tenantId,
-                    ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
-                ].filter(Boolean);
-
-            if (allowedTenants && !allowedTenants.includes(ticket.tenantId)) {
-                throw new AppError('FORBIDDEN', 403, 'api.errors.forbidden_access');
-            }
-        } else {
-            // Normal user: only see their own tickets
-            if (ticket.createdBy !== session.user.id) {
-                throw new AppError('FORBIDDEN', 403, 'api.errors.forbidden_access');
-            }
-        }
+        // Get ticket via Service with ACL (Phase 173.1)
+        const ticket = await TicketService.getTicketByIdWithAcl(id, session);
 
         return NextResponse.json({ success: true, ticket });
 

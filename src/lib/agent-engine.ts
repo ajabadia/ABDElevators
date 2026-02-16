@@ -77,6 +77,18 @@ export const AgentState = Annotation.Root({
     }),
 
     /**
+     * Contexto dinámico
+     */
+    industry: Annotation<string>({
+        reducer: (x, y) => y ?? x,
+        default: () => 'ELEVATORS',
+    }),
+    environment: Annotation<string>({
+        reducer: (x, y) => y ?? x,
+        default: () => 'PRODUCTION',
+    }),
+
+    /**
      * Insights federados (Vision 2027)
      */
     federated_insights: Annotation<any[]>({
@@ -123,7 +135,9 @@ async function retrievalNode(state: AgentStateType) {
             query,
             tenantId!,
             correlacion_id!,
-            search_queries.length > 0 ? 5 : 3 // Más profundidad si es una búsqueda de corrección
+            search_queries.length > 0 ? 5 : 3, // Más profundidad si es una búsqueda de corrección
+            state.industry,
+            state.environment
         );
         allChunks = [...allChunks, ...chunks];
     }

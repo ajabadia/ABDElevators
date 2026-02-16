@@ -23,6 +23,7 @@ export type ErrorCode =
   | 'MFA_DISABLE_FAILED'
   | 'LIMIT_EXCEEDED'
   | 'LLM_INVALID_RESPONSE'
+  | 'LLM_INVALID_FORMAT'
   | 'PROMPT_NOT_FOUND'
   | 'TRANSITION_ERROR'
   | 'WORKFLOW_NOT_FOUND'
@@ -41,14 +42,18 @@ export class AppError extends Error {
   }
 
   toJSON() {
+    const isInternalError = this.status >= 500;
+
     return {
       success: false,
       error: {
         code: this.code,
-        message: this.message,
-        details: this.details instanceof Error
-          ? { message: this.details.message, name: this.details.name }
-          : (this.details || null),
+        message: isInternalError ? 'Error interno del servidor' : this.message,
+        details: isInternalError
+          ? null // No filtrar detalles en 5xx
+          : (this.details instanceof Error
+            ? { message: this.details.message, name: this.details.name }
+            : (this.details || null)),
       },
     };
   }

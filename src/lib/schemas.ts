@@ -528,6 +528,9 @@ export const UserSchema = z.object({
     }),
 
     isActive: z.boolean().default(true),
+    mustChangePassword: z.boolean().default(false), // Requerido para Phase 165.1
+    activationToken: z.string().optional(), // Hash del token de activación
+    activationTokenExpiry: z.date().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
     deletedAt: z.date().optional(),
@@ -1494,3 +1497,45 @@ export type CreateWorkshopOrderFragment = z.infer<typeof CreateWorkshopOrderSche
 
 
 
+
+/**
+ * 🕸️ FASE 150: Graph Mutation Schemas
+ */
+export const CreateGraphNodeSchema = z.object({
+    id: z.string().optional(), // If not provided, should be generated
+    label: z.string().min(1, "Label is required"),
+    name: z.string().min(1, "Name is required"),
+    properties: z.record(z.string(), z.any()).default({}),
+});
+
+export const UpdateGraphNodeSchema = z.object({
+    id: z.string().min(1, "Node ID is required"),
+    label: z.string().optional(),
+    properties: z.record(z.string(), z.any()),
+});
+
+export const CreateGraphRelationSchema = z.object({
+    sourceId: z.string().min(1, "Source ID is required"),
+    targetId: z.string().min(1, "Target ID is required"),
+    type: z.string().min(1, "Relation type is required"),
+    properties: z.record(z.string(), z.any()).default({}),
+});
+
+export const UpdateGraphRelationSchema = z.object({
+    sourceId: z.string().min(1, "Source ID is required"),
+    targetId: z.string().min(1, "Target ID is required"),
+    type: z.string().min(1, "Relation type is required"),
+    properties: z.record(z.string(), z.any()),
+});
+
+export const DeleteGraphRelationSchema = z.object({
+    sourceId: z.string().min(1, "Source ID is required"),
+    targetId: z.string().min(1, "Target ID is required"),
+    type: z.string().min(1, "Relation type is required"),
+});
+
+export type CreateGraphNode = z.infer<typeof CreateGraphNodeSchema>;
+export type UpdateGraphNode = z.infer<typeof UpdateGraphNodeSchema>;
+export type CreateGraphRelation = z.infer<typeof CreateGraphRelationSchema>;
+export type UpdateGraphRelation = z.infer<typeof UpdateGraphRelationSchema>;
+export type DeleteGraphRelation = z.infer<typeof DeleteGraphRelationSchema>;

@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSession } from "next-auth/react";
@@ -37,7 +37,8 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
     const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     const [loading, setLoading] = useState(false);
-    const [tempPassword, setTempPassword] = useState<string | null>(null);
+    const [activationLink, setActivationLink] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
     const { toast } = useToast();
 
     const [formData, setFormData] = useState({
@@ -64,7 +65,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             const data = await res.json();
 
             if (res.ok) {
-                setTempPassword(data.tempPassword);
+                setActivationLink(data.activationLink);
                 toast({
                     title: "Usuario creado",
                     description: `Usuario ${formData.email} creado exitosamente`,
@@ -88,7 +89,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
     };
 
     const handleClose = () => {
-        if (tempPassword) {
+        if (activationLink) {
             onSuccess();
         }
         setFormData({
@@ -100,8 +101,21 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
             tenantId: "",
             activeModules: ["TECHNICAL", "RAG"],
         });
-        setTempPassword(null);
+        setActivationLink(null);
+        setCopied(false);
         onClose();
+    };
+
+    const handleCopy = () => {
+        if (activationLink) {
+            navigator.clipboard.writeText(activationLink);
+            setCopied(true);
+            toast({
+                title: "Enlace copiado",
+                description: "El enlace de activación ha sido copiado al portapapeles",
+            });
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     return (
@@ -110,30 +124,38 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
                 <DialogHeader>
                     <DialogTitle>Crear Nuevo Usuario</DialogTitle>
                     <DialogDescription>
-                        Completa los datos del nuevo usuario. Se generará una contraseña temporal.
+                        Completa los datos del nuevo usuario. Se generará un enlace de activación seguro.
                     </DialogDescription>
                 </DialogHeader>
 
-                {tempPassword ? (
+                {activationLink ? (
                     <div className="space-y-4">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <p className="text-sm font-medium text-green-900 mb-2">
+                        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                            <p className="text-sm font-medium text-teal-900 mb-2">
                                 ✓ Usuario creado exitosamente
                             </p>
-                            <p className="text-sm text-green-700 mb-3">
-                                Contraseña temporal generada:
+                            <p className="text-sm text-teal-700 mb-3">
+                                Enlace de activación generado para el usuario:
                             </p>
-                            <div className="bg-white border border-green-300 rounded p-3">
-                                <code className="text-lg font-mono font-bold text-green-900">
-                                    {tempPassword}
+                            <div className="flex gap-2 bg-white border border-teal-300 rounded p-3 items-center">
+                                <code className="flex-1 text-xs font-mono break-all text-teal-900">
+                                    {activationLink}
                                 </code>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleCopy}
+                                    className="shrink-0 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                                >
+                                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                </Button>
                             </div>
-                            <p className="text-xs text-green-600 mt-2">
-                                ⚠️ Comunica esta contraseña al usuario. No se volverá a mostrar.
+                            <p className="text-xs text-teal-600 mt-3">
+                                ⚠️ Comparte este enlace con el usuario para que active su cuenta y elija su contraseña.
                             </p>
                         </div>
-                        <Button onClick={handleClose} className="w-full">
-                            Cerrar
+                        <Button onClick={handleClose} className="w-full bg-teal-600 hover:bg-teal-700">
+                            Finalizar
                         </Button>
                     </div>
                 ) : (

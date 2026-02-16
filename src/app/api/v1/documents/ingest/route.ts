@@ -5,6 +5,7 @@ import { DocumentChunkSchema, KnowledgeAssetSchema, IngestAuditSchema } from '@/
 import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/lib/llm';
 import { chunkText } from '@/lib/chunk-utils';
 import { PromptService } from '@/lib/prompt-service';
+import { validateLanguageCode } from '@/lib/language-validator';
 import { UsageService } from '@/lib/usage-service';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
@@ -17,7 +18,8 @@ const IngestV1Schema = z.object({
         title: z.string().min(1), // e.g. "Manual Orona Arca II"
         model: z.string().optional(),
         version: z.string().default('1.0'),
-        language: z.string().length(2).optional()
+        language: z.string().length(2).optional(),
+        chunkingLevel: z.enum(['bajo', 'medio', 'alto']).optional()
     })
 });
 
@@ -51,6 +53,7 @@ export const POST = publicApiHandler(
             );
             detectedLang = (await callGeminiMini(languagePrompt, tenantId, { correlationId, model: langModel })).trim().toLowerCase().substring(0, 2);
         }
+        detectedLang = validateLanguageCode(detectedLang);
 
         let primaryModel = metadata.model || 'UNKNOWN';
         if (primaryModel === 'UNKNOWN') {
@@ -69,7 +72,8 @@ export const POST = publicApiHandler(
             model: primaryModel,
             version: metadata.version,
             revisionDate: new Date(),
-            language: detectedLang || 'es',
+            language: detectedLang,
+            chunkingLevel: metadata.chunkingLevel || 'bajo',
             status: 'vigente' as const,
             fileMd5: contentHash,
             totalChunks: chunks.length,

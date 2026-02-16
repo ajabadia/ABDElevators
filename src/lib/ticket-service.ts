@@ -170,4 +170,62 @@ export class TicketService {
             details: { assignedTo: data.assignedTo, note: !!data.note }
         });
     }
+
+    /**
+     * Recupera un ticket individual validando acceso por tenant y rol.
+     * Fase 173.1: Consolidación de ACL.
+     */
+    static async getTicketByIdWithAcl(id: string, session: any) {
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
+        const ticket = await ticketColl.findOne({ _id: new ObjectId(id) as any });
+
+        if (!ticket) {
+            throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
+        }
+
+        const isSupport = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(session.user.role);
+
+        if (isSupport) {
+            if (session.user.role !== 'SUPER_ADMIN') {
+                const allowedTenants = [
+                    session.user.tenantId,
+                    ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
+                ].filter(Boolean);
+
+                if (!allowedTenants.includes(ticket.tenantId)) {
+                    throw new AppError('FORBIDDEN', 403, 'No tienes permiso para ver este ticket');
+                }
+            }
+        } else {
+            if (ticket.createdBy !== session.user.id) {
+                throw new AppError('FORBIDDEN', 403, 'No tienes permiso para ver este ticket');
+            }
+        }
+
+        return ticket;
+    }
+
+    /**
+     * Actualiza el estado del ticket basado en el tipo de autor (User/Support).
+     */
+    static async updateStatusOnReply(ticketId: string, authorType: 'User' | 'Support') {
+        const ticketColl = await getTenantCollection<Ticket>("tickets");
+        const ticket = await ticketColl.findOne({ _id: new ObjectId(ticketId) as any });
+
+        if (!ticket) return;
+
+        let newStatus = ticket.status;
+        if (authorType === 'User' && ticket.status === 'WAITING_USER') {
+            newStatus = 'OPEN';
+        } else if (authorType === 'Support' && !['RESOLVED', 'CLOSED'].includes(ticket.status)) {
+            newStatus = 'WAITING_USER';
+        }
+
+        if (newStatus !== ticket.status) {
+            await ticketColl.updateOne(
+                { _id: new ObjectId(ticketId) as any },
+                { $set: { status: newStatus as any, updatedAt: new Date() } }
+            );
+        }
+    }
 }

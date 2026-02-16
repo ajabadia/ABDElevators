@@ -47,17 +47,9 @@ export async function POST(
         }
         const result = await uploadProfilePhoto(buffer, file.name, tenantId, id);
 
-        // Actualizar el documento del usuario en la base de datos de identidad
-        await authDb.collection('users').updateOne(
-            { _id: new ObjectId(id) },
-            {
-                $set: {
-                    foto_url: result.secureUrl,
-                    foto_cloudinary_id: result.publicId,
-                    modificado: new Date()
-                }
-            }
-        );
+        // Actualizar el documento del usuario vía Servicio (Phase 171.2)
+        const { UserService } = await import('@/lib/user-service');
+        await UserService.updateProfilePhoto(id, result.secureUrl, result.publicId);
 
         await logEvento({
             level: 'INFO',

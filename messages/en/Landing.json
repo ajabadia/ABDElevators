@@ -15,5 +15,15 @@
     "how_calculated_title": "How is this calculated?",
     "how_calculated_desc": "We estimate that ABD RAG reduces the time to analyze a complex technical specification by approximately <strong>20 minutes per order</strong> compared to manual review.",
     "cta": "START YOUR FREE TRIAL"
+  },
+  "REPORTING": {
+    "badge": "INDUSTRIAL REPORTING",
+    "title": "Corporate PDF Generation",
+    "description": "Transform AI analysis into professional deliverables. Inspection, Audit, and Quality templates with your branding.",
+    "features": [
+      "Customizable Templates",
+      "Generation History",
+      "Digital Signature"
+    ]
   }
 }

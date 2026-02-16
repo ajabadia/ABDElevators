@@ -61,7 +61,9 @@ export async function GET(
                     messages: [{ role: 'user', content: entity.originalText || '' }],
                     entityId: id,
                     tenantId,
-                    correlationId
+                    correlationId,
+                    industry: entity.industry || 'ELEVATORS',
+                    environment: entity.environment || 'PRODUCTION'
                 };
 
                 const thread_id = `analyze_${id}_${Date.now()}`;

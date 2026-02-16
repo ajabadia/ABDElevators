@@ -1,0 +1,42 @@
+{
+    "title": "Operations Center",
+    "subtitle": "Monitoring and technical maintenance of the industrial platform.",
+    "sections": {
+        "observability": {
+            "title": "Observability",
+            "description": "Real-time metrics, SLAs, and system status."
+        },
+        "ingest": {
+            "title": "Ingest & Jobs",
+            "description": "Indexing job status and processing queues."
+        },
+        "logs": {
+            "title": "Technical Logs",
+            "description": "Error traces, debugging, and Correlation ID search."
+        },
+        "maintenance": {
+            "title": "Maintenance",
+            "description": "Cleanup tools and manual re-indexing."
+        },
+        "status": {
+            "title": "Service Status",
+            "description": "Status of external services (LLM, DB, Storage)."
+        },
+        "trace": {
+            "title": "Technical Traceability",
+            "description": "End-to-end request tracing and process debugging."
+        }
+    },
+    "maintenance": {
+        "title": "System Maintenance",
+        "subtitle": "Data optimization and correction tools.",
+        "description": "Use these tools to sync graphs or clean up storage.",
+        "placeholder": "Maintenance module in development phase."
+    },
+    "status": {
+        "title": "External Service Status",
+        "subtitle": "Infrastructure availability in real-time.",
+        "description": "Verify the status of Gemini APIs, MongoDB, and Cloudinary.",
+        "placeholder": "Integrated status page coming soon."
+    }
+}

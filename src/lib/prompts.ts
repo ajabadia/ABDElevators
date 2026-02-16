@@ -48,11 +48,11 @@ export const PROMPTS = {
         { "id": "nombre_id_normalizado", "type": "Component|Procedure|Error|Model", "name": "Nombre Legible" }
       ],
       "relations": [
-        { "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino" }
+        { "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino", "weight": 0.0-1.0 }
       ]
     }
     
-    IMPORTANTE: El ID debe ser descriptivo pero sin espacios (ej: "motherboard_arca_2"). Si no hay entidades claras, devuelve arrays vacíos.
+    IMPORTANTE: El ID debe ser descriptivo pero sin espacios. El "weight" debe reflejar la importancia semántica o certidumbre de la relación.
     
     TEXTO A ANALIZAR:
     {{text}}`,

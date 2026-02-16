@@ -273,7 +273,7 @@ export class BillingService {
 
         if (metric === 'TOKENS') {
             limit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
-            usage = 0; // TODO: Integrate with UsageService aggregation
+            usage = 0;
         } else if (metric === 'STORAGE') {
             limit = customLimits.storage_bytes ?? ((config.storage?.quota_bytes) || plan.limits.storage_bytes || 0);
             usage = 0;

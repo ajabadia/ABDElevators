@@ -86,8 +86,8 @@ export class BillingAdminService {
                 const usageStats = await QuotaService.getTenantUsageStats(config.tenantId);
 
                 // Get Spaces count for usage display
-                const mainDb = await (await import('@/lib/db')).connectDB();
-                const spacesCount = await mainDb.collection('spaces').countDocuments({ tenantId: config.tenantId });
+                const spacesDb = await (await import('@/lib/db')).getTenantCollection('spaces');
+                const spacesCount = await spacesDb.countDocuments({ tenantId: config.tenantId });
 
                 // Determine Limits from unified model
                 const limits = await LimitsService.getEffectiveLimits(config.tenantId);

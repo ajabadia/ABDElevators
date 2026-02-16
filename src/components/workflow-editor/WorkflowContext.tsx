@@ -10,6 +10,7 @@ import { useWorkflowHistory } from "@/hooks/useWorkflowHistory";
 import { useWorkflowShortcuts } from "@/hooks/useWorkflowShortcuts";
 import { useWorkflowValidation } from "@/hooks/useWorkflowValidation";
 import { useEnvironmentStore } from "@/store/environment-store";
+import { runWorkflowSimulation, SimulationResult } from "@/lib/simulation-engine";
 
 const WorkflowContext = createContext<any>(null);
 
@@ -33,7 +34,8 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
         setEdges: state.setEdges,
         setSelectedNode: state.setSelectedNode,
         reactFlowInstance,
-        reactFlowWrapper
+        reactFlowWrapper,
+        edges: state.edges // Added edges for auto-layout
     });
 
     // History (Undo/Redo)
@@ -91,6 +93,26 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
         detectCycles: nodeOps.detectCycles
     });
 
+    // Simulation State
+    const [isSimulating, setIsSimulating] = React.useState(false);
+    const [simResults, setSimResults] = React.useState<SimulationResult | null>(null);
+    const [showSimulation, setShowSimulation] = React.useState(false);
+
+    const handleRunSimulation = React.useCallback(() => {
+        setIsSimulating(true);
+        setShowSimulation(true);
+        setTimeout(() => {
+            try {
+                const results = runWorkflowSimulation(state.nodes, state.edges);
+                setSimResults(results);
+            } catch (error) {
+                console.error("Simulation failed:", error);
+            } finally {
+                setIsSimulating(false);
+            }
+        }, 800);
+    }, [state.nodes, state.edges]);
+
     // Initial Load
     useEffect(() => {
         crud.refreshWorkflows();
@@ -102,6 +124,12 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
         ...history,
         ...crud,
         ...analytics,
+        // Simulation
+        isSimulating,
+        simResults,
+        showSimulation,
+        setShowSimulation,
+        handleRunSimulation,
         reactFlowWrapper,
         setReactFlowInstance
     }), [state, nodeOps, history, crud, analytics]);

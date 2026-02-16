@@ -1,0 +1,29 @@
+{
+  "title": "Centro de Seguridad y Auditoría",
+  "subtitle": "Gestión centralizada de permisos, logs de acceso y cumplimiento industrial.",
+  "tabs": {
+    "permissions": "Permisos y Roles",
+    "audit": "Auditoría",
+    "sessions": "Sesiones Activas",
+    "lifecycle": "Ciclo de Vida"
+  },
+  "permissions": {
+    "title": "Gestión de Roles (Guardian)",
+    "description": "Configure los roles y permisos de acceso para su organización.",
+    "placeholder": "Próximamente: Editor visual de políticas Guardian."
+  },
+  "audit": {
+    "title": "Registro de Auditoría",
+    "description": "Historial inmutable de acciones realizadas en el sistema."
+  },
+  "sessions": {
+    "title": "Sesiones Activas",
+    "description": "Supervise y gestione las sesiones de usuario activas.",
+    "placeholder": "Próximamente: Gestor de sesiones remotas."
+  },
+  "lifecycle": {
+    "title": "Ciclo de Vida de Datos",
+    "description": "Políticas de retención y derecho al olvido (GDPR).",
+    "placeholder": "Próximamente: Programador de purgas automáticas."
+  }
+}

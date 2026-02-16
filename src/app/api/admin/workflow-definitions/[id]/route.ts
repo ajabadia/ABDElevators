@@ -12,12 +12,12 @@ import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
  */
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = uuidv4();
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-        const id = params.id;
+        const { id } = await params;
 
         const definition = await WorkflowService.getDefinitionById(id);
 
@@ -25,8 +25,9 @@ export async function GET(
             return NextResponse.json({ success: false, error: 'NOT_FOUND' }, { status: 404 });
         }
 
-        // Verify tenant ownership (getDefinitionById uses SecureCollection but double check is good)
-        if (definition.tenantId !== session.user.tenantId) {
+        // Verify tenant ownership
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+        if (!isSuperAdmin && definition.tenantId !== session.user.tenantId) {
             return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
         }
 
@@ -39,13 +40,12 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    props: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const params = await props.params;
     const correlationId = uuidv4();
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-        const id = params.id;
+        const { id } = await params;
         const body = WorkflowDefinitionSchema.partial().parse(await request.json());
 
         // Enforce the ID from the URL and the tenant from the session

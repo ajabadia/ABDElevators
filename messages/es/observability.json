@@ -1,0 +1,42 @@
+{
+  "trace": {
+    "title": "Rastreo Técnico (Trace)",
+    "subtitle": "Visualización end-to-end de peticiones y procesos del sistema.",
+    "search_placeholder": "Filtrar por mensaje, acción o fuente...",
+    "events": "Eventos",
+    "duration": "Duración",
+    "start_time": "Inicio",
+    "end_state": "Estado Final",
+    "status_error": "CON ERRORES",
+    "status_success": "EXITOSO",
+    "loading": "Cargando traza...",
+    "no_logs_title": "No se encontraron logs",
+    "no_logs_desc": "Verifica el Correlation ID:",
+    "show_details": "Ver detalles técnicos",
+    "hide_details": "Ocultar detalles",
+    "filter_all": "Todos",
+    "filter_errors": "Errores",
+    "search_button": "Buscar",
+    "input_placeholder": "Ej: 550e8400-e29b-41d4-a716-446655440000",
+    "payload_inspector": "Inspector de Payload",
+    "end_of_trace": "Fin de la traza"
+  },
+  "audit": {
+    "title": "Auditoría de Configuración",
+    "subtitle": "Historial de cambios sensibles en la configuración del sistema.",
+    "zone_title": "Zona de Alta Sensibilidad",
+    "zone_desc": "Este registro es inmutable. Cualquier cambio en Prompts, Feature Flags o Configuración Global queda registrado aquí permanentemente por motivos de cumplimiento (SOC2/GDPR).",
+    "empty_state": "No hay historial de cambios de configuración registrado.",
+    "table": {
+      "date": "Fecha",
+      "actor": "Actor",
+      "action": "Acción",
+      "target": "Target",
+      "changes": "Cambios",
+      "changes_count": "{count} cambios",
+      "reason_title": "MOTIVO DEL CAMBIO",
+      "before": "ANTES",
+      "after": "AHORA"
+    }
+  }
+}

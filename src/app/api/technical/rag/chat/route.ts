@@ -28,7 +28,13 @@ export async function POST(req: NextRequest) {
         if (!tenantId) {
             return NextResponse.json({ error: 'Tenant ID no encontrado en la sesión' }, { status: 403 });
         }
-        const { question, messages = [], stream = false } = await req.json();
+        const {
+            question,
+            messages = [],
+            stream = false,
+            industry = 'ELEVATORS',
+            environment = 'PRODUCTION'
+        } = await req.json();
 
         if (!question && messages.length === 0) {
             return NextResponse.json({ error: 'La pregunta o el historial son obligatorios' }, { status: 400 });
@@ -47,7 +53,14 @@ export async function POST(req: NextRequest) {
 
         if (effectiveQuestion && stream) {
             const encoder = new TextEncoder();
-            const generator = AgenticRAGService.runStream(effectiveQuestion, tenantId, correlationId, messages);
+            const generator = AgenticRAGService.runStream(
+                effectiveQuestion,
+                tenantId,
+                correlationId,
+                messages,
+                industry,
+                environment
+            );
 
             const customStream = new ReadableStream({
                 async pull(controller) {
@@ -77,7 +90,14 @@ export async function POST(req: NextRequest) {
         }
 
         // Execute agentic RAG service (Non-streaming)
-        const result = await AgenticRAGService.run(effectiveQuestion, tenantId, correlationId, messages);
+        const result = await AgenticRAGService.run(
+            effectiveQuestion,
+            tenantId,
+            correlationId,
+            messages,
+            industry,
+            environment
+        );
 
         return NextResponse.json({
             success: true,

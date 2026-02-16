@@ -8,6 +8,7 @@ export default function ObservabilityPage() {
             <PageHeader
                 title="Observabilidad"
                 subtitle="Métricas operativas y estado de salud del sistema."
+                backHref="/admin/operations"
             />
             <ObservabilityDashboard />
         </PageContainer>

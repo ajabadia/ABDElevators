@@ -1,0 +1,29 @@
+{
+    "title": "Security & Audit Center",
+    "subtitle": "Centralized management of permissions, access logs, and industrial compliance.",
+    "tabs": {
+        "permissions": "Permissions & Roles",
+        "audit": "Audit",
+        "sessions": "Active Sessions",
+        "lifecycle": "Data Lifecycle"
+    },
+    "permissions": {
+        "title": "Role Management (Guardian)",
+        "description": "Configure access roles and permissions for your organization.",
+        "placeholder": "Coming Soon: Visual Guardian policy editor."
+    },
+    "audit": {
+        "title": "Audit Trail",
+        "description": "Immutable history of actions performed within the system."
+    },
+    "sessions": {
+        "title": "Active Sessions",
+        "description": "Monitor and manage active user sessions.",
+        "placeholder": "Coming Soon: Remote session manager."
+    },
+    "lifecycle": {
+        "title": "Data Lifecycle",
+        "description": "Retention policies and right to be forgotten (GDPR).",
+        "placeholder": "Coming Soon: Automatic purge scheduler."
+    }
+}

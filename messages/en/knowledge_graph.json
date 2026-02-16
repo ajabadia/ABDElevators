@@ -10,8 +10,17 @@
   "stats_nodes": "Nodes",
   "stats_links": "Relations",
   "properties": "Properties",
+  "filters": {
+    "title": "Advanced Filters",
+    "all_types": "All types",
+    "relation_types": "Relation Types",
+    "min_weight": "Min Weight",
+    "weight_desc": "Filter by semantic importance",
+    "critical_path": "Critical Path"
+  },
   "page_title": "Graph Explorer",
   "page_subtitle": "Visualize and explore entities and relationships automatically extracted by AI.",
+  "subtitle": "Knowledge Graph",
   "meta_title": "Graph Explorer | Knowledge Base",
   "meta_desc": "Visual exploration of Knowledge Graph entities and relationships.",
   "title": "Graph Explorer",
@@ -22,5 +31,36 @@
     "document": "Document",
     "system": "System",
     "unknown": "Unknown"
+  },
+  "editor": {
+    "toggle_edit": "Edit Mode",
+    "create_node": "Create Node",
+    "create_relation": "Connect Nodes",
+    "delete_node": "Delete Node",
+    "delete_relation": "Delete Relation",
+    "edit_properties": "Edit Properties",
+    "edit_mode_active": "Edit Mode Active",
+    "save_changes": "Save Changes",
+    "cancel": "Cancel",
+    "node_name": "Node Name",
+    "node_label": "Node Label",
+    "relation_type": "Relation Type",
+    "confirm_delete": "Are you sure you want to delete this element?",
+    "creating": "Creating...",
+    "saving": "Saving...",
+    "deleted_success": "Element deleted successfully",
+    "saved_success": "Changes saved successfully",
+    "source_selected": "Source node selected. Click another node to connect.",
+    "create_fail": "Failed to create node",
+    "rel_create_fail": "Failed to create relation",
+    "delete_fail": "Failed to delete node",
+    "linking_from": "Linking from: {name}",
+    "no_props": "No additional properties",
+    "phase_155_coming": "Property editor coming in Phase 155",
+    "instructions": {
+      "add_node": "Click background to add node",
+      "connect_nodes": "Click 2 nodes to connect",
+      "delete_sidebar": "Use sidebar to delete"
+    }
   }
 }

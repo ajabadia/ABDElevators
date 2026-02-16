@@ -92,6 +92,13 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         response.headers.set("X-Frame-Options", "DENY");
         response.headers.set("X-XSS-Protection", "1; mode=block");
         response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+        response.headers.set("X-DNS-Prefetch-Control", "on");
+        response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+
+        // HSTS (Strict-Transport-Security) - 1 year
+        if (process.env.NODE_ENV === 'production') {
+            response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        }
 
         // Relax CSP for development: Nonce and unsafe-inline don't coexist well for hydration scripts
         const hostname = request.headers.get("host") || "";
@@ -116,6 +123,7 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             object-src 'none';
             base-uri 'self';
             worker-src 'self' blob:;
+            upgrade-insecure-requests;
         `.replace(/\s{2,}/g, ' ').trim();
 
         response.headers.set("Content-Security-Policy", cspHeader);

@@ -19,6 +19,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useTranslations } from "next-intl";
+import { resolveI18nKey, ACTIVITY_TYPE_MAP } from "@/lib/i18n-key-map";
 
 interface LogEntry {
     _id: string;
@@ -37,7 +38,8 @@ export function LogExplorer() {
     const t = useTranslations('admin.logs.explorer');
     const tDetail = useTranslations('admin.logs.detail');
     const tLevels = useTranslations('admin.logs.explorer.levels');
-    
+    const tLogs = useTranslations('admin.logs');
+
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -189,7 +191,7 @@ export function LogExplorer() {
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-bold text-teal-600 uppercase tracking-tight">{log.source}</span>
-                                                    <span className="text-[11px] text-slate-500 font-mono">{log.action}</span>
+                                                    <span className="text-[11px] text-slate-500 font-mono">{tLogs(resolveI18nKey(ACTIVITY_TYPE_MAP, log.action))}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 max-w-md">
@@ -283,7 +285,7 @@ export function LogExplorer() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold uppercase text-slate-400">{tDetail('action')}</p>
-                                    <p className="text-sm font-mono">{selectedLog.action}</p>
+                                    <p className="text-sm font-mono">{tLogs(resolveI18nKey(ACTIVITY_TYPE_MAP, selectedLog.action))}</p>
                                 </div>
                             </div>
 

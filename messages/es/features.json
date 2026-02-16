@@ -34,10 +34,10 @@
   "learn_more": "Saber más",
   "f16_desc": "Motor de configuración de reglas industriales para validación técnica. Categorización, priorización y aislamiento multi-tenant nativo.",
   "f16_title": "Gobernanza de Checklists Avanzada",
-  "f17_desc": "Canalización de ingesta blindada con validación de estados de grado bancario, Dead Letter Queue para recuperaciones manuales y auto-detección de procesos bloqueados.",
+  "f17_desc": "Canalización de ingesta blindada con validación de estados de grado bancario, auto-detección de procesos bloqueados y orquestación resiliente ante fallos de IA.",
   "f17_title": "Máquina de Estados Resiliente",
-  "f18_title": "Autenticación Resiliente (v4.3)",
-  "f18_desc": "Motor de seguridad reforzado con State-Driven MFA para evitar inconsistencias de sesión y fallos críticos en el flujo de credenciales.",
+  "f18_title": "Seguridad de Acceso (v4.7.2)",
+  "f18_desc": "Flujos de activación por token sin exposición de contraseñas y MFA persistente para máxima protección de identidad empresarial.",
   "f19_desc": "Optimización profesional de los módulos de Facturación, Permisos y Activos con estándares de Vercel y trazabilidad UUID segura.",
   "f19_title": "Módulos de Grado Industrial",
   "f20_title": "Espacios de Conocimiento Seguros",
@@ -45,5 +45,7 @@
   "f21_title": "Claves API con Alcance Restringido",
   "f21_desc": "Crea integraciones API granulares que solo tengan acceso a espacios específicos. Seguridad garantizada para clientes externos IoT o CRM.",
   "f22_title": "Explorador Visual de Grafos",
-  "f22_desc": "Interfaz interactiva para navegar, buscar e inspeccionar nodos y relaciones en el Grafo de Conocimiento (Neo4j) en tiempo real."
+  "f22_desc": "Interfaz interactiva para navegar, buscar e inspeccionar nodos y relaciones en el Grafo de Conocimiento (Neo4j) en tiempo real.",
+  "f23_title": "Curación de Conocimiento Avanzada",
+  "f23_desc": "Gestión profesional del Grafo de Conocimiento. Edición manual, herramientas de fusión de nodos (Merging) y borrado masivo con trazabilidad total."
 }

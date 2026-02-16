@@ -23,7 +23,7 @@ Antes de iniciar, determina si el archivo pertenece a **Área Pública (Marketin
 
 ### Fase 1: Auditoría de Estilo
 
-- **Área Privada**: Usa skill `ui-styling` (Consistencia, Dashboards, Zustand).
+- **Área Privada**: Usa skill `ui-styling` (Consistencia, Dashboards, Zustand) y `hub-dashboard-architect` (Reducción de navbars densas por fichas/cards).
 - **Área Pública**: Usa skill `marketing-styling` (Impacto visual, Gradients, Conversión).
 - En ambos casos: Usa skill `web-design-guidelines`
 
@@ -120,6 +120,7 @@ Combina la lógica de permisos con la robustez técnica:
 
 - [ ] Identificada Área (Pública vs Privada)
 - [ ] Ejecutada Auditoría UI/Styling (ui-styling O marketing-styling)
+- [ ] Ejecutada Auditoría Hub/Dashboard Architect (hub-dashboard-architect, para Área Privada)
 - [ ] Ejecutada Auditoría i18n/a11y (+ SEO si es público)
 - [ ] Ejecutada Auditoría Feedback Visual (toast-notifier-auditor)
 - [ ] Ejecutada Auditoría Seguridad Integral (guardian-auditor + security-auditor)
@@ -141,6 +142,7 @@ Presenta un **Dashboard de Calidad** consolidado:
 | Categoría     | Calificación | Hallazgos Críticos |
 | -------------- | ------------- | ------------------- |
 | UI / UX        | A-F           | [X]                 |
+| Hub Archi      | A-F / N/A     | [X]                 |
 | i18n/a11y      | A-F           | [X]                 |
 | Seguridad      | A-F           | [X]                 |
 | Prompts        | A-F / N/A     | [X]                 |

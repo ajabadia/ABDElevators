@@ -63,9 +63,16 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/tasks` | **Tasks Hub**: Gestión de tareas, mi bandeja y asignaciones. | 2026-02-16 |
 | `/admin/security` | **Security Hub**: Permisos, Auditoría y Sesiones activas. | 2026-02-16 |
 | `/admin/operations` | **Operations Hub**: Ingesta, Logs, Observabilidad y Mantenimiento. | 2026-02-16 |
+| `/admin/operations/observability` | Monitorización de métricas y salud del sistema. | 2026-02-16 |
+| `/admin/operations/ingest` | Gestión de colas de ingesta y jobs de procesamiento (DLQ). | 2026-02-16 |
+| `/admin/operations/logs` | Visor de logs técnicos y traza de errores. | 2026-02-16 |
+| `/admin/operations/trace` | **Trace Viewer**: Rastreo técnico end-to-end por Correlation ID. | 2026-02-16 |
+| `/admin/operations/maintenance` | Herramientas de mantenimiento y corrección de datos. | 2026-02-16 |
+| `/admin/operations/status` | Estado de servicios externos e infraestructura. | 2026-02-16 |
 | `/admin/settings` | **Settings Hub**: Configuración centralizada (Org, Users, Prompts, i18n). | 2026-02-16 |
 | `/admin/profile` | Perfil de usuario administrador. | 2026-02-16 |
-| `/admin/support` | Centro de soporte técnico. | 2026-02-16 |
+| `/admin/reports` | Report Hub: Dashboard de informes. | 2026-02-16 |
+| `/admin/reports/schedules` | Schedule Management: Gestión de programación de informes. | 2026-02-16 |
 
 ### 🧠 Knowledge & RAG
 | Ruta | Funcionalidad | Última Revisión |
@@ -74,7 +81,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/knowledge-base` | *Redirects to /admin/knowledge?tab=explorer* | 2026-02-13 |
 | `/admin/knowledge-assets` | *Redirects to /admin/knowledge?tab=assets* | 2026-02-13 |
 | `/admin/spaces` | *Redirects to /admin/knowledge?tab=spaces* | 2026-02-13 11:00 |
-| `/admin/knowledge-base/graph` | **Graph Explorer**: Visualizador de grafos y relaciones (Neo4j). | 2026-02-16 10:15 |
+| `/admin/knowledge-base/graph` | **Graph Explorer**: Visualizador de grafos y relaciones (Neo4j) con edición directa. | 2026-02-16 |
 | `/admin/rag-quality` | *Redirects to /admin/ai?tab=rag-quality* | 2026-02-13 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
@@ -84,7 +91,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-14 |
 | `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-14 |
 | `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
-| `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-14 |
+| `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-16 |
 | `/admin/settings/i18n` | Gobernanza i18n: Editor de traducciones con asistencia de IA. | 2026-02-14 |
 | `/admin/document-types` | Gestión de tipos de documento personalizados. | - |
 
@@ -101,18 +108,20 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |------|---------------|-----------------|
 | `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-14 |
 | `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-06 10:15 |
-| `/admin/logs` | Visor de sistema distribuido para depuración técnica. | 2026-02-13 12:00 |
+| `/admin/audit/config-changes` | **Config Audit**: Historial de cambios en configuración (Prompts, Feature Flags). | 2026-02-16 |
+| `/admin/logs` | *Redirects to /admin/operations/logs* | 2026-02-16 |
 | `/admin/analytics` | Métricas globales, KPIs y analytics de plataforma (SUPER_ADMIN). | 2026-02-13 12:15 |
 | `/admin/rag-eval` | Evaluación y testing de calidad RAG. | - |
+| `/admin/reports` | **Report Hub**: Generación y gestión de informes industriales PDF. | 2026-02-16 |
 
 ### 💰 Billing & Organizations
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin/billing` | Facturación, consumo de recursos y gestión de planes. | 2026-02-13 11:30 |
-| `/admin/billing/contracts` | Gestión de contratos, límites y planes por tenant. | 2026-02-12 |
-| `/admin/billing/invoices` | Gestión y visualización de facturas. | - |
-| `/admin/billing/plan` | Detalle y gestión del plan actual. | - |
-| `/admin/billing/usage` | Métricas de uso y consumo de recursos. | - |
+| `/admin/billing/contracts` | Gestión de contratos, límites y planes por tenant. | 2026-02-17 |
+| `/admin/billing/invoices` | Gestión y visualización de facturas. | 2026-02-17 |
+| `/admin/billing/plan` | Detalle y gestión del plan actual. | 2026-02-17 |
+| `/admin/billing/usage` | Métricas de uso y consumo de recursos. | 2026-02-17 |
 | `/admin/organizations` | Configuración de tenant: branding, almacenamiento, facturación y reportes. | 2026-02-14 |
 
 ### 📋 Checklist & Compliance
@@ -128,7 +137,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |------|---------------|-----------------|
 | `/admin/prompts` | Gestión de directivas de IA e i18n avanzada (Phase 109). | 2026-02-12 |
 | `/admin/api-keys` | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
-| `/admin/ingest/jobs` | Panel de gestión de Dead Letter Queue (DLQ) y jobs atascados (Phase 126). | 2026-02-12 |
+| `/admin/ingest/jobs` | *Redirects to /admin/operations/ingest* | 2026-02-16 |
 | `/admin/api-docs` | Portal Interactivo Swagger (OAS 3.0). | 2026-02-08 |
 
 ### 🔔 Notificaciones
@@ -158,7 +167,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/technical/entities` | Dashboard técnico de análisis de entidades (pedidos) con IA. | 2026-02-14 |
-| `/technical/graphs` | Visualizador de Grafo de Conocimiento (Neo4j). | 2026-02-14 |
+| `/technical/graphs` | Visualizador de Grafo de Conocimiento (Neo4j) con soporte de mutación masiva. | 2026-02-16 |
 | `/entities/[id]/validar` | Validación técnica de entidad específica con workflow. | 2026-02-14 |
 | `/architecture` | Diagramas de sistema y documentación viva. | 2026-02-14 |
 
@@ -166,22 +175,30 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Base Path | Propósito | Última Revisión |
 |-----------|-----------|-----------------|
 | `/api/admin/cases/[id]` | Recuperación segura de detalles de casos (Entity Detail). | 2026-02-13 |
-| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase) + Multi-level Chunking. | 2026-02-13 |
+| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase) + Multi-level Chunking. | 2026-02-16 |
 | `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos (ExecuteIngestionAnalysis). | 2026-02-08 02:00 |
 | `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-10 10:00 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-06 |
+| `/api/admin/reports` | **GET**: Listado histórico de informes generados. | 2026-02-16 |
+| `/api/admin/reports/generate` | **POST**: Motor de generación de PDF basado en templates (ReportEngine). | 2026-02-16 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
 | `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | 2026-02-06 00:30 |
 | `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-06 10:15 |
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-06 00:30 |
 | `/api/admin/users/invite/bulk` | Ingesta masiva de invitaciones (Batch Processing). | 2026-02-06 07:45 |
-| `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-14 |
+| `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-16 |
 | `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 |
+| `/api/admin/graph/nodes` | **MUT**: Mutación de nodos (Create/Update/Delete) en Neo4j. | 2026-02-16 |
+| `/api/admin/graph/nodes/bulk` | **NEW**: Borrado masivo de nodos en una sola transacción. | 2026-02-16 |
+| `/api/admin/graph/nodes/merge` | **NEW**: Fusión de nodos con redirección de relaciones (APOC). | 2026-02-16 |
+| `/api/admin/graph/relations` | **MUT**: Mutación de relaciones en Neo4j. | 2026-02-16 |
 | `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
 | `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
 | `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-10 |
 | `/api/cron/stuck-jobs` | Detección y recuperación automática de procesos de ingesta bloqueados. | 2026-02-10 |
+| `/api/_health` | **Health Check**: Liveness probe para k8s/load balancers (200 OK). | 2026-02-16 |
+| `/api/_ready` | **Readiness Probe**: Verificación de conectividad BB.DD. (200 OK/503). | 2026-02-16 |
 | `/api/admin/spaces` | Gestión administrativa de espacios universales (Quota & Hierarchy). | 2026-02-11 |
 | `/api/spaces` | Recuperación de espacios accesibles para navegación del usuario. | 2026-02-11 |
 | `/api/core/quick-qa` | Endpoint efímero para preguntas rápidas sobre texto pegado. | 2026-02-11 |
@@ -203,7 +220,9 @@ Rutas que aparecen en versiones anteriores del mapa pero no existen físicamente
 | `/admin/settings/general` | 🔄 Redirect | Redirige a `/admin/settings` (Phase 133) |
 | `/admin/knowledge-base` | 🔄 Redirect | Redirige a `/admin/knowledge` |
 | `/admin/workflow-tasks` | 🔄 Redirect | Reemplazado por `/admin/tasks` |
+| `/admin/rag-eval` | ⛔ Deleted | Eliminado por seguridad (usar `/admin/rag-quality`) |
+| `/api/debug/*` | ⛔ Deleted | Endpoints de debug eliminados de producción |
 
 ---
-*Mapa actualizado por Antigravity v4.5.1 (Unified Experience Edition) - Estructura real al: 2026-02-14*
+*Mapa actualizado por Antigravity v4.7.0 (Enterprise Curation Edition) - Estructura real al: 2026-02-16*
 *Rutas sin fecha (-) están pendientes de auditoría*

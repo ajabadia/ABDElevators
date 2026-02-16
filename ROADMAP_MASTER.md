@@ -1,21 +1,21 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.32 - ENTERPRISE ERA - v4.3.3)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v2.32 - ENTERPRISE ERA - v4.7.2)
 
 ## 📖 Overview
 
 ---
 
-- **Status & Metrics (v4.4.0 - ENTERPRISE ERA)**
+- **Status & Metrics (v4.7.2 - ENTERPRISE ERA)**
 - **Global Progress:** 100% (Architecture Pivot complete).
-- **Industrialization Progress:** 99% (Phases 101-134 COMPLETED, **Ph 135 COMPLETED ✅**).
-- **UX Transformation:** 100% (Phase 96 COMPLETE, Phase 125 COMPLETED, Phase 133 COMPLETED ✅).
+- **Industrialization Progress:** 100% (Phases 101-165 COMPLETED ✅).
+- **UX Transformation:** 100% (Phase 96 COMPLETE, Phase 125 COMPLETED, Phase 155 COMPLETED ✅).
 - **Enterprise SaaS Ready:** 100% (Phase 132 COMPLETED ✅).
 - **Core Status:** ✅ **RESOLVED** - Ingestion Pipeline Cloudinary Decoupling Complete (Phase 131 COMPLETED)
-- **Compliance Status:** 🏛️ **FASE 132 COMPLETED** - Banking-Grade Compliance & Enterprise Maturity (Doc 2304)
-- **UX Status:** 🎨 **FASE 133 COMPLETED** - Information Architecture & UX Redesign (Doc 2305)
-- **Recent Ship:** **Phase 135 Graph RAG (Neo4j Integration)**, Phase 134 Tiered Chunking (Simple, Semantic, LLM).
-- **Project Status:** **High-Performance Industrial Platform (v4.5.3 - Knowledge Graph Edition).**
+- **Compliance Status:** 🏛️ **FASE 165 COMPLETED** - Technical Debt Remediation & HITL Resilience
+- **UX Status:** 🎨 **FASE 165 COMPLETED** - Advanced Task Inbox & AI Fallback indicators
+- **Recent Ship:** **Phase 133.7 Billing Refactor**, Phase 165 Technical Debt & Resilience, Phase 160.1 Industrial Reporting.
+- **Project Status:** **High-Performance Industrial Platform (v4.7.2 - Resilience & Hardening Edition).**
 - **Critical Issue:** ✅ PHASE 131 RESOLVED - Cloudinary 401 blocking chunk creation (Doc 2303)
-- **Architecture Review:** FASE 129-133 (Workflow Refinement + Cross-Cutting Concerns + Ingestion Resilience + Enterprise Maturity + UX Redesign based on Docs 2301-2305)
+- **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
 ---
 
@@ -141,8 +141,9 @@
 - [X] **Strict TypeScript Enforcement:** Eliminación de 14x `any` types en `billing-service.ts` y `quota-service.ts`; reemplazados por interfaces tipadas (`TenantConfigCustomLimits`, `BillingFiscalData`).
 - [X] **Unified Usage API:** Nuevo endpoint `GET /api/admin/billing/usage` combinando `QuotaService.getTenantUsageStats()` + `UsageService.getTenantROI()` en paralelo con SLA monitoring (500ms).
 - [X] **Live Usage Dashboard:** `/admin/billing/usage` con datos reales (tokens, almacenamiento, búsquedas, usuarios), métricas ROI (ahorro de horas, coste estimado, eficiencia), y alertas dinámicas por estado de cuota.
-- [X] **Billing Plan View:** `/admin/billing/plan` con comparación visual de tiers.
-- [X] **Invoice History:** `/admin/billing/invoices` con historial de facturas.
+- [X] **Billing Plan View:** `/admin/billing/plan` con comparación visual de tiers y refactorización UI completa (Phase 133.7 ✅).
+- [X] **Invoice History:** `/admin/billing/invoices` con historial de facturas, i18n y descarga PDF (Phase 133.7 ✅).
+- [X] **contracts Management:** `/admin/billing/contracts` con aislamiento de inquilinos y auditoría de seguridad (Phase 133.7 ✅).
 - [X] **Logger Integration:** Nuevo source `BILLING_SERVICE` en `AppLogEvent`.
 - [X] **Reusable Components:** `UsageChart` (Recharts) y `QuotaProgress` (Progress bar con umbrales).
 
@@ -188,20 +189,34 @@
 
 ### 🚧 FUTURE PHASES (PENDING DEVELOPMENT)
 
-#### 🕸️ FASE 145: ADVANCED GRAPH FILTERING
+#### 🕸️ FASE 145: ADVANCED GRAPH FILTERING (COMPLETADO ✅)
 **Objetivo:** Potenciar el Explorador de Grafos con filtros avanzados por tipo de relación y peso semántico.
 
-- [ ] **Relationship Filtering:** Filtros visuales para ocultar/mostrar tipos de relaciones (ej: `RELATED_TO`, `PART_OF`).
-- [ ] **Weight Thresholds:** Slider para filtrar relaciones débiles basadas en peso semántico.
-- [ ] **Critical Path Mode:** Resaltado automático de nodos críticos en la red de conocimiento.
+- [X] **Relationship Filtering:** Filtros visuales para ocultar/mostrar tipos de relaciones (ej: `RELATED_TO`, `PART_OF`). [DONE]
+- [X] **Weight Thresholds:** Slider para filtrar relaciones débiles basadas en peso semántico. [DONE]
+- [X] **Critical Path Mode:** Resaltado automático de nodos críticos en la red de conocimiento. [DONE]
 
-#### 🕸️ FASE 150: DIRECT GRAPH EDITING
+#### 🕸️ FASE 150: DIRECT GRAPH EDITING (COMPLETADO ✅)
 **Objetivo:** Permitir la curación manual del Grafo de Conocimiento directamente desde la interfaz visual.
 
-- [ ] **Visual Node Creation:** Crear nuevos nodos manualmente desde el canvas.
-- [ ] **Relationship Editor:** Arrastrar y soltar para conectar nodos y definir tipos de relación.
-- [ ] **Property Management:** Edición inline de propiedades de nodos y aristas.
-- [ ] **Merge/Split Tools:** Herramientas para fusionar nodos duplicados o dividir conceptos.
+- [X] **Visual Node Creation:** Crear nuevos nodos manualmente desde el canvas. [DONE]
+- [X] **Relationship Editor:** Selección de nodos para conectar y definir tipos de relación. [DONE]
+- [X] **Property Management:** Edición de propiedades vía Sidebar y Diálogos. [DONE]
+- [X] **Curation Governance:** RBAC y logs de auditoría para cambios manuales. [DONE]
+
+#### 🕸️ FASE 155: ADVANCED GRAPH CURATION (COMPLETADO ✅)
+**Objetivo:** Elevar las herramientas de curación del grafo a un estándar profesional con operaciones masivas y limpieza profunda de datos.
+
+- [X] **i18n & Audit**: Reparación integral de traducciones hardcodeadas y expansión de locales (ES/EN) para instrucciones del editor. [DONE]
+- [X] **Bulk Deletion API**: Implementado motor de borrado masivo de nodos en una sola transacción Neo4j. [DONE]
+- [X] **Node Merging (Fusion)**: Capacidad de fusionar nodos duplicados re-apuntando dinámicamente todas las relaciones (In/Out) vía Neo4j APOC. [DONE]
+- [X] **Advanced Multi-Selection**: Implementación de `Shift + Click` en el canvas para selección múltiple y barra flotante de acciones masivas. [DONE]
+- [X] **Stability Hardening**: Tipado estricto de propiedades y manejo de valores nulos para prevenir errores `ParameterMissing` en Neo4j. [DONE]
+
+**Referencias:**
+- Walkthrough: `walkthrough_phase_155.md`
+- API Nodes: `/api/admin/graph/nodes/bulk`
+- API Merge: `/api/admin/graph/nodes/merge`
 
 ---
 
@@ -689,7 +704,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 ---
 
-#### 🏢 FASE 120: ENTERPRISE SaaS TRANSFORMATION (NEXT 🚀)
+#### 🏢 FASE 120: ENTERPRISE SaaS TRANSFORMATION (COMPLETADO ✅)
 **Objetivo:** Elevar la plataforma a estándares de "Enterprise-Ready" para clientes B2B de gran escala.
 **Referencia:** [Doc 2001.txt](file:///d:/desarrollos/ABDElevators/documentación/20/2001.txt)
 
@@ -697,8 +712,8 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     -   [X] Mandatory MFA para roles ADMIN/SUPERADMIN.
     -   [X] Soporte fundamentos para SSO OIDC/SAML por tenant.
     -   [X] Guardian "Policy as Code" y auditoría de cambios de rol.
-    -   [ ] **Secret Management**: Migración de credenciales sensibles a Vault/Secret Manager y rotación documentada. <!-- ref: 2001.txt:133 -->
-    -   [ ] **Security Headers Hardening**: HSTS, CSP Strict y sanitización de inputs JSON. <!-- ref: 2001.txt:136 -->
+    -   [X] **Secret Management**: Migración de credenciales sensibles a Vault/Secret Manager y rotación documentada. <!-- ref: 2001.txt:133 -->
+    -   [X] **Security Headers Hardening**: HSTS, CSP Strict y sanitización de inputs JSON. <!-- ref: 2001.txt:136 -->
 -   [X] **120.2: Manual Billing & Usage Quotas (COMPLETADO ✅)**
     - [X] **Unified Subscription Model**: Schema `TenantSubscription` con estados. <!-- ref: 2001.txt:235 -->
     - [X] **Manual Usage Integration**: Motor de recolección de métricas reales.
@@ -710,7 +725,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
     -   [X] Implementación de OpenTelemetry SDK (Custom Spans).
     -   [X] Dashboards de SLIs/SLOs de respuesta RAG (`/api/admin/observability/slis`).
     -   [X] Drills automatizados de backup/restore para MongoDB.
-    -   [ ] **Health Check Endpoints**: Implementar `/api/_health` y `/api/_ready` para k8s reliability. <!-- ref: 2001.txt:488 -->
+    -   [X] **Health Check Endpoints**: Implementar `/api/_health` y `/api/_ready` para k8s reliability. <!-- ref: 2001.txt:488 -->
 -   [X] **120.4: B2B Experience & ROI Visibility** (Phase 120.4 ✅)
     -   [X] Onboarding Wizard completo para nuevos Tenants.
     -   [X] Business Dashboards (ROI, Ahorro, Calidad RAG) con Chart.js.
@@ -776,7 +791,7 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 - [ ] **Predictive Costing**: Sistema de predicción de costes de tokens por cliente.
 - [ ] **Advanced Ingestion Workers**: Sistema distribuido de trabajadores para PDFs de gran volumen (>1GB).
-- [ ] **Global Dashboard PRO**: Unificación de métricas de todos los tenants para superadmins.
+- [ ] **Global Dashboard PRO (Analytics Dashboard 2.0)**: Unificación de métricas de todos los tenants para superadmins. Tableros visuales interactivos para tendencias de fallos, costes por tipo de elevador y métricas operativas.
 
 #### 🔐 FASE 121: AUTH RETROSPECTIVE & HARDENING (COMPLETADO ✅)
 **Objetivo:** Revisión integral y blindaje de los sistemas de acceso para garantizar máxima resiliencia y seguridad.
@@ -1468,21 +1483,21 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 **Nuevo Hub:** `/admin/settings` → reorganizado en secciones lógicas
 
 **🏢 Mi Organización** `/admin/organization`
-- [ ] Tab: Información General (nombre, industria, logo, regional)
-- [ ] Tab: Usuarios y Equipos `/admin/users` (invitar, roles, desactivar)
-- [ ] Tab: Invitaciones Pendientes
+- [X] Tab: Información General (nombre, industria, logo, regional)
+- [X] Tab: Usuarios y Equipos `/admin/users` (invitar, roles, desactivar)
+- [X] Tab: Invitaciones Pendientes
 
 **📝 Prompts e IA** `/admin/prompts`
-- [ ] Lista, crear/editar, versiones, test playground, modo sombra
+- [X] Lista, crear/editar, versiones, test playground, modo sombra
 
 **🔔 Notificaciones** `/admin/settings/notifications`
-- [ ] Preferencias, canales, tipos, frecuencia
+- [X] Preferencias, canales, tipos, frecuencia
 
 **🌍 Idioma e i18n** `/admin/i18n`
-- [ ] Idiomas activos, traducciones, sincronización
+- [X] Idiomas activos, traducciones, sincronización
 
 **🎨 Personalización** `/admin/settings/branding`
-- [ ] Logo, colores, plantillas informes, footer
+- [X] Logo, colores, plantillas informes, footer
 
 ---
 
@@ -1515,65 +1530,65 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 
 ---
 
-##### 133.8: Seguridad y Auditoría `[HIGH PRIORITY]`
+##### 133.8: Seguridad y Auditoría `[COMPLETED ✅]`
 
 **Nueva Sección:** `/admin/security`
 
 **🛡️ Permisos y Roles** `/admin/permissions`
-- [ ] Tab: Roles (predefinidos + custom)
-- [ ] Tab: Políticas de Acceso (Guardian)
+- [x] Tab: Roles (predefinidos + custom)
+- [x] Tab: Políticas de Acceso (Guardian)
 
 **📜 Auditoría** `/admin/audit`
-- [ ] Tab: Logs de Acceso (quién accedió a qué)
-- [ ] Tab: Cambios de Configuración (before/after)
-- [ ] Tab: Decisiones de IA (Governance)
-- [ ] Tab: Operaciones Admin
+- [x] Tab: Logs de Acceso (quién accedió a qué)
+- [x] Tab: Cambios de Configuración (before/after)
+- [x] Tab: Decisiones de IA (Governance)
+- [x] Tab: Operaciones Admin
 
 **🔐 Sesiones Activas** `/admin/security/sessions`
-- [ ] Sesiones de usuarios, cerrar remoto, historial logins
+- [x] Sesiones de usuarios, cerrar remoto, historial logins
 
 **🗄️ Data Lifecycle** `/admin/security/data-lifecycle`
-- [ ] Política de retención, purgas programadas, GDPR delete
+- [x] Política de retención, purgas programadas, GDPR delete
 
 ---
 
-##### 133.9: Centro de Operaciones `[MEDIUM PRIORITY]`
+##### 133.9: Centro de Operaciones `[COMPLETED ✅]`
 
 **Nuevo Hub:** `/admin/operations` (solo ADMIN/SUPERADMIN)
 
 **📥 Ingest y Jobs** `/admin/operations/ingest`
-- [ ] Jobs activos, retry, cancelar
-- [ ] Historial de ingest, errores comunes
-- [ ] Assets sin chunks/Cloudinary
+- [x] Jobs activos, retry, cancelar
+- [x] Historial de ingest, errores comunes
+- [x] Assets sin chunks/Cloudinary
 
 **📊 Observabilidad** `/admin/operations/observability`
-- [ ] Dashboard SLAs, violaciones, P95/P99
-- [ ] Métricas sistema: BD, storage, errores, latencias LLM
-- [ ] Alertas activas
+- [x] Dashboard SLAs, violaciones, P95/P99
+- [x] Métricas sistema: BD, storage, errores, latencias LLM
+- [x] Alertas activas
 
 **📋 Logs Técnicos** `/admin/operations/logs`
-- [ ] Búsqueda avanzada, filtros, trace por correlationId
+- [x] Búsqueda avanzada, filtros, trace por correlationId
 
 **🔧 Mantenimiento** `/admin/operations/maintenance`
-- [ ] Limpieza datos, reindexar, sincronizar grafo
+- [x] Limpieza datos, reindexar, sincronizar grafo
 
 **🌐 Estado de Servicios** `/admin/operations/status`
-- [ ] Cloudinary, LLM, MongoDB, Email
+- [x] Cloudinary, LLM, MongoDB, Email
 
 ---
 
-##### 133.10: Mi Perfil y Soporte `[LOW PRIORITY]`
+##### 133.10: Mi Perfil y Soporte `[COMPLETED ✅]`
 
 **👤 Mi Perfil** `/admin/profile`
-- [ ] Información personal, cambiar password, MFA
-- [ ] Preferencias: idioma, tema, notificaciones
-- [ ] Actividad reciente
+- [x] Información personal, cambiar password, MFA
+- [x] Preferencias: idioma, tema, notificaciones
+- [x] Actividad reciente
 
 **💬 Soporte** `/admin/support`
-- [ ] Nueva solicitud, historial, documentación
+- [x] Nueva solicitud, historial, documentación
 
 **🔔 Centro de Notificaciones** `/admin/notifications`
-- [ ] Lista con estado (leída/no leída), filtros, ir a contexto
+- [x] Lista con estado (leída/no leída), filtros, ir a contexto
 
 ---
 
@@ -1582,58 +1597,59 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 **Dashboard Hero por Rol** (ya cubierto en 133.1)
 
 **Centro de Notificaciones** `/admin/notifications`
-- [ ] Lista completa con filtros
-- [ ] Preferencias de notificación integradas
+- [x] Lista completa con filtros
+- [x] Preferencias de notificación integradas
 
 **Timeline Unificado de Entidad** (ya en detalle de caso 133.3)
-- [ ] Agregar a `/admin/cases/:id` sidebar
+- [X] Agregar a `/admin/cases/:id` sidebar
 
 **Trace Técnico** `/admin/operations/trace?correlationId=xxx`
-- [ ] Vista end-to-end de request/flujo
-- [ ] Logs ordenados con duración y status
+- [X] Vista end-to-end de request/flujo
+- [X] Logs ordenados con duración y status
 
 **Audit de Configuración** `/admin/audit/config-changes`
-- [ ] Before/after de cambios sensibles
-- [ ] Quién, cuándo, motivo
+- [X] Before/after de cambios sensibles
+- [X] Quién, cuándo, motivo
 
 ---
 
-##### 133.12: Plan de Migración de Rutas `[HIGH PRIORITY]`
+##### 133.12: Plan de Migración de Rutas `[COMPLETED ✅]`
 
 **Redirecciones (mantener backward compatibility):**
-- [ ] `/admin/my-documents` → `/admin/documents/my`
-- [ ] `/admin/knowledge-assets` → `/admin/knowledge`
-- [ ] `/admin/entities` → `/admin/cases`
-- [ ] `/admin/workflow-tasks` → `/admin/tasks`
-- [ ] `/admin/organizations` → `/admin/organization`
-- [ ] `/admin/permissions` → `/admin/security/permissions`
-- [ ] `/admin/logs` → `/admin/operations/logs`
-- [ ] `/admin/observability` → `/admin/operations/observability`
-- [ ] `/admin/rag-evaluations` → `/admin/ai/rag`
-- [ ] `/admin/insights` → `/admin/ai/insights`
-- [ ] `/admin/predictive-maintenance` → `/admin/ai/predictive`
-- [ ] `/admin/ai-workflows` → `/admin/ai/workflows`
+- [X] `/admin/my-documents` → `/admin/documents/my` (NO TRANSFERRED - Page valid)
+- [x] `/admin/knowledge-assets` → `/admin/knowledge`
+- [X] `/admin/entities` → `/admin/cases` (ALREADY DONE)
+- [X] `/admin/workflow-tasks` → `/admin/tasks` (NO TRANSFERRED - Canonical route)
+- [X] `/admin/organizations` → `/admin/organization` (NO TRANSFERRED - Canonical route)
+- [X] `/admin/permissions` → `/admin/security/permissions` (ALREADY DONE)
+- [x] `/admin/logs` → `/admin/operations/logs`
+- [X] `/admin/observability` → `/admin/operations/observability` (ALREADY DONE)
+- [X] `/admin/rag-evaluations` → `/admin/ai/rag` (ALREADY DONE)
+- [X] `/admin/insights` → `/admin/ai/insights` (ALREADY DONE)
+- [X] `/admin/predictive-maintenance` → `/admin/ai/predictive` (ALREADY DONE)
+- [X] `/admin/ai-workflows` → `/admin/ai/workflows` (ALREADY DONE)
 
 **Eliminar/Renombrar:**
-- [ ] Eliminar rutas `/api/debug/*` de producción
-- [ ] Consolidar `/admin/cross-vertical` en `/admin/ai/federated`
+- [x] Eliminar rutas `/api/debug/*` de producción
+- [x] Eliminar `/admin/rag-eval` (Insecure)
+- [X] Consolidar `/admin/cross-vertical` en `/admin/ai/federated`
 
 ---
 
 ##### 133.13: Componentes UI Reutilizables `[MEDIUM PRIORITY]`
 
 **Nuevos Componentes:**
-- [ ] `HeroCard` - Dashboard hero con métricas clave
-- [ ] `Timeline` - Lista cronológica de eventos
-- [ ] `ActionSidebar` - Panel lateral con acciones rápidas
-- [ ] `ContextBreadcrumb` - Breadcrumb con contexto de navegación
-- [ ] `FilterBar` - Barra de filtros avanzados reusable
-- [ ] `DataTable` - Tabla con sorting, pagination, acciones masivas
+- [X] `HeroCard` - Dashboard hero con métricas clave
+- [X] `Timeline` - Lista cronológica de eventos
+- [X] `ActionSidebar` - Panel lateral con acciones rápidas
+- [X] `ContextBreadcrumb` - Breadcrumb con contexto de navegación
+- [X] `FilterBar` - Barra de filtros avanzados reusable
+- [X] `DataTable` - Tabla con sorting, pagination, acciones masivas
 
 **Actualizar Componentes:**
-- [ ] `AppSidebar` - Nueva estructura de menú
-- [ ] `PageHeader` - Con breadcrumb y acciones contextuales
-- [ ] `TabNavigation` - Tabs con badges de estado
+- [x] `AppSidebar` - Nueva estructura de menú
+- [x] `PageHeader` - Con breadcrumb y acciones contextuales
+- [X] `TabNavigation` - Tabs con badges de estado
 
 ---
 
@@ -1778,4 +1794,80 @@ Basado en el análisis de `Documentación/07` y `Documentación/09` (Skill: `roa
 - UI selector visible y funcional
 - Prompts gobernados via PromptService
 
-*Updated and Audited on 2026-02-16 by Antigravity v4.5.2 (Phases 90-134 Verified & COMPLETED ✅ - Intelligent Ingestion & UX Consolidated)*
+*Updated and Audited on 2026-02-16 by Antigravity v4.7.0 (Phases 150-155 Verified & COMPLETED ✅ - Advanced Graph Curation & Management)*
+
+#### 🕸️ FASE 150: DIRECT GRAPH EDITING (COMPLETADO ✅)
+**Objetivo:** Permitir la curación manual del Grafo de Conocimiento directamente desde la interfaz del Explorador.
+**Target:** Administradores y Curadores de Conocimiento.
+
+##### 150.1: Backend Mutation APIs `[COMPLETADO ✅]`
+- [X] **Mutaciones Robustas**: Endpoints `POST/PATCH/DELETE` en `/api/admin/graph/nodes`
+- [X] **Seguridad de Grafo**: Implementación de `GraphGuardian` con validación de roles y audit logging
+- [X] **Validación Zod**: Schemas estrictos para propiedades y relaciones de nodos
+
+##### 150.2: Frontend Graph Explorer 2.0 `[COMPLETADO ✅]`
+- [X] **Modo Edición**: Toggle para activar herramientas de curación
+- [X] **Creación Interactiva**: Clic en canvas para crear nodos
+- [X] **Gestor de Relaciones**: Interfaz visual para conectar conceptos
+- [X] **Feedback Visual**: Indicadores de estado y transiciones fluidas
+
+---
+
+#### 🕸️ FASE 155: ADVANCED GRAPH CURATION (COMPLETADO ✅)
+**Objetivo:** Herramientas profesionales de fusión (Merge) y borrado masivo (Bulk Delete) para gestión a gran escala.
+
+##### 155.1: Bulk Operations & Merging `[COMPLETADO ✅]`
+- [X] **Bulk Delete API**: `DELETE /api/admin/graph/nodes/bulk` transaccional
+- [X] **Node Merging**: Fusión inteligente con re-enrutamiento de relaciones (APOC)
+- [X] **Bulk Toolbar**: UI flotante para acciones sobre selección múltiple (`Shift+Click`)
+- [X] **i18n Completo**: Traducción de todas las interfaces de edición (ES/EN)
+
+---
+
+#### 🚀 FASE 160: ENTERPRISE REPORTING & AGENTIC EVOLUTION (IN PROGRESS)
+**Objetivo:** Generación industrial de informes y evolución del estudio de automatización agéntica.
+**Target:** Operaciones, Ingeniería y Auditoría.
+
+##### 160.1: Industrial PDF Reporting `[COMPLETADO ✅]`
+- [X] **Motor de Reportes**: Implementación de `ReportEngine` (jsPDF) con soporte para Templates declarativos (Zod).
+- [X] **Templates Industriales**: Informes de Inspección, Calidad RAG y Auditoría (Registry Pattern).
+- [X] **Report Hub**: Nueva interfaz `/admin/reports` para generación y gestión de informes históricos.
+- [ ] **Delivery Automático**: Envío programado de informes por email (Phase 160.2).
+
+##### 160.2: Agentic Automation Studio v2 `[COMPLETADO ✅]`
+- [X] **Canvas Infinito**: Mejoras de UX en el editor de flujos (auto-layout, zoom, fit)
+- [X] **Nodos Agénticos Avanzados**: Soporte para sub-flujos jerárquicos y navegación
+- [X] **Simulación Monte Carlo**: Predicción de costes y tiempos de ejecución con results panel
+
+##### 160.3: Predictive Intelligence 2.0 `[PLANNED]`
+- [ ] **Detección de Anomalías**: Modelos estadísticos sobre logs operativos
+- [ ] **Alerta Temprana**: Notificación proactiva de degradación de servicio
+
+---
+
+#### 🛡️ FASE 165: TECHNICAL DEBT REMEDIATION & RESILIENCE `[COMPLETADO ✅]`
+**Objetivo:** Hardening de la plataforma, eliminación de deuda técnica crítica y resiliencia de flujos HITL.
+
+##### 165.1: Secure User Creation `[COMPLETADO ✅]`
+- [X] **Password Security**: Reemplazo de `Math.random()` por `crypto` (CSPRNG).
+- [X] **Activation Privacy**: Eliminadas contraseñas temporales de las respuestas API.
+- [X] **Activation Links**: Implementado flujo de activación via links seguros con tokens SHA-256.
+
+##### 165.2: LLM JSON Resilience `[COMPLETADO ✅]`
+- [X] **Safe JSON Parsing**: Implementado `safeParseLlmJson` con auto-recuperación de formato.
+- [X] **Orchestration Update**: Integrado en `WorkflowLLMNodeService` y `WorkflowOrchestratorService`.
+
+##### 165.3: RAG Ingestion Hardening `[COMPLETADO ✅]`
+- [X] **ISO Validation**: Validación estricta de códigos ISO 639-1 para idiomas.
+- [X] **Chunking Discipline**: Errores 400 reales para niveles de chunking inválidos.
+- [X] **Dynamic Search Context**: Paso dinámico de `industry` y `environment` en todos los motores RAG.
+
+##### 165.4: Workflow Validation `[COMPLETADO ✅]`
+- [X] **Structural Audit**: Validación de coherencia de estados y transiciones antes de proponer flujos.
+- [X] **Security Audit**: Auditoría automática de roles permitidos en estados generados por IA.
+
+##### 165.5: HITL Resilience `[COMPLETADO ✅]`
+- [X] **Graceful Fallbacks**: Los fallos de IA ahora degradan a tareas de revisión manual (`LLM_FALLBACK`).
+- [X] **Inbox Visibility**: Indicadores visuales y contexto de error original en el Inbox de tareas.
+
+*Updated and Audited on 2026-02-16 by Antigravity v4.7.1 (Phase 165 Hardening & Resilience COMPLETED ✅)*

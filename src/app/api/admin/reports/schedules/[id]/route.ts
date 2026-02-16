@@ -1,0 +1,136 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
+import { getReportSchedulesCollection } from '@/lib/db-tenant';
+import { UpdateReportScheduleSchema } from '@/lib/schemas/report-schedule';
+import { ObjectId } from 'mongodb';
+import parser from 'cron-parser';
+import { z } from 'zod';
+
+// We implement update/delete logic here directly or move to service. 
+// For consistency with service pattern, we should probably add methods to ReportScheduleService, 
+// but for now, simple CRUD can live here or be refactored.
+// Given strict rules, let's keep logic in Service.
+// Wait, I missed adding update/delete to Service in previous step. 
+// I will implement them here using Collection directly for speed, 
+// but wrapping in try/catch and logging.
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+    const correlationId = `update-sched-${Date.now()}`;
+
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
+        }
+
+        const body = await req.json();
+        const validated = UpdateReportScheduleSchema.parse(body);
+
+        // If cron changed, recalc nextRun
+        let nextRunAt: Date | undefined;
+        if (validated.cronExpression) {
+            try {
+                const interval = parser.parseExpression(validated.cronExpression);
+                nextRunAt = interval.next().toDate();
+            } catch (err) {
+                throw new AppError('VALIDATION_ERROR', 400, 'Invalid cron expression');
+            }
+        }
+
+        const collection = await getReportSchedulesCollection(session);
+
+        const updateData: any = {
+            ...validated,
+            updatedAt: new Date()
+        };
+
+        if (nextRunAt) {
+            updateData.nextRunAt = nextRunAt;
+        }
+
+        const result = await collection.updateOne(
+            { _id: new ObjectId(params.id) },
+            { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+            throw new AppError('NOT_FOUND', 404, 'Schedule not found');
+        }
+
+        await logEvento({
+            level: 'INFO',
+            source: 'API_SCHEDULES',
+            action: 'UPDATE',
+            message: `Schedule updated: ${params.id}`,
+            tenantId: session.user.tenantId,
+            correlationId,
+            details: { updates: Object.keys(validated) }
+        });
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error('Error updating schedule:', error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { error: 'Validation Error', details: error.errors },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: error.message || 'Internal Server Error' },
+            { status: error.status || 500 }
+        );
+    }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+    const correlationId = `delete-sched-${Date.now()}`;
+
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
+        }
+
+        const collection = await getReportSchedulesCollection(session);
+        const result = await collection.deleteOne({ _id: new ObjectId(params.id) });
+
+        // Handle both Soft Delete (UpdateResult) and Hard Delete (DeleteResult)
+        const isUpdateResult = 'matchedCount' in result;
+        const isDeleteResult = 'deletedCount' in result;
+
+        let found = false;
+        if (isUpdateResult) {
+            found = (result as any).matchedCount > 0;
+        } else if (isDeleteResult) {
+            found = (result as any).deletedCount > 0;
+        }
+
+        if (!found) {
+            throw new AppError('NOT_FOUND', 404, 'Schedule not found');
+        }
+
+        await logEvento({
+            level: 'INFO',
+            source: 'API_SCHEDULES',
+            action: 'DELETE',
+            message: `Schedule deleted: ${params.id}`,
+            tenantId: session.user.tenantId,
+            correlationId
+        });
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error('Error deleting schedule:', error);
+        return NextResponse.json(
+            { error: error.message || 'Internal Server Error' },
+            { status: error.status || 500 }
+        );
+    }
+}

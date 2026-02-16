@@ -27,22 +27,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             throw new AppError('VALIDATION_ERROR', 400, 'El mensaje no puede estar vacío');
         }
 
-        const db = await connectDB();
+        // Verify ticket access via Service (Phase 173.1)
+        const ticket = await TicketService.getTicketByIdWithAcl(id, session);
 
-        // Verify ticket access before replying
-        const ticket = await db.collection('tickets').findOne({ _id: new ObjectId(id) });
-        if (!ticket) {
-            throw new NotFoundError('Ticket no encontrado');
-        }
-
-        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(session.user.role as UserRole);
+        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(session.user.role as UserRole);
 
         if (isInternal && !isSupport) {
             throw new AppError('FORBIDDEN', 403, 'Solo soporte puede añadir notas internas');
-        }
-
-        if (!isSupport && ticket.createdBy !== session.user.id) {
-            throw new AppError('FORBIDDEN', 403, 'No tienes permiso para responder a este ticket');
         }
 
         // Determine author
@@ -56,19 +47,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             isInternal: !!isInternal
         });
 
-        // Update status automatically (Only if not internal)
+        // Update status automatically (Phase 173.1)
         if (!isInternal) {
-            if (authorType === 'User' && ticket.status === 'WAITING_USER') {
-                await db.collection('tickets').updateOne(
-                    { _id: new ObjectId(id) },
-                    { $set: { status: 'OPEN' } }
-                );
-            } else if (authorType === 'Support' && ticket.status !== 'RESOLVED' && ticket.status !== 'CLOSED') {
-                await db.collection('tickets').updateOne(
-                    { _id: new ObjectId(id) },
-                    { $set: { status: 'WAITING_USER' } }
-                );
-            }
+            await TicketService.updateStatusOnReply(id, authorType as any);
         }
 
         return NextResponse.json({ success: true, message });

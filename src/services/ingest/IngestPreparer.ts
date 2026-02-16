@@ -4,6 +4,7 @@ import { KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
 import { ValidationError, AppError } from '@/lib/errors';
 import { IngestOptions } from '../ingest-service';
 import { logEvento } from '@/lib/logger';
+import { validateLanguageCode } from '@/lib/language-validator';
 import { FeatureFlags } from '@/lib/feature-flags';
 import { GridFSUtils } from '@/lib/gridfs-utils';
 
@@ -20,6 +21,12 @@ export class IngestPreparer {
         const scope = metadata.scope || 'TENANT';
         const industry = metadata.industry || 'ELEVATORS';
         const spaceId = metadata.spaceId; // 🌌 Phase 125.2
+
+        // 0. Strict Chunking Level Validation (Phase 165.3)
+        const supportedLevels = ['bajo', 'medio', 'alto'];
+        if (metadata.chunkingLevel && !supportedLevels.includes(metadata.chunkingLevel)) {
+            throw new ValidationError(`Nivel de fragmentación (chunkingLevel) no soportado: ${metadata.chunkingLevel}. Valores válidos: ${supportedLevels.join(', ')}`);
+        }
 
         // 1. Critical Size Validation (Phase 131.6: Large File Support)
         const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB

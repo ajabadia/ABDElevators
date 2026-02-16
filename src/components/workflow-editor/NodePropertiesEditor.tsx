@@ -11,8 +11,9 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select';
-import { Settings, X, Plus, Trash2, Clock, GitBranch, Repeat } from 'lucide-react';
+import { Settings, X, Plus, Trash2, Clock, GitBranch, Repeat, GitFork, Activity } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useWorkflow } from './WorkflowContext';
 
 interface NodePropertiesEditorProps {
     node: Node | null;
@@ -21,9 +22,10 @@ interface NodePropertiesEditorProps {
 }
 
 export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodePropertiesEditorProps) => {
-    const t = useTranslations('admin.workflows.properties');
+    const t = useTranslations('workflows.properties');
     const [label, setLabel] = useState("");
     const [metadata, setMetadata] = useState<Record<string, any>>({});
+    const { workflows, handleWorkflowChange } = useWorkflow();
 
     useEffect(() => {
         if (node) {
@@ -94,6 +96,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                     {nodeType === 'wait' && <Clock className="w-4 h-4 text-amber-500" />}
                     {nodeType === 'switch' && <GitBranch className="w-4 h-4 text-purple-500" />}
                     {nodeType === 'loop' && <Repeat className="w-4 h-4 text-blue-500" />}
+                    {nodeType === 'subflow' && <GitFork className="w-4 h-4 text-purple-500" />}
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('node_type', { type: nodeType })}</span>
                 </div>
 
@@ -104,6 +107,46 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                         onChange={(e) => setLabel(e.target.value)}
                         className="h-8 text-sm font-medium"
                     />
+                </div>
+
+                {/* Simulation Data (General) */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <Label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                        <Activity size={10} className="text-teal-500" />
+                        Cost & Time Estimates
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                            <Label className="text-[9px] text-slate-500">Avg Cost (€)</Label>
+                            <Input
+                                type="number"
+                                value={metadata.simulationData?.cost_est || 0}
+                                onChange={(e) => setMetadata({
+                                    ...metadata,
+                                    simulationData: {
+                                        ...(metadata.simulationData || {}),
+                                        cost_est: parseFloat(e.target.value)
+                                    }
+                                })}
+                                className="h-7 text-xs"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-[9px] text-slate-500">Avg Time (min)</Label>
+                            <Input
+                                type="number"
+                                value={metadata.simulationData?.time_est || 0}
+                                onChange={(e) => setMetadata({
+                                    ...metadata,
+                                    simulationData: {
+                                        ...(metadata.simulationData || {}),
+                                        time_est: parseFloat(e.target.value)
+                                    }
+                                })}
+                                className="h-7 text-xs"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Specialized Editor for Wait */}
@@ -218,6 +261,51 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                     </div>
                 )}
 
+                {/* Specialized Editor for Subflow */}
+                {nodeType === 'subflow' && (
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t('subflow_config')}</Label>
+                        <div className="space-y-3">
+                            <div className="space-y-1">
+                                <Label className="text-[9px] text-slate-500">{t('select_subflow')}</Label>
+                                <Select
+                                    value={metadata.subflowId || ""}
+                                    onValueChange={(v) => {
+                                        const selectedWf = workflows.find((w: any) => (w._id || w.id) === v);
+                                        setMetadata({
+                                            ...metadata,
+                                            subflowId: v,
+                                            label: selectedWf?.name || label
+                                        });
+                                        if (selectedWf) setLabel(selectedWf.name);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 text-xs font-medium">
+                                        <SelectValue placeholder={t('select_placeholder')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(workflows || []).map((w: { id?: string; _id?: string; name: string }) => (
+                                            <SelectItem key={w._id || w.id} value={(w._id || w.id) as string} className="text-xs">
+                                                {w.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full h-8 text-[10px] font-bold flex items-center gap-2"
+                                disabled={!metadata.subflowId}
+                                onClick={() => handleWorkflowChange(metadata.subflowId, workflows)}
+                            >
+                                <GitFork size={12} />
+                                {t('edit_subflow')}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between">
                         <Label className="text-[10px] uppercase font-bold text-slate-400">{t('extra_features')}</Label>
@@ -227,7 +315,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                     </div>
 
                     <div className="space-y-3">
-                        {Object.entries(metadata).filter(([k]) => !['duration', 'unit', 'paths', 'source', 'maxIterations'].includes(k)).map(([key, value]) => (
+                        {Object.entries(metadata).filter(([k]) => !['duration', 'unit', 'paths', 'source', 'maxIterations', 'simulationData', 'subflowId'].includes(k)).map(([key, value]) => (
                             <div key={key} className="flex gap-2 items-start group">
                                 <div className="flex-1 space-y-1">
                                     <Input

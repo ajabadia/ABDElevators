@@ -23,9 +23,6 @@ export async function POST(req: Request) {
         const invitation = await SpaceInvitationService.validateToken(token);
         await SpaceInvitationService.acceptInvitation(token, session.user.id);
 
-        // TODO: Logic to actually grant access (e.g., adding user to a collaborators array in Space document or similar)
-        // For now, we just mark the invitation as accepted.
-
         await logEvento({
             level: 'INFO',
             source: 'API_SPACES',

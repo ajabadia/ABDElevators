@@ -32,11 +32,16 @@ export class ChunkingOrchestrator {
 
         // Normalize level
         let level: ChunkingLevel = 'SIMPLE';
-        const inputLevel = input.level?.toString().toUpperCase();
+        const rawLevel = input.level?.toString().toUpperCase();
 
-        if (inputLevel === 'BAJO' || inputLevel === 'SIMPLE') level = 'SIMPLE';
-        else if (inputLevel === 'MEDIO' || inputLevel === 'SEMANTIC') level = 'SEMANTIC';
-        else if (inputLevel === 'ALTO' || inputLevel === 'LLM') level = 'LLM';
+        if (!rawLevel || ['BAJO', 'SIMPLE'].includes(rawLevel)) level = 'SIMPLE';
+        else if (['MEDIO', 'SEMANTIC'].includes(rawLevel)) level = 'SEMANTIC';
+        else if (['ALTO', 'LLM'].includes(rawLevel)) level = 'LLM';
+        else {
+            // Log warning for unrecognized level but proceed with default
+            console.warn(`[ChunkingOrchestrator] ⚠️ Unrecognized chunking level: ${rawLevel}. Defaulting to SIMPLE.`);
+            level = 'SIMPLE';
+        }
 
         const strategy = this.strategies[level] || this.strategies.SIMPLE;
         const start = Date.now();

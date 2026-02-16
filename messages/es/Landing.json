@@ -15,5 +15,11 @@
     "how_calculated_title": "¿Cómo se calcula esto?",
     "how_calculated_desc": "Estimamos que ABD RAG reduce el tiempo de análisis de una especificación técnica compleja en aproximadamente <strong>20 minutos por pedido</strong> comparado con la revisión manual.",
     "cta": "INICIAR PRUEBA GRATUITA"
+  },
+  "REPORTING": {
+    "badge": "INFORMES INDUSTRIALES",
+    "title": "Generación de PDF Corporativos",
+    "description": "Transforma el análisis de IA en entregables profesionales. Plantillas de Inspección, Auditoría y Calidad con tu marca.",
+    "features": "Plantillas Personalizables,Historial de Generación,Firma Digital"
   }
 }

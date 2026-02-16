@@ -17,6 +17,7 @@ import { connectDB, connectLogsDB, connectAuthDB, getMongoClient } from '@/lib/d
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { UserRole } from '@/types/roles';
+import { ReportSchedule } from './schemas/report-schedule';
 
 /**
  * Interface para el contexto de sesión necesario para el aislamiento.
@@ -343,3 +344,12 @@ export async function getEntityCollection(session?: any) {
 export async function getKnowledgeAssetCollection(session?: any) {
     return await getTenantCollection('knowledge_assets', session);
 }
+
+export async function getReportsCollection(session?: any) {
+    return await getTenantCollection('reports', session);
+}
+
+export async function getReportSchedulesCollection(session?: any) {
+    return await getTenantCollection<ReportSchedule>('report_schedules', session);
+}
+

@@ -1,0 +1,42 @@
+{
+  "title": "Centro de Operaciones",
+  "subtitle": "Monitorización y mantenimiento técnico de la plataforma industrial.",
+  "sections": {
+    "observability": {
+      "title": "Observabilidad",
+      "description": "Métricas en tiempo real, SLAs y estado del sistema."
+    },
+    "ingest": {
+      "title": "Ingesta y Jobs",
+      "description": "Estado de trabajos de indexación y colas de procesamiento."
+    },
+    "logs": {
+      "title": "Logs Técnicos",
+      "description": "Traza de errores, debug y búsqueda por Correlation ID."
+    },
+    "maintenance": {
+      "title": "Mantenimiento",
+      "description": "Herramientas de limpieza y reindexación manual."
+    },
+    "status": {
+      "title": "Estado de Servicios",
+      "description": "Estado de servicios externos (LLM, BD, Storage)."
+    },
+    "trace": {
+      "title": "Trazabilidad Técnica (Trace)",
+      "description": "Rastreo end-to-end de peticiones y procesos."
+    }
+  },
+  "maintenance": {
+    "title": "Mantenimiento del Sistema",
+    "subtitle": "Herramientas de optimización y corrección de datos.",
+    "description": "Utilice estas herramientas para sincronizar grafos o limpiar el almacenamiento.",
+    "placeholder": "Módulo de mantenimiento en fase de desarrollo."
+  },
+  "status": {
+    "title": "Estado de Servicios Externos",
+    "subtitle": "Disponibilidad de la infraestructura en tiempo real.",
+    "description": "Verifique el estado de las APIs de Gemini, MongoDB y Cloudinary.",
+    "placeholder": "Status page integrada próximamente."
+  }
+}

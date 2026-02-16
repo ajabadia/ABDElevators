@@ -3,6 +3,10 @@
         {
             "path": "/api/cron/stuck-jobs",
             "schedule": "*/5 * * * *"
+        },
+        {
+            "path": "/api/cron/scheduled-reports",
+            "schedule": "0 7 * * *"
         }
     ]
 }

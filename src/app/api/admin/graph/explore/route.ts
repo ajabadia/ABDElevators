@@ -25,9 +25,17 @@ export async function GET(req: NextRequest) {
         const limitStr = searchParams.get('limit') || '300';
         const limit = parseInt(limitStr);
 
+        const relTypes = searchParams.get('relTypes')?.split(',').filter(Boolean) || [];
+        const minWeight = parseFloat(searchParams.get('minWeight') || '0');
+
         let cypher = '';
         // Explicitly cast to Neo4j Integer to avoid '300.0' float error
-        const params: any = { tenantId, limit: neo4j.int(Math.min(limit, 500)) };
+        const params: any = {
+            tenantId,
+            limit: neo4j.int(Math.min(limit, 500)),
+            relTypes,
+            minWeight
+        };
 
         if (search) {
             // Search for specific nodes and their 1-hop neighborhood
@@ -38,6 +46,8 @@ export async function GET(req: NextRequest) {
                 LIMIT 50
                 OPTIONAL MATCH (n)-[r]-(m)
                 WHERE m.tenantId = $tenantId
+                AND (size($relTypes) = 0 OR type(r) IN $relTypes)
+                AND (r.weight >= $minWeight OR r.weight IS NULL)
                 RETURN n, r, m
                 LIMIT $limit
              `;
@@ -47,11 +57,13 @@ export async function GET(req: NextRequest) {
             cypher = `
                 MATCH (n)
                 WHERE n.tenantId = $tenantId
-                WITH n, rand() as r
-                ORDER BY r
+                WITH n, rand() as r_rand
+                ORDER BY r_rand
                 LIMIT 50
                 OPTIONAL MATCH (n)-[r_rel]-(m)
                 WHERE m.tenantId = $tenantId
+                AND (size($relTypes) = 0 OR type(r_rel) IN $relTypes)
+                AND (r_rel.weight >= $minWeight OR r_rel.weight IS NULL)
                 RETURN n, r_rel as r, m
                 LIMIT $limit
             `;
@@ -91,7 +103,7 @@ export async function GET(req: NextRequest) {
                     source: n.properties.id,
                     target: m.properties.id,
                     type: r.type,
-                    // Force graph expects source/target as IDs initially
+                    weight: r.properties.weight || 0.5
                 });
             }
         });

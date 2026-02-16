@@ -35,9 +35,9 @@
   "f16_title": "Advanced Checklist Governance",
   "f16_desc": "Industrial rules configuration engine for technical validation. Categorization, prioritization, and native multi-tenant isolation.",
   "f17_title": "Resilient State Machine",
-  "f17_desc": "Armored ingestion pipeline with bank-grade state validation, Dead Letter Queue for manual recoveries, and auto-detection of stuck processes.",
-  "f18_title": "Resilient Authentication (v4.3)",
-  "f18_desc": "Reinforced security engine with State-Driven MFA to prevent session inconsistencies and critical failures in the credential flow.",
+  "f17_desc": "Armored ingestion pipeline with bank-grade state validation, auto-detection of stuck processes, and resilient AI-to-Human fallback orchestration.",
+  "f18_title": "Access Security (v4.7.2)",
+  "f18_desc": "Token-based activation flows without password exposure and persistent MFA for maximum corporate identity protection.",
   "f19_title": "Industrial Grade Modules",
   "f19_desc": "Professional optimization of Billing, Permissions, and Assets modules with Vercel standards and secure UUID traceability.",
   "f20_title": "Secure Knowledge Spaces",
@@ -45,5 +45,7 @@
   "f21_title": "Scoped API Keys",
   "f21_desc": "Create granular API integrations that only have access to specific spaces. Guaranteed security for external IoT or CRM clients.",
   "f22_title": "Visual Graph Explorer",
-  "f22_desc": "Interactive interface to navigate, search, and inspect nodes and relationships in the Knowledge Graph (Neo4j) in real-time."
+  "f22_desc": "Interactive interface to navigate, search, and inspect nodes and relationships in the Knowledge Graph (Neo4j) in real-time.",
+  "f23_title": "Advanced Knowledge Curation",
+  "f23_desc": "Professional management of the Knowledge Graph. Manual editing, node merging tools, and bulk deletion with industrial-grade traceability."
 }

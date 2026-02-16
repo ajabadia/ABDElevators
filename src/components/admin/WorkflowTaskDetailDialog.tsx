@@ -237,6 +237,24 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                             </div>
                         )}
 
+                        {/* ⚡ FASE 165.5: LLM Fallback Context Section */}
+                        {task.metadata?.source === 'LLM_FALLBACK' && (
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-bold flex items-center gap-2 text-red-800">
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    Fallo en Análisis de IA (Fallback)
+                                </h4>
+                                <div className="bg-red-50/40 p-5 rounded-2xl border-2 border-red-100/50 shadow-sm">
+                                    <p className="text-xs text-red-700 font-medium mb-2">
+                                        El motor de IA no pudo completar la decisión automática. Se requiere intervención humana para validar este paso.
+                                    </p>
+                                    <div className="bg-white/80 p-3 rounded-lg border border-red-100 font-mono text-[10px] text-red-600">
+                                        <strong>Error original:</strong> {task.metadata.error || 'Desconocido'}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
                                 <Label htmlFor="notes" className="text-sm font-bold text-slate-800">Notas de Resolución</Label>

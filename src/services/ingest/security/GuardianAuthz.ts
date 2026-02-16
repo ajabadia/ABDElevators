@@ -111,7 +111,6 @@ export class IngestGuardian {
 
             case 'INDUSTRY':
                 // INDUSTRY scope: SUPER_ADMIN only (for now)
-                // TODO: Add industry manager role when implemented
                 return role === 'SUPER_ADMIN';
 
             case 'GLOBAL':

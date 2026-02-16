@@ -32,7 +32,7 @@ interface ExecutionLogsPanelProps {
 }
 
 export const ExecutionLogsPanel = ({ workflowId, onClose }: ExecutionLogsPanelProps) => {
-    const t = useTranslations('admin.workflows.logs');
+    const t = useTranslations('workflows.logs');
     const locale = useLocale();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [logs, setLogs] = useState<ExecutionLog[]>([]);

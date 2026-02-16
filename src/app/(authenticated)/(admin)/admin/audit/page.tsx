@@ -21,6 +21,7 @@ import {
 import { InlineHelpPanel } from "@/components/ui/inline-help-panel";
 import { AuditMetrics } from "@/components/admin/AuditMetrics";
 import { AuditFilters } from "@/components/admin/AuditFilters";
+import Link from "next/link";
 
 interface GlobalStats {
     totalTenants: number;
@@ -160,6 +161,11 @@ export default function AuditoriaPage() {
                 subtitle="Monitoreo de actividad, seguridad y validación de reglas de negocio en tiempo real."
                 actions={
                     <div className="flex items-center gap-2">
+                        <Link href="/admin/audit/config-changes">
+                            <Button variant="secondary" className="bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-100 border border-amber-200 dark:border-amber-800">
+                                <ShieldAlert className="mr-2 h-4 w-4" /> Auditoría Config
+                            </Button>
+                        </Link>
                         <Button
                             variant="ghost"
                             size="icon"

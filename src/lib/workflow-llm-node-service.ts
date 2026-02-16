@@ -9,6 +9,7 @@ import { PROMPTS } from './prompts';
 import { logEvento } from './logger';
 import { AppError } from './errors';
 import { callGeminiMini } from './llm';
+import { safeParseLlmJson } from './safe-llm-json';
 
 // Generic LLM Node Output Schema
 const LLMNodeOutputSchema = z.object({
@@ -108,16 +109,14 @@ export class WorkflowLLMNodeService {
                 { correlationId, temperature: 0.3, model: 'gemini-2.0-flash-exp' }
             );
 
-            // Parse JSON response
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                throw new AppError('LLM_INVALID_RESPONSE', 500, 'LLM did not return valid JSON');
-            }
-
-            const parsed = JSON.parse(jsonMatch[0]);
-
-            // Validate with generic schema (custom schemas can be added later)
-            const validated = LLMNodeOutputSchema.parse(parsed);
+            // Parse and validate response using resilient utility
+            const validated = await safeParseLlmJson({
+                raw: text,
+                schema: LLMNodeOutputSchema,
+                source: 'WORKFLOW_LLM_NODE',
+                correlationId,
+                tenantId
+            });
 
             await logEvento({
                 level: 'INFO',
@@ -152,7 +151,7 @@ export class WorkflowLLMNodeService {
             });
 
             return validated;
-        } catch (error) {
+        } catch (error: any) {
             await logEvento({
                 level: 'ERROR',
                 source: 'WORKFLOW_LLM_NODE',
@@ -166,7 +165,15 @@ export class WorkflowLLMNodeService {
                 },
                 correlationId,
             });
-            throw error;
+
+            // ⚡ FASE 165.5: Return structured fallback instead of throwing
+            return {
+                riskLevel: 'MEDIUM',
+                confidence: 0,
+                reason: `LLM_FALLBACK: ${error.message || 'Unknown error'}`,
+                detectedIssues: ['LLM_UNAVAILABLE'],
+                source: 'LLM_FALLBACK'
+            };
         }
     }
 
@@ -268,7 +275,7 @@ export class WorkflowLLMNodeService {
             });
 
             return defaultBranch.to;
-        } catch (error) {
+        } catch (error: any) {
             await logEvento({
                 level: 'ERROR',
                 source: 'WORKFLOW_LLM_ROUTER',
@@ -281,7 +288,9 @@ export class WorkflowLLMNodeService {
                 },
                 correlationId,
             });
-            throw error;
+
+            // ⚡ FASE 165.5: Fallback to manual review (signaled by empty string or specific token)
+            return 'PENDING_MANUAL_REVIEW';
         }
     }
 }

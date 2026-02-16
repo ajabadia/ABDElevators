@@ -25,5 +25,5 @@ export async function enforcePermission(resource: string, action: string) {
         throw new AppError('FORBIDDEN', 403, `Permission denied: ${result.reason}`);
     }
 
-    return session.user;
+    return session;
 }
