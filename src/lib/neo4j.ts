@@ -30,7 +30,7 @@ export async function getNeo4jDriver(): Promise<Driver> {
  */
 export async function runQuery(query: string, params: Record<string, any> = {}) {
     const drv = await getNeo4jDriver();
-    const session = drv.session();
+    const session = drv.session({ database: process.env.NEO4J_DATABASE || 'neo4j' });
     try {
         const result = await session.run(query, params);
         return result;

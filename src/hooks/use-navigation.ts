@@ -6,7 +6,7 @@ import { UserRole } from '@/types/roles';
 export function useNavigation() {
     const { data: session } = useSession();
     const userRole = session?.user?.role as UserRole | undefined;
-    const activeModules = (session?.user as any)?.activeModules || [];
+    const activeModules = session?.user?.activeModules || [];
 
     const filteredSections = useMemo(() => {
         return menuSections.map(section => ({

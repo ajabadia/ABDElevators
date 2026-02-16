@@ -1,0 +1,49 @@
+{
+  "title": "My Documents",
+  "subtitle": "Personal space for your manuals, notes and technical files.",
+  "confirmDelete": "Do you want to delete this file from your personal repository?",
+  "deleteSuccessTitle": "Document deleted",
+  "deleteSuccess": "The file has been deleted.",
+  "titleAlt": "My Files",
+  "subtitleAlt": "Your personal repository of manuals and technical files.",
+  "search": "Search in my documents...",
+  "upload": {
+    "button": "Upload File",
+    "title": "Upload New Personal Document",
+    "submit": "Upload",
+    "cancel": "Cancel",
+    "file": "File",
+    "filePdf": "PDF File",
+    "description": "Description (Optional)",
+    "descriptionPlaceholder": "Ex: Manual for project 123",
+    "type": "Document Type",
+    "typePlaceholder": "Select type...",
+    "save": "Save File",
+    "uploading": "Uploading...",
+    "errorSize": "File is too large (Max 10MB)",
+    "successTitle": "Success",
+    "successDesc": "Your document has been saved and processed.",
+    "successGeneric": "Document uploaded successfully.",
+    "errorTitle": "Upload Error",
+    "errorDesc": "Could not upload the file. Check the size or format."
+  },
+  "table": {
+    "name": "Name",
+    "description": "Description",
+    "size": "Size",
+    "date": "Date",
+    "actions": "Actions",
+    "download": "Download",
+    "delete": "Delete",
+    "empty": "You haven't uploaded any personal documents yet.",
+    "noResults": "No documents found.",
+    "file": "File",
+    "loading": "Loading your files...",
+    "loadingRepo": "Loading personal repository..."
+  },
+  "storage": {
+    "title": "Storage",
+    "totalFiles": "Total files",
+    "usage": "{{used}} GB of {{total}} GB used"
+  }
+}

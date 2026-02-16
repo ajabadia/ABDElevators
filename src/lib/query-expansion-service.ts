@@ -18,8 +18,16 @@ export class QueryExpansionService {
             }
         }, async (span) => {
             try {
-                const { text: prompt, model } = await PromptService.getRenderedPrompt('QUERY_EXPANDER', { query }, tenantId);
-                const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
+                const { production, shadow } = await PromptService.getPromptWithShadow('QUERY_EXPANDER', { query }, tenantId);
+
+                if (shadow) {
+                    const { runShadowCall } = await import("./gemini-client");
+                    runShadowCall(shadow.text, shadow.model, tenantId, correlationId, 'QUERY_EXPANDER', shadow.key).catch(e =>
+                        console.error("[EXPANDER SHADOW ERROR]", e)
+                    );
+                }
+
+                const response = await callGeminiMini(production.text, tenantId, { correlationId, model: production.model });
 
                 const variations = response
                     .split('\n')

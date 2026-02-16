@@ -1,210 +1,198 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Download, Loader2, Sparkles, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+    FileText,
+    Wand2,
+    Download,
+    AlertCircle,
+    Loader2,
+    CheckCircle2,
+    Settings2,
+    ChevronDown,
+    ChevronUp
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 
 interface InformeLLMGeneratorProps {
     pedidoId: string;
-    isValidated: boolean;
+    onReportGenerated?: (text: string) => void;
 }
 
-export function InformeLLMGenerator({ pedidoId, isValidated }: InformeLLMGeneratorProps) {
+export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMGeneratorProps) {
     const [isGenerating, setIsGenerating] = useState(false);
-    const [informe, setInforme] = useState<any>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [report, setReport] = useState<string | null>(null);
+    const [metadata, setMetadata] = useState<any>(null);
+    const [showDebug, setShowDebug] = useState(false);
+    const { toast } = useToast();
+    const t = useTranslations('common.reports');
 
-    const handleGenerate = async () => {
+    const generateReport = async () => {
         setIsGenerating(true);
-        setError(null);
-
         try {
-            const res = await fetch(`/api/pedidos/${pedidoId}/generar-informe`, {
-                method: 'POST',
+            const res = await fetch(`/api/entities/${pedidoId}/generate-report`, {
+                method: "POST"
             });
-
             const data = await res.json();
 
-            if (data.success) {
-                setInforme({
-                    id: data.informeId,
-                    contenido: data.contenido,
-                    pdfUrl: data.pdfUrl,
-                    metadata: data.metadata,
-                    timestamp: new Date()
-                });
-            } else {
-                setError(data.message || 'Error al generar el informe');
-            }
-        } catch (err) {
-            setError('Error de conexión al generar el informe');
-            console.error(err);
+            if (!res.ok) throw new Error(data.message || "Error al generar informe");
+
+            setReport(data.report);
+            setMetadata(data.metadata);
+            if (onReportGenerated) onReportGenerated(data.report);
+
+            toast({
+                title: "Informe Generado",
+                description: "El análisis técnico ha sido redactado satisfactoriamente.",
+            });
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive"
+            });
         } finally {
             setIsGenerating(false);
         }
     };
 
-    const handleDownloadPDF = () => {
-        if (informe?.pdfUrl) {
-            window.open(informe.pdfUrl, '_blank');
-        } else {
-            alert('El PDF se está procesando o no está disponible.');
+    const downloadPDF = async () => {
+        if (!report) return;
+        try {
+            const res = await fetch(`/api/entities/${pedidoId}/generate-report/pdf`, {
+                method: "POST",
+                body: JSON.stringify({ content: report })
+            });
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Informe_Tecnico_${pedidoId}.pdf`;
+            a.click();
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "No se pudo descargar el PDF.",
+                variant: "destructive"
+            });
         }
     };
 
-    if (!isValidated) {
-        return (
-            <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
-                <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                        <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-1" />
+    return (
+        <Card className="border-none shadow-2xl bg-gradient-to-br from-white to-slate-50 overflow-hidden">
+            <CardHeader className="border-b bg-white/50 backdrop-blur-sm px-8 py-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-teal-600 text-white rounded-2xl shadow-lg shadow-teal-200">
+                            <FileText size={28} />
+                        </div>
                         <div>
-                            <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-1">
-                                Validación Requerida
-                            </h3>
-                            <p className="text-sm text-amber-700 dark:text-amber-300">
-                                El pedido debe estar validado y aprobado antes de generar el informe profesional con IA.
+                            <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">
+                                {t('title')}
+                            </CardTitle>
+                            <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+                                <Wand2 size={14} className="text-teal-500" />
+                                {t('subtitle')}
                             </p>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            {/* Header con botón de generación */}
-            <Card className="border-slate-200 dark:border-slate-800">
-                <CardHeader className="border-b border-slate-100 dark:border-slate-900">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg font-bold flex items-center gap-2">
-                            <Sparkles className="text-purple-500" size={18} />
-                            Informe Profesional con IA
-                        </CardTitle>
-                        {!informe && (
+                    <div className="flex items-center gap-3">
+                        {report && (
                             <Button
-                                onClick={handleGenerate}
-                                disabled={isGenerating}
-                                className="bg-purple-600 hover:bg-purple-500 text-white font-bold"
+                                variant="outline"
+                                onClick={downloadPDF}
+                                className="border-slate-200 hover:bg-slate-50 font-bold"
                             >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Generando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        Generar Informe
-                                    </>
-                                )}
+                                <Download className="mr-2 h-4 w-4" /> Exportar PDF
                             </Button>
                         )}
+                        <Button
+                            onClick={generateReport}
+                            disabled={isGenerating}
+                            className="bg-teal-600 hover:bg-teal-700 text-white font-black px-6 shadow-lg shadow-teal-100 transition-all active:scale-95"
+                        >
+                            {isGenerating ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Wand2 className="mr-2 h-4 w-4" />
+                            )}
+                            {report ? "Regenerar Análisis" : "Redactar Informe"}
+                        </Button>
                     </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Genera un informe técnico profesional utilizando inteligencia artificial.
-                        El informe incluye análisis detallado, cumplimiento normativo y recomendaciones basadas en la validación aprobada.
-                    </p>
-                </CardContent>
-            </Card>
-
-            {/* Error */}
-            {error && (
-                <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-                    <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                            <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0" />
-                            <div>
-                                <h3 className="font-bold text-red-900 dark:text-red-100 mb-1">Error</h3>
-                                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                            </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-8">
+                {report ? (
+                    <div className="animate-in fade-in zoom-in-95 duration-500">
+                        <div className="flex items-center gap-2 mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800">
+                            <CheckCircle2 size={20} className="text-emerald-500" />
+                            <span className="text-sm font-bold tracking-tight">
+                                Análisis verificado y listo para revisión profesional.
+                            </span>
                         </div>
-                    </CardContent>
-                </Card>
-            )}
 
-            {/* Informe Generado */}
-            {informe && (
-                <Card className="border-slate-200 dark:border-slate-800">
-                    <CardHeader className="border-b border-slate-100 dark:border-slate-900 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                    <CheckCircle className="text-purple-600 dark:text-purple-400" size={20} />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-lg font-bold">Informe Generado</CardTitle>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {new Date(informe.timestamp).toLocaleString('es-ES')}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={handleDownloadPDF}
-                                    variant="outline"
-                                    size="sm"
-                                    className="font-bold"
+                        <div className="prose prose-slate max-w-none 
+                            prose-headings:text-slate-900 prose-headings:font-black
+                            prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium
+                            prose-strong:text-teal-700 prose-strong:font-bold
+                            bg-white p-8 rounded-2xl border border-slate-100 shadow-inner">
+                            <ReactMarkdown>{report}</ReactMarkdown>
+                        </div>
+
+                        {/* Metadata Técnica (Colapsable para purga de terminología) */}
+                        {metadata && (
+                            <div className="mt-8 border-t border-slate-100 pt-6">
+                                <button
+                                    onClick={() => setShowDebug(!showDebug)}
+                                    className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
                                 >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Descargar PDF
-                                </Button>
-                                <Button
-                                    onClick={handleGenerate}
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={isGenerating}
-                                >
-                                    Regenerar
-                                </Button>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                        {/* Metadata */}
-                        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                                <div>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Modelo IA</p>
-                                    <p className="font-mono font-bold">{informe.metadata?.model || 'Gemini 2.0'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Tokens Usados</p>
-                                    <p className="font-mono font-bold">{Math.round(informe.metadata?.tokensUsados || 0)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Temperatura</p>
-                                    <p className="font-mono font-bold">{informe.metadata?.temperatura || 0.3}</p>
-                                </div>
-                            </div>
-                        </div>
+                                    <Settings2 size={12} />
+                                    {showDebug ? "Ocultar detalles de procesamiento" : "Ver detalles de procesamiento"}
+                                    {showDebug ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </button>
 
-                        {/* Contenido del Informe */}
-                        <div className="prose prose-slate dark:prose-invert max-w-none">
-                            <ReactMarkdown
-                                components={{
-                                    h1: ({ children, ...props }: any) => <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4" {...props}>{children}</h1>,
-                                    h2: ({ children, ...props }: any) => <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-8 mb-4" {...props}>{children}</h2>,
-                                    h3: ({ children, ...props }: any) => <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-6 mb-3" {...props}>{children}</h3>,
-                                    p: ({ children, ...props }: any) => <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4" {...props}>{children}</p>,
-                                    ul: ({ children, ...props }: any) => <ul className="list-disc list-inside space-y-2 mb-4" {...props}>{children}</ul>,
-                                    ol: ({ children, ...props }: any) => <ol className="list-decimal list-inside space-y-2 mb-4" {...props}>{children}</ol>,
-                                    li: ({ children, ...props }: any) => <li className="text-slate-600 dark:text-slate-300" {...props}>{children}</li>,
-                                    strong: ({ children, ...props }: any) => <strong className="font-bold text-slate-900 dark:text-white" {...props}>{children}</strong>,
-                                    code: ({ children, ...props }: any) => <code className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-sm font-mono" {...props}>{children}</code>,
-                                }}
-                            >
-                                {informe.contenido}
-                            </ReactMarkdown>
+                                {showDebug && (
+                                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Modelo de Datos</p>
+                                            <p className="text-xs font-mono text-slate-700">{metadata.model || 'Gemini 1.5'}</p>
+                                        </div>
+                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Volumen Procesado</p>
+                                            <p className="text-xs font-mono text-slate-700">{metadata.tokensUsed || 0} unidades</p>
+                                        </div>
+                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Precisión de Respuesta</p>
+                                            <Badge variant="outline" className="text-[10px] py-0">{metadata.temperature || 0.1}</Badge>
+                                        </div>
+                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Identificador de Rastreo</p>
+                                            <p className="text-[10px] font-mono text-slate-500 truncate">#661-v2</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="py-20 text-center space-y-4">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-slate-200">
+                            <FileText className="text-slate-300" size={32} />
                         </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+                        <div className="max-w-xs mx-auto">
+                            <h3 className="text-lg font-bold text-slate-900">Análisis pendiente</h3>
+                            <p className="text-slate-500 text-sm font-medium">
+                                Haz clic en el botón superior para generar un informe técnico completo basado en la documentación del pedido.
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }

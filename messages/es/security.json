@@ -1,0 +1,10 @@
+{
+  "title": "Seguridad de Nivel Empresarial",
+  "subtitle": "Tus datos están protegidos en cada capa del proceso.",
+  "f1_title": "Aislamiento Multi-Tenant",
+  "f1_desc": "Arquitectura de base de datos físicamente aislada por cliente, garantizando absoluta privacidad.",
+  "f2_title": "Cifrado de Grado Militar",
+  "f2_desc": "Datos cifrados en reposo (AES-256) y en tránsito (TLS 1.3) bajo los más altos estándares de seguridad.",
+  "f3_title": "Soberanía de Datos",
+  "f3_desc": "Mantienes el control total sobre dónde se almacenan tus documentos y cómo se procesan."
+}

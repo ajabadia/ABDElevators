@@ -148,7 +148,7 @@ async function riskAnalysisNode(state: AgentStateType) {
     const models = findings.filter(f => f.source === 'extraction').map(f => f.model).join(', ');
 
     // Renderizar prompt dinámico de riesgo para agente
-    const renderedPrompt = await PromptService.renderPrompt(
+    const renderedPrompt = await PromptService.getRenderedPrompt(
         'AGENT_RISK_ANALYSIS',
         {
             context,
@@ -158,7 +158,7 @@ async function riskAnalysisNode(state: AgentStateType) {
         tenantId!
     );
 
-    const result = await callGeminiMini(renderedPrompt, tenantId!, { correlationId: correlacion_id! });
+    const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlacion_id! });
 
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
@@ -257,6 +257,58 @@ async function federatedDiscoveryNode(state: AgentStateType) {
     };
 }
 
+/**
+ * NODO: Análisis Causal (Phase 86)
+ * Evalúa escenarios "What If" y efectos de segundo orden.
+ */
+async function causalAnalysisNode(state: AgentStateType) {
+    const { context_chunks, tenantId, correlationId: correlacion_id, messages } = state;
+    const lastMessage = messages[messages.length - 1];
+    const scenario = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
+
+    // Heurística simple: Solo activamos Causal AI si parece una pregunta de impacto
+    // En producción esto usaría un clasificador de intenciones (Router)
+    const isCausalQuery = /impact|chang|what if|si cambio|pasa si|riesgo/i.test(scenario);
+
+    if (!isCausalQuery) {
+        return {};
+    }
+
+    const context = context_chunks.map(c => c.text).join('\n---\n');
+
+    try {
+        const renderedPrompt = await PromptService.getRenderedPrompt(
+            'CAUSAL_IMPACT_ANALYSIS',
+            {
+                scenario,
+                context,
+                industry: 'ELEVATORS'
+            },
+            tenantId!
+        );
+
+        const result = await callGeminiMini(renderedPrompt.text, tenantId!, { correlationId: correlacion_id! });
+        const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
+
+        return {
+            findings: [{ ...parsed, source: 'causal_analysis' }],
+            messages: [{ role: 'assistant', content: `Causal AI: Impacto ${parsed.impact} detectado. Riesgo: ${parsed.risk}.` }]
+        };
+
+    } catch (e) {
+        // Fallo silencioso para no bloquear el flujo principal
+        await logEvento({
+            level: 'ERROR',
+            source: 'AGENT_ENGINE',
+            action: 'CAUSAL_ANALYSIS_ERROR',
+            message: 'Error executing causal analysis',
+            correlationId: correlacion_id!,
+            tenantId: tenantId!
+        });
+        return {};
+    }
+}
+
 const checkpointer = new MongoDBSaver();
 
 const workflow = new StateGraph(AgentState)
@@ -264,12 +316,15 @@ const workflow = new StateGraph(AgentState)
     .addNode("retrieve", retrievalNode)
     .addNode("federated_discovery", federatedDiscoveryNode) // Nuevo Nodo Federado
     .addNode("analyze_risks", riskAnalysisNode)
+    .addNode("analyze_causality", causalAnalysisNode) // Phase 86
     .addNode("critique", critiqueNode)
     .addEdge(START, "extract")
     .addEdge("extract", "retrieve")
     .addEdge("retrieve", "federated_discovery") // Flujo hacia red federada
     .addEdge("federated_discovery", "analyze_risks") // Unión de conocimiento local + global
+    .addEdge("federated_discovery", "analyze_causality") // Parallel Causal Analysis
     .addEdge("analyze_risks", "critique")
+    .addEdge("analyze_causality", "critique")
     .addConditionalEdges(
         "critique",
         shouldContinue,

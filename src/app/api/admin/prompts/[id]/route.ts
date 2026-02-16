@@ -33,8 +33,7 @@ export async function PATCH(
 
         await PromptService.updatePrompt(
             id,
-            template,
-            variables || [],
+            { template, variables: variables || [], category: body.category, model: body.model, industry: body.industry },
             session.user.email!,
             changeReason,
             isSuperAdmin ? undefined : tenantId,

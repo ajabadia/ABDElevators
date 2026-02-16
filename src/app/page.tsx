@@ -1,5 +1,3 @@
-"use client";
-
 import { PublicNavbar } from "@/components/shared/PublicNavbar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
@@ -10,11 +8,13 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { ROICalculator } from "@/components/landing/ROICalculator";
 
 /**
- * Landing Page - Versión Profesional 3.0
+ * Landing Page - Versión Profesional 3.0 (RSC Optimized)
  * Optimizada para conversión y claridad de mensaje.
  * Cumple con estándares Enterprise & Compliance.
+ * Refactored to Server Component for improved LCP and bundle size.
  */
 export default function Home() {
   return (
@@ -32,6 +32,9 @@ export default function Home() {
 
       {/* Enterprise & Compliance unificado */}
       <EnterpriseSection />
+
+      {/* ROI Calculator */}
+      <ROICalculator />
 
       {/* Pricing visible y transparente */}
       <PricingSection />

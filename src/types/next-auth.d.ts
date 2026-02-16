@@ -21,6 +21,8 @@ declare module "next-auth" {
         tenantAccess?: TenantAccess[];
         permissionGroups?: string[];
         permissionOverrides?: string[];
+        mfaVerified?: boolean;
+        mfaPending?: boolean;
     }
 
     interface Session extends DefaultSession {
@@ -31,9 +33,10 @@ declare module "next-auth" {
             tenantId: string;
             industry: IndustryType;
             activeModules: string[];
-            tenantAccess?: TenantAccess[];
             permissionGroups?: string[];
             permissionOverrides?: string[];
+            mfaVerified?: boolean;
+            mfaPending?: boolean;
         } & DefaultSession["user"];
     }
 }
@@ -46,8 +49,9 @@ declare module "next-auth/jwt" {
         tenantId: string;
         industry: IndustryType;
         activeModules: string[];
-        tenantAccess?: TenantAccess[];
         permissionGroups?: string[];
         permissionOverrides?: string[];
+        mfaVerified?: boolean;
+        mfaPending?: boolean;
     }
 }

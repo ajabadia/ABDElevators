@@ -30,6 +30,7 @@ Contiene los datos de negocio y activos de conocimiento.
 
 - ❌ `connectDB().collection('users')` -> Los usuarios NO están en el clúster MAIN.
 - ❌ `connectAuthDB().collection('reports')` -> Los informes NO son datos de identidad.
+- ❌ **CRÍTICO**: Uso de `db.collection(...)` directo en APIs -> Salta el aislamiento multi-tenant (Regla de Oro #11).
 - ❌ Uso de `db.collection(...)` sin haber validado previamente a qué clúster pertenece `db`.
 - ❌ Hardcoding de nombres de base de datos en las queries.
 

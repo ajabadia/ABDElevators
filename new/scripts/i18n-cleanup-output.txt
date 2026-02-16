@@ -1,0 +1,94 @@
+﻿[dotenv@17.2.3] injecting env (22) from .env.local -- tip: ­ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+­ƒº╣ i18n Cleanup Script (Correlation: I18N_CLEANUP_1771093578962)
+
+­ƒôï Dead keys to remove: 211
+­ƒôï Missing keys to add: 188
+
+ÔòÉÔòÉÔòÉ PHASE 1: Removing dead keys from JSONs ÔòÉÔòÉÔòÉ
+  Ô£à Removed 211 keys from es.json
+  Ô£à Removed 211 keys from en.json
+
+ÔòÉÔòÉÔòÉ PHASE 2: Checking DB for missing keys ÔòÉÔòÉÔòÉ
+  Ô£à Connected to MongoDB
+  ­ƒôª Found 8 ES keys in DB
+  ­ƒôª Found 0 EN keys in DB
+  ­ƒñû Inferred 188 translations
+
+ÔòÉÔòÉÔòÉ PHASE 3: Marking dead keys as obsolete in DB ÔòÉÔòÉÔòÉ
+  Ô£à Marked 412 DB entries as obsolete
+
+ÔòÉÔòÉÔòÉ PHASE 4: Writing updated JSONs ÔòÉÔòÉÔòÉ
+  Ô£à es.json: 1279 keys (was 1302)
+  Ô£à en.json: 1279 keys (was 1302)
+  Ô£à Both files have identical key structure
+
+ÔòÉÔòÉÔòÉ SUMMARY ÔòÉÔòÉÔòÉ
+  Removed: 211 dead keys
+  Added from DB: 8 ES / 0 EN
+  Added via inference: 188
+  Remaining placeholders: 61
+  Placeholder keys:
+    - admin.knowledge.tabs.ai
+    - admin.knowledge.actions.export
+    - admin.knowledge.actions.sim_btn
+    - admin.knowledge.explorer_h2
+    - admin.knowledge.explorer_subtitle
+    - admin.knowledge.stats.total
+    - admin.knowledge.stats.arch
+    - admin.knowledge.stats.langs
+    - admin.knowledge.stats.backend
+    - admin.knowledge.stats.synced
+    - admin.knowledge.simulator.title
+    - admin.knowledge.simulator.subtitle
+    - admin.knowledge.simulator.placeholder
+    - admin.knowledge.filters.title
+    - admin.knowledge.filters.query_placeholder
+    - admin.knowledge.filters.lang_label
+    - admin.knowledge.filters.lang_all
+    - admin.knowledge.filters.type_label
+    - admin.knowledge.filters.type_all
+    - admin.knowledge.filters.type_original
+    - admin.knowledge.filters.type_shadow
+    - admin.knowledge.view.showing
+    - admin.knowledge.view.loading
+    - admin.knowledge.view.empty_title
+    - admin.knowledge.view.empty_subtitle
+    - admin.knowledge.view.chunk_shadow
+    - admin.knowledge.view.chunk_original
+    - admin.knowledge.view.chunk_model
+    - admin.knowledge.view.chunk_type
+    - admin.knowledge.view.auto_trans
+    - admin.knowledge.view.dual_mechanism
+    - admin.knowledge.view.dual_desc
+    - admin.knowledge.view.prev
+    - admin.knowledge.view.next
+    - admin.knowledge.brain.title
+    - admin.knowledge.brain.description
+    - admin.knowledge.brain.placeholder
+    - admin.knowledge.brain.thinking
+    - admin.knowledge.brain.submit
+    - admin.knowledge.brain.investigating
+    - admin.knowledge.brain.investigating_desc
+    - admin.knowledge.brain.verified_badge
+    - admin.knowledge.brain.hide_trace
+    - admin.knowledge.brain.show_trace
+    - admin.knowledge.brain.trace_title
+    - admin.knowledge.brain.trace_footer
+    - admin.knowledge.brain.sources_title
+    - admin.knowledge.brain.manual_label
+    - admin.knowledge.brain.score_label
+    - admin.knowledge.brain.examples.torque.title
+    - admin.knowledge.brain.examples.torque.desc
+    - admin.knowledge.brain.examples.torque.query
+    - admin.knowledge.brain.examples.safety.title
+    - admin.knowledge.brain.examples.safety.desc
+    - admin.knowledge.brain.examples.safety.query
+    - admin.knowledge.brain.examples.quantum.title
+    - admin.knowledge.brain.examples.quantum.desc
+    - admin.knowledge.brain.examples.quantum.query
+    - admin.knowledge.brain_federated.title
+    - admin.knowledge.brain_federated.investigating
+    - admin.knowledge.brain_federated.match
+
+­ƒÄë Cleanup completed!
+­ƒôè Report saved to scripts/i18n-cleanup-report.json

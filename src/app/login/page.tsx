@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -11,22 +11,65 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
+    console.log("🚀 [CLIENT] LoginPage mounted - Version 1.2 DEBUG");
     const t = useTranslations('login');
     const router = useRouter();
+    const [isMagicLink, setIsMagicLink] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [requiresMfa, setRequiresMfa] = useState(false);
     const [mfaCode, setMfaCode] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Verificar si ya hay una sesión con MFA pendiente al cargar la página
+    useEffect(() => {
+        const checkMfaSession = async () => {
+            const session = await getSession();
+            if (session?.user?.mfaPending) {
+                setRequiresMfa(true);
+            }
+        };
+        checkMfaSession();
+    }, []);
+
+    const handleMagicLink = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            const res = await fetch('/api/auth/magic-link/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || t('error_generic'));
+            }
+
+            setSuccess(t('magic_link_sent'));
+            // Optional: clear email or keep it? Keep it for convenience.
+        } catch (err: any) {
+            setError(err.message || t('error_generic'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCredentialsLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
 
         try {
+            console.log("🔐 [LOGIN] Attempting signIn with:", { email, hasMfaCode: !!mfaCode });
             const result = await signIn("credentials", {
                 email,
                 password,
@@ -34,21 +77,71 @@ export default function LoginPage() {
                 redirect: false,
             });
 
+            console.log("📡 [LOGIN] signIn result summary:", {
+                ok: result?.ok,
+                error: result?.error,
+                url: result?.url,
+                code: (result as any)?.code
+            });
+
+            // 1. Check session for mfaPending BEFORE handling errors (Auditoría v4.2)
+            const session = await getSession();
+            console.log("🤝 [LOGIN] Current Session state:", session ? `User: ${session.user?.email} | mfaPending: ${(session.user as any)?.mfaPending}` : "No Session");
+
+            if (session?.user && (session.user as any).mfaPending) {
+                console.log("🔒 [LOGIN] Session detected with mfaPending: true. Switching to MFA mode.");
+                setRequiresMfa(true);
+                setMfaCode("");
+                setError("");
+                setIsLoading(false);
+                return; // SUCCESS path (Pending MFA)
+            }
+
+            // ⚠️ DEFENSIVE: Priority check for errors
             if (result?.error) {
-                if (result.error.includes("MFA_REQUIRED")) {
+                // MEGA ERROR TRACE: Dump everything for debugging
+                console.log("🔍 [LOGIN] MEGA ERROR TRACE:", JSON.stringify(result, null, 2));
+
+                const errorCode = (result as any).code || result.error;
+
+                // Handle legacy or explicit error codes if they happen to bypass normalization
+                if (errorCode === "MFA_REQUIRED" || errorCode?.includes("MFA_REQUIRED")) {
                     setRequiresMfa(true);
+                    setMfaCode("");
                     setError("");
-                } else if (result.error.includes("INVALID_MFA_CODE")) {
-                    setError(t('error_mfa'));
-                } else {
-                    setError(t('error_invalid'));
+                    return;
                 }
-            } else {
+
+                if (errorCode === "INVALID_MFA_CODE" || errorCode?.includes("INVALID_MFA_CODE")) {
+                    setError(t('error_mfa'));
+                    return;
+                }
+
+                if (errorCode === "INVALID_MAGIC_LINK" || errorCode?.includes("INVALID_MAGIC_LINK")) {
+                    setError("El enlace mágico es inválido o ha expirado.");
+                    return;
+                }
+
+                // If we get "credentials" error but we didn't find mfaPending session above, treat as failure
+                console.error("❌ [LOGIN] Auth failed with error:", errorCode);
+                setError(errorCode === 'credentials' ? t('error_invalid') : `${t('error_invalid')} (${errorCode})`);
+                return;
+            }
+
+            if (result?.ok) {
+                console.log("🚀 [LOGIN] Full success detected! Redirecting to dashboard...");
                 router.push("/admin/knowledge-assets");
                 router.refresh();
+                return;
             }
-        } catch (err) {
-            setError(t('error_generic'));
+
+            if (!result?.ok) {
+                console.warn("⚠️ [LOGIN] SignIn returned not OK without error code.");
+                setError(t('error_invalid'));
+            }
+        } catch (err: any) {
+            console.error("💥 [LOGIN] Fatal error in handleCredentialsLogin:", err);
+            setError(`${t('error_generic')} Check console.`);
         } finally {
             setIsLoading(false);
         }
@@ -74,7 +167,7 @@ export default function LoginPage() {
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-block group/logo transition-transform hover:scale-105">
                             <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-teal-500/20 group-hover/logo:rotate-3 transition-all">
-                                <Lock className="text-white" size={32} />
+                                <Lock className="text-white" size={32} aria-hidden="true" />
                             </div>
                             <h1 className="text-3xl font-black text-white tracking-tight">
                                 ABD<span className="text-teal-500"> RAG</span>
@@ -88,19 +181,22 @@ export default function LoginPage() {
                     <AnimatePresence mode="wait">
                         {!requiresMfa ? (
                             <motion.form
-                                key="login"
+                                key={isMagicLink ? "magic" : "login"}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                onSubmit={handleSubmit}
+                                onSubmit={isMagicLink ? handleMagicLink : handleCredentialsLogin}
                                 className="space-y-6"
                             >
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                    <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
                                         {t('email_label')}
                                     </label>
                                     <Input
+                                        id="email"
+                                        name="email"
                                         type="email"
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={t('email_placeholder')}
@@ -108,36 +204,63 @@ export default function LoginPage() {
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
-                                        {t('password_label')}
-                                    </label>
-                                    <div className="relative">
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder={t('password_placeholder')}
-                                            className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                        </button>
+
+                                {!isMagicLink && (
+                                    <div className="space-y-2">
+                                        <label htmlFor="password" className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                            {t('password_label')}
+                                        </label>
+                                        <div className="relative">
+                                            <Input
+                                                id="password"
+                                                name="password"
+                                                type={showPassword ? "text" : "password"}
+                                                autoComplete="current-password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder={t('password_placeholder')}
+                                                className="bg-slate-800/50 border-slate-700 h-12 text-white placeholder:text-slate-600 focus:border-teal-500/50 transition-all pr-12 rounded-xl"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-teal-400 transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {error && (
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
+                                        role="alert"
+                                        aria-live="assertive"
                                         className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
                                     >
                                         {error}
+                                    </motion.div>
+                                )}
+
+                                {success && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        role="status"
+                                        aria-live="polite"
+                                        className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2"
+                                    >
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            aria-hidden="true"
+                                            className="w-2 h-2 rounded-full bg-emerald-500"
+                                        />
+                                        {success}
                                     </motion.div>
                                 )}
 
@@ -148,16 +271,31 @@ export default function LoginPage() {
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="h-5 w-5 animate-spin" />
-                                            {t('verifying')}
+                                            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                                            {isMagicLink ? t('sending') : t('verifying')}
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
-                                            {t('button')}
-                                            <ArrowRight size={20} />
+                                            {isMagicLink ? t('magic_link_button') : t('button')}
+                                            <ArrowRight size={20} aria-hidden="true" />
                                         </div>
                                     )}
                                 </Button>
+
+                                <div className="text-center pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsMagicLink(!isMagicLink);
+                                            setError("");
+                                            setSuccess("");
+                                        }}
+                                        className="text-sm text-slate-500 hover:text-teal-400 transition-colors font-medium border-b border-dashed border-slate-700 hover:border-teal-400 pb-0.5"
+                                    >
+                                        {isMagicLink ? t('password_toggle') : t('magic_link_toggle')}
+                                    </button>
+                                </div>
+
                             </motion.form>
                         ) : (
                             <motion.form
@@ -165,7 +303,7 @@ export default function LoginPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                onSubmit={handleSubmit}
+                                onSubmit={handleCredentialsLogin}
                                 className="space-y-6"
                             >
                                 <p className="text-sm text-slate-400 text-center leading-relaxed">
@@ -173,10 +311,16 @@ export default function LoginPage() {
                                 </p>
 
                                 <Input
+                                    id="mfa-code"
+                                    name="mfa-code"
                                     type="text"
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    pattern="[0-9]*"
                                     value={mfaCode}
                                     onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
+                                    aria-label="Código de autenticación de dos factores"
                                     className="h-14 text-center text-3xl font-mono tracking-[0.3em] bg-slate-800/50 border-slate-700 text-white focus:border-teal-500/50 rounded-xl"
                                     maxLength={6}
                                     autoFocus
@@ -184,7 +328,11 @@ export default function LoginPage() {
                                 />
 
                                 {error && (
-                                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium">
+                                    <div
+                                        role="alert"
+                                        aria-live="assertive"
+                                        className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm font-medium"
+                                    >
                                         {error}
                                     </div>
                                 )}
@@ -194,7 +342,7 @@ export default function LoginPage() {
                                     disabled={isLoading || mfaCode.length < 6}
                                     className="w-full h-12 bg-teal-600 hover:bg-teal-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-teal-600/20 transition-all"
                                 >
-                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : t('mfa_button')}
+                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" /> : t('mfa_button')}
                                 </Button>
 
                                 <button

@@ -15,7 +15,8 @@ export class CognitiveRetrievalService {
         text: string,
         industry: string,
         tenantId: string,
-        correlationId?: string
+        correlationId?: string,
+        session?: any
     ): Promise<string> {
         let renderedPrompt: string;
         let modelName = 'gemini-1.5-flash';
@@ -27,7 +28,10 @@ export class CognitiveRetrievalService {
                     text: text.substring(0, 5000),
                     industry: industry.toLowerCase()
                 },
-                tenantId
+                tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                session
             );
             renderedPrompt = promptText;
             modelName = model;
@@ -46,14 +50,69 @@ export class CognitiveRetrievalService {
                 .replace('{{industry}}', industry.toLowerCase());
         }
 
+        // Phase 2: Wrap LLM call with retry + tracing + cost tracking
+        const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
+        const { withLLMRetry } = await import('@/lib/llm-retry');
+        const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
+
+        const span = IngestTracer.startCognitiveContextSpan({
+            correlationId: correlationId || 'cognitive-router',
+            tenantId,
+        });
+
         try {
-            const response = await callGeminiMini(renderedPrompt, tenantId, {
+            const startTime = Date.now();
+
+            const response = await withLLMRetry(
+                () => callGeminiMini(renderedPrompt, tenantId, {
+                    correlationId: correlationId || 'cognitive-router',
+                    model: modelName
+                }),
+                {
+                    operation: 'COGNITIVE_CONTEXT',
+                    tenantId,
+                    correlationId: correlationId || 'cognitive-router',
+                },
+                {
+                    maxRetries: 3,
+                    timeoutMs: 10000, // 10s timeout
+                }
+            );
+
+            const durationMs = Date.now() - startTime;
+
+            // Estimate tokens
+            const inputTokens = Math.ceil(renderedPrompt.length / 4);
+            const outputTokens = Math.ceil(response.length / 4);
+
+            // Track cost
+            await LLMCostTracker.trackOperation(
+                correlationId || 'cognitive-router',
+                'COGNITIVE_CONTEXT',
+                modelName,
+                inputTokens,
+                outputTokens,
+                durationMs
+            );
+
+            // End span success
+            await IngestTracer.endSpanSuccess(span, {
                 correlationId: correlationId || 'cognitive-router',
-                model: modelName
+                tenantId,
+            }, {
+                'llm.tokens.input': inputTokens,
+                'llm.tokens.output': outputTokens,
+                'llm.model': modelName,
+                'context.length': response.length,
             });
 
             return response.trim();
         } catch (error: any) {
+            await IngestTracer.endSpanError(span, {
+                correlationId: correlationId || 'cognitive-router',
+                tenantId,
+            }, error);
+
             console.error('[COGNITIVE RETRIEVAL ERROR]', error);
             return 'Documento técnico general sin contexto específico detectado.';
         }

@@ -1,0 +1,65 @@
+{
+  "page": {
+    "title": "Configuración del Sistema",
+    "subtitle": "Gestiona tu perfil, preferencias de interfaz y opciones de gobernanza.",
+    "profile": "Perfil de Usuario",
+    "interface": "Interfaz y Pantalla",
+    "security": "Seguridad y Permisos",
+    "history": "Historial de Cambios",
+    "onboarding": {
+      "title": "Tour de Bienvenida",
+      "description": "Reinicie el recorrido interactivo para descubrir todas las funciones.",
+      "resetting": "Reiniciando...",
+      "reset": "Reiniciar Tour"
+    },
+    "securitySection": {
+      "title": "Seguridad y Acceso",
+      "description": "Estado de las políticas de seguridad global."
+    },
+    "mfa": {
+      "label": "MFA Obligatorio (Admin)",
+      "description": "Forzar a administradores a configurar MFA para acceder a rutas críticas.",
+      "active": "Activo (Phase 120.1)",
+      "configurable": "Configurable vía FEATURE_ENFORCE_MFA_ADMIN"
+    },
+    "securityPolicy": {
+      "title": "Política de Seguridad",
+      "description": "Si este flag está activo y no tienes MFA configurado, serás redirigido automáticamente a tu perfil desde cualquier ruta de administración."
+    },
+    "audit": {
+      "title": "Trazabilidad y Auditoría",
+      "description": "Transparencia total sobre los cambios estructurales.",
+      "bankGrade": "Tu cuenta cuenta con registro de auditoría de grado bancario. Todos los cambios en configuraciones son registrados con firma de usuario y correlation_id."
+    },
+    "theme": {
+      "system": "Sistema",
+      "title": "Tema Visual",
+      "dark": "Oscuro",
+      "light": "Claro"
+    }
+  },
+  "playground": {
+    "title": "Spaces Playground",
+    "subtitle": "Explora la jerarquía de espacios y prueba el análisis efímero.",
+    "details": "Detalles del Espacio",
+    "name": "Nombre",
+    "path": "Ruta",
+    "type": "Tipo",
+    "created": "Creado",
+    "tabs": {
+      "qa": "Quick Q&A",
+      "settings": "Configuración"
+    },
+    "settings": {
+      "title": "Configuración del Espacio",
+      "description": "Próximamente: Administración de permisos, invitaciones y cuotas específicas.",
+      "moduleInDevelopment": "Módulo en Desarrollo"
+    },
+    "qa": {
+      "title": "Quick Q&A",
+      "description": "Prueba el análisis sin necesidad de ingesta previa.",
+      "inputLabel": "Pega tu texto técnico aquí",
+      "analyze": "Analizar"
+    }
+  }
+}

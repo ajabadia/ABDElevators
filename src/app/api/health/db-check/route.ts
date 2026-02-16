@@ -8,10 +8,19 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const secret = searchParams.get('secret');
 
-        // Simple guard to prevent public abuse, checking for a simple hardcoded 'debug' token
-        // User triggers via: /api/health/db-check?secret=elevator-debug
-        if (secret !== 'elevator-debug') {
-            return NextResponse.json({ error: 'Unauthorized debug access' }, { status: 403 });
+        // Hardening (Phase 105): Restrict debug tools in production and remove hardcoded secrets
+        const debugToken = process.env.HEALTH_CHECK_SECRET;
+
+        if (!debugToken || secret !== debugToken || process.env.NODE_ENV === 'production') {
+            const { logEvento } = await import('@/lib/logger');
+            await logEvento({
+                level: 'WARN',
+                source: 'SECURITY_HARDENING',
+                action: 'UNAUTHORIZED_HEALTH_CHECK',
+                message: `Intento de acceso a health check denegado (ENV: ${process.env.NODE_ENV})`,
+                correlationId: 'security-event'
+            });
+            return NextResponse.json({ error: 'Access restricted. Diagnostic tools are disabled in this environment or missing secure token.' }, { status: 403 });
         }
 
         const db = await connectAuthDB();

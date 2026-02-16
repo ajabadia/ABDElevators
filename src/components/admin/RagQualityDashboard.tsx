@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity } from 'lucide-react';
+import { ShieldCheck, Target, Search, AlertCircle, FileText, Activity, BrainCircuit, Zap, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslations, useLocale } from 'next-intl';
+import { DecisionTraceDialog } from './intelligence/DecisionTraceDialog';
+import { Button } from '@/components/ui/button';
 
 interface RagMetricStats {
     faithfulness: number;
@@ -33,29 +35,41 @@ interface RagEvaluation {
 export default function RagQualityDashboard() {
     const [stats, setStats] = useState<RagMetricStats | null>(null);
     const [evaluations, setEvaluations] = useState<RagEvaluation[]>([]);
+    const [criticalEntities, setCriticalEntities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedEval, setExpandedEval] = useState<string | null>(null);
+    const [selectedEval, setSelectedEval] = useState<any | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const t = useTranslations('admin.rag_quality');
     const locale = useLocale();
     const dateLocale = locale === 'es' ? es : enUS;
 
     useEffect(() => {
-        const fetchMetrics = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch('/api/admin/rag/evaluations');
-                const data = await res.json();
-                if (data.success) {
-                    setStats(data.stats);
-                    setEvaluations(data.evaluations);
+                const [metricsRes, criticalRes] = await Promise.all([
+                    fetch('/api/admin/rag/evaluations'),
+                    fetch('/api/core/entities/pedido?maxConfidence=0.7&limit=5')
+                ]);
+
+                const metricsData = await metricsRes.json();
+                const criticalData = await criticalRes.json();
+
+                if (metricsData.success) {
+                    setStats(metricsData.stats);
+                    setEvaluations(metricsData.evaluations);
+                }
+                if (criticalData.success) {
+                    setCriticalEntities(criticalData.pedidos || []);
                 }
             } catch (err) {
-                console.error("Error fetching metrics:", err);
+                console.error("Error fetching dashboard data:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchMetrics();
+        fetchData();
     }, []);
 
     if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
@@ -84,11 +98,60 @@ export default function RagQualityDashboard() {
                         {t('dashboard_desc')}
                     </p>
                 </div>
-                <Badge variant="outline" className="px-3 py-1 text-sm font-medium border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:border-indigo-900 dark:text-indigo-300">
-                    <Activity className="w-4 h-4 mr-2" />
-                    {t('latest_sessions', { count: evaluations.length })}
-                </Badge>
+                <div className="flex items-center gap-3">
+                    {criticalEntities.length > 0 && (
+                        <Badge variant="destructive" className="animate-pulse px-3 py-1">
+                            <AlertCircle className="w-4 h-4 mr-2" />
+                            {criticalEntities.length} Análisis Críticos
+                        </Badge>
+                    )}
+                    <Badge variant="outline" className="px-3 py-1 text-sm font-medium border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:border-indigo-900 dark:text-indigo-300">
+                        <Activity className="w-4 h-4 mr-2" />
+                        {t('latest_sessions', { count: evaluations.length })}
+                    </Badge>
+                </div>
             </div>
+
+            {/* Critical Analysis Widget (HITL Proactivo) */}
+            {criticalEntities.length > 0 && (
+                <Card className="border-rose-200 bg-rose-50/30 dark:bg-rose-950/10 shadow-lg shadow-rose-500/5">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                            <Zap className="w-5 h-5 text-rose-500 fill-rose-500" />
+                            Atención Técnica Requerida (Confianza Baja)
+                        </CardTitle>
+                        <CardDescription className="text-rose-600/70 dark:text-rose-400/60 font-medium">
+                            Los siguientes pedidos han sido marcados por el sistema con una confianza inferior al 70%. Requieren validación humana inmediata.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {criticalEntities.map((p) => (
+                                <a
+                                    key={p._id}
+                                    href={`/entities?id=${p._id}`}
+                                    className="block p-4 bg-white dark:bg-slate-900 rounded-xl border border-rose-100 dark:border-rose-900 hover:shadow-md transition-all group"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">
+                                            {p.identifier || p.numero_pedido}
+                                        </h4>
+                                        <Badge className="bg-rose-100 text-rose-700 border-none text-[10px] font-black">
+                                            {Math.round((p.confidence_score || 0) * 100)}%
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-black tracking-widest">
+                                        <span>{p.filename || 'Análisis PDF'}</span>
+                                        <span className="flex items-center gap-1">
+                                            Revisar <ChevronRight className="w-3 h-3" />
+                                        </span>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Global Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -217,6 +280,17 @@ export default function RagQualityDashboard() {
                                         >
                                             {expandedEval === ev._id ? t('history.hide_trace') : t('history.show_trace')}
                                         </button>
+                                        <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-800" />
+                                        <button
+                                            onClick={() => {
+                                                setSelectedEval(ev);
+                                                setIsDialogOpen(true);
+                                            }}
+                                            className="text-blue-500 hover:text-blue-600 font-bold flex items-center gap-1"
+                                        >
+                                            <BrainCircuit className="w-3 h-3" />
+                                            {t('trace.actions.audit')}
+                                        </button>
                                     </div>
                                     <span>{format(new Date(ev.timestamp), "dd MMM yyyy HH:mm", { locale: dateLocale })}</span>
                                 </div>
@@ -233,6 +307,12 @@ export default function RagQualityDashboard() {
                     </div>
                 </CardContent>
             </Card>
+
+            <DecisionTraceDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                evaluation={selectedEval}
+            />
         </div>
     );
 }

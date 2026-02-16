@@ -53,12 +53,12 @@ export class GraphRetrievalService {
                 WHERE (toLower(e.id) CONTAINS name OR toLower(e.name) CONTAINS name)
                 AND e.tenantId = $tenantId
                 
-                // Get immediate relations
-                OPTIONAL MATCH (e)-[r]->(neighbor)
+                // Get bidirectional immediate relations
+                OPTIONAL MATCH (e)-[r]-(neighbor)
                 WHERE neighbor.tenantId = $tenantId
                 
-                RETURN e, r, neighbor
-                LIMIT 20
+                RETURN e, r, neighbor, (startNode(r) = e) as isOutgoing
+                LIMIT 30
             `;
 
             const result = await runQuery(cypher, { names: entityNames, tenantId });
@@ -74,14 +74,15 @@ export class GraphRetrievalService {
                 const e = record.get('e');
                 const r = record.get('r');
                 const neighbor = record.get('neighbor');
+                const isOutgoing = record.get('isOutgoing');
 
                 if (e) nodesMap.set(e.properties.id, { id: e.properties.id, name: e.properties.name, type: e.labels[0] });
                 if (neighbor) nodesMap.set(neighbor.properties.id, { id: neighbor.properties.id, name: neighbor.properties.name, type: neighbor.labels[0] });
                 if (r) {
                     relations.push({
-                        source: e.properties.id,
+                        source: isOutgoing ? e.properties.id : neighbor.properties.id,
                         type: r.type,
-                        target: neighbor.properties.id
+                        target: isOutgoing ? neighbor.properties.id : e.properties.id
                     });
                 }
             });

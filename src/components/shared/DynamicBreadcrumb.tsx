@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 export function DynamicBreadcrumb() {
     const pathname = usePathname();
+    if (!pathname) return null;
     const cleanPath = pathname.split('?')[0];
     const pathSegments = cleanPath.split('/').filter(segment => segment);
 

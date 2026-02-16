@@ -20,6 +20,7 @@ import { DataTable, Column } from "@/components/ui/data-table";
 import { Loader2, Plus, FileText, Download, Shield } from 'lucide-react';
 import { OptimisticDelete } from '@/components/shared/OptimisticDelete';
 import { DataStateIndicator } from '@/components/shared/DataStateIndicator';
+import { useTranslations } from 'next-intl';
 
 interface PersonalDocument {
     _id: string;
@@ -28,9 +29,13 @@ interface PersonalDocument {
     sizeBytes: number;
     cloudinaryUrl: string;
     createdAt: string;
+    fileMd5?: string;
 }
 
 export default function MyDocumentsPage() {
+    const t = useTranslations('myDocuments');
+    const tUpload = useTranslations('myDocuments.upload');
+    const tTable = useTranslations('myDocuments.table');
     const { toast } = useToast();
     const modal = useFormModal();
 
@@ -44,14 +49,28 @@ export default function MyDocumentsPage() {
         endpoint: '/api/auth/knowledge-assets'
     });
 
+    // 1.5 Fetch Document Types
+    const { data: docTypes } = useApiList<{ _id: string, name: string }>({
+        endpoint: '/api/admin/document-types?category=USER_DOCUMENT'
+    });
+
     // 2. Mutación para Subir (usado por el formulario)
     const { mutate: uploadDoc, isLoading: uploading } = useApiMutation({
         endpoint: '/api/auth/knowledge-assets',
         method: 'POST',
-        successMessage: 'Documento subido correctamente.',
+        successMessage: tUpload('successGeneric'),
         onSuccess: () => {
             modal.close();
             fetchDocs();
+            toast({ title: tUpload('successTitle'), description: tUpload('successDesc') });
+        },
+        onError: (err) => {
+            console.error("Upload failed", err);
+            toast({
+                title: tUpload('errorTitle'),
+                description: typeof err === 'string' ? err : tUpload('errorDesc'),
+                variant: 'destructive'
+            });
         }
     });
 
@@ -66,40 +85,55 @@ export default function MyDocumentsPage() {
     const handleUpload = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+
+        // Validación básica cliente
+        const file = formData.get('file') as File;
+        if (file && file.size > 10 * 1024 * 1024) {
+            toast({ title: "Error", description: "El archivo es demasiado grande (Máx 10MB)", variant: "destructive" });
+            return;
+        }
+
         uploadDoc(formData);
     };
 
     // 4. Definición de Columnas
     const columns: Column<PersonalDocument>[] = [
         {
-            header: "Name",
+            header: tTable('name'),
             cell: (doc) => (
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded text-teal-600">
                         <FileText size={16} />
                     </div>
-                    <span className="font-medium">{doc.originalName}</span>
+                    <div className="flex flex-col">
+                        <span className="font-medium">{doc.originalName}</span>
+                        {doc.fileMd5 && (
+                            <span className="text-[10px] text-slate-400 font-mono" title="MD5 Hash for Deduplication">
+                                {doc.fileMd5}
+                            </span>
+                        )}
+                    </div>
                 </div>
             )
         },
         {
-            header: "Description",
+            header: tTable('description'),
             accessorKey: "description",
             cell: (doc) => <span className="text-slate-600 dark:text-slate-400 max-w-xs truncate">{doc.description || '-'}</span>
         },
         {
-            header: "Size",
+            header: tTable('size'),
             cell: (doc) => <span className="text-slate-500 text-xs">{(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB</span>
         },
         {
-            header: "Date",
+            header: tTable('date'),
             cell: (doc) => <span className="text-slate-500 text-xs">{new Date(doc.createdAt).toLocaleDateString()}</span>
         },
         {
-            header: "Actions",
+            header: tTable('actions'),
             cell: (doc) => (
                 <div className="flex justify-end gap-2">
-                    <Button size="icon" variant="ghost" asChild title="Descargar">
+                    <Button size="icon" variant="ghost" asChild title={tTable('download')}>
                         <a href={doc.cloudinaryUrl} target="_blank" rel="noopener noreferrer">
                             <Download size={16} className="text-teal-600" />
                         </a>
@@ -121,56 +155,56 @@ export default function MyDocumentsPage() {
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-bold flex items-center gap-2">
                             <Shield className="text-teal-600" />
-                            Mis Documentos
+                            {t('title')}
                         </h1>
                         <DataStateIndicator
                             isLoading={loading}
                             isError={!!listError}
                             isCached={docs && docs.length > 0}
                         />
-                    </div>
-                    <p className="text-slate-500">Espacio personal para tus manuales, notas y archivos técnicos.</p>
-                </div>
+                    </div >
+                    <p className="text-slate-500">{t('subtitle')}</p>
+                </div >
 
                 <Dialog open={modal.isOpen} onOpenChange={modal.setIsOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={() => modal.openCreate()} className="bg-teal-600 hover:bg-teal-700">
-                            <Plus className="mr-2 h-4 w-4" /> Subir Archivo
+                            <Plus className="mr-2 h-4 w-4" /> {tUpload('button')}
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Subir Nuevo Documento Personal</DialogTitle>
+                            <DialogTitle>{tUpload('title')}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleUpload} className="space-y-4 pt-4">
                             <div className="space-y-2">
-                                <Label htmlFor="file">Archivo</Label>
+                                <Label htmlFor="file">{tUpload('file')}</Label>
                                 <Input id="file" name="file" type="file" required />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Input id="description" name="description" placeholder="What is this document?" />
+                                <Label htmlFor="description">{tUpload('description')}</Label>
+                                <Input id="description" name="description" placeholder={tUpload('descriptionPlaceholder')} />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <Button type="button" variant="outline" onClick={() => modal.close()}>Cancelar</Button>
+                                <Button type="button" variant="outline" onClick={() => modal.close()}>{tUpload('cancel')}</Button>
                                 <Button type="submit" disabled={uploading} className="bg-teal-600 hover:bg-teal-700">
                                     {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    Subir
+                                    {tUpload('submit')}
                                 </Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </div >
 
             <ContentCard noPadding={true}>
                 <DataTable
                     columns={columns}
                     data={docs || []}
                     isLoading={loading}
-                    emptyMessage="No has subido ningún documento personal aún."
+                    emptyMessage={tTable('empty')}
                 />
             </ContentCard>
-        </div>
+        </div >
     );
 }

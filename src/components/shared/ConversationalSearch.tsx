@@ -36,7 +36,7 @@ const SUGGESTED_QUERIES = [
 ]
 
 export function ConversationalSearch() {
-    const t = useTranslations("search");
+    const t = useTranslations("common.navigation.search");
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)

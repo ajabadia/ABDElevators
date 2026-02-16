@@ -29,7 +29,9 @@ export class WorkflowTaskService {
         if (filters.assignedUserId) query.assignedUserId = filters.assignedUserId;
         if (filters.caseId) query.caseId = filters.caseId;
 
-        return await (collection as any).find(query).sort({ priority: -1, createdAt: -1 }).toArray();
+        return await collection.find(query, {
+            sort: { priority: -1, createdAt: -1 }
+        });
     }
 
     /**
@@ -56,9 +58,10 @@ export class WorkflowTaskService {
         userName: string;
         status: WorkflowTask['status'];
         notes?: string;
+        metadata?: Record<string, any>;
         correlationId: string;
     }) {
-        const { id, tenantId, userId, userName, status, notes, correlationId } = params;
+        const { id, tenantId, userId, userName, status, notes, metadata, correlationId } = params;
         const collection = await getTenantCollection(this.COLLECTION);
 
         const task = await this.getTaskById(id, tenantId);
@@ -77,6 +80,13 @@ export class WorkflowTaskService {
             updateData['metadata.resolution_notes'] = notes;
         }
 
+        // ⚡ FASE 128.3: Generic metadata update (e.g. workshop checklist)
+        if (metadata) {
+            for (const [key, value] of Object.entries(metadata)) {
+                updateData[`metadata.${key}`] = value;
+            }
+        }
+
         const result = await collection.updateOne(
             { _id: new ObjectId(id), tenantId },
             { $set: updateData }
@@ -90,13 +100,62 @@ export class WorkflowTaskService {
         await logEvento({
             level: 'INFO',
             source: 'WORKFLOW_TASK_SERVICE',
-            action: 'TASK_STATUS_UPDATED',
-            message: `Tarea ${id} marcada como ${status} por ${userName}`,
-            correlationId,
+            action: 'TASK_STATUS_UPDATE',
+            message: `Tarea ${id} actualizada a ${status}`,
             tenantId,
-            details: { taskId: id, previousStatus: task.status, nextStatus: status }
+            details: { id, status, resolution_notes: notes },
+            correlationId,
         });
 
-        return { success: true, taskId: id, status };
+        // ⚡ FASE 127: Return complete task for HITL integration
+        const updatedTask = await this.getTaskById(id, tenantId);
+        return { success: true, taskId: id, status, task: updatedTask };
+    }
+
+    /**
+     * Crea una nueva tarea de workflow (System or HITL)
+     */
+    static async createTask(params: {
+        tenantId: string;
+        caseId: string;
+        type: 'DOCUMENT_REVIEW' | 'SECURITY_SIGNATURE' | 'TECHNICAL_VALIDATION' | 'COMPLIANCE_CHECK' | 'WORKFLOW_DECISION';
+        title: string;
+        description: string;
+        assignedRole: UserRole;
+        priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+        metadata?: Record<string, any>;
+        correlationId?: string;
+    }) {
+        const collection = await getTenantCollection('workflow_tasks');
+        const taskId = new ObjectId();
+
+        const task = {
+            _id: taskId,
+            tenantId: params.tenantId,
+            caseId: params.caseId,
+            type: params.type,
+            title: params.title,
+            description: params.description,
+            assignedRole: params.assignedRole,
+            priority: params.priority,
+            status: 'PENDING',
+            metadata: params.metadata || {},
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        await collection.insertOne(task);
+
+        await logEvento({
+            level: 'INFO',
+            source: 'WORKFLOW_TASK_SERVICE',
+            action: 'TASK_CREATED',
+            message: `Tarea ${params.title} creada para caso ${params.caseId}`,
+            tenantId: params.tenantId,
+            details: { taskId: taskId.toString(), ...params },
+            correlationId: params.correlationId || 'no-id'
+        });
+
+        return { success: true, taskId: taskId.toString(), task };
     }
 }

@@ -80,15 +80,24 @@ Create a functional RAG prototype for the technical department of an elevator fa
     - [x] Servicio `workflow-engine.ts`.
     - [x] API de transiciones.
     - [x] Seed de flujos industriales.
-- [x] **Fase 7.3: Taxonomías y Metadatos**
-    - [x] Esquemas de taxonomía.
-    - [x] Servicio y API de gestión.
-    - [x] Sincronización de perfil global (Header).
-- [x] **Fase 7.4: Automatización y Billing (SaaS Ready)**
+- [x] Phase 127: UI Extensions (Intelligent Orchestration)
+    - [x] HITL Task Inbox Enhancements (display/accept AI suggestions)
+    - [x] Visual Workflow Designer (edit states, transitions, LLM nodes)
+    - [x] Case Detail Integration (smart controller with real-time AI feedback)
+- [/] Phase 127: Full Quality Audit & Remediation (app-full-reviewer)
+    - [x] Comprehensive technical audit (Security, UI/UX, i18n, Performance)
+    - [/] Remediation: i18n integration for Workflow UI
+    - [/] Remediation: Zod validation & Security headers in API Routes
+    - [/] Remediation: Synchronization with map.md
     - [x] Definir modelo de consumo (Metrics).
     - [x] Implementar trackeo de uso (LLM, Storage).
     - [x] API de Estadísticas de Consumo.
     - [x] Dashboard de Administración (Billing UI).
+- [x] **Fase 7.3: Taxonomías y Metadatos**
+    - [x] Esquemas de taxonomía.
+    - [x] Servicio y API de gestión.
+    - [x] Sincronización de perfil global (Header).
+- [ ] **Fase 7.4: Automatización y Billing (SaaS Ready)**
 - [/] **Fase 7.5: Inteligencia y Auditoría (Risk Engine)**
     - [x] Diseño del motor de riesgos genérico.
     - [x] Implementación de `RiskService.ts`.

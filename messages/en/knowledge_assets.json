@@ -1,0 +1,127 @@
+{
+  "delete_confirm": "Are you sure you want to delete this document? This action is irreversible.",
+  "metrics": {
+    "active": "Active Documents",
+    "indexed": "Indexed Chunks",
+    "last_ingest": "Last Ingest"
+  },
+  "search_placeholder": "Search by name, component or model...",
+  "actions": {
+    "new": "New Document",
+    "preview": "Preview",
+    "diagnostics": "View Diagnostics",
+    "relationships": "Relationships",
+    "download": "View / Download",
+    "retry": "Retry Ingest",
+    "mark_active": "Mark Active",
+    "mark_obsolete": "Mark Obsolete",
+    "archive": "Archive",
+    "delete": "Permanent Delete"
+  },
+  "table": {
+    "document": "Document",
+    "type_model": "Type / Model",
+    "status": "Status / Ingest",
+    "chunks": "Chunks",
+    "actions": "Actions",
+    "loading": "Loading documents...",
+    "empty": "No documents found.",
+    "uploaded": "Uploaded on"
+  },
+  "status": {
+    "pending": "Pending",
+    "failed": "Failed",
+    "active": "Active",
+    "obsolete": "Obsolete",
+    "archived": "Archived",
+    "processing": "Processing"
+  },
+  "retry_success": "Retry initiated",
+  "retry_desc": "The document is being processed again.",
+  "title": "Technical Corpus Management",
+  "subtitle": "Upload and manage manuals feeding the RAG system.",
+  "filters": "Filters",
+  "spaces": {
+    "title": "Workspaces",
+    "subtitle": "Manage your personal documents, collections and quick queries.",
+    "tabs": {
+      "quick_qa": "Quick Q&A",
+      "personal": "My Space",
+      "collections": "Collections"
+    },
+    "placeholders": {
+      "personal_title": "Personal Document Management",
+      "personal_desc": "Coming soon: Upload and manage your own PDF files.",
+      "collections_title": "Smart Collections",
+      "collections_desc": "Coming soon: Organize documents in folders by project or topic."
+    },
+    "quick_qa": {
+      "title": "Quick Q&A",
+      "desc": "Paste technical text, notes or specifications to query without persistence.",
+      "snippet_label": "Text Fragment (Snippet)",
+      "snippet_badge": "Ephemeral",
+      "snippet_placeholder": "Paste content here to analyze...",
+      "context_label": "Additional Context (Optional)",
+      "context_placeholder": "Ex: Specific instructions, software version...",
+      "clear_all": "Clear All",
+      "promote": "Promote to Document",
+      "chat_title": "Ephemeral Chat",
+      "chat_welcome_title": "Ask a question about the text",
+      "chat_welcome_desc": "The assistant will respond using only the provided snippet.",
+      "chat_input_placeholder": "Write your question about the fragment...",
+      "status_loading": "Querying information...",
+      "promote_success": "Snippet saved as persistent Document",
+      "promote_error": "Error promoting",
+      "conn_error": "Connection error",
+      "validation_error": "You must paste text and write a question",
+      "ia_error": "Error querying AI"
+    },
+    "admin": {
+      "title": "Spaces Management",
+      "search_placeholder": "Search spaces...",
+      "new_space": "New Space",
+      "manage": "Manage",
+      "table": {
+        "space": "Space",
+        "type": "Type",
+        "visibility": "Visibility",
+        "status": "Status",
+        "created": "Created",
+        "actions": "Actions"
+      },
+      "types": {
+        "global": "Global",
+        "industry": "Industry",
+        "tenant": "Tenant",
+        "team": "Team",
+        "personal": "Personal"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    }
+  },
+  "tabs": {
+    "active": "Active Users",
+    "pending": "Pending Invitations"
+  },
+  "invitations": {
+    "title": "Pending Invitations",
+    "desc": "Manage and revoke invitations that haven't been accepted yet.",
+    "empty": "No pending invitations",
+    "revoke_confirm": "Are you sure you want to revoke the invitation for {email}?",
+    "table": {
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "expiry": "Expiry"
+    },
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    }
+  }
+}

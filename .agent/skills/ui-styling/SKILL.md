@@ -24,10 +24,13 @@ Reemplaza layouts manuales por **Componentes Primitivos**:
 - `<PageHeader>`: Títulos, subtítulos y botones de acción.
 - `<ContentCard>`: Contenedores con estilo consistente para formularios, tablas o listados.
 
-### 3. Limpieza de Estilos
-- Elimina clases de fondo y bordes hardcodeadas (`bg-white`, `border-slate-200`). Los primitivos ya manejan el **Dark Mode**.
-- Usa `teal-600` solo para la acción principal (Primary).
-- Usa `variant="outline"` para acciones secundarias.
+### 3. Limpieza de Estilos y Tematización (Branding First)
+- **Regla Fundamental**: NUNCA uses clases de colores hardcodeadas (`bg-slate-950`, `bg-white`, `border-slate-800`, `text-teal-600`, `bg-teal-500`).
+- **Motivo**: Rompen el **Modo Claro/Oscuro** y, lo más importante, impiden que el **Branding Organizacional** (logo/colores del cliente) se aplique. Si usas `text-teal-600`, el dashboard siempre será verde aunque el cliente sea de color rojo corporativo.
+- **Acción**: Usa siempre variables semánticas: `bg-background`, `bg-card`, `border-border`, `text-foreground`.
+- **Primary Color**: Para el color principal de la marca, usa `text-primary`, `bg-primary`, `border-primary` o variantes con opacidad: `bg-primary/10`, `text-primary/90`.
+- **Secondary/Accent**: Usa `bg-secondary` o `bg-accent` para elementos de apoyo.
+- **Auditoría**: Si ves `teal-XXX` o `slate-XXX` en un componente, REEMPLÁZALO por su equivalente semántico.
 
 ## Guía de Implementación
 
@@ -36,11 +39,11 @@ Reemplaza layouts manuales por **Componentes Primitivos**:
 ```tsx
 <div className="p-6 space-y-4">
   <h1 className="text-2xl font-bold">Título</h1>
-  <div className="bg-white p-4 border rounded-lg">...</div>
+  <div className="bg-slate-950 p-4 border border-slate-800 rounded-lg">...</div>
 </div>
 ```
 
-✅ Estandarizado:
+✅ Estandarizado (Theme-aware):
 ```tsx
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
@@ -48,13 +51,43 @@ import { ContentCard } from "@/components/ui/content-card";
 
 <PageContainer>
   <PageHeader title="Título" subtitle="Descripción corta" actions={<AddButton />} />
-  <ContentCard>
+  <ContentCard className="bg-card/50 backdrop-blur-sm border-border">
     {/* Tu contenido aquí */}
   </ContentCard>
 </PageContainer>
 ```
 
-### Gestión de Estado
+### 4. Tablas de Datos (DataTable)
+Las tablas deben ser legibles y profesionales en ambos temas.
+
+❌ Hardcoded Dark:
+```tsx
+<div className="bg-slate-950 border-slate-800">
+  <TableHeader className="bg-slate-900">
+     <TableCell className="text-slate-300">...</TableCell>
+  </TableHeader>
+</div>
+```
+
+✅ Theme-Aware Table (Shadcn compliant):
+```tsx
+<div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden">
+  <Table>
+    <TableHeader className="bg-muted/50 text-foreground">
+      <TableRow className="border-border">
+         <TableHead className="text-foreground font-semibold">Columna</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow className="border-border/50 hover:bg-primary/5">
+        <TableCell className="text-foreground/90">Dato</TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</div>
+```
+
+### 5. Gestión de Estado
 ❌ Prop-Drilling:
 ```tsx
 const [data, setData] = useState([]);
@@ -63,7 +96,7 @@ const [data, setData] = useState([]);
 ```
 
 ✅ Zustand Store:
-### 4. Grid System para Dashboards
+### 6. Grid System para Dashboards
 ❌ Layouts rígidos o Flexbox anidados:
 ```tsx
 <div className="flex flex-col gap-4">
@@ -93,7 +126,7 @@ const [data, setData] = useState([]);
 </div>
 ```
 
-### 5. Tokens de Diseño (Sidebar & Navigation)
+### 7. Tokens de Diseño (Sidebar & Navigation)
 Usa las variables CSS globales para componentes de navegación (`globals.css`):
 - `bg-sidebar`: Fondo del sidebar.
 - `text-sidebar-foreground`: Texto principal.
@@ -107,7 +140,7 @@ Usa las variables CSS globales para componentes de navegación (`globals.css`):
 </aside>
 ```
 
-### 6. Sistema de Pestañas (Tabs Navigation)
+### 8. Sistema de Pestañas (Tabs Navigation)
 Usa este patrón para navegación interna de dashboards (`Tabs` de shadcn/ui):
 
 ```tsx
@@ -125,7 +158,7 @@ Usa este patrón para navegación interna de dashboards (`Tabs` de shadcn/ui):
 </Tabs>
 ```
 
-### 7. Tarjetas de Métricas (KPIs)
+### 9. Tarjetas de Métricas (KPIs)
 Para mostrar números grandes o estados, usa `<MetricCard />`:
 
 ```tsx
@@ -141,24 +174,25 @@ Para mostrar números grandes o estados, usa `<MetricCard />`:
 </div>
 ```
 
-### 8. Animaciones y Transiciones
+### 10. Animaciones y Transiciones
 Aplica siempre clases de entrada para suavizar la carga:
 - Páginas enteras: `<PageContainer className="animate-in fade-in duration-500">`
 - Elementos internos: `animate-in fade-in slide-in-from-bottom-4 duration-500`
 
-### 9. Breadcrumbs Dinámicos
+### 11. Breadcrumbs Dinámicos
 Usa siempre `<DynamicBreadcrumb />` en el `<Header />` para navegación automática basada en rutas.
 
-### 10. Compatibilidad con Modos (Light/Dark)
+### 12. Compatibilidad con Modos (Light/Dark)
 Toda interfaz debe ser funcional y estética en ambos temas:
 - **Contraste**: Verifica que el texto sea legible (WCAG AA mínimo: 4.5:1 para texto normal, 3:1 para grande).
 - **Semántica de Colores**: Usa variables CSS como `text-foreground` y `bg-background` en lugar de clases rígidas como `text-slate-900`.
-- **Ajuste de Sombras**: En modo oscuro, las sombras deben ser más sutiles o reemplazarse por bordes (`border-slate-800`).
+- **Ajuste de Sombras**: En modo oscuro, las sombras deben ser más sutiles o reemplazarse por bordes (`border-border`).
 - **Imágenes y Logos**: Asegura que el logo tenga variantes o sea visible sobre fondos claros y oscuros.
 - **Transiciones**: Añade transiciones suaves al cambiar de tema para evitar destellos (`transition-colors duration-300`).
+- **DataTable Fix**: Asegura que el header use `bg-muted` y las filas tengan bordes `border-border/50` para evitar el efecto de "mancha gris" en modo claro.
 
 ## Output (formateo exacto)
 - **Estado**: "Migrada lógica de estado a Zustand Store ([store-name])".
 - **UI**: "Estandarizados componentes visuales ([PageContainer/Header/Card])".
-- **Limpieza**: "Eliminados estilos inline y ajustado branding a Teal-Identity".
+- **Limpieza**: "Eliminados estilos hardcodeados (slate-X) y aplicadas variables semánticas (bg-card/border-border)".
 - **Modos**: "Verificada legibilidad y contraste en Modo Claro y Oscuro".

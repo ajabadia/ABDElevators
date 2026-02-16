@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,23 +11,280 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Receipt, Mail, MapPin, Building, Shield, Info } from "lucide-react";
+import { Receipt, Mail, MapPin, Building, Shield, Info, CreditCard, Check, AlertTriangle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TenantConfig } from '@/app/(authenticated)/(admin)/admin/organizations/page';
+import { TenantConfig } from '@/lib/schemas';
+import { Progress } from "@/components/ui/progress";
+import { PLANS, PlanTier } from '@/lib/plans';
+import { useToast } from "@/hooks/use-toast";
+
+import { useTranslations } from 'next-intl';
 
 interface BillingTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
+    usageStats?: any;
 }
 
-export function BillingTab({ config, setConfig }: BillingTabProps) {
+export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
+    const t = useTranslations('admin.organizations.billing');
+    const { toast } = useToast();
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+    // Estados para la simulación de precio
+    const [simulation, setSimulation] = useState<any>(null);
+    const [isSimulating, setIsSimulating] = useState(false);
+    const [selectedTier, setSelectedTier] = useState<PlanTier | null>(null);
+
+    const handleSimulate = async (tier: PlanTier) => {
+        if (tier === currentTier) return;
+
+        setIsSimulating(true);
+        setSelectedTier(tier);
+        setSimulation(null);
+
+        try {
+            const res = await fetch('/api/billing/simulate-change', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newTier: tier })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error en la simulación');
+
+            setSimulation(data.simulation);
+        } catch (error: any) {
+            toast({
+                title: 'Error de Simulación',
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setIsSimulating(false);
+        }
+    };
+
+    const handleUpgrade = async (tier: PlanTier) => {
+        setIsCheckingOut(true);
+        try {
+            const res = await fetch('/api/billing/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error iniciando checkout');
+
+            window.location.href = data.url;
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error.message,
+                variant: 'destructive'
+            });
+            setIsCheckingOut(false);
+        }
+    };
+
+    const currentTier = (usageStats?.tier as PlanTier) || 'FREE';
+    const currentPlan = PLANS[currentTier] || PLANS.FREE;
+
+    // Helper para formatear bytes
+    const formatBytes = (bytes: number) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Columna 1: Datos Fiscales y Recepción */}
+
+            {/* Sección 1: Plan Actual y Consumo */}
+            <div className="lg:col-span-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Tarjeta de Plan */}
+                    <div className="col-span-1 bg-slate-900 text-white rounded-3xl p-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                        <div className="relative z-10">
+                            <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider mb-1">Plan Actual</h3>
+                            <div className="flex items-baseline gap-2 mb-4">
+                                <h1 className="text-4xl font-bold">{currentPlan.name}</h1>
+                                {currentTier !== 'FREE' && <span className="text-sm bg-primary px-2 py-1 rounded-full">Activo</span>}
+                            </div>
+
+                            <div className="space-y-4 mb-8">
+                                <p className="text-sm opacity-70">
+                                    {currentTier === 'FREE'
+                                        ? 'Estás disfrutando del periodo de prueba gratuito.'
+                                        : `Suscripción renovada mensualmente.`}
+                                </p>
+                            </div>
+
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="w-full bg-white text-slate-900 hover:bg-slate-100">
+                                        Cambiar Plan
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Planes y Precios</DialogTitle>
+                                        <DialogDescription>Selecciona el plan que mejor se adapte a tus necesidades.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                                        {(Object.keys(PLANS) as PlanTier[]).map((tier) => {
+                                            const plan = PLANS[tier];
+                                            const isCurrent = tier === currentTier;
+                                            const isSelected = selectedTier === tier;
+
+                                            return (
+                                                <div key={tier} className={cn(
+                                                    "border rounded-xl p-6 relative flex flex-col transition-all",
+                                                    isCurrent ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-200",
+                                                    isSelected && !isCurrent ? "border-primary bg-primary/5 ring-2 ring-primary" : ""
+                                                )}>
+                                                    {isCurrent && (
+                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
+                                                            {t('planActive')}
+                                                        </div>
+                                                    )}
+                                                    <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                                                    <div className="text-3xl font-bold mb-4">
+                                                        {plan.price_monthly}€ <span className="text-sm font-normal text-slate-500">{t('perMonth')}</span>
+                                                    </div>
+                                                    <ul className="space-y-2 mb-6 flex-1">
+                                                        {plan.features.map((f, i) => (
+                                                            <li key={i} className="text-sm flex items-start gap-2">
+                                                                <Check size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                                                <span className="text-slate-600">{f}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    <Button
+                                                        disabled={isCurrent || isCheckingOut || tier === 'FREE' || isSimulating}
+                                                        variant={isCurrent ? "outline" : (isSelected ? "default" : "outline")}
+                                                        onClick={() => tier !== 'FREE' && handleSimulate(tier)}
+                                                    >
+                                                        {isCurrent ? t('planCurrent') : (tier === 'FREE' ? t('contactSupport') : (isSelected ? t('selectPlan') : t('selectPlan')))}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Resultados de la Simulación */}
+                                    {(isSimulating || simulation) && selectedTier && (
+                                        <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-primary/20 animate-in fade-in slide-in-from-top-4">
+                                            <div className="flex items-center gap-2 mb-6 text-primary">
+                                                <Zap fill="currentColor" size={20} />
+                                                <h4 className="text-lg font-bold">{t('simulation.title')}</h4>
+                                            </div>
+
+                                            {isSimulating ? (
+                                                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                                    <p className="text-sm text-slate-500 italic">Calculando prorrateo exacto con Stripe...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                        <div className="space-y-1 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-[10px] text-slate-500 uppercase font-black spacing tracking-tighter">{t('simulation.creditApplied')}</p>
+                                                            <p className="text-2xl font-bold text-green-600">-{simulation.creditApplied / 100}€</p>
+                                                        </div>
+                                                        <div className="space-y-1 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                            <p className="text-[10px] text-slate-500 uppercase font-black spacing tracking-tighter">{t('simulation.newPlanCost')}</p>
+                                                            <p className="text-2xl font-bold text-slate-900">{simulation.newPlanCost / 100}€</p>
+                                                        </div>
+                                                        <div className="space-y-1 p-4 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
+                                                            <p className="text-[10px] opacity-80 uppercase font-black spacing tracking-tighter">{t('simulation.totalDueNow')}</p>
+                                                            <p className="text-3xl font-black">{simulation.totalDueNow / 100}€</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                            <Info size={14} />
+                                                            <span>
+                                                                <strong>{t('simulation.nextBillingDate')}:</strong> {new Date(simulation.nextBillingDate).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        <Button
+                                                            size="lg"
+                                                            className="w-full sm:w-auto px-12"
+                                                            onClick={() => handleUpgrade(selectedTier!)}
+                                                            disabled={isCheckingOut}
+                                                        >
+                                                            {isCheckingOut ? (
+                                                                <span className="flex items-center gap-2">
+                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                                    Procesando...
+                                                                </span>
+                                                            ) : "Confirmar y Suscribirse"}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
+
+                    {/* Tarjetas de Consumo */}
+                    <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {usageStats && (
+                            <>
+                                <UsageCard
+                                    title="Tokens IA (Generativo)"
+                                    icon={<Zap size={18} className="text-yellow-500" />}
+                                    current={usageStats.usage.tokens}
+                                    limit={usageStats.limits.llm_tokens_per_month}
+                                    format={(v: number) => v.toLocaleString()}
+                                    status={usageStats.status.tokens}
+                                />
+                                <UsageCard
+                                    title="Almacenamiento (RAG)"
+                                    icon={<Shield size={18} className="text-blue-500" />}
+                                    current={usageStats.usage.storage}
+                                    limit={usageStats.limits.storage_bytes}
+                                    format={formatBytes}
+                                    status={usageStats.status.storage}
+                                />
+                                <UsageCard
+                                    title="Búsquedas Vectoriales"
+                                    icon={<Receipt size={18} className="text-purple-500" />}
+                                    current={usageStats.usage.searches}
+                                    limit={usageStats.limits.vector_searches_per_month}
+                                    format={(v: number) => v.toLocaleString()}
+                                    status={usageStats.status.searches}
+                                />
+                                <UsageCard
+                                    title="Llamadas API"
+                                    icon={<Building size={18} className="text-slate-500" />}
+                                    current={usageStats.usage.apiRequests}
+                                    limit={usageStats.limits.api_requests_per_month}
+                                    format={(v: number) => v.toLocaleString()}
+                                    status={usageStats.status.apiRequests}
+                                />
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="lg:col-span-3 border-t border-slate-100 my-4"></div>
+
+            {/* Columna 1: Datos Fiscales y Recepción (Original Refactored) */}
             <div className="lg:col-span-1 space-y-8">
                 <div className="space-y-4">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
-                        <Receipt className="text-teal-600" size={20} />
+                        <Receipt className="text-primary" size={20} />
                         Identidad Fiscal
                     </h3>
                     <div className="space-y-4">
@@ -61,7 +317,7 @@ export function BillingTab({ config, setConfig }: BillingTabProps) {
 
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
-                        <Mail className="text-teal-600" size={20} />
+                        <Mail className="text-primary" size={20} />
                         Recepción de Facturas
                     </h3>
                     <div className="space-y-4">
@@ -135,7 +391,7 @@ export function BillingTab({ config, setConfig }: BillingTabProps) {
                 </div>
             </div>
 
-            {/* Columna 2 & 3: Direcciones */}
+            {/* Columna 2 & 3: Direcciones (Original) */}
             <div className="lg:col-span-2 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
@@ -209,7 +465,7 @@ export function BillingTab({ config, setConfig }: BillingTabProps) {
                     )}>
                         <div className="flex justify-between items-center">
                             <h3 className="font-bold flex items-center gap-2 text-slate-800">
-                                <Building className="text-teal-600" size={18} />
+                                <Building className="text-primary" size={18} />
                                 Dirección de Facturación
                             </h3>
                             <Switch
@@ -290,49 +546,55 @@ export function BillingTab({ config, setConfig }: BillingTabProps) {
                     </div>
                 </div>
 
-                <div className="p-6 rounded-3xl bg-teal-600 text-white flex items-center justify-between">
+                <div className="p-6 rounded-3xl bg-primary text-primary-foreground flex items-center justify-between">
                     <div className="space-y-1">
                         <h4 className="font-bold flex items-center gap-2">
                             <Shield size={18} />
                             Certificación de Factura Electrónica
                         </h4>
-                        <p className="text-xs text-teal-100">Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.</p>
+                        <p className="text-xs opacity-90">Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.</p>
                     </div>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                                Información EDI
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                            <DialogHeader>
-                                <DialogTitle>Facturación Electrónica (Ley Crea y Crece)</DialogTitle>
-                                <DialogDescription>
-                                    Información sobre el cumplimiento normativo para el intercambio B2B.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4 text-sm text-slate-600">
-                                <div className="p-4 bg-teal-50 rounded-lg border border-teal-100">
-                                    <h5 className="font-bold text-teal-800 mb-1">✅ Emisor (Tú / Plataforma)</h5>
-                                    <p>Tu sistema ya genera automáticamente las facturas con la huella digital y formato XML requeridos por defecto.</p>
-                                </div>
-
-                                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                                    <h5 className="font-bold text-slate-800 mb-1">📩 Receptor (Este Cliente)</h5>
-                                    <p className="mb-2">Configura aquí cómo este cliente específico prefiere recibir sus facturas:</p>
-                                    <ul className="list-disc pl-5 space-y-1">
-                                        <li><strong>Email (PDF):</strong> Cumplimiento estándar. El cliente recibe el PDF firmado.</li>
-                                        <li><strong>XML / EDI:</strong> Para integración directa con el ERP del cliente (requiere punto de entrada AS2/Facturae configurado).</li>
-                                    </ul>
-                                </div>
-
-                                <p className="text-xs text-slate-400">
-                                    Usa los selectores de "Recepción de Facturas" superiores para cambiar la preferencia de este cliente.
-                                </p>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                        Información EDI
+                    </Button>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// Sub-componente para tarjetas de uso
+function UsageCard({ title, icon, current, limit, format, status }: any) {
+    const isInfinity = limit === Infinity || limit === null;
+    const percentage = isInfinity ? 0 : Math.min(100, (current / limit) * 100);
+
+    let colorClass = "bg-primary";
+    if (status?.status === 'BLOCKED') colorClass = "bg-red-500";
+    else if (status?.status === 'OVERAGE_WARNING') colorClass = "bg-yellow-500";
+
+    return (
+        <div className="border border-slate-200 rounded-xl p-5 bg-white flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
+                    <span className="font-medium text-slate-700">{title}</span>
+                </div>
+                {status?.status !== 'ALLOWED' && (
+                    <div className={cn("text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1",
+                        status?.status === 'BLOCKED' ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
+                    )}>
+                        <AlertTriangle size={12} />
+                        {status?.status === 'BLOCKED' ? 'Límite' : 'Exceso'}
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                    <span className="font-bold text-slate-900">{format(current)}</span>
+                    <span className="text-slate-400">/ {isInfinity ? '∞' : format(limit)}</span>
+                </div>
+                <Progress value={percentage} className="h-2" indicatorClassName={colorClass} />
             </div>
         </div>
     );

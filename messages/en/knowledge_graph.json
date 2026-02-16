@@ -1,0 +1,26 @@
+{
+  "search_placeholder": "Search nodes (ID, Label, Props)...",
+  "search_button": "Search",
+  "error_loading": "Error loading graph data",
+  "no_nodes": "No nodes found matching search criteria.",
+  "actions": {
+    "reload": "Reload data",
+    "fit_view": "Fit view"
+  },
+  "stats_nodes": "Nodes",
+  "stats_links": "Relations",
+  "properties": "Properties",
+  "page_title": "Graph Explorer",
+  "page_subtitle": "Visualize and explore entities and relationships automatically extracted by AI.",
+  "meta_title": "Graph Explorer | Knowledge Base",
+  "meta_desc": "Visual exploration of Knowledge Graph entities and relationships.",
+  "title": "Graph Explorer",
+  "legend": {
+    "component": "Component",
+    "procedure": "Procedure",
+    "error_code": "Error Code",
+    "document": "Document",
+    "system": "System",
+    "unknown": "Unknown"
+  }
+}

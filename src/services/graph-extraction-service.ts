@@ -1,13 +1,27 @@
+import { z } from 'zod';
 import { PromptService } from '@/lib/prompt-service';
-import { callGeminiMini } from '@/lib/llm';
-import { runQuery } from '@/lib/neo4j';
-import { logEvento } from '@/lib/logger';
 import { PROMPTS } from '@/lib/prompts';
+import { callGeminiMini } from '@/lib/llm';
+import { logEvento } from '@/lib/logger';
+import { runQuery } from '@/lib/neo4j';
 
-interface GraphData {
-    entities: Array<{ id: string; type: string; name: string }>;
-    relations: Array<{ source: string; type: string; target: string }>;
-}
+const GraphDataSchema = z.object({
+    entities: z.array(z.object({
+        id: z.string(),
+        type: z.string(),
+        name: z.string()
+    })),
+    relations: z.array(z.object({
+        source: z.string(),
+        type: z.string(),
+        target: z.string()
+    }))
+});
+
+type GraphData = z.infer<typeof GraphDataSchema>;
+
+// ... inside class ...
+
 
 export class GraphExtractionService {
     /**
@@ -42,7 +56,7 @@ export class GraphExtractionService {
 
             // Clean response (sometimes LLM adds markdown blocks)
             const cleanJson = response.replace(/```json|```/g, '').trim();
-            const data: GraphData = JSON.parse(cleanJson);
+            const data = GraphDataSchema.parse(JSON.parse(cleanJson));
 
             // 3. Persist in Neo4j
             await this.persistInNeo4j(data, tenantId, metadata);
@@ -68,6 +82,7 @@ export class GraphExtractionService {
                 tenantId,
                 details: { error: String(error) }
             });
+            throw error;
         }
     }
 

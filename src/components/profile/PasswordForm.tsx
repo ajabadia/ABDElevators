@@ -34,7 +34,7 @@ export function PasswordForm() {
         }
 
         try {
-            const res = await fetch('/api/auth/cambiar-password', {
+            const res = await fetch('/api/auth/change-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ currentPassword, newPassword }),

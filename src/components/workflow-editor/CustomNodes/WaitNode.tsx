@@ -19,6 +19,11 @@ export const WaitNode = memo(({ data, selected }: { data: any, selected: boolean
                     ⚠️
                 </div>
             )}
+            {data.isCyclic && (
+                <div className="absolute -bottom-6 left-0 bg-purple-600 text-[8px] text-white px-2 py-0.5 rounded-b-md font-bold uppercase tracking-wider">
+                    🔄 Bucle Detectado
+                </div>
+            )}
             <Handle type="target" position={Position.Left} className="w-3 h-3 bg-slate-400" />
 
             <div className="p-2 bg-amber-100/50 rounded-full text-amber-600">

@@ -1,3 +1,5 @@
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import { connectLogsDB } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,10 +7,19 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Edit, Mail, Languages } from 'lucide-react';
 import { NotificationTypeSchema } from '@/lib/schemas';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationTemplatesPage() {
+    const session = await auth();
+
+    if (session?.user?.role !== 'SUPER_ADMIN') {
+        redirect('/dashboard');
+    }
+
+    const t = await getTranslations('admin.notifications.templates');
+
     const db = await connectLogsDB();
 
     // 1. Obtener templates existentes
@@ -38,8 +49,8 @@ export default async function NotificationTemplatesPage() {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Plantillas de Email</h1>
-                    <p className="text-slate-500 mt-2">Personaliza el HTML base y textos legales para cada tipo de notificación.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('title')}</h1>
+                    <p className="text-slate-500 mt-2">{t('subtitle')}</p>
                 </div>
             </div>
 
@@ -56,9 +67,9 @@ export default async function NotificationTemplatesPage() {
                                     <Mail className={`h-5 w-5 ${meta.color}`} />
                                 </div>
                                 {tpl.active ? (
-                                    <Badge variant="outline" className="text-green-600 border-green-200">Activa</Badge>
+                                    <Badge variant="outline" className="text-green-600 border-green-200">{t('active')}</Badge>
                                 ) : (
-                                    <Badge variant="secondary">Inactiva</Badge>
+                                    <Badge variant="secondary">{t('inactive')}</Badge>
                                 )}
                             </CardHeader>
                             <CardContent>
@@ -67,16 +78,16 @@ export default async function NotificationTemplatesPage() {
 
                                 <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
                                     <Languages className="h-4 w-4" />
-                                    <span>{langCount} idiomas configurados</span>
+                                    <span>{langCount} {t('languagesConfigured')}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center text-xs text-slate-400 mb-4">
                                     <span>v{tpl.version}</span>
-                                    <span>Actualizado: {new Date(tpl.updatedAt).toLocaleDateString()}</span>
+                                    <span>{t('updated')} {new Date(tpl.updatedAt).toLocaleDateString()}</span>
                                 </div>
 
                                 <Link href={`/admin/notifications/templates/${tpl.type}`}>
-                                    <Button className="w-full" variant="secondary">Configurar</Button>
+                                    <Button className="w-full" variant="secondary">{t('configure')}</Button>
                                 </Link>
                             </CardContent>
                         </Card>
@@ -87,15 +98,15 @@ export default async function NotificationTemplatesPage() {
                 {pendingTypes.map((type) => (
                     <Card key={type} className="border-dashed border-2 opacity-70 hover:opacity-100 hover:border-slate-400 transition-all">
                         <CardHeader>
-                            <Badge variant="outline" className="w-fit mb-2">Pendiente</Badge>
+                            <Badge variant="outline" className="w-fit mb-2">{t('pending')}</Badge>
                             <CardTitle className="text-lg">{type}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-slate-500 mb-6">Esta notificación usa el fallback genérico del sistema. Configúrala para personalizarla.</p>
+                            <p className="text-sm text-slate-500 mb-6">{t('fallbackMessage')}</p>
                             <Link href={`/admin/notifications/templates/${type}`}>
                                 <Button className="w-full border-dashed" variant="outline">
                                     <Edit className="h-4 w-4 mr-2" />
-                                    Crear Plantilla
+                                    {t('createTemplate')}
                                 </Button>
                             </Link>
                         </CardContent>

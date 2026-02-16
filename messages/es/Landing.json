@@ -1,0 +1,19 @@
+{
+  "ROI": {
+    "badge": "CALCULADORA DE ROI",
+    "title": "Calcula tu Ahorro Potencial",
+    "description": "Descubre cuánto puede ahorrar tu equipo automatizando el análisis técnico con la plataforma ABD RAG.",
+    "num_techs": "Número de Técnicos",
+    "num_techs_desc": "Técnicos de campo o ingenieros que analizan pedidos.",
+    "orders_month": "Pedidos por Técnico / Mes",
+    "orders_month_desc": "Media de especificaciones técnicas analizadas por persona.",
+    "hourly_cost": "Coste Horario Interno (€)",
+    "hourly_cost_desc": "Coste total por hora (salario + gastos generales).",
+    "annual_savings": "Ahorro Anual Estimado",
+    "hours_saved_year": "Horas Ahorradas / Año",
+    "orders_analyzed": "Pedidos Analizados",
+    "how_calculated_title": "¿Cómo se calcula esto?",
+    "how_calculated_desc": "Estimamos que ABD RAG reduce el tiempo de análisis de una especificación técnica compleja en aproximadamente <strong>20 minutos por pedido</strong> comparado con la revisión manual.",
+    "cta": "INICIAR PRUEBA GRATUITA"
+  }
+}

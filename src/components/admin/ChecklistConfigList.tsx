@@ -42,9 +42,9 @@ export const ChecklistConfigList: React.FC = () => {
         {
             header: t('table.name'),
             cell: (config: ChecklistConfig) => (
-                <div>
+                <div role="rowheader">
                     <div className="font-bold text-slate-900 dark:text-white">{config.name}</div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                    <div className="text-[10px] text-slate-500 font-mono mt-0.5" aria-hidden="true">
                         {new Date(config.updatedAt).toLocaleString()}
                     </div>
                 </div>
@@ -53,7 +53,7 @@ export const ChecklistConfigList: React.FC = () => {
         {
             header: t('table.categories'),
             cell: (config: ChecklistConfig) => (
-                <div className="flex gap-1 flex-wrap max-w-xs">
+                <div className="flex gap-1 flex-wrap max-w-xs" aria-label={t('table.categories')}>
                     {config.categories.slice(0, 3).map(cat => (
                         <span
                             key={cat.id}
@@ -96,7 +96,13 @@ export const ChecklistConfigList: React.FC = () => {
             className: 'text-right',
             cell: (config: ChecklistConfig) => (
                 <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all"
+                        aria-label={`${t('table.actions')}: ${t('table.name')} ${config.name}`}
+                    >
                         <Link href={`/admin/checklist-configs/${config._id}`}>
                             <Edit size={14} />
                         </Link>
@@ -106,6 +112,7 @@ export const ChecklistConfigList: React.FC = () => {
                         size="sm"
                         onClick={() => deleteConfig(String(config._id))}
                         className="h-8 w-8 p-0 rounded-full hover:bg-rose-50 hover:text-rose-600 transition-all text-slate-400"
+                        aria-label={`${t('table.actions')}: Remove ${config.name}`}
                     >
                         <Trash2 size={14} />
                     </Button>

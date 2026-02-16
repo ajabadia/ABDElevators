@@ -1,0 +1,1348 @@
+ Análisis de tu Arquitectura Actual
+Fortalezas Consolidadas (Multi-Vertical)
+Table
+Copy
+Componente	Implementación	Observación
+Tenant Isolation	getTenantCollection(), tenantId en todas las colecciones	✅ Sólido para multi-tenant
+Industry Detection	session.user.industry en document-types/route.ts	✅ Base para routing de dominio
+Scope System	GLOBAL / INDUSTRY / TENANT en document types	✅ Jerarquía de visibilidad
+Environment Separation	STAGING / PRODUCTION en prompts	✅ Buena para testing
+RAG Evaluation	rag_evaluations collection	✅ Métricas básicas implementadas
+Hybrid Search	hybridSearch() en rag-service	✅ Combinación vector + keyword
+⚠️ Brechas Identificadas para Multi-Vertical
+1. Falta de Domain Router en el Pipeline RAG
+Tu código en document-types/route.ts filtra por industry, pero el RAG en sí no parece tener un router que clasifique queries por dominio antes de retrieval:
+TypeScript
+Copy
+// CÓDIGO ACTUAL (en document-types/route.ts):
+// Filtrado pasivo por industry, pero no hay clasificación activa de la query
+
+const filteredTypes = isSuperAdmin ? types : types.filter((t: any) => {
+    if (t.scope === 'GLOBAL') return true;
+    if (t.scope === 'TENANT') return true;
+    if (t.scope === 'INDUSTRY') {
+        const allowedIndustries = t.industries || [];
+        if (t.industry) allowedIndustries.push(t.industry);
+        return allowedIndustries.includes(userIndustry); // userIndustry viene de sesión, no de la query
+    }
+    return true;
+});
+Mejora propuesta - Domain Router:
+TypeScript
+Copy
+// NUEVO: /lib/domain-router.ts
+interface DomainClassification {
+    primaryDomain: 'legal' | 'insurance' | 'healthcare' | 'banking' | 'elevators' | 'generic';
+    confidence: number;
+    subDomain?: string;
+    intent: 'retrieval' | 'comparison' | 'compliance_check' | 'diagnostic';
+    requiresCrossDomain: boolean;
+}
+
+class DomainRouter {
+    async classify(query: string, tenantContext: TenantContext): Promise<DomainClassification> {
+        // Opción 1: Usar LLM con few-shot examples por vertical
+        // Opción 2: Embedding similarity contra descripciones de dominio
+        
+        const domainDescriptions = {
+            legal: "contratos, jurisprudencia, normativa, litigios, derecho laboral, mercantil",
+            insurance: "pólizas, siniestros, reaseguro, actuarial, riesgos, coberturas",
+            healthcare: "clínico, diagnóstico, tratamientos, farmacología, evidencia médica",
+            banking: "regulatorio, riesgo crediticio, compliance, productos financieros",
+            elevators: "mantenimiento, normativa técnica, componentes, seguridad industrial"
+        };
+        
+        // Implementación con embeddings...
+    }
+}
+2. Prompts Sin Contexto de Dominio Específico
+En admin/prompts/page.tsx tienes categorías (EXTRACTION, ANALYSIS, RISK, CHECKLIST, GENERAL) pero no hay dimensión de dominio vertical:
+TypeScript
+Copy
+// CÓDIGO ACTUAL:
+const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL'];
+
+// MEJORA PROPUESTA:
+interface DomainPrompt extends Prompt {
+    domain: 'legal' | 'insurance' | 'healthcare' | 'banking' | 'elevators' | 'generic';
+    subDomain?: string;
+    domainContext: {
+        terminology: string[];
+        regulatoryFramework: string[];
+        standardProcedures: string[];
+        forbiddenOutputs: string[];
+    };
+    reasoningTemplate: string; // Chain-of-thought específico del dominio
+}
+3. Vector Search No Segmentado por Dominio
+Tu hybridSearch (referenciado en chunks/route.ts) parece usar un único espacio vectorial. Para multi-vertical, deberías considerar:
+TypeScript
+Copy
+// MEJORA PROPUESTA: Configuración por tenant
+interface TenantRAGConfig {
+    vectorSpaces: {
+        [domain: string]: {
+            indexName: string;           // "vs_legal_contracts", "vs_medical_records"
+            embeddingModel: string;      // Diferente modelo por dominio si es necesario
+            chunkStrategy: 'semantic' | 'fixed' | 'hierarchical';
+            domainSpecialTokens: string[]; // Términos clave del dominio
+        }
+    };
+    
+    // Para tenants multi-vertical (consultoras, grandes firmas)
+    crossDomainSearch: {
+        enabled: boolean;
+        mergeStrategy: 'union' | 'intersection' | 'weighted';
+        domainWeights: Record<string, number>;
+    };
+}
+4. Entity Engine Genérico pero Sin Mapeo de Dominio
+Tu EntityEngine en entities/page.tsx es potente:
+TypeScript
+Copy
+// CÓDIGO ACTUAL:
+const entity = EntityEngine.getInstance().getEntity('pedido')!;
+Pero podría expandirse para cross-domain:
+TypeScript
+Copy
+// MEJORA PROPUESTA:
+interface EntityDefinition {
+    slug: string; // "claim", "policy", "case", "patient_record"
+    
+    // Mapeo por vertical (misma entidad, diferentes nombres)
+    domainAliases: {
+        insurance: { name: 'claim', plural: 'claims', icon: 'Shield' };
+        legal: { name: 'case', plural: 'cases', icon: 'Scale' };
+        healthcare: { name: 'episode', plural: 'episodes', icon: 'HeartPulse' };
+        banking: { name: 'incident', plural: 'incidents', icon: 'AlertCircle' };
+    };
+    
+    // Campos abstractos comunes con mapeo específico
+    abstractFields: {
+        identifier: { type: 'string', required: true };
+        status: { type: 'enum', values: ['open', 'pending', 'resolved', 'closed'] };
+    };
+    
+    domainSpecificFields: {
+        insurance: { policy_number: string; loss_date: Date; coverage_type: string };
+        legal: { case_type: string; court_jurisdiction: string; opposing_party: string };
+    };
+}
+5. Evaluación de RAG Genérica
+Tu rag_evaluations (visto en admin/page.tsx) tiene métricas básicas:
+TypeScript
+Copy
+// CÓDIGO ACTUAL (inferido de global-stats):
+rag_quality_avg: {
+    avgFaithfulness: number;
+    avgRelevance: number;
+    avgPrecision: number;
+}
+
+// MEJORA PROPUESTA - Métricas por dominio:
+interface DomainRAGEvaluation {
+    domain: string;
+    subDomain?: string;
+    
+    domainMetrics: {
+        terminologyAccuracy: number;      // ¿Usó términos correctos del dominio?
+        regulatoryCompliance: boolean;    // ¿Violó alguna regla sectorial?
+        sourceAuthority: number;          // ¿Citó fuentes autoritativas del dominio?
+        crossDomainConfusion: boolean;    // ¿Mezcló conceptos de dominios diferentes?
+    };
+    
+    // Ground truth específico por dominio
+    expectedAnswer?: {
+        legal: string;
+        medical: string;
+        insurance: string;
+    };
+}
+🚀 Roadmap Priorizado para Multi-Vertical
+Table
+Copy
+Fase	Feature	Impacto	Esfuerzo	Archivos a Modificar
+1	Domain Router - Clasificación de queries por dominio	🔥 Alto	2-3 días	Nuevo: /lib/domain-router.ts, Modificar: /api/search/route.ts
+2	Prompts con dimensión domain	🔥 Alto	3-4 días	/app/admin/prompts/page.tsx, /lib/schemas.ts
+3	Entity Engine con domainAliases	🔥 Alto	1 semana	/core/engine/EntityEngine.ts
+4	Vector spaces separados por dominio	⚡ Medio-Alto	1-2 semanas	/lib/rag-service.ts, /lib/db-tenant.ts
+5	Compliance rules por dominio (GDPR, HIPAA, etc.)	⚡ Medio-Alto	1 semana	Nuevo: /lib/compliance-service.ts
+6	Cross-domain search & merge	💎 Diferenciador	2 semanas	/lib/rag-service.ts
+7	Evaluación con métricas de dominio	💎 Diferenciador	3-4 días	/app/admin/rag-eval/page.tsx, /lib/schemas.ts
+💡 Recomendación Inmediata
+Dado que ya tienes la base sólida, te sugiero empezar por el Domain Router (Fase 1). Esto es low-hanging fruit con alto impacto:
+TypeScript
+Copy
+// Implementación rápida en tu endpoint de búsqueda existente:
+
+// En /api/search/route.ts (o donde tengas el endpoint principal)
+export async function POST(req: NextRequest) {
+    const { query, tenantId } = await req.json();
+    
+    // NUEVO: Clasificar dominio
+    const domainRouter = new DomainRouter();
+    const classification = await domainRouter.classify(query, { tenantId });
+    
+    // Usar la clasificación para:
+    // 1. Seleccionar prompts específicos del dominio
+    // 2. Filtrar documentos por industry/domain relevante
+    // 3. Ajustar el system prompt del LLM con contexto de dominio
+    
+    const results = await executeDomainAwareRAG(query, tenantId, classification);
+    
+    return NextResponse.json({ 
+        results, 
+        meta: { classification } // Opcional: exponer para debugging
+    });
+}
+¿Quieres que profundice en alguna de estas áreas específicamente? El Domain Router parece el punto de entrada más impactante para empezar, seguido de la expansión de tu Entity Engine para soportar aliases por dominio.
+profundiza en estos temas, no es necesario que me des código fuente, porque de eso se encargarán los programadores, solo díme qué hacer y qué modificar
+Edit
+Copy
+Share
+Entendido. Aquí tienes la guía estratégica sin código, organizada por prioridad de implementación:
+1. DOMAIN ROUTER (Prioridad Máxima)
+Qué es
+Un clasificador inteligente que analiza cada consulta del usuario y determina a qué dominio vertical pertenece (legal, seguros, sanidad, bancario, elevadores) antes de ejecutar el retrieval.
+Por qué es crítico ahora
+Sin esto, una consulta sobre "póliza" en un tenant multi-vertical buscará en documentación de seguros, derecho contractual y banca simultáneamente, generando ruido y alucinaciones.
+Qué modificar
+Nuevo componente a crear:
+Servicio de clasificación de dominio con dos opciones: LLM-based (preciso, lento) o embedding-based (rápido, suficiente para MVP)
+Endpoints a modificar:
+Todos los endpoints de búsqueda RAG (/api/search, /api/technical/rag/chat, etc.) deben llamar al Domain Router antes del retrieval
+Base de datos:
+Nueva colección domain_profiles con descripciones en lenguaje natural de cada dominio para comparación semántica
+Índice en document_chunks por domain + tenantId
+Configuración de tenant:
+Añadir campo enabledDomains en configuración de tenant para restringir qué dominios puede ver cada organización
+2. PROMPTS CON DIMENSIÓN DE DOMINIO
+Qué es
+Extender tu sistema de prompts actual para que cada prompt esté etiquetado no solo por categoría (EXTRACTION, ANALYSIS) sino por dominio vertical específico.
+Por qué es necesario
+Un prompt de "extracción de entidades" para documentos legales necesita buscar cláusulas y jurisprudencia; el mismo prompt para sanidad debe buscar síntomas y diagnósticos. Son lógicas radicalmente diferentes.
+Qué modificar
+Schema de prompts:
+Añadir campo obligatorio domain con valores del enum de dominios
+Añadir campo opcional subDomain para especializaciones (ej: "reinsurance_treaty" dentro de insurance)
+Añadir objeto domainContext con: terminología específica, marco regulatorio aplicable, procedimientos estándar del sector, y salidas prohibidas (para compliance)
+UI de administración:
+En /admin/prompts, añadir filtro por dominio en el sidebar
+Mostrar badge de dominio en cada tarjeta de prompt
+Validar que un tenant solo pueda ver prompts de sus dominios habilitados
+Lógica de selección:
+Modificar el PromptService para que, dada una query ya clasificada por el Domain Router, seleccione automáticamente el prompt más específico disponible
+3. ENTITY ENGINE CON DOMAIN ALIASES
+Qué es
+Tu Entity Engine actual asume que una entidad "pedido" siempre se llama así. En multi-vertical, la misma entidad abstracta tiene nombres diferentes: "siniestro" (seguros), "caso" (legal), "episodio" (sanidad).
+Qué modificar
+Definición de entidades:
+Añadir sección domainAliases en cada definición de entidad
+Mapear campos abstractos (identifier, status, priority) a nombres concretos por dominio
+Definir campos específicos por dominio que no existen en otros (ej: policy_number solo en insurance, court_jurisdiction solo en legal)
+Motor de resolución:
+Modificar EntityEngine.getEntity() para aceptar parámetro de dominio
+Si el usuario pide "claim" y el dominio es insurance, resolver a la entidad genérica con alias insurance
+Si el dominio es legal y pide "claim", sugerir "case" o mostrar ambigüedad
+APIs dinámicas:
+Los endpoints de entidades deben aceptar header o parámetro X-Domain-Context
+Las respuestas deben incluir metadatos de qué alias se usó para la resolución
+4. VECTOR SPACES SEGREGADOS POR DOMINIO
+Qué es
+En lugar de un único índice vectorial por tenant, crear índices separados por dominio dentro de cada tenant, permitiendo estrategias de retrieval diferenciadas.
+Qué modificar
+Arquitectura de índices:
+Cambiar de tenant_vectors a estructura tenant_domain_vectors
+Cada espacio puede tener: modelo de embedding diferente (si los dominios lo justifican), estrategia de chunking específica, y tokens especiales de dominio inyectados en los embeddings
+Pipeline de ingestión:
+Modificar el servicio de ingestión para que, al procesar un documento, detecte su dominio (via metadatos o clasificación automática) y lo indexe en el espacio vectorial correspondiente
+Permitir documentos "multi-dominio" que se indexen en múltiples espacios (ej: un contrato de seguro de responsabilidad civil que toca legal + insurance)
+Configuración de búsqueda:
+Añadir campo vectorSpaceConfig en configuración de tenant
+Permitir configurar pesos por dominio para tenants multi-vertical (ej: bufete de seguros: 70% legal, 30% insurance)
+5. COMPLIANCE Y GOBERNANZA POR DOMINIO
+Qué es
+Cada vertical tiene regulaciones distintas: GDPR para todos, pero también HIPAA (sanidad), Solvency II (seguros), PCI-DSS (banca). El RAG debe respetar restricciones diferentes por dominio.
+Qué modificar
+Sistema de reglas:
+Crear módulo DomainComplianceRules con configuraciones por dominio
+Definir: niveles de retención de datos, requisitos de audit trail, umbrales de confianza para respuestas (más altos en dominios regulados), y listas de lo que el RAG nunca debe generar (ej: consejo médico diagnóstico, asesoría legal vinculante)
+Integración con Guardian:
+Extender tu sistema ABAC actual para incluir atributos de dominio en las políticas
+Políticas como "usuarios con rol ANALYST pueden ver respuestas RAG de insurance pero no de banking"
+Certificaciones:
+Añadir generación automática de reportes de compliance por dominio para auditorías
+6. CROSS-DOMAIN SEARCH (Fase Avanzada)
+Qué es
+Para consultas ambiguas o explícitamente multi-dominio (ej: "comparar cobertura de pólizas con precedentes judiciales"), ejecutar búsqueda paralela en múltiples espacios vectoriales y fusionar resultados inteligentemente.
+Qué modificar
+Lógica de routing:
+Extender Domain Router para detectar requiresCrossDomain: true
+Casos: confianza baja en clasificación, query contiene términos de múltiples dominios, o usuario explícitamente solicita comparación
+Estrategias de merge:
+Implementar: unión (todos los resultados), intersección (solo relevantes en ambos), ponderado (según configuración de tenant)
+Añadir reranking cross-domain con modelo específico que entienda relevancia inter-dominio
+Presentación de resultados:
+UI debe agrupar resultados por dominio de origen
+Indicar visualmente cuando una respuesta combina fuentes de múltiples dominios
+7. EVALUACIÓN CON MÉTRICAS DE DOMINIO
+Qué es
+Tu evaluación RAG actual mide faithfulness y relevance genéricos. Necesitas métricas que validen si el sistema entiende correctamente la terminología y contexto específico de cada vertical.
+Qué modificar
+Schema de evaluaciones:
+Añadir campos de dominio a cada evaluación registrada
+Métricas específicas: precisión terminológica (¿usó el término técnico correcto?), autoridad de fuentes (¿citó el reglamento sectorial adecuado?), confusión cross-domain (¿mezcló conceptos incompatibles?)
+Ground truth:
+Permitir definir respuestas esperadas diferentes por dominio para la misma pregunta abstracta
+Sistema de evaluadores humanos especializados por vertical
+Dashboard:
+Extender /admin/rag-eval para mostrar tendencias separadas por dominio
+Alertas cuando la calidad de un dominio específico cae por debajo del umbral
+Secuencia de Implementación Recomendada
+Table
+Copy
+Semana	Foco	Dependencias
+1-2	Domain Router + modificación de endpoints de búsqueda	Ninguna
+3	Prompts con dimensión de dominio	Domain Router
+4	Entity Engine con domain aliases	Domain Router
+5-6	Vector spaces segregados	Domain Router, Ingestión
+7	Compliance por dominio	Domain Router, Guardian
+8+	Cross-domain search	Vector spaces segregados
+Continuo	Evaluación con métricas de dominio	Todo lo anterior
+Riesgos a Mitigar
+Sobrecarga de complejidad: No activar todos los dominios para todos los tenants. Mantener "generic" como fallback.
+Consistencia de datos: Si un documento cambia de dominio (reclasificación), reindexar en el espacio vectorial correcto.
+Latencia: El Domain Router añade una llamada LLM o embedding adicional. Considerar caché por patrones de query frecuentes.
+¿Necesitas que profundice en alguno de estos puntos específicos o en la interacción entre ellos?
+profundiza en la interacción entre ellos
+Edit
+Copy
+Share
+Aquí tienes el análisis de interacciones entre los componentes, con los flujos de dependencia, puntos de fricción potenciales y estrategias de mitigación:
+Arquitectura de Interacciones
+Diagrama de Dependencias
+Copy
+┌─────────────────────────────────────────────────────────────┐
+│                    DOMAIN ROUTER (Base)                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │  LLM-based  │  │Embedding-   │  │  Confidence Score   │ │
+│  │  (Preciso)  │  │based(Rápido)│  │  (Umbral decisión)  │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│PROMPT SERVICE │    │  ENTITY ENGINE  │    │ VECTOR SPACE    │
+│  (Dimensión   │    │  (Domain        │    │  SELECTOR       │
+│   Dominio)    │    │   Aliases)      │    │                 │
+└───────────────┘    └─────────────────┘     └─────────────────┘
+        │                     │                     │
+        └─────────────────────┼─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │  RAG ORCHESTRATOR│
+                    │  (Integración)   │
+                    └─────────────────┘
+                              │
+            ┌─────────────────┼─────────────────┐
+            │                 │                 │
+            ▼                 ▼                 ▼
+    ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+    │  COMPLIANCE   │ │  CROSS-DOMAIN │ │  EVALUATION   │
+    │    FILTER     │ │    SEARCH     │ │   ENGINE      │
+    │  (Validación) │ │  (Condicional)│ │  (Feedback)   │
+    └───────────────┘ └───────────────┘ └───────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │  RESPONSE       │
+                    │  GENERATOR      │
+                    └─────────────────┘
+Flujos de Interacción Detallados
+Flujo 1: Consulta Simple (Single-Domain)
+Escenario: Usuario de aseguradora pregunta "¿Qué cubre mi póliza de responsabilidad civil?"
+Table
+Copy
+Etapa	Componentes Activos	Interacción
+1	Domain Router	Clasifica: domain: insurance, confidence: 0.94, subDomain: liability
+2	Vector Space Selector	Selecciona índice tenant_abc_insurance_vectors
+3	Prompt Service	Recupera prompt EXTRACTION_INSURANCE_LIABILITY con contexto de coberturas
+4	Entity Engine	Resuelve "póliza" → entidad genérica con alias insurance (policy)
+5	RAG Orchestrator	Ejecuta retrieval en índice específico + generación con prompt especializado
+6	Compliance Filter	Valida contra reglas Solvency II: ¿menciona exclusiones obligatorias?
+7	Response Generator	Emite respuesta con disclaimer regulatorio automático
+Punto de fricción: Si el Domain Router tiene confianza baja (0.6), el flujo cambia radicalmente.
+Flujo 2: Consulta Ambigua (Cross-Domain Trigger)
+Escenario: Usuario pregunta "¿Está cubierto el daño por negligencia médica?"
+Table
+Copy
+Etapa	Decisión	Acción
+1	Domain Router	confidence: 0.52, candidateDomains: [insurance, healthcare, legal]
+2	Router config	requiresCrossDomain: true (umbral típico: 0.75)
+3	Vector Space Selector	Activa búsqueda paralela en 3 índices
+4	Retrieval	Cada índice devuelve top-k resultados
+5	Merge Strategy	Aplica configuración de tenant: insurance: 0.5, legal: 0.3, healthcare: 0.2
+6	Reranking	Modelo cross-domain reordena por relevancia inter-sector
+7	Prompt Service	Selecciona prompt COMPARISON_MULTI_DOMAIN
+8	Entity Engine	Resuelve "negligencia médica" → entidad claim (insurance) + malpractice (legal)
+9	Compliance Filter	Aplica reglas más restrictivas de los 3 dominios involucrados
+10	Response	Estructurada por dominio: "Desde perspectiva aseguradora... / Legalmente... / Clínicamente..."
+Punto de fricción: Latencia multiplicada por 3. Necesario timeout por índice + fallback parcial.
+Flujo 3: Cambio de Contexto Dinámico
+Escenario: Mismo tenant, usuarios con roles diferentes ven el mismo término diferente.
+Table
+Copy
+Contexto	Input	Resolución Entity Engine	Output UI
+Técnico de siniestros	"Abrir nuevo claim"	Alias insurance: claim → entidad genérica	Formulario "Nuevo Siniestro"
+Abogado interno	"Abrir caso de claim"	Alias legal: case → misma entidad genérica	Formulario "Nuevo Caso"
+Médico de la aseguradora	"Episodio relacionado"	Alias healthcare: episode → misma entidad	Formulario "Nuevo Episodio"
+Punto de fricción: Sincronización de estados. Si el técnico cambia estado a "en evaluación", el abogado debe ver "caso en valoración" no "claim pending".
+Matriz de Interacciones Críticas
+Interacción Domain Router ↔ Vector Space Selector
+Table
+Copy
+Aspecto	Descripción	Estrategia
+Cache de decisión	Queries similares deben reusar clasificación	Cache Redis con TTL 1h por (query_hash, tenantId)
+Fallback	Router caído o lento	Default al dominio principal del tenant + alerta
+Actualización	Nuevo dominio añadido a tenant	Invalidar cache + reindexar documentos históricos
+Conflicto	Query clasificada como A pero usuario solo tiene permiso B	Override a B + log de seguridad
+Interacción Prompt Service ↔ Compliance Filter
+Table
+Copy
+Aspecto	Descripción	Estrategia
+Pre-validación	Prompts ciertos dominios requieren aprobación legal	Flag requiresLegalReview en prompt schema
+Inyección	Compliance puede modificar system prompt	Añadir sección complianceConstraints dinámica
+Post-validación	Respuesta generada viola reglas	Rechazo + retry con prompt más restrictivo
+Evidencia	Auditoría necesita trazabilidad	Log de qué reglas se aplicaron en cada generación
+Interacción Entity Engine ↔ Cross-Domain Search
+Table
+Copy
+Aspecto	Descripción	Estrategia
+Desambiguación	"Claim" en query cross-domain	Entity Engine proporciona expansión: [claim, case, incident, episode]
+Peso semántico	Términos de entidades en ranking	Boost en BM25 para términos del alias del dominio activo
+Consistencia	Misma entidad referenciada en diferentes dominios	ID único interno, aliases por dominio para presentación
+Migración	Entidad cambia de dominio (reclasificación)	Evento de dominio + reindexación selectiva
+Patrones de Fallo y Mitigación
+Patrón 1: Oscilación de Dominio
+Síntoma: Query "póliza de seguro de crédito" oscila entre insurance y banking en recargas sucesivas.
+Causa: Términos de alta frecuencia en ambos dominios, embeddings similares.
+Mitigación:
+Añadir historial de conversación al Domain Router (contexto multi-turn)
+Configurar domainStickiness: una vez clasificado, mantener 3 turnos o hasta negación explícita
+Umbral de histeresis: cambiar dominio requiere delta de confianza > 0.15
+Patrón 2: Contaminación Cross-Domain
+Síntoma: Respuesta sobre "jurisprudencia en siniestros" mezcla conceptos legales de Common Law con Civil Law incorrectamente.
+Causa: Merge de resultados sin comprensión de incompatibilidades jurisdiccionales.
+Mitigación:
+Añadir campo jurisdiction a metadatos de chunks
+Filtro post-merge: eliminar chunks con jurisdicción incompatible con tenant
+Prompt específico: "Responde solo basado en jurisprudencia [civil/common] law"
+Patrón 3: Entity Drift
+Síntoma: Usuario A (insurance) crea "claim #123", Usuario B (legal) busca "case #123" y no lo encuentra.
+Causa: Entity Engine no sincroniza aliases en tiempo real o búsqueda no expande sinónimos.
+Mitigación:
+Índice invertido de aliases: cada entidad indexada bajo todos sus nombres de dominio
+Sincronización eventual: evento de creación propaga aliases a servicio de búsqueda
+Query expansion automática: búsqueda de "case" expande a ["case", "claim", "incident", "episode"] con pesos por dominio del usuario
+Configuración de Tenant como Punto de Coordinación
+La configuración de cada tenant debe actuar como orquestador estático que reduce complejidad en runtime:
+yaml
+Copy
+# Ejemplo conceptual de configuración tenant
+
+tenant_id: "consultora_xyz"
+enabled_domains: ["legal", "insurance", "banking"]
+primary_domain: "legal"  # Fallback si router duda
+
+domain_weights:
+  legal: 0.5
+  insurance: 0.3
+  banking: 0.2
+
+cross_domain:
+  enabled: true
+  threshold: 0.75  # Confianza mínima para no activar cross-domain
+  max_domains: 2   # Limitar búsqueda paralela
+  merge_strategy: "weighted"
+
+entity_aliases:
+  legal: "case"
+  insurance: "claim"
+  banking: "incident"
+
+compliance_profile: "strict"  # Aplica reglas más restrictivas de todos los dominios habilitados
+Esta configuración es leída por:
+Domain Router (para threshold y max_domains)
+Vector Space Selector (para domain_weights)
+Entity Engine (para entity_aliases)
+Compliance Filter (para compliance_profile)
+Métricas de Salud del Sistema de Interacciones
+Table
+Copy
+Métrica	Definición	Alerta
+Router Consistency	% de queries que mantienen clasificación en reejecución	< 95%
+Cross-Domain Rate	% de queries que activan búsqueda multi-dominio	> 30% (posible ambigüedad sistemática)
+Entity Resolution Time	Tiempo desde query hasta entidad resuelta	> 200ms
+Compliance Rejection Rate	% de respuestas rechazadas post-generación	> 5% (prompts mal calibrados)
+Domain Confidence Distribution	Desviación estándar de confianzas por dominio	Alta = dominios mal definidos
+Decisión Arquitectónica Pendiente
+Opción A: Pipeline Secuencial (recomendada para MVP)
+Router → Selector → Retrieval → Prompt → Generation → Compliance
+Predecible, debuggable, latencia acumulativa conocida
+Opción B: Graph Execution (futuro)
+Copy
+Router activa nodos en paralelo
+Selector y Prompt Service se ejecutan simultáneamente
+Compliance como guarda final
+Menor latencia, mayor throughput, complejidad de orquestación
+Recomendación: Implementar A con hooks claros para evolucionar a B. Cada componente debe exponer interfaz async que permita paralelización futura sin cambio de contrato.
+¿Necesitas que profundice en algún flujo específico, en la estrategia de migración desde tu arquitectura actual, o en el diseño de la configuración de tenant?
+díme la estratégia de migración
+Edit
+Copy
+Share
+Aquí tienes la estrategia de migración completa, diseñada para minimizar riesgo operacional y permitir rollback en cada fase:
+Principios Rectores
+Table
+Copy
+Principio	Aplicación
+Backward Compatibility	Cada fase debe funcionar con datos y APIs existentes
+Feature Flags	Todo nuevo comportamiento desactivable por tenant
+Shadow Mode	Nuevos componentes ejecutan en paralelo sin afectar respuestas reales
+Data Migration Lazy	No reindexar todo de golpe; migrar on-read y on-write
+Rollback por Capas	Cada componente puede revertirse independientemente
+Fases de Migración
+FASE 0: Preparación (Semanas 1-2)
+Objetivo: Infraestructura para soportar la migración sin cambios funcionales visibles.
+Qué implementar
+Sistema de Feature Flags
+Nueva colección tenant_feature_flags
+Flags iniciales: domain_router_enabled, domain_prompts_enabled, vector_spaces_segregated
+Todas en false por defecto para todos los tenants
+Logging de Baseline
+Extender logs actuales para capturar: dominio detectado (manual por ahora), confianza del clasificador (placeholder), tiempo de retrieval por colección
+Establecer métricas actuales como referencia
+Estructuras de Datos Duales
+Añadir campos opcionales a esquemas existentes: domain (string), vector_space_id (string, default null)
+Índices nuevos creados pero no utilizados aún
+Validación de salida
+[ ] Feature flags funcionan en todos los entornos
+[ ] Métricas baseline visibles en dashboard
+[ ] Rollback: eliminar flags, sin impacto
+FASE 1: Domain Router en Shadow Mode (Semanas 3-4)
+Objetivo: Entrenar y validar el clasificador sin afectar usuarios.
+Qué implementar
+Domain Router Service
+Implementación completa del servicio
+Dos modos: LLM-based y embedding-based (configurable por tenant)
+Cache de clasificaciones activo
+Shadow Execution
+En cada query RAG, ejecutar Domain Router en paralelo
+Loguear: clasificación propuesta, confianza, tiempo de ejecución
+Respuesta al usuario usa flujo legacy (ignora clasificación)
+Validación de Calidad
+Dashboard comparativo: clasificación manual vs automática
+Umbral de aceptación: 95% concordancia en top-1 domain para queries claras
+Gradual Rollout
+Table
+Copy
+Semana	Alcance	Criterio de avance
+3a	1 tenant de staging	Sin errores de ejecución
+3b	Todos tenants staging	Concordancia > 90%
+4a	1 tenant producción (voluntario)	Concordancia > 95%
+4b	5 tenants producción	Sin degradación de métricas
+Rollback
+Desactivar flag domain_router_shadow → Router deja de ejecutar
+Sin cambios en datos ni APIs
+FASE 2: Router Activo con Fallback (Semanas 5-6)
+Objetivo: Router determina flujo, pero fallback a legacy disponible.
+Qué implementar
+Router como Orquestador
+Query entra → Router clasifica → Selección de índice basada en clasificación
+Si confianza < umbral, fallback a índice unificado legacy
+Header de respuesta indica: X-Domain-Used: insurance|legacy
+Dual Write Inicial
+Nuevos documentos: escribir a índice legacy + índice específico de dominio (si detectado)
+Lectura: preferir índice específico, fallback a legacy
+Monitoreo Intensivo
+Alerta si tasa de fallback > 10%
+Alerta si latencia p95 > baseline + 50ms
+Gradual Rollout
+Table
+Copy
+Segmento	Criterio de inclusión
+Early adopters	Tenants single-domain con alta volumetría
+Mayoría	Tenants single-domain estándar
+Excluidos	Tenants multi-domain complejos (fase 5)
+Rollback
+Activar flag domain_router_force_legacy para tenant específico
+Respuestas vuelven a flujo unificado inmediatamente
+FASE 3: Prompts con Dimensión de Dominio (Semanas 7-8)
+Objetivo: Prompts especializados por vertical.
+Qué implementar
+Schema Extendido
+Prompts existentes: campo domain = generic (default)
+Nuevos prompts: domain específico, subDomain opcional
+Lógica de Selección
+Router determina dominio → Prompt Service busca prompt más específico disponible
+Jerarquía: EXTRACTION_INSURANCE_LIABILITY > EXTRACTION_INSURANCE > EXTRACTION_GENERIC
+Si no hay prompt específico, usar genérico (backward compatibility)
+Migración de Prompts Existentes
+Análisis: qué prompts son realmente genéricos vs de dominio implícito
+Creación de variantes por dominio para los 20% más usados
+Validación
+A/B test: 50% usuarios ven prompts de dominio, 50% genéricos
+Métrica: relevance score en evaluaciones RAG
+Avance si mejora > 10% o neutral, rollback si degradación > 5%
+Rollback
+Flag domain_prompts_enabled = false → todos los prompts se tratan como genéricos
+Sin pérdida de datos
+FASE 4: Entity Engine con Domain Aliases (Semanas 9-10)
+Objetivo: Misma entidad, diferentes nombres por dominio.
+Qué implementar
+Definiciones de Entidad Extendidas
+Añadir domainAliases a entidades core (pedido, cliente, documento)
+Mantener API actual: getEntity('pedido') funciona igual
+Nueva API opcional: getEntity('pedido', { domain: 'insurance' })
+Resolución de Alias
+UI pide "nuevo claim" → Entity Engine resuelve a entidad genérica con presentación "claim"
+API interna usa ID único estable
+Migración de Datos Históricos
+Script batch: poblar domainAliases basado en industry del tenant
+Ejecución por tenant, fuera de horario pico
+Validación
+Tests de integración: mismo flujo ejecutado con diferentes aliases produce mismo resultado interno
+Usuarios de diferentes dominios ven terminología correcta
+Rollback
+Ignorar campo domainAliases, usar name base siempre
+UI muestra nombre genérico temporalmente
+FASE 5: Vector Spaces Segregados (Semanas 11-14)
+Objetivo: Índices separados por dominio, migración completa de datos.
+Qué implementar
+Estructura de Índices
+Copy
+Antes: tenant_abc_vectors (único)
+Después: 
+  - tenant_abc_generic_vectors (legacy, read-only)
+  - tenant_abc_insurance_vectors
+  - tenant_abc_legal_vectors
+  - ...
+Migración Lazy de Documentos
+On-write: indexar en espacio específico de dominio
+On-read: si documento no está en índice específico, copiar desde legacy y reindexar
+Background job: migración progresiva de documentos frecuentemente accedidos
+Selector de Espacio
+Basado en clasificación del Router
+Configuración de tenant: vector_spaces_enabled_domains
+Gradual Rollout Crítica
+Table
+Copy
+Fase	Descripción	Validación
+5.1	Nuevos documentos a índices específicos	Verificación de indexación correcta
+5.2	Queries single-domain a índices específicos	Comparación de recall vs baseline
+5.3	Background migration de documentos históricos	Progreso > 80%
+5.4	Desactivar escritura en índice legacy	Solo lectura fallback
+5.5	Eliminación índice legacy (meses después)	Confirmar 0 accesos
+Rollback
+Revertir a índice unificado: activar flag force_legacy_vector_space
+Documentos nuevos duplicados en legacy durante período de transición
+FASE 6: Compliance por Dominio (Semanas 15-16)
+Objetivo: Regulaciones específicas por vertical.
+Qué implementar
+Motor de Reglas
+Configuración por dominio: retención, prohibiciones, requisitos de audit
+Integración con Guardian: políticas ABAC con atributos de dominio
+Validación de Respuestas
+Post-procesamiento: verificar que respuesta no viole reglas del dominio detectado
+Si violación: rechazo + retry con constraints adicionales
+Validación
+Auditoría de seguridad por dominio
+Penetration testing: intentar obtener respuestas prohibidas
+FASE 7: Cross-Domain Search (Semanas 17-20)
+Objetivo: Búsqueda inteligente multi-dominio para consultas ambiguas.
+Qué implementar
+Activación Condicional
+Solo cuando Router indica requiresCrossDomain: true
+Configuración de tenant: dominios permitidos para cross-search
+Merge de Resultados
+Estrategias: weighted (por config), union, intersection
+Reranking específico para resultados multi-dominio
+Validación
+Dataset de queries ambiguas etiquetadas manualmente
+Métrica: precision@5 en resultados cross-domain vs single-domain forzado
+Estrategia de Datos Durante Migración
+Estado de Documentos por Fase
+Table
+Copy
+Fase	Índice Legacy	Índices Específicos	Estado
+0-2	Read/Write	No existen	Único
+3-4	Read/Write	Write (nuevos)	Dual write
+5	Read/Write	Read/Write (lazy migrate)	Transición
+6	Read-only	Read/Write	Casi final
+7+	Eliminado	Read/Write	Final
+Sincronización de Entidades
+Copy
+Cambio de estado en entidad
+        │
+        ▼
+┌─────────────────┐
+│  Evento de      │────┐
+│  Dominio        │    │
+└─────────────────┘    │
+        │              │
+        ▼              ▼
+┌─────────────────┐  ┌─────────────────┐
+│  Projection     │  │  Projection     │
+│  Insurance      │  │  Legal          │
+│  (claim status) │  │  (case status)  │
+└─────────────────┘  └─────────────────┘
+        │              │
+        └──────┬───────┘
+               ▼
+        ┌─────────────────┐
+        │  Consistency    │
+        │  Check (eventual)│
+        └─────────────────┘
+Plan de Rollback Global
+Table
+Copy
+Escenario	Acción	Tiempo de Recuperación
+Degradación de calidad RAG	Desactivar Domain Router para tenant afectado	< 1 minuto (flag)
+Latencia excesiva	Forzar modo embedding-based (vs LLM) en Router	< 5 minutos
+Inconsistencia de datos	Pausar background jobs, reindexar desde backup	2-4 horas
+Fallo de índices específicos	Fallback a índice legacy para todos los tenants	< 1 minuto
+Error crítico de compliance	Modo "solo lectura" en RAG para dominio afectado	Inmediato
+Checklist de Go/No-Go por Fase
+Antes de activar Fase N en producción:
+[ ] Métricas de Fase N-1 estables por 1 semana
+[ ] Runbook de rollback escrito y probado en staging
+[ ] Dashboard de monitoreo específico de Fase N operativo
+[ ] Equipo de soporte entrenado en síntomas de fallo
+[ ] Comunicación a clientes (si aplica) enviada
+[ ] Backup de datos completo validado
+Estimación de Recursos
+Table
+Copy
+Fase	Esfuerzo Dev	Esfuerzo QA	Riesgo	Clientes Afectados
+0	1 dev-week	0.5 week	Bajo	Ninguno
+1	2 dev-weeks	1 week	Medio	Staging only
+2	2 dev-weeks	2 weeks	Alto	Early adopters
+3	2 dev-weeks	1 week	Medio	Gradual
+4	2 dev-weeks	1 week	Medio	Gradual
+5	4 dev-weeks	3 weeks	Muy Alto	Todos (progresivo)
+6	2 dev-weeks	2 weeks	Alto	Por dominio
+7	3 dev-weeks	2 weeks	Medio	Opt-in
+Total estimado: 20 semanas de desarrollo + 12 semanas de QA paralela, con solapamiento entre fases estables.
+¿Necesitas detalle en alguna fase específica, en la estrategia de comunicación con clientes, o en el diseño del sistema de feature flags?
+diseño de features flag
+Edit
+Copy
+Share
+Aquí tienes el diseño completo del sistema de Feature Flags, pensado específicamente para la complejidad de tu migración multi-vertical:
+Arquitectura General del Sistema
+Niveles de Configuración (Jerarquía de Precedencia)
+Copy
+┌─────────────────────────────────────────┐
+│  NIVEL 5: REQUEST (Header/Cookie)       │ ← Mayor precedencia
+│  x-feature-override: domain_router=off  │
+├─────────────────────────────────────────┤
+│  NIVEL 4: USER (Sesión/Token)           │
+│  user.featureOverrides[]                │
+├─────────────────────────────────────────┤
+│  NIVEL 3: TENANT (Organización)         │
+│  tenant.config.featureFlags             │
+├─────────────────────────────────────────┤
+│  NIVEL 2: DOMAIN (Vertical)             │
+│  domainConfig.featureDefaults           │
+├─────────────────────────────────────────┤
+│  NIVEL 1: GLOBAL (Plataforma)           │ ← Menor precedencia
+│  platform.defaults.featureFlags         │
+└─────────────────────────────────────────┘
+Regla de resolución: Nivel más específico gana. Permite overrides graduales sin conflictos.
+Schema de Feature Flags
+Estructura Base
+Copy
+feature_flag
+├── id: string (único global)
+├── scope: "global" | "domain" | "tenant" | "user"
+├── target: string (domain_id, tenant_id, user_id, o "*")
+├── state: "off" | "shadow" | "gradual" | "on"
+├── conditions: Condition[]
+├── metadata
+│   ├── description
+│   ├── owner (equipo responsable)
+│   ├── createdAt, expiresAt
+│   └── rollbackWindow (horas para revertir)
+└── audit
+    ├── lastModifiedBy
+    ├── lastModifiedAt
+    └── changeHistory[]
+Estados de Feature
+Table
+Copy
+Estado	Comportamiento	Uso en tu migración
+off	Código ni se ejecuta	Fases aún no iniciadas
+shadow	Ejecuta en paralelo, no afecta respuesta	Fase 1: Domain Router
+gradual	Activo para % de tráfico o segmentos	Fase 2-5: Rollout progresivo
+on	Activo para todos	Fase estable
+deprecated	Activo pero marcado para eliminación	Post-migración, limpieza
+Condiciones Avanzadas
+Permiten activación contextual sin código adicional:
+yaml
+Copy
+conditions:
+  - type: "timeRange"           # Horario de baja carga
+    start: "02:00"
+    end: "06:00"
+    timezone: "Europe/Madrid"
+    
+  - type: "trafficPercentage"   # Gradual rollout
+    value: 10                   # 10% de requests
+    
+  - type: "tenantSegment"       # Segmentos de riesgo
+    include: ["beta_testers"]
+    exclude: ["enterprise_tier1"]
+    
+  - type: "queryComplexity"     # Solo queries simples
+    metric: "token_count"
+    max: 500
+    
+  - type: "domainConfidence"    # Solo si Router confía
+    min: 0.85
+    
+  - type: "canary"              # 1 tenant específico
+    tenantId: "test_abc"
+    duration: "24h"
+Sistema de Evaluación (Feature Engine)
+Flujo de Evaluación por Request
+Copy
+Request entra
+    │
+    ▼
+┌─────────────────┐
+│  Resolver       │ ← Determinar todos los flags aplicables
+│  Contexto       │   (user, tenant, domain, request params)
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  Evaluar        │ ← Para cada flag relevante:
+│  Condiciones    │   - ¿Aplica timeRange?
+│                 │   - ¿Pasa trafficPercentage?
+│                 │   - ¿Cumple queryComplexity?
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  Resolver       │ ← Determinar estado final
+│  Precedencias   │   (user override > tenant > domain > global)
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  Cachear        │ ← TTL corto (5-30s) para no reevaluar
+│  Resultado      │   mismo request
+└─────────────────┘
+    │
+    ▼
+  Estado final: { flag1: "on", flag2: "shadow", ... }
+Performance
+Table
+Copy
+Aspecto	Estrategia	Target
+Latencia de evaluación	Cache local + Redis	< 5ms p99
+Consistencia	Eventual: propagación < 2s	Stale reads aceptables
+Disponibilidad	Fallback a defaults si Redis cae	100% uptime degradado
+Feature Flags Específicos de la Migración
+Fase 1: Domain Router
+Table
+Copy
+Flag	Estados	Descripción
+domain_router.enabled	off → shadow → gradual → on	Master switch del router
+domain_router.mode	"embedding" / "llm" / "hybrid"	Estrategia de clasificación
+domain_router.cache_ttl	número (segundos)	Duración de cache por query
+domain_router.fallback_threshold	0.0 - 1.0	Confianza mínima para no fallback
+domain_router.shadow.log_only	true / false	En shadow, ¿loggear detalle?
+Fase 2: Router Activo
+Table
+Copy
+Flag	Estados	Descripción
+domain_router.force_legacy	true / false	Bypass a flujo unificado
+domain_router.domain_whitelist	["insurance", "legal"]	Dominios permitidos para este tenant
+domain_router.cross_domain.enabled	false → true	Permitir búsqueda multi-dominio
+Fase 3: Prompts por Dominio
+Table
+Copy
+Flag	Estados	Descripción
+prompts.domain_aware.enabled	off → on	Selección de prompts por dominio
+prompts.domain_aware.fallback_generic	true / false	Si no hay prompt específico, ¿usar genérico?
+prompts.domain_aware.strict_mode	true / false	Error si no hay prompt para dominio detectado
+Fase 4: Entity Engine
+Table
+Copy
+Flag	Estados	Descripción
+entities.domain_aliases.enabled	off → on	Resolución de aliases por dominio
+entities.domain_aliases.ui_transform	true / false	Transformar nombres en UI
+entities.domain_aliases.api_transform	true / false	Aceptar aliases en API inputs
+Fase 5: Vector Spaces
+Table
+Copy
+Flag	Estados	Descripción
+vectors.segregation.enabled	off → gradual → on	Usar índices separados por dominio
+vectors.segregation.dual_write	true / false	Escribir a legacy + específico
+vectors.segregation.lazy_migration	true / false	Migrar documentos on-read
+vectors.segregation.force_legacy_read	true / false	Ignorar índices específicos
+vectors.segregation.background_job	"paused" / "active" / "completed"	Estado de migración batch
+Fase 6: Compliance
+Table
+Copy
+Flag	Estados	Descripción
+compliance.domain_rules.enabled	off → on	Aplicar reglas por dominio
+compliance.domain_rules.enforce	"log" / "warn" / "block"	Nivel de enforce
+compliance.domain_rules.audit_all	true / false	Loggear todas las validaciones
+UI de Administración
+Vista por Tenant
+Copy
+┌─────────────────────────────────────────────────────────┐
+│  Tenant: Consultora ABC          [+] Añadir Override    │
+│  Dominios: [legal] [insurance] [banking]                │
+├─────────────────────────────────────────────────────────┤
+│  FEATURE                          ESTADO      ACCIONES  │
+├─────────────────────────────────────────────────────────┤
+│  domain_router.enabled            GRADUAL 10%  [▲] [▼] [✏] │
+│    └─ Modo: embedding                                   │
+│    └─ Fallback: 0.75                                    │
+│  prompts.domain_aware.enabled     ON         [✏] [🗑]   │
+│  vectors.segregation.enabled      SHADOW     [▲] [✏]    │
+│    └─ Dual write: ✓                                     │
+│    └─ Lazy migration: ✓                                 │
+│  entities.domain_aliases.enabled  OFF        [▲]        │
+├─────────────────────────────────────────────────────────┤
+│  [💾 Guardar]  [🔄 Reset a defaults de dominio]         │
+└─────────────────────────────────────────────────────────┘
+Vista Global (SuperAdmin)
+Copy
+┌─────────────────────────────────────────────────────────┐
+│  PLATFORM FEATURE FLAGS                                 │
+├─────────────────────────────────────────────────────────┤
+│  Feature                    Default    Tenants Override │
+├─────────────────────────────────────────────────────────┤
+│  domain_router.enabled      SHADOW     45 ON / 12 OFF   │
+│  vectors.segregation        OFF        3 GRADUAL        │
+│  ...                                                    │
+├─────────────────────────────────────────────────────────┤
+│  [📊 Ver métricas de uso]  [🚨 Alertas configuradas]    │
+└─────────────────────────────────────────────────────────┘
+Integración con Código
+Patrón de Uso (TypeScript)
+TypeScript
+Copy
+// Inicialización (una vez por request)
+const features = await featureEngine.evaluate({
+  request: req,
+  user: session.user,
+  tenant: session.user.tenantId,
+  domain: detectedDomain // si ya se conoce
+});
+
+// Uso en lógica de negocio
+if (features.isOn('domain_router.enabled')) {
+  const classification = await domainRouter.classify(query);
+  
+  if (features.isInShadow('domain_router.enabled')) {
+    // Loguear pero no usar
+    analytics.logShadow('domain_router', classification);
+  } else {
+    // Usar para decisión real
+    vectorSpace = classification.domain;
+  }
+}
+
+// Con condiciones inline
+if (features.evaluate('vectors.segregation.enabled', {
+  onlyIf: { trafficPercentage: 10 }
+})) {
+  // Solo entra para 10% del tráfico
+}
+
+// Fallback explícito
+const indexName = features.get('vectors.index_name', {
+  fallback: 'tenant_legacy_vectors'
+});
+Decoradores (para endpoints)
+TypeScript
+Copy
+@FeatureGate('domain_router.enabled', { 
+  mode: 'shadow',
+  track: 'domain_router_metrics'
+})
+async function searchEndpoint(req: Request) {
+  // El decorador maneja logging y métricas automáticamente
+}
+
+@FeatureGate('compliance.domain_rules.enabled', {
+  mode: 'block', // Rechaza request si feature off
+  errorMessage: 'Compliance validation unavailable'
+})
+async function validateResponse(data: any) {
+  // Solo ejecuta si feature activa
+}
+Eventos y Observabilidad
+Eventos Emitidos
+Table
+Copy
+Evento	Cuándo	Datos
+feature.evaluated	Cada evaluación	flag, context, result, latency
+feature.state_changed	Cambio de estado	flag, oldState, newState, actor
+feature.shadow_mismatch	Shadow detecta diferencia	flag, expected, actual, severity
+feature.gradual_advanced	Aumento de %	flag, old%, new%, criteria
+feature.emergency_rollback	Rollback automático	flag, trigger, timestamp
+Métricas Clave
+Copy
+feature_flag_evaluations_total{flag, state, result}
+feature_flag_evaluation_duration_seconds{flag, percentile}
+feature_flag_state_changes_total{flag, transition}
+feature_flag_shadow_mismatches_total{flag, severity}
+feature_flag_active_tenants{flag, state}
+Estrategias de Rollback Automático
+Triggers de Auto-Rollback
+Table
+Copy
+Condición	Acción	Notificación
+Error rate > baseline + 5%	Degradar a shadow	Slack #alerts
+Latencia p99 > 2x baseline	Forzar modo ligero	PagerDuty
+Shadow mismatch > 10%	Pausar gradual	Email owner
+3+ errores 500 en 1 minuto	Off inmediato	Todo
+Ventana de Rollback
+Cada feature tiene configurado:
+yaml
+Copy
+rollbackWindow:
+  automatic: true        # ¿Permitir auto-rollback?
+  maxDuration: "4h"      # Después de esto, rollback manual solo
+  requireApproval: false # ¿Necesita ticked de aprobación?
+  approvers: ["team-lead", "sre-oncall"]
+Sincronización Multi-Entorno
+Copy
+┌─────────────┐     Push manual     ┌─────────────┐
+│  Production │ ◄────────────────── │   Staging   │
+│   (cauteloso)│   con validación   │  (pruebas)  │
+└─────────────┘                     └─────────────┘
+       ▲                                    │
+       │         Sync automático            │
+       └────────────────────────────────────┘
+              (solo defaults, no overrides)
+Reglas:
+Defaults globales: sync automático staging → prod con validación
+Overrides de tenant: nunca sync automático, migración manual con checklist
+Emergencias: posible push directo a prod con aprobación de 2 personas
+Checklist de Implementación
+Semana 1: Infraestructura Base
+[ ] Schema de MongoDB para feature flags
+[ ] Servicio Redis para cache
+[ ] API REST para CRUD de flags
+[ ] Middleware de Express/Next.js para evaluación
+Semana 2: UI y Observabilidad
+[ ] Dashboard de administración
+[ ] Integración con sistema de logs existente
+[ ] Alertas configuradas
+[ ] Documentación de runbooks
+Semana 3: Integración con Migración
+[ ] Flags de Fase 0 y 1 definidos
+[ ] Tests de shadow mode
+[ ] Validación de performance
+¿Necesitas profundizar en algún aspecto: el algoritmo de gradual rollout, la estrategia de cache, los mecanismos de seguridad para prevenir activación accidental, o la integración específica con tu stack Next.js/MongoDB?
+ves diciendome todo
+Edit
+Copy
+Share
+Voy a profundizar en todos los aspectos que mencioné, uno por uno. Empezamos con el algoritmo de gradual rollout:
+Algoritmo de Gradual Rollout
+Problema a Resolver
+Necesitas activar una feature para un porcentaje creciente de tráfico, pero de forma determinista (mismo usuario siempre ve mismo estado) y controlable (puedes segmentar por riesgo).
+Estrategias de Asignación
+Table
+Copy
+Estrategia	Descripción	Cuándo Usar	Ejemplo en tu caso
+Random	Aleatorio puro por request	Testing de carga, no importa consistencia	Stress test de Domain Router
+Sticky (User ID)	Hash de user_id % 100	Consistencia por usuario, múltiples sesiones	Prompts por dominio (mismo usuario, misma experiencia)
+Sticky (Tenant)	Hash de tenant_id % 100	Consistencia por organización	Vector spaces (migración por tenant completo)
+Sticky (Entity)	Hash de entity_id % 100	Consistencia por objeto	Lazy migration de documentos
+Segment-based	Grupos predefinidos (beta, enterprise, etc.)	Control manual, alta confianza	Early adopters de Fase 2
+Time-based	Ventanas horarias	Reducir riesgo en horario pico	Fase 5 background migration
+Algoritmo Sticky Hash (Recomendado para tu caso)
+Copy
+Entrada: user_id (o tenant_id), feature_key, percentage (0-100)
+
+1. Concatenar: input = user_id + ":" + feature_key
+2. Calcular hash: hash = sha256(input)
+3. Tomar últimos 4 dígitos hex: suffix = hash[-4:]
+4. Convertir a entero: value = hex_to_int(suffix)  // 0-65535
+5. Calcular porcentaje: user_percent = (value / 65535) * 100
+6. Retornar: user_percent <= percentage
+Ventajas:
+Mismo usuario siempre mismo resultado para misma feature
+Diferentes features tienen distribuciones independientes (no siempre "sí" o "no" juntas)
+Fácil de reproducir para debugging
+Progresión Típica en tu Migración
+Table
+Copy
+Día	Porcentaje	Criterio para avanzar
+1	1%	Monitoreo básico, sin alertas
+3	5%	Error rate < baseline + 0.1%
+5	10%	Latencia p95 < baseline + 10%
+7	25%	Sin tickets de soporte relacionados
+10	50%	Métricas de negocio estables
+14	100%	3 días sin incidentes
+Segmentos Prioritarios (para tu caso multi-vertical)
+Copy
+Orden de inclusión en gradual rollout:
+
+1. Tenants "beta" voluntarios (bajo riesgo, alto feedback)
+2. Tenants single-domain simples (ej: solo elevators)
+3. Tenants single-domain complejos (ej: solo legal con muchos usuarios)
+4. Tenants multi-domain con dominio primario claro (80% legal, 20% insurance)
+5. Tenants multi-domain balanceados (50/50) ← Mayor riesgo, al final
+6. Enterprise tier 1 (alto riesgo reputacional, requieren aprobación explícita)
+Estrategia de Cache
+Niveles de Cache
+Copy
+┌─────────────────────────────────────────┐
+│  L1: In-Memory (Node.js)                │
+│  - TTL: 5-10 segundos                   │
+│  - Capacidad: 1000 entries por proceso  │
+│  - Uso: Evaluaciones de feature flags   │
+│    para requests concurrentes del       │
+│    mismo usuario                        │
+├─────────────────────────────────────────┤
+│  L2: Redis Cluster                      │
+│  - TTL: 30-60 segundos                  │
+│  - Capacidad: Ilimitada (escalable)     │
+│  - Uso: Compartir estado entre          │
+│    instancias de Next.js                │
+├─────────────────────────────────────────┤
+│  L3: MongoDB (Source of Truth)          │
+│  - Persistencia permanente              │
+│  - Uso: Configuración, historial,       │
+│    auditoría                            │
+└─────────────────────────────────────────┘
+Cache Key Design
+Copy
+Estructura de clave Redis:
+
+ff:v2:{tenant_id}:{feature_key}:{user_id_hash}
+
+Ejemplo:
+ff:v2:consultora_xyz:domain_router.enabled:a3f9b2...
+
+Contenido (JSON):
+{
+  "state": "gradual",
+  "evaluatedAt": "2024-01-15T10:30:00Z",
+  "conditions": {
+    "trafficPercentage": 25,
+    "userInSegment": true
+  },
+  "finalDecision": true,
+  "version": 3  // Para invalidación por cambio de config
+}
+Estrategia de Invalidación
+Table
+Copy
+Evento	Acción	Propagación
+Cambio de estado de feature	Invalidar L1 inmediato, L2 con delay 1s	< 2s global
+Cambio de condiciones (ej: % de 10→25)	Incrementar version en payload, lazy invalidation	Next read detecta versión obsoleta
+Emergencia (rollback)	Pub/sub a todos los nodos, flush L1 inmediato	< 500ms
+Expiración TTL	Reconstruir desde MongoDB	Transparente
+Optimización para tu Caso Multi-Vertical
+Problema: Mismo tenant, diferentes usuarios en diferentes dominios, mismas features.
+Solución: Cache por "contexto efectivo":
+Copy
+Clave de cache = hash(tenant_id + dominio_detectado + feature_key)
+
+Esto permite:
+- Usuario A (legal) ve feature ON
+- Usuario B (insurance, mismo tenant) ve feature OFF
+- Sin re-evaluar condiciones complejas
+Mecanismos de Seguridad
+Prevención de Activación Accidental
+1. Two-Person Rule (2PR)
+Copy
+Cambio de estado requiere:
+
+DE: off / shadow / gradual
+A:  on / gradual con % > 50
+
+Requiere:
+- Aprobador 1: Creador del cambio (developer/PM)
+- Aprobador 2: SRE o Team Lead
+
+Implementación:
+- PR en repo de config (GitOps)
+- Check automático: ¿2 aprobaciones de owners diferentes?
+- Merge → deploy automático
+2. Circuit Breaker por Feature
+Copy
+Si feature X causa:
+- Error rate > 5% en 2 minutos
+- Latencia p99 > 3x baseline
+- 10+ errores 500 consecutivos
+
+Entonces:
+1. Auto-degradar a shadow (si disponible)
+2. Si no, auto-off
+3. Notificar: Slack #incidents + PagerDuty
+4. Bloquear re-activación por 1 hora (cooldown)
+3. Dry-Run Mode
+Copy
+Antes de cualquier cambio en producción:
+
+$ featurectl dry-run \
+  --feature domain_router.enabled \
+  --tenant consultora_xyz \
+  --state gradual \
+  --percentage 25
+
+Output:
+  Usuarios afectados: 45 de 180 (25%)
+  Tenants con riesgo alto: 0
+  Tenants multi-domain: 3 (recomendado: excluir)
+  Estimación de latencia: +12ms p95
+  
+  [Confirmar] [Modificar] [Cancelar]
+4. Time-Based Restrictions
+Copy
+Cambios a estado "on" o aumento de % > 50:
+- Bloqueado: Viernes después de las 18h
+- Bloqueado: Fin de semana
+- Bloqueado: Días de cierre de mercado (configurable por tenant)
+- Requerido: Ventana de mantenimiento programada
+Permisos Granulares
+Table
+Copy
+Rol	Permisos	Scope
+SuperAdmin	Todo	Global
+Platform Engineer	Cambiar defaults, ver todo	Global, solo lectura en prod
+Tenant Admin	Overrides para su tenant	Su tenant únicamente
+Feature Owner	Cambiar su feature, cualquier tenant	Features asignadas
+SRE On-call	Emergency rollback, read-only	Global, solo emergencias
+Auditor	Solo lectura, historial	Global
+Audit Trail Inmutable
+Copy
+Cada cambio genera registro en:
+
+feature_audit_log
+├── timestamp (precisión nanosegundos)
+├── actor (user_id, ip, user_agent)
+├── action (create, update, delete, emergency_rollback)
+├── feature_id
+├── previous_state (snapshot completo)
+├── new_state (snapshot completo)
+├── reason (obligatorio para cambios manuales)
+├── ticket_reference (Jira/GitHub issue)
+└── signature (HMAC para integridad)
+
+Retención: 7 años (compliance)
+Almacenamiento: Write-once read-many (WORM) en S3/GCS
+Integración con tu Stack (Next.js + MongoDB)
+Arquitectura de Componentes
+Copy
+┌─────────────────────────────────────────┐
+│           Next.js App Router            │
+│  ┌─────────────────────────────────┐    │
+│  │  Middleware (middleware.ts)     │    │
+│  │  - Evaluar flags globales       │    │
+│  │  - Inyectar contexto en headers │    │
+│  └─────────────────────────────────┘    │
+│                   │                     │
+│  ┌─────────────────────────────────┐    │
+│  │  Server Components / API Routes │    │
+│  │  ┌─────────────────────────┐    │    │
+│  │  │  FeatureProvider        │    │    │
+│  │  │  (React Context)        │    │    │
+│  │  │  - Cache por request    │    │    │
+│  │  │  - Re-evaluar si cambia │    │    │
+│  │  │    dominio              │    │    │
+│  │  └─────────────────────────┘    │    │
+│  │              │                  │    │
+│  │  ┌───────────┴───────────┐      │    │
+│  │  │  Hooks de Feature     │      │    │
+│  │  │  useFeature()         │      │    │
+│  │  │  useFeatureValue()    │      │    │
+│  │  └───────────────────────┘      │    │
+│  └─────────────────────────────────┘    │
+└─────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Feature Service (Singleton)            │
+│  ┌─────────┐ ┌─────────┐ ┌──────────┐  │
+│  │  L1     │ │   L2    │ │    L3    │  │
+│  │  Memory │ │  Redis  │ │ MongoDB  │  │
+│  │  Cache  │ │  Cache  │ │  Source  │  │
+│  └─────────┘ └─────────┘ └──────────┘  │
+└─────────────────────────────────────────┘
+Implementación Específica por Capa
+Middleware (Edge Runtime)
+TypeScript
+Copy
+// Limitaciones: No MongoDB, solo fetch
+// Ideal para: Flags globales, geolocalización, rate limiting
+
+export async function middleware(request: NextRequest) {
+  // Solo evaluar flags que afectan routing
+  const edgeFlags = await evaluateEdgeFlags({
+    geo: request.geo,
+    userAgent: request.headers.get('user-agent'),
+    // Fetch desde Edge Config de Vercel o similar
+  });
+  
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-edge-flags', JSON.stringify(edgeFlags));
+  
+  return NextResponse.next({
+    request: { headers: requestHeaders }
+  });
+}
+Server Components (Node.js Runtime)
+TypeScript
+Copy
+// Acceso completo a MongoDB, evaluación rica
+
+async function FeatureServerProvider({ children, tenantId, userId }) {
+  const features = await featureService.evaluate({
+    tenantId,
+    userId,
+    // Puede hacer joins complejos con MongoDB
+    context: await buildContext(tenantId)
+  });
+  
+  return (
+    <FeatureContext.Provider value={features}>
+      {children}
+    </FeatureContext.Provider>
+  );
+}
+Client Components (Browser)
+TypeScript
+Copy
+// Solo flags seguras para exponer (no lógica interna)
+
+'use client';
+
+function DomainRouterToggle() {
+  // Hook que lee del contexto server-inyectado
+  const { isEnabled, toggle } = useClientFeature('domain_router.ui_preview');
+  
+  // Solo UI, la lógica real está en server
+  return (
+    <Switch 
+      checked={isEnabled}
+      onChange={() => toggle({ reason: 'user_request' })}
+    />
+  );
+}

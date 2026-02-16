@@ -7,10 +7,12 @@ import { AppError } from '@/lib/errors';
 export const PromptTestSchema = z.object({
     promptId: z.string().optional(),
     template: z.string().min(1),
+    templateB: z.string().optional(), // Para A/B testing
     variables: z.record(z.string(), z.any()),
     tenantId: z.string(),
     industry: z.string(),
-    model: z.enum(['gemini-1.5-flash', 'gemini-1.5-pro']).default('gemini-1.5-flash'),
+    model: z.enum(['gemini-2.5-flash', 'gemini-3-pro', 'gemini-3-pro-image']).default('gemini-2.5-flash'),
+    modelB: z.enum(['gemini-2.5-flash', 'gemini-3-pro', 'gemini-3-pro-image']).optional(), // Para A/B testing
     correlationId: z.string()
 });
 
@@ -44,9 +46,10 @@ export class PromptTesterService {
             }
 
             // 2. Execute with the selected model
-            const callFn = model === 'gemini-1.5-pro' ? callGeminiPro : callGeminiMini;
+            const callFn = model === 'gemini-3-pro' ? callGeminiPro : callGeminiMini;
             const output = await callFn(renderedPrompt, tenantId, {
                 correlationId,
+                model,
                 temperature: 0.2 // Low temperature for deterministic dry-runs
             });
 
@@ -83,5 +86,40 @@ export class PromptTesterService {
             });
             throw new AppError('INTERNAL_ERROR', 500, error.message);
         }
+    }
+
+    /**
+     * Run two simulations in parallel for comparison.
+     */
+    static async runComparison(input: PromptTestInput): Promise<{
+        resultA: PromptTestResult;
+        resultB: PromptTestResult;
+    }> {
+        const { template, templateB, model, modelB, variables, tenantId, industry, correlationId } = PromptTestSchema.parse(input);
+
+        // Si no hay templateB, comparamos mismo template con modeloB (si existe)
+        const finalTemplateB = templateB || template;
+        const finalModelB = modelB || model;
+
+        const [resultA, resultB] = await Promise.all([
+            this.runSimulation({
+                template,
+                variables,
+                tenantId,
+                industry,
+                model,
+                correlationId: `${correlationId}_A`
+            }),
+            this.runSimulation({
+                template: finalTemplateB,
+                variables,
+                tenantId,
+                industry,
+                model: finalModelB,
+                correlationId: `${correlationId}_B`
+            })
+        ]);
+
+        return { resultA, resultB };
     }
 }

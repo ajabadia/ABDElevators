@@ -1,0 +1,28 @@
+{
+  "title": "Centro de IA",
+  "subtitle": "Potencia tu productividad con herramientas de IA agéntica y orquestación inteligente.",
+  "tabs": {
+    "ragQuality": "Calidad RAG",
+    "workflows": "Flujos",
+    "predictive": "Predictivo",
+    "playground": "Playground"
+  },
+  "sections": {
+    "workflows": {
+      "title": "Orquestación de Flujos",
+      "subtitle": "Configura y monitorea agentes autónomos para tareas complejas."
+    },
+    "ragQuality": {
+      "title": "Evaluación de Calidad RAG",
+      "subtitle": "Monitorea la precisión y relevancia de las respuestas generadas."
+    },
+    "playground": {
+      "subtitle": "Experimenta con modelos y prompts en un entorno seguro.",
+      "title": "AI Playground"
+    },
+    "predictive": {
+      "subtitle": "Análisis de patrones para prevención de fallos en tiempo real.",
+      "title": "Mantenimiento Predictivo"
+    }
+  }
+}

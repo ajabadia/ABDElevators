@@ -23,7 +23,8 @@ import {
     UserCircle,
     BrainCircuit,
     ShieldAlert,
-    Languages
+    Languages,
+    Box
 } from 'lucide-react';
 import { UserRole } from '@/types/roles';
 
@@ -87,28 +88,18 @@ export const menuSections: MenuSection[] = [
                 module: 'TECHNICAL'
             },
             {
-                name: 'Knowledge Assets',
-                nameKey: 'items.assets',
-                href: '/admin/knowledge-assets',
+                name: 'Knowledge Hub',
+                nameKey: 'items.knowledgeHub',
+                href: '/admin/knowledge',
                 icon: FileText,
-                roles: [UserRole.ADMIN, UserRole.ENGINEERING],
-                module: 'RAG'
-            },
-            {
-                name: 'Search Explorer',
-                nameKey: 'items.explorer',
-                href: '/admin/knowledge-base',
-                icon: Search,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-                module: 'RAG'
+                roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
             },
             {
                 name: 'Semantic Map',
                 nameKey: 'items.graph',
-                href: '/graphs',
+                href: '/admin/knowledge-base/graph',
                 icon: Share2,
-                roles: [UserRole.ADMIN, UserRole.TECHNICAL],
-                module: 'TECHNICAL'
+                roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN]
             }
         ]
     },
@@ -117,10 +108,10 @@ export const menuSections: MenuSection[] = [
         labelKey: 'sections.studio',
         items: [
             {
-                name: 'Workflows',
-                nameKey: 'items.workflows',
-                href: '/admin/workflows',
-                icon: GitBranch,
+                name: 'AI Hub',
+                nameKey: 'items.aiHub',
+                href: '/admin/ai',
+                icon: BrainCircuit,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
             },
             {
@@ -154,6 +145,25 @@ export const menuSections: MenuSection[] = [
         ]
     },
     {
+        label: 'Knowledge Workspace',
+        labelKey: 'sections.workspace',
+        items: [
+            {
+                name: 'Spaces',
+                nameKey: 'items.spaces',
+                href: '/spaces',
+                icon: Box
+            },
+            {
+                name: 'Admin Spaces',
+                nameKey: 'items.admin_spaces',
+                href: '/admin/spaces',
+                icon: Shield,
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            }
+        ]
+    },
+    {
         label: 'Corporate & Admin',
         labelKey: 'sections.corporate',
         items: [
@@ -177,6 +187,13 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/billing',
                 icon: CreditCard,
                 roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            },
+            {
+                name: 'Contracts',
+                nameKey: 'items.contracts',
+                href: '/admin/billing/contracts',
+                icon: FileText,
+                roles: [UserRole.SUPER_ADMIN]
             },
             {
                 name: 'API Keys',
@@ -219,22 +236,7 @@ export const menuSections: MenuSection[] = [
                 icon: TrendingUp,
                 roles: [UserRole.SUPER_ADMIN]
             },
-            {
-                name: 'RAG Quality',
-                nameKey: 'items.quality',
-                href: '/admin/rag-quality',
-                icon: ShieldCheck,
-                roles: [UserRole.SUPER_ADMIN],
-                module: 'RAG'
-            },
-            {
-                name: 'Active Intelligence',
-                nameKey: 'items.intelligence',
-                href: '/admin/intelligence/trends',
-                icon: BrainCircuit,
-                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
-                module: 'RAG'
-            },
+
             {
                 name: 'Workflow Tasks',
                 nameKey: 'items.workflow_tasks',

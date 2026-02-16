@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 interface ContentCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
     children: React.ReactNode;
     title?: React.ReactNode;
+    subtitle?: React.ReactNode;
     description?: string;
     icon?: React.ReactNode;
     noPadding?: boolean;
@@ -13,6 +14,7 @@ export function ContentCard({
     children,
     className,
     title,
+    subtitle,
     description,
     icon,
     noPadding = false,
@@ -32,6 +34,7 @@ export function ContentCard({
                         {icon && <span className="text-teal-500 shrink-0">{icon}</span>}
                         {title}
                     </CardTitle>
+                    {subtitle && <CardDescription>{subtitle}</CardDescription>}
                     {description && <CardDescription>{description}</CardDescription>}
                 </CardHeader>
             )}

@@ -1,0 +1,19 @@
+{
+  "ROI": {
+    "badge": "ROI CALCULATOR",
+    "title": "Calculate Your Potential Savings",
+    "description": "See how much your team could save by automating technical analysis with ABD RAG Platform.",
+    "num_techs": "Number of Technicians",
+    "num_techs_desc": "Field technicians or engineers analyzing orders.",
+    "orders_month": "Orders per Tech / Month",
+    "orders_month_desc": "Average number of technical specs analyzed per person.",
+    "hourly_cost": "Avg. Hourly Internal Cost (€)",
+    "hourly_cost_desc": "Fully loaded cost per hour (salary + overhead).",
+    "annual_savings": "Estimated Annual Savings",
+    "hours_saved_year": "Hours Saved / Year",
+    "orders_analyzed": "Orders Analyzed",
+    "how_calculated_title": "How is this calculated?",
+    "how_calculated_desc": "We estimate that ABD RAG reduces the time to analyze a complex technical specification by approximately <strong>20 minutes per order</strong> compared to manual review.",
+    "cta": "START YOUR FREE TRIAL"
+  }
+}

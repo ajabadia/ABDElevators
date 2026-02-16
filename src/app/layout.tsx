@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  width: "width=device-width",
+  width: "device-width",
   initialScale: 1,
 };
 
@@ -45,7 +45,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
-import BrandingProvider from "@/components/BrandingProvider";
+import { BrandingProvider } from "@/providers/BrandingProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 

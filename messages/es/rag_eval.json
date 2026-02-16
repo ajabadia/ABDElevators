@@ -1,0 +1,31 @@
+{
+  "title": "Dashboard de Evaluación RAG",
+  "subtitle": "Observabilidad y calidad de respuestas (Fidelidad, Relevancia, Precisión)",
+  "judge_badge": "Juez LLM: Gemini 1.5 Pro",
+  "metrics": {
+    "faithfulness": "Fidelidad (Avg)",
+    "relevance": "Relevancia de Respuesta",
+    "precision": "Precisión de Contexto",
+    "queries": "Consultas Evaluadas",
+    "faithfulness_desc": "Respuestas basadas solo en contexto",
+    "relevance_desc": "Pertinencia de la respuesta",
+    "precision_desc": "Utilidad del contexto recuperado",
+    "queries_desc": "Total de trazas analizadas"
+  },
+  "tabs": {
+    "trends": "Tendencias de Calidad",
+    "history": "Historial de Trazas"
+  },
+  "chart": {
+    "title": "Evolución de Métricas",
+    "desc": "Seguimiento diario de la fidelidad y relevancia de las respuestas",
+    "faithfulness": "Fidelidad",
+    "relevance": "Relevancia"
+  },
+  "table": {
+    "date": "Fecha",
+    "query": "Consulta",
+    "metrics": "Métricas (F|R|P)",
+    "feedback": "Feedback Juez"
+  }
+}

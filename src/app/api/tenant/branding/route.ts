@@ -34,6 +34,12 @@ export async function GET() {
                 ...branding,
                 companyName: branding.companyName || config.name
             }
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
         });
 
     } catch (error: any) {

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "types": [
       "jest",
       "node"
@@ -41,6 +42,14 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "scripts",
+    "src/scripts",
+    "tests",
+    "test-prompt-tester.ts",
+    "jest.setup.ts",
+    ".next",
+    "GIT-BACK",
+    "new"
   ]
 }

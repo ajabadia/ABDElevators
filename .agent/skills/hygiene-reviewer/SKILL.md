@@ -29,6 +29,10 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | HYG-001 | `(session.user as any).property` | `session.user.property` (requiere actualización previa de `next-auth.d.ts`) | El casting a `any` anula la seguridad de tipos de TypeScript y oculta errores de propiedad inexistente. |
 | HYG-002 | `console.log(...)` en código de producción | Reemplazar por `await logEvento({ level: 'DEBUG', ... })` | El logging debe ser estructurado y persistente para auditoría en Vercel/MongoDB. |
 | HYG-003 | Hardcoded limits (ej: `1000`, `1024*1024`) | Mover a constantes en `@/lib/constants.ts` o configuraciones de tenant. | Facilita el ajuste de SLAs y límites sin despliegues de código. |
+| HYG-004 | Operación costosa sin monitoreo de performance | Envolver en `withSla(source, action, threshold, correlationId, fn)` | Permite detectar violaciones de performance y degradación de servicio (Fase 130.7). |
+| HYG-005 | Uso de `db.collection(...)` directo en API | Migrar a `getTenantCollection` o `SecureCollection` | Vital para el aislamiento multi-tenant y Soft Delete (Regla de Oro #11). |
+| HYG-006 | API Catch block sin estandarización | Usar `handleApiError(error, source, correlationId)` | Garantiza respuestas de error coherentes y logueo centralizado (Fase 130.2). |
+| HYG-007 | Uso de `WorkflowEngine` (Legacy) | Migrar a `AIWorkflowEngine` o `CaseWorkflowEngine` | El motor monolítico está deprecado. Se debe usar el motor especializado (Fase 129.1). |
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)
 Si detectas un cast a `any` en la sesión del usuario:

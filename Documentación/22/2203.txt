@@ -1,0 +1,3036 @@
+admin/checklist-configs es el “CMS” de reglas de negocio para checklists: defines plantillas de categorías y puntos de verificación que luego se usan en otros flujos (LLM extractor, clasificación, tareas de workflow). Está bastante bien enlazado, pero hay una pequeña dualidad de fuentes que conviene aclarar.
+​
+
+1. Qué es exactamente una ChecklistConfig
+Modelo: ChecklistConfigSchema en lib/schemas (categorías, items, prioridades, workflowOrder, metadatos, etc.).
+​
+
+Almacenamiento principal en producción: colección configschecklist por tenant, expuesta vía api/admin/checklist-configs (GET/POST/PATCH/DELETE).
+​
+
+Uso funcional:
+
+Auto-clasificación de items: autoClassify(item, config, correlationId) decide a qué categoría va un item según keywords.
+​
+
+Ordenación inteligente: smartSort(items, config, correlationId) ordena por prioridad de categoría y, opcionalmente, score.
+​
+
+Generación de checklists vía LLM: extractChecklist(...) saca items desde documentos y después puedes aplicar autoClassify + smartSort con una ChecklistConfig concreta.
+​
+
+2. Dónde y cómo se alimenta
+2.1. UI de administración
+Página principal: /admin/checklist-configs (ConfigsChecklistPage).
+​
+
+Lista todas las configuraciones del tenant usando ChecklistConfigList y GET api/admin/checklist-configs.
+​
+
+Tarjetas de ayuda que explican usos: categorización, priorización, multi-tenant.
+​
+
+Crear nueva: /admin/configs-checklist → NewChecklistConfigPage.
+​
+
+Renderiza ConfiguratorFull isNew={true} (editor visual completo).
+​
+
+Editar existente: /admin/checklist-configs/[id] (ChecklistEditorPage).
+​
+
+Llama a GET api/admin/checklist-configs/:id.
+
+Si carga bien, pasa initialConfig a ConfiguratorFull para editar.
+​
+
+2.2. APIs y permisos
+GET api/admin/checklist-configs
+
+Usa enforcePermission('checklists','read') y getTenantCollection('configschecklist').
+
+Devuelve todas las configs del tenant ordenadas por creado desc.
+​
+
+POST api/admin/checklist-configs
+
+enforcePermission('checklists','write').
+
+Inyecta tenantId, creado, actualizado, valida con ChecklistConfigSchema, inserta en configschecklist.
+​
+
+GET/PATCH/DELETE api/admin/checklist-configs/:id
+
+También protegidos por permisos checklists, con validación Zod parcial en PATCH y borrado con log estructurado.
+​
+
+Esto significa que la alimentación “oficial” es siempre: admin con permiso → UI → APIs → configschecklist.
+
+3. De dónde la consumen los motores
+Hay dos rutas de lectura:
+
+Ruta multi‑tenant “core” (recomendable)
+
+lib/configs.ts :: getChecklistConfigById(id, correlationId?).
+​
+
+Si id === 'default', carga un default-checklist-config embebido (útil como fallback global).
+​
+
+Si no, usa connectDB y db.collection('configschecklist') para leer por _id y validar con Zod.
+​
+
+Usada en:
+
+lib/checklist-auto-classifier.ts (para autoClassify y smartSort).
+​
+
+Servicios de negocio que necesitan una config concreta para un tenant (por id).
+
+Ruta admin multi‑tenant a través de getTenantCollection
+
+Toda la zona /api/admin/checklist-configs usa getTenantCollection('configschecklist'), que aplica aislamiento por tenant automáticamente.
+​
+
+No he visto usos que se salten estas funciones, así que la ruta de datos es consistente:
+config se define/edita via admin → vive en configschecklist → se recupera por id en los servicios de checklist/LLM.
+
+4. Integración con workflows y Human‑in‑the‑Loop
+Aquí está el punto interesante: las ChecklistConfig no viven aisladas, sino que se conectan con tu motor de workflows.
+
+HumanTaskHandler ya acepta action.params.checklistConfigId y lo mete en taskPayload.checklistConfigId cuando crea una tarea manual (workflowtasks).
+​
+
+El front de WorkflowTaskInbox puede, para cada tarea:
+
+Leer checklistConfigId.
+
+Llamar a getChecklistConfigById (vía un endpoint UI) para renderizar la checklist asociada.
+​
+
+Los motores de IA:
+
+extractChecklist(...) puede generar items para un caso, luego usar autoClassify y smartSort con la config elegida para ese tipo de caso.
+​
+
+En la práctica:
+
+admin/checklist-configs define “cómo se estructura y prioriza la checklist” para tipos de casos.
+
+El workflow (o un action handler) decide qué checklistConfigId usar para una tarea específica (por ejemplo, revisión de contrato, revisión de mantenimiento, etc.).
+​
+
+5. Evaluación y mejoras recomendadas
+Correcto enlace
+Panel de admin:
+
+Enlazado desde el menú lateral como “Config. Checklists” (items.checklists).
+​
+
+Navegación interna coherente (/admin/checklist-configs → editor → nuevo).
+​
+
+Backend:
+
+Seguridad: usa enforcePermission('checklists', read/write), no roles planos.
+​
+
+Multi‑tenant: getTenantCollection garantiza aislamiento.
+​
+
+Motores:
+
+autoClassify/smartSort validan con Zod y loguean rendimiento.
+​
+
+extractChecklist usa PromptService y valida salida LLM, luego se pueden combinar con la config.
+​
+
+En general, la ruta de datos está bien diseñada.
+
+Dos mejoras claras
+Unificación de lectura
+
+Ahora getChecklistConfigById usa connectDB directo, mientras los endpoints admin usan getTenantCollection.
+
+Recomendación: refactorizar getChecklistConfigById para usar getTenantCollection('configschecklist') con un contexto/tenant explícito, así mantienes el mismo mecanismo de seguridad en todos los accesos.
+​
+
+Enlace explícito con workflows en la UI
+
+En ConfigsChecklistPage o en el editor, añadir campos:
+
+“Uso previsto”: dropdown con tipos de caso / workflows que suelen usar esta config.
+
+En el editor de workflows:
+
+Para transiciones o estados que crean tareas human‑review, permitir seleccionar una ChecklistConfig desde un select alimentado por api/admin/checklist-configs.
+
+Esto hace visible a nivel UX que las ChecklistConfig son “plantillas de revisión” conectadas a pasos de workflow.
+
+
+Te propongo cuatro usos tipo donde ChecklistConfig y workflows/LLM encajan de forma clara.
+​
+
+1. Revisión técnica de mantenimiento (caso “técnico”)
+ChecklistConfig
+
+Categorías: “Seguridad”, “Componentes críticos”, “Documentación”, “Fotos/Pruebas”.
+
+Items típicos:
+
+Verificar documentación de última revisión.
+
+Confirmar sustitución de piezas con desgaste.
+
+Adjuntar fotos de puntos críticos.
+
+Prioridad: Seguridad > Componentes críticos > Documentación.
+
+Workflow
+
+Estados: ingresado → analizando → revision → completado (tu flujo estándar).
+​
+
+Transiciones:
+
+analizando → revision: requiresValidation: true, genera tarea DOCUMENTREVIEW con checklistConfigId = “Checklist mantenimiento técnico”.
+​
+
+LLM
+
+Antes de la revisión:
+
+extractChecklist sobre informe/fotos, autoClassify + smartSort con esa config.
+​
+
+En la tarea:
+
+El revisor ve los puntos extraídos + checklist configurada y decide aprobar/corregir.
+
+2. Aprobación legal de contrato
+ChecklistConfig
+
+Categorías: “Cláusulas obligatorias”, “Riesgos legales”, “Datos personales/GDPR”, “Condiciones económicas”.
+
+Items:
+
+Confirmar presencia de cláusula de limitación de responsabilidad.
+
+Verificar tratamiento de datos personales.
+
+Revisar duración y prórrogas.
+
+Workflow
+
+Estados: borrador → en_analisis_legal → pendiente_firma → activo.
+
+Transición a en_analisis_legal:
+
+Genera tarea con type: DOCUMENTREVIEW, assignedRole: LEGAL, checklistConfigId = “Checklist contrato legal”.
+​
+
+LLM
+
+Node LLM en en_analisis_legal:
+
+Resume el contrato, destaca cláusulas de riesgo, puntúa riesgo (riskScore) y propone “APROBAR” o “RECHAZAR”.
+
+Human‑in‑the‑Loop:
+
+Tarea legal muestra output LLM + checklist; el abogado marca checklist y decide transición.
+
+3. Onboarding de nuevo cliente/tenant
+ChecklistConfig
+
+Categorías: “Datos fiscales”, “Seguridad/MFA”, “Cumplimiento”, “Facturación”.
+
+Items:
+
+Verificar CIF/NIF y domicilio fiscal.
+
+Confirmar MFA activado para admin.
+
+Comprobar aceptación de Términos/DPAs.
+
+Validar método de pago.
+
+Workflow
+
+Estados: solicitud_recibida → validacion_datos → activo.
+
+validacion_datos:
+
+Tarea generada con checklistConfigId = “Onboarding cliente”.
+​
+
+LLM
+
+A partir de formularios/documentos, el LLM:
+
+Extrae campos clave y valida formato.
+
+Señala campos dudosos que requieren revisión.
+
+La checklist asegura que, aunque el LLM haga el trabajo pesado, el equipo de operaciones valida pasos críticos.
+
+4. Revisión de incidente de seguridad / riesgo
+ChecklistConfig
+
+Categorías: “Impacto”, “Origen”, “Contención”, “Comunicación”.
+
+Items:
+
+Evaluar impacto en datos personales.
+
+Verificar si se ha aplicado contención técnica.
+
+Documentar timeline del incidente.
+
+Decidir si requiere notificación a regulador/cliente.
+
+Workflow
+
+Estados: detectado → en_investigacion → mitigado → cerrado.
+
+Transición detectado → en_investigacion:
+
+Activa análisis LLM (sobre logs, descripciones) + crea tarea RISKREVIEW con checklistConfigId = “Incidente de seguridad”.
+​
+
+LLM
+
+Nodo LLM calcula riskScore y propone clasificación del incidente.
+
+HumanTaskHandler crea la tarea, el equipo de seguridad revisa checklist y decide ruta (notificar/no notificar, escalar, etc.).
+​
+
+En todos los casos, admin/checklist-configs define la estructura de la revisión; el workflow decide en qué estados y transiciones se aplica, y el LLM sirve para pre‑rellenar contexto y proponer decisiones, pero el checklist y la tarea ponen al humano en el centro de los puntos críticos.
+
+
+Sí, se puede, y encaja muy bien con tus piezas actuales: workflows, RAG, LLM, checklists y tareas humanas.
+​
+
+Te lo dejo como diseño concreto en dos workflows encadenados.
+
+1. Workflow 1: Operario de taller ejecuta el pedido
+1.1. Flujo de estados (ENTITY = PedidoTaller)
+borrador → en_ejecucion → pendiente_revision_operario → cerrado_operario.
+​
+
+Estado inicial: borrador.
+
+Estado clave: pendiente_revision_operario (donde se valida manual por manual).
+
+Definición aproximada en WorkflowDefinition:
+
+Estados:
+
+borrador (canEdit: TECHNICAL, isInitial: true).
+
+en_ejecucion.
+
+pendiente_revision_operario (requiresValidation: true, rolesAllowed: TECHNICAL).
+​
+
+cerrado_operario (isFinal: true).
+​
+
+Transiciones:
+
+borrador → en_ejecucion (“Enviar a taller”).
+
+en_ejecucion → pendiente_revision_operario (“Finalizar trabajo y revisar manuales”).
+
+pendiente_revision_operario → cerrado_operario (“Confirmar ejecución”).
+
+1.2. Extracción de partes y manuales vía LLM + RAG
+Cuando se crea el pedido o pasa a en_ejecucion:
+
+El operario o el sistema introduce:
+
+Lista de partes del ascensor afectadas (texto libre o selección).
+
+Descripción del trabajo previsto.
+
+Servicio de IA:
+
+Llama a un prompt tipo WORKSHOP_PARTS_EXTRACTOR:
+
+Extrae entidades “parte” normalizadas (p.ej. “motor de tracción modelo X”, “limitador de velocidad Y”).
+
+Para cada parte:
+
+Llama a tu RAG (RagService.searchManuals) para encontrar manuales relevantes y sus versiones (asset + version).
+​
+
+Persistes en el caso (pedido taller) algo como:
+
+ts
+parts: Array<{
+  id: string;
+  name: string;
+  manuals: Array<{
+    assetId: string;
+    title: string;
+    version: string;
+    url: string;
+  }>;
+}>
+1.3. Checklist para el operario (Human-in-the-Loop 1)
+Definir en admin/checklist-configs una ChecklistConfig tipo “Ejecución de pedido taller”:
+​
+
+Categorías:
+
+“Manuales consultados”.
+
+“Desviaciones respecto al manual”.
+
+Items generados dinámicamente por parte:
+
+Para cada parte P y manual M:
+
+Item 1 (checkbox + metadata):
+
+Descripción: “He leído y seguido el manual {M.title} v{M.version} para la parte {P.name}.”
+
+Campos extra (en UI):
+
+seguidoManual: boolean.
+
+motivoNoSeguir: string | null.
+
+Item 2 opcional:
+
+“He documentado cualquier desviación del manual según procedimiento interno.”
+
+Cómo conectarlo:
+
+En el workflow:
+
+La transición en_ejecucion → pendiente_revision_operario crea una tarea DOCUMENTREVIEW con checklistConfigId = “Ejecución pedido taller” y metadata con la lista de partes/manuales.
+​
+
+En la UI de la tarea:
+
+Renderizas la checklist usando la config general + items instanciados por partes.
+
+El operario marca para cada manual si lo ha seguido y, si no, indica motivo.
+
+Al completar la tarea:
+
+Guardas en el pedido un resumen estructurado de:
+
+Por parte/manual: seguidoManual, motivoNoSeguir.
+
+2. Workflow 2: Revisor verifica in situ
+Este es otro workflow, sobre otra entidad, por ejemplo INSPECCION_TALLER o el mismo PedidoTaller en una “fase de revisión”.
+
+2.1. Flujo de estados (ENTITY = InspeccionTaller)
+pendiente_inspeccion → en_inspeccion → validado / rechazado.
+​
+
+Relación con el pedido:
+
+Cuando el Workflow 1 acaba en cerrado_operario, se dispara un WorkflowAction (con tu UpdateEntityHandler / HumanTaskHandler) que:
+
+Crea una nueva entidad “Inspección de pedido” ligada al pedido (pedidoId).
+​
+
+O crea directamente una tarea de tipo RISKREVIEW asociada al pedido.
+
+2.2. Checklist para el revisor (Human-in-the-Loop 2)
+Nueva ChecklistConfig: “Inspección física de pedido taller”:
+​
+
+Categorías:
+
+“Verificación de ejecución”.
+
+“Concordancia manual vs realidad”.
+
+Items por cada parte/manual:
+
+Para cada parte P y manual M, usando los datos del workflow 1:
+
+Item 1:
+
+“Verificar que la parte {P.name} está instalada/configurada según {M.title} v{M.version}.”
+
+Campo extra:
+
+validado: boolean.
+
+motivoNoValida: string | null.
+
+Item 2:
+
+“Si el operario declaró que no siguió el manual, revisar y justificar si está aceptado: {motivoNoSeguir}.”
+
+Cómo conectarlo:
+
+La tarea de inspector (workflow 2) recibe en metadata:
+
+pedidoId.
+
+Lista de partes/manuales + respuesta del operario (seguidoManual, motivos).
+
+En la UI:
+
+El inspector ve:
+
+Lo que afirmó el operario.
+
+Campo para confirmar o no, y añadir su propia justificación.
+
+Al finalizar:
+
+Se marca la tarea como COMPLETED con decisión:
+
+APPROVE (validado).
+
+REJECT (rechazado) + motivos.
+
+Workflow 2 actualiza el estado del pedido o de la inspección.
+
+3. Rol del LLM y del RAG en ambos workflows
+3.1. En creación/ejecución del pedido
+LLM:
+
+Normaliza partes, sugiere manuales relevantes.
+
+Puede proponer qué manual es “obligatorio” vs “recomendado”.
+
+RAG:
+
+Busca manuales oficiales por texto/ID de parte, devolviendo enlaces y versiones.
+​
+
+3.2. En revisión del inspector
+LLM (opcional pero potente):
+
+Puede:
+
+Analizar diferencias entre lo que decía el manual y lo que el operario hizo (a partir de logs, fotos e informes).
+
+Proponer si la desviación es “justificada” o “riesgosa”.
+
+Pero la decisión final se queda en el revisor humano, vía checklist y workflow.
+
+4. Encaje con tu stack actual
+Con lo que ya tienes:
+
+Workflows:
+
+Puedes definir ambos flujos con WorkflowService.createOrUpdateDefinition y conectar transiciones con HumanTaskHandler para generar tareas con checklistConfigId.
+​
+
+Checklists:
+
+admin/checklist-configs define las plantillas base.
+
+El backend instancia items dinámicamente por partes/manuales y los pasa a la UI como extensión de ChecklistConfig.
+​
+
+RAG:
+
+Tu RAG ya indexa documentos; solo hay que definir un servicio searchManualsByPart y quizá un prompt de normalización de partes.
+​
+
+Human‑in‑the‑Loop:
+
+Ambas fases usan tareas (workflowtasks) con roles distintos: TECHNICAL para operario, REVIEWER o COMPLIANCE para el inspector.
+​
+
+Es un caso de uso muy natural para tu plataforma: une catálogo de conocimiento técnico (RAG), workflows multi‑tenant y trazabilidad fuerte de “qué se hizo, según qué manual, quién lo comprobó y por qué”.
+
+
+La mayoría de interfaces ya existen o están muy cerca; necesitas sobre todo “especializarlas” para este caso de uso, no rehacerlas.
+​
+
+1. Pantalla para subir documento y lanzar el flujo
+Hoy tienes varias piezas:
+
+Ingesta de documentos a RAG (subida + clasificación) y BlobStorageService para almacenar ficheros, que ya se usa en RAG y documentos de usuario.
+​
+
+Casos genéricos (cases) con MongoCaseRepository y workflows asociados a ENTITY.
+​
+
+Para tu caso “pedido a taller”:
+
+Lo razonable es:
+
+Reutilizar una pantalla tipo “nuevo caso / nuevo pedido” donde:
+
+Se selecciona ascensor / equipo.
+
+Se sube uno o varios documentos (orden de trabajo, planos, etc.).
+
+Se escriben las partes afectadas (texto libre).
+
+Al guardar:
+
+Se crea el PedidoTaller (ENTITY) y se dispara el workflow 1 (borrador → en_ejecucion), incluyendo la llamada al LLM/RAG para extraer partes/manuales.
+
+Conclusión:
+no hay una screen específica “subir doc → lanzar workflow pedido taller”, pero puedes construirla rápidamente reutilizando:
+
+El patrón de “nuevo caso” (formularios estándar de entidad).
+
+Los componentes de subida de documento que ya usas para RAG / documentos de usuario.
+​
+
+2. Pantallas para dar OK/KO y motivo
+Aquí estás bastante cubierto:
+
+Tareas de workflow:
+
+API: GET api/admin/workflow-tasks (lista por status, role, caseId).
+​
+
+API: PATCH api/admin/workflow-tasks/:id (cambia status, notes).
+​
+
+UI:
+
+Menú lateral: ítem “Workflow Tasks” que apunta a /admin/workflow-tasks.
+​
+
+Página WorkflowTaskInbox (React) que:
+
+Lista tareas del tenant.
+
+Filtra por estado y rol.
+
+Permite abrir tarea y actualizar status (INPROGRESS, COMPLETED, REJECTED, etc.).
+​
+
+Para tu caso concreto solo necesitas:
+
+Extender el modelo de tarea con:
+
+Metadata de partes/manuales y campos de decisión (seguido/no, motivo).
+
+En la pantalla de detalle de tarea:
+
+Renderizar un formulario con:
+
+Por cada parte/manual:
+
+Radio/checkbox “OK / KO”.
+
+Campo texto “motivo” si KO.
+
+Usar el PATCH existente para:
+
+Enviar status (COMPLETED/REJECTED) y notes o un JSON de decisiones.
+
+Conclusión:
+sí tienes la base de “pantalla para dar OK/KO y motivo”; falta especializar el detalle de la tarea para mostrar los campos que necesitas (pero el flujo general de lista → detalle → actualizar ya está implementado).
+​
+
+3. Pantalla para listar tareas y su estado (operario y revisor)
+Esto ya está listo:
+
+Endpoint GET api/admin/workflow-tasks:
+
+Filtros: status, role, caseId.
+​
+
+UI WorkflowTaskInbox:
+
+Página en admin con tabla de tareas (título, tipo, estado, fecha, etc.).
+​
+
+Filtros por estado y rol.
+
+Menú:
+
+Ítem “Workflow Tasks” visible para roles ADMIN, COMPLIANCE, REVIEWER, TECHNICAL.
+​
+
+Para que funcione como “bandeja de operario” y “bandeja de revisor”:
+
+Usa assignedRole en la tarea (ya lo rellena HumanTaskHandler).
+​
+
+En la UI, filtra por rol del usuario autenticado:
+
+Operario (TECHNICAL) ve solo tareas con assignedRole: TECHNICAL.
+
+Revisor (REVIEWER/COMPLIANCE) ve las suyas.
+
+Conclusión:
+la pantalla de lista de tareas y navegación a detalle existe y está correctamente enlazada; solo debes afinar filtros y diseño del detalle para este caso.
+
+4. ¿Qué falta exactamente?
+En resumen:
+
+Existe:
+
+Lista de tareas de workflow (/admin/workflow-tasks).
+​
+
+APIs para listar y actualizar tareas (GET/PATCH api/admin/workflow-tasks).
+​
+
+Motor para crear tareas (WorkflowTaskService, HumanTaskHandler).
+​
+
+Infra de documentos/RAG para buscar manuales.
+​
+
+Falta (a implementar):
+
+Una screen específica de “nuevo pedido de taller” con subida de doc y definición de partes, que cree el caso y dispare el workflow.
+
+Ampliar el detalle de tarea de WorkflowTaskInbox para:
+
+Mostrar partes + manuales.
+
+Recoger OK/KO y motivos, tanto para operario como para revisor.
+
+Conectar esas decisiones con la transición del workflow (cuando se completa la tarea, ejecutar la transición correspondiente al estado siguiente).
+
+Con esos ajustes, la aplicación estaría plenamente preparada para el escenario que describes, sin cambios de arquitectura ni de tecnología.
+
+
+
+
+Sí, si rematas bien las capas de UX que faltan, puede quedar al nivel de un SaaS profesional para un usuario medio.
+​
+
+1. Lo que ya está al nivel “pro”
+Bandeja de tareas: tienes un inbox de workflow con filtros, estados y roles, muy similar a cualquier herramienta de ticketing/BPM.
+​
+
+Seguridad y multi‑tenant: permisos por recurso (checklists, workflow), aislamiento getTenantCollection, trazabilidad y logs.
+​
+
+Editor de configuraciones: admin/checklist-configs + configurador visual dan una forma clara de definir reglas sin tocar código.
+​
+
+2. Lo que necesitas cuidar para que sea “usable para taller”
+Si implementas lo que hemos hablado con estas pautas, un operario medio no se perderá:
+
+Flujos guiados, no genéricos
+
+Pantalla “Nuevo pedido de taller” con texto muy simple:
+
+Paso 1: selecciona ascensor.
+
+Paso 2: describe el trabajo.
+
+Paso 3: sube documentos.
+
+Botón grande “Enviar a taller”.
+
+Tareas con lenguaje humano, sin jerga de workflow
+
+En WorkflowTaskInbox, en vez de “DOCUMENTREVIEW”/“WORKFLOWDECISION”, textos como:
+
+“Revisar pedido de taller”, “Inspeccionar ascensor instalados hoy”.
+
+Estado mostrado como “Pendiente”, “En curso”, “Completado”, no como PENDING/COMPLETED.
+
+Checklists claras por paso
+
+Para el operario:
+
+Por cada parte: “He leído el manual X vY” → Sí/No, motivo si No.
+
+Para el revisor:
+
+“Confirmo que la parte X está instalada según el manual” → Sí/No, motivo.
+
+Minimizar decisiones técnicas
+
+El operario nunca elige workflow ni estados; solo ve:
+
+“Crear pedido”.
+
+“Tareas pendientes”.
+
+Dentro de cada tarea: un checklist y botones “Confirmar” / “Rechazar”.
+
+3. Riesgos y cómo mitigarlos
+Complejidad oculta
+
+Motor de workflows, RAG y LLM pueden ser complejos, pero si la UI los abstrae en 3–4 pantallas sencillas, el usuario no lo notará.
+
+Sobrecarga de formularios
+
+Evitar que el operario tenga que rellenar demasiado texto libre:
+
+Muchos campos booleanos (sí/no) + motivos solo cuando algo no se cumple.
+
+Si mantienes esa disciplina de UX (flujos guiados, lenguaje claro, pocos clics), con las piezas que ya tienes y los ajustes que hemos descrito, el resultado encaja bien con la experiencia que se espera de un SaaS profesional en entorno industrial
+
+
+
+
+Un diseño tentativo, siguiendo tus patrones actuales (PageContainer, PageHeader, ContentCard, grid 1–2 columnas, badges, inputs shadcn-like), podría ser así.
+​
+
+1. Pantalla “Nuevo Pedido de Taller”
+Ruta: /workshop/orders/new (o /admin/workshop/orders/new según organización).
+
+Estructura general
+PageContainer
+
+PageHeader
+
+title: “Nuevo pedido de taller”
+
+highlight: “Taller”
+
+subtitle: “Registra un nuevo trabajo y deja que el sistema prepare los manuales necesarios.”
+
+Grid 2 columnas en desktop, 1 en móvil.
+
+Contenido
+Columna izquierda: datos del pedido
+
+ContentCard “Datos del trabajo”
+
+Campos:
+
+Select “Ascensor / Equipo”
+
+Select con búsqueda rápida (modelo, ubicación).
+
+Input “Título del pedido”
+
+Ej.: “Sustitución grupo tractor – Torre Norte”.
+
+Textarea “Descripción del trabajo”
+
+Placeholder: “Describe brevemente qué hay que hacer…”.
+
+Chips/Tags “Partes afectadas”
+
+Input + chips; al escribir “motor”, “limitador”, etc., se añaden tags.
+
+Botón principal al final:
+
+Button ancho completo, teal:
+
+Texto: “Enviar a taller y preparar manuales”.
+
+Columna derecha: documentos y vista previa
+
+ContentCard “Documentos adjuntos”
+
+Componente de subida de ficheros (igual que user docs/RAG):
+
+Zona drag & drop con icono Upload.
+
+Lista de archivos adjuntos con nombre, tamaño y botón de borrar.
+
+ContentCard “Resumen”
+
+Lista compacta:
+
+Ascensor seleccionado.
+
+Número de documentos subidos.
+
+Número de partes listadas.
+
+Acción al guardar
+
+Backend:
+
+Crea entidad PedidoTaller.
+
+Lanza workflow (estado borrador → en_ejecucion) y proceso de LLM+RAG para identificar partes/manuales.
+
+2. Bandeja de tareas del operario (WorkflowTaskInbox “Taller”)
+Ruta: /workshop/tasks (view especializada sobre /admin/workflow-tasks).
+​
+
+Estructura
+PageContainer
+
+PageHeader
+
+title: “Tareas de taller”
+
+highlight: “Pendientes”
+
+subtitle: “Revisa tus trabajos pendientes y confirma la ejecución según los manuales.”
+
+Filtros arriba + tabla de tareas.
+
+Filtros
+Fila con:
+
+Select “Estado”: Todos, Pendientes, En curso.
+
+(Opcional) Select “Tipo de tarea”: “Revisión de pedido”, “Inspección de ascensor”.
+
+Search simple (por código de pedido o ubicación).
+
+Tabla
+ContentCard con DataTable:
+
+Columnas:
+
+Pedido: código + título (badge).
+
+Tipo: “Revisión de manuales”, “Inspección”.
+
+Estado: badge (Pendiente / En curso / Completada).
+
+Fecha creación.
+
+Acción: botón “Abrir”.
+
+Una fila se abre en una página/modal de detalle.
+
+3. Detalle de tarea del operario (checklist de manuales)
+Ruta: /workshop/tasks/[id].
+
+Estructura
+PageContainer
+
+Breadcrumb: “Tareas de taller / Pedido XXX”.
+
+PageHeader
+
+title: “Revisión de manuales – Pedido XXX”
+
+highlight: estado (badge).
+
+subtitle: “Confirma que has seguido los manuales indicados para cada parte.”
+
+Layout:
+
+Columna izquierda: info del pedido.
+
+Columna derecha: checklist interactiva.
+
+Columna izquierda: contexto
+ContentCard “Información del pedido”
+
+Campos en lista:
+
+Ascensor / ubicación.
+
+Descripción del trabajo.
+
+Fecha asignación.
+
+ContentCard “Partes afectadas”
+
+Para cada parte:
+
+Nombre de la parte (badge).
+
+Manuales sugeridos (lista de links):
+
+“Manual motor X v1.2 (PDF)”.
+
+Icono para abrir en nueva pestaña.
+
+Columna derecha: checklist
+ContentCard “Confirmación de ejecución”
+
+Para cada parte P y manual M:
+
+Bloque tipo:
+
+Título: “Parte: Motor de tracción – Manual: Manual motor X v1.2”.
+
+Radio buttons o toggle:
+
+“He leído y he seguido este manual” (Sí / No).
+
+Si No:
+
+Textarea pequeña “Motivo por el que no se ha seguido el manual”.
+
+Divider ligero entre bloques.
+
+Al final:
+
+Textarea “Comentarios generales (opcional)”.
+
+Fila de botones:
+
+Button primario: “Confirmar ejecución” → marca tarea COMPLETED y dispara transición.
+
+Button secundario, rojo link: “Marcar como bloqueada / rechazada” → abre pequeño diálogo para motivos (envía REJECTED).
+
+4. Bandeja del revisor (inspector)
+Ruta: /inspection/tasks (otro filtro sobre workflow-tasks).
+
+Similar a la bandeja del operario, pero:
+
+PageHeader
+
+title: “Inspecciones pendientes”.
+
+highlight: “Control”.
+
+subtitle: “Valida sobre el terreno que los trabajos siguen los manuales.”
+
+Filtro por estado y, opcionalmente, por zona/ascensor.
+
+5. Detalle de tarea del revisor (inspección física)
+Ruta: /inspection/tasks/[id].
+
+Estructura
+PageContainer
+
+Breadcrumb: “Inspecciones / Pedido XXX”.
+
+PageHeader
+
+title: “Inspección – Pedido XXX”
+
+highlight: estado.
+
+subtitle: “Verifica en el ascensor lo que declaró el taller.”
+
+Layout 2 columnas:
+
+Columna izquierda: declaración del operario
+
+ContentCard “Resumen del trabajo”
+
+Igual que en la tarea del operario: ascensor, descripción, documentos.
+
+ContentCard “Lo que declaró el operario”
+
+Para cada parte/manual:
+
+Parte + manual.
+
+Badge “Operario: siguió manual” Sí/No.
+
+Motivo si No.
+
+Columna derecha: checklist del inspector
+
+ContentCard “Verificación in situ”
+
+Para cada parte/manual:
+
+Título: “Parte X – Manual Y vZ”.
+
+Radio:
+
+“Confirmo que la instalación sigue el manual” (Sí/No).
+
+Campo texto si No: “Motivo / desviación observada”.
+
+Campo opcional: “Acción correctiva sugerida”.
+
+Al final:
+
+Radio global:
+
+“Resultado global de la inspección”: Aprobado / Rechazado.
+
+Textarea “Observaciones finales”.
+
+Botones:
+
+Primario: “Aprobar e informar” → workflow a validado.
+
+Secundario (rojo): “Rechazar y solicitar corrección” → workflow a estado de “correcciones”.
+
+6. Estilo y componentes
+En todas las pantallas:
+
+Usar tus PageContainer, PageHeader, ContentCard, Button, Badge, DataTable tal como en dashboard, auditoría, billing.
+​
+
+Colores:
+
+Teal para acciones positivas (como en Compliance/Billing).
+
+Amber/rose para alertas/KO.
+
+Tipografía:
+
+Títulos font-black, text-xs para labels en mayúsculas, igual que en el resto del admin.
+​
+
+Si quieres, en el siguiente paso puedo bajarte uno de estos layouts (por ejemplo, el detalle de tarea de operario) a JSX/TSX casi directo para integrarlo en tu WorkflowTaskInbox como un tipo de tarea especializado.
+
+
+Una posible implementación del detalle de tarea de operario en TSX, alineada con tus componentes y lista para enchufar en WorkflowTaskInbox, podría ser algo así (asumiendo que ya traes la task con metadata de partes/manuales):
+
+tsx
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+interface ManualRef {
+  assetId: string;
+  title: string;
+  version: string;
+  url: string;
+}
+
+interface PartManualStatus {
+  partId: string;
+  partName: string;
+  manual: ManualRef;
+  followed: boolean | null;
+  reason?: string;
+}
+
+interface WorkshopTaskMetadata {
+  elevatorName?: string;
+  location?: string;
+  orderTitle?: string;
+  orderDescription?: string;
+  parts: PartManualStatus[];
+}
+
+interface WorkflowTask {
+  id: string;
+  caseId: string;
+  title: string;
+  description?: string;
+  status: "PENDING" | "INPROGRESS" | "COMPLETED" | "REJECTED" | "CANCELLED";
+  createdAt: string;
+  metadata?: WorkshopTaskMetadata;
+}
+
+interface Props {
+  task: WorkflowTask;
+  onResolved?: () => void; // para refrescar lista tras completar
+}
+
+export function WorkshopOperatorTaskDetail({ task, onResolved }: Props) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [saving, setSaving] = React.useState(false);
+
+  // Estado local editable de los items
+  const [items, setItems] = React.useState<PartManualStatus[]>(
+    task.metadata?.parts ?? []
+  );
+  const [generalNotes, setGeneralNotes] = React.useState("");
+
+  const meta = task.metadata;
+
+  const handleToggleFollowed = (index: number, value: boolean) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              followed: value,
+              // si marcamos como seguido, limpiamos el motivo
+              reason: value ? "" : item.reason,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleReasonChange = (index: number, value: string) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, reason: value } : item
+      )
+    );
+  };
+
+  const handleSubmit = async (decision: "COMPLETE" | "REJECT") => {
+    try {
+      setSaving(true);
+
+      // Payload para el PATCH de workflow-tasks
+      const payload: any = {
+        status: decision === "COMPLETE" ? "COMPLETED" : "REJECTED",
+        // notes globales + snapshot de decisiones
+        notes: generalNotes,
+        decision: decision === "COMPLETE" ? "APPROVE" : "REJECT",
+        operatorChecklist: items.map((it) => ({
+          partId: it.partId,
+          partName: it.partName,
+          manualAssetId: it.manual.assetId,
+          manualTitle: it.manual.title,
+          manualVersion: it.manual.version,
+          followed: it.followed,
+          reason: it.reason,
+        })),
+      };
+
+      const res = await fetch(`/api/admin/workflow-tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Error al actualizar la tarea");
+      }
+
+      toast({
+        title: "Tarea actualizada",
+        description:
+          decision === "COMPLETE"
+            ? "Has confirmado la ejecución del pedido."
+            : "Has marcado la tarea como rechazada.",
+      });
+
+      onResolved?.();
+      // opcional: volver a la lista
+      router.push("/admin/workflow-tasks");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la tarea.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label="Volver"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Revisión de manuales – {task.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Confirma que has seguido los manuales indicados para cada parte.
+            </p>
+          </div>
+        </div>
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-xs font-semibold px-3 py-1",
+            task.status === "PENDING" && "bg-amber-50 text-amber-700 border-amber-200",
+            task.status === "INPROGRESS" &&
+              "bg-blue-50 text-blue-700 border-blue-200",
+            task.status === "COMPLETED" &&
+              "bg-emerald-50 text-emerald-700 border-emerald-200",
+            task.status === "REJECTED" &&
+              "bg-rose-50 text-rose-700 border-rose-200"
+          )}
+        >
+          {task.status === "PENDING" && "Pendiente"}
+          {task.status === "INPROGRESS" && "En curso"}
+          {task.status === "COMPLETED" && "Completada"}
+          {task.status === "REJECTED" && "Rechazada"}
+          {task.status === "CANCELLED" && "Cancelada"}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Columna izquierda: contexto del pedido */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-teal-500" />
+                Información del pedido
+              </CardTitle>
+              <CardDescription>
+                Datos básicos del trabajo asociado a esta tarea.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {meta?.elevatorName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ascensor</span>
+                  <span className="font-medium">{meta.elevatorName}</span>
+                </div>
+              )}
+              {meta?.location && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ubicación</span>
+                  <span className="font-medium">{meta.location}</span>
+                </div>
+              )}
+              {meta?.orderTitle && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Trabajo</span>
+                  <span className="font-medium">{meta.orderTitle}</span>
+                </div>
+              )}
+              {meta?.orderDescription && (
+                <div className="mt-3">
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
+                    Descripción
+                  </span>
+                  <p className="mt-1 text-sm leading-relaxed">
+                    {meta.orderDescription}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Partes afectadas</CardTitle>
+              <CardDescription>
+                Resumen de las partes y manuales a revisar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {items.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  No hay partes registradas en esta tarea.
+                </p>
+              )}
+              {items.map((item, idx) => (
+                <div
+                  key={`${item.partId}-${idx}`}
+                  className="border border-slate-200 rounded-lg px-3 py-2"
+                >
+                  <div className="flex justify-between items-center gap-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                        Parte
+                      </p>
+                      <p className="text-sm font-medium">{item.partName}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      Manual v{item.manual.version}
+                    </Badge>
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                      Manual
+                    </p>
+                    <a
+                      href={item.manual.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-teal-600 hover:underline"
+                    >
+                      {item.manual.title}
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna derecha: checklist del operario */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Confirmación de ejecución</CardTitle>
+              <CardDescription>
+                Indica si has seguido los manuales para cada parte y explica
+                cualquier desviación.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              {items.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  No hay elementos para revisar en esta tarea.
+                </p>
+              )}
+
+              {items.map((item, index) => (
+                <div
+                  key={`${item.partId}-${index}`}
+                  className="border border-slate-200 rounded-lg p-3 space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                        Parte y manual
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {item.partName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.manual.title} (v{item.manual.version})
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                      ¿Has leído y seguido este manual?
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id={`followed-yes-${index}`}
+                          checked={item.followed === true}
+                          onCheckedChange={() =>
+                            handleToggleFollowed(index, true)
+                          }
+                        />
+                        <Label htmlFor={`followed-yes-${index}`} className="text-xs">
+                          Sí, lo he seguido
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id={`followed-no-${index}`}
+                          checked={item.followed === false}
+                          onCheckedChange={() =>
+                            handleToggleFollowed(index, false)
+                          }
+                        />
+                        <Label htmlFor={`followed-no-${index}`} className="text-xs">
+                          No lo he seguido
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {item.followed === false && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                        Motivo por el que no se ha seguido el manual
+                      </p>
+                      <Textarea
+                        value={item.reason ?? ""}
+                        onChange={(e) =>
+                          handleReasonChange(index, e.target.value)
+                        }
+                        className="text-xs"
+                        placeholder="Describe brevemente por qué no se ha seguido el manual (p. ej. manual desactualizado, condición especial del ascensor, etc.)."
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                  Comentarios generales (opcional)
+                </p>
+                <Textarea
+                  value={generalNotes}
+                  onChange={(e) => setGeneralNotes(e.target.value)}
+                  className="text-xs"
+                  placeholder="Observaciones adicionales sobre el trabajo realizado."
+                />
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-3 pt-2">
+                <Button
+                  className="flex-1 bg-teal-600 hover:bg-teal-500"
+                  onClick={() => handleSubmit("COMPLETE")}
+                  disabled={saving}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Confirmar ejecución
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => handleSubmit("REJECT")}
+                  disabled={saving}
+                >
+                  <XCircle className="w-4 h-4 mr-2 text-rose-500" />
+                  Marcar como rechazada / bloqueada
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+Cómo integrarlo con tu WorkflowTaskInbox:
+
+En la lista de tareas, al hacer clic en una tarea de tipo "WORKSHOP_OPERATOR" (por ejemplo, por task.type o metadata.context), navegas a /admin/workflow-tasks/[id].
+
+En la página de detalle de tarea, si detectas que es de este tipo, renderizas WorkshopOperatorTaskDetail con la task completa (incluyendo metadata.parts).
+
+El PATCH /api/admin/workflow-tasks/:id ya existe; solo debes extender el esquema Zod para aceptar decision y operatorChecklist, como comentamos antes.
+
+
+
+
+
+Te propongo ahora el layout TSX para el detalle de tarea del revisor/inspector, complementario al del operario. La idea: ver lo que declaró el taller y validar (OK/KO + motivo) cada parte/manual.
+
+Asumo que:
+
+La tarea trae en metadata tanto lo que declaró el operario como campos para que el inspector añada su validación.
+
+Reutilizas el mismo endpoint PATCH /api/admin/workflow-tasks/:id con campos status, decision, inspectorChecklist, notes.
+​
+
+tsx
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, FileSearch, CheckCircle2, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+interface ManualRef {
+  assetId: string;
+  title: string;
+  version: string;
+  url: string;
+}
+
+interface OperatorDecision {
+  followed: boolean | null;
+  reason?: string;
+}
+
+interface InspectorDecision {
+  validated: boolean | null;
+  reason?: string;
+  correctiveAction?: string;
+}
+
+interface PartInspection {
+  partId: string;
+  partName: string;
+  manual: ManualRef;
+  operator: OperatorDecision;
+  inspector?: InspectorDecision;
+}
+
+interface InspectionTaskMetadata {
+  elevatorName?: string;
+  location?: string;
+  orderTitle?: string;
+  orderDescription?: string;
+  // resumen global del pedido, si quieres
+  parts: PartInspection[];
+}
+
+interface WorkflowTask {
+  id: string;
+  caseId: string;
+  title: string;
+  description?: string;
+  status: "PENDING" | "INPROGRESS" | "COMPLETED" | "REJECTED" | "CANCELLED";
+  createdAt: string;
+  metadata?: InspectionTaskMetadata;
+}
+
+interface Props {
+  task: WorkflowTask;
+  onResolved?: () => void;
+}
+
+export function WorkshopInspectorTaskDetail({ task, onResolved }: Props) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [saving, setSaving] = React.useState(false);
+
+  const meta = task.metadata;
+
+  const [items, setItems] = React.useState<PartInspection[]>(
+    meta?.parts ?? []
+  );
+  const [globalResult, setGlobalResult] = React.useState<
+    "APPROVE" | "REJECT" | null
+  >(null);
+  const [generalNotes, setGeneralNotes] = React.useState("");
+
+  const handleToggleValidated = (index: number, value: boolean) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              inspector: {
+                ...(item.inspector ?? {}),
+                validated: value,
+                // si se valida, puedes decidir limpiar reason/correctiveAction
+              },
+            }
+          : item
+      )
+    );
+  };
+
+  const handleInspectorReasonChange = (index: number, field: "reason" | "correctiveAction", value: string) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              inspector: {
+                ...(item.inspector ?? { validated: null }),
+                [field]: value,
+              },
+            }
+          : item
+      )
+    );
+  };
+
+  const handleSubmit = async (decision: "APPROVE" | "REJECT") => {
+    try {
+      setSaving(true);
+
+      const payload: any = {
+        status: decision === "APPROVE" ? "COMPLETED" : "REJECTED",
+        decision,
+        notes: generalNotes,
+        inspectorChecklist: items.map((it) => ({
+          partId: it.partId,
+          partName: it.partName,
+          manualAssetId: it.manual.assetId,
+          manualTitle: it.manual.title,
+          manualVersion: it.manual.version,
+          operatorFollowed: it.operator.followed,
+          operatorReason: it.operator.reason,
+          inspectorValidated: it.inspector?.validated,
+          inspectorReason: it.inspector?.reason,
+          inspectorCorrectiveAction: it.inspector?.correctiveAction,
+        })),
+      };
+
+      const res = await fetch(`/api/admin/workflow-tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Error al actualizar la tarea");
+      }
+
+      toast({
+        title: "Inspección registrada",
+        description:
+          decision === "APPROVE"
+            ? "Has aprobado la inspección del pedido."
+            : "Has rechazado la inspección y se solicitarán correcciones.",
+      });
+
+      onResolved?.();
+      router.push("/admin/workflow-tasks");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la tarea.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label="Volver"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Inspección – {task.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Valida sobre el terreno que los trabajos siguen los manuales.
+            </p>
+          </div>
+        </div>
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-xs font-semibold px-3 py-1",
+            task.status === "PENDING" && "bg-amber-50 text-amber-700 border-amber-200",
+            task.status === "INPROGRESS" &&
+              "bg-blue-50 text-blue-700 border-blue-200",
+            task.status === "COMPLETED" &&
+              "bg-emerald-50 text-emerald-700 border-emerald-200",
+            task.status === "REJECTED" &&
+              "bg-rose-50 text-rose-700 border-rose-200"
+          )}
+        >
+          {task.status === "PENDING" && "Pendiente"}
+          {task.status === "INPROGRESS" && "En curso"}
+          {task.status === "COMPLETED" && "Completada"}
+          {task.status === "REJECTED" && "Rechazada"}
+          {task.status === "CANCELLED" && "Cancelada"}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Columna izquierda: información + declaración del operario */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSearch className="w-4 h-4 text-indigo-500" />
+                Información del pedido
+              </CardTitle>
+              <CardDescription>
+                Datos del trabajo asociado a esta inspección.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {meta?.elevatorName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ascensor</span>
+                  <span className="font-medium">{meta.elevatorName}</span>
+                </div>
+              )}
+              {meta?.location && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ubicación</span>
+                  <span className="font-medium">{meta.location}</span>
+                </div>
+              )}
+              {meta?.orderTitle && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Trabajo</span>
+                  <span className="font-medium">{meta.orderTitle}</span>
+                </div>
+              )}
+              {meta?.orderDescription && (
+                <div className="mt-3">
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
+                    Descripción
+                  </span>
+                  <p className="mt-1 text-sm leading-relaxed">
+                    {meta.orderDescription}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lo que declaró el taller</CardTitle>
+              <CardDescription>
+                Resumen de la declaración del operario para cada parte.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {items.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  No hay partes registradas en esta tarea.
+                </p>
+              )}
+              {items.map((item, idx) => (
+                <div
+                  key={`${item.partId}-${idx}`}
+                  className="border border-slate-200 rounded-lg px-3 py-2"
+                >
+                  <div className="flex justify-between items-center gap-2 mb-1">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                        Parte
+                      </p>
+                      <p className="text-sm font-medium">{item.partName}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      Manual v{item.manual.version}
+                    </Badge>
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                      Manual
+                    </p>
+                    <a
+                      href={item.manual.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-teal-600 hover:underline"
+                    >
+                      {item.manual.title}
+                    </a>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                      Declaración del operario
+                    </p>
+                    <p className="text-xs">
+                      {item.operator.followed === true && (
+                        <span className="text-emerald-700">
+                          Indicó que siguió el manual.
+                        </span>
+                      )}
+                      {item.operator.followed === false && (
+                        <span className="text-amber-700">
+                          Indicó que NO siguió el manual.
+                        </span>
+                      )}
+                      {item.operator.followed == null && (
+                        <span className="text-slate-500">
+                          No hay información registrada.
+                        </span>
+                      )}
+                    </p>
+                    {item.operator.reason && (
+                      <p className="mt-1 text-xs text-slate-600">
+                        Motivo: {item.operator.reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna derecha: checklist de inspección */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Verificación en campo</CardTitle>
+              <CardDescription>
+                Confirma en el ascensor si la ejecución se ajusta a los
+                manuales o documenta las desviaciones.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              {items.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  No hay elementos para inspeccionar en esta tarea.
+                </p>
+              )}
+
+              {items.map((item, index) => {
+                const inspector = item.inspector ?? { validated: null };
+                return (
+                  <div
+                    key={`${item.partId}-${index}`}
+                    className="border border-slate-200 rounded-lg p-3 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                          Parte y manual
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {item.partName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.manual.title} (v{item.manual.version})
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                        ¿La instalación sigue el manual?
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`validated-yes-${index}`}
+                            checked={inspector.validated === true}
+                            onCheckedChange={() =>
+                              handleToggleValidated(index, true)
+                            }
+                          />
+                          <Label
+                            htmlFor={`validated-yes-${index}`}
+                            className="text-xs"
+                          >
+                            Sí, coincide con el manual
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`validated-no-${index}`}
+                            checked={inspector.validated === false}
+                            onCheckedChange={() =>
+                              handleToggleValidated(index, false)
+                            }
+                          />
+                          <Label
+                            htmlFor={`validated-no-${index}`}
+                            className="text-xs"
+                          >
+                            No, hay desviaciones
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {inspector.validated === false && (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                            Motivo de la desviación
+                          </p>
+                          <Textarea
+                            value={inspector.reason ?? ""}
+                            onChange={(e) =>
+                              handleInspectorReasonChange(
+                                index,
+                                "reason",
+                                e.target.value
+                              )
+                            }
+                            className="text-xs"
+                            placeholder="Describe qué diferencia hay respecto al manual."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                            Acción correctiva sugerida (opcional)
+                          </p>
+                          <Textarea
+                            value={inspector.correctiveAction ?? ""}
+                            onChange={(e) =>
+                              handleInspectorReasonChange(
+                                index,
+                                "correctiveAction",
+                                e.target.value
+                              )
+                            }
+                            className="text-xs"
+                            placeholder="Indica si debe corregirse y cómo."
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                  Resultado global de la inspección
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="global-approve"
+                      checked={globalResult === "APPROVE"}
+                      onCheckedChange={() => setGlobalResult("APPROVE")}
+                    />
+                    <Label htmlFor="global-approve" className="text-xs">
+                      Aprobado
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="global-reject"
+                      checked={globalResult === "REJECT"}
+                      onCheckedChange={() => setGlobalResult("REJECT")}
+                    />
+                    <Label htmlFor="global-reject" className="text-xs">
+                      Rechazado / requiere correcciones
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                  Observaciones finales (opcional)
+                </p>
+                <Textarea
+                  value={generalNotes}
+                  onChange={(e) => setGeneralNotes(e.target.value)}
+                  className="text-xs"
+                  placeholder="Resumen general de la inspección."
+                />
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-3 pt-2">
+                <Button
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500"
+                  onClick={() => handleSubmit("APPROVE")}
+                  disabled={saving || globalResult === "REJECT"}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Aprobar inspección
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => handleSubmit("REJECT")}
+                  disabled={saving || globalResult === "APPROVE"}
+                >
+                  <XCircle className="w-4 h-4 mr-2 text-rose-500" />
+                  Rechazar e iniciar correcciones
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+Este componente sigue el mismo estilo que el layout del operario:
+
+Encabezado con PageHeader equivalente, badges de estado y botón Back.
+
+Columna izquierda: contexto del pedido + resumen de lo que declaró el operario.
+
+Columna derecha: checklist de inspección con OK/KO por parte/manual, motivo y acción correctiva, además de resultado global.
+​
+
+Bastaría con:
+
+Detectar en tu WorkflowTaskInbox cuándo task.metadata corresponde a una inspección (por metadata.type o task.type) y renderizar WorkshopInspectorTaskDetail.
+
+Extender el UpdateStatusSchema del endpoint PATCH api/admin/workflow-tasks/:id para aceptar decision e inspectorChecklist además de status y notes.
+
+
+
+Otro layout útil es la pantalla específica de “Nuevo pedido de taller”, que arranca el workflow y sube los documentos/manuales de base.
+
+tsx
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { UploadCloud, ArrowLeft, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+interface ElevatorOption {
+  id: string;
+  name: string;
+  location: string;
+  code: string;
+}
+
+interface FileItem {
+  id: string;
+  file: File;
+}
+
+export default function NewWorkshopOrderPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [elevatorQuery, setElevatorQuery] = React.useState("");
+  const [selectedElevator, setSelectedElevator] =
+    React.useState<ElevatorOption | null>(null);
+
+  const [orderTitle, setOrderTitle] = React.useState("");
+  const [orderDescription, setOrderDescription] = React.useState("");
+  const [partsInput, setPartsInput] = React.useState("");
+  const [parts, setParts] = React.useState<string[]>([]);
+
+  const [files, setFiles] = React.useState<FileItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // TODO: sustituir por hook real de búsqueda de ascensores
+  const fakeElevators: ElevatorOption[] = [
+    {
+      id: "1",
+      name: "Ascensor Torre Norte",
+      location: "Edificio A – Torre Norte",
+      code: "TN-01",
+    },
+    {
+      id: "2",
+      name: "Ascensor Torre Sur",
+      location: "Edificio A – Torre Sur",
+      code: "TS-02",
+    },
+  ];
+
+  const filteredElevators = fakeElevators.filter((e) =>
+    (e.name + e.location + e.code)
+      .toLowerCase()
+      .includes(elevatorQuery.toLowerCase())
+  );
+
+  const handleAddPart = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (!parts.includes(trimmed)) {
+      setParts((prev) => [...prev, trimmed]);
+    }
+  };
+
+  const handlePartsKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (
+    e
+  ) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      handleAddPart(partsInput);
+      setPartsInput("");
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = Array.from(event.target.files ?? []);
+    if (!newFiles.length) return;
+    setFiles((prev) => [
+      ...prev,
+      ...newFiles.map((file) => ({ id: crypto.randomUUID(), file })),
+    ]);
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedElevator) {
+      toast({
+        title: "Ascensor requerido",
+        description: "Selecciona el ascensor o equipo antes de continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!orderTitle.trim()) {
+      toast({
+        title: "Título requerido",
+        description: "Añade un título breve para el pedido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (files.length === 0) {
+      toast({
+        title: "Documentos requeridos",
+        description:
+          "Sube al menos un documento (orden de trabajo, planos, etc.).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("elevatorId", selectedElevator.id);
+      formData.append("orderTitle", orderTitle);
+      formData.append("orderDescription", orderDescription);
+      formData.append("parts", JSON.stringify(parts));
+
+      files.forEach((f) => {
+        formData.append("files", f.file, f.file.name);
+      });
+
+      const res = await fetch("/api/workshop/orders", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Error al crear el pedido de taller");
+      }
+
+      const data = await res.json();
+      toast({
+        title: "Pedido creado",
+        description:
+          "El pedido se ha registrado y se están preparando los manuales.",
+      });
+
+      // Redirigir al detalle del pedido o a la bandeja de tareas
+      router.push(`/admin/workflow-tasks?caseId=${data.caseId}`);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error.message || "No se pudo crear el pedido de taller.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <PageContainer>
+      <div className="flex items-center justify-between mb-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          aria-label="Volver"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <PageHeader
+        title="Nuevo pedido de taller"
+        highlight="Taller"
+        subtitle="Registra un nuevo trabajo y deja que el sistema prepare los manuales necesarios."
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 items-start">
+        {/* Columna izquierda: datos del trabajo */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos del trabajo</CardTitle>
+              <CardDescription>
+                Identifica el ascensor y describe el trabajo a realizar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Selector de ascensor */}
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide font-semibold">
+                  Ascensor / Equipo
+                </Label>
+                <Input
+                  placeholder="Buscar ascensor por nombre, código o ubicación..."
+                  value={elevatorQuery}
+                  onChange={(e) => setElevatorQuery(e.target.value)}
+                />
+                {elevatorQuery && (
+                  <div className="mt-2 border rounded-md max-h-40 overflow-y-auto bg-background">
+                    {filteredElevators.length === 0 && (
+                      <p className="text-xs text-muted-foreground p-2">
+                        No se han encontrado ascensores.
+                      </p>
+                    )}
+                    {filteredElevators.map((e) => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedElevator(e);
+                          setElevatorQuery("");
+                        }}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex flex-col gap-0.5",
+                          selectedElevator?.id === e.id &&
+                            "bg-teal-50 text-teal-900"
+                        )}
+                      >
+                        <span className="font-semibold">{e.name}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {e.location} · Código {e.code}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedElevator && !elevatorQuery && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {selectedElevator.name} · {selectedElevator.code}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      className="text-[11px] px-2"
+                      onClick={() => setSelectedElevator(null)}
+                    >
+                      Cambiar
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Título */}
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide font-semibold">
+                  Título del pedido
+                </Label>
+                <Input
+                  placeholder="Ej. Sustitución grupo tractor – Torre Norte"
+                  value={orderTitle}
+                  onChange={(e) => setOrderTitle(e.target.value)}
+                />
+              </div>
+
+              {/* Descripción */}
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide font-semibold">
+                  Descripción del trabajo
+                </Label>
+                <Textarea
+                  placeholder="Describe brevemente qué hay que hacer en el ascensor."
+                  value={orderDescription}
+                  onChange={(e) => setOrderDescription(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              {/* Partes afectadas */}
+              <div className="space-y-1">
+                <Label className="text-xs uppercase tracking-wide font-semibold">
+                  Partes afectadas
+                </Label>
+                <Input
+                  placeholder="Escribe una parte y pulsa Enter (ej. motor, limitador, puertas)..."
+                  value={partsInput}
+                  onChange={(e) => setPartsInput(e.target.value)}
+                  onKeyDown={handlePartsKeyDown}
+                />
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {parts.map((p) => (
+                    <Badge
+                      key={p}
+                      variant="outline"
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      {p}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setParts((prev) => prev.filter((x) => x !== p))
+                        }
+                        className="text-[10px] text-slate-500 hover:text-rose-500"
+                      >
+                        ✕
+                      </button>
+                    </Badge>
+                  ))}
+                  {parts.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Añade las partes que consideres relevantes; el sistema
+                      usará esta información para buscar manuales.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna derecha: documentos + resumen */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documentos adjuntos</CardTitle>
+              <CardDescription>
+                Sube órdenes de trabajo, planos, fotos u otros documentos
+                relevantes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+                <UploadCloud className="w-8 h-8 text-slate-400 mb-3" />
+                <p className="text-sm font-medium">
+                  Arrastra y suelta archivos aquí
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  o haz clic para seleccionarlos (PDF, imágenes, DOCX…)
+                </p>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-input"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    document.getElementById("file-input")?.click()
+                  }
+                >
+                  Seleccionar archivos
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
+                  Archivos seleccionados
+                </p>
+                {files.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No has añadido ningún archivo todavía.
+                  </p>
+                )}
+                {files.map((f) => (
+                  <div
+                    key={f.id}
+                    className="flex items-center justify-between text-xs border border-slate-200 rounded-md px-3 py-2"
+                  >
+                    <span className="truncate max-w-[220px]">
+                      {f.file.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile(f.id)}
+                      className="text-[11px] text-slate-500 hover:text-rose-500"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumen</CardTitle>
+              <CardDescription>
+                Revisa los datos antes de enviar el pedido a taller.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Ascensor</span>
+                <span className="font-medium">
+                  {selectedElevator
+                    ? `${selectedElevator.name} (${selectedElevator.code})`
+                    : "No seleccionado"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Documentos</span>
+                <span className="font-medium">{files.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Partes indicadas</span>
+                <span className="font-medium">{parts.length}</span>
+              </div>
+              <Button
+                className="w-full mt-4 bg-teal-600 hover:bg-teal-500"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                Enviar a taller y preparar manuales
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+Esta pantalla:
+
+Sigue tus patrones (PageContainer, PageHeader, Card, Button, etc.).
+​
+
+Recoge la selección de ascensor, título, descripción, partes y documentos.
+
+Envía un FormData a un endpoint /api/workshop/orders, que puede crear el caso y lanzar el workflow + procesos LLM/RAG asociados.
+
+
+hay dos vistas que completarían muy bien el flujo:
+
+1. Vista “Pedido de taller” con timeline de workflow
+Una página de detalle del caso/pedido (ENTITY), donde ver:
+
+Encabezado:
+
+Título del pedido, ascensor, estado actual (badge con color del workflow).
+​
+
+Timeline:
+
+Historial de estados (transitionsHistory del caso): fecha, usuario, acción (“Enviado a taller”, “Revisión de manuales completada”, “Inspección aprobada”).
+​
+
+Panel lateral:
+
+Enlaces directos a:
+
+Documentos adjuntos.
+
+Tareas relacionadas (operario, inspector) con su estado.
+
+Reutiliza tu patrón de PageContainer + PageHeader + ContentCard y el historial ya existente en MongoCaseRepository.updateStatus (que empuja transitionsHistory).
+​
+
+2. Vista “Mapa de procesos de taller” (admin)
+Para admins/compliance:
+
+Página en /admin/workflows?entityType=WORKSHOP_ORDER filtrada ya para el flujo de taller.
+​
+
+Contenido:
+
+Lista de workflows relacionados (operario, inspección).
+
+Botón “Ver analítica” que usa api/admin/workflows/analytics/:id para mostrar:
+
+Nº de pedidos por estado.
+
+Tiempos medios en cada nodo.
+
+Botón “Ver logs de ejecución” (/api/admin/workflows/analytics/:id/logs).
+​
+
+Esto da visibilidad tipo SaaS pro del rendimiento del proceso (cuellos de botella, tiempos de revisión, etc.), aprovechando WorkflowAnalyticsService que ya tienes.
+
+
+
+se podría abstraer esas pantallas para usar en otros entornos, por ejemplo, un despacho de abogados que sube un contrato de un cliente, extrae el clausulado, se busca en el RAG si cumple con los procedimientos y leyes vigentes, el abogado valida o rechazada cada punto (aquí se tendría que poder interrumpir para subsanar algo y volver a meter la nueva versión del contrato). Un senior podría revisar algunos contratos, ver si se ha tenido en cuenta lo que había dicho el RAG, para determinar la calidad de los contratos de un abogado concreto. Otro caso, es que un abogado mete un contrato y el rag (asistido por un LLM, si es necesario) le encuentra los contratos similares y le dice las partes que son similares o diferentes o las que faltan para poder rematar la redacción. O le pregunta qué partes tiene un contrato del tipo x, el rag se las da, él va copiando y pegando y validando que esa parte ya la tiene hecha.
+Sí, se puede abstraer casi todo y reutilizarlo en un despacho de abogados con muy pocos cambios conceptuales: cambiar vocabulario (pedido → contrato, operario → abogado, inspector → senior) y ajustar checklists y prompts.
+
+1. Abstracción general de las pantallas
+Las tres piezas clave que ya tienes y que se pueden hacer “genéricas”:
+
+Pantalla de “nuevo caso + documentos”
+
+Hoy: “Nuevo pedido de taller” con ascensor, descripción, partes, adjuntos.
+
+Abstracto: “Nuevo caso” con:
+
+entityType (WORKSHOP_ORDER, LEGAL_CONTRACT, INCIDENT, etc.).
+
+Campos configurables por tipo (cliente, asunto, jurisdicción…).
+
+Reutilizable como “Nuevo contrato” en el despacho.
+
+Detalle de tarea con checklist de revisión
+
+Hoy: operario/inspector marcan manuales seguidos/no, motivo.
+
+Abstracto: tarea con:
+
+Lista de “elementos a validar” (partes + manuales, cláusulas + normas).
+
+Campos ok/ko + motivo + acción recomendada.
+
+Sirve igual para que un abogado valide cada cláusula frente a la política interna / ley.
+
+Bandeja de tareas
+
+Ya es genérica: lista tareas por assignedRole, status, caseId.
+​
+
+Roles distintos (TECHNICAL, REVIEWER, LEGAL_JUNIOR, LEGAL_SENIOR) verán tareas distintas.
+
+Si conviertes “pedido de taller” en una especialización de “caso con documentos + checklist + workflow”, la misma estructura soporta un despacho.
+
+2. Caso: despacho de abogados revisando contratos
+2.1. Pantalla “Nuevo contrato”
+Equivalente a “Nuevo pedido”, pero con campos legales:
+
+Cliente, asunto, tipo de contrato (arrendamiento, NDA, MSA, etc.), jurisdicción.
+
+Upload de contrato en DOCX/PDF.
+
+Botón “Enviar a revisión IA + crear checklist”.
+
+Backend:
+
+Crea entidad Contrato (ENTITY LEGAL_CONTRACT).
+
+Workflow 1: borrador → analisis_ia → pendiente_revision_abogado.
+
+Paso analisis_ia:
+
+LLM + RAG:
+
+Extraen cláusulas (clause extraction).
+
+Comparan contra plantillas internas y legislación en RAG.
+
+Generan lista estructurada de puntos a revisar:
+
+“Cláusula de limitación de responsabilidad”, “Protección de datos”, “Jurisdicción”… con flags “OK”, “falta”, “difiere”.
+
+2.2. Tarea de abogado junior (detalle tipo checklist)
+Reutilizas el “detalle de tarea del operario”:
+
+En lugar de “parte + manual”, muestras:
+
+Cláusula: nombre y texto breve/resumen.
+
+Referencia en RAG: enlace a política interna / artículo de ley relevante.
+
+Campos de decisión:
+
+“Acepto tal como está” / “Necesita cambios” / “Falta cláusula”.
+
+Motivo y, opcionalmente, propuesta de redacción.
+
+El abogado puede:
+
+Pausar para modificar el contrato en Word.
+
+Subir nueva versión y relanzar análisis IA (mismo caso, versión nueva del doc).
+
+Esto es la misma UX que el operario: lista de elementos, sí/no + motivo, con RAG ayudando en contexto.
+
+2.3. Tarea de senior (auditoría de calidad)
+Reutilizas el “detalle de tarea del inspector”:
+
+Tarea generada para un senior (ROLE LEGAL_SENIOR) sobre ciertos contratos (p. ej. muestreo).
+
+Metadatos:
+
+Qué dijo el RAG (riesgos, sugerencias).
+
+Qué decidió el junior para cada cláusula.
+
+Senior ve:
+
+Columna izquierda: “Lo que dijo la IA / RAG” + salida inicial.
+
+Columna central: “Lo que decidió el abogado junior (OK/KO, motivos)”.
+
+Columna derecha: su propia checklist de validación:
+
+Confirmar si se han tenido en cuenta los puntos críticos.
+
+Puntuar calidad o marcar incidencias.
+
+Así obtienes trazabilidad de:
+
+“Qué sugería el sistema”.
+
+“Qué hizo el abogado”.
+
+“Qué opina un revisor humano senior”.
+
+3. Interrumpir y reanudar tras subsanar el contrato
+Esto encaja natural con tu motor de workflows:
+
+Estados de un contrato:
+
+borrador → analisis_ia → pendiente_revision_abogado → en_edicion_cliente → pendiente_revision_final → aprobado / rechazado.
+
+En pendiente_revision_abogado:
+
+Abogado ve checklist y puede:
+
+Marcar puntos como “OK”, “cambiar”, etc.
+
+Poner el contrato en estado en_edicion_cliente (esperando que el cliente devuelva una versión modificada).
+
+Cuando se sube una nueva versión:
+
+Se adjunta una nueva versión del documento al mismo caso.
+
+Se puede relanzar el análisis IA/RAG parcial:
+
+Comparar versión anterior vs nueva.
+
+Resaltar cláusulas añadidas, cambiadas o eliminadas (similar a tu caso “contratos similares”).
+
+Workflow mantiene historial de versiones y estados.
+
+4. Casos adicionales de RAG/LLM que encajan con la misma UI
+4.1. Comparar contratos similares
+Puedes usar una variante del “detalle de tarea” sin workflow humano, solo como herramienta:
+
+Pantalla “Analizar contrato”:
+
+Subes un contrato o seleccionas uno existente.
+
+RAG + LLM:
+
+Buscan en el corpus contratos similares (mismo tipo, misma jurisdicción).
+
+Calculan diferencias de cláusulas (faltantes, extras, condiciones más duras/blandas).
+
+UI tipo checklist:
+
+Para cada cláusula estándar:
+
+¿Existe en tu contrato? Sí/No.
+
+¿Es más restrictiva o más laxa que la plantilla?
+
+Abogado puede ir marcando “listo” mientras revisa y copia/ajusta texto.
+
+4.2. “Asistente de redacción” por partes
+Pantalla tipo “Asistente contrato tipo X”:
+
+Lado izquierdo: lista de partes esperadas (cabecera, definiciones, obligación, responsabilidad, DP, jurisdicción…).
+
+Lado derecho: editor de texto (o enlace a editor externo).
+
+RAG + LLM:
+
+Cuando el abogado pregunta “¿Qué partes tiene un contrato de tal tipo?”, la app consulta al RAG y le rellena la lista de secciones.
+
+A medida que el abogado marca secciones como “ya redactada”, se van tachando o marcando “completa”.
+
+Aquí reutilizas:
+
+El componente de checklist (cada sección = item).
+
+El motor de tareas si quieres hacerlo parte de un workflow (p.ej. “borrador completo” cuando todos los items están OK).
+
+5. Qué necesitas abstraer/cambiar para soportar ambos dominios
+A nivel técnico, para no casarte con “taller”:
+
+Entidad genérica “Case” + tipo de caso
+
+Ya tienes GenericCase / cases con type o entityType configurable.
+​
+
+Usa type = WORKSHOP_ORDER vs LEGAL_CONTRACT y configura campos adicionales por tipo.
+
+Checklist genérica
+
+ChecklistConfig ya es genérica; cambia solo las categorías/labels.
+​
+
+Usa una config “Revisión contrato” en lugar de “Revisión de manuales”.
+
+Tareas genéricas
+
+workflowtasks ya soporta type, assignedRole, metadata.
+​
+
+En metadata puedes guardar tanto parts/manuals como clauses/laws.
+
+Pantallas parametrizables
+
+Las pantallas que hemos diseñado (nuevo caso, detalle de tarea con checklist) pueden recibir props o configuraciones diferentes según el entityType/taskType:
+
+Labels (“Parte/Manual” vs “Cláusula/Norma”).
+
+Campos extra (motivo técnico vs argumentación legal).
+
+Con esas abstracciones, el mismo núcleo te sirve tanto para un entorno industrial (taller de ascensores) como para un despacho de abogados, sin cambiar de tecnología, solo cambiando:
+
+Configuración de workflows.
+
+Configuración de checklists.
+
+Prompts y colecciones RAG.
+
+
+
+
+Usar solo el módulo i18n para llegar a “por idioma + industria + tenant + workflow” se vuelve inmanejable; a partir de cierto punto conviene introducir una capa intermedia en BD con caché y un buen esquema de fallback.
+
+1. Cuándo basta con i18n clásico
+i18n (con next-intl, etc.) funciona muy bien para:
+
+Idioma de la UI genérica (botones, menús, mensajes comunes).
+​
+
+Algún matiz por industria muy estable (p. ej. “Ascensor” vs “Equipo”), mientras no sea editable por tenant.
+
+En tu caso, seguiría usando i18n para:
+
+admin.*: textos del panel, labels genéricos.
+
+Mensajes de errores estándar, tooltips, etc.
+
+Todo eso puede seguir en ficheros de mensajes por locale sin problema.
+
+2. Dónde i18n se queda corto
+Lo que quieres mover dinámicamente:
+
+Literales por tenant (ej. “pedido de taller” vs “orden de servicio”).
+
+Copys por industria (taller, legal, seguros) que pueden cambiar con el tiempo.
+
+Textos específicos de workflows y checklists:
+
+Nombres de estados, transiciones, categorías de checklist, items, descripciones de tareas.
+
+Posible gestión por negocio (no solo por devs) y, en el futuro, editables vía UI.
+
+Mantener todo eso en messages.es.json, messages.en.json por combinación de industria/tenant/workflow te llevaría a:
+
+Archivos gigantes.
+
+Riesgo enorme de duplicación / divergencias.
+
+Necesidad de desplegar para cambiar un texto de un cliente.
+
+Esto encaja mejor con un “content store” que con i18n de ficheros.
+​
+
+3. Pieza intermedia recomendada: Content / Copy Service en BD + caché
+La solución más sostenible es:
+
+Seguir usando i18n para la capa base
+
+Claves como admin.workflows.title, admin.checklists.title, etc.
+​
+
+Introducir un módulo de copy dinámico multi‑tenant, algo tipo:
+
+ts
+// Tabla/colección: ui_copy
+{
+  tenantId: string | "global";
+  industry: string | "any";
+  workflowKey?: string;      // opcional: para casos muy específicos
+  locale: string;            // "es", "en", etc.
+  key: string;               // "workshop.order.title", "contract.review.clause.missing"
+  value: string;             // texto final visible
+  updatedAt: Date;
+}
+Un servicio de lectura con fallback:
+
+ts
+getCopy({ tenantId, industry, key, locale }) ->
+  1. busca tenantId + industry + key + locale
+  2. si no, tenantId + "any" + key + locale
+  3. si no, "global" + industry + key + locale
+  4. si no, "global" + "any" + key + locale
+  5. si no, cae a i18n.messages[key] o un default
+Caché:
+
+In‑memory por proceso (LRU) + TTL corto (ej. 5–15 min) o invalidación manual.
+
+Opcional Redis si quieres compartir caché entre instancias.
+
+Este patrón (BD + caché + fallback) es el que se recomienda en escenarios multi‑tenant con copy editable.
+
+4. Cómo convivir con workflows y checklists
+WorkflowDefinition y ChecklistConfig pueden seguir guardando keys y no textos finales:
+
+ts
+state.labelKey = "workshop.order.state.in_progress";
+transition.labelKey = "workshop.order.transition.send_to_review";
+category.labelKey = "checklist.workshop.manuals";
+item.labelKey = "checklist.workshop.manual.followed";
+El front:
+
+Primero intenta copyService.getCopy(tenantId, industry, labelKey, locale).
+
+Si no hay override, usa t(labelKey) desde i18n o, si no existe, un fallback técnico.
+
+De esta forma:
+
+Puedes tener defaults globales en ficheros i18n.
+
+Permites que un tenant/industria overridee solo lo que necesite, sin tocar código.
+
+5. Complejidad de mantenimiento
+Con esta pieza intermedia:
+
+Devs mantienen:
+
+Estructura de claves.
+
+Defaults en i18n para no romper nada.
+
+Negocio / Customer success puede:
+
+Ajustar textos por tenant/industria/workflow desde una UI de “Branding / Terminología” o incluso vía seed / migration.
+
+La carga de mantenimiento se desplaza de “modificar ficheros de traducciones + redeploy” a “gestionar contenido en BD con herramientas internas”, que es más sano para un SaaS multi‑vertical.
+
+6. Resumen práctico
+Sí: usa i18n para la capa base multi‑idioma.
+
+No: no intentes gestionar variantes por industria/tenant/workflow solo con i18n, se volvería frágil.
+
+Sí: añade una capa de copy dinámico en BD con caché y fallback; es la forma limpia de soportar textos distintos por tenant/industria/workflow manteniendo un core común y desplegable.
+
+
+En tus workflows ya tienes casi todo para hacer buenos fallbacks de i18n, solo falta conectar bien las piezas Translation + WorkflowDefinition y definir una estrategia clara.
+
+1. Qué ya tienes para i18n de workflows
+Esquema TranslationSchema en BD con key, value, locale, namespace, isObsolete, etc., que actúa como tabla de literales dinámica.
+​
+
+WorkflowDefinitionSchema con states y transitions que ahora usan label literal en vez de una key.
+​
+
+UI del canvas que usa useTranslations("admin.workflows.canvas") para los textos del editor, pero no para nombres de estados/transiciones.
+​
+
+Esto permite diseñar un mecanismo de fallback de tres niveles: traducciones en BD → ficheros i18n → label embebido.
+
+2. Mecanismo de fallback recomendado
+Para cada literal de workflow (estado, transición, tipo de tarea):
+
+Normaliza a una clave estable
+
+Ej.:
+
+Estado: workflow.{definitionId}.state.{stateId}.label
+
+Transición: workflow.{definitionId}.transition.{from}-{to}.label.
+​
+
+Función central de resolución:
+
+ts
+async function resolveWorkflowLabel({
+  tenantId,
+  key,
+  locale,
+  fallback,
+}: {
+  tenantId: string;
+  key: string;
+  locale: string;
+  fallback: string; // label del schema
+}): Promise<string> {
+  // 1) BD per-tenant
+  const dbHit = await TranslationCollection.findOne({
+    tenantId,
+    key,
+    locale,
+    isObsolete: false,
+  });
+  if (dbHit) return dbHit.value;
+
+  // 2) i18n estático (next-intl / messages.*)
+  const staticHit = safeIntlT(key, locale); // devuelve null si no existe
+  if (staticHit) return staticHit;
+
+  // 3) Fallback: lo que viene del workflow (label “bruto”)
+  return fallback;
+}
+Fallbacks en cascada:
+
+Primero, overrides por tenant en Translation (multi‑tenant, editable).
+​
+
+Si no, traducción base en ficheros i18n globales (por industria, entorno, etc.).
+​
+
+Si nada, el label que lleva el WorkflowDefinition (generalmente en un idioma principal).
+
+3. Dónde aplicar el fallback
+3.1. En el backend al exponer workflows
+Cuando devuelves definiciones o tareas:
+
+GET /api/admin/workflows/:id
+
+GET /api/admin/workflow-tasks/:id
+
+Puedes resolver los labels ya localizados:
+
+ts
+// pseudo-código en WorkflowService.getActiveWorkflowLocalized
+for (const state of definition.states) {
+  const key = `workflow.${definition.id}.state.${state.id}.label`;
+  state.localizedLabel = await resolveWorkflowLabel({
+    tenantId,
+    key,
+    locale,
+    fallback: state.label,
+  });
+}
+Así el front solo pinta state.localizedLabel y no se preocupa de fallbacks.
+
+3.2. En el front como mejora incremental
+Mientras migras, puedes:
+
+Seguir usando state.label para no romper nada.
+
+Para nuevas pantallas, usar resolveWorkflowLabel vía endpoint dedicado o hook (useWorkflowI18n) que consulte /api/admin/i18n/workflows con caché.
+
+4. Capa de caché para rendimiento
+La tabla Translation se va a consultar mucho si cada render pide varios labels.
+​
+
+Crea una caché in‑memory (y opcionalmente Redis) por (tenantId, locale) → Map<key, value>.
+
+Precalienta por namespace: por ejemplo, al entrar en panel de workflows, cargar todas las Translation con namespace = "workflow" para ese tenant/locale y guardarlas en caché.
+
+Invalidación:
+
+Al editar traducciones en tu futura UI (“Terminología”), incrementa un version o marca lastUpdated, y purga caché del tenant/locale.
+
+5. Fallbacks por industria / entorno
+Si quieres ir más fino:
+
+Extiende TranslationSchema con campos opcionales industry y environment.
+
+Orden de búsqueda:
+
+Tenant+locale+key+industry+environment.
+
+Tenant+locale+key (sin industria).
+
+Global (tenantId = "global") + locale + key (+industry opcional).
+
+Ficheros i18n.
+
+Label del workflow.
+
+Así puedes tener:
+
+Texto global legal.
+
+Overrides para ELEVATORS vs LEGAL vs BANKING, sin multiplicar definiciones de workflow.
+
+6. Conexión con checklists y tareas
+Tienes ChecklistConfigSchema con categories y items que también usan name literal.
+​
+
+Aplica el mismo patrón de keys:
+
+checklist.{configId}.category.{categoryId}.name
+
+checklist.{configId}.item.{itemId}.label
+
+Y el mismo resolveWorkflowLabel, solo cambiando namespace.
+
+Las WorkflowTask pueden llevar en metadata solo IDs de categoría/item, y el front siempre resuelve texto via i18n+BD con fallback, evitando duplicar copys.
+​
+
+En resumen: la combinación de tu TranslationSchema + labels en WorkflowDefinition te permite montar un fallback robusto (BD per‑tenant → i18n estático → label embebido), con caché por tenant/locale para no penalizar los workflows

@@ -12,40 +12,44 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export default function WorkflowTasksPage() {
+    const t = useTranslations('admin.workflow_tasks');
+    const tStats = useTranslations('admin.workflow_tasks.stats');
+
     return (
         <PageContainer>
             <PageHeader
-                title="Task Collaboration Hub"
-                highlight="Workflow Goverance"
-                subtitle="Gestión y validación de tareas críticas automatizadas por el motor industrial."
+                title={t('title')}
+                highlight={t('highlight')}
+                subtitle={t('subtitle')}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8 mb-8">
                 <StatSimple
-                    title="Pendientes"
+                    title={tStats('pending')}
                     value="12"
                     icon={CheckSquare}
                     color="text-amber-600"
                     bg="bg-amber-50"
                 />
                 <StatSimple
-                    title="En Revisión"
+                    title={tStats('inReview')}
                     value="5"
                     icon={Users}
                     color="text-blue-600"
                     bg="bg-blue-50"
                 />
                 <StatSimple
-                    title="Completadas hoy"
+                    title={tStats('completedToday')}
                     value="28"
                     icon={ShieldCheck}
                     color="text-emerald-600"
                     bg="bg-emerald-50"
                 />
                 <StatSimple
-                    title="Tiempo medio"
+                    title={tStats('avgTime')}
                     value="45m"
                     icon={History}
                     color="text-sidebar-primary"

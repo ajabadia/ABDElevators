@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             throw new AppError('FORBIDDEN', 403, 'Solo el SuperAdmin puede inicializar planes comerciales');
         }
 
-        const result = await BillingService.seedDefaultPlans();
+        const result = await BillingService.seedDefaultPlans() as any;
 
         await logEvento({
             level: 'INFO',

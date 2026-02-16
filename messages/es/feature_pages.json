@@ -1,0 +1,278 @@
+{
+  "dual_engine": {
+    "title": "Extracción Dual-Engine",
+    "subtitle": "Combina OCR tradicional con inteligencia contextual para extraer datos técnicos con precisión milimétrica.",
+    "problem_title": "El Problema",
+    "problem_items": "OCR tradicional falla con tablas complejas y diagramas técnicos,Pérdida de contexto en especificaciones multi-columna,Errores críticos en valores numéricos (voltajes, dimensiones),Imposibilidad de extraer relaciones entre componentes",
+    "solution_title": "Nuestra Solución",
+    "solution_items": "**Motor OCR:** Extracción de texto base con alta precisión,**Motor IA:** Comprensión contextual de tablas y diagramas,**Validación cruzada:** Ambos motores se verifican mutuamente,**Precisión 99.9%:** En especificaciones técnicas críticas",
+    "how_it_works": "Cómo Funciona",
+    "steps": {
+      "1": {
+        "title": "Pre-procesamiento de Imagen",
+        "desc": "El PDF se convierte en imágenes de alta resolución. Se aplican filtros de mejora de contraste y eliminación de ruido."
+      },
+      "2": {
+        "title": "Extracción OCR Tradicional",
+        "desc": "Tesseract OCR extrae todo el texto visible. Se detectan bloques de texto, tablas y áreas de diagrama."
+      },
+      "3": {
+        "title": "Análisis Contextual con IA",
+        "desc": "La IA analiza las imágenes originales para entender relaciones entre elementos, interpretar tablas complejas y extraer datos de diagramas."
+      },
+      "4": {
+        "title": "Fusión Inteligente",
+        "desc": "Los resultados de ambos motores se combinan. La IA corrige errores de OCR y añade contexto semántico."
+      },
+      "5": {
+        "title": "Estructuración de Datos",
+        "desc": "El texto final se estructura en JSON con metadatos: type de componente, modelo, especificaciones técnicas, referencias normativas."
+      }
+    },
+    "use_cases": "Casos de Uso",
+    "case_1": {
+      "title": "Pedidos de Ascensores",
+      "desc": "Extracción automática de modelos de componentes (motores, cables, cuadros) desde PDFs de pedidos técnicos."
+    },
+    "case_2": {
+      "title": "Manuales de Servicio",
+      "desc": "Indexación de procedimientos de mantenimiento con tablas de especificaciones y diagramas de cableado."
+    },
+    "case_3": {
+      "title": "Normativas Técnicas",
+      "desc": "Análisis de documentos EN 81-20/50 con extracción de requisitos de seguridad y tablas de cumplimiento."
+    },
+    "cta_title": "Prueba la Extracción Dual-Engine",
+    "cta_desc": "Sube tu primer documento técnico y comprueba la precisión por ti mismo.",
+    "cta_btn": "Comenzar Ahora"
+  },
+  "compliance": {
+    "title": "Compliance & Portabilidad",
+    "subtitle": "Portabilidad total y cumplimiento normativo garantizado. Exporta tu conocimiento en paquetes firmados y gestiona el derecho al olvido con certificados legales.",
+    "package_title": "Knowledge Package (.ZIP)",
+    "package_desc": "Descarga todo el corpus de conocimiento de tu organización en un solo archivo comprimido. Incluye documentos originales, metadatos indexados, taxonomías y embeddings en formato abierto.",
+    "package_items": "Cero vendor lock-in,Exportación en 1-Click,Firma digital de integridad",
+    "gdpr_title": "Derecho al Olvido GDPR",
+    "gdpr_desc": "Ejecuta purgas permanentes de datos de clientes o proyectos específicos conforme al Reglamento General de Protección de Datos (GDPR).",
+    "gdpr_items": "Borrado físico en Cloudinary/Atlas,Certificado de eliminación PDF,Auditoría inmutable de purga",
+    "security_title": "Seguridad y Firma Digital",
+    "sha_title": "Hash de Integridad SHA-256",
+    "sha_desc": "Cada paquete de exportación incluye un archivo de manifiesto firmado electrónicamente. Esto garantiza que los datos no han sido manipulados desde su salida de nuestros servidores.",
+    "cert_title": "Certificados Digitales",
+    "cert_desc": "Al completar una purga de datos, el sistema genera automáticamente un certificado PDF firmado por ABD RAG Platform que sirve como evidencia legal ante reguladores de que los datos han sido destruidos irreversiblemente.",
+    "portability_tag": "100% Portabilidad Garantizada",
+    "portability_sub": "Tus datos son tuyos. Siempre.",
+    "cta_title": "Infraestructura Lista para Auditoría",
+    "cta_desc": "No te preocupes por el cumplimiento normativo. Hemos construido las herramientas para que tú solo te preocupes de tu negocio.",
+    "cta_btn": "Ver Panel Compliance",
+    "cta_outline_btn": "Hablar con Legal"
+  },
+  "audit_trail": {
+    "title": "Audit-Trail Pro",
+    "subtitle": "Trazabilidad total: cada párrafo generado incluye una cita directa al documento fuente original. Cumplimiento normativo garantizado.",
+    "negative_title": "Sin Trazabilidad",
+    "negative_items": "**Riesgo legal:** Imposible demostrar origen de la información,**Alucinaciones no detectables:** La IA puede inventar datos sin que lo notes,**Auditorías imposibles:** No cumples ISO 9001, SOC2, GDPR,**Pérdida de confianza:** Los técnicos no confían en respuestas sin fuente",
+    "positive_title": "Con Audit-Trail Pro",
+    "positive_items": "**Cita exacta:** Cada afirmación enlaza al documento y página fuente,**Verificación instantánea:** Click en la cita → PDF original resaltado,**Cumplimiento automático:** Logs inmutables para auditorías,**Confianza total:** Los técnicos pueden verificar cada dato",
+    "how_it_works": "Cómo Funciona",
+    "steps": {
+      "1": {
+        "title": "Chunking con Metadatos",
+        "desc": "Cada chunk de texto indexado incluye metadatos completos: nombre del documento, página, párrafo, fecha de revisión, versión."
+      },
+      "2": {
+        "title": "Tracking de Fuentes",
+        "desc": "Durante la generación RAG, se registra qué chunks fueron usados para generar cada parte de la respuesta."
+      },
+      "3": {
+        "title": "Citación Automática",
+        "desc": "La respuesta final incluye referencias numeradas [1], [2], [3] que enlazan a los documentos fuente específicos."
+      },
+      "4": {
+        "title": "Logs Inmutables",
+        "desc": "Cada consulta se registra en MongoDB con timestamp, usuario, query, respuesta, y fuentes usadas. Logs encriptados y no modificables."
+      }
+    },
+    "example_title": "Ejemplo de Respuesta con Trazabilidad",
+    "example_query_label": "Query del Usuario",
+    "example_query": "¿Qué cable se especifica para el pedido P-2024-0156?",
+    "example_resp_label": "Respuesta Generada",
+    "example_resp_text": "Para el pedido P-2024-0156 se especifica un **cable de acero 8x19 Seale IWRC** con las siguientes características:",
+    "example_resp_items": "Diámetro: 10mm,Carga de rotura mínima: 6370 kgf,Longitud: 45 metros,Cumple normativa EN 12385-5",
+    "example_ref_label": "Referencias",
+    "example_ref_1": {
+      "doc": "Pedido_P-2024-0156_Rev2.pdf",
+      "page": "3",
+      "excerpt": "Cable de tracción: 8x19 Seale IWRC, Ø10mm, carga rotura 6370 kgf"
+    },
+    "example_ref_2": {
+      "doc": "Pedido_P-2024-0156_Rev2.pdf",
+      "page": "5",
+      "excerpt": "Longitud total cable: 45m (incluye reserva 3m)"
+    },
+    "example_ref_3": {
+      "doc": "Normativa_EN_12385-5_2021.pdf",
+      "page": "12",
+      "excerpt": "Requisitos para cables de acero en ascensores - Clasificación 8x19"
+    },
+    "badges": {
+      "iso": "Gestión de Calidad",
+      "soc2": "Seguridad de Datos",
+      "gdpr": "Protección de Datos",
+      "en81": "Normativa Ascensores"
+    },
+    "cta_title": "Garantiza la Trazabilidad de tus Análisis",
+    "cta_desc": "Cumple con auditorías y normativas desde el primer día. Cada respuesta es verificable.",
+    "cta_btn": "Activar Audit-Trail"
+  },
+  "federated": {
+    "title": "Inteligencia Federada",
+    "subtitle": "Red de conocimiento global que detecta patrones anónimos entre organizaciones para optimizar sugerencias técnicas y prevenir errores conocidos.",
+    "value_1_title": "Conocimiento Global",
+    "value_1_desc": "Benefíciate de patrones detectados en miles de documentos técnicos sin comprometer la privacidad.",
+    "value_2_title": "Privacidad por Diseño",
+    "value_2_desc": "Los datos nunca salen de tu tenant. Solo los patrones matemáticos abstractos y anónimos se comparten.",
+    "value_3_title": "Sugerencias Proactivas",
+    "value_3_desc": "Recibe alertas inmediatas si tu configuración técnica coincide con un patrón de fallo conocido en la red global.",
+    "how_it_works": "Cómo Funciona la Red Federada",
+    "steps": {
+      "1": {
+        "title": "Extracción de Patrones Locales",
+        "desc": "Nuestros modelos analizan tus documentos técnicos buscando relaciones causa-efecto."
+      },
+      "2": {
+        "title": "Anonimización y Hash",
+        "desc": "Se eliminan nombres de clientes e identificadores. El patrón se convierte en un vector abstracto mediante hashes criptográficos."
+      },
+      "3": {
+        "title": "Sincronización de la Red",
+        "desc": "La red global valida si otros tenants han encontrado el mismo patrón y lo publica si la confianza es alta."
+      }
+    },
+    "showcase_title": "Sugerencia Inteligente en Tiempo Real",
+    "showcase_badge": "Sugerencia Federada Detectada",
+    "showcase_text": "Hemos detectado que estás configurando un **Inversor VF-400** con una distancia a motor superior a 60 metros.",
+    "showcase_tip": "**Recomendación de la Red:** El 82% de configuraciones similares en el sector elevaron el uso de filtros dU/dt para evitar picos de tensión en el motor.",
+    "showcase_footer": "Este conocimiento no está en tus manuales, proviene de la experiencia colectiva anonimizada de la red.",
+    "cta_title": "Únete a la Red de Conocimiento",
+    "cta_desc": "Eleva tu precisión técnica al siguiente nivel con la sabiduría colectiva del sector. Privacidad 100% garantizada.",
+    "cta_btn": "Empezar Trial Federado"
+  },
+  "pdf_bridge": {
+    "title": "Advanced PDF Bridge",
+    "subtitle": "Motor híbrido Python/Node de alta fidelidad. Procesamiento de planos, esquemas y tablas técnicas con precisión del 99.9% mediante PyMuPDF.",
+    "stats": {
+      "s1": {
+        "val": "0.8s",
+        "label": "Inferencia / Pág"
+      },
+      "s2": {
+        "val": "99.9%",
+        "label": "Precisión OCR"
+      },
+      "s3": {
+        "val": "Híbrido",
+        "label": "Node/Python"
+      },
+      "s4": {
+        "val": "2026",
+        "label": "Versión Motor"
+      }
+    },
+    "why_title": "¿Por qué usar un Bridge Python?",
+    "features": {
+      "tables": {
+        "title": "Extracción Dinámica de Tablas",
+        "desc": "Nuestro motor identifica bordes de celdas invisibles y mantiene la estructura lógica de los datos técnicos."
+      },
+      "layers": {
+        "title": "Análisis Multicapa",
+        "desc": "Separa texto de vectores geométricos en planos de ingeniería, indexando anotaciones en su contexto original."
+      },
+      "fonts": {
+        "title": "Soporte de Fuentes No Estándar",
+        "desc": "Decodificación robusta de archivos PDF corruptos o con codificaciones personalizadas."
+      }
+    },
+    "quote": "El motor bridge permite procesar en 5 segundos lo que un humano tardaría 15 minutos en transcribir.",
+    "pipeline_title": "Pipeline de Procesamiento",
+    "pipeline_steps": {
+      "1": {
+        "title": "Ingesta Estricta",
+        "desc": "Validación MD5 y saneamiento de binarios."
+      },
+      "2": {
+        "title": "Python Worker",
+        "desc": "Extracción de alto rendimiento via PyMuPDF C++ extension."
+      },
+      "3": {
+        "title": "Gemini Embedding",
+        "desc": "Generación de vectores 004 con conciencia técnica."
+      }
+    },
+    "cta_title": "¿Listo para el procesamiento técnico real?",
+    "cta_desc": "No te conformes con OCR básico. Obtén la precisión que tu departamento de ingeniería demanda.",
+    "cta_btn": "Probar Advanced PDF Bridge"
+  },
+  "vector_search": {
+    "title": "Hybrid Vector Search",
+    "subtitle": "Búsqueda semántica que entiende la intención del experto, no solo las palabras clave.",
+    "comparison": {
+      "traditional": {
+        "title": "Búsqueda Tradicional",
+        "query": "cable de acero",
+        "results": "✓ Documentos con \"cable\" y \"acero\",✗ Pierde \"cuerda metálica\",✗ No entiende sinónimos"
+      },
+      "vector": {
+        "title": "Búsqueda Vectorial",
+        "query": "cable de acero",
+        "results": "✓ \"cable de acero\" (100% match),✓ \"cuerda metálica\" (95% similar),✓ \"sistema de suspensión\" (87% similar)"
+      }
+    },
+    "how_it_works": "Cómo Funciona la Magia",
+    "steps": {
+      "1": {
+        "title": "Embeddings Semánticos",
+        "desc": "Cada chunk se convierte en un vector de 768 dimensiones usando Gemini Embeddings."
+      },
+      "2": {
+        "title": "Indexación en MongoDB Atlas",
+        "desc": "Los vectores se almacenan con índices HNSW optimizados para búsquedas rápidas."
+      },
+      "3": {
+        "title": "Query Transformation",
+        "desc": "Tu consulta también se convierte en vector, garantizando que la búsqueda sea en el mismo espacio semántico."
+      },
+      "4": {
+        "title": "Cosine Similarity",
+        "desc": "Se calcula la similitud coseno entre vectores. Los chunks con mayor similitud se devuelven como resultados."
+      },
+      "5": {
+        "title": "Hybrid Ranking",
+        "desc": "Los resultados se re-rankean combinando similitud semántica con metadatos técnicos."
+      }
+    },
+    "examples_title": "Ejemplos Reales",
+    "examples": "[object Object]",
+    "stats": {
+      "latency": {
+        "val": "< 200ms",
+        "label": "Latencia",
+        "desc": "P95 en corpus de 100k docs"
+      },
+      "precision": {
+        "val": "95%",
+        "label": "Precisión",
+        "desc": "En consultas técnicas"
+      },
+      "dims": {
+        "val": "768D",
+        "label": "Dimensiones",
+        "desc": "Gemini Embeddings"
+      }
+    },
+    "cta_title": "Experimenta la Búsqueda Semántica",
+    "cta_desc": "Prueba consultas en lenguaje natural y descubre información que las búsquedas tradicionales no encuentran.",
+    "cta_btn": "Probar Ahora"
+  }
+}

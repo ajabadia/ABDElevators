@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 
 export interface Step {
     target: string
@@ -33,15 +34,20 @@ const useOnboardingStore = create<OnboardingState>()(
 )
 
 export function useOnboarding() {
+    const { data: session } = useSession()
+    const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN'
+
     const [isActive, setIsActive] = useState(false)
     const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const pathname = usePathname()
     const { completed: hasCompletedOnboarding, completeOnboarding } = useOnboardingStore()
     const t = useTranslations("common.onboarding.steps")
 
-    const getSteps = (path: string): Step[] => {
+    const getSteps = (path: string, adminMode: boolean): Step[] => {
+        const steps: Step[] = []
+
         if (path === '/search') {
-            return [
+            steps.push(
                 {
                     target: 'h3.font-bold',
                     title: 'search_title',
@@ -54,22 +60,30 @@ export function useOnboarding() {
                     content: 'input_content',
                     position: 'top'
                 }
-            ]
+            )
         }
-        if (path === '/admin') {
-            return [
+
+        if (path === '/admin' && adminMode) {
+            steps.push(
                 {
                     target: '[data-tour="quick-actions"]',
                     title: 'actions_title',
                     content: 'actions_content',
                     position: 'bottom'
+                },
+                {
+                    target: '[data-tour="consumption-stats"]',
+                    title: 'business_stats_title',
+                    content: 'business_stats_content',
+                    position: 'top'
                 }
-            ]
+            )
         }
-        return []
+
+        return steps
     }
 
-    const currentTourStepsRaw = pathname ? getSteps(pathname) : []
+    const currentTourStepsRaw = pathname ? getSteps(pathname, isAdmin) : []
 
     // Map content to translations
     const currentTourSteps = currentTourStepsRaw.map(step => ({
@@ -83,7 +97,7 @@ export function useOnboarding() {
             setIsActive(false)
         } else {
             // Start onboarding automatically for new users if steps exist for current page
-            if (pathname && getSteps(pathname).length > 0) {
+            if (pathname && getSteps(pathname, isAdmin).length > 0) {
                 setIsActive(true)
             }
         }

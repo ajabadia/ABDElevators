@@ -19,13 +19,30 @@ export function getGenAI() {
 }
 
 /**
- * Mapea nombres de modelos legacy/incorrectos a modelos oficiales de Google.
+ * Mapea nombres de modelos comerciales o técnicos a nombres oficiales de la SDK.
  */
 export function mapModelName(model: string): string {
-    if (model.startsWith('gemini-3')) {
-        return 'gemini-2.0-flash-exp';
+    const m = model.toLowerCase();
+
+    // Soporte para Gemini 3 (Working models per user feedback)
+    if (m.includes('gemini-3')) {
+        if (m.includes('image')) return 'gemini-3-pro-image';
+        if (m.includes('preview')) return 'gemini-3-pro-preview';
+        return 'gemini-3-pro';
     }
-    return model;
+
+    // Soporte para Gemini 2.x/1.x (Working models per diagnostic script)
+    // El script de diagnóstico confirmó que gemini-2.5-flash es el único que responde OK (Success).
+    // gemini-1.5-* devuelve 404 y gemini-2.0-* devuelve 429 (Quota 0).
+    if (m.includes('gemini-2.0') || m.includes('gemini-2.5')) {
+        return 'gemini-2.5-flash';
+    }
+    if (m.includes('gemini-1.5')) {
+        return 'gemini-2.5-flash'; // Forzamos 2.5-flash ya que 1.5 dio 404
+    }
+
+    // Fallback absoluto estable confirmado
+    return 'gemini-2.5-flash';
 }
 
 /**

@@ -84,7 +84,7 @@ export function InsightPanel() {
                         className={cn(
                             "group hover:shadow-md transition-all duration-300 border-l-4",
                             insight.type === 'warning' && "border-l-amber-500",
-                            insight.type === 'critical' && "border-l-red-500",
+                            insight.type === 'critical' && "border-l-red-500 animate-pulse-subtle",
                             insight.type === 'info' && "border-l-blue-500",
                             insight.type === 'success' && "border-l-emerald-500",
                             !insight.type && "border-l-teal-500"
@@ -100,9 +100,21 @@ export function InsightPanel() {
                                         <h4 className="font-bold text-slate-900 dark:text-white leading-none">
                                             {insight.title}
                                         </h4>
-                                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4">
-                                            Impacto: {insight.impact}
-                                        </Badge>
+                                        <div className="flex gap-1.5 items-center">
+                                            <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4">
+                                                Impacto: {insight.impact}
+                                            </Badge>
+                                            {insight.category === 'ANOMALY' && (
+                                                <Badge className="text-[10px] py-0 px-1.5 h-4 bg-rose-100 text-rose-700 border-rose-200">
+                                                    ANOMALÍA
+                                                </Badge>
+                                            )}
+                                            {insight.category === 'PREDICTIVE' && (
+                                                <Badge className="text-[10px] py-0 px-1.5 h-4 bg-indigo-100 text-indigo-700 border-indigo-200">
+                                                    PROACTIVO
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                     <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                                         {insight.description}

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Debe iniciar sesión');
+            throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
         }
 
         const body = await req.json();
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await auth();
-        if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status') || undefined;

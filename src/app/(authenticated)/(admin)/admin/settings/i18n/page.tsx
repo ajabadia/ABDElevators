@@ -25,6 +25,7 @@ import { CreateI18nKeyModal } from '@/components/admin/CreateI18nKeyModal';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 /**
  * AdminI18nPage: Gestión Maestra de Traducciones (Fase 62)
@@ -37,10 +38,11 @@ export default function AdminI18nPage() {
     const [secondaryLocale, setSecondaryLocale] = useState('en');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [namespaceFilter, setNamespaceFilter] = useState('');
+    const [showMissingOnly, setShowMissingOnly] = useState(false);
 
     // Determinar si hay filtros activos (para lazy loading)
     // '__ALL__' es un valor especial que significa "cargar todos"
-    const hasActiveFilters = Boolean(namespaceFilter || searchQuery);
+    const hasActiveFilters = Boolean(namespaceFilter || searchQuery || showMissingOnly);
 
     // Cargar estadísticas de namespaces
     const {
@@ -65,7 +67,7 @@ export default function AdminI18nPage() {
         isLoading: loadingPrimary,
         refresh: refetchPrimary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}`,
+        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}&detailed=true`,
         dataKey: 'messages',
         autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
     });
@@ -76,7 +78,7 @@ export default function AdminI18nPage() {
         isLoading: loadingSecondary,
         refresh: refetchSecondary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${secondaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}`,
+        endpoint: `/api/admin/i18n?locale=${secondaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}&detailed=true`,
         dataKey: 'messages',
         autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
     });
@@ -84,9 +86,70 @@ export default function AdminI18nPage() {
     const syncMutation = useApiMutation({
         endpoint: '/api/admin/i18n/sync',
         method: 'POST',
-        onSuccess: () => {
+        onSuccess: (data: any) => {
             refetchPrimary();
             refetchSecondary();
+
+            const added = data?.result?.added || 0;
+            const updated = data?.result?.updated || 0;
+            const total = added + updated;
+
+            if (total === 0) {
+                toast.info(t('notifications.syncCompletedTitle'), {
+                    description: t('notifications.syncNoChanges')
+                });
+            } else {
+                toast.success(t('notifications.syncSuccessTitle'), {
+                    description: `${t('notifications.syncSuccessDetail', { added, updated })}`
+                });
+            }
+        },
+        onError: (err) => {
+            toast.error(t('notifications.syncErrorTitle'), {
+                description: typeof err === 'string' ? err : 'Error en sincronización'
+            });
+        }
+    });
+
+    const syncAllMutation = useApiMutation({
+        endpoint: '/api/admin/i18n/sync',
+        method: 'POST',
+        onSuccess: (data: any) => {
+            refetchPrimary();
+            refetchSecondary();
+
+            // For 'all', data.result is a map { es: {count, added, updated}, ... }
+            const results = data.result || {};
+            let totalAdded = 0;
+            let totalUpdated = 0;
+            Object.values(results).forEach((r: any) => {
+                totalAdded += (r.added || 0);
+                totalUpdated += (r.updated || 0);
+            });
+
+            toast.success('Sincronización Global Completada', {
+                description: `Se procesaron todos los idiomas. añadidos: ${totalAdded}, actualizados: ${totalUpdated}`
+            });
+        },
+        onError: (err) => {
+            toast.error('Error Global', {
+                description: typeof err === 'string' ? err : 'Falló la sincronización global'
+            });
+        }
+    });
+
+    const exportMutation = useApiMutation({
+        endpoint: '/api/admin/i18n/sync',
+        method: 'POST',
+        onSuccess: (data: any) => {
+            toast.success(t('page.exportSuccessTitle') || 'Exportación Exitosa', {
+                description: data.message || t('page.exportSuccessDesc')
+            });
+        },
+        onError: (err) => {
+            toast.error(t('page.exportErrorTitle') || 'Error', {
+                description: typeof err === 'string' ? err : 'Falló la exportación'
+            });
         }
     });
 
@@ -107,10 +170,28 @@ export default function AdminI18nPage() {
                             variant="outline"
                             className="rounded-xl border-slate-200 dark:border-slate-800"
                             onClick={() => syncMutation.mutate({ locale: primaryLocale })}
-                            disabled={syncMutation.isLoading}
+                            disabled={syncMutation.isLoading || syncAllMutation.isLoading}
                         >
                             <RefreshCw className={`w-4 h-4 mr-2 ${syncMutation.isLoading ? 'animate-spin' : ''}`} />
-                            {t('page.syncBtn')}
+                            {t('page.syncBtn') || 'JSON→BD'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="rounded-xl border-teal-500/50 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950"
+                            onClick={() => syncAllMutation.mutate({ locale: 'all' })}
+                            disabled={syncMutation.isLoading || syncAllMutation.isLoading}
+                        >
+                            <Globe className={`w-4 h-4 mr-2 ${syncAllMutation.isLoading ? 'animate-spin' : ''}`} />
+                            {t('page.syncAllBtn') || 'Sincronizar Todo'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="rounded-xl border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950"
+                            onClick={() => exportMutation.mutate({ locale: primaryLocale, action: 'export' })}
+                            disabled={exportMutation.isLoading}
+                        >
+                            <FileJson className={`w-4 h-4 mr-2 ${exportMutation.isLoading ? 'animate-spin' : ''}`} />
+                            {t('page.exportBtn') || 'Exportar a JSON (BD→JSON)'}
                         </Button>
                         <Button
                             onClick={() => setIsCreateModalOpen(true)}
@@ -165,6 +246,19 @@ export default function AdminI18nPage() {
                                     </span>
                                 </button>
                             ))}
+
+                            <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 self-center hidden md:block" />
+
+                            <button
+                                onClick={() => setShowMissingOnly(!showMissingOnly)}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-2 ${showMissingOnly
+                                    ? "bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20"
+                                    : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-amber-600 hover:border-amber-500/50"
+                                    }`}
+                            >
+                                <AlertCircle className="w-3 h-3" />
+                                {t('page.filterMissing')}
+                            </button>
                         </div>
 
                         <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -198,6 +292,7 @@ export default function AdminI18nPage() {
                     primaryMessages={safeMessagesPrimary}
                     secondaryMessages={safeMessagesSecondary}
                     searchQuery={searchQuery}
+                    showMissingOnly={showMissingOnly}
                     loading={loadingPrimary || loadingSecondary}
                     hasActiveFilters={hasActiveFilters}
                     onRefresh={() => {

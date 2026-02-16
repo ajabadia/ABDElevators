@@ -1,0 +1,1961 @@
+Te propongo un plan detallado, pensado para entregarlo a un equipo de desarrollo. Lo organizo en bloques funcionales, con objetivos, tareas técnicas y puntos de atención.
+
+Bloque A · Espacios personales de RAG (“Mi espacio”)
+A.1. Modelo de datos y alcance
+Objetivo
+Permitir a cada usuario tener un espacio personal de documentos y consultas, independiente del espacio corporativo del tenant.
+
+Requisitos funcionales
+
+Cada usuario tendrá un área “Mi espacio” donde:
+
+Puede subir documentos propios.
+
+Puede hacer consultas RAG sólo sobre esos documentos.
+
+Los documentos personales no deben aparecer ni en:
+
+Búsquedas globales corporativas.
+
+Dashboards de conocimiento del tenant (salvo agregados anonimizados si se decide).
+
+Requisitos técnicos
+
+Extender modelos de documentos y chunks:
+
+Añadir campos:
+
+scope: "TENANT" | "USER" (por defecto TENANT como hasta ahora).
+
+ownerUserId?: string (solo informado cuando scope = "USER").
+
+Aplicar estos campos en:
+
+knowledgeassets
+
+documentchunks
+
+Cualquier índice/colección que dependa de documentos (si aplica).
+
+Reglas de negocio:
+
+scope = "TENANT": comportamiento actual (documento compartido en el tenant).
+
+scope = "USER":
+
+Sólo accesible para ownerUserId y, si se decide, para roles muy privilegiados (p.ej. SUPERADMIN con vista de soporte).
+
+No se usa en búsquedas corporativas por defecto.
+
+Seguridad:
+
+Añadir comprobación explícita en el repositorio y en los endpoints:
+
+Si scope = "USER" → verificar session.user.id === ownerUserId (o equivalente).
+
+Añadir tests de aislamiento:
+
+Usuario A no puede acceder a documentos scope = "USER" de usuario B, aunque compartan tenant.
+
+A.2. Flujos de ingest en “Mi espacio”
+Objetivo
+Un flujo de subida de documentos personales similar al de tenant, pero simplificado.
+
+Requisitos funcionales
+
+Desde la sección “Mi espacio”, el usuario puede:
+
+Subir nuevos documentos (PDF u otros formatos soportados).
+
+Ver un listado de sus documentos personales.
+
+Eliminar sus documentos personales.
+
+Requisitos técnicos
+
+Endpoints / casos de uso:
+
+Crear endpoint específico o reutilizar el existente con metadatos:
+
+Ejemplo: POST /api/core/ingest con metadatos:
+
+scope = "USER"
+
+ownerUserId = session.user.id
+
+El servicio de ingest debe soportar ese scope y rellenar los campos adecuados en BD.
+
+Listado:
+
+GET /api/user/knowledge-assets filtrando por:
+
+tenantId = session.user.tenantId
+
+scope = "USER"
+
+ownerUserId = session.user.id
+
+Eliminación:
+
+DELETE /api/user/knowledge-assets/:id
+
+Validar que:
+
+El documento pertenece al mismo tenantId.
+
+scope = "USER" y ownerUserId = session.user.id.
+
+UX / UI (para el equipo frontend):
+
+Nueva sección “Mi espacio” en el sidebar:
+
+Vista de lista de documentos personales.
+
+Botón “Subir documento” que abre un formulario minimalista:
+
+Archivo.
+
+Título opcional.
+
+Nota opcional.
+
+Mensajería clara:
+
+Indicar que esos documentos son personales y no visibles para el resto del tenant (según la regla que defináis).
+
+Bloque B · Asistente rápido (“subir → preguntar”)
+B.1. Asistente rápido a nivel usuario
+Objetivo
+Permitir un flujo muy simple de uso: el usuario sube uno o varios documentos y realiza preguntas sobre ellos desde la misma pantalla.
+
+Requisitos funcionales
+
+En una única pantalla:
+
+Zona para subir 1–N documentos personales.
+
+Caja de chat/pregunta.
+
+Zona de respuesta con citas a documentos subidos.
+
+Como mínimo:
+
+El usuario puede:
+
+Subir documentos nuevos.
+
+Elegir si la pregunta se hace sobre:
+
+Sólo los nuevos documentos.
+
+Todos sus documentos personales en “Mi espacio”.
+
+Requisitos técnicos
+
+API / casos de uso:
+
+Caso de uso “Asistente rápido”:
+
+Entrada:
+
+tenantId (implícito por sesión).
+
+userId (implícito).
+
+Lista opcional de assetIds personales sobre los que restringir el RAG.
+
+Texto de consulta.
+
+Comportamiento:
+
+Si se pasan assetIds:
+
+Construir el conjunto de chunks filtrados por:
+
+scope = "USER"
+
+ownerUserId = userId
+
+knowledgeAssetId in assetIds.
+
+Si no se pasan assetIds:
+
+Buscar contra todos los chunks scope="USER" del usuario.
+
+Ejecutar el flujo RAG existente limitado a ese subconjunto.
+
+Devolver:
+
+Respuesta generada.
+
+Lista de referencias (documento + fragmento + puntuación).
+
+Seguridad:
+
+Comprobaciones:
+
+Las assetIds recibidas deben pertenecer al mismo tenantId, scope = "USER" y ownerUserId = userId.
+
+No se permite usar documentos scope="TENANT" en este flujo “personal” salvo que se especifique lo contrario.
+
+Frontend:
+
+Componente “Asistente rápido” con:
+
+Paso 1 (opcional): subida de documentos (con feedback de ingest).
+
+Paso 2: campo de texto y botón “Preguntar”.
+
+Posibilidad de seleccionar documentos concretos (checkboxes o similar) o “todos mis documentos”.
+
+Bloque C · Colecciones personales (“notebooks”)
+C.1. Modelo de “colecciones”
+Objetivo
+Permitir a cada usuario organizar sus documentos personales en colecciones temáticas y hacer RAG por colección.
+
+Requisitos funcionales
+
+Cada usuario puede:
+
+Crear colecciones.
+
+Añadir documentos personales a una o varias colecciones.
+
+Lanzar consultas RAG limitadas a una colección concreta.
+
+Requisitos técnicos
+
+Modelo de datos:
+
+Nueva colección usercollections (nombre orientativo):
+
+Campos mínimos:
+
+id
+
+tenantId
+
+ownerUserId
+
+name
+
+description
+
+assetIds: string[] (referencias a knowledgeassets personales).
+
+createdAt, updatedAt
+
+Reglas de negocio:
+
+Sólo se permiten assetIds que pertenezcan a:
+
+Mismo tenantId.
+
+scope = "USER".
+
+ownerUserId = ownerUserId de la colección.
+
+Collections son visibles sólo para su propietario (y, opcionalmente, para roles de soporte global si lo necesitáis).
+
+C.2. RAG por colección
+Objetivo
+Permitir que el motor RAG existente haga consultas limitadas a una colección.
+
+Requisitos técnicos
+
+API / casos de uso:
+
+Endpoint o método “RAG por colección”:
+
+Entrada:
+
+tenantId, userId (implícitos).
+
+collectionId.
+
+query.
+
+Lógica:
+
+Recuperar la colección:
+
+Validar tenantId y ownerUserId.
+
+Obtener assetIds asociados.
+
+Limitar la búsqueda vectorial a:
+
+scope = "USER", ownerUserId = userId.
+
+knowledgeAssetId in assetIds.
+
+Ejecutar flujo RAG estándar con esa restricción.
+
+Frontend:
+
+En “Mi espacio”:
+
+Lista de colecciones.
+
+Opción “Preguntar a esta colección” que abre un chat/caixa de pregunta.
+
+Opción para añadir/quitar documentos de una colección.
+
+Bloque D · Integración con lo existente (RAG, governance, métricas)
+D.1. Integración con motor RAG actual
+Objetivo
+Reutilizar el motor existente, añadiendo sólo filtros contextuales para scope y ownerUserId.
+
+Requisitos técnicos
+
+En el servicio de búsqueda/chunking:
+
+Incluir parámetros opcionales en los métodos de retrieval:
+
+scope?: "TENANT" | "USER"
+
+ownerUserId?: string
+
+assetIds?: string[]
+
+Donde hoy se filtra por tenantId, añadir:
+
+Si scope = "USER":
+
+scope = "USER" AND ownerUserId = userId.
+
+Si se pasan assetIds:
+
+knowledgeAssetId in assetIds.
+
+Mantener compatibilidad con flujos existentes:
+
+Si no se pasan scope ni ownerUserId, comportamiento actual (tenant‑wide).
+
+Evitar que los nuevos filtros afecten a la calidad/recuperación del RAG corporativo.
+
+D.2. Integración con gobernanza IA
+Objetivo
+Que las acciones automáticas, logs y políticas de IA también contemplen el contexto “Mi espacio”.
+
+Requisitos técnicos
+
+Logs y auditoría:
+
+Incluir scope y ownerUserId en:
+
+Logs de auditoría (AIGOVERNANCE / auditoría de IA).
+
+Cualquier log de RAG donde tenga sentido.
+
+Políticas:
+
+Definir si las políticas de governance del tenant afectan igual a:
+
+Documentos scope="TENANT" y scope="USER".
+
+Documentar y aplicar reglas:
+
+Por ejemplo, permitir más libertad en “Mi espacio” pero mantener bloquear ciertas acciones globalmente.
+
+D.3. Métricas
+Objetivo
+Reflejar el uso de “Mi espacio” en el dashboard B2B sin mezclarlo incorrectamente con el uso corporativo.
+
+Requisitos técnicos
+
+Métricas específicas:
+
+Contadores como:
+
+userPersonalDocsCount
+
+userPersonalRagQueriesCount
+
+A nivel de dashboard:
+
+Agregados:
+
+Nº de usuarios que usan “Mi espacio”.
+
+Nº medio de documentos personales por usuario.
+
+Uso de RAG personal vs corporativo.
+
+No mezclar:
+
+Evitar que el consumo de “Mi espacio” distorsione métricas de valor corporativo como:
+
+Ahorro por automatización sobre procesos oficiales.
+
+Calidad de RAG sobre documentación corporativa validada.
+
+Bloque E · Seguridad, privacidad y UX
+E.1. Seguridad y aislamiento
+Puntos clave a vigilar
+
+Que las queries, caches y endpoints que trabajen con chunks/documentos siempre contemplen:
+
+tenantId
+
+scope
+
+ownerUserId cuando proceda.
+
+Añadir tests automáticos específicos:
+
+Un usuario no puede leer ni buscar en documentos de “Mi espacio” de otro usuario, aunque sean del mismo tenant.
+
+El motor RAG con filtro scope="USER" nunca devuelve chunks TENANT, y viceversa.
+
+E.2. UX y mensajería
+Requisitos funcionales de UX
+
+Explicar claramente al usuario:
+
+Qué es “Mi espacio”.
+
+Qué diferencia hay entre:
+
+Documentos personales.
+
+Documentos corporativos.
+
+En la UI del asistente rápido:
+
+Indicar explícitamente que las respuestas se basan en documentos personales o en la colección seleccionada.
+
+
+
+Integro el requisito de deduplicación por md5 en el plan, y te lo convierto en una RFC funcional/técnica orientada a equipo.
+
+1. Contexto y objetivos
+La plataforma RAG multi‑tenant quiere introducir:
+
+“Mi espacio” y colecciones personales por usuario (tipo Pocket RAG, pero en web/desktop).
+
+Un asistente rápido “subir → preguntar”.
+
+Deduplicación agresiva por md5 para minimizar coste de almacenamiento y procesamiento:
+
+Si un documento ya existe e incluso está indexado (chunks generados), no se vuelve a subir ni procesar.
+
+Se reutiliza el documento/chunks y se crea solo la relación con el nuevo tenant/usuario.
+
+Objetivos clave:
+
+Evitar re‑procesar el mismo PDF si múltiples tenants/usuarios suben el mismo archivo.
+
+Mantener aislamiento lógico entre tenants/usuarios aunque compartan el mismo “blob” y/o chunks.
+
+2. Requisitos de deduplicación por md5
+2.1. Modelo de datos (nivel físico vs lógico)
+Requisito funcional
+
+Conceptualmente, hay tres niveles:
+
+Blob físico: el fichero en sí (en Cloudinary/S3/etc.).
+
+Documento lógico global: “este contenido concreto” identificado por md5.
+
+Vínculos tenant/usuario: quién tiene ese documento en su biblioteca (tenant y opcionalmente usuario).
+
+Requisitos técnicos
+
+Extender/normalizar modelos:
+
+Tabla/colección de blobs globales (si no existe ya):
+
+fileblobs (nombre orientativo):
+
+id
+
+md5
+
+storageProvider (Cloudinary, S3, …)
+
+storageKey / URL
+
+sizeBytes
+
+mimeType
+
+createdAt, updatedAt
+
+knowledgeassets:
+
+Campos clave:
+
+md5
+
+fileBlobId (ref a fileblobs)
+
+tenantId
+
+scope: "TENANT" | "USER"
+
+ownerUserId?: string
+
+Metadatos de negocio (tipo de documento, industria, etc.).
+
+documentchunks:
+
+Opciones:
+
+Opción A (sencilla): seguir guardando tenantId y knowledgeAssetId como hasta ahora.
+
+Opción B (más agresiva en ahorro): tener chunks por fileBlobId y reutilizarlos entre tenants, aplicando aislamiento solo en la query.
+
+Para empezar, se recomienda Opción A por simplicidad y claridad de auditoría.
+
+Decisión práctica recomendada:
+
+Fase 1: deduplicar a nivel de fileblobs + knowledgeassets pero mantener documentchunks por tenant.
+
+Fase 2 (si el ahorro lo justifica): estudiar tener chunks únicos por fileBlobId.
+
+2.2. Flujo de ingest con deduplicación
+Requisito funcional
+
+Al subir un documento:
+
+Si el md5 ya existe y el documento ya fue analizado e indexado:
+
+No se vuelve a subir ni procesar.
+
+Se crea/actualiza el knowledgeasset para ese tenant/usuario apuntando al fileBlobId existente.
+
+Si solo existe el blob pero no se ha indexado (casos raros):
+
+Se puede reaprovechar el blob y lanzar análisis/indexado, o forzar reindexado.
+
+Requisitos técnicos
+
+Pasos del flujo de ingest:
+
+Calcular md5 del fichero antes de subirlo.
+
+Consultar fileblobs por md5:
+
+Si no existe:
+
+Subir fichero a storage.
+
+Crear entrada en fileblobs.
+
+Si existe:
+
+Reutilizar storageKey / URL existente.
+
+Revisar si ya hay knowledgeassets asociados a ese fileBlobId:
+
+Si hay al menos un asset con status = "analyzed" y indexed = true (o campo equivalente):
+
+Asumir que el contenido está indexado.
+
+Si no hay ninguno analizado:
+
+Preparar flujo de análisis/indexado normal.
+
+Crear o reutilizar knowledgeasset para el tenant/usuario actual:
+
+Siempre se crea una nueva entrada por tenant (y usuario, si scope="USER"), aunque comparta fileBlobId y md5.
+
+Campos:
+
+tenantId
+
+scope
+
+ownerUserId (si aplica)
+
+fileBlobId
+
+md5
+
+status:
+
+analyzed/indexed si se hereda un análisis completo existente.
+
+pending si hay que lanzar análisis.
+
+Reuso de indexado:
+
+Fase 1 (más sencilla):
+
+Aunque el blob ya exista, se vuelve a generar chunks para el nuevo tenant:
+
+Asegura aislamiento total, métricas separadas, posibilidad de aplicar políticas distintas por tenant.
+
+Menos ahorro de CPU, pero evita complejidad extra.
+
+Fase 2 (si se decide):
+
+Crear documentchunks a nivel de fileBlobId.
+
+En consultas RAG, filtrar por:
+
+tenantId que tenga acceso a ese fileBlobId, usando una tabla de permisos/vínculos.
+
+Requiere más diseño para no mezclar contextos ni governance entre tenants.
+
+Para el equipo: en esta primera iteración, lo prioritario es deduplicar subida física y lógica de documento (fileblobs + knowledgeassets), no tanto los chunks.
+
+3. Integración con “Mi espacio” y colecciones
+3.1. Alta de documento en “Mi espacio”
+Flujo funcional
+
+Usuario en “Mi espacio” sube un PDF.
+
+Sistema:
+
+Calcula md5.
+
+Busca en fileblobs:
+
+Si existe: reutiliza blob.
+
+Si no: lo sube y lo registra.
+
+Crea knowledgeasset con:
+
+tenantId del usuario.
+
+scope = "USER".
+
+ownerUserId = user.id.
+
+fileBlobId, md5, metadatos.
+
+Lanza (o reutiliza) análisis/indexado según lo descrito en 2.2.
+
+Puntos a vigilar
+
+Evitar que un documento scope="USER" de un usuario pueda ser vinculado por error a otro usuario del mismo tenant sin acción explícita.
+
+Si el mismo usuario sube varias veces el mismo fichero:
+
+Se puede decidir:
+
+Reutilizar el knowledgeasset existente (mostrar un mensaje “ya tienes este documento en tu espacio”), o
+
+Crear uno nuevo (por si quiere organizarlo en distintas colecciones); en ese caso se reutiliza fileBlobId pero no se recalcula nada.
+
+3.2. Vincular documentos a colecciones
+Requisito funcional
+
+Al crear/editar una colección personal:
+
+El usuario puede seleccionar documentos ya presentes en su “Mi espacio”.
+
+No se crean blobs nuevos ni assets nuevos; solo se añaden assetIds a la colección.
+
+Requisitos técnicos
+
+La deduplicación aquí ya está resuelta por el flujo de ingest:
+
+La colección sólo referencia knowledgeassets existentes (uno por usuario/tenant).
+
+No hay riesgo de “duplicado” extra.
+
+4. Integración con RAG, seguridad y métricas
+4.1. RAG respetando deduplicación y aislamiento
+Requisito funcional
+
+El motor RAG debe:
+
+Poder usar documentos compartidos físicamente entre tenants/usuarios.
+
+Mantener siempre el aislamiento lógico: un tenant/usuario sólo ve sus documentos y los corporativos del tenant.
+
+Requisitos técnicos
+
+Siempre filtrar por:
+
+tenantId
+
+scope
+
+ownerUserId (si scope="USER")
+
+No basarse únicamente en fileBlobId o md5 para decidir qué chunks usar: estos se emplean sólo para deduplicación, no para acceso.
+
+4.2. Métricas y deduplicación
+Objetivo
+
+Medir ahorro por deduplicación sin perder claridad en métricas de uso.
+
+Requisitos técnicos
+
+Métricas posibles:
+
+dedupSavedUploadsBytes: bytes evitados gracias a blobs ya existentes.
+
+dedupSavedIngestsCount: nº de veces que se ha evitado reprocesar un documento ya indexado (fase 2, si se implementa reuso de chunks).
+
+En dashboards técnicos internos (no de cliente), reflejar:
+
+uniqueFileBlobsCount vs totalKnowledgeAssetsCount.
+
+5. Tareas resumidas para el equipo
+5.1. Backend / dominio
+Diseñar y crear la colección fileblobs (o equivalente) con md5 como clave lógica.
+
+Extender knowledgeassets con:
+
+md5, fileBlobId, scope, ownerUserId.
+
+Modificar el flujo de ingest para:
+
+Calcular md5.
+
+Buscar/reutilizar blob.
+
+Crear/vincular knowledgeasset según reglas de scope/owner.
+
+Definir claramente la estrategia de indexado:
+
+Fase 1: mantener documentchunks por tenant/asset.
+
+Añadir métodos/servicios para:
+
+Consultar si un fileBlobId ya tiene al menos un asset “analyzed/indexed” (para posible Fase 2).
+
+5.2. “Mi espacio” y colecciones
+Definir endpoints/casos de uso para:
+
+Listar y gestionar knowledgeassets scope="USER".
+
+Crear colecciones personales y vincular assets.
+
+RAG por “Mi espacio” y por colección.
+
+Integrar scope y ownerUserId en el motor RAG.
+
+5.3. Seguridad y tests
+Tests de aislamiento que cubran:
+
+Acceso a blobs compartidos entre tenants/usuarios sin fuga de datos (sólo a través de sus propios assets).
+
+Acceso a documentos scope="USER" solo para ownerUserId.
+
+Revisar endpoints de ingest/RAG para garantizar:
+
+Filtro por tenantId + scope + ownerUserId según el contexto.
+
+Con este plan el equipo tiene:
+
+Qué entidades nuevas tocar (fileblobs, knowledgeassets, documentchunks).
+
+Qué reglas seguir al deduplicar con md5.
+
+Cómo encaja esto con “Mi espacio”, colecciones y RAG, sin preocuparse aún de detalles de implementación de código.
+
+No, en el plan anterior he cubierto bien la parte “Spaces” (Mi espacio + colecciones), pero no he bajado a detalle la pestaña de Quick Q&A.
+
+Te resumo cómo quedaría integrado para el equipo:
+
+Spaces (ya incluido):
+
+“Mi espacio” = workspace personal (scope="USER").
+
+Colecciones/notebooks personales (spaces temáticos).
+
+RAG limitado a esos documentos.
+
+Quick Q&A (faltaba detallarlo):
+
+Un endpoint/caso de uso independiente que:
+
+Recibe solo texto pegado (snippet) + contexto opcional, sin subir archivos ni tocar BD.
+
+Construye un prompt directo al LLM o, si quieres, hace RAG acotado con:
+
+snippet como “documento efímero” (no se persiste)
+
+más contexto opcional desde docs del tenant/usuario.
+
+No crea knowledgeassets ni chunks, no consume almacenamiento (salvo logs mínimos).
+
+UI: tal y como se ve en la captura:
+
+Textarea grande “Paste relevant text or notes here”.
+
+Campo “Context (optional)”.
+
+Caja de chat debajo para las preguntas.
+
+Reglas:
+
+Limitar tamaño máximo de snippet (p.ej. X KB) para controlar coste.
+
+Opción de “promocionar” un snippet a documento real (crear asset desde el snippet si el usuario lo desea).
+
+
+1) Quick Q&A – especificación funcional/técnica
+Objetivo
+Permitir pegar texto (snippet) y hacer preguntas de una sola vez, sin subir ni persistir archivos ni documentos. Es un “modo efímero”.
+
+Requisitos funcionales
+Pestaña “Quick Q&A” con:
+
+Textarea grande: “Paste relevant text or notes here”.
+
+Campo adicional “Context (optional)”.
+
+Zona de chat debajo con input “Ask a question”.
+
+El usuario:
+
+Pega texto.
+
+Opcionalmente añade contexto.
+
+Lanza una pregunta.
+
+Recibe una respuesta basada solo en ese texto (o en texto + contexto), sin afectar a la base de conocimiento ni a “Mi espacio”.
+
+Requisitos técnicos
+Caso de uso / endpoint
+
+Endpoint: POST /api/core/quick-qa (nombre orientativo).
+
+Entrada:
+
+json
+{
+  "snippet": "texto pegado por el usuario",
+  "context": "contexto opcional",
+  "question": "pregunta del usuario",
+  "tenantId": "...",   // implícito vía sesión
+  "userId": "..."      // implícito vía sesión
+}
+Salida:
+
+json
+{
+  "answer": "texto de respuesta",
+  "reasoning": "opcional, breve explicación",
+  "usedRag": false,      // true si decides combinar con documentos
+  "tokensUsed": 123      // opcional, para métricas/billing
+}
+Comportamiento interno
+
+Modo mínimo (recomendado para empezar):
+
+No hacer RAG.
+
+Llamar al LLM con un prompt que incluya:
+
+Instrucción de “responde SOLO usando el snippet/contexto”.
+
+El snippet y context.
+
+La question.
+
+Modo extendido (opcional más adelante):
+
+Permitirte combinar:
+
+Snippet como “documento efímero”.
+
+documentos corporativos/ personales del usuario.
+
+Para la primera versión no es necesario; complica poco al usuario pero mucho al backend.
+
+Persistencia
+
+No se crean knowledgeassets ni documentchunks.
+
+Solo se guardan:
+
+Logs técnicos (para auditoría y métricas de uso).
+
+Opcional: histórico de preguntas/respuestas en la sesión de chat, si quieres continuidad en esa pestaña.
+
+Seguridad / costes
+
+Limitar longitud de snippet y context (p.ej. máximo X KB / Y tokens).
+
+Tratarlo como otro tipo de “uso” en tu UsageService (tipo QUICK_QA), para poder ver consumo y límites por tenant.
+
+2) Spaces – confirmación rápida
+En el plan anterior ya tienes:
+
+“Mi espacio” / scope="USER" con ownerUserId.
+
+Colecciones personales (“spaces” / notebooks) que agrupan knowledgeassets.
+
+RAG por:
+
+Todo “Mi espacio”.
+
+Una colección concreta.
+
+Eso cubre la pestaña “Spaces”.
+
+3) Integración de Quick Q&A en tu interfaz actual
+3.1. Tabs en la zona de asistente
+Visto lo que ya tienes (dashboard admin, RAG técnico, etc.), la integración más sencilla es:
+
+En el módulo donde ahora tienes tu chat técnico/RAG (por ejemplo, página del asistente o vista de análisis), añadir un conmutador de modo con tres pestañas:
+
+Workspace único (tu modo actual: RAG sobre documentación del tenant).
+
+Spaces (Mi espacio + colecciones personales; lo que ya definimos).
+
+Quick Q&A (nuevo).
+
+A nivel UI:
+
+Reutilizar vuestro componente de Tabs (Tabs, TabsList, TabsTrigger, TabsContent) que ya usáis en otros paneles (ej. RAG Eval, dashboard).
+
+Cada pestaña simplemente renderiza un componente distinto:
+
+<TenantRagWorkspace />
+
+<UserSpacesRag />
+
+<QuickQaPanel />
+
+3.2. QuickQaPanel: layout mínimo
+Dentro de QuickQaPanel:
+
+Parte superior:
+
+Textarea grande snippet.
+
+Textarea pequeña context (opcional).
+
+Botón “Clear” (limpia los campos).
+
+Debajo:
+
+Chat:
+
+Input de pregunta.
+
+Lista de mensajes (tu componente de chat actual simplificado).
+
+Botón “Ask” que:
+
+Llama a POST /api/core/quick-qa.
+
+Añade la respuesta al hilo de chat local.
+
+Puntos de integración fáciles:
+
+El chat de Quick Q&A puede reutilizar tu componente de chat/RAG actual, pero con distinto “backend”:
+
+En modo normal llama a /apitechnical/ragchat.
+
+En Quick Q&A llama a /api/core/quick-qa.
+
+4) Cómo encaja con lo que ya tenéis
+No rompe flujos existentes:
+
+No toca ingest, ni governance, ni workflows.
+
+Solo añade una nueva vía de consulta ligera.
+
+Reutiliza piezas:
+
+Autenticación/tenantId/userId (middleware actual).
+
+Sistema de billing/usage: nuevo tipo de evento (QUICK_QA).
+
+Componentes UI: Tabs, chat, formularios de texto.
+
+Aporta valor rápido para demos y usuarios finales:
+
+Se parece visualmente a Pocket RAG:
+
+Tres pestañas.
+
+Quick Q&A con textarea + chat.
+
+Dentro de tu branding y layout actual (sidebar, header, etc.).
+
+
+Para streaming de respuestas RAG tipo chat, la recomendación actual es: SSE por defecto, WebSockets solo cuando realmente necesitas bidireccional “en tiempo real”.
+
+Cuándo usar SSE en RAG
+Encajan muy bien con tu caso actual (streaming de respuestas del agente / RAG):
+
+Comunicación unidireccional en el stream: el cliente manda una petición y solo necesita recibir tokens/eventos del servidor.
+
+Se apoyan en HTTP normal:
+
+Funciona mejor con proxies, firewalls corporativos, CDNs, balanceadores.
+
+Reutilizas toda tu observabilidad HTTP (logs, tracing, rate limiting).
+
+Simplicidad de implementación:
+
+Nada de handshake Upgrade, ni ping/pong, ni reconexión manual.
+
+En el navegador basta EventSource o un ReadableStream de fetch y en Next/Node simplemente devolver text/event-stream (como ya haces en /apipedidos/:id/analyze).
+​
+
+UX de “typing”:
+
+Para chat IA, lo que importa es percepción de velocidad: ver el modelo escribiendo. SSE lo consigue con muy poca sobrecarga.
+
+Buenas prácticas específicas:
+
+Cabeceras: Content-Type: text/event-stream, Cache-Control: no-store, Connection: keep-alive.
+
+Desactivar buffering en proxies para estos endpoints.
+
+Medir métricas de streaming: “time to first token” y “tokens/s”.
+
+Cuándo merece la pena WebSockets
+WebSockets tienen sentido si tu flujo RAG/agents necesita interacción continua durante el stream:
+
+Bidireccionalidad en tiempo real:
+
+El cliente debe enviar mensajes mientras el servidor está generando: edición colaborativa, herramientas que mandan eventos cada pocos ms, UI muy interactiva.
+
+Múltiples fuentes y canales simultáneos:
+
+Varias conversaciones, señales en paralelo, dashboards en tiempo real más densos.
+
+Audio/voz o streams de alta frecuencia:
+
+Speech‑to‑text, TTS continuo, etc., donde tienes frames de audio constantemente.
+
+Costes/complicaciones:
+
+Tienes que gestionar:
+
+Handshake, reconexión, heartbeats, backpressure.
+
+Infraestructura aparte (WS‑aware load balancers, autoscaling por conexiones).
+
+Regla práctica aplicable a tu plataforma
+Con tu diseño actual (Next.js, endpoints tipo /apipedidos/:id/analyze ya en SSE, agente que “emite pasos”):
+​
+
+Mantén/estandariza SSE para:
+
+Chat técnico RAG.
+
+Asistente rápido (Quick Q&A) si decides streamear la respuesta.
+
+Streams del agente sobre pedidos (ya lo haces con SSE).
+
+Considera WebSockets solo si más adelante quieres:
+
+Edición colaborativa de prompts/workflows en tiempo real.
+
+Herramientas donde el cliente manda señales frecuentes durante la generación (por ejemplo, mover un slider y afectar al output al vuelo).
+
+Integración de audio en tiempo real.
+
+Detalles de implementación que merece la pena cuidar
+Diseño de eventos SSE:
+
+Tipos de evento claros: status, token, trace, error, complete.
+
+Contratos estables para el front (ya tienes algo parecido en el SSE del agente).
+​
+
+Cancelación:
+
+Aunque SSE es unidireccional, el cliente puede cancelar cerrando la conexión (EventSource.close() / abort de fetch); el servidor debe respetar abortSignal y parar la llamada al LLM para ahorrar tokens.
+
+Escalabilidad:
+
+Usar HTTP/1.1/2 con keep‑alive, y revisar límites de conexiones concurrentes por pod/instancia.
+
+Resumiendo: para tu producto RAG/agents, SSE es el “default sensato”: mucho más simple de operar y suficientemente potente para todo el streaming que tienes hoy. WebSockets es una carta a jugar más adelante si introduces colaboración en tiempo real o audio interactivo.
+
+
+Documento funcional – Quick Q&A + Streaming RAG
+1. Quick Q&A – Documento funcional
+1.1. Objetivo del módulo
+Quick Q&A permite a un usuario pegar texto o notas y hacer preguntas puntuales sobre ese contenido, sin necesidad de:
+
+Subir archivos.
+
+Crear documentos en la base de conocimiento.
+
+Configurar espacios o colecciones.
+
+Es un modo “efímero” de consulta, ideal para:
+
+Revisar un email, contrato o fragmento de normativa rápido.
+
+Probar el comportamiento de la IA sin “ensuciar” la base de conocimiento.
+
+Hacer consultas ad‑hoc durante reuniones o llamadas.
+
+1.2. Casos de uso
+Revisión de un fragmento de documento
+
+Usuario copia un párrafo de una normativa o contrato.
+
+Lo pega en el área de Quick Q&A.
+
+Pregunta: “¿Dónde ves posibles riesgos para el cliente?”.
+
+El sistema responde señalando puntos de riesgo en ese texto.
+
+Resumen rápido
+
+Usuario copia un correo largo o acta de reunión.
+
+Pregunta: “Resúmelo en 5 viñetas para enviar al equipo técnico”.
+
+El sistema devuelve un resumen en lenguaje claro.
+
+Reescritura / adaptación
+
+Usuario pega un texto técnico.
+
+Pregunta: “Reescribe esto para que lo entienda un cliente no técnico”.
+
+El sistema mantiene el contenido pero adapta el tono.
+
+Comparación con contexto adicional (opcional)
+
+Usuario pega un texto.
+
+En el campo “Contexto (opcional)” escribe:
+
+“Estamos hablando de ascensores hidráulicos en España”.
+
+Pregunta: “¿Qué partes de este texto crees que no aplican a nuestro contexto?”.
+
+El sistema usa texto + contexto para responder.
+
+1.3. Flujo de usuario
+El usuario entra en la pestaña Quick Q&A.
+
+Ve:
+
+Texto de ayuda (“Pega aquí texto o notas y haz preguntas puntuales sin subir archivos”).
+
+Textarea grande “Texto” (obligatorio).
+
+Textarea más pequeña “Contexto (opcional)”.
+
+Caja de chat “Pregunta” + botón “Ask”.
+
+Pasos:
+
+Pega texto (y contexto si quiere).
+
+Escribe su pregunta en la caja de chat.
+
+Pulsa “Ask”.
+
+Ve la respuesta aparecer en el chat, con la sensación de “el modelo escribiendo” (streaming).
+
+Puede:
+
+Hacer más preguntas sobre el mismo texto (la app recuerda snippet + contexto durante la sesión).
+
+Vaciar el contenido con un botón “Limpiar” para empezar de cero.
+
+1.4. Reglas de producto
+Quick Q&A no guarda el texto pegado como documento:
+
+No aparece en “Mi espacio”.
+
+No se indexa en el grafo ni afecta al RAG del tenant.
+
+Se pueden guardar:
+
+La pregunta y la respuesta como parte del historial de conversación de la sesión (si se desea), pero sin considerar ese texto como conocimiento oficial.
+
+Tamaño máximo del texto pegado:
+
+Se definirá un límite (por ejemplo, equivalente a unas pocas páginas) para:
+
+Mantener la velocidad.
+
+Evitar costes excesivos.
+
+Quick Q&A es personal:
+
+Responde en el contexto del usuario que pregunta.
+
+La experiencia es por defecto privada (no compartida en dashboards de negocio salvo métricas agregadas).
+
+1.5. Ejemplos de prompts para UX/copys
+Ejemplo 1 – Análisis de riesgos
+
+Texto pegado: cláusulas de un contrato de mantenimiento.
+
+Pregunta sugerida (placeholder):
+“¿Qué riesgos o responsabilidades importantes ves para nuestra empresa en este texto?”
+
+Respuesta esperada:
+
+Lista de puntos con frases cortas, destacando:
+
+Responsabilidades fuertes.
+
+Penalizaciones.
+
+Ambigüedades.
+
+Ejemplo 2 – Explicación simple
+
+Texto pegado: fragmento de normativa técnica compleja.
+
+Pregunta sugerida:
+“Explícalo como si se lo contáramos a un cliente no técnico.”
+
+Respuesta esperada:
+
+3–5 frases claras, sin jerga jurídica/técnica.
+
+Ejemplo 3 – Checklist improvisado
+
+Texto pegado: descripción de un procedimiento interno.
+
+Pregunta sugerida:
+“Genera una lista de pasos y puntos de control a partir de este texto.”
+
+Respuesta esperada:
+
+Lista de pasos numerados.
+
+Lista de checks “Sí/No” que podrían usarse en un checklist formal.
+
+Ejemplo 4 – Comparación con contexto
+
+Texto pegado: especificación técnica de un sistema.
+
+Contexto (campo opcional): “Nuestro cliente solo tiene edificios de 4 plantas y normativas EN81 en España.”
+
+Pregunta:
+“¿Qué partes de este texto no aplican a este contexto?”
+
+Respuesta esperada:
+
+Lista de partes no aplicables.
+
+Opcional: sugerencias rápidas de adaptación.
+
+1.6. Consideraciones UX
+Mensaje claro en la UI:
+
+“Quick Q&A no guarda este texto como documento. Usa este modo para revisiones puntuales.”
+
+Botón “Promocionar a documento” (opcional futura):
+
+Si el usuario marca una casilla o pulsa un botón, el texto pegado se convierte en un documento en “Mi espacio”.
+
+Feedback de errores:
+
+Si el texto es demasiado grande, mensaje claro: “El texto es muy largo. Intenta recortar o convertirlo en documento completo”.
+
+2. Mejores prácticas – Streaming RAG (SSE vs WebSockets) para producto/UX
+Esta sección es para que producto/UX entienda por qué se ve “el modelo escribiendo” y por qué usamos una tecnología u otra.
+
+2.1. ¿Qué es el streaming en RAG?
+En lugar de esperar a que la IA genere toda la respuesta y mostrarla de golpe:
+
+La respuesta se envía “a trozos”.
+
+El usuario ve cómo el texto aparece progresivamente (como si alguien escribiera).
+
+Beneficios:
+
+Sensación de rapidez (el usuario deja de mirar el reloj).
+
+Mejor experiencia en respuestas largas y complejas.
+
+2.2. SSE – Cómo se percibe
+SSE = Server-Sent Events (eventos enviados desde el servidor al navegador):
+
+El cliente hace una petición normal.
+
+El servidor responde con un flujo de eventos.
+
+El navegador recibe cada trozo y lo va pintando.
+
+Desde producto/UX:
+
+Es suficiente para:
+
+Mostrar la respuesta de RAG “en vivo”.
+
+Enviar pequeños eventos de estado (“pensando…”, “recuperando contexto…”, “generando respuesta…”).
+
+Ejemplo de eventos que puede ver el usuario:
+
+Estado inicial: “Analizando el texto…”
+
+Luego: el texto de respuesta se va escribiendo.
+
+Al final: “Respuesta completada” o se actualizan las tarjetas de resumen.
+
+2.3. WebSockets – Cuándo se notarían
+WebSockets permiten que:
+
+El cliente y el servidor envíen mensajes en cualquier momento, sin abrir/cerrar peticiones nuevas.
+
+Beneficios perceptibles para UX cuando:
+
+Hay interacción continua durante el streaming:
+
+Varios usuarios escribiendo a la vez (colaboración en tiempo real).
+
+Mover sliders o cambiar parámetros mientras la IA responde.
+
+Casos de audio/voz (hablar con la IA en tiempo real).
+
+En la experiencia actual de tu producto (un usuario frente a un chat, viendo respuestas de IA):
+
+WebSockets no aportan una mejora directa para el usuario frente a SSE.
+
+Añaden complejidad técnica sin beneficio claro de UX en este momento.
+
+2.4. Resumen para decisiones de producto
+Quick Q&A y chat RAG:
+
+Usar SSE:
+
+Proporciona streaming de texto natural.
+
+Más sencillo de operar y mantener.
+
+Bueno para demo, producción, entornos corporativos con proxies.
+
+Futuras funcionalidades que sí podrían requerir WebSockets:
+
+Edición colaborativa de checklists o informes en tiempo real por varios usuarios.
+
+Paneles que muestran simultáneamente:
+
+Progreso de múltiples agentes.
+
+Señales en tiempo real de sensores o sistemas externos.
+
+Integración de voz (hablar y escuchar respuestas sin pausas).
+
+Mientras no entren en juego esos escenarios, la experiencia “tipo Pocket RAG” (texto que aparece en streaming en Quick Q&A, chat técnico, análisis de pedidos) se cubre perfectamente con SSE.
+
+
+
+Tiene todo el sentido extender el concepto de “spaces” al nivel de tenant y usarlo como modelo de aislamiento interno (HR, Taller, Dirección, etc.). Te resumo una propuesta clara que el equipo puede implantar sin liarse.
+
+1) Concepto: Tenant Spaces
+Un Space es un “contenedor de conocimiento” dentro de un tenant:
+
+Agrupa documentos, chunks, entidades y consultas RAG.
+
+Tiene propios permisos (usuarios y grupos que lo pueden ver/usar).
+
+Puede ser:
+
+Departamento (HR, Taller, Calidad, Legal…).
+
+Proyecto/cliente.
+
+Espacio común de empresa (por ejemplo “Corporativo”).
+
+Esto se suma a los scopes que ya hablamos:
+
+scope = "TENANT": documentos compartidos “sin space” (o en el espacio default).
+
+scope = "SPACE": documentos vinculados a un Space concreto.
+
+scope = "USER": espacio personal (“Mi espacio”).
+
+2) Modelo funcional mínimo
+2.1. Qué puede hacer un admin de tenant
+Crear, editar y borrar Spaces del tenant.
+
+Configurar para cada Space:
+
+Nombre y descripción (“Recursos Humanos interno”, “Taller Sevilla”, “Corporate Docs”).
+
+Visibilidad:
+
+Privado a grupos/usuarios (HR interno).
+
+Visible a toda la empresa (Corporate).
+
+Miembros:
+
+Grupos (por roles o grupos lógicos: HR, Taller, Dirección).
+
+Usuarios individuales (excepciones).
+
+Asignar documentos a un Space:
+
+Al subir un documento: elegir Space de destino.
+
+Mover documentos entre Spaces (si tiene permisos).
+
+2.2. Qué ve un usuario normal
+Una lista de Spaces a los que tiene acceso:
+
+Ejemplo: “Corporate”, “Taller Sevilla”.
+
+Al hacer preguntas RAG:
+
+Por defecto, el assistant usa:
+
+Todos los Spaces a los que tiene acceso menos los marcados como “internos” (HR).
+
+El usuario puede forzar “preguntar solo en un Space” (pestaña o selector).
+
+Así se cumple tu ejemplo:
+
+HR tiene un Space privado “HR interno”:
+
+Solo HR (y quizá Dirección) ve y usa esos documentos.
+
+Hay otro Space “HR público/Empresa”:
+
+Contiene documentos de RRHH que sí puede consultar todo el mundo (políticas generales, beneficios…).
+
+Si Taller pregunta algo:
+
+El RAG no ve los documentos del Space “HR interno”.
+
+Sí puede ver “HR público/Empresa” y el resto de Spaces a los que tenga acceso.
+
+3) Reglas de permisos (alto nivel)
+Conviene separar roles de alcance (scope):
+
+Roles (lo que puedes hacer):
+
+SPACE_ADMIN: crear/editar Spaces, asignar miembros.
+
+SPACE_EDITOR: subir y gestionar documentos del Space.
+
+SPACE_VIEWER: solo consultar.
+
+Scope (dónde lo haces):
+
+Espacios concretos (HR, Taller…).
+
+Espacio “global de empresa”.
+
+“Mi espacio” (USER).
+
+Reglas básicas fáciles de entender:
+
+Los documentos “pertenecen” a un Space (o al espacio “Global” si no se especifica).
+
+Un usuario sólo puede:
+
+Ver documentos de los Spaces donde tenga VIEWER (o superior).
+
+Subir documentos al Space donde tenga EDITOR/ADMIN.
+
+Un Space puede tener una opción:
+
+“Visible a toda la empresa” (equivalente a un VIEWER implícito para todos los usuarios del tenant).
+
+“Privado a colaboradores” (solo grupos/usuarios añadidos).
+
+4) Impacto en el RAG (cómo se aísla a nivel de respuestas)
+Para producto/UX, lo importante es:
+
+Cuando el usuario hace una pregunta, el assistant sabe en qué Space(s) debe mirar.
+
+Recomendaciones:
+
+Contexto de Space en el assistant:
+
+En el asistente principal, añade un selector:
+
+“Todos mis espacios permitidos (por defecto)”.
+
+Lista de Spaces concretos: HR público, Taller, etc.
+
+El usuario puede:
+
+Preguntar “a toda la empresa” (excepto espacios internos a los que no tenga acceso).
+
+O focalizar: “Preguntar solo a Taller”.
+
+Filtro lógico en RAG:
+
+Cuando se construye la consulta de retrieval:
+
+Solo incluir documentos cuyos Spaces estén en la lista de espacios visibles para ese usuario.
+
+Si HR interno no está en esa lista para un usuario de Taller:
+
+Nunca se seleccionan documentos de ahí.
+
+Por tanto, esas fuentes nunca se citan ni influyen en la respuesta.
+
+UX clara para evitar confusiones:
+
+Mostrar en la UI qué Spaces se están usando para responder:
+
+Ejemplo: “Respondido usando: Corporate, Taller Sevilla” (no verán HR interno).
+
+Así, si alguien no encuentra algo, sabe si está buscando en el espacio correcto.
+
+5) Cómo encaja con “Mi espacio” y deduplicación
+“Mi espacio”:
+
+Sigue siendo un Space de tipo USER solo para el usuario (espacios personales).
+
+No se mezcla con Spaces de departamento a menos que el usuario “promocione” un documento.
+
+Deduplicación por md5:
+
+Un blob físico puede estar:
+
+Asociado a varios Spaces en un mismo tenant (HR interno + HR público), con distintos permisos.
+
+Asociado a distintos tenants.
+
+La deduplicación sigue siendo interna al motor (blob compartido), pero el acceso lo decide el Space y los permisos de usuario.
+
+6) Siguiente paso
+Si te encaja este diseño, el siguiente paso que puedo prepararte es:
+
+Un mini‑spec formal para “Tenant Spaces” con:
+
+Entidades: Space, SpaceMembership, relación con knowledge assets.
+
+Escenarios de uso: crear Space, asignar HR interno/público, cómo se ven en el assistant.
+
+Reglas de transición (qué pasa si cambias un documento de Space o cambias la visibilidad del Space).
+
+Así el equipo tiene un documento sólido para implementar los Spaces multi‑departamento con aislamiento de RAG tal como quieres.
+
+
+Mini‑spec – Tenant Spaces
+1. Objetivo
+Introducir Spaces de tenant para segmentar el conocimiento por áreas (HR, Taller, Calidad, etc.), con:
+
+Aislamiento de documentos y RAG por Space.
+
+Permisos por usuario/grupo.
+
+Integración transparente con el assistant (por defecto pregunta a todo lo permitido, con opción de acotar por Space).
+
+Migración limpia desde el modelo actual.
+
+2. Entidades
+2.1. Space
+Representa un espacio lógico de conocimiento dentro de un tenant.
+
+Campos mínimos:
+
+id: string
+
+tenantId: string
+
+name: string
+
+description?: string
+
+type: "DEFAULT" | "DEPARTMENT" | "PROJECT" | "PUBLIC_COMPANY"
+
+DEFAULT: espacio general del tenant (lo que hoy es “todo el tenant”).
+
+DEPARTMENT: HR, Taller, Calidad, etc.
+
+PROJECT: proyectos/cliente.
+
+PUBLIC_COMPANY: documentos compartidos con toda la empresa.
+
+visibility: "PRIVATE" | "TENANT_WIDE"
+
+PRIVATE: solo miembros explícitos (HR interno).
+
+TENANT_WIDE: todos los usuarios del tenant son VIEWER implícitos.
+
+isDefault: boolean (true para el espacio “Tenant default”).
+
+createdBy: userId
+
+createdAt, updatedAt
+
+2.2. SpaceMembership
+Define quién tiene acceso a un Space y con qué rol.
+
+Campos:
+
+id: string
+
+tenantId: string
+
+spaceId: string
+
+principalType: "USER" | "GROUP"
+
+principalId: string (userId o groupId / roleId)
+
+role: "SPACE_ADMIN" | "SPACE_EDITOR" | "SPACE_VIEWER"
+
+createdAt, updatedAt
+
+Notas:
+
+SPACE_ADMIN: gestiona miembros y metadatos del Space.
+
+SPACE_EDITOR: puede subir/editar documentos del Space.
+
+SPACE_VIEWER: solo lectura/RAG.
+
+2.3. Relación con KnowledgeAssets
+Extender knowledgeassets:
+
+Campos nuevos:
+
+spaceId?: string // null o defaultSpaceId = comportamiento actual
+
+scope: "TENANT" | "SPACE" | "USER":
+
+TENANT: se trata como perteneciente al spaceId por defecto del tenant.
+
+SPACE: ligado a un Space concreto.
+
+USER: “Mi espacio” (personal).
+
+Regla:
+
+En la práctica, todos los assets TENANT se mapearán a algún spaceId (ver migración).
+
+3. Escenarios de uso
+3.1. Crear Space
+Actor: Admin de tenant o usuario con permiso SPACE_ADMIN global.
+
+Pasos:
+
+Desde la UI de administración, el usuario hace “Crear Space”.
+
+Rellena:
+
+Nombre (HR interno, Taller Sevilla…).
+
+Tipo: DEPARTMENT, PROJECT, PUBLIC_COMPANY, etc.
+
+Visibilidad:
+
+PRIVATE: selecciona grupos/usuarios iniciales.
+
+TENANT_WIDE: se marca como visible a todo el tenant.
+
+El sistema crea:
+
+Entrada en spaces.
+
+Si TENANT_WIDE, no hace falta SpaceMembership para VIEWER (es implícito).
+
+Si PRIVATE, crea SpaceMembership para:
+
+El creador como SPACE_ADMIN.
+
+Los grupos/usuarios seleccionados.
+
+3.2. Asignar Space HR interno / HR público
+Ejemplo:
+
+Space A: “HR interno”
+
+type = DEPARTMENT, visibility = PRIVATE.
+
+Miembros: grupo HR, grupo Dirección.
+
+Space B: “HR empresa”
+
+type = PUBLIC_COMPANY, visibility = TENANT_WIDE.
+
+Miembros explícitos solo para admins/editores (HR) como SPACE_EDITOR, pero todos los usuarios tienen VIEWER implícito.
+
+Al subir un documento de HR:
+
+Si es uso interno:
+
+Se elige Space “HR interno”.
+
+Si es política pública:
+
+Se elige Space “HR empresa”.
+
+Resultado:
+
+Usuarios de Taller:
+
+Ven y consultan documentos de “HR empresa”.
+
+No ven ni usan “HR interno”.
+
+3.3. Cómo se ve en el assistant
+Para cualquier usuario autentificado:
+
+El sistema calcula la lista de Spaces a los que tiene acceso como VIEWER (explícito o implícito):
+
+spacesVisible = tenantDefault + Spaces TENANT_WIDE + Spaces con membership.
+
+En el assistant:
+
+Modo por defecto:
+
+El usuario pregunta y el sistema busca en todos los Spaces visibles.
+
+Esto es transparente: “Preguntar a toda la empresa que tengo permiso para ver”.
+
+Modo acotado:
+
+Selector de Space (o multi‑selector):
+
+“Todos mis espacios” (por defecto).
+
+O un Space concreto (HR empresa, Taller…).
+
+El usuario puede acotar cuando quiera precisión:
+
+“Preguntar solo en Taller Sevilla”.
+
+4. Reglas de transición
+4.1. Cambiar un documento de Space
+Caso: un documento pasa de Space “Corporate” a “HR interno”.
+
+Reglas:
+
+Actualizas knowledgeassets.spaceId del documento.
+
+Efectos:
+
+A partir de ese momento:
+
+Solo los usuarios con acceso al nuevo Space (HR interno) verán ese documento en listas y resultados de RAG.
+
+Para usuarios que antes lo veían:
+
+El documento deja de aparecer en resultados nuevos.
+
+No hace falta reindexar contenido (salvo que tu política lo exija); basta con que las consultas RAG filtren por spaceId + permisos.
+
+4.2. Cambiar la visibilidad del Space
+Ejemplo 1: HR empresa pasa de PRIVATE a TENANT_WIDE.
+
+Antes:
+
+Solo miembros (ej. HR) pueden ver.
+
+Después:
+
+Todos los usuarios del tenant son VIEWER implícitos.
+
+Efectos:
+
+El assistant, en modo “Todos mis espacios”, empezará a usar documentos de ese Space para todos los usuarios.
+
+No hace falta tocar los documentos: la lógica de permisos lee visibility.
+
+Ejemplo 2: HR empresa pasa de TENANT_WIDE a PRIVATE.
+
+Antes:
+
+Todos podían consultar.
+
+Después:
+
+Solo HR y quienes estén en SpaceMembership.
+
+Efectos:
+
+El assistant dejará de usar documentos de ese Space para los usuarios que no estén en el Space.
+
+Regla de UX recomendada:
+
+Mostrar un aviso cuando se cambie visibility de un Space:
+
+“Este cambio afectará quién puede usar estos documentos en las respuestas de IA.”
+
+5. Migración de datos existentes a Spaces
+5.1. Situación actual
+Todos los knowledgeassets están ligados sólo por tenantId (y quizá algún tipo/industria), pero no por Space.
+
+Queremos introducir Spaces sin romper nada.
+
+5.2. Plan de migración
+Crear un Space por defecto por tenant:
+
+Para cada tenantId:
+
+Crear Space:
+
+name = "General" o “Default”.
+
+isDefault = true.
+
+type = "DEFAULT".
+
+visibility = TENANT_WIDE (para no cambiar permisos efectivos actuales).
+
+Asignar todos los assets existentes al Space por defecto:
+
+Script de migración:
+
+Para cada knowledgeasset:
+
+Si spaceId es null:
+
+spaceId = defaultSpaceId del tenant.
+
+scope = "TENANT".
+
+Fase 2: crear Spaces departamentales (opcional pero recomendada):
+
+Para tenants que ya tienen segmentación (HR, Taller, etc.):
+
+Crear Spaces correspondientes.
+
+Mover gradualmente documentos:
+
+HR mueve documentos sensibles al Space “HR interno”.
+
+HR marca otros como “HR empresa” si quieres un Space público.
+
+Esto se puede hacer manualmente desde la UI de admin.
+
+Resultado:
+
+Tras Fase 1, nada cambia a ojos del usuario.
+
+Tras Fase 2, HR y otros departamentos pueden ir aislando su conocimiento.
+
+6. Integración en dashboard y UI de usuario
+6.1. Dashboard (admin / tenant)
+Objetivos:
+
+Dar visibilidad de cómo está repartido el conocimiento.
+
+Ayudar a detectar riesgos (ej.: documentos sensibles en espacios demasiado abiertos).
+
+Elementos:
+
+Tarjeta “Spaces del tenant”:
+
+Nº de Spaces totales.
+
+Nº de Spaces privados vs tenant‑wide.
+
+Tabla/lista de Spaces:
+
+Nombre, tipo, visibilidad.
+
+Nº de documentos.
+
+Nº de miembros.
+
+Métricas:
+
+Por Space:
+
+Documentos.
+
+Consultas RAG en el último periodo.
+
+Avisos:
+
+Spaces de tipo HR/Legal con visibility = TENANT_WIDE (marcar como potencial riesgo según política del cliente).
+
+6.2. UI para usuarios finales (assistant)
+Objetivo principal: experiencia transparente.
+
+Recomendación:
+
+En el asistente principal, añadir un componente sencillo:
+
+Selector desplegable (o chip con menú):
+
+Modo consulta:
+
+“Todos mis espacios” (por defecto).
+
+“Solo [spaceName]”.
+
+Comportamiento:
+
+Si el usuario no toca nada:
+
+Pregunta sobre todos los Spaces a los que tiene acceso (incluyendo el Space por defecto).
+
+Si selecciona un Space:
+
+Las respuestas usan solo documentos de ese Space (más “Mi espacio” si lo consideráis).
+
+No es necesario enseñar toda la jerarquía de permisos; basta con la lista de nombres visibles.
+
+UX adicional:
+
+Indicar en la cabecera del chat:
+
+“Consultando: Todos mis espacios” o “Consultando: Taller Sevilla”.
+
+Si los documentos usados vienen de varios Spaces, mostrar chips en la respuesta:
+
+Ej.: “Fuentes: Corporate, Taller Sevilla”.
+
+7. Mejores prácticas de seguridad
+Principio de mínimo privilegio:
+
+Spaces sensibles (HR, Legal, Compliance) deben ser PRIVATE por defecto.
+
+Otorgar acceso por grupos (roles) mejor que por usuarios sueltos.
+
+Separar rol global de rol en Space:
+
+Ser ADMIN del tenant no implica ver contenidos de Spaces sensibles, salvo que se decida explícitamente.
+
+Introducir un rol como TENANT_SUPERADMIN para soporte, con acceso auditado.
+
+Auditoría:
+
+Registrar:
+
+Creación/edición/borrado de Spaces.
+
+Cambios de visibility.
+
+Alta/baja de SpaceMembership.
+
+Movimientos de documentos entre Spaces.
+
+Guardar who/when/what para todas estas acciones.
+
+RAG y filtrado estricto:
+
+Todas las consultas de retrieval deben incluir:
+
+tenantId.
+
+scope.
+
+spaceId dentro de la lista de Spaces visibles del usuario.
+
+Nunca basarse solo en tenantId para filtros de RAG.
+
+Pruebas de aislamiento:
+
+Tests automáticos donde:
+
+Un usuario de Taller no pueda:
+
+Listar documentos de HR interno.
+
+Recibir respuestas que citen documentos de HR interno.
+
+Cambiar la visibilidad de un Space actualiza inmediatamente qué documentos entran en las respuestas.
+
+UI/UX de seguridad:
+
+Al crear o cambiar un Space a TENANT_WIDE, mostrar advertencia:
+
+“Todos los usuarios del tenant podrán usar estos documentos en sus respuestas de IA.”
+
+Para Spaces muy sensibles, puedes recomendar (o forzar) que no se usen en RAG general, sino solo en un asistente específico (ej.: “Assistant HR”).
+
+
+

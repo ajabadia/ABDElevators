@@ -1,0 +1,2551 @@
+A partir de lo que se ve en el snapshot del repo, el código está bastante sólido en patrón y seguridad, pero hay varios olores estructurales y detalles de riesgo que conviene ajustar.
+​
+
+Fortalezas generales
+Buen uso de hooks genéricos (useApiList, useApiMutation, useApiOptimistic, useFilterState, useFormModal, useLocalStorage, useOnboarding) que centralizan lógica de fetch, debounce, abort y UX optimista.
+​
+
+Manejo consistente de errores con AppError, handleApiError, logging con logEvento y códigos de error tipados (VALIDATIONERROR, EXTERNALSERVICEERROR, etc.).
+​
+
+En RAG/LLM, AdaptiveAnalysisService y el ecosistema de prompts tienen trazas, correlationId, shadow calls de Gemini y UsageService.trackLLM, lo que da buena auditabilidad y control de costes.
+​
+
+Code smells estructurales
+HTML y estilos de emails muy largos embebidos directamente en servicios (sendInvitationEmail, sendMfaEnabledEmail, sendNewInvoiceNotification, notificaciones de pago rechazado, etc.), mezclando lógica de dominio con maquetación.
+​
+
+Recomendado: extraer plantillas a archivos dedicados (p. ej. templates/email/*.ts con builders) o incluso a un micro-módulo de “NotificationService” que reciba DTOs y devuelva HTML.
+​
+
+Scripts “one‑off” de mantenimiento/migración (diagnosis de Mongo, limpieza de workflows, promotion de prompts/workflows/chunks) parecen acumular mucha lógica de negocio real, p. ej. EnvironmentService.promotePromptToProduction, promoteWorkflowToProduction, promoteChunksBySourceDoc.
+​
+
+Recomendado: la lógica de promoción debería vivir en un dominio estable (e.g. EnvironmentService en src/lib o similar) y los scripts sólo orquestar llamadas. Eso ya lo haces parcialmente, pero revisa que todos los scripts CLI estén usando siempre el mismo servicio, nunca lógica ad‑hoc.
+​
+
+Algunas páginas React (dashboard, tickets, compliance, knowledge assets) tienen mucha lógica inline (estadísticas, filtrados, cálculos de métricas) mezclada con JSX muy denso.
+​
+
+Recomendado: extraer “view models” o hooks específicos (useIntelligenceStats, useTicketsViewModel, etc.) para mantener los componentes de página centrados en layout.
+​
+
+Riesgos de scripts one‑off como fuente de verdad
+El copy de UI hace referencia a “Ephemeral Clean‑up script” para borrados masivos y cumplimiento GDPR, lo que indica que parte del proceso real de borrado está fuera de la app interactiva.
+​
+
+Riesgo: un operador que no ejecute el script o use una versión antigua puede dejar datos residuales (chunks, logs) que el usuario cree borrados.
+
+Recomendado: formalizar esos scripts como “jobs” versionados (p. ej. jobs/gdpr/tenant-erase-v2.ts) con changelog, y exponer en la UI qué versión del job se ha usado para un tenant concreto.
+​
+
+Los scripts de promoción de prompts/workflows/chunks son críticos para la separación STAGING/PRODUCTION; si alguien ejecuta una variación rápida con filtros ligeramente distintos puede divergirse el entorno.
+​
+
+Recomendado:
+
+Tener pruebas automatizadas mínimas sobre EnvironmentService (promueve prompt/workflow/chunks) en vez de sólo confiar en scripts.
+
+Guardar en audit log qué versión de script/servicio realizó la promoción (ya guardas action PROMOTEPROMPT y similares, pero añade un scriptVersion o serviceVersion si la ejecución viene de CLI).
+​
+
+Bugs y riesgos concretos
+Manejo de aborts y NPE
+useApiList usa un AbortController global con abortControllerRef y comprueba if (abortControllerRef.current === controller) antes de limpiar isLoading, lo que está bien para evitar race conditions.
+​
+
+Riesgo: si algún consumidor reutiliza el hook de forma inusual (cambia endpoint dinámicamente sin desmontar componente) podrían quedar estados inconsistentes.
+
+Recomendado: documentar explícitamente en el JSDoc del hook que endpoint debe ser estable o controlado (p. ej. en useMemo) y no cambiarse arbitrariamente.
+​
+
+En varios useEffect y handlers de fetch (CompliancePage, dashboards de inteligencia, soporte, etc.) haces if (res.ok) setState(await res.json()), pero en el catch sólo log + toast; no hay reset claro de algunos estados auxiliares.
+​
+
+Recomendado: asegurar que en todos los catch se reestablece un estado coherente (e.g. setStats(null) y setPatterns([]) si falla la carga del dashboard, para no dejar UI en estados parciales).
+​
+
+instanceof FormData en SSR
+En useApiMutation, detectas cuerpo tipo formulario con const isFormData = variables instanceof FormData, y si lo es, eliminas Content-Type para dejar que el navegador fije el boundary.
+​
+
+En componentes client‑side (use client) esto es correcto, pero el hook podría llegar a ejecutarse en un entorno donde FormData no esté definido (SSR / edge) si alguien lo usa erróneamente.
+​
+
+Recomendado: blindar la comprobación:
+
+const isFormData = typeof FormData !== "undefined" && variables instanceof FormData;
+
+O mover claramente este hook a uso exclusivo client (ya está en use client, pero documentarlo duro y evitar importarlo en server components).
+​
+
+Errores silenciosos / mensajes poco claros
+En varios sitios se hace catch (error) { toast.error(...) } pero el texto es genérico (“Error al crear ticket”, “Could not generate backup”), mientras que en la capa API tienes información rica (AppError.code, details).
+​
+
+Recomendado: normalizar la respuesta de errores en UI para mostrar mensajes más específicos cuando venga un AppError con code conocido (e.g. UNAUTHORIZED, STORAGEQUOTAEXCEEDED, TENANTCONFIGERROR).
+​
+
+En AdaptiveAnalysisService.analyzeEntityWithGemini si no hay JSON válido en la respuesta de Gemini, lanzas ExternalServiceError("No hay JSON válido...") y lo logueas, pero no parece haber un fallback “graceful” hacia una respuesta parcialmente utilizable o un mensaje UX específico.
+​
+
+Recomendado:
+
+Devolver un objeto de error estructurado a la capa superior (por ejemplo analysisFailed: true, reason: "LLM_PARSE_ERROR"), que la UI pueda traducir a un mensaje claro (“La IA no pudo estructurar la respuesta, prueba a simplificar el texto”).
+​
+
+Seguridad/API
+AccessControlService.checkUsageLimits implementa correctamente la política BLOCK vs SURCHARGE, y en caso de error en billing hace “fail open” para no bloquear negocio, dejando log de error.
+​
+
+Riesgo: si Billing se rompe durante un largo período, podrías tener un consumo descontrolado de tokens y llamadas LLM.
+
+Recomendado: añadir un mecanismo de “circuit breaker” o alerta cuando se detectan demasiados fallos consecutivos en BillingService.calculateCurrentUsage para que alguien intervenga.
+​
+
+El manejador handleApiError centraliza respuesta JSON con success: false y códigos HTTP correctos, y loguea tanto errores de dominio (AppError) como internos inesperados, sin filtrar stack ni mensajes sensibles al cliente.
+​
+
+Esto es una fortaleza clara; sólo revisaría que ningún AppError se construya con details conteniendo datos personales crudos, para no inundar logs con PII.
+​
+
+En varias rutas admin (/api/admin/*) la UI supone que useSession() ya ha validado roles (isSuperAdmin = session?.user?.role === "SUPERADMIN"), pero no vemos aquí la implementación de los handlers API.
+​
+
+Recomendado: asegurarte de que todos los endpoints críticos (prompts, billing, onboarding global, i18n keys) validan también el rol en servidor, no sólo a nivel de UI.
+​
+
+RAG/LLM: fortalezas y riesgos
+AdaptiveAnalysisService usa EntityEngine y AgentEngine para renderizar prompts basados en ontología; si no hay prompt se cae a PromptService.getPromptWithShadow, con soporte de shadow model para experimentos (runShadowCall).
+​
+
+Fortalezas:
+
+Telemetría con SpanStatusCode, atributos como prompt.source, genai.model, genai.tokens.
+
+Trazabilidad por correlationId y tenantId.
+​
+
+Los prompts tienen gestión de versiones, auditoría global (PromptGlobalHistory), validación de integridad P0 (variables usadas vs definidas, variables huérfanas, “system vars” obligatorias) y control de longitud (maxLength).
+​
+
+Esto es un diseño muy sólido para gobernanza de prompts.
+​
+
+Riesgos:
+
+El parsing del output de Gemini depende de un responseText.match(...) con JSON embebido; no se ve un fallback robusto si el modelo responde con texto extra o formato inesperado más allá del ExternalServiceError.
+​
+
+Recomendado: usar un patrón de respuesta más estricto (e.g. pedir siempre json “puro” y validar con Zod en servidor) o implementar un parser que tolere texto alrededor del bloque JSON pero valide fuertemente el esquema.
+​
+
+EvaluationService (RAG QA) se apoya en LLMs para evaluar faithfulness/relevance, lo cual es correcto, pero asegúrate de que los resultados de esta evaluación no se usan nunca como “verdad” para lógica de negocio (por ejemplo, bloquear respuestas al usuario sólo por score bajo) sin un margen configurable.
+​
+
+Cambios recomendados (resumen accionable)
+Extraer plantillas de email y HTML largos a módulos dedicados; mantener servicios de dominio finos.
+​
+
+Formalizar todos los scripts “one‑off” como jobs versionados que usen servicios compartidos (EnvironmentService, TenantDeletionService, etc.), y registrar versión en audit log.
+​
+
+Blindar useApiMutation para entornos SSR (typeof FormData !== "undefined"), y documentar claramente que es sólo para client.
+​
+
+Mejorar UX de errores propagando AppError.code a la UI y mostrando mensajes diferenciados para casos de cuota, permisos, etc.
+​
+
+Añadir fallback/contrato más robusto para parsing JSON de Gemini y devolver errores estructurados a la UI.
+​
+
+Revisar que todos los endpoints admin críticos refuercen autorización en servidor, no sólo en UI.
+​
+
+
+La arquitectura RAG/LLM y de APIs está muy bien encaminada; con unos pocos refuerzos quedaría nivel “enterprise duro”.
+​
+
+Fortalezas RAG/LLM
+AdaptiveAnalysisService usa ontología (EntityEngine), feedback loop (AgentEngine.getCorrectionContext), shadow prompts y métricas OpenTelemetry (modelo, duración, tokens), lo que da buena trazabilidad y control de costes.
+​
+
+Flujo de ingestión (documents/ingest) con zod, deduplicación MD5, detección de idioma, extracción de modelos, chunking y embeddings duales (Gemini + BGE-m3 multilingüe).
+​
+
+AgenticRAGService construye un grafo con nodos de retrieve / grade-documents / generate / grade-generation / grade-answer y aplica circuit breaker cuando no hay documentos, evitando alucinaciones gratuitas.
+​
+
+Evaluación en background de sesiones con EvaluationService.evaluateSession y nodos tipo gradeGenerationNode (hallucination) y gradeAnswerNode (utility) que usan prompts dedicados (RAGHALLUCINATIONGRADER, RAGANSWERGRADER).
+​
+
+Riesgos y olores específicos en RAG/LLM
+AdaptiveAnalysisService.analyzeEntityWithGemini parsea el JSON de salida de Gemini con un responseText.match(...) sobre el texto completo; si el modelo cambia mínimamente el formato, rompes todo el análisis con ExternalServiceError("No hay JSON válido...").
+​
+
+Cambios recomendados:
+
+Forzar formato JSON puro en el prompt (“responde únicamente con un JSON válido con este schema, sin texto adicional”) y validar con zod el resultado.
+​
+
+Implementar un parser tolerante (busca el primer {...} balanceado) pero con validación fuerte posterior; si falla, devolver analysisFailed: true, reason: "LLM_PARSE_ERROR" al API, no un 500 genérico.
+​
+
+En el endpoint apitechnicalentities/analyze tienes un flujo híbrido síncrono/async: insertas entidad en estado received y encolas PDFANALYSIS, pero más abajo mantienes la versión síncrona completa (extract, RAG, riesgos, entidades, generic case) comentada como “Traditional Synchronous Flow”.
+​
+
+Code smell: el código síncrono parece legado pero sigue en el mismo handler, lo que aumenta superficie de error y confusión sobre cuál es la “fuente de verdad”.
+
+Cambios recomendados:
+
+Dejar el endpoint ONLY-async (insert + enqueue + devolver entityId/jobId), y mover el flujo tradicional completo a un job BullMQ dedicado, compartiendo servicios (analyzeEntityWithGemini, performTechnicalSearch, RiskService).
+​
+
+AgenticRAGService.runStream usa prompts de generación desde PromptService, pero en caso de fallo cae a un masterTemplate embebido en código (PROMPTS[promptKey]) que hace .replace("{question}", question) y similares.
+​
+
+Riesgo: duplicas contrato de prompt fuera del sistema de gobierno de prompts, y cualquier cambio en variables puede desalinearse.
+
+Cambios recomendados: mover también ese masterTemplate a PromptService (o al menos mantenerlo en el mismo repositorio de plantillas), marcándolo como “fallback master prompt” versionado.
+​
+
+Seguridad/API: fortalezas
+Casi todos los endpoints críticos usan auth, requireRole o enforcePermission, con comprobaciones claras de tenantId y RBAC (ej. soporte, tickets, federated patterns).
+​
+
+Buena disciplina de AppError vs. errores inesperados y handleApiError, con mensajes neutros hacia el cliente y logs detallados para servidor.
+​
+
+En RAG user-facing (APIUSERSEARCH), registras búsquedas, resultsCount, topScore, duración y seguimiento en UsageService.trackUsage, lo que permite controlar abuso y coste.
+​
+
+Riesgos y bugs potenciales en API/seguridad
+Endpoints técnicos (apitechnicalentities/analyze, apitechnicalragchat) a veces devuelven errores genéricos ("Error interno", "Ocurrió un error procesando tu consulta agéntica") sin diferenciación por tipo de fallo LLM vs validación vs billing.
+​
+
+Recomendación: estandarizar respuesta de error con un errorCode de dominio (LLM_UNAVAILABLE, BILLING_LIMIT_EXCEEDED, TENANT_MISCONFIG) para que la UI pueda actuar (reintento, mensaje específico, contacto soporte).
+​
+
+AccessControlService.checkUsageLimits hace fail open si Billing falla, lo cual está bien para no frenar negocio, pero sin ningún tipo de “circuit breaker” o contadores.
+​
+
+Recomendación: añadir contador de fallos consecutivos de billing y, al superar N, lanzar alerta/Slack/email para que alguien revise antes de que explote la factura LLM.
+​
+
+El endpoint api/health/db-check expone un debug token hardcoded (elevator-debug) y prueba explícita de contraseña admin@abd.com con super123.
+​
+
+Recomendación radical:
+
+Sólo habilitar este endpoint en NODE_ENV !== "production" o tras protegerlo con auth fuerte + ENV secreto, y eliminar el check de contraseña estática.
+​
+
+Bugs/olores concretos de robustez
+En algunos endpoints (apitechnicalentities/analyze, apitechnicalragchat) se usa console.log/console.error en lugar de sólo logEvento, lo que mezcla estilos de logging y puede ocultar errores en entornos donde stdout no se recoge.
+​
+
+En el SSE de apitechnicalentities/analyze/[id] haces polling cada 1s a Mongo y a la colección de logs (connectLogsDB) hasta 5 minutos.
+​
+
+Riesgos:
+
+Carga innecesaria si hay muchos clientes;
+
+Si connectLogsDB falla repetidamente, sólo haces console.error y sigues intentando.
+
+Recomendación: añadir backoff o detener el intervalo tras N errores, enviando un evento error SSE al cliente para que reintente manualmente.
+​
+
+Hardening plan muy concreto
+Contratos LLM
+
+Para AdaptiveAnalysisService, RagJudgeService y AgenticRAGService definir schemas zod para las estructuras que esperas del LLM (modelos extraídos, scores de hallucination/utility, etc.) y validar siempre el JSON.
+​
+
+Añadir tests de snapshot de prompts clave (hallucination grader, answer grader, generator) para evitar roturas al refactorizar textos.
+​
+
+Separación clara de caminos async vs sync
+
+Sacar por completo la lógica síncrona de análisis de entidades a workers BullMQ (ya tienes queue-service y job PDFANALYSIS) y dejar en APIs sólo: validación + enqueue + respuesta rápida + SSE de progreso.
+​
+
+Seguridad/operación
+
+Blindar api/health/db-check y cualquier endpoint de diagnóstico interno (no accesibles en producción sin auth fuerte).
+​
+
+Añadir monitorización específica para fallos de BillingService.calculateCurrentUsage y para SLAs violados (SLAVIOLATION en TECHNICALENTITIESANALYZE y TECHNICALRAGCHAT)
+
+
+
+
+Hay varios candidatos claros a “Dioses” que se pueden trocear en orquestadores + módulos pequeños sin mucho drama.
+​
+
+Páginas React muy grandes
+AdminDashboardPage (app/admin/(authenticated)/page.tsx o similar)
+
+Muchas secciones: métricas, consumo, industrias/plan, actividad reciente, tabs de inteligencia/automation/governance/search/reliability/security.
+​
+
+Refactor: convertirla en puro orquestador de layout y extraer:
+
+AdminOverviewSection (grid de métricas + consumo + industrias/plan).
+
+AdminActivitySection (actividad reciente).
+
+Cada pestaña en su propio componente lazy (IntelligenceTab, AutomationTab, etc.), aunque algunos ya existen (p.ej. CollectiveIntelligenceDashboard, AutomationStudio).
+​
+
+AuditoriaPage (admin/auditoria / registro de auditoría)
+
+Mezcla: carga de stats (globalStats, logStats, logs), definición de filtros, helper sources, definición de columnas de DataTable y toda la UI de filtros y tabla en un solo archivo.
+​
+
+Refactor:
+
+useAuditLogsViewModel hook que encapsule llamadas useApiItem/useApiList, construcción de filtros y columnas.
+
+Componente AuditFiltersBar y AuditLogsTable separados, manteniendo esta página como orquestador.
+​
+
+RAGEvalPage (admin/rag-eval)
+
+Tiene lógica de fetch, cálculo de summary, trends, definición de columnas y gráfico LineChart todo junto.
+​
+
+Refactor:
+
+useRAGEvalData (fetch + derivadas summary,trends).
+
+RAGEvalTrendsChart y RAGEvalTable como componentes separados.
+​
+
+DocumentsPage / Knowledge Assets (gestión de corpus)
+
+En el snapshot ya combina stats, búsqueda, tabla, acciones optimistas (updateOptimistic, deleteOptimistic), auto‑refresh.
+​
+
+Refactor: extraer useKnowledgeAssetsViewModel y un KnowledgeAssetsTable que reciba solo props ya masticadas.
+​
+
+Endpoints/API densos
+apitechnicalentities/analyze
+
+Hace: auth, formData, deduplicación MD5, inserción, encolado BullMQ, logging, y además conserva comentada/mixta la versión síncrona de análisis completo (RAG, riesgos, generic case).
+​
+
+Refactor:
+
+Endpoint -> sólo orquesta: valida, guarda entity mínima, encola job y devuelve { entityId, jobId }.
+
+Servicios separados: EntityIngestService (parse + guardado inicial), EntityAnalysisJob (worker) que reusa AdaptiveAnalysisService, RiskService, FederatedKnowledgeService.
+​
+
+apitechnicalragchat
+
+Mezcla control de sesión, logging, modo streaming SSE y modo non‑streaming en el mismo archivo.
+​
+
+Refactor:
+
+Mantener este archivo como orquestador con dos helpers internos o externos: handleStreamRagChat y handleNonStreamRagChat.
+
+O bien separar rutas (/stream y /sync) si Next/archivo lo permite.
+​
+
+apiadminlogs, apiadminglobal-stats, apiadmindocument-types
+
+Tienen bastante lógica de filtros, agregaciones y reglas por rol en el mismo handler.
+​
+
+Refactor:
+
+Crear servicios LogStatsService, GlobalStatsService, DocumentTypeService y convertir las rutas en handlers delgados que sólo llamen a estos servicios.
+​
+
+Módulos de i18n
+apiadmini18n / apiadmini18nstats
+
+Contienen helpers nestToFlat, flatToNest, filterByNamespace, filterBySearch mezclados con la lógica de endpoint.
+​
+
+Refactor fácil: mover esos helpers a lib/i18n-utils.ts y que los endpoints sólo hagan wiring y validación.
+​
+
+Instrumentation y workers
+instrumentation.ts (hook de Next)
+
+Tiene polyfill de DOMMatrix + inicialización de tracing + lógica para arrancar/omitir ingesta worker según Vercel/flag.
+​
+
+Refactor:
+
+Mantener aquí solo la llamada initInstrumentation() y mover el polyfill + arranque de worker a lib/instrumentation-runtime.ts
+
+
+
+
+Primer caso: apitechnicalentities/analyze (RAG Orchestrator).
+​
+
+Por qué es candidato
+Hace demasiadas cosas en un solo handler:
+
+Auth + extracción de formData y fichero.
+​
+
+Deduplicación MD5 contra entities.
+​
+
+Inserción de entidad con estado received.
+​
+
+Encolado BullMQ (PDFANALYSIS) pasando buffer base64.
+​
+
+Devuelve respuesta HTTP.
+​
+
+Además mantiene pegado debajo el flujo “Traditional Synchronous Flow” completo (análisis Gemini, RAG, riesgos, casos genéricos), aunque el endpoint ya retorna antes.
+​
+
+Cómo dividirlo
+Mantener el endpoint como puro orquestador HTTP:
+
+ts
+// apitechnicalentities/analyze.ts
+export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const session = await auth();
+  // validar sesión, leer formData, etc.
+
+  const tenantId = session.user.tenantId;
+  const file = getAndValidateFile(formData); // helper pequeño
+
+  const { entityId, jobId } = await EntityIngestService.ingestAndEnqueue({
+    tenantId,
+    userId: session.user.id,
+    file,
+    correlationId,
+  });
+
+  return NextResponse.json({ success: true, entityId, jobId, correlationId });
+}
+Crear EntityIngestService en lib/entity-ingest-service.ts:
+
+Responsabilidades: deduplicación MD5, inserción inicial entities, encolado BullMQ, logging.
+​
+
+Firma algo tipo:
+
+ts
+export class EntityIngestService {
+  static async ingestAndEnqueue(params: {
+    tenantId: string;
+    userId: string;
+    file: File;
+    correlationId: string;
+  }): Promise<{ entityId: string; jobId: string }> {
+    // aquí mueves todo lo de:
+    // - textBuffer / md5
+    // - findOne md5Hash
+    // - insertOne status: 'received'
+    // - queueService.addJob('PDF_ANALYSIS', ...)
+  }
+}
+Mover el “Traditional Synchronous Flow” (2. AI Extract, 3. RAG, 4. Save result, 5. Generic Case) al worker de BullMQ:
+
+workers/pdf-analysis-worker.ts o similar, que reciba entityId, fileBuffer, industry, etc., y entonces use:
+
+analyzeEntityWithGemini (AdaptiveAnalysisService).
+​
+
+performTechnicalSearch.
+​
+
+RiskService.analyzeRisks.
+​
+
+mapEntityToCase + GenericCaseSchema.
+​
+
+De esa forma:
+
+El handler queda corto y fácil de testear.
+
+Toda la lógica pesada vive en servicios/worker reutilizables y aislados.
+
+El cambio a modelo 100% async queda claro; no hay código muerto/síncrono en el endpoint.
+
+
+
+Segundo caso: AdminDashboardPage (dashboard principal admin).
+​
+
+Por qué es candidato
+Hace fetch y transformación de global-stats.
+​
+
+Gestiona vista compacta/normal (isCompact).
+​
+
+Renderiza:
+
+Cabecera dinámica según rol (SuperAdmin vs tenant).
+​
+
+Grid de métricas (tenants/usuarios, documentos, casos, búsquedas IA).
+​
+
+Bloque de consumo (UsageBar para tokens, storage, searches).
+​
+
+Bloque de industrias o plan / tier.
+​
+
+Actividad reciente (ActivityRow).
+​
+
+Tabs con múltiples secciones (CollectiveIntelligenceDashboard, AutomationStudio, KnowledgeGovernance, GlobalSemanticSearch, ReliabilityStressMonitor, SecurityAutoscaleMonitor).
+​
+
+Todo eso está en un único componente de página, con bastante JSX y lógica de layout mezcladas.
+
+Cómo dividirlo
+Dejar AdminDashboardPage como orquestador de datos y layout:
+
+Responsabilidades:
+
+Llamar a useApiItem para global-stats.
+​
+
+Calcular isSuperAdmin, isCompact.
+​
+
+Componer secciones de alto nivel.
+
+Extraer secciones a componentes dedicados:
+
+AdminOverviewMetrics
+
+Props: { stats, isSuperAdmin, isCompact }.
+
+Renderiza solo la rejilla de cuatro MetricCard iniciales.
+​
+
+AdminUsageSection
+
+Props: { usage, limits, isSuperAdmin, isCompact }.
+
+Encapsula los tres UsageBar (tokens, storage, searches) dentro de un ContentCard.
+​
+
+AdminPlanOrIndustriesSection
+
+Props: { industries, tier, planSlug, isSuperAdmin }.
+
+Para SuperAdmin, lista de industrias; para tenant normal, bloque de plan/renovación/CTA.
+​
+
+AdminActivitySection
+
+Props: { activities }.
+
+Encapsula ContentCard y ActivityRow / estado vacío.
+​
+
+Mantener las pestañas como están, pero limpiar la página:
+
+tsx
+export default function AdminDashboardPage() {
+  const { data: stats, isLoading, error } = useApiItem(...);
+
+  // loading / error / null handling...
+
+  return (
+    <PageContainer className={isCompact ? "..." : undefined}>
+      <PageHeader ... />
+
+      <QuickNavConnector />
+
+      <Tabs ...>
+        <TabsContent value="overview">
+          <AdminOverviewMetrics stats={stats} isSuperAdmin={isSuperAdmin} isCompact={isCompact} />
+          <div className="grid ...">
+            <AdminUsageSection usage={stats.usage} limits={stats.limits} isSuperAdmin={isSuperAdmin} isCompact={isCompact} />
+            <AdminPlanOrIndustriesSection ... />
+            <AdminActivitySection activities={stats.activities} />
+          </div>
+        </TabsContent>
+
+        {/* otras tabs ya en componentes propios */}
+      </Tabs>
+    </PageContainer>
+  );
+}
+Con esto reduces mucho el ruido en la página, manteniendo una estructura clara.
+
+
+
+Tercer caso: apitechnicalragchat (chat técnico con agente RAG).
+​
+
+Por qué es candidato
+En un solo handler hace:
+
+Auth y extracción de tenantId.
+​
+
+Logging de inicio (QUERYSTART / QUERYSTREAMSTART) y fin con SLA.
+​
+
+Control de input (question, messages, stream).
+​
+
+Modo streaming: crea ReadableStream, usa AgenticRAGService.runStream, empaqueta chunks como SSE JSON.
+​
+
+Modo no streaming: llama a AgenticRAGService.run y responde JSON con answer, documents, trace.
+​
+
+Manejo de errores y logging de errores (QUERYERROR).
+​
+
+Todo eso en un archivo hace difícil testear y razonar cada parte.
+
+Cómo dividirlo
+Mantener el route como dispatcher:
+
+ts
+// apitechnicalragchat/route.ts
+export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const start = Date.now();
+
+  try {
+    const session = await auth();
+    if (!session?.user?.tenantId) { ... }
+
+    const body = await req.json();
+    const { question, messages = [], stream = false } = body;
+
+    const effectiveQuestion = question || messages[messages.length - 1]?.content;
+
+    if (!effectiveQuestion) { ... }
+
+    await logEvento(...QUERYSTART/QUERYSTREAMSTART...);
+
+    return stream
+      ? handleRagChatStream({ effectiveQuestion, messages, tenantId, correlationId })
+      : handleRagChatNonStream({ effectiveQuestion, messages, tenantId, correlationId });
+  } catch (error) {
+    // logging + error response
+  } finally {
+    // SLA logging
+  }
+}
+Extraer helpers en el mismo archivo o en lib/technical-ragchat-handler.ts:
+
+handleRagChatStream({ effectiveQuestion, messages, tenantId, correlationId })
+
+Encapsula la creación de ReadableStream, el uso de AgenticRAGService.runStream y el formato de los eventos SSE.
+​
+
+Devuelve directamente el Response con headers SSE.
+
+handleRagChatNonStream({ effectiveQuestion, messages, tenantId, correlationId })
+
+Encapsula llamada a AgenticRAGService.run, y formatea { success, answer, documents, trace, correlationId }.
+​
+
+Opcional: mover la lógica de logging a un pequeño helper:
+
+logRagChatStart(...) y logRagChatError(...) para no mezclar demasiadas llamadas a logEvento y console.error en el handler.
+​
+
+Con esto, el endpoint queda como orquestador claro, y los modos stream/non-stream se pueden testear en aislamiento.
+
+
+
+Cuarto caso: AuditoriaPage (Registro de Auditoría / monitor industrial).
+​
+
+Por qué es candidato
+En un solo componente hace:
+
+Estado y lógica de filtros (searchQuery, levelFilter, sourceFilter, hasActiveFilters, actualLevel, actualSource, allParam).
+​
+
+Tres capas de datos distintas:
+
+globalStats (dashboard de mérticas globales).
+​
+
+logStats (contadores de niveles y fuentes para filtros).
+​
+
+logs (lista lazy de eventos, dependiente de filtros).
+​
+
+Definición de columnas para DataTable (timestamp, origen, acción, nivel con colores, duración, correlationId).
+​
+
+Toda la UI de filtros (botones ALL/ERROR/INFO/WARN/DEBUG, fuentes, barra de búsqueda) y la tabla, incluido el estado vacío cuando no hay filtros activos.
+​
+
+Es un buen sitio para convertir la página en orquestador y sacar un “view model” de auditoría.
+
+Cómo dividirlo
+Crear un hook de vista: useAuditLogViewModel (p.ej. en hooks/useAuditLogViewModel.ts):
+
+Responsabilidades:
+
+Encapsular llamadas useApiItem y useApiList:
+
+ts
+const { data: globalStats, isLoading: loadingGlobal } = useApiItem(...);
+const { data: logStats, isLoading: loadingStats } = useApiItem(...);
+const { data: logs, isLoading: loadingLogs, refresh } = useApiList(...);
+Gestionar estado de filtros y derivadas:
+
+ts
+const { searchQuery, levelFilter, sourceFilter, hasActiveFilters,
+        actualLevel, actualSource, setLevelFilter, setSourceFilter,
+        setSearchQuery } = ...
+Construir columns para la tabla.
+​
+
+Devolver algo tipo:
+
+ts
+return {
+  globalStats,
+  logStats,
+  logs,
+  loadingGlobal,
+  loadingStats,
+  loadingLogs,
+  hasActiveFilters,
+  filters: { searchQuery, levelFilter, sourceFilter },
+  actions: { setSearchQuery, setLevelFilter, setSourceFilter, refreshLogs },
+  columns,
+};
+Dividir UI en componentes:
+
+AuditMetricsHeader
+
+Props: { globalStats, loading }.
+
+Renderiza las cuatro ContentCard de cabecera (Pedidos Total, Incidencias SLA, Tokens Consumidos, RAG Faithfulness).
+​
+
+AuditFiltersBar
+
+Props: { logStats, filters, actions }.
+
+Renderiza barra de búsqueda, botones de nivel, fuentes, botón “Todos”, etc.
+​
+
+AuditLogsTable
+
+Props: { logs, loadingLogs, columns, hasActiveFilters }.
+
+Encapsula ContentCard de tabla, header de “Eventos de Auditoría” y estado vacío cuando no hay filtros activos.
+​
+
+Página como orquestador:
+
+tsx
+export default function AuditoriaPage() {
+  const vm = useAuditLogViewModel();
+
+  return (
+    <PageContainer>
+      <PageHeader ... />
+      <AuditMetricsHeader globalStats={vm.globalStats} loading={vm.loadingGlobal} />
+      <AuditFiltersBar logStats={vm.logStats} filters={vm.filters} actions={vm.actions} />
+      <AuditLogsTable logs={vm.logs} loadingLogs={vm.loadingLogs} columns={vm.columns} hasActiveFilters={vm.hasActiveFilters} />
+    </PageContainer>
+  );
+}
+Esto deja la página muy legible y te permite testear el view‑model en aislamiento.
+
+
+Quinto caso: IngestService (pipeline de ingesta multimodal).
+​
+
+Por qué es candidato
+prepareIngest hace:
+
+Validación de tamaño, lectura de buffer, MD5.
+​
+
+Construcción de dedupeQuery según scope e industry.
+​
+
+Búsqueda de duplicado y escritura en auditingestion.
+​
+
+Subida a Cloudinary con withRetry.
+​
+
+Inserción de knowledgeassets con un doc grande.
+​
+
+Manejo de condición de carrera (error 11000).
+​
+
+executeAnalysis hace en una sola función:
+
+Fetch del asset y gestión de reintentos (attempts).
+​
+
+Control de progreso y, opcionalmente, actualización de job BullMQ.
+​
+
+Descarga desde Cloudinary.
+​
+
+Extracción de texto y visuales.
+​
+
+Detección de industria (DomainRouterService).
+​
+
+PII masking.
+​
+
+Language detect, modelos detectados, contexto de documento.
+​
+
+Chunking, inserción de chunks (texto y visuales) con dos embeddings, y actualización incremental de progreso.
+​
+
+Audit trail de éxito y de error en auditingestion.
+​
+
+Es básicamente un “god service” de ingestión.
+
+Cómo dividirlo
+Mantener IngestService como fachada orquestadora:
+
+API pública:
+
+ts
+export class IngestService {
+  static async prepareIngest(options: IngestOptions): Promise<PrepResult> { ... }
+  static async executeAnalysis(docId: string, options: Partial<IngestOptions> & { job?: Job }): Promise<IngestResult> { ... }
+}
+El cuerpo interno delega en servicios especializados.
+
+Extraer servicios internos por responsabilidad (en services/ingest):
+
+IngestDedupService
+
+Método checkDuplicate({ fileHash, metadata, tenantId, userEmail, correlationId }).
+
+Encapsula dedupeQuery, búsqueda y escritura en auditingestion con estado DUPLICATE.
+​
+
+IngestStorageService
+
+Método uploadOriginal({ buffer, filename, tenantId, correlationId }).
+
+Envuelve withRetry(uploadRAGDocument) y devuelve { secureUrl, publicId }.
+​
+
+IngestMetadataService
+
+Método createAssetRecord({ file, metadata, tenantId, environment, fileHash, cloudinary, correlationId }).
+
+Construye docMetadata, aplica KnowledgeAssetSchema.parse, inserta en knowledgeassets, y registra PENDING en auditingestion.
+​
+
+IngestDownloadService
+
+Método downloadBinary({ asset, correlationId }) que hace el fetch a Cloudinary con encodeURI y devuelve buffer.
+​
+
+IngestAnalysisPipeline
+
+Método run({ asset, buffer, options, job, correlationId }) que orquesta:
+
+extractTextAdvanced + analyzePDFVisuals.
+​
+
+DomainRouterService.detectIndustry.
+​
+
+PII (PIIMasker).
+​
+
+Language detect + models (PromptService, callGeminiMini, extractModelsWithGemini).
+​
+
+Contexto (CognitiveRetrievalService.generateDocumentContext).
+​
+
+chunkText, GraphExtractionService.extractAndPersist.
+​
+
+Inserción de chunks en batches con embeddings.
+​
+
+Actualización final de asset y audit de éxito o fallo.
+​
+
+Cada subpaso puede extraerse a métodos privados (updateIndustry, maskPii, detectLanguageAndModels, generateContext, processChunks, auditSuccess, auditFailure).
+
+Reescribir flujo de alto nivel en IngestService:
+
+prepareIngest:
+
+ts
+static async prepareIngest(options: IngestOptions) {
+  const { file, metadata, tenantId, environment = "PRODUCTION" } = options;
+  const correlationId = options.correlationId ?? crypto.randomUUID();
+
+  const buffer = await file.arrayBuffer();
+  const fileHash = md5(buffer);
+
+  const duplicate = await IngestDedupService.checkDuplicate(...);
+  if (duplicate) return { ...duplicate, correlationId };
+
+  const cloudinary = await IngestStorageService.uploadOriginal(...);
+  const asset = await IngestMetadataService.createAssetRecord(...);
+
+  return { docId: asset.id, status: "PENDING", correlationId };
+}
+executeAnalysis:
+
+ts
+static async executeAnalysis(docId: string, options: Partial<IngestOptions> & { job?: Job }) {
+  const correlationId = options.correlationId ?? crypto.randomUUID();
+  const { asset, buffer } = await IngestDownloadService.loadAssetAndBinary(docId, correlationId);
+
+  return IngestAnalysisPipeline.run({ asset, buffer, options, job: options.job, correlationId });
+}
+Con esto:
+
+Ganas test unitarios por pieza (dedupe, storage, análisis, audit).
+
+El código de alto nivel en IngestService queda mucho más corto y expresivo.
+
+
+Sexto caso: WorkflowEngine (automatización basada en eventos) junto con GraphEngine (grafo semántico).
+​
+
+Por qué son candidatos
+WorkflowEngine.processEvent y executeActions mezclan:
+
+Resolución de workflows activos (aiworkflows).
+​
+
+Evaluación de triggers con condiciones de campo/operador/valor.
+​
+
+Registro analítico de cada nodo (WorkflowAnalyticsService.recordEvent).
+​
+
+Ejecución de muchos tipos de acción en un switch: branch, humantask, delay, iterator, notify, log, updateentity, etc.
+​
+
+Llamadas a GovernanceEngine para validar acciones.
+​
+
+GraphEngine mezcla en una clase:
+
+Sincronización de entidades Mongo → Neo4j (syncEntityToGraph).
+​
+
+Construcción de relaciones implícitas (buildImplicitRelationships).
+​
+
+Consultas de lectura (getTenantGraph) más lógica de post-proceso para nodos y colores.
+​
+
+Todo esto en dos motores globales de núcleo hace difícil evolucionar reglas o meter más tipos de nodos/acciones.
+
+Cómo dividirlo
+WorkflowEngine como orquestador + estrategia por tipo de acción
+
+Dejar WorkflowEngine con:
+
+processEvent(eventType, data, tenantId, correlationId)
+
+evaluateTrigger(trigger, data) (pequeña, ya la tienes).
+​
+
+executeActions(workflowId, actions, data, tenantId, correlationId) que delega por tipo:
+
+ts
+private async executeActions(...) {
+  for (const action of actions) {
+    const handler = WorkflowActionRegistry.getHandler(action.type);
+    const startTime = Date.now();
+    let status: WorkflowStatus = "SUCCESS";
+    let errorMessage: string | undefined;
+
+    try {
+      await handler.run({ action, data, tenantId, correlationId, workflowId });
+    } catch (e) {
+      status = "FAILED";
+      errorMessage = (e as Error).message;
+    }
+
+    await WorkflowAnalyticsService.recordEvent(..., { status, durationMs: Date.now() - startTime, errorMessage });
+  }
+}
+Crear WorkflowActionRegistry + handlers en core/workflow/actions:
+
+BranchActionHandler (lógica de riskScore, confidenceScore, thresholds).
+​
+
+HumanTaskActionHandler (crea doc en workflowtasks, logEvento).
+​
+
+DelayActionHandler (calcula ms según unidad y hace setTimeout).
+​
+
+NotifyActionHandler (por ahora console.log/logEvento, futuro integraciones).
+​
+
+LogActionHandler (usa logEvento con AIAUTOMATION).
+​
+
+UpdateEntityActionHandler (encapsula llamada a GovernanceEngine.evaluateAction y actualización en Mongo).
+​
+
+Así, añadir una nueva acción no implica tocar un switch gigante.
+
+Extraer capa de persistencia de workflows
+
+WorkflowRepository con métodos:
+
+findActiveByTrigger(eventType, tenantId) devuelve AIWorkflow[].
+​
+
+recordAnalytics(...) podría ser un wrapper sobre WorkflowAnalyticsService.
+​
+
+WorkflowEngine.processEvent solo orquesta:
+
+ts
+const workflows = await WorkflowRepository.findActiveByTrigger(eventType, tenantId);
+for (const wf of workflows) {
+  const isTriggered = this.evaluateTrigger(wf.trigger, data);
+  if (isTriggered) await this.executeActions(...);
+}
+GraphEngine dividido en lectura vs sincronización
+
+Mantener GraphEngine como fachada:
+
+syncEntityToGraph(entitySlug, tenantId)
+
+buildImplicitRelationships(tenantId)
+
+getTenantGraph(tenantId)
+
+Extraer:
+
+GraphSyncService
+
+Se encarga de leer de Mongo (getTenantCollection) y hacer los MERGE en Neo4j, sin preocuparse de colores o formato de salida.
+​
+
+GraphQueryService
+
+Envuelve runCypher y construye nodes/links a partir de records.
+​
+
+GraphStyling
+
+Función getNodeColor(type) separada, que GraphEngine o GraphQueryService usan.
+​
+
+Con eso puedes, por ejemplo, reusar GraphQueryService desde otros servicios (PredictiveEngine, InsightEngine) sin cargar dependencias circulares.
+
+
+Séptimo caso: PredictiveEngine e InsightEngine (capa de inteligencia sobre el grafo).
+​
+
+Por qué son candidatos
+Ambos motores mezclan en una sola clase:
+
+Consultas Cypher específicas de dominio (señales de fallo, patrones del grafo).
+​
+
+Construcción del “payload” JSON para el LLM (prompts largos en castellano con requisitos de salida).
+​
+​
+
+Parseo frágil del JSON devuelto (match sobre texto y JSON.parse).
+​
+
+Disparo de workflows automáticos (WorkflowEngine.processEvent) por cada insight/predicción.
+​
+
+Además, la lógica de negocio de mantenimiento predictivo y recomendaciones vive mezclada con detalles infra (Neo4j, LLM, workflows), lo que complica evolucionar el modelo o cambiar de proveedor LLM.
+​
+​
+
+Cómo dividirlos
+Separar en tres capas por cada motor
+
+Para PredictiveEngine:
+
+FailureSignalRepository
+
+Encapsula extractFailureSignals(tenantId) con las consultas Cypher.
+​
+​
+
+Devuelve un tipo FailureSignal[] puro, sin tocar LLM.
+
+PredictiveLLMService
+
+Recibe signals y construye el prompt, llama a callGeminiMini y se encarga del jsonMatch + JSON.parse.
+​
+​
+
+Devuelve MaintenancePrediction[] ya tipado.
+
+PredictiveWorkflowDispatcher
+
+Dado predictions, llama a WorkflowEngine.processEvent("prediction", pred, tenantId, correlationId).
+​
+
+PredictiveEngine.getMaintenanceForecast quedaría como orquestador:
+
+ts
+public async getMaintenanceForecast(tenantId: string, correlationId: string) {
+  const signals = await FailureSignalRepository.extract(tenantId);
+  if (!signals.length) return [];
+
+  const predictions = await PredictiveLLMService.generatePredictions(signals, tenantId, correlationId);
+  await PredictiveWorkflowDispatcher.dispatch(predictions, tenantId, correlationId);
+
+  return predictions;
+}
+Para InsightEngine:
+
+GraphPatternRepository
+
+Encapsula extractGraphPatterns(tenantId) con las 3 consultas (carga, modelos frecuentes, gaps de normativa).
+​
+​
+
+InsightLLMService
+
+Construye el prompt “Eres el cerebro de inteligencia organizacional…” y parsea el array JSON de insights.
+​
+​
+
+InsightWorkflowDispatcher
+
+Dispara workflows por cada insight igual que arriba.
+​
+
+Normalizar el manejo de JSON LLM
+
+Crear SafeJsonExtractor reutilizable:
+
+ts
+export function extractJsonArray<T>(raw: string): T[] {
+  const match = raw.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+  return JSON.parse(match[0]) as T[];
+}
+Usarlo en ambos servicios LLM en lugar de repetir match y JSON.parse.
+​
+​
+
+Unificar contrato de eventos para WorkflowEngine
+
+Definir tipos de evento:
+
+ts
+type WorkflowEvent =
+  | { kind: "insight"; payload: Insight }
+  | { kind: "prediction"; payload: MaintenancePrediction };
+WorkflowEngine.processEvent recibe event.kind y decide qué workflows considerar, en lugar de tener lógica dispersa en InsightEngine y PredictiveEngine.
+​
+
+Con esta separación, cada motor queda con:
+
+Una capa de datos (Cypher/Neo4j).
+
+Una capa de razonamiento LLM específica pero testeable.
+
+Una capa de orquestación de acciones vía workflows, sin mezclarla con prompts ni Cypher.
+
+Octavo caso: normalizar logging (logEvento) y errores (AppError y derivados).
+​
+​
+
+Por qué es candidato
+Tienes muchos endpoints y servicios llamando a logEvento con firmas ligeramente distintas (source, action, message, details, stack, a veces tenantId, a veces no).
+​
+
+El manejo de errores mezcla AppError, ValidationError, ExternalServiceError, DatabaseError, NotFoundError, handleApiError, y respuestas manuales con NextResponse.json.
+​
+
+Esto complica trazabilidad y hace fácil que un endpoint nuevo loguee menos contexto del necesario.
+​
+
+Cómo dividir y estandarizar
+Crear un LoggingContext unificado
+
+Definir un tipo:
+
+ts
+interface LoggingContext {
+  correlationId: string;
+  tenantId?: string;
+  userId?: string;
+  ip?: string;
+  userAgent?: string;
+}
+Crear helpers en lib/logging.ts:
+
+ts
+export function logInfo(event: {
+  ctx: LoggingContext;
+  source: string;
+  action: string;
+  message: string;
+  details?: any;
+}) {
+  return logEvento({
+    level: "INFO",
+    source: event.source,
+    action: event.action,
+    message: event.message,
+    correlationId: event.ctx.correlationId,
+    tenantId: event.ctx.tenantId,
+    details: event.details,
+  });
+}
+Similares para logWarn, logError, logSecurity.
+​
+
+Unificar manejo de errores HTTP
+
+Crear ApiErrorHandler en lib/api-error-handler.ts:
+
+ts
+export function createApiErrorHandler(source: string, ctx: LoggingContext) {
+  return async function handle(error: unknown): Promise<NextResponse> {
+    const appError = normalizeToAppError(error);
+
+    await logError({
+      ctx,
+      source,
+      action: appError.code ?? "UNHANDLED",
+      message: appError.message,
+      details: { status: appError.status, code: appError.code, stack: appError.stack },
+    });
+
+    return NextResponse.json(appError.toJSON(), { status: appError.status });
+  };
+}
+normalizeToAppError se encarga de:
+
+Si ya es AppError, devolverlo.
+​
+
+Si es ZodError, envolver en ValidationError.
+​
+
+Otros errores en AppError("INTERNALERROR", 500, error.message, ...).
+
+Patrones en endpoints
+
+En cada route:
+
+ts
+export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const ctx: LoggingContext = {
+    correlationId,
+    tenantId: session?.user?.tenantId,
+    userId: session?.user?.id,
+  };
+  const handleError = createApiErrorHandler("APIINGEST", ctx);
+
+  try {
+    // lógica
+  } catch (error) {
+    return handleError(error);
+  }
+}
+Con esto eliminas múltiples bloques if (error instanceof AppError) { ... } else { ... } repartidos.
+​
+
+Normalizar estructura de details
+
+Acordar un esquema ligero para details:
+
+ts
+type LogDetails = {
+  durationMs?: number;
+  entityId?: string;
+  assetId?: string;
+  documentId?: string;
+  status?: string;
+  errorCode?: string;
+  extra?: Record<string, any>;
+};
+Los helpers logInfo / logWarn reciben details: LogDetails en vez de any, forzando un poco de coherencia.
+​
+
+Así reduces ruido en cada handler y tienes un “contrato” claro de trazas y errores en toda la plataforma.
+
+
+
+Noveno caso: checklist dinámico (GET /apipedidos/:id/checklist) y MockChecklistService.
+​
+​
+
+Por qué es candidato
+El endpoint checklist mezcla en un solo handler:
+
+Auth, lectura de params y Zod (ParamsSchema).
+​
+
+Tenant‑isolation + carga de entidad desde entities.
+​
+
+RAG (getRelevantDocuments), llamada LLM (extractChecklist), carga de config (getChecklistConfigById), clasificación (autoClassify), ordenación (smartSort).
+​
+​
+
+Logging de éxito/SLA y manejo de errores con varias clases (AppError, ExternalServiceError, etc.).
+​
+
+MockChecklistService implementa un LLM fake para tests, pero la ruta real llama directamente a extractChecklist, no a una abstracción común.
+​
+
+Cómo dividirlo
+Crear ChecklistService de dominio
+
+En services/checklist-service.ts:
+
+ts
+export class ChecklistService {
+  static async generateForOrder(params: {
+    entityId: string;
+    tenantId: string;
+    configId?: string;
+    correlationId: string;
+  }): Promise<ChecklistItem[]> {
+    // 1. RAG
+    const docs = await getRelevantDocuments(params.entityId, params.tenantId, { topK: 15, correlationId: params.correlationId });
+
+    // 2. LLM extraction on top docs
+    const rawItems = await extractChecklist(docs.slice(0, 5), params.tenantId, params.correlationId);
+
+    // 3. Load config
+    const config = await getChecklistConfigById(params.configId ?? "default", params.correlationId);
+
+    // 4. Classify + sort
+    const classified = rawItems.map((item) => ({
+      ...item,
+      categoryId: autoClassify(item, config, params.correlationId),
+    }));
+    return smartSort(classified, config, params.correlationId);
+  }
+}
+El endpoint solo orquesta auth, aislamiento y llama a este método.
+​
+​
+
+Usar interfaz LLM para facilitar mocks
+
+Definir interfaz:
+
+ts
+export interface ChecklistLLM {
+  extract(docs: { id: string; content: string }[], tenantId: string, correlationId: string): Promise<ChecklistItem[]>;
+}
+Implementaciones:
+
+RealChecklistLLM que delega en extractChecklist actual.
+​
+
+MockChecklistLLM que usa la lógica de mockLLMCaller.
+​
+
+ChecklistService recibe una instancia de ChecklistLLM (inyección simple):
+
+ts
+constructor(private llm: ChecklistLLM) {}
+
+static withRealLLM() {
+  return new ChecklistService(new RealChecklistLLM());
+}
+Endpoint más limpio
+
+ts
+export async function GET(request: Request, context: { params: { id: string } }) {
+  const correlationId = uuidv4();
+  const start = Date.now();
+
+  try {
+    const session = await auth();
+    // tenant + entity checks...
+
+    const service = ChecklistService.withRealLLM();
+    const items = await service.generateForOrder({
+      entityId,
+      tenantId,
+      configId,
+      correlationId,
+    });
+
+    const durationMs = Date.now() - start;
+    await logEvento({ ... });
+
+    return NextResponse.json({ success: true, items }, { status: 200 });
+  } catch (error) {
+    // usar ApiErrorHandler del caso anterior
+  }
+}
+Tests con MockChecklistService
+
+En tests de integración: construir ChecklistService con MockChecklistLLM, lo que te permite probar la tubería de clasificación y orden sin depender de LLM real.
+
+
+Décimo caso: SSE agente (GET /apipedidos/:id/analyze).
+​
+​
+
+Por qué es candidato
+En un solo handler hace:
+
+Auth + tenant, AccessControlService.checkUsageLimits (billing).
+​
+
+Apertura de ReadableStream, función interna sendEvent.
+​
+
+Carga de entidad desde Mongo, control de errores “Entidad no encontrada”.
+​
+
+Ejecución del grafo agente agentEngine.stream con un bucle for await que:
+
+Actualiza finalState.
+
+Emite eventos trace con contenido parcial, confidence, findingsCount.
+​
+
+Persistencia final de detectedPatterns y metadata.risks en entities.
+​
+
+Registro de consumo (UsageService.trackReportGeneration) y manejo especial de errores de facturación (BILLINGBLOCK).
+​
+
+Demasiadas responsabilidades para un solo route.
+
+Cómo dividirlo
+Crear un servicio de dominio OrderAgentAnalysisService
+
+En services/order-agent-analysis-service.ts:
+
+ts
+export interface AgentTraceEvent {
+  message: string;
+  confidence: number;
+  findingsCount: number;
+}
+
+export interface AgentFinalResult {
+  detectedPatterns: { type: string; model: string }[];
+  risks: any[];
+}
+
+export class OrderAgentAnalysisService {
+  static async runStream(params: {
+    entity: any;
+    tenantId: string;
+    correlationId: string;
+    onTrace: (event: AgentTraceEvent) => Promise<void> | void;
+  }): Promise<AgentFinalResult | null> {
+    const initialState = {
+      messages: [{ role: "user", content: params.entity.originalText }],
+      entityId: params.entity.id?.toString(),
+      tenantId: params.tenantId,
+      correlationId: params.correlationId,
+    };
+
+    const config = { /* threadId, etc. */ };
+
+    const eventStream = await agentEngine.stream(initialState, config);
+    let finalState: any = null;
+
+    for await (const update of eventStream) {
+      finalState = update;
+      const lastMessage = update.messages[update.messages.length - 1];
+
+      await params.onTrace({
+        message: lastMessage?.content ?? "Procesando...",
+        confidence: update.confidencescore,
+        findingsCount: update.findings?.length ?? 0,
+      });
+    }
+
+    if (!finalState) return null;
+
+    const detectedPatterns = (finalState.findings ?? [])
+      .filter((f: any) => f.source === "extraction")
+      .map((f: any) => ({ type: f.type, model: f.model }));
+
+    const risks = (finalState.findings ?? []).filter((f: any) => f.source === "riskanalysis");
+
+    return { detectedPatterns, risks };
+  }
+}
+El servicio no conoce SSE ni HTTP; sólo emite trazas por callback y devuelve resultado final.
+​
+
+Extraer helper genérico de SSE
+
+En lib/sse.ts:
+
+ts
+export type SseSender = (event: string, data: any) => void;
+
+export function createSseStream(
+  register: (send: SseSender, controller: ReadableStreamDefaultController) => Promise<void>
+): Response {
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send: SseSender = (event, data) => {
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      };
+
+      try {
+        await register(send, controller);
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
+Route más limpio
+
+ts
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const correlationId = crypto.randomUUID();
+  const session = await auth();
+  // auth + tenant + entity + AccessControlService.checkUsageLimits...
+
+  return createSseStream(async (send, controller) => {
+    try {
+      send("status", { message: "Iniciando cerebro agéntico...", node: "start" });
+
+      const result = await OrderAgentAnalysisService.runStream({
+        entity,
+        tenantId,
+        correlationId,
+        async onTrace(event) {
+          send("trace", event);
+        },
+      });
+
+      if (result) {
+        await db.collection("entities").updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              detectedPatterns: result.detectedPatterns,
+              "metadata.risks": result.risks,
+              status: "analyzed",
+              updatedAt: new Date(),
+            },
+          },
+        );
+
+        try {
+          await UsageService.trackReportGeneration(tenantId, id);
+        } catch (e) {
+          console.error("Error logging report usage", e);
+        }
+
+        send("complete", {
+          message: "Análisis finalizado y guardado con éxito",
+          entityId: id,
+          correlationId,
+        });
+      } else {
+        send("error", { message: "No se pudo completar el análisis" });
+      }
+    } catch (error) {
+      if (error instanceof AppError && error.code === "FORBIDDEN") {
+        send("error", { message: error.message, type: "BILLINGBLOCK" });
+      } else {
+        send("error", { message: (error as Error).message ?? "Error interno en el agente" });
+      }
+    }
+  });
+}
+Beneficios
+
+Reutilizas OrderAgentAnalysisService en tests sin montar SSE ni HTTP.
+​
+​
+
+El handler se lee como un guion de orquestación; la lógica del grafo agente está aislada.
+
+Puedes más adelante usar el mismo servicio para un modo no‑streaming (por ejemplo, para re‑análisis batch).
+
+
+
+Onceavo caso: Knowledge Assets API (lista, estado, borrado, descarga, retry).
+​
+​
+
+Por qué es candidato
+Tienes varios endpoints pequeños pero muy relacionados alrededor de knowledgeassets y documentchunks:
+
+GET /api/admin/knowledge-assets (lista).
+​
+
+PATCH /api/admin/knowledge-assets/status (cambia estado + chunks, con transacción).
+​
+
+DELETE /api/admin/knowledge-assets/:id (soft delete documento + chunks).
+​
+
+GET /api/admin/knowledge-assets/:id/download (redirect a Cloudinary).
+​
+
+POST /api/admin/knowledge-assets/:id/retry (resetea a PENDING y relanza ingest).
+​
+
+Cada route implementa su propia lógica de filtrado por rol/tenant, búsqueda de asset, gestión de transacciones, y llamadas a IngestService o Cloudinary.
+
+Cómo dividirlo
+Crear KnowledgeAssetRepository
+
+En services/knowledge-asset-repository.ts:
+
+Métodos:
+
+list({ tenantId, role, limit, skip }) → { assets, total }. Encapsula el filtro userRole === SUPERADMIN ? {} : { tenantId }.
+​
+
+findForTenant(documentId, tenantId, role) usado por status, delete, retry, download.
+​
+
+updateStatusWithChunks({ documentId, status, tenantId, role }) que implementa la transacción de actualización de asset + chunks.
+​
+
+softDeleteWithChunks({ id, tenantId, role }) que centraliza el patrón de “poner obsoleto + deletedAt” en asset y chunks.
+​
+
+Con esto eliminas duplicación de filtros y transacciones en cada endpoint.
+
+Crear KnowledgeAssetService
+
+En services/knowledge-asset-service.ts:
+
+Orquesta casos de uso:
+
+listAssets(params) delega en el repo.
+​
+
+changeStatus(params) usa updateStatusWithChunks y devuelve updatedChunks.
+​
+
+softDelete(params) usa softDeleteWithChunks y devuelve resumen para logging.
+​
+
+retryIngestion({ id, tenantId, role, correlationId, userEmail }):
+
+Valida estado (FAILED o PENDING).
+​
+
+Resetea campos (ingestionStatus, progress, error).
+​
+
+Llama a IngestService.executeAnalysis en background.
+​
+
+Endpoints muy finos
+
+Ejemplo PATCH status:
+
+ts
+export async function PATCH(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  const session = await auth();
+  const ctx = { correlationId, tenantId: session?.user?.tenantId, userId: session?.user?.id };
+
+  try {
+    // role check...
+    const body = await req.json();
+    const { documentId, status } = StatusUpdateSchema.parse(body);
+
+    const result = await KnowledgeAssetService.changeStatus({
+      documentId,
+      status,
+      tenantId: ctx.tenantId!,
+      role: session.user.role,
+      correlationId,
+    });
+
+    await logInfo({ ctx, source: "APIDOCSTATUS", action: "UPDATESTATUS", message: `Document ${result.filename} updated to ${status}`, details: { documentId, updatedChunks: result.updatedChunks } });
+
+    return NextResponse.json({ success: true, message: `Status updated to ${status}`, updatedChunks: result.updatedChunks });
+  } catch (error) {
+    const handleError = createApiErrorHandler("APIDOCSTATUS", ctx);
+    return handleError(error);
+  }
+}
+Los otros endpoints (lista, delete, retry, download) siguen el mismo patrón, llamando a métodos del servicio en vez de reimplementar queries.
+​
+​
+
+Descarga y URL de Cloudinary
+
+Añadir en KnowledgeAssetService:
+
+ts
+async getDownloadUrl({ id, tenantId, role }) {
+  const asset = await KnowledgeAssetRepository.findForTenant(id, tenantId, role);
+  if (!asset.cloudinaryPublicId) throw new ValidationError("This document does not have a stored PDF file");
+  return getPDFDownloadUrl(asset.cloudinaryPublicId);
+}
+El route de download sólo valida auth/rol, llama a este método y hace NextResponse.redirect(url).
+​
+
+Con esto, toda la gestión de knowledge assets queda concentrada en un servicio + repo, y los endpoints se reducen a auth + mapping HTTP.
+
+
+
+
+Doceavo caso: GlobalStats + RAG Evaluation (métricas de calidad IA).
+​
+​
+
+Por qué es candidato
+RAGEvalPage consume api/admin/rag-evaluations con métricas agregadas (avgFaithfulness, avgRelevance, avgPrecision, trends, evaluations).
+​
+
+RagEvaluationService hace de todo:
+
+Obtiene prompt RAGJUDGE.
+​
+
+Llama a LLM (callGeminiMini).
+​
+
+Parsea JSON con replace(/```json/g, ""). [file:1]
+
+Construye documento evaluation y lo guarda en Mongo. [file:1]
+
+GlobalStats (para AdminDashboardPage y AuditoriaPage) también agrega parte de estas métricas (ragqualityavg). [file:1]
+
+Hay lógica de agregación y calidad IA repartida, sin un módulo único de “analytics de IA”.
+
+Cómo dividirlo
+RagEvaluationService como puro “writer”
+
+Mantenerlo responsable solo de:
+
+Ejecutar el juez LLM. [file:1]
+
+Persistir cada evaluación individual (aicorrections / colección de evaluaciones). [file:1]
+
+Separar:
+
+RagJudgePromptService (render de prompt + parseo seguro de JSON). [file:1][]
+
+RagEvaluationRepository (insert y queries por tenant). [file:1]
+
+Crear RagQualityAnalyticsService
+
+Nuevo servicio para métricas agregadas:
+
+getSummary(tenantId)
+
+Calcula avgFaithfulness, avgRelevance, avgPrecision y totalEvaluated. [file:1]
+
+getTrends(tenantId, window)
+
+Devuelve puntos de serie temporal para la gráfica de RAGEvalPage. [file:1]
+
+listEvaluations(tenantId, filters)
+
+Para la tabla de historiales, con paginación. [file:1]
+
+Endpoint de evaluaciones más fino
+
+GET /api/admin/rag-evaluations llama solo a RagQualityAnalyticsService y devuelve:
+
+ts
+{
+  success: true,
+  metrics: { avgFaithfulness, avgRelevance, avgPrecision, totalEvaluated },
+  trends,
+  evaluations
+}
+Sin replicar aggregation pipelines en la página. [file:1]
+
+Reutilizar en GlobalStats
+
+GlobalStatsService puede delegar en RagQualityAnalyticsService.getSummary para rellenar performance.ragqualityavg, en vez de recalcular en otro sitio. [file:1]
+
+Con esto tienes un “núcleo de analytics IA” reutilizable para dashboard, auditoría y futuras vistas de calidad.
+
+
+
+Quedan más casos de micro‑refactor, pero el ROI marginal ya baja comparado con consolidar todo esto en una arquitectura clara, así que paso a la estructura final de módulos/capas.
+​
+
+Visión de alto nivel
+Plantearía el backend de ABD RAG como monolito modular con arquitectura hexagonal / DDD ligera:
+
+Núcleo (core/domain + core/application) sin dependencias de Next, Mongo, Cloudinary, etc.
+
+Adaptadores (inbound: HTTP/Next routes, cron, workers; outbound: Mongo, Redis/BullMQ, Cloudinary, LLM APIs, Neo4j).
+
+Módulos por subdominio: ingest, knowledge, rag, governance, workflow, analytics, audit, billing, notifications, permissions, etc.
+​
+
+La idea: todo lo que has ido refactorizando (IngestService, GraphEngine, WorkflowEngine, RAG chat, checklist, etc.) vive como casos de uso y servicios de dominio dentro de esos módulos; las routes y componentes React sólo orquestan.
+
+Estructura de carpetas propuesta
+Asumiendo src/ dentro de un repo Next.js 14 app router:
+
+text
+src/
+  app/
+    (public)...
+    api/
+      admin/
+        ingest/route.ts
+        knowledge-assets/...
+        knowledge-base/...
+        logs/...
+        prompts/...
+        ragevaluations/...
+        ...
+      core/
+        graph/route.ts
+        insights/route.ts
+        predictive-maintenance/route.ts
+        governance-audit/route.ts
+      technical/
+        ragchat/route.ts
+        entities/...
+      pedidos/
+        [id]/
+          analyze/route.ts    # SSE agent
+          checklist/route.ts
+      entities/
+        [id]/
+          generate-report/route.ts
+          validate/route.ts
+      ...
+  core/
+    domain/
+      ingest/
+        IngestTypes.ts
+        IngestPolicies.ts
+      knowledge/
+        KnowledgeAsset.ts
+        DocumentChunk.ts
+        KnowledgeStatus.ts
+      rag/
+        RagQuery.ts
+        RagEvaluation.ts
+        ChecklistItem.ts
+      workflow/
+        WorkflowDefinition.ts
+        WorkflowEvent.ts
+      governance/
+        AIPolicy.ts
+        AIDecision.ts
+      analytics/
+        IntelligenceMetrics.ts
+        RagQualityMetrics.ts
+      audit/
+        AuditLog.ts
+      billing/
+        UsageQuota.ts
+        UsageRecord.ts
+      permissions/
+        PermissionPolicy.ts
+        PermissionRole.ts
+      ...
+    application/
+      ingest/
+        PrepareIngestUseCase.ts
+        ExecuteIngestAnalysisUseCase.ts
+        RetryIngestUseCase.ts
+      knowledge/
+        ListAssetsUseCase.ts
+        ChangeAssetStatusUseCase.ts
+        SoftDeleteAssetUseCase.ts
+        GetAssetDownloadUrlUseCase.ts
+      rag/
+        AgenticAnalyzeOrderUseCase.ts
+        TechnicalRagChatUseCase.ts
+        ChecklistGenerateUseCase.ts
+      workflow/
+        ProcessWorkflowEventUseCase.ts
+        ExecuteTransitionUseCase.ts
+      governance/
+        EvaluateActionUseCase.ts
+        LogAIDecisionUseCase.ts
+      analytics/
+        GetGlobalStatsUseCase.ts
+        GetRagQualityUseCase.ts
+        GetAuditMetricsUseCase.ts
+      coregraph/
+        GetTenantGraphUseCase.ts
+        SyncGraphUseCase.ts
+      intelligence/
+        GenerateInsightsUseCase.ts
+        GetPredictiveMaintenanceUseCase.ts
+      audit/
+        GetAuditLogsUseCase.ts
+      notifications/
+        UpdateNotificationConfigUseCase.ts
+        ManageTemplatesUseCase.ts
+      permissions/
+        SimulatePermissionUseCase.ts
+        ManagePoliciesUseCase.ts
+        ManageRolesUseCase.ts
+      ...
+  adapters/
+    in/
+      http/
+        admin/
+          IngestController.ts
+          KnowledgeAssetsController.ts
+          LogsController.ts
+          PromptsController.ts
+          RagevalController.ts
+          IntelligenceController.ts
+          BillingController.ts
+          PermissionsController.ts
+          NotificationsController.ts
+        technical/
+          TechnicalRagChatController.ts
+          TechnicalEntitiesController.ts
+        pedidos/
+          OrderAnalyzeController.ts
+          ChecklistController.ts
+        entities/
+          EntityReportController.ts
+          EntityValidationController.ts
+      workers/
+        IngestWorker.ts
+        GraphSyncWorker.ts
+        AnalyticsWorkers.ts
+      schedulers/
+        NightlyJobs.ts
+    out/
+      persistence/
+        mongodb/
+          IngestMongoRepository.ts
+          KnowledgeAssetMongoRepository.ts
+          DocumentChunkMongoRepository.ts
+          RagEvaluationMongoRepository.ts
+          WorkflowMongoRepository.ts
+          GovernanceMongoRepository.ts
+          AuditMongoRepository.ts
+          LogsMongoRepository.ts
+          PermissionsMongoRepository.ts
+          NotificationsMongoRepository.ts
+          IntelligenceMongoRepository.ts
+          ...
+        neo4j/
+          GraphNeo4jRepository.ts
+        redis/
+          IngestBullQueue.ts
+          ...
+      external/
+        llm/
+          GeminiClient.ts
+          LlmPromptService.ts
+        storage/
+          CloudinaryAssetStorage.ts
+        email/
+          ResendEmailGateway.ts
+        billing/
+          UsageTrackerService.ts
+        i18n/
+          TranslationServiceAdapter.ts
+  shared/
+    logging/
+      LoggingContext.ts
+      LogHelpers.ts         # logInfo/logWarn/logError
+    errors/
+      AppError.ts
+      ErrorTypes.ts         # ValidationError, ExternalServiceError, ...
+      ApiErrorHandler.ts
+    security/
+      AuthContext.ts
+      GuardianEnforce.ts
+    rag/
+      RetrieverPort.ts      # interfaces for retriever
+      GeneratorPort.ts      # interfaces for LLM calls
+    utils/
+      JsonExtractor.ts      # extractJsonArray<>
+      DateUtils.ts
+      PiiMaskerPort.ts
+      ...
+  ui/
+    components/
+      admin/
+        dashboards/
+          AdminDashboardPage.tsx
+          AuditoriaPage.tsx
+          BillingPage.tsx
+          RageEvalPage.tsx
+          ...
+        widgets/
+          AdminOverviewMetrics.tsx
+          AdminUsageSection.tsx
+          AdminPlanOrIndustriesSection.tsx
+          AdminActivitySection.tsx
+          AuditMetricsHeader.tsx
+          AuditFiltersBar.tsx
+          AuditLogsTable.tsx
+        prompts/
+          AdminPromptsPage.tsx
+        permissions/
+          PermissionSimulatorPage.tsx
+        profile/
+          ProfilePage.tsx
+      technical/
+        EntityDetailPage.tsx
+        RagChatPanel.tsx
+      shared/
+        PageContainer.tsx
+        PageHeader.tsx
+        MetricCard.tsx
+        ContentCard.tsx
+        ...
+    hooks/
+      useApiItem.ts
+      useApiList.ts
+      useAuditLogViewModel.ts
+      useAdminDashboardViewModel.ts
+      ...
+Notas clave de esta estructura
+core/domain: sólo modelos y lógica de negocio pura, sin Mongo/Next/Cloudinary.
+
+core/application: casos de uso orquestadores que dependen de puertos (interfaces) hacia repositorios, LLM, storage, etc.
+
+adapters/in: controladores HTTP (Next routes llaman a controllers), workers SSE, cron jobs. Sólo transforman HTTP ↔ DTO ↔ casos de uso.
+​
+​
+
+adapters/out: implementaciones concretas de puertos: Mongo, Neo4j, BullMQ, Gemini, Cloudinary, Resend, etc.
+​
+
+shared: logging unificado, manejo de errores y seguridad, utilidades comunes (extractJsonArray, PII, etc.).
+​
+
+ui: componentes React desacoplados de casos de uso (usan hooks que llaman a controllers/Next API).
+​
+
+Mapeo de los casos que hemos visto
+Para que encaje mentalmente con todo lo anterior:
+
+apitechnicalentities/analyze → PrepareIngestUseCase + IngestWorker usando ExecuteIngestAnalysisUseCase.
+​
+
+AdminDashboardPage → useAdminDashboardViewModel que llama GetGlobalStatsUseCase.
+​
+
+apitechnicalragchat → TechnicalRagChatUseCase + adapter SSE opcional.
+​
+​
+
+AuditoriaPage → useAuditLogViewModel que usa GetAuditLogsUseCase y GetAuditMetricsUseCase.
+​
+
+IngestService → troceado entre ingest domain + PrepareIngestUseCase / ExecuteIngestAnalysisUseCase + repositorios Mongo/Cloudinary/LLM en adapters/out.
+​
+​
+
+WorkflowEngine, GraphEngine, InsightEngine, PredictiveEngine → casos de uso en core/application/{workflow,coregraph,intelligence} con repositorios Neo4j y motores LLM detrás de puertos.
+​
+
+ChecklistEndpoint → ChecklistGenerateUseCase + ChecklistLLM port con implementación real y mock.
+​
+​
+
+
+Para cerrar todo esto de forma operativa, te propongo empezar por un módulo “núcleo” y definir sus interfaces.
+​
+
+Ejemplo concreto: módulo ingest
+1) Puertos (interfaces) en core/application/ingest
+ts
+// core/application/ingest/ports/IngestRepositories.ts
+export interface KnowledgeAssetRepository {
+  findDuplicate(options: {
+    fileMd5: string;
+    scope: "TENANT" | "GLOBAL" | "INDUSTRY";
+    tenantId: string;
+    industry: string;
+    environment: string;
+  }): Promise<{ id: string } | null>;
+
+  createPendingAsset(input: {
+    tenantId: string;
+    scope: "TENANT" | "GLOBAL" | "INDUSTRY";
+    industry: string;
+    filename: string;
+    componentType: string;
+    version: string;
+    environment: string;
+    fileMd5: string;
+    sizeBytes: number;
+    cloudinaryUrl: string;
+    cloudinaryPublicId: string;
+  }): Promise<{ id: string }>;
+
+  getById(id: string): Promise<KnowledgeAsset | null>;
+
+  markProcessing(id: string, attempts: number): Promise<void>;
+  markCompleted(id: string, data: { model: string; language: string; totalChunks: number }): Promise<void>;
+  markFailed(id: string, error: { message: string; details?: any }): Promise<void>;
+}
+
+export interface IngestAuditRepository {
+  logIngestEvent(input: {
+    tenantId: string;
+    performedBy: string;
+    filename: string;
+    fileSize: number;
+    md5: string;
+    docId: string;
+    correlationId: string;
+    status: "DUPLICATE" | "PENDING" | "SUCCESS" | "FAILED";
+    details?: any;
+  }): Promise<void>;
+}
+
+export interface DocumentChunkRepository {
+  insertMany(chunks: DocumentChunk[]): Promise<void>;
+}
+ts
+// core/application/ingest/ports/IngestServices.ts
+export interface FileStorage {
+  uploadOriginal(params: {
+    buffer: Buffer;
+    filename: string;
+    tenantId: string;
+    correlationId: string;
+  }): Promise<{ url: string; publicId: string }>;
+
+  download(params: { url: string; correlationId: string }): Promise<Buffer>;
+}
+
+export interface LlmClassifier {
+  detectLanguage(textSample: string, tenantId: string, correlationId: string): Promise<string>;
+  detectModels(text: string, tenantId: string, correlationId: string): Promise<string[]>;
+}
+
+export interface DomainRouter {
+  detectIndustry(text: string, tenantId: string, correlationId: string, fallback: string): Promise<string>;
+}
+
+export interface PiiMasker {
+  mask(text: string, tenantId: string, correlationId: string): Promise<string>;
+}
+
+export interface EmbeddingService {
+  embed(text: string, tenantId: string, correlationId: string): Promise<number[]>;
+  embedMultilingual(text: string, tenantId: string, correlationId: string): Promise<number[]>;
+}
+
+export interface PdfAnalyzer {
+  extractText(buffer: Buffer, tenantId: string, correlationId: string): Promise<string>;
+  extractVisualFindings(buffer: Buffer, tenantId: string, correlationId: string): Promise<VisualFinding[]>;
+}
+
+export interface GraphExtraction {
+  extractFromDocument(params: {
+    text: string;
+    tenantId: string;
+    correlationId: string;
+    sourceDoc: string;
+  }): Promise<void>;
+}
+
+export interface QueuePort {
+  enqueueIngestAnalysis(params: {
+    docId: string;
+    tenantId: string;
+    userEmail: string;
+    environment: string;
+    maskPii: boolean;
+    correlationId: string;
+  }): Promise<{ jobId: string }>;
+}
+2) Casos de uso en core/application/ingest
+ts
+// PrepareIngestUseCase.ts
+export class PrepareIngestUseCase {
+  constructor(
+    private assets: KnowledgeAssetRepository,
+    private audit: IngestAuditRepository,
+    private storage: FileStorage,
+  ) {}
+
+  async execute(input: {
+    file: { buffer: Buffer; name: string; size: number };
+    metadata: { type: string; version: string; scope: "TENANT" | "GLOBAL" | "INDUSTRY"; industry: string };
+    tenantId: string;
+    environment: string;
+    userEmail: string;
+    correlationId: string;
+  }): Promise<{ status: "DUPLICATE" | "PENDING"; docId: string }> {
+    // lógicas de tamaño, MD5, dedupe y creación de asset PENDING
+  }
+}
+ts
+// ExecuteIngestAnalysisUseCase.ts
+export class ExecuteIngestAnalysisUseCase {
+  constructor(
+    private assets: KnowledgeAssetRepository,
+    private chunks: DocumentChunkRepository,
+    private audit: IngestAuditRepository,
+    private storage: FileStorage,
+    private pdf: PdfAnalyzer,
+    private router: DomainRouter,
+    private pii: PiiMasker,
+    private llmClassifier: LlmClassifier,
+    private embeddings: EmbeddingService,
+    private graph: GraphExtraction,
+  ) {}
+
+  async execute(input: {
+    docId: string;
+    correlationId: string;
+    maskPii: boolean;
+    userEmail: string;
+  }): Promise<{ success: boolean; chunks: number }> {
+    // orquesta descarga, análisis, chunking, embeddings, graph, update asset, audit
+  }
+}
+ts
+// RetryIngestUseCase.ts
+export class RetryIngestUseCase {
+  constructor(
+    private assets: KnowledgeAssetRepository,
+    private audit: IngestAuditRepository,
+    private queue: QueuePort,
+  ) {}
+
+  async execute(input: {
+    docId: string;
+    tenantId: string;
+    userEmail: string;
+    correlationId: string;
+  }): Promise<{ message: string }> {
+    // valida estado, resetea a PENDING y encola/relanza análisis
+  }
+}
+3) Adaptadores concretos
+adapters/out/persistence/mongodb/IngestMongoRepository.ts implementa KnowledgeAssetRepository, IngestAuditRepository, DocumentChunkRepository con el código que ya tienes.
+​
+
+adapters/out/external/storage/CloudinaryAssetStorage.ts implementa FileStorage.
+​
+
+adapters/out/external/llm/GeminiClassifier.ts implementa LlmClassifier.
+​
+​
+
+adapters/out/persistence/neo4j/GraphNeo4jExtraction.ts implementa GraphExtraction.
+​
+
+adapters/out/redis/IngestBullQueue.ts implementa QueuePort.
+​
+
+4) Controllers / routes
+adapters/in/http/admin/IngestController.ts instancia los casos de uso con los adaptadores y los expone a route.ts de Next: POST /api/admin/ingest, GET /api/admin/ingest/status/:docId, POST /api/admin/knowledge-assets/:id/retry, etc.
+​
+
+
+Te aterrizo ahora el módulo RAG con interfaces y un ejemplo de route.ts completo.
+​
+
+1) Puertos del módulo RAG
+ts
+// core/application/rag/ports/RagRepositories.ts
+export interface RagEvaluationRepository {
+  insert(evaluation: RagEvaluation): Promise<void>;
+  getSummary(tenantId: string): Promise<RagQualitySummary>;
+  getTrends(tenantId: string, limit: number): Promise<RagQualityTrendPoint[]>;
+  listEvaluations(tenantId: string, limit: number): Promise<RagEvaluationListItem[]>;
+}
+ts
+// core/application/rag/ports/RagServices.ts
+export interface RetrieverPort {
+  retrieve(params: {
+    query: string;
+    tenantId: string;
+    topK: number;
+    correlationId: string;
+  }): Promise<{ text: string; sourceId: string }[]>;
+}
+
+export interface GeneratorPort {
+  generate(params: {
+    prompt: string;
+    tenantId: string;
+    correlationId: string;
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<string>;
+}
+
+export interface RagPromptPort {
+  renderAnswerPrompt(input: {
+    question: string;
+    context: string;
+    history: { role: string; content: string }[];
+    tenantId: string;
+  }): Promise<{ prompt: string; model: string }>;
+
+  renderJudgePrompt(input: {
+    query: string;
+    response: string;
+    contexts: string[];
+    tenantId: string;
+  }): Promise<{ prompt: string; model: string }>;
+}
+2) Casos de uso RAG
+Chat técnico (/apitechnical/ragchat)
+ts
+// core/application/rag/TechnicalRagChatUseCase.ts
+export class TechnicalRagChatUseCase {
+  constructor(
+    private retriever: RetrieverPort,
+    private generator: GeneratorPort,
+    private prompts: RagPromptPort,
+  ) {}
+
+  async answer(params: {
+    question: string;
+    messages: { role: string; content: string }[];
+    tenantId: string;
+    correlationId: string;
+  }): Promise<{
+    answer: string;
+    documents: { text: string; sourceId: string }[];
+  }> {
+    const docs = await this.retriever.retrieve({
+      query: params.question,
+      tenantId: params.tenantId,
+      topK: 8,
+      correlationId: params.correlationId,
+    });
+
+    const context = docs.map(d => d.text).join("\n\n");
+
+    const { prompt } = await this.prompts.renderAnswerPrompt({
+      question: params.question,
+      context,
+      history: params.messages,
+      tenantId: params.tenantId,
+    });
+
+    const answer = await this.generator.generate({
+      prompt,
+      tenantId: params.tenantId,
+      correlationId: params.correlationId,
+      temperature: 0.2,
+      maxTokens: 1200,
+    });
+
+    return { answer, documents: docs };
+  }
+}
+Evaluación de calidad RAG
+ts
+// core/application/rag/RagJudgeUseCase.ts
+export class RagJudgeUseCase {
+  constructor(
+    private prompts: RagPromptPort,
+    private generator: GeneratorPort,
+    private evaluations: RagEvaluationRepository,
+  ) {}
+
+  async evaluate(params: {
+    query: string;
+    response: string;
+    contexts: string[];
+    tenantId: string;
+    correlationId: string;
+  }): Promise<RagEvaluation> {
+    const { prompt, model } = await this.prompts.renderJudgePrompt({
+      query: params.query,
+      response: params.response,
+      contexts: params.contexts,
+      tenantId: params.tenantId,
+    });
+
+    const raw = await this.generator.generate({
+      prompt,
+      tenantId: params.tenantId,
+      correlationId: params.correlationId,
+      temperature: 0.0,
+    });
+
+    const json = extractJsonArray<any>(raw)[0] ?? {};
+    const evaluation: RagEvaluation = {
+      tenantId: params.tenantId,
+      correlationId: params.correlationId,
+      query: params.query,
+      generation: params.response,
+      contextChunks: params.contexts,
+      metrics: {
+        faithfulness: json.faithfulness ?? 0,
+        answerRelevance: json.answerrelevance ?? 0,
+        contextPrecision: json.contextprecision ?? 0,
+      },
+      feedback: json.reasoning ?? "",
+      causalAnalysis: json.causalanalysis ?? "",
+      model,
+      timestamp: new Date(),
+    };
+
+    await this.evaluations.insert(evaluation);
+    return evaluation;
+  }
+}
+Analytics para RAGEvalPage
+ts
+// core/application/rag/RagQualityAnalyticsUseCase.ts
+export class RagQualityAnalyticsUseCase {
+  constructor(private repo: RagEvaluationRepository) {}
+
+  async getDashboard(tenantId: string) {
+    const metrics = await this.repo.getSummary(tenantId);
+    const trends = await this.repo.getTrends(tenantId, 30);
+    const evaluations = await this.repo.listEvaluations(tenantId, 200);
+    return { metrics, trends, evaluations };
+  }
+}
+3) Ejemplo de route.ts real (chat técnico)
+ts
+// src/app/api/technical/ragchat/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { auth } from "@/lib/auth";
+import { createApiErrorHandler } from "@/shared/errors/ApiErrorHandler";
+import { buildRagChatUseCase } from "@/adapters/in/http/technical/buildRagChatUseCase";
+import { createLoggingContext, logInfo } from "@/shared/logging";
+
+export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+  let session = null;
+
+  try {
+    session = await auth();
+    if (!session?.user?.tenantId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const ctx = createLoggingContext({
+      correlationId,
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
+      req,
+    });
+    const handleError = createApiErrorHandler("TECHNICALRAGCHAT", ctx);
+
+    const body = await req.json();
+    const question: string | undefined = body.question;
+    const messages: { role: string; content: string }[] = body.messages ?? [];
+    const stream: boolean = body.stream ?? false;
+
+    const effectiveQuestion =
+      question || messages[messages.length - 1]?.content || "";
+
+    if (!effectiveQuestion.trim()) {
+      return NextResponse.json(
+        { error: "Pregunta requerida" },
+        { status: 400 },
+      );
+    }
+
+    const useCase = buildRagChatUseCase(); // ensambla puertos/adapters
+
+    if (!stream) {
+      const result = await useCase.answer({
+        question: effectiveQuestion,
+        messages,
+        tenantId: session.user.tenantId,
+        correlationId,
+      });
+
+      await logInfo({
+        ctx,
+        source: "TECHNICALRAGCHAT",
+        action: "QUERY",
+        message: "RAG chat completado",
+        details: {
+          docs: result.documents.length,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        answer: result.answer,
+        documents: result.documents,
+        correlationId,
+      });
+    }
+
+    // si quieres streaming, aquí usarías un helper SSE similar al del caso agente
+    // createSseStream(...)
+
+    return NextResponse.json(
+      { error: "Streaming no implementado en este ejemplo" },
+      { status: 400 },
+    );
+  } catch (error) {
+    const ctx = {
+      correlationId,
+      tenantId: session?.user?.tenantId,
+      userId: session?.user?.id,
+    };
+    const handleError = createApiErrorHandler("TECHNICALRAGCHAT", ctx as any);
+    return handleError(error);
+  }
+}
+Este patrón es el mismo que puedes replicar para:
+
+/api/admin/rag-evaluations usando RagQualityAnalyticsUseCase.
+​
+
+/api/admin/rag-evaluations/evaluate si quieres endpoint explícito de judge.
+
+
+
+El siguiente paso lógico sería planificar una migración incremental por módulos, empezando por algo muy central pero acotado como ingest + knowledge-assets, y después rag y workflow

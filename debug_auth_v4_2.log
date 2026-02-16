@@ -1,0 +1,18 @@
+[2026-02-11T11:47:36.978Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] ➡️ [AUTH_UTILS] Authorize START | Email: superadmin@abd.com
+[2026-02-11T11:47:37.697Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] ✅ User found in DB: superadmin@abd.com | Host: ABDElevators-Auth
+[2026-02-11T11:47:37.697Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] ⚖️ Verifying password for superadmin@abd.com...
+[2026-02-11T11:47:38.798Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] 🔎 MFA Enabled: true for superadmin@abd.com | Tenant: abd_global
+[2026-02-11T11:47:38.798Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] 🔎 MFA Check | InputType: string | Value: [undefined] | IsInvalid: true
+[2026-02-11T11:47:38.799Z] [fdad9c1b-7384-4a5d-9ead-244079c1dbd4] 🎟️ MFA Required for superadmin@abd.com. Returning PENDING state.
+[2026-02-11T11:48:05.337Z] [52253e74-0714-47e1-beca-d281a4fbf171] ➡️ [AUTH_UTILS] Authorize START | Email: superadmin@abd.com
+[2026-02-11T11:48:05.390Z] [52253e74-0714-47e1-beca-d281a4fbf171] ✅ User found in DB: superadmin@abd.com | Host: ABDElevators-Auth
+[2026-02-11T11:48:05.391Z] [52253e74-0714-47e1-beca-d281a4fbf171] ⚖️ Verifying password for superadmin@abd.com...
+[2026-02-11T11:48:05.621Z] [52253e74-0714-47e1-beca-d281a4fbf171] 🔎 MFA Enabled: true for superadmin@abd.com | Tenant: abd_global
+[2026-02-11T11:48:05.621Z] [52253e74-0714-47e1-beca-d281a4fbf171] 🔎 MFA Check | InputType: string | Value: [807052] | IsInvalid: false
+[2026-02-11T11:48:05.749Z] [52253e74-0714-47e1-beca-d281a4fbf171] 💥 CAUGHT ERROR: Read more at https://errors.authjs.dev#credentialssignin | Code: INVALID_MFA_CODE
+[2026-02-11T11:48:05.749Z] [52253e74-0714-47e1-beca-d281a4fbf171] 🛑 Handled Auth Error Re-thrown: INVALID_MFA_CODE
+[2026-02-11T11:48:16.194Z] [ad3eff8e-d052-4e5a-9aec-5dc9d80cdb9e] ➡️ [AUTH_UTILS] Authorize START | Email: superadmin@abd.com
+[2026-02-11T11:48:16.274Z] [ad3eff8e-d052-4e5a-9aec-5dc9d80cdb9e] ✅ User found in DB: superadmin@abd.com | Host: ABDElevators-Auth
+[2026-02-11T11:48:16.274Z] [ad3eff8e-d052-4e5a-9aec-5dc9d80cdb9e] ⚖️ Verifying password for superadmin@abd.com...
+[2026-02-11T11:48:16.609Z] [ad3eff8e-d052-4e5a-9aec-5dc9d80cdb9e] 🔎 MFA Enabled: true for superadmin@abd.com | Tenant: abd_global
+[2026-02-11T11:48:16.609Z] [ad3eff8e-d052-4e5a-9aec-5dc9d80cdb9e] 🔎 MFA Check | InputType: string | Value: [598052] | IsInvalid: false

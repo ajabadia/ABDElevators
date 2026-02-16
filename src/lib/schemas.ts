@@ -4,7 +4,7 @@ import { UserRole } from '@/types/roles';
 /**
  * Esquemas para la Visión 2.0 (Generalización)
  */
-export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC']);
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC', 'MEDICAL']);
 export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
 export const AppEnvironmentEnum = z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']);
@@ -151,6 +151,7 @@ export const BulkInviteItemSchema = z.object({
 
 export const BulkInviteRequestSchema = z.object({
     invitations: z.array(BulkInviteItemSchema).min(1, 'Se requiere al menos una invitación'),
+    expiresInDays: z.number().int().min(1).max(30).default(7),
 });
 
 export type BulkInviteItem = z.infer<typeof BulkInviteItemSchema>;
@@ -159,6 +160,29 @@ export type BulkInviteRequest = z.infer<typeof BulkInviteRequestSchema>;
 /**
  * Esquemas para el Motor de Workflows (Visión 2.0 - Fase 7.2)
  */
+
+export const LLMNodeConfigSchema = z.object({
+    enabled: z.boolean().default(false),
+    promptKey: z.string().optional(),
+    temperature: z.number().min(0).max(1).default(0.3),
+    schemaKey: z.string().optional(), // For structured output validation
+    auto_transition: z.boolean().default(false),
+});
+
+export const DecisionStrategySchema = z.object({
+    type: z.enum(['RULE_BASED', 'LLM_ROUTING', 'HYBRID']).default('RULE_BASED'),
+    rules: z.array(z.any()).default([]),
+});
+
+export const LLMRoutingConfigSchema = z.object({
+    promptKey: z.string(),
+    branches: z.array(z.object({
+        value: z.string(),
+        to: z.string(),
+        label: z.string()
+    })),
+});
+
 export const WorkflowStateSchema = z.object({
     id: z.string(),                    // ej: 'draft', 'in_analysis', 'completed'
     label: z.string(),
@@ -169,6 +193,16 @@ export const WorkflowStateSchema = z.object({
     can_edit: z.boolean().default(true), // ¿Se pueden editar datos en este estado?
     requires_validation: z.boolean().default(false), // ¿Bloquea el flujo hasta validación humana?
     roles_allowed: z.array(z.string()).default(['ADMIN', 'TECHNICAL']),
+
+    // Fase 127: Intelligent Workflow Orchestration
+    llmNode: LLMNodeConfigSchema.optional(),
+    decisionStrategy: DecisionStrategySchema.optional(),
+    llmRouting: LLMRoutingConfigSchema.optional(),
+    checklistConfigId: z.string().optional(), // ID de configuración de checklist dinámica
+    sla: z.object({
+        timeTarget: z.number().optional(), // Horas
+        action: z.enum(['NOTIFY', 'ESCALATE', 'AUTO_TRANSITION']).optional(),
+    }).optional(),
 });
 
 export const WorkflowTransitionSchema = z.object({
@@ -184,6 +218,8 @@ export const WorkflowTransitionSchema = z.object({
         require_comment: z.boolean().default(false),
     }).optional(),
     actions: z.array(z.string()).optional(), // ej: ['notify_admin', 'generate_pdf', 'webhook_call']
+    decisionStrategy: z.enum(['USER', 'LLM_DIRECT', 'LLM_SUGGEST_HUMAN_APPROVE', 'HUMAN_ONLY']).optional(),
+    llmRouting: LLMRoutingConfigSchema.optional(),
 });
 
 export const WorkflowDefinitionSchema = z.object({
@@ -386,13 +422,24 @@ export const KnowledgeAssetSchema = z.object({
     revisionDate: z.date(),
     language: z.string().default('es'), // Idioma principal detectado
     status: z.enum(['vigente', 'obsoleto', 'borrador']).default('vigente'),
-    ingestionStatus: z.enum(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']).default('PENDING'),
+    ingestionStatus: z.enum([
+        'PENDING',
+        'QUEUED',
+        'PROCESSING',
+        'COMPLETED',
+        'FAILED',
+        'STORED_NO_INDEX',
+        'INDEXED_NO_STORAGE',
+        'PARTIAL'
+    ]).default('PENDING'),
     progress: z.number().min(0).max(100).default(0), // Porcentaje de avance
     attempts: z.number().default(0), // Reintentos realizados
     error: z.string().optional(), // Para registrar errores asíncronos
     cloudinaryUrl: z.string().optional(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
+    chunkingLevel: z.enum(['SIMPLE', 'SEMANTIC', 'LLM']).default('SIMPLE'), // Phase 134: Tiered Chunking
+    fileSize: z.number().default(0), // Added for consistency
     totalChunks: z.number().default(0),
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()), // Añadido para seguimiento de cambios
@@ -406,6 +453,9 @@ export const DocumentTypeSchema = z.object({
     _id: z.any().optional(),
     name: z.string(),
     description: z.string().optional(),
+    scope: z.enum(['TENANT', 'GLOBAL', 'INDUSTRY']).default('TENANT'),
+    industry: IndustryTypeSchema.optional(), // Legacy single industry
+    industries: z.array(IndustryTypeSchema).default([]), // Multi-industry support
     isActive: z.boolean().default(true),
     createdAt: z.date().default(() => new Date()),
 });
@@ -545,6 +595,19 @@ export const UserDocumentSchema = z.object({
 });
 
 /**
+ * Esquema para Configuración de Reportes (Fase 64 integration)
+ */
+export const ReportConfigSchema = z.object({
+    disclaimer: z.string().optional(),
+    signatureText: z.string().optional(),
+    footerText: z.string().optional(),
+    includeSources: z.boolean().default(true),
+    primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(), // Color corporativo para impresión
+});
+
+export type ReportConfig = z.infer<typeof ReportConfigSchema>;
+
+/**
  * Esquema para Configuración de Tenant (Fase 7.4 + Fase 9)
  */
 export const TenantConfigSchema = z.object({
@@ -563,11 +626,24 @@ export const TenantConfigSchema = z.object({
     }),
     subscription: z.object({
         tier: z.enum(['FREE', 'PRO', 'ENTERPRISE']).default('FREE'),
-        status: z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED']).default('ACTIVE'),
+        planSlug: z.enum(['FREE', 'PRO', 'ENTERPRISE']).default('FREE').optional(), // Alias for tier (BillingService compatibility)
+        status: z.preprocess(
+            (val) => {
+                if (typeof val === 'string') return val.toUpperCase();
+                // If null or undefined flow into preprocess, validation might fail if schema expects string.
+                // But z.preprocess output is fed to z.enum(...).default('ACTIVE').
+                // If we return undefined here, default() catches it.
+                if (val === null || val === undefined) return undefined;
+                return val;
+            },
+            z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED']).default('ACTIVE')
+        ),
         stripe_customer_id: z.string().optional(),
         stripe_subscription_id: z.string().optional(),
-        current_period_start: z.date().optional(),
-        current_period_end: z.date().optional(),
+        current_period_start: z.date().nullable().optional(),
+        current_period_end: z.date().nullable().optional(),
+        currentPeriodEnd: z.date().nullable().optional(), // Alias for camelCase usage
+        overrides: z.record(z.string(), z.any()).default({}), // Custom limits
     }).optional(),
     branding: z.object({
         logo: z.object({
@@ -589,6 +665,7 @@ export const TenantConfigSchema = z.object({
         autoDarkMode: z.boolean().default(true),
         companyName: z.string().optional(),
     }).optional(),
+    reportConfig: ReportConfigSchema.optional(),
     active: z.boolean().default(true),
     billing: z.object({
         fiscalName: z.string().optional(),
@@ -1140,6 +1217,8 @@ export const ChecklistItemSchema = z.object({
     description: z.string().min(1),
     notes: z.string().optional(),
     icon: z.string().optional(),
+    confidenceLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
+    ragReference: z.string().optional(),
 });
 
 export const ChecklistConfigSchema = z.object({
@@ -1227,6 +1306,7 @@ export const PromptVersionSchema = z.object({
     ip: z.string().optional(),
     userAgent: z.string().optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
+    industry: IndustryTypeSchema.default('GENERIC'), // Snapshot industry
     createdAt: z.date().default(() => new Date()),
 });
 
@@ -1237,6 +1317,7 @@ export const PromptSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
+    industry: IndustryTypeSchema.default('GENERIC'), // Added for multi-vertical support
     category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST']).default('GENERAL'),
     model: z.string().default('gemini-1.5-flash'), // Permite elegir el modelo por cada prompt
     template: z.string(),
@@ -1282,6 +1363,7 @@ export const ApiKeySchema = z.object({
     tenantId: z.string(),
     keyHash: z.string(),           // Hash SHA-256 de la key completa
     keyPrefix: z.string(),         // Primeros 7 caracteres para display (ej: "sk_live_...")
+    spaceId: z.string().optional(), // Espacio de trabajo asociado (Phase 30)
     name: z.string(),              // "Producción CRM"
     permissions: z.array(ApiKeyPermissionSchema),
     lastUsedAt: z.date().optional(),
@@ -1397,3 +1479,18 @@ export const SystemEmailTemplateHistorySchema = z.object({
 
 export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 export type SystemEmailTemplateHistory = z.infer<typeof SystemEmailTemplateHistorySchema>;
+
+export const CreateWorkshopOrderSchema = z.object({
+    description: z.string().min(10, "Description must be at least 10 characters long"),
+    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
+    metadata: z.record(z.string(), z.any()).optional(),
+});
+export type CreateWorkshopOrderFragment = z.infer<typeof CreateWorkshopOrderSchema>;
+
+
+
+
+
+
+
+

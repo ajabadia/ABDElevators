@@ -65,12 +65,12 @@ export function DataTable<T>({
 
     if (isLoading && data.length === 0) {
         return (
-            <div className={cn("rounded-xl border border-slate-800 bg-slate-950/50 backdrop-blur-sm overflow-hidden", className)}>
+            <div className={cn("rounded-xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden", className)}>
                 <Table>
-                    <TableHeader className="bg-slate-900/50">
-                        <TableRow className="hover:bg-transparent border-slate-800">
+                    <TableHeader className="bg-muted/50">
+                        <TableRow className="hover:bg-transparent border-border/50">
                             {columns.map((col, idx) => (
-                                <TableHead key={idx} className={cn("text-slate-400 font-semibold", col.headerClassName)}>
+                                <TableHead key={idx} className={cn("text-muted-foreground font-semibold", col.headerClassName)}>
                                     {col.header}
                                 </TableHead>
                             ))}
@@ -78,10 +78,10 @@ export function DataTable<T>({
                     </TableHeader>
                     <TableBody>
                         {[...Array(5)].map((_, i) => (
-                            <TableRow key={i} className="border-slate-800/50">
+                            <TableRow key={i} className="border-border/40">
                                 {columns.map((_, j) => (
                                     <TableCell key={j}>
-                                        <Skeleton className="h-5 w-full bg-slate-800/50" />
+                                        <Skeleton className="h-5 w-full opacity-50" />
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -94,8 +94,8 @@ export function DataTable<T>({
 
     if (!isLoading && data.length === 0) {
         return (
-            <div className={cn("rounded-xl border border-dashed border-slate-800 bg-slate-950/30 p-12 text-center", className)}>
-                <div className="flex flex-col items-center justify-center gap-3 text-slate-500">
+            <div className={cn("rounded-xl border border-dashed border-border bg-card/30 p-12 text-center", className)}>
+                <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
                     <Inbox className="h-10 w-10 opacity-20" />
                     <p className="text-sm font-medium">{emptyMessage}</p>
                 </div>
@@ -104,13 +104,13 @@ export function DataTable<T>({
     }
 
     return (
-        <div className={cn("rounded-xl border border-slate-800 bg-slate-950/50 backdrop-blur-sm overflow-hidden", className)}>
+        <div className={cn("rounded-xl border border-border bg-card/50 backdrop-blur-sm overflow-hidden", className)}>
             <div className="overflow-x-auto">
                 <Table>
-                    <TableHeader className="bg-slate-900/50">
-                        <TableRow className="hover:bg-transparent border-slate-800">
+                    <TableHeader className="bg-muted/50 text-foreground">
+                        <TableRow className="hover:bg-transparent border-border">
                             {columns.map((col, idx) => (
-                                <TableHead key={idx} className={cn("text-slate-400 font-semibold py-4", col.headerClassName)}>
+                                <TableHead key={idx} className={cn("text-foreground font-semibold py-4", col.headerClassName)}>
                                     {col.header}
                                 </TableHead>
                             ))}
@@ -122,13 +122,13 @@ export function DataTable<T>({
                                 key={idx}
                                 onClick={() => onRowClick?.(item)}
                                 className={cn(
-                                    "border-slate-800/50 transition-colors",
-                                    onRowClick && "cursor-pointer hover:bg-teal-500/5",
+                                    "border-border/50 transition-colors",
+                                    onRowClick && "cursor-pointer hover:bg-primary/5",
                                     typeof rowClassName === 'function' ? rowClassName(item) : rowClassName
                                 )}
                             >
                                 {columns.map((col, colIdx) => (
-                                    <TableCell key={colIdx} className={cn("py-4 text-slate-300", col.className)}>
+                                    <TableCell key={colIdx} className={cn("py-4 text-foreground/90", col.className)}>
                                         {renderCell(item, col)}
                                     </TableCell>
                                 ))}

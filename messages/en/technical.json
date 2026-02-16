@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "title": "Analysis",
+    "subtitle": "Agentic processing and technical validation of specifications (System Engine).",
+    "backToNew": "← Back to New Analysis",
+    "newAnalysis": "New Analysis",
+    "dropPdf": "Drop the order PDF here",
+    "clickBrowse": "Click to browse",
+    "pdfFormat": "Order PDF (Max 10MB)",
+    "processing": "Processing...",
+    "analyze": "Analyze Order",
+    "features": {
+      "autoDetect": "Automatic detection of models and components.",
+      "crossRef": "Intelligent cross-referencing with active manuals.",
+      "checklist": "AI-generated compatibility checklist."
+    },
+    "recents": "Recents",
+    "searchPlaceholder": "Search orders...",
+    "patterns": "Patterns",
+    "noRecents": "No orders have been analyzed recently.",
+    "toast": {
+      "processed": "processed",
+      "startingBrain": "Starting agentic brain for technical analysis...",
+      "error": "Error",
+      "couldNotProcess": "Could not process the order",
+      "fatalError": "Fatal error",
+      "connectionFailure": "Connection failure",
+      "retrievalError": "Could not retrieve final results"
+    }
+  },
+  "graphs": {
+    "title": "Semantic Knowledge",
+    "highlight": "Graph",
+    "subtitle": "Visualize the network of logical connections captured by the intelligent engine.",
+    "whatIs": "What is this Graph?",
+    "description": "Unlike a traditional database, the Knowledge Graph understands how orders relate to technicians and regulations.",
+    "nodes": {
+      "title": "Nodes",
+      "desc": "Physical entities (Elevators, People, Papers)."
+    },
+    "edges": {
+      "title": "Edges",
+      "desc": "Logical relationships (\"This order COMPLIES with this regulation\")."
+    }
+  },
+  "validation": {
+    "loadingEngine": "Loading validation engine...",
+    "title": "Technical Validation",
+    "entityLabel": "Entity",
+    "status": "Status",
+    "completed": "Validation Completed",
+    "completedDesc": "The validation has been saved successfully in the system.",
+    "viewEntity": "View Entity",
+    "noRagResults": "No RAG Results",
+    "noRagDesc": "No results found from previous analysis. Do you want to start the agentic brain to analyze this order now?",
+    "startAgent": "Start Agentic Reasoning"
+  }
+}

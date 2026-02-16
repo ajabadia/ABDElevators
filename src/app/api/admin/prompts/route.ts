@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
             template: body.template,
             variables: body.variables || [],
             active: body.active ?? true,
+            industry: body.industry || 'GENERIC',
             maxLength: body.maxLength,
 
             // Protected/System fields
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
         const existing = await collection.findOne({
             key: validated.key,
             tenantId,
+            industry: validated.industry,
             environment: validated.environment
         });
         if (existing) {

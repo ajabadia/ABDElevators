@@ -1,0 +1,26 @@
+{
+  "search_placeholder": "Buscar nodos (ID, Etiqueta, Propiedades)...",
+  "search_button": "Buscar",
+  "error_loading": "Error al cargar datos del grafo",
+  "no_nodes": "No se encontraron nodos con los criterios de búsqueda.",
+  "actions": {
+    "reload": "Recargar datos",
+    "fit_view": "Ajustar vista"
+  },
+  "stats_nodes": "Nodos",
+  "stats_links": "Relaciones",
+  "properties": "Propiedades",
+  "page_title": "Explorador de Grafo",
+  "page_subtitle": "Visualiza y explora las entidades y relaciones extraídas automáticamente por la IA.",
+  "meta_title": "Explorador de Grafo | Base de Conocimiento",
+  "meta_desc": "Visualización de las entidades y relaciones del Grafo de Conocimiento.",
+  "title": "Explorador de Grafo",
+  "legend": {
+    "component": "Componente",
+    "procedure": "Procedimiento",
+    "error_code": "Código Error",
+    "document": "Documento",
+    "system": "Sistema",
+    "unknown": "Desconocido"
+  }
+}

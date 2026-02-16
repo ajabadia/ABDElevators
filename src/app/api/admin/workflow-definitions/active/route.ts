@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { WorkflowService } from '@/lib/workflow-service';
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from '@/types/roles';
 
 /**
  * API para obtener la definición de workflow activa.
@@ -20,10 +21,7 @@ export async function GET(request: Request) {
     else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER, UserRole.SUPPORT]);
 
         const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entityType);
 

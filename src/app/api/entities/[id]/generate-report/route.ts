@@ -74,7 +74,7 @@ export async function POST(
             .join('\n');
 
         // Render dynamic prompt (Phase 7.6)
-        const renderedPrompt = await PromptService.renderPrompt(
+        const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
             'REPORT_GENERATOR',
             {
                 identifier: entity.identifier,
@@ -93,14 +93,22 @@ export async function POST(
             maxTokens: 2000
         });
 
-        // 6. Generate Server PDF (Vision 2.0 - Phase 6.6.1)
+        // 6. Get Tenant Config for Branding & Templates (Phase 64)
+        const tenant = await db.collection('tenants').findOne({ tenantId });
+
+        // 7. Generate Server PDF (Vision 2.0 - Phase 6.6.1)
+        const locale = req.headers.get('accept-language')?.split(',')[0].split('-')[0] || 'es';
+
         const pdfBuffer = await generateServerPDF({
             identifier: entity.identifier || 'N/A',
             client: entity.client || 'S/N',
             content: reportText,
             tenantId,
             date: new Date(),
-            technician: session.user.name || 'Sistema'
+            technician: session.user.name || 'Sistema',
+            locale,
+            branding: tenant?.branding as any,
+            reportConfig: tenant?.reportConfig as any
         });
 
         // 7. Upload to Cloudinary

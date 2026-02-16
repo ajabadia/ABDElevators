@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle, Download, Settings, Building2 } from 'lucide-react';
+import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle, Download, Settings, Building2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlanSelector } from './PlanSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,17 @@ import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTranslations } from 'next-intl';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from 'recharts';
 
 interface UsageStats {
     tokens: number;
@@ -52,7 +63,8 @@ export function ConsumptionDashboard() {
     const {
         data: stats,
         isLoading,
-        refresh: fetchStats
+        refresh: fetchStats,
+        error
     } = useApiItem<UsageStats>({
         endpoint: '/api/admin/usage/stats',
         dataKey: 'stats'
@@ -108,6 +120,15 @@ export function ConsumptionDashboard() {
         }
     });
 
+    // 3. Carga de preview de factura
+    const {
+        data: invoiceData,
+        isLoading: loadingInvoice
+    } = useApiItem<any>({
+        endpoint: '/api/admin/billing/invoice-preview',
+        autoFetch: true
+    });
+
     useEffect(() => {
         setIsMounted(true);
     }, []);
@@ -150,6 +171,20 @@ export function ConsumptionDashboard() {
         return '';
     };
 
+    if (error) {
+        return (
+            <div className="p-6 rounded-lg border border-red-200 bg-red-50 text-red-800">
+                <h3 className="font-bold flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" /> Error cargando métricas
+                </h3>
+                <p className="text-sm mt-1">{error || "Error desconocido"}</p>
+                <Button variant="outline" size="sm" onClick={fetchStats} className="mt-4 bg-white hover:bg-red-50 border-red-200">
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Reintentar
+                </Button>
+            </div>
+        );
+    }
+
     if (!isMounted || (isLoading && !stats)) {
         return (
             <div className="flex flex-col items-center justify-center p-20 space-y-4">
@@ -159,8 +194,26 @@ export function ConsumptionDashboard() {
         );
     }
 
-    const blockedStatus = stats?.status?.find(s => s.state === 'BLOCKED');
-    const surchargeStatus = stats?.status?.find(s => s.state === 'SURCHARGE');
+    // Defensive: If ready but no stats, show empty state or error
+    if (!stats) {
+        return (
+            <div className="p-6 text-center text-muted-foreground">
+                No hay datos de consumo disponibles.
+            </div>
+        );
+    }
+
+    // Defensive: If ready but no stats, show empty state or error
+    if (!stats) {
+        return (
+            <div className="p-6 text-center text-muted-foreground">
+                No hay datos de consumo disponibles.
+            </div>
+        );
+    }
+
+    const blockedStatus = Array.isArray(stats.status) ? stats.status.find(s => s.state === 'BLOCKED') : undefined;
+    const surchargeStatus = Array.isArray(stats.status) ? stats.status.find(s => s.state === 'SURCHARGE') : undefined;
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -219,7 +272,7 @@ export function ConsumptionDashboard() {
 
                 <TabsContent value="metrics" className="space-y-8 animate-in slide-in-from-left-2 duration-300">
                     {/* Grid de Métricas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="consumption-stats">
 
                         {/* Informes Generados (Principal) */}
                         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group overflow-hidden relative border-l-4 border-l-teal-500">
@@ -233,11 +286,11 @@ export function ConsumptionDashboard() {
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('metrics.reports.label')}</span>
                             </div>
                             <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-                                {stats?.reports_generated.toLocaleString()}
+                                {stats?.reports_generated?.toLocaleString() ?? '0'}
                             </h3>
                             <p className="text-sm text-slate-500">
                                 {t('metrics.reports.desc')}
-                                {stats?.limits && stats.limits.reports !== Infinity && stats.limits.reports != null && (
+                                {stats?.limits?.reports != null && stats.limits.reports !== Infinity && (
                                     <span className="ml-2 text-xs text-slate-400">/ {stats.limits.reports.toLocaleString()}</span>
                                 )}
                             </p>
@@ -265,7 +318,7 @@ export function ConsumptionDashboard() {
                             </h3>
                             <p className="text-sm text-slate-500">
                                 {t('metrics.tokens.desc')}
-                                {stats?.limits && stats.limits.tokens !== Infinity && stats.limits.tokens != null && (
+                                {stats?.limits?.tokens != null && stats.limits.tokens !== Infinity && (
                                     <span className="ml-2 text-xs text-slate-400">/ {stats.limits.tokens.toLocaleString()}</span>
                                 )}
                             </p>
@@ -293,7 +346,7 @@ export function ConsumptionDashboard() {
                             </h3>
                             <p className="text-sm text-slate-500">
                                 {t('metrics.storage.desc')}
-                                {stats?.limits && stats.limits.storage !== Infinity && (
+                                {stats?.limits?.storage != null && stats.limits.storage !== Infinity && (
                                     <span className="ml-2 text-xs text-slate-400">/ {formatBytes(stats.limits.storage)}</span>
                                 )}
                             </p>
@@ -317,11 +370,11 @@ export function ConsumptionDashboard() {
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('metrics.search.label')}</span>
                             </div>
                             <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-                                {stats?.searches.toLocaleString()}
+                                {stats?.searches?.toLocaleString() ?? '0'}
                             </h3>
                             <p className="text-sm text-slate-500">
                                 {t('metrics.search.desc')}
-                                {stats?.limits && stats.limits.searches !== Infinity && (
+                                {stats?.limits?.searches != null && stats.limits.searches !== Infinity && (
                                     <span className="ml-2 text-xs text-slate-400">/ {stats.limits.searches.toLocaleString()}</span>
                                 )}
                             </p>
@@ -334,9 +387,45 @@ export function ConsumptionDashboard() {
                         </div>
                     </div>
 
-                    {/* Smart Savings */}
+                    {/* ROI & Trend Analytics (Phase 120.4) */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-teal-600 p-8 rounded-2xl text-white shadow-xl shadow-teal-500/20 relative overflow-hidden">
+                        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-slate-950 text-white">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Activity className="text-teal-400" /> {t('charts.tokens_title')}
+                                </CardTitle>
+                                <CardDescription className="text-slate-400">
+                                    {t('charts.tokens_desc')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="h-[300px] mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={(stats?.history || []).slice(0, 15).reverse().map(h => ({
+                                        date: new Date(h.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+                                        tokens: h.type === 'LLM_TOKENS' ? h.value : 0,
+                                        savings: h.type === 'SAVINGS_TOKENS' ? h.value : 0
+                                    }))}>
+                                        <defs>
+                                            <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
+                                        <YAxis stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
+                                            itemStyle={{ fontSize: '12px' }}
+                                        />
+                                        <Area type="monotone" dataKey="tokens" stroke="#0d9488" fillOpacity={1} fill="url(#colorTokens)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+
+                        {/* Smart Savings Summary */}
+                        <div className="bg-gradient-to-br from-indigo-600 to-teal-600 p-8 rounded-2xl text-white shadow-xl shadow-teal-500/20 relative overflow-hidden flex flex-col justify-between">
                             <div className="absolute right-0 top-0 opacity-10">
                                 <Zap size={240} />
                             </div>
@@ -344,10 +433,10 @@ export function ConsumptionDashboard() {
                                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                                     <Zap className="text-amber-300" /> {t('savings.title')}
                                 </h3>
-                                <p className="text-indigo-100 text-sm max-w-md mb-6">
+                                <p className="text-indigo-100 text-sm mb-6">
                                     {t('savings.desc')}
                                 </p>
-                                <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-6">
                                     <div>
                                         <p className="text-indigo-200 text-xs uppercase font-bold tracking-wider mb-1">{t('savings.tokens')}</p>
                                         <p className="text-4xl font-black">{((stats as any)?.savings || 0).toLocaleString()}</p>
@@ -363,22 +452,23 @@ export function ConsumptionDashboard() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <Search size={16} /> {t('multilingual.title')}
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-end">
-                                    <span className="text-slate-600 dark:text-slate-400 text-sm">{t('multilingual.label')}</span>
-                                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{(stats as any)?.embeddings || 0}</span>
-                                </div>
-                                <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-teal-500" style={{ width: '100%' }}></div>
-                                </div>
+                    </div>
+                    {/* Multilingual Support Status */}
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center">
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Search size={16} /> {t('multilingual.title')}
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-end">
+                                <span className="text-slate-600 dark:text-slate-400 text-sm">{t('multilingual.label')}</span>
+                                <span className="text-2xl font-bold text-slate-900 dark:text-white">{(stats as any)?.embeddings || 0}</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-teal-500" style={{ width: '100%' }}></div>
                             </div>
                         </div>
                     </div>
+
 
                     {/* Registro de Actividad */}
                     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -399,7 +489,7 @@ export function ConsumptionDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                    {stats?.history.map((log) => (
+                                    {(stats?.history || []).map((log) => (
                                         <tr key={log._id} className="hover:bg-slate-50 dark:hover:bg-teal-900/5 transition-colors">
                                             <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
                                                 {new Date(log.timestamp).toLocaleString()}
@@ -486,9 +576,20 @@ export function ConsumptionDashboard() {
                             </CardHeader>
                             <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
                                 <div className="text-4xl font-black text-slate-800 dark:text-white">
-                                    {(stats?.tokens ? (stats.tokens / 1000000) * 5 + 299 : 299).toFixed(2)} €
+                                    {loadingInvoice ? (
+                                        <Loader2 className="animate-spin h-8 w-8 text-teal-500" />
+                                    ) : (
+                                        `${(invoiceData?.totalAmount || 0).toLocaleString()} €`
+                                    )}
                                 </div>
-                                <Badge variant="outline" className="text-xs text-slate-500">{t('invoice.tier_estimate')}</Badge>
+                                <Badge variant="outline" className="text-xs text-slate-500">
+                                    {invoiceData?.tierName || t('invoice.tier_estimate')}
+                                </Badge>
+                                {invoiceData?.isManual && (
+                                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">
+                                        Modo Facturación Manual
+                                    </p>
+                                )}
                             </CardContent>
                             <CardFooter>
                                 <Button className="w-full bg-teal-600 hover:bg-teal-500" onClick={handleDownloadInvoice} disabled={downloading}>
@@ -518,7 +619,7 @@ export function ConsumptionDashboard() {
                     </Card>
                 </TabsContent>
             </Tabs>
-        </div>
+        </div >
     );
 }
 

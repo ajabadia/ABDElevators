@@ -1,0 +1,52 @@
+﻿­ƒöÇ i18n Split Script (EXECUTE MODE)
+
+­ƒôª [es] 20 namespaces found
+  Ô£à Written 20 namespace files to messages/es/
+  Ô£à Round-trip verification passed (1279 keys)
+  ­ƒôü Namespace files:
+     common.json ÔåÆ 200 leaf keys
+     login.json ÔåÆ 16 leaf keys
+     features.json ÔåÆ 11 leaf keys
+     enterprise.json ÔåÆ 10 leaf keys
+     pricing.json ÔåÆ 11 leaf keys
+     faq.json ÔåÆ 2 leaf keys
+     about.json ÔåÆ 8 leaf keys
+     contact.json ÔåÆ 11 leaf keys
+     terms.json ÔåÆ 24 leaf keys
+     privacy.json ÔåÆ 9 leaf keys
+     accessibility.json ÔåÆ 15 leaf keys
+     cta.json ÔåÆ 4 leaf keys
+     ingest.json ÔåÆ 7 leaf keys
+     rag_eval.json ÔåÆ 21 leaf keys
+     dashboard.json ÔåÆ 22 leaf keys
+     admin.json ÔåÆ 602 leaf keys
+     feature_pages.json ÔåÆ 168 leaf keys
+     profile.json ÔåÆ 106 leaf keys
+     search.json ÔåÆ 10 leaf keys
+     upgrade.json ÔåÆ 22 leaf keys
+­ƒôª [en] 20 namespaces found
+  Ô£à Written 20 namespace files to messages/en/
+  Ô£à Round-trip verification passed (1279 keys)
+  ­ƒôü Namespace files:
+     common.json ÔåÆ 200 leaf keys
+     login.json ÔåÆ 16 leaf keys
+     features.json ÔåÆ 11 leaf keys
+     enterprise.json ÔåÆ 10 leaf keys
+     pricing.json ÔåÆ 11 leaf keys
+     about.json ÔåÆ 8 leaf keys
+     contact.json ÔåÆ 11 leaf keys
+     faq.json ÔåÆ 2 leaf keys
+     terms.json ÔåÆ 24 leaf keys
+     privacy.json ÔåÆ 9 leaf keys
+     accessibility.json ÔåÆ 15 leaf keys
+     cta.json ÔåÆ 4 leaf keys
+     ingest.json ÔåÆ 7 leaf keys
+     rag_eval.json ÔåÆ 21 leaf keys
+     dashboard.json ÔåÆ 22 leaf keys
+     admin.json ÔåÆ 602 leaf keys
+     feature_pages.json ÔåÆ 168 leaf keys
+     profile.json ÔåÆ 106 leaf keys
+     search.json ÔåÆ 10 leaf keys
+     upgrade.json ÔåÆ 22 leaf keys
+
+­ƒÄë Split complete!

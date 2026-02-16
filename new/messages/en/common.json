@@ -1,0 +1,270 @@
+{
+  "error": "Error",
+  "save": "Save",
+  "saving": "Saving...",
+  "cancel": "Cancel",
+  "connectionError": "Connection Error",
+  "notifications": {
+    "success": {
+      "title": "Operation Successful"
+    },
+    "error": {
+      "title": "System Failure"
+    },
+    "info": {
+      "title": "Information"
+    },
+    "warning": {
+      "title": "Technical Attention"
+    },
+    "loading": {
+      "title": "Processing..."
+    },
+    "dismiss": "Dismiss",
+    "upload_success": "The file has been uploaded and indexed successfully in the vault.",
+    "search_complete": "Semantic analysis completed successfully.",
+    "workflow_saved": "Workflow structure persisted atomically.",
+    "empty_title": "All caught up",
+    "empty_desc": "You have no pending notifications.",
+    "mark_all": "Mark all as read",
+    "close": "Close panel"
+  },
+  "navigation": {
+    "sections": {
+      "core": "Core",
+      "inventory": "Technical Inventory",
+      "studio": "Automation Studio",
+      "corporate": "Corporate & Admin",
+      "governance": "Governance & Systems",
+      "preference": "Preference"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "search": "Smart Search",
+      "documents": "My Documents",
+      "support": "Technical Support",
+      "entities": "Technical Entities",
+      "assets": "Document Library",
+      "explorer": "Semantic Search",
+      "graph": "Semantic Map",
+      "workflows": "Workflow Editor",
+      "checklists": "Checklist Configs",
+      "prompts": "Prompts",
+      "docTypes": "Document Types",
+      "organizations": "Organizations",
+      "users": "Users",
+      "billing": "Billing",
+      "apiKeys": "API Keys",
+      "audit": "Audit Trail",
+      "compliance": "Compliance",
+      "logs": "System Logs",
+      "analytics": "Global Analytics",
+      "quality": "Quality Control",
+      "intelligence": "Active Intelligence",
+      "governance_console": "Guardian Console",
+      "workflow_tasks": "Workflow Tasks",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "settings": "Settings",
+      "i18n": "i18n Governance"
+    },
+    "search": {
+      "title": "Technical Assistant",
+      "subtitle": "Connected to engineering manuals",
+      "placeholder": "Type your technical query here...",
+      "welcome_title": "How can I help you today?",
+      "welcome_desc": "I have access to all technical documentation, schematics, and maintenance procedures.",
+      "sources_label": "Consulted Sources",
+      "analyzing": "Analyzing documentation...",
+      "error_connection": "I had a connection problem. Please try again.",
+      "error_message": "Sorry, I lost connection to the knowledge base. Could you try asking me again?",
+      "disclaimer": "AI can make mistakes. Verify critical information in original manuals.",
+      "suggested": {
+        "q1": "Error E45 in Arca II maneuver",
+        "q2": "Manual rescue procedure",
+        "q3": "Safety series schematic",
+        "q4": "Gearless motor torque settings"
+      }
+    },
+    "onboarding": {
+      "step_counter": "Step {current} of {total}",
+      "skip": "Skip tour",
+      "next": "Next",
+      "finish": "Finish",
+      "steps": {
+        "search_title": "Technical Assistant",
+        "search_content": "Here you can make natural language queries about technical manuals.",
+        "input_title": "Smart Search",
+        "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
+        "actions_title": "Quick Actions",
+        "actions_content": "Quickly access most used functions: Search, File Upload, and Tickets."
+      }
+    }
+  },
+  "verticals": {
+    "elevators": "Elevator Intelligence",
+    "legal": "Legal Mind",
+    "clinical": "Clinical Cortex"
+  },
+  "help": {
+    "title": "Contextual Help Center",
+    "subtitle": "Technical information and usage tips for this section."
+  },
+  "activateBtn": "Activate",
+  "activities": {
+    "actions": {
+      "history": {
+        "desc": "View query history",
+        "title": "History"
+      },
+      "search": {
+        "desc": "Make a new query",
+        "title": "Search"
+      },
+      "upload": {
+        "desc": "Upload new document",
+        "title": "Upload"
+      }
+    },
+    "empty": {
+      "desc": "Your recent actions will appear here",
+      "title": "No recent activity"
+    },
+    "help": {
+      "search": {
+        "desc": "Use natural language to find information",
+        "title": "How to search"
+      },
+      "upload": {
+        "desc": "We support PDF, DOCX and other formats",
+        "title": "How to upload"
+      }
+    },
+    "sections": {
+      "activity": "Recent activity",
+      "contact": "Contact",
+      "help": "Help",
+      "view_all": "View all"
+    },
+    "stats": {
+      "accuracy": "Accuracy",
+      "documents": "Documents",
+      "queries": "Queries",
+      "time": "Average time"
+    },
+    "subtitle": "Recent activity panel",
+    "system": "System"
+  },
+  "cleanupDesc": "Selected data has been removed",
+  "cleanupSuccess": "Cleanup completed",
+  "columns_help": "File columns",
+  "confirmLabel": "Confirm",
+  "copyCodes": "Copy codes",
+  "csv_read_error": "Error reading CSV",
+  "currentBadge": "Current",
+  "currentLabel": "Current",
+  "default_help": "Default value",
+  "desc": "Description",
+  "description": "Description",
+  "disableBtn": "Disable",
+  "disableConfirm": "Disable MFA?",
+  "doneBtn": "Done",
+  "drop_active": "Drop file here",
+  "drop_idle": "Drag a file or click to select",
+  "email": "Email",
+  "encoding_help": "File encoding",
+  "errorConnection": "Connection error",
+  "errorDescription": "An error occurred",
+  "errorSave": "Error saving",
+  "errorUpdate": "Error updating",
+  "error_no_valid": "Invalid data",
+  "eventType": "Event type",
+  "excel_read_error": "Error reading Excel",
+  "file_hint": "Accepted formats: PDF, DOCX, XLSX",
+  "firstName": "First name",
+  "format": "Format",
+  "hide_help": "Hide help",
+  "inApp": "In-app",
+  "infoDisabled": "MFA disabled",
+  "infoEnabled": "MFA enabled",
+  "instructions": "Instructions",
+  "invalidCode": "Invalid code",
+  "lastName": "Last name",
+  "manualKey": "Manual key",
+  "matchError": "Passwords do not match",
+  "memberSince": "Member since",
+  "mfa": "Two-factor authentication",
+  "newLabel": "New",
+  "note": "Note",
+  "notificationPrefs": "Notification preferences",
+  "notificationPrefsSubtitle": "Configure how you want to receive notifications",
+  "onboarding": {
+    "finish": "Finish",
+    "next": "Next",
+    "skip": "Skip"
+  },
+  "parsing": "Processing...",
+  "password": "Password",
+  "personalInfo": "Personal information",
+  "personalInfoSubtitle": "Update your profile information",
+  "readOnly": "Read only",
+  "recoveryCodesTitle": "Recovery codes",
+  "recoveryCodesWarning": "Store these recovery codes in a safe place",
+  "recoveryDesc": "You can use these codes to access your account if you lose your device",
+  "recoveryTitle": "Recovery",
+  "revokeConfirmOthers": "Revoke all other sessions?",
+  "revokeDesc": "All sessions except the current one will be closed",
+  "revokeError": "Error revoking sessions",
+  "revokeOthersBtn": "Revoke other sessions",
+  "revokeSuccess": "Sessions revoked",
+  "role": "Role",
+  "roles_help": "Assign roles",
+  "saveBtn": "Save",
+  "securityCenter": "Security center",
+  "securityCenterSubtitle": "Manage your password and authentication",
+  "sending": "Sending...",
+  "setupBtn": "Set up",
+  "setupStep1": "Scan the QR code",
+  "setupStep1Desc": "Use an authenticator app to scan",
+  "setupStep2": "Enter the verification code",
+  "sizeError": "File too large",
+  "statusDisabled": "Disabled",
+  "statusEnabled": "Enabled",
+  "submitBtn": "Submit",
+  "subtitle": "Subtitle",
+  "successDesc": "Operation completed successfully",
+  "successDescription": "Operation completed successfully",
+  "successTitle": "Success",
+  "success_title": "Success",
+  "table": {
+    "email": "Email",
+    "invalid_email": "Invalid email",
+    "missing_email": "Missing email",
+    "no_email": "No email",
+    "role": "Role",
+    "status": "Status"
+  },
+  "title": "Title",
+  "typeError": "File type not allowed",
+  "unknownBrowser": "Unknown browser",
+  "unknownOs": "Unknown OS",
+  "unprivilegedNotice": "You do not have permission for this action",
+  "updateError": "Update error",
+  "uploadError": "Upload error",
+  "user": "User",
+  "valid_to_send": "Valid to send",
+  "verifying": "Verifying...",
+  "with_errors": "With errors",
+  "reports": {
+    "title": "Advanced Technical Analysis",
+    "subtitle": "Assisted Technical Evaluation Document",
+    "details": "Report Details",
+    "technician": "Responsible Technician",
+    "compatibility": "Compatibility Index",
+    "protocol": "Verification Protocol",
+    "date": "Generation Date",
+    "client": "Client",
+    "page": "Page {current} of {total}",
+    "automaticFootnote": "Report automatically generated by the ABD Intelligence Engine"
+  }
+}

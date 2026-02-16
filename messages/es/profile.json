@@ -1,0 +1,333 @@
+{
+  "form": {
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "role": "Puesto / Especialidad",
+    "readOnly": "Solo lectura",
+    "successTitle": "Perfil actualizado",
+    "successDescription": "Tus datos personales se han guardado correctamente.",
+    "errorUpdate": "Error de actualización",
+    "errorDescription": "No se han podido guardar los cambios en tu perfil.",
+    "note": "Nota",
+    "unprivilegedNotice": "No tienes permisos de administrador para editar estos campos. Contacta con soporte para realizar cambios.",
+    "saveBtn": "Guardar Perfil",
+    "error": "Error al guardar perfil",
+    "save": "Guardar perfil"
+  },
+  "notifications": {
+    "successTitle": "Preferencias actualizadas",
+    "successDescription": "Tus ajustes de comunicación se han guardado correctamente.",
+    "errorSave": "No se pudieron guardar tus preferencias.",
+    "errorConnection": "Ocurrió un problema al conectar con el servidor.",
+    "eventType": "Tipo de Evento",
+    "email": "Correo",
+    "inApp": "App",
+    "saveBtn": "Guardar Preferencias",
+    "events": {
+      "system": "Mensajes del Sistema",
+      "analysisComplete": "Análisis Finalizados",
+      "riskAlert": "Alertas de Riesgo",
+      "billingEvent": "Facturación y Cuotas",
+      "securityAlert": "Seguridad y Accesos"
+    },
+    "connectionError": "Error de conexión",
+    "error": "Error",
+    "saving": "Guardando..."
+  },
+  "page": {
+    "title": "Configuración de Cuenta",
+    "subtitle": "Gestiona tu identidad digital, preferencias y seguridad de acceso.",
+    "role": "Rol",
+    "memberSince": "Miembro desde",
+    "personalInfo": "Información Personal",
+    "personalInfoSubtitle": "Actualiza tus datos de contacto básicos y puesto.",
+    "avatar": "Foto de Perfil",
+    "security": "Seguridad",
+    "securitySubtitle": "Acciones de protección de cuenta",
+    "notifications": "Notificaciones",
+    "sessions": "Sesiones Activas",
+    "notificationPrefs": "Preferencias de Notificación",
+    "notificationPrefsSubtitle": "Define qué alertas quieres recibir y por qué canal",
+    "securityCenter": "Centro de Seguridad",
+    "securityCenterSubtitle": "Contraseña, MFA y Sesiones Activas",
+    "password": "Contraseña",
+    "mfa": "Autenticación Multifactor",
+    "user": "Usuario",
+    "mfaRequiredTitle": "Acceso Restringido",
+    "mfaRequiredDesc": "Tu rol requiere MFA obligatorio. Serás redirigido al intentar acceder a rutas de administración hasta que lo actives.",
+    "recentlyUpdated": "Actualizada recientemente",
+    "manage": "Gestionar",
+    "deactivate": "Desactivar",
+    "activate": "Activar"
+  },
+  "security": {
+    "password": {
+      "title": "Seguridad",
+      "currentLabel": "Contraseña Actual",
+      "newLabel": "Nueva Contraseña",
+      "confirmLabel": "Confirmar Nueva Contraseña",
+      "submitBtn": "Actualizar Contraseña",
+      "matchError": "Las contraseñas no coinciden.",
+      "successTitle": "Contraseña actualizada",
+      "successDesc": "Tu contraseña se ha cambiado correctamente.",
+      "updateError": "Error al cambiar contraseña",
+      "error": "Error al cambiar contraseña"
+    },
+    "mfa": {
+      "title": "Autenticación de Doble Factor (MFA)",
+      "description": "Añade una capa extra de seguridad a tu cuenta usando una App de autenticador.",
+      "statusEnabled": "Activado",
+      "statusDisabled": "Desactivado",
+      "infoEnabled": "Tu cuenta está protegida. Al iniciar sesión se te pedirá un código generado por tu aplicación (Google Authenticator, Authy, Microsoft Authenticator, etc).",
+      "infoDisabled": "Actualmente tu cuenta solo está protegida por tu contraseña. Te recomendamos activar el doble factor para evitar accesos no autorizados.",
+      "disableBtn": "Desactivar Doble Factor",
+      "setupBtn": "Configurar Doble Factor",
+      "disableConfirm": "¿Estás seguro de que quieres desactivar la protección de doble factor? Tu cuenta será menos segura.",
+      "setupStep1": "Escanea el código QR",
+      "setupStep1Desc": "Abre tu aplicación de autenticador (Google Authenticator, Authy, etc) y escanea el código de la izquierda.",
+      "manualKey": "O introduce la clave manualmente:",
+      "setupStep2": "Introduce el código de 6 dígitos",
+      "activateBtn": "Activar",
+      "verifying": "Verificando...",
+      "successTitle": "MFA Activado",
+      "successDesc": "Tu cuenta ahora está más segura.",
+      "invalidCode": "Código inválido",
+      "recoveryTitle": "¡Doble Factor Activado!",
+      "recoveryDesc": "Tu cuenta está ahora protegida con seguridad de grado bancario.",
+      "recoveryCodesTitle": "Códigos de Recuperación",
+      "recoveryCodesWarning": "Si pierdes el acceso a tu aplicación de autenticador, estos códigos son la UNICA forma de recuperar tu cuenta. Guárdalos en un lugar seguro (ej: un gestor de contraseñas).",
+      "copyCodes": "Copiar todos los códigos",
+      "doneBtn": "Entendido",
+      "cancel": "Cancelar configuración",
+      "error": "Error en configuración MFA",
+      "notifications": {
+        "success": {
+          "title": "MFA configurado correctamente"
+        }
+      },
+      "updateError": "Error al actualizar configuración",
+      "verificationSuccess": "Verificación exitosa",
+      "verifySessionTitle": "Verificación Requerida",
+      "verifySessionDesc": "Para acceder a las funciones administrativas, por favor introduce tu código MFA.",
+      "verifyBtn": "Verificar"
+    },
+    "sessions": {
+      "title": "Sesiones Activas",
+      "description": "Dispositivos que tienen acceso actualmente a tu cuenta.",
+      "revokeOthersBtn": "Cerrar todas las demás",
+      "revokeConfirmOthers": "¿Estás seguro de que quieres cerrar sesión en todos los demás dispositivos?",
+      "currentBadge": "Sesión Actual",
+      "unknownBrowser": "Navegador desconocido",
+      "unknownOs": "OS desconocido",
+      "revokeSuccess": "Sesión cerrada",
+      "revokeDesc": "El dispositivo ha sido desconectado.",
+      "revokeError": "No se pudo cerrar la sesión.",
+      "cleanupSuccess": "Limpieza completada",
+      "cleanupDesc": "Se han cerrado todas las sesiones excepto la actual.",
+      "error": "Error al cargar sesiones"
+    }
+  },
+  "photo": {
+    "title": "Foto de Perfil",
+    "subtitle": "PNG, JPG o GIF hasta 5MB",
+    "uploadError": "No se pudo subir la imagen.",
+    "sizeError": "La imagen es demasiado grande (máximo 5MB).",
+    "typeError": "Por favor selecciona un archivo de imagen.",
+    "successTitle": "Foto actualizada",
+    "successDesc": "Tu foto de perfil se ha actualizado correctamente.",
+    "error": "Error al subir foto"
+  },
+  "search": {
+    "title": "Búsqueda Conversacional",
+    "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+    "feedback_positive": "Útil",
+    "input_placeholder": "Escribe tu pregunta aquí...",
+    "regenerate": "Regenerate respuesta",
+    "feedback_negative": "No útil",
+    "copy": "Copiar respuesta",
+    "analyzing": "Analizando...",
+    "sources_label": "Fuentes encontradas:",
+    "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+    "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+    "suggested_questions": "Preguntas sugeridas",
+    "spaces": {
+      "tabs": {
+        "quick_qa": "Consulta Rápida",
+        "personal": "Mis Espacios",
+        "collections": "Colecciones"
+      },
+      "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+      "title": "Espacios de Conocimiento",
+      "placeholders": {
+        "personal_title": "Espacios Personales",
+        "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+        "collections_title": "Colecciones",
+        "collections_desc": "Agrupa documentos relacionados en colecciones temáticas"
+      },
+      "admin": {
+        "table": {
+          "space": "Espacio",
+          "type": "Tipo",
+          "visibility": "Visibilidad",
+          "status": "Estado",
+          "created": "Creado",
+          "actions": "Acciones"
+        },
+        "types": {
+          "industry": "Industrial",
+          "team": "Equipo",
+          "tenant": "Tenant",
+          "global": "Global",
+          "personal": "Personal"
+        },
+        "status": {
+          "active": "Activo",
+          "inactive": "Inactivo"
+        },
+        "search_placeholder": "Buscar espacios...",
+        "new_space": "Nuevo Espacio",
+        "manage": "Gestionar"
+      }
+    },
+    "security": {
+      "title": "Seguridad de grado empresarial",
+      "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
+    }
+  },
+  "spaces": {
+    "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+    "tabs": {
+      "quick_qa": "Consulta Rápida",
+      "personal": "Mis Espacios",
+      "collections": "Colecciones"
+    },
+    "title": "Espacios de Conocimiento",
+    "placeholders": {
+      "personal_title": "Espacios Personales",
+      "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+      "collections_title": "Colecciones",
+      "collections_desc": "Agrupa documentos relacionados en colecciones temáticas"
+    },
+    "admin": {
+      "table": {
+        "space": "Espacio",
+        "type": "Tipo",
+        "visibility": "Visibilidad",
+        "status": "Estado",
+        "created": "Creado",
+        "actions": "Acciones"
+      },
+      "types": {
+        "tenant": "Tenant",
+        "team": "Equipo",
+        "global": "Global",
+        "industry": "Industrial",
+        "personal": "Personal"
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
+      },
+      "search_placeholder": "Buscar espacios...",
+      "new_space": "Nuevo Espacio",
+      "manage": "Gestionar"
+    }
+  },
+  "enterpriseSecurity": {
+    "title": "Seguridad de grado empresarial",
+    "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
+  },
+  "support": {
+    "page": {
+      "subtitle": "Consulta a nuestra IA agéntica o gestiona tus tickets de soporte.",
+      "title": "Centro de Soporte",
+      "newTicket": "Nuevo Ticket",
+      "aiSearch": "Consulta IA",
+      "searchPlaceholder": "Buscar por asunto o ID (ej: #22901)...",
+      "noTickets": "No hay tickets activos",
+      "myTickets": "Mis Tickets",
+      "createFirst": "Crear mi primer ticket",
+      "viewConversation": "Ver Conversación",
+      "records": "Registros",
+      "noTicketsDesc": "Tu historial está limpio. Si tienes alguna duda técnica o incidencia, estamos aquí para ayudarte."
+    },
+    "new": {
+      "back": "Volver a mis tickets",
+      "subtitle": "Describe tu problema detalladamente para que podamos ayudarte mejor.",
+      "title": "Abrir Nueva Incidencia",
+      "category": "Categoría",
+      "priority": "Prioridad",
+      "subject": "Asunto",
+      "subjectPlaceholder": "Ej: Error al subir PDF...",
+      "descriptionPlaceholder": "Describe los pasos para reproducir el problema...",
+      "descriptionHint": "Sé lo más específico posible para agilizar la resolución.",
+      "description": "Descripción Detallada",
+      "errorCreate": "No se pudo crear el ticket. Inténtalo de nuevo.",
+      "submit": "Enviar Ticket",
+      "cancel": "Cancelar",
+      "error": "Error",
+      "errorFields": "Completa los campos obligatorios",
+      "success": "Ticket Creado",
+      "successDesc": "Te hemos enviado un email de confirmación."
+    },
+    "category": {
+      "TECHNICAL": "Soporte Técnico",
+      "BILLING": "Facturación y Pagos",
+      "ACCESS": "Acceso de Usuarios",
+      "FEATURE_REQUEST": "Sugerencia",
+      "OTHER": "Otro"
+    },
+    "priority": {
+      "MEDIUM": "Media - Problema menor",
+      "HIGH": "Alta - Bloqueo parcial",
+      "LOW": "Baja - Consulta general",
+      "CRITICAL": "Crítica - Sistema caído"
+    },
+    "detail": {
+      "notFound": "Ticket no encontrado",
+      "backToSupport": "Volver al centro de soporte",
+      "opened": "Apertura",
+      "initialDescription": "Descripción Inicial",
+      "yourReply": "Tu Respuesta",
+      "sendMessage": "Enviar Mensaje",
+      "technicalSupport": "Soporte Técnico",
+      "replyHint": "Tu respuesta llegará directamente a nuestros ingenieros nivel 2.",
+      "replyPlaceholder": "Escribe una respuesta para el equipo técnico...",
+      "messageSent": "Mensaje enviado correctamente"
+    }
+  },
+  "i18n": {
+    "page": {
+      "title": "Gobernanza i18n",
+      "highlight": "Internacionalización",
+      "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+      "syncBtn": "Sincronizar DB",
+      "newKeyBtn": "Nueva Llave",
+      "searchPlaceholder": "Busca por llave o texto..."
+    },
+    "languages": {
+      "es": "Español",
+      "en": "Inglés"
+    },
+    "table": {
+      "keyHeader": "LLAVE TÉCNICA",
+      "primaryLabel": "PRINCIPAL",
+      "secondaryLabel": "COMPARACIÓN",
+      "autoTranslateBtn": "AUTO-TRADUCIR",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "empty": "Vacío",
+      "missing": "Faltante",
+      "noResults": "No se encontraron traducciones para los filtros aplicados."
+    },
+    "notifications": {
+      "aiSuccessTitle": "IA: Traducción Completada",
+      "aiSuccessDesc": "Se han generado y guardado las traducciones faltantes correctamente.",
+      "upToDateTitle": "Todo al día",
+      "upToDateDesc": "No hay traducciones pendientes entre los idiomas seleccionados.",
+      "syncSuccessTitle": "Sincronización Exitosa",
+      "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+      "saveSuccess": "Traducción actualizada correctamente."
+    }
+  }
+}

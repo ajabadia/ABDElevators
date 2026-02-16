@@ -1,0 +1,49 @@
+{
+  "title": "Mis Documentos",
+  "subtitle": "Espacio personal para tus manuales, notas y archivos técnicos.",
+  "confirmDelete": "¿Deseas eliminar este archivo de tu repositorio personal?",
+  "deleteSuccessTitle": "Documento eliminado",
+  "deleteSuccess": "El archivo ha sido borrado.",
+  "titleAlt": "Mis Archivos",
+  "subtitleAlt": "Tu repositorio personal de manuales y archivos técnicos.",
+  "search": "Buscar en mis documentos...",
+  "upload": {
+    "title": "Subir Nuevo Documento Personal",
+    "button": "Subir Archivo",
+    "cancel": "Cancelar",
+    "file": "Archivo",
+    "filePdf": "Archivo PDF",
+    "submit": "Subir",
+    "description": "Descripción (Opcional)",
+    "descriptionPlaceholder": "Ej: Manual de la obra 123",
+    "type": "Tipo de Documento",
+    "typePlaceholder": "Seleccionar tipo...",
+    "save": "Guardar Archivo",
+    "uploading": "Subiendo...",
+    "successTitle": "Éxito",
+    "errorSize": "El archivo es demasiado grande (Máx 10MB)",
+    "successDesc": "Tu documento se ha guardado y procesado.",
+    "successGeneric": "Documento subido correctamente.",
+    "errorTitle": "Error al subir",
+    "errorDesc": "No se pudo subir el archivo. Verifica el tamaño o formato."
+  },
+  "table": {
+    "date": "Fecha",
+    "noResults": "No se encontraron documentos.",
+    "empty": "No has subido ningún documento personal aún.",
+    "download": "Descargar",
+    "delete": "Eliminar",
+    "description": "Descripción",
+    "size": "Tamaño",
+    "actions": "Acciones",
+    "name": "Nombre",
+    "file": "Archivo",
+    "loading": "Cargando tus archivos...",
+    "loadingRepo": "Cargando repositorio personal..."
+  },
+  "storage": {
+    "title": "Almacenamiento",
+    "totalFiles": "Archivos totales",
+    "usage": "{{used}} GB de {{total}} GB usados"
+  }
+}

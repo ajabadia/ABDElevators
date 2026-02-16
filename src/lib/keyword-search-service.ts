@@ -14,8 +14,9 @@ export class KeywordSearchService {
         tenantId: string,
         correlationId: string,
         limit = 5,
-        industry: string = 'ELEVATORS',
-        environment: string = 'PRODUCTION'
+        industry: string = 'GENERIC',
+        environment: string = 'PRODUCTION',
+        spaceId?: string
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.keyword_search', {
             attributes: {
@@ -23,7 +24,8 @@ export class KeywordSearchService {
                 'correlation.id': correlationId,
                 'rag.query': query,
                 'rag.strategy': 'BM25',
-                'rag.environment': environment
+                'rag.environment': environment,
+                'rag.space_id': spaceId
             }
         }, async (span) => {
             const inicio = Date.now();
@@ -50,7 +52,8 @@ export class KeywordSearchService {
                             $or: [
                                 { tenantId: "global" },
                                 { tenantId: tenantId }
-                            ]
+                            ],
+                            ...(spaceId ? { spaceId } : {})
                         }
                     },
                     {

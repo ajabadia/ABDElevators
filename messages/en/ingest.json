@@ -1,0 +1,45 @@
+{
+  "pii_label": "Data De-identification (PII)",
+  "pii_desc": "Protect sensitive data by removing it before processing.",
+  "pii_warning_title": "WARNING: Sensitive Data",
+  "pii_warning_desc": "You are about to upload a document without data protection. This will save emails, phones, and other sensitive data in the database. How do you want to proceed?",
+  "pii_opt_continue": "Continue without protection",
+  "pii_opt_cancel": "Cancel",
+  "pii_opt_enable": "Enable and continue",
+  "fields": {
+    "chunking_label": "Chunking Level",
+    "chunking_placeholder": "Select level...",
+    "chunking_low": "Simple (Low) - Fast, fixed blocks",
+    "chunking_medium": "Semantic (Medium) - AI detects topic changes",
+    "chunking_high": "LLM (High) - Deep intelligent segmentation",
+    "type": "Component Type",
+    "version": "Doc. Version",
+    "placeholder": "Select...",
+    "scope": "Knowledge Scope",
+    "industry": "Industry / Sector"
+  },
+  "status": {
+    "error": "Ingest Error",
+    "duplicate": "Already Exists!",
+    "success": "Document Received!",
+    "duplicate_desc": "Processed instantly (Smart Ingest).",
+    "success_desc": "Processing and indexing chunks...",
+    "uploading": "AI Processing...",
+    "processing_note": "This process may take 1-2 min."
+  },
+  "title": "Upload Technical Documentation",
+  "description": "Documents will be automatically processed by AI to feed the RAG corpus and vector-indexed.",
+  "dropzone": {
+    "idle": "Drag a PDF manual here or click to select",
+    "format": "PDF files only (Max 50MB)",
+    "max_size": "Max 250MB. Very large files may take longer to process.",
+    "active": "Drop file here...",
+    "selected": "File selected"
+  },
+  "actions": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "submit": "Upload & Index",
+    "done": "Done"
+  }
+}

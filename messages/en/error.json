@@ -1,0 +1,15 @@
+{
+  "page": {
+    "title": "Oops, something went wrong",
+    "defaultMessage": "An unexpected error has occurred on the platform.",
+    "technicalDetails": "Technical Details",
+    "supportMessage": "If the problem persists, please contact our technical support team with the error code above.",
+    "home": "Home",
+    "retry": "Retry"
+  },
+  "rateLimit": {
+    "title": "Too Many Requests",
+    "message": "You've made too many requests. Please wait a moment before trying again.",
+    "waitMessage": "Please wait {seconds} seconds before trying again."
+  }
+}

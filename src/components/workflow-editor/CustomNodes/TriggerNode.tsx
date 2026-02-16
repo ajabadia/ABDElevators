@@ -4,7 +4,7 @@ import { Handle, Position } from '@xyflow/react';
 import { Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export const TriggerNode = memo(({ data }: { data: { label: string, analytics?: { count: number, avgDuration: number, errorRate: number } } }) => {
+export const TriggerNode = memo(({ data }: { data: { label: string, isCyclic?: boolean, analytics?: { count: number, avgDuration: number, errorRate: number } } }) => {
     const { analytics } = data;
 
     return (
@@ -18,6 +18,11 @@ export const TriggerNode = memo(({ data }: { data: { label: string, analytics?: 
                     <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500 text-[8px] text-white items-center justify-center font-bold">
                         {analytics.count}
                     </span>
+                </div>
+            )}
+            {data.isCyclic && (
+                <div className="absolute -bottom-6 left-0 bg-purple-600 text-[8px] text-white px-2 py-0.5 rounded-b-md font-bold uppercase tracking-wider">
+                    🔄 Bucle Detectado
                 </div>
             )}
             <div className="flex items-center">

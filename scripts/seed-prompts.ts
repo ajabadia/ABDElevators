@@ -366,7 +366,105 @@ Respuesta técnica:`,
         active: true,
         createdBy: 'system',
         updatedBy: 'system'
-    }
+    },
+    {
+        key: 'CHUNKING_LLM_CUTTER',
+        name: 'Segmentador de Documentos LLM',
+        description: 'Divide documentos técnicos en chunks semánticos inteligentes',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-pro',
+        template: `Eres un experto en segmentación de documentos técnicos.
+Analiza el siguiente fragmento de documento y divídelo en chunks semánticamente independientes.
+
+REGLAS:
+1. Cada chunk debe poder entenderse de forma independiente
+2. Mantén entre 500-3000 caracteres por chunk
+3. Agrupa contenido relacionado juntos
+4. Si el fragmento es muy largo, divídelo por cambios de tema natural
+
+FORMATO JSON DE SALIDA:
+{
+    "chunks": [
+    { "texto": "...", "titulo": "...", "tipo": "tema|subtema" }
+    ]
+}
+
+FRAGMENTO:
+{{text}}`,
+        variables: [
+            { name: 'text', type: 'string', description: 'Fragmento de texto a segmentar', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'GRAPH_EXTRACTOR',
+        name: 'Extractor de Grafos de Conocimiento',
+        description: 'Extrae entidades y relaciones para el grafo de conocimiento (Graph RAG)',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
+Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
+    
+ENTIDADES permitidas:
+- Component (Pieza física, placa, motor, etc.)
+- Procedure (Paso de mantenimiento, calibración, montaje)
+- Error (Código de error o descripción de fallo)
+- Model (Modelo de ascensor específico como ARCA II, Evolve, etc.)
+    
+RELACIONES permitidas:
+- REQUIRES (P.ej: Procedimiento REQUIRES Componente)
+- PART_OF (P.ej: Componente PART_OF Modelo)
+- RESOLVES (P.ej: Procedimiento RESOLVES Error)
+- DESCRIBES (P.ej: Manual DESCRIBES Modelo)
+    
+FORMATO DE SALIDA (JSON estrictamente):
+{
+"entities": [
+{ "id": "nombre_id_normalizado", "type": "Component|Procedure|Error|Model", "name": "Nombre Legible" }
+],
+"relations": [
+{ "source": "id_origen", "type": "REQUIRES|PART_OF|RESOLVES|DESCRIBES", "target": "id_destino" }
+]
+}
+    
+IMPORTANTE: El ID debe ser descriptivo pero sin espacios (ej: "motherboard_arca_2"). Si no hay entidades claras, devuelve arrays vacíos.
+    
+TEXTO A ANALIZAR:
+{{text}}`,
+        variables: [
+            { name: 'text', type: 'string', description: 'Texto técnico a analizar', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'QUERY_ENTITY_EXTRACTOR',
+        name: 'Extractor de Entidades en Consultas',
+        description: 'Identifica entidades clave en preguntas de usuario para búsqueda en grafo',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
+Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
+No devuelvas explicaciones, solo los nombres.
+    
+EJEMPLO:
+Consulta: "¿Cómo calibro la placa ARCA II?"
+Salida: arca_ii, placa
+    
+CONSULTA: {{query}}`,
+        variables: [
+            { name: 'query', type: 'string', description: 'Consulta del usuario', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
 ];
 
 async function seedPrompts() {

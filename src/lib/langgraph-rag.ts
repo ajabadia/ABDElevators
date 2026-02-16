@@ -3,14 +3,16 @@ import { Annotation } from "@langchain/langgraph";
 import { RagResult, hybridSearch } from "./rag-service";
 import { callGeminiMini, callGeminiStream } from "./llm";
 import { PromptService } from "./prompt-service";
+import { PROMPTS } from './prompts';
 import { logEvento } from "./logger";
-import { EvaluationService } from "./evaluation-service";
+import { RagEvaluationService } from "@/services/rag-evaluation-service";
 
 /**
  * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)
  */
 const GraphState = Annotation.Root({
     question: Annotation<string>(),
+    history: Annotation<any[]>(), // Support for thread history
     documents: Annotation<RagResult[]>(),
     generation: Annotation<string>(),
     retry_count: Annotation<number>(),
@@ -36,20 +38,28 @@ export class AgenticRAGService {
     private static async retrieve(state: typeof GraphState.State) {
         const { question, tenantId, correlationId } = state;
 
-        await logEvento({
-            level: 'DEBUG',
-            source: 'AGENT_RAG',
-            action: 'RETRIEVE',
-            message: `Retrieving docs for: ${question}`,
-            correlationId
-        });
+        try {
+            await logEvento({
+                level: 'DEBUG',
+                source: 'AGENT_RAG',
+                action: 'RETRIEVE',
+                message: `Retrieving docs for: ${question}`,
+                correlationId
+            });
 
-        const docs = await hybridSearch(question, tenantId, correlationId, 3);
+            const docs = await hybridSearch(question, tenantId, correlationId, 3);
 
-        return {
-            documents: docs,
-            trace: [`RETRIEVAL: Found ${docs.length} chunks.`]
-        };
+            return {
+                documents: docs,
+                trace: [`RETRIEVAL: Found ${docs.length} chunks.`]
+            };
+        } catch (error: any) {
+            console.error("[AgenticRAGService] Error in retrieve node:", error);
+            return {
+                documents: [],
+                trace: [`RETRIEVAL_ERROR: Failed to fetch documents. ${error.message}`]
+            };
+        }
     }
 
     /**
@@ -87,21 +97,42 @@ export class AgenticRAGService {
      * Nodo: Generación de Respuesta
      */
     private static async generate(state: typeof GraphState.State) {
-        const { question, documents, tenantId, correlationId } = state;
+        const { question, documents, tenantId, correlationId, history } = state;
         const context = documents.length > 0
             ? documents.map(d => d.text).join("\n\n---\n\n")
             : "No relevant documents found in the corpus.";
 
-        const { text: genPrompt, model } = await PromptService.getRenderedPrompt(
-            'RAG_GENERATOR',
-            { question, context: context, industry: 'ELEVATORS' },
-            tenantId
-        );
+        const promptKey = history && history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
+
+        let genPrompt: string;
+        let model: string = 'gemini-1.5-flash';
+
+        try {
+            const result = await PromptService.getRenderedPrompt(
+                promptKey,
+                {
+                    question,
+                    context: context,
+                    industry: 'ELEVATORS',
+                    history: history ? JSON.stringify(history) : "[]"
+                },
+                tenantId
+            );
+            genPrompt = result.text;
+            model = result.model;
+        } catch (err) {
+            console.warn(`[AgenticRAGService] ⚠️ Fallback to Master Prompt (${promptKey}):`, err);
+            const masterTemplate = (PROMPTS as any)[promptKey];
+            genPrompt = masterTemplate
+                .replace('{{question}}', question)
+                .replace('{{context}}', context)
+                .replace('{{history}}', history ? JSON.stringify(history) : "[]");
+        }
 
         const generation = await callGeminiMini(genPrompt, tenantId, { correlationId, model });
         return {
             generation,
-            trace: ["GENERATION: Response drafted by technical model."]
+            trace: [`GENERATION: Response drafted by technical model using ${promptKey}${genPrompt === (PROMPTS as any)[promptKey] ? ' (FALLBACK)' : ''}.`]
         };
     }
 
@@ -111,19 +142,28 @@ export class AgenticRAGService {
     private static async transformQuery(state: typeof GraphState.State) {
         const { question, tenantId, correlationId, retry_count } = state;
 
-        const { text: rewritePrompt, model } = await PromptService.getRenderedPrompt(
-            'RAG_QUERY_REWRITER',
-            { question },
-            tenantId
-        );
+        try {
+            const { text: rewritePrompt, model } = await PromptService.getRenderedPrompt(
+                'RAG_QUERY_REWRITER',
+                { question },
+                tenantId
+            );
 
-        const betterQuestion = await callGeminiMini(rewritePrompt, tenantId, { correlationId, model });
+            const betterQuestion = await callGeminiMini(rewritePrompt, tenantId, { correlationId, model });
 
-        return {
-            question: betterQuestion,
-            retry_count: (retry_count || 0) + 1,
-            trace: [`RE-WRITE: Query optimized for better recall: "${betterQuestion}"`]
-        };
+            return {
+                question: betterQuestion,
+                retry_count: (retry_count || 0) + 1,
+                trace: [`RE-WRITE: Query optimized for better recall: "${betterQuestion}"`]
+            };
+        } catch (error: any) {
+            console.warn("[AgenticRAGService] Error in transformQuery node, using original question:", error);
+            return {
+                question,
+                retry_count: (retry_count || 0) + 1,
+                trace: ["RE-WRITE_ERROR: Optimization failed, using original question."]
+            };
+        }
     }
 
     /**
@@ -181,14 +221,16 @@ export class AgenticRAGService {
     /**
      * Compila e invoca el flujo agéntico devolviendo un flujo de eventos (docs, trace, generation stream)
      */
-    public static async *runStream(question: string, tenantId: string, correlationId: string) {
+    public static async *runStream(question: string, tenantId: string, correlationId: string, history: any[] = []) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
-        // 1. Ejecutar el grafo de forma atómica para resolver la lógica agéntica (CRAG/Self-RAG)
-        // En un futuro podríamos emitir eventos node-by-node usando app.stream()
+        // 1. Flush headers immediately to prevent browser timeouts (Phase 96 Stability)
+        yield { type: 'connected', data: { correlationId } };
+
         const result = await app.invoke({
             question,
+            history,
             tenantId,
             correlationId,
             retry_count: 0,
@@ -203,16 +245,48 @@ export class AgenticRAGService {
         yield { type: 'docs', data: result.documents };
         yield { type: 'trace', data: result.trace };
 
-        // 3. Obtener el prompt de generación para hacer el streaming real de la respuesta
-        const context = result.documents.length > 0
-            ? result.documents.map((d: any) => d.text).join("\n\n---\n\n")
-            : "No relevant documents found.";
+        // 3. Circuit Breaker: Si no hay documentos, no llamar al LLM (ahorrar tokens y evitar alucinaciones/crash)
+        if (result.documents.length === 0) {
+            const noDocsMessage = "No he encontrado información relevante en la base de conocimiento para responder a tu pregunta.\n\nPor favor, asegúrate de que has subido los manuales técnicos correspondientes a la plataforma.";
 
-        const { text: genPrompt, model } = await PromptService.getRenderedPrompt(
-            'RAG_GENERATOR',
-            { question, context, industry: 'ELEVATORS' },
-            tenantId
-        );
+            // Simular streaming de la respuesta estática para mantener UX consistente
+            const tokens = noDocsMessage.split(/(?=[ ])/g); // Split conservando espacios
+            for (const token of tokens) {
+                yield { type: 'token', data: token };
+                await new Promise(r => setTimeout(r, 10)); // Pequeño delay para naturalidad
+            }
+            return;
+        }
+
+        // 4. Obtener el prompt de generación para hacer el streaming real de la respuesta
+        const context = result.documents.map((d: any) => d.text).join("\n\n---\n\n");
+
+        const promptKey = history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
+
+        let genPrompt: string;
+        let model: string = 'gemini-1.5-flash';
+
+        try {
+            const result = await PromptService.getRenderedPrompt(
+                promptKey,
+                {
+                    question,
+                    context,
+                    industry: 'ELEVATORS',
+                    history: JSON.stringify(history)
+                },
+                tenantId
+            );
+            genPrompt = result.text;
+            model = result.model;
+        } catch (err) {
+            console.warn(`[AgenticRAGService.runStream] ⚠️ Fallback to Master Prompt (${promptKey}):`, err);
+            const masterTemplate = (PROMPTS as any)[promptKey];
+            genPrompt = masterTemplate
+                .replace('{{question}}', question)
+                .replace('{{context}}', context)
+                .replace('{{history}}', JSON.stringify(history));
+        }
 
         const stream = await callGeminiStream(genPrompt, tenantId, { correlationId, model });
 
@@ -228,20 +302,24 @@ export class AgenticRAGService {
     /**
      * Ejecuta el flujo agéntico completo (Blocking)
      */
-    public static async run(question: string, tenantId: string, correlationId: string) {
+    public static async run(question: string, tenantId: string, correlationId: string, history: any[] = []) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
         const result = await app.invoke({
-            question, tenantId, correlationId, retry_count: 0,
+            question, history, tenantId, correlationId, retry_count: 0,
             documents: [], generation: "", is_grounded: false, is_useful: false, trace: []
         });
 
-        // Background evaluation
-        EvaluationService.evaluateSession(
-            tenantId, correlationId, question, result.generation,
-            result.documents.map((d: any) => d.text), result.trace
-        ).catch(err => console.error("Error in background evaluation:", err));
+        // Iniciar evaluación asíncrona (no bloquea la respuesta al usuario)
+        RagEvaluationService.evaluateQuery(
+            correlationId,
+            question,
+            result.generation,
+            result.documents.map((d: any) => d.text || d.content),
+            tenantId,
+            result.trace || []
+        ).catch(err => console.error("❌ [RAG EVAL ERROR]", err));
 
         return result;
     }

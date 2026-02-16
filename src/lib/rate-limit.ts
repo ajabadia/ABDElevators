@@ -27,6 +27,7 @@ export const LIMITS = {
     AUTH: { limit: 10, window: "5 m" as const },      // 10 attempts per 5 minutes (Strict for Login/Signup)
     ADMIN: { limit: 100, window: "1 m" as const },    // 100 req/min (Admin actions)
     PUBLIC: { limit: 60, window: "1 m" as const },    // 60 req/min (Public endpoints)
+    SANDBOX: { limit: 5, window: "1 m" as const },    // 5 req/min (Strict Public Demo)
     CORE: { limit: 300, window: "1 m" as const },     // 300 req/min (Authorized App usage)
 };
 

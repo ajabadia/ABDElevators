@@ -27,8 +27,9 @@ async function uploadToFolder(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: resourceType,
+                type: 'upload', // Ensure public access even for 'raw' types
                 folder,
-                public_id: `${Date.now()}_${filename.replace(/\.[^/.]+$/, '')}`,
+                public_id: resourceType === 'raw' ? filename : filename.replace(/\.[^/.]+$/, ''),
             },
             (error, result) => {
                 if (error) {
@@ -69,13 +70,13 @@ export async function uploadRAGDocument(
     input: StreamInput,
     filename: string,
     tenantId: string,
-    estimatedSize?: number // Optional for logging/quota check if stream
+    options: { estimatedSize?: number; fileHash?: string } = {}
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
+    const { estimatedSize = 0, fileHash } = options;
     // 1. Verificar quota del tenant (Approximation if stream)
-    const size = Buffer.isBuffer(input) ? input.length : (estimatedSize || 0);
+    const size = Buffer.isBuffer(input) ? input.length : estimatedSize;
 
-    // We check quota if size is known or > 0. If unknown stream, we might check post-upload?
-    // For now, if size provided or buffer, checking:
+    // We check quota if size is known or > 0
     if (size > 0) {
         const hasQuota = await TenantService.hasStorageQuota(tenantId, size);
         if (!hasQuota) {
@@ -86,7 +87,11 @@ export async function uploadRAGDocument(
     // 2. Obtener prefijo de carpeta según config del tenant
     const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
 
-    const result = await uploadToFolder(input, filename, `${folderPrefix}/documentos-rag`);
+    // Use MD5 if provided to allow overwriting, otherwise fallback to timestamp
+    const uniqueId = fileHash || Date.now().toString();
+    const finalPublicId = `${uniqueId}/${filename}`; // Use / to create a "folder" hierarchy in Cloudinary
+
+    const result = await uploadToFolder(input, finalPublicId, `${folderPrefix}/documentos-rag`);
     await UsageService.trackStorage(tenantId, size, 'cloudinary-rag-docs');
     return result;
 }
@@ -116,7 +121,7 @@ export async function uploadUserDocument(
     tenantId: string,
     userId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const result = await uploadToFolder(buffer, filename, `abd-elevators/tenants/${tenantId}/usuarios/${userId}/documentos`);
+    const result = await uploadToFolder(buffer, filename, `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/documentos`);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-user-docs');
     return result;
 }
@@ -134,7 +139,7 @@ export async function uploadProfilePhoto(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-elevators/tenants/${tenantId}/usuarios/${userId}/perfil`,
+                folder: `abd-rag-platform/tenants/${tenantId}/usuarios/${userId}/perfil`,
                 public_id: `perfil_${Date.now()}`,
                 transformation: [
                     { width: 400, height: 400, crop: 'fill', gravity: 'face' },
@@ -172,7 +177,7 @@ export async function uploadPDFToCloudinary(
     tenantId: string,
     folder: string = ''
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const targetFolder = folder || `abd-elevators/tenants/${tenantId}/documentos`;
+    const targetFolder = folder || `abd-rag-platform/tenants/${tenantId}/documentos`;
     const result = await uploadToFolder(buffer, filename, targetFolder);
     await UsageService.trackStorage(tenantId, buffer.length, 'cloudinary-legacy-docs');
     return result;
@@ -191,7 +196,7 @@ export async function uploadBrandingAsset(
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: 'image',
-                folder: `abd-elevators/tenants/${tenantId}/branding`,
+                folder: `abd-rag-platform/tenants/${tenantId}/branding`,
                 public_id: `${assetType}_${Date.now()}`,
                 transformation: assetType === 'logo'
                     ? [{ width: 800, height: 400, crop: 'limit' }, { quality: 'auto', fetch_format: 'auto' }]
@@ -247,4 +252,16 @@ export function getDownloadUrl(publicId: string, resourceType: 'raw' | 'image' =
  */
 export function getPDFDownloadUrl(publicId: string): string {
     return getDownloadUrl(publicId, 'raw');
+}
+
+/**
+ * Generates a SIGNED URL for internal server-side fetches.
+ * This bypasses ACL restrictions and ensures the worker can access the file.
+ */
+export function getSignedUrl(publicId: string, resourceType: 'raw' | 'image' = 'raw'): string {
+    return cloudinary.url(publicId, {
+        resource_type: resourceType,
+        sign_url: true,
+        type: 'upload',
+    });
 }

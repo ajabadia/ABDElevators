@@ -1,0 +1,44 @@
+{
+  "orders": {
+    "new": {
+      "title": "Nuevo Pedido de Taller",
+      "subtitle": "Crea una nueva orden y extrae piezas automáticamente vía IA.",
+      "form": {
+        "details": "Detalles del Pedido",
+        "description": "Descripción del Trabajo",
+        "description_placeholder": "Describe el problema, piezas necesarias o pega la solicitud del técnico...",
+        "priority": "Prioridad",
+        "priority_placeholder": "Seleccionar prioridad",
+        "analyzing": "Analizando...",
+        "submit": "Crear y Analizar"
+      },
+      "priorities": {
+        "LOW": "Baja",
+        "MEDIUM": "Media",
+        "HIGH": "Alta",
+        "CRITICAL": "Crítica"
+      },
+      "analysis": {
+        "title": "Resultado del Análisis IA",
+        "complexity": "Complejidad",
+        "hours": "Horas Est.",
+        "parts_title": "Piezas Extraídas ({count})",
+        "manuals_found": "MANUALES ENCONTRADOS",
+        "empty_state": "Los resultados del análisis aparecerán aquí"
+      },
+      "toast": {
+        "success_title": "Pedido Creado",
+        "error_title": "Error",
+        "success_desc": "Pedido {id} creado correctamente."
+      }
+    }
+  },
+  "checklist": {
+    "validation_required": "Checklist de Validación Requerido",
+    "validation_desc": "Este workflow requiere la validación de los siguientes puntos técnicos:",
+    "configure_btn": "Ver / Configurar Protocolo de Validación",
+    "technical_spec": "Especificación Técnica (IA)",
+    "title": "Validación de Taller",
+    "manuals_title": "MANUALES SUGERIDOS (RAG)"
+  }
+}

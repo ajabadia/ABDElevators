@@ -1,0 +1,18 @@
+{
+  "subtitle": "Access your secure dashboard",
+  "email_label": "CORPORATE EMAIL",
+  "email_placeholder": "name@company.com",
+  "password_label": "PASSWORD",
+  "password_placeholder": "Enter your password",
+  "button": "Sign In",
+  "verifying": "Verifying credentials...",
+  "error_generic": "Connection error. Please try again.",
+  "error_invalid": "Invalid credentials. Check your email and password.",
+  "error_mfa": "Invalid or expired MFA code.",
+  "mfa_title": "Two-Factor Authentication",
+  "mfa_desc": "For security, please enter the verification code sent to your device.",
+  "mfa_button": "Verify Identity",
+  "mfa_back": "Back",
+  "test_users": "DEMO ACCESS (TESTING ONLY)",
+  "footer_text": "INDUSTRIAL SECURITY • AES-256 ENCRYPTION • SOC2 COMPLIANT"
+}

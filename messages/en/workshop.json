@@ -1,0 +1,39 @@
+{
+    "orders": {
+        "new": {
+            "title": "New Workshop Order",
+            "subtitle": "Create a new order and automatically extract parts via AI.",
+            "form": {
+                "details": "Order Details",
+                "description": "Work Description",
+                "description_placeholder": "Describe the problem, required parts or paste the technician's request...",
+                "priority": "Priority",
+                "priority_placeholder": "Select priority",
+                "analyzing": "Analyzing...",
+                "submit": "Create and Analyze"
+            },
+            "priorities": {
+                "LOW": "Low",
+                "MEDIUM": "Medium",
+                "HIGH": "High",
+                "CRITICAL": "Critical"
+            },
+            "analysis": {
+                "title": "AI Analysis Result",
+                "complexity": "Complexity",
+                "hours": "Est. Hours",
+                "parts_title": "Extracted Parts ({count})",
+                "manuals_found": "SUGGESTED MANUALS",
+                "empty_state": "Analysis results will appear here"
+            }
+        }
+    },
+    "checklist": {
+        "validation_required": "Validation Checklist Required",
+        "validation_desc": "This workflow requires validation of the following technical points:",
+        "configure_btn": "View / Configure Validation Protocol",
+        "technical_spec": "Technical Specification (AI)",
+        "title": "Workshop Validation",
+        "manuals_title": "SUGGESTED MANUALS (RAG)"
+    }
+}

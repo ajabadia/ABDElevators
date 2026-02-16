@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/types/roles';
+import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
 
 /**
  * API para gestionar definiciones de workflow (Phase 70 compliance).
@@ -50,9 +51,9 @@ export async function POST(request: Request) {
         // Phase 70: Centralized typed role check
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 
-        const body = await request.json();
+        const body = WorkflowDefinitionSchema.parse(await request.json());
 
-        // El WorkflowService ya maneja la validación de esquema y lógica de negocio
+        // El WorkflowService ya maneja la lógica de negocio, pero aquí forzamos validación en el borde
         const result = await WorkflowService.createOrUpdateDefinition(body, correlationId);
 
         return NextResponse.json({ success: true, definitionId: result });

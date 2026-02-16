@@ -3,7 +3,9 @@
  * Define los tiers de suscripción y sus límites de consumo.
  */
 
-export type PlanTier = 'FREE' | 'PRO' | 'ENTERPRISE';
+import { MetricPricing } from './schemas/billing';
+
+export type PlanTier = 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
 
 export interface PlanLimits {
     tier: PlanTier;
@@ -16,7 +18,16 @@ export interface PlanLimits {
         vector_searches_per_month: number; // Búsquedas RAG
         api_requests_per_month: number;    // Llamadas API
         users: number;                     // Usuarios por tenant
+        spaces_per_tenant: number;         // Límite total de espacios en el tenant
+        spaces_per_user: number;           // Límite de espacios por cada usuario individual
     };
+    overage: {
+        tokens: number;      // Precio por token excedente
+        storage: number;     // Precio por byte excedente (o GB, normalizaremos a byte)
+        searches: number;    // Precio por búsqueda excedente
+    };
+    metrics: Record<string, MetricPricing>; // standardized for Phase 120.2
+    stripePriceId?: string;
     features: string[];
 }
 
@@ -35,12 +46,50 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             vector_searches_per_month: 500,       // 500 búsquedas/mes
             api_requests_per_month: 1_000,        // 1k requests/mes
             users: 2,                             // 2 usuarios
+            spaces_per_tenant: 10,                // 10 espacios totales/empresa
+            spaces_per_user: 3,                   // 3 espacios personales/usuario
         },
+        overage: { tokens: 0, storage: 0, searches: 0 },
+        metrics: {
+            llm_tokens_per_month: { type: 'FLAT_FEE_OVERAGE', includedUnits: 100_000, overagePrice: 0, currency: 'EUR' },
+            storage_bytes: { type: 'FLAT_FEE_OVERAGE', includedUnits: 50 * 1024 * 1024, overagePrice: 0, currency: 'EUR' }
+        },
+        stripePriceId: '',
         features: [
             'Dual-Engine Extraction (OCR + AI)',
             'Hybrid Vector Search',
             'Audit-Trail básico',
             'Soporte por email',
+        ],
+    },
+    BASIC: {
+        tier: 'BASIC',
+        name: 'Basic Business',
+        price_monthly: 49,
+        price_yearly: 490,
+        limits: {
+            llm_tokens_per_month: 500_000,
+            storage_bytes: 1 * 1024 * 1024 * 1024, // 1 GB
+            vector_searches_per_month: 2_000,
+            api_requests_per_month: 5_000,
+            users: 5,
+            spaces_per_tenant: 50,
+            spaces_per_user: 10,
+        },
+        overage: {
+            tokens: 0.00001, // $0.01 por 1k
+            storage: 0.10 / (1024 * 1024 * 1024), // $0.10 por GB
+            searches: 0.001
+        },
+        metrics: {
+            llm_tokens_per_month: { type: 'FLAT_FEE_OVERAGE', includedUnits: 500_000, overagePrice: 0.00001, currency: 'EUR' },
+            storage_bytes: { type: 'FLAT_FEE_OVERAGE', includedUnits: 1024 * 1024 * 1024, overagePrice: 0.10 / (1024 * 1024 * 1024), currency: 'EUR' }
+        },
+        stripePriceId: process.env.STRIPE_PRICE_BASIC || '',
+        features: [
+            'Todo lo de Free',
+            'Branding básico',
+            'SLA 99.0%',
         ],
     },
     PRO: {
@@ -54,7 +103,19 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             vector_searches_per_month: 10_000,    // 10k búsquedas/mes
             api_requests_per_month: 50_000,       // 50k requests/mes
             users: 10,                            // 10 usuarios
+            spaces_per_tenant: 200,                // 200 espacios totales
+            spaces_per_user: 20,                   // 20 espacios por usuario
         },
+        overage: {
+            tokens: 0.000005, // $0.005 por 1k
+            storage: 0.05 / (1024 * 1024 * 1024), // $0.05 por GB
+            searches: 0.0005
+        },
+        metrics: {
+            llm_tokens_per_month: { type: 'FLAT_FEE_OVERAGE', includedUnits: 1_000_000, overagePrice: 0.000005, currency: 'EUR' },
+            storage_bytes: { type: 'FLAT_FEE_OVERAGE', includedUnits: 5 * 1024 * 1024 * 1024, overagePrice: 0.05 / (1024 * 1024 * 1024), currency: 'EUR' }
+        },
+        stripePriceId: process.env.STRIPE_PRICE_PRO || '',
         features: [
             'Todo lo de Free',
             'Audit-Trail Pro (trazabilidad completa)',
@@ -75,7 +136,15 @@ export const PLANS: Record<PlanTier, PlanLimits> = {
             vector_searches_per_month: Infinity,  // Ilimitado
             api_requests_per_month: Infinity,     // Ilimitado
             users: Infinity,                      // Ilimitado
+            spaces_per_tenant: Infinity,         // Ilimitado
+            spaces_per_user: Infinity,           // Ilimitado
         },
+        overage: { tokens: 0, storage: 0, searches: 0 },
+        metrics: {
+            llm_tokens_per_month: { type: 'FIXED', unitPrice: 0, currency: 'EUR' }, // Ilimitado = 0 cost
+            storage_bytes: { type: 'FIXED', unitPrice: 0, currency: 'EUR' }
+        },
+        stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || '',
         features: [
             'Todo lo de Pro',
             'Recursos ilimitados',
@@ -133,17 +202,17 @@ export function calculateOverageCost(
 
     let cost = 0;
 
-    // Tokens excedentes: $0.01 por cada 1k tokens
+    // Tokens excedentes
     const excessTokens = Math.max(0, usage.tokens - plan.limits.llm_tokens_per_month);
-    cost += (excessTokens / 1000) * 0.01;
+    cost += excessTokens * plan.overage.tokens;
 
-    // Storage excedente: $0.10 por GB/mes
+    // Storage excedente
     const excessStorage = Math.max(0, usage.storage - plan.limits.storage_bytes);
-    cost += (excessStorage / (1024 * 1024 * 1024)) * 0.10;
+    cost += excessStorage * plan.overage.storage;
 
-    // Búsquedas excedentes: $0.001 por búsqueda
+    // Búsquedas excedentes
     const excessSearches = Math.max(0, usage.searches - plan.limits.vector_searches_per_month);
-    cost += excessSearches * 0.001;
+    cost += excessSearches * plan.overage.searches;
 
     return Math.round(cost * 100) / 100; // Redondear a 2 decimales
 }

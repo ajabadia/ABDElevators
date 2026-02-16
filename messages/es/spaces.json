@@ -1,0 +1,514 @@
+{
+  "admin": {
+    "createModal": {
+      "title": "Crear Nuevo Espacio",
+      "name": "Nombre",
+      "namePlaceholder": "Ej: Departamento de Ventas",
+      "slug": "Slug (Único)",
+      "slugPlaceholder": "ej: ventas-global",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Propósito de este espacio...",
+      "type": "Tipo de Espacio",
+      "typePlaceholder": "Seleccionar tipo",
+      "visibility": "Visibilidad",
+      "visibilityPlaceholder": "Seleccionar visibilidad",
+      "industry": "Industria",
+      "industryPlaceholder": "Seleccionar industria",
+      "isDefault": "Espacio por Defecto",
+      "isDefaultDesc": "Los nuevos assets se asignarán aquí si no se especifica otro.",
+      "allowQuickQA": "Permitir Quick Q&A",
+      "allowQuickQADesc": "Habilita el chat efímero sobre documentos en este espacio.",
+      "cancel": "Cancelar",
+      "submitting": "Creando...",
+      "submit": "Crear Espacio"
+    },
+    "types": {
+      "tenant": "Tenant",
+      "team": "Equipo",
+      "global": "Global",
+      "industry": "Industrial",
+      "personal": "Personal"
+    },
+    "table": {
+      "type": "Tipo",
+      "actions": "Acciones",
+      "space": "Espacio",
+      "created": "Creado",
+      "visibility": "Visibilidad",
+      "status": "Estado"
+    },
+    "new_space": "Nuevo Espacio",
+    "status": {
+      "inactive": "Inactivo",
+      "active": "Activo"
+    },
+    "search_placeholder": "Buscar espacios...",
+    "manage": "Gestionar",
+    "visibility": {
+      "INTERNAL": "Interno (Auth Requerida)",
+      "PRIVATE": "Privado (Solo Invitados)",
+      "RESTRICTED": "Restringido (Admin Only)",
+      "PUBLIC": "Público (Solo Lectura)"
+    },
+    "toast": {
+      "createSuccess": "Espacio creado correctamente",
+      "createError": "Error al crear el espacio"
+    },
+    "analytics": {
+      "page": {
+        "title": "Métricas Globales",
+        "subtitle": "Perspectiva analítica del rendimiento de la plataforma y ecosistema RAG."
+      },
+      "explorer": {
+        "loading": "Sincronizando Métricas Globales...",
+        "title": "Insights de la Plataforma",
+        "subtitle": "Análisis en tiempo real de infraestructura y ecosistema RAG.",
+        "liveStatus": "Estado: OK",
+        "growth": "+14.2% vs mes anterior",
+        "kpi": {
+          "mau": "MAU (30d)",
+          "mrr": "MRR Estimado",
+          "uniqueUsers": "Usuarios Únicos",
+          "activeTenants": "Tenants Activos"
+        },
+        "quality": {
+          "title": "Calidad de Rendimiento RAG (P100)",
+          "relevance": "Relevancia",
+          "noData": "Datos insuficientes para generar informe de calidad.",
+          "precision": "Precisión",
+          "faithfulness": "Fiabilidad",
+          "subtitle": "Evaluación heurística automatizada en las últimas 100 inferencias."
+        },
+        "slaUnit": "Incidentes",
+        "errors": "Errores Críticos (30d)",
+        "sla": "Violaciones SLA (30d)",
+        "system": {
+          "title": "Carga del Sistema",
+          "totalOrders": "Pedidos Totales",
+          "deduplication": "Ahorro por Deduplicación",
+          "ragSearch": "Búsquedas RAG"
+        },
+        "errorsUnit": "Logs",
+        "anomaly": {
+          "desc": "Aumento del 12% en latencia en Tier 2 (US-East)",
+          "title": "Anomalía Detectada"
+        },
+        "industrial": {
+          "title": "Distribución Industrial"
+        },
+        "adopters": {
+          "title": "Nuevos Adoptantes",
+          "onboarding": "Incorporación",
+          "viewAll": "Ver Todos los Tenants"
+        }
+      }
+    },
+    "notifications": {
+      "page": {
+        "manageTemplates": "Gestionar Plantillas",
+        "title": "Centro de Notificaciones",
+        "subtitle": "Gestiona las comunicaciones, plantillas y el estado del sistema.",
+        "channelSettings": "Configuración de Canales"
+      },
+      "kpi": {
+        "billingDesc": "Alertas de límites/pagos",
+        "billing": "Facturación",
+        "totalSent": "Total Enviados",
+        "totalSentDesc": "Notificaciones exitosas",
+        "errors": "Errores",
+        "errorsDesc": "Fallos de envío o sistema"
+      },
+      "table": {
+        "recent": "Últimas Notificaciones",
+        "status": "Estado",
+        "type": "Tipo",
+        "title": "Título",
+        "recipient": "Destinatario",
+        "ago": "Hace"
+      },
+      "status": {
+        "sent": "Enviado",
+        "inApp": "In-App",
+        "error": "Error"
+      },
+      "templates": {
+        "title": "Plantillas de Email",
+        "subtitle": "Personaliza el HTML base y textos legales para cada tipo de notificación.",
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "languagesConfigured": "idiomas configurados",
+        "pending": "Pendiente",
+        "configure": "Configurar",
+        "updated": "Actualizado:",
+        "createTemplate": "Crear Plantilla",
+        "fallbackMessage": "Esta notificación usa el fallback genérico del sistema. Configúrala para personalizarla."
+      },
+      "events": {
+        "ANALYSIS_COMPLETE": "Análisis Finalizados",
+        "SYSTEM": "Mensajes del Sistema",
+        "RISK_ALERT": "Alertas de Riesgo",
+        "BILLING_EVENT": "Facturación y Cuotas",
+        "SECURITY_ALERT": "Seguridad y Accesos"
+      },
+      "settings": {
+        "subtitle": "Gestiona los canales, destinatarios y reglas de comunicación de tu organización.",
+        "title": "Configuración de Notificaciones",
+        "form": {
+          "title": "Preferencias de Comunicación",
+          "subtitle": "Configura cómo y qué notificaciones recibe tu organización.",
+          "saveBtn": "Guardar Cambios",
+          "saving": "Guardando...",
+          "saveSuccess": "Configuración guardada",
+          "saveSuccessDesc": "Tus preferencias de notificación se han actualizado correctamente.",
+          "saveError": "Error al guardar",
+          "connectionErrorDesc": "Ocurrió un problema al intentar conectar con el servidor.",
+          "saveErrorDesc": "No se pudo actualizar la configuración. Revisa los datos.",
+          "connectionError": "Error de conexión",
+          "generalTitle": "Configuración General",
+          "generalDesc": "Ajustes globales para el sistema de notificaciones.",
+          "loadError": "Error al cargar configuración",
+          "fallbackHelp": "Este email recibirá las notificaciones si no hay destinatarios específicos definidos para un evento.",
+          "loading": "Cargando configuración...",
+          "fallbackEmail": "Email de Fallback (Default)",
+          "fallbackPlaceholder": "alertas@tuempresa.com",
+          "eventActive": "Evento Activo",
+          "eventActiveDesc": "Habilitar/deshabilitar este tipo de notificaciones.",
+          "channelsTitle": "Canales y Estado",
+          "recipientsTitle": "Destinatarios Específicos",
+          "actionCol": "Acción",
+          "newEmailPlaceholder": "nuevo@email.com",
+          "emailCol": "Email",
+          "enabledChannels": "Canales habilitados",
+          "inAppChannel": "Notificaciones In-App (Campana)",
+          "emailChannel": "Correo Electrónico",
+          "recipientsDesc": "Quién recibirá alertas para este evento concreto.",
+          "customNoteTitle": "Inyección de Texto (Opcional)",
+          "noRecipients": "No hay destinatarios específicos. Se usará el fallback del tenant o el usuario afectado.",
+          "customNotePlaceholder": "Ej: Recuerda subir el comprobante de pago a la carpeta compartida de RRHH.",
+          "customNoteDesc": "Este texto aparecerá en el pie de los correos de este tipo para todos tus usuarios."
+        }
+      },
+      "validation": {
+        "invalidDate": "Fecha inválida"
+      }
+    },
+    "documentTypes": {
+      "page": {
+        "title": "Tipos de Documento",
+        "subtitle": "Configura las categorías de documentos técnicos para RAG."
+      },
+      "table": {
+        "name": "Nombre",
+        "status": "Estado",
+        "created": "Creado",
+        "description": "Descripción",
+        "actions": "Acciones",
+        "scope": "Alcance",
+        "industries": "Industrias"
+      },
+      "status": {
+        "inactive": "Inactivo",
+        "active": "Activo"
+      },
+      "form": {
+        "editTitle": "Editar Tipo de Documento",
+        "namePlaceholder": "Ej: Controlador, Motor, etc.",
+        "createTitle": "Crear Nuevo Tipo de Documento",
+        "name": "Nombre",
+        "newType": "Nuevo Tipo",
+        "scopeTenant": "Específico del Tenant",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Opcional",
+        "scope": "Alcance (SuperAdmin)",
+        "scopeGlobal": "Global (Todos los Tenants)",
+        "industries": "Industrias (Multi-selección)",
+        "scopeIndustry": "Específico por Industria",
+        "industriesHelp": "Mantén Ctrl/Cmd para seleccionar múltiples.",
+        "cancel": "Cancelar",
+        "saveChanges": "Guardar Cambios",
+        "create": "Crear",
+        "saving": "Guardando...",
+        "creating": "Creando..."
+      },
+      "scope": {
+        "INDUSTRY": "Específico por Industria",
+        "TENANT": "Específico del Tenant",
+        "GLOBAL": "Global (Todos los Tenants)"
+      },
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar este tipo de documento?",
+      "toast": {
+        "created": "Tipo de documento creado correctamente",
+        "updated": "Tipo de documento actualizado correctamente",
+        "deleted": "Tipo de documento eliminado"
+      },
+      "all": "Todas",
+      "empty": "No hay tipos de documento configurados."
+    }
+  },
+  "placeholders": {
+    "collections_desc": "Agrupa documentos relacionados en colecciones temáticas",
+    "personal_title": "Espacios Personales",
+    "personal_desc": "Crea espacios privados para organizar tu conocimiento",
+    "collections_title": "Colecciones"
+  },
+  "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+  "tabs": {
+    "personal": "Mis Espacios",
+    "collections": "Colecciones",
+    "quick_qa": "Consulta Rápida"
+  },
+  "title": "Espacios de Conocimiento",
+  "organizations": {
+    "page": {
+      "title": "Configuración de Organización",
+      "subtitle": "Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento.",
+      "refresh": "Refrescar",
+      "errorTenantId": "Falta tenantId",
+      "error": "Error",
+      "save": "Guardar Cambios",
+      "saveError": "No se pudo guardar la configuración.",
+      "saveSuccess": "Configuración de la organización actualizada correctamente."
+    },
+    "tabs": {
+      "general": "General",
+      "reports": "Reportes",
+      "billing": "Facturación",
+      "branding": "Identidad y Branding",
+      "features": "Módulos",
+      "storage": "Almacenamiento"
+    },
+    "general": {
+      "compliance": {
+        "title": "Estado de Cumplimiento",
+        "encryption": "Cifrado",
+        "dataRegion": "Región de Datos",
+        "active": "Activo",
+        "dataIsolation": "Aislamiento de Datos",
+        "regionValue": "EU-West (Zaragoza/Frankfurt)",
+        "encryptionValue": "AES-256"
+      },
+      "industryPlaceholder": "Selecciona industria",
+      "name": "Nombre Comercial",
+      "tenantId": "ID de Organización",
+      "industry": "Industria / Dominio",
+      "industries": {
+        "ELEVATORS": "Elevadores y Elevación",
+        "LEGAL": "Legal / Despachos",
+        "IT": "Tecnología / IT",
+        "GENERIC": "Genérico / Otros",
+        "MEDICAL": "Médico / Salud"
+      }
+    },
+    "storage": {
+      "cloudinary": "Cloudinary",
+      "cloudinaryDesc": "Óptimo para PDFs e imágenes con CDN.",
+      "provider": "Proveedor de Infraestructura",
+      "awsS3": "AWS S3",
+      "comingSoon": "PRÓXIMAMENTE",
+      "folderPrefix": "Directorio Raíz (Storage Isolation)",
+      "folderPrefixDesc": "Determina la carpeta base en el cloud para este tenant.",
+      "quota": {
+        "title": "Cuota Máxima de Disco",
+        "desc": "Límite de documentos procesados.",
+        "currentUsage": "Uso Actual (Cloudinary / Storage)",
+        "warning": "Al superar la cuota, se bloqueará el acceso a nuevas peticiones de análisis."
+      }
+    },
+    "features": {
+      "features": {
+        "ragSearch": "Búsqueda Semántica RAG",
+        "customAgents": "Custom Agents",
+        "multiLanguage": "Multi-idioma Avanzado",
+        "geminiAnalysis": "Análisis Inteligente (Gemini)",
+        "auditReviews": "Revisiones de Auditoría",
+        "whiteLabel": "White Label Branding"
+      },
+      "status": {
+        "active": "Active",
+        "locked": "Locked",
+        "planned": "Planned"
+      }
+    },
+    "branding": {
+      "title": "Personalización de Marca",
+      "subtitle": "Define los colores corporativos y activos visuales.",
+      "logo": {
+        "title": "Logotipo de Organización",
+        "upload": "Subir Logotipo",
+        "remove": "Eliminar",
+        "uploadButton": "Subir Logo",
+        "dimensions": "Dimensiones mín: 400x400px. Fondo transparente recomendado (PNG).",
+        "success": "Logo actualizado",
+        "error": "Error",
+        "successDesc": "El branding se ha guardado correctamente.",
+        "errorDesc": "Fallo al subir el logo"
+      },
+      "favicon": {
+        "title": "Favicon",
+        "upload": "Subir Favicon",
+        "dimensions": "Archivos .ico, .png o .svg. Recomendado 32x32px.",
+        "uploadButton": "Subir Favicon",
+        "errorDesc": "Fallo al subir el favicon",
+        "error": "Error",
+        "successDesc": "El icono de pestaña se ha guardado correctamente.",
+        "success": "Favicon actualizado"
+      },
+      "colors": {
+        "accent": "Color Acento (Light Mode)",
+        "accentDark": "Acento (Dark Mode Override)",
+        "primary": "Color Primario (Light Mode)",
+        "primaryDark": "Primario (Dark Mode Override)"
+      },
+      "autoDarkMode": {
+        "title": "Modo Oscuro Automático",
+        "desc": "Calcula automáticamente variantes legibles para el tema oscuro."
+      },
+      "preview": {
+        "title": "Live Preview App",
+        "light": "CLARO",
+        "lightDesc": "Vista previa en Modo Claro (colores originales).",
+        "dark": "OSCURO",
+        "darkDesc": "Vista previa en Modo Oscuro (colores auto-optimizados)."
+      }
+    },
+    "billing": {
+      "currentPlan": "Plan Actual",
+      "planActive": "Activo",
+      "freeTrial": "Estás disfrutando del periodo de prueba gratuito.",
+      "changePlan": "Cambiar Plan",
+      "usage": {
+        "tokens": "Tokens IA (Generativo)",
+        "storage": "Almacenamiento (RAG)",
+        "searches": "Búsquedas Vectoriales",
+        "apiCalls": "Llamadas API"
+      },
+      "subscription": "Suscripción renovada mensualmente.",
+      "planCurrent": "Plan Actual",
+      "perMonth": "/mes",
+      "plansDesc": "Selecciona el plan que mejor se adapte a tus necesidades.",
+      "selectPlan": "Seleccionar",
+      "plansTitle": "Planes y Precios",
+      "contactSupport": "Contactar Soporte",
+      "fiscal": {
+        "title": "Identidad Fiscal",
+        "name": "Razón Social / Nombre Fiscal",
+        "namePlaceholder": "Ej: ABD Elevadores S.L.",
+        "taxId": "CIF / NIF / VAT ID",
+        "taxIdPlaceholder": "Ej: B12345678"
+      },
+      "reception": {
+        "title": "Recepción de Facturas",
+        "channelEmail": "Correo Electrónico",
+        "channel": "Canal Preferente",
+        "channelPostal": "Correo Postal",
+        "email": "Email de Facturación",
+        "emailPlaceholder": "facturacion@empresa.com",
+        "channelInApp": "Sóla descarga en App",
+        "formatXml": "XML Facturae",
+        "channelXmlEdi": "Intercambio XML / EDI",
+        "formatPdf": "PDF (Firmado Digitalmente)",
+        "format": "Formato de Archivo",
+        "formatPaper": "Papel (Físico)",
+        "formatCsv": "CSV / excel"
+      },
+      "shippingAddress": {
+        "title": "Dirección de Envío",
+        "line1": "Calle y Número",
+        "city": "Ciudad",
+        "postalCode": "Cód. Postal",
+        "country": "País"
+      },
+      "edi": {
+        "button": "Información EDI",
+        "desc": "Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.",
+        "title": "Certificación de Factura Electrónica"
+      },
+      "billingAddress": {
+        "sameAsShipping": "Igual que la dirección de envío activo.",
+        "title": "Dirección de Facturación"
+      },
+      "usageStatus": {
+        "limit": "Límite",
+        "overage": "Exceso"
+      },
+      "simulation": {
+        "title": "Simulación de Cambio de Plan",
+        "creditApplied": "Crédito aplicado por plan actual",
+        "newPlanCost": "Costo del nuevo plan (prorrateado)",
+        "totalDueNow": "Total a pagar hoy",
+        "currency": "Moneda",
+        "nextBillingDate": "Próxima Facturación"
+      }
+    },
+    "security": {
+      "title": "Centro de Seguridad y Confianza",
+      "auditLink": "Ver Auditoría Chunks",
+      "subtitle": "Aislamiento por Tenant validado mediante auditoría sintética continua.",
+      "certify": "Certificar GDPR",
+      "certTitle": "Certificado de Cumplimiento GDPR",
+      "certDesc": "Informe de conformidad normativa para {organization}.",
+      "dataLocation": {
+        "value": "EU-WEST-1 (Frankfurt)",
+        "title": "Ubicación de Datos"
+      },
+      "logRetention": {
+        "title": "Retención de Logs",
+        "value": "90 Días (Anonimizado)"
+      },
+      "status": {
+        "title": "Estado del Procesamiento",
+        "value": "CONFORME"
+      },
+      "encryption": {
+        "title": "Cifrado en Reposo",
+        "value": "AES-256-GCM"
+      },
+      "gdprNote": "Este tenant cumple con los requisitos del Reglamento General de Protección de Datos (RGPD) UE 2016/679.",
+      "downloadBtn": "Descargar Informe PDF",
+      "downloadSuccess": {
+        "title": "Informe descargado",
+        "desc": "El PDF de cumplimiento se ha guardado en tu equipo."
+      }
+    },
+    "reports": {
+      "title": "Plantillas de Reportes",
+      "subtitle": "Personaliza el formato y contenido legal de tus informes industriales.",
+      "disclaimer": {
+        "title": "Disclaimer Legal (Pie de reporte)",
+        "placeholder": "Ej: Este informe es confidencial y ha sido generado mediante procesos de IA...",
+        "desc": "Este texto aparecerá al final de cada informe generado."
+      },
+      "signature": {
+        "title": "Texto para Firma",
+        "placeholder": "Ej: Fdo: Responsable de Ingeniería"
+      },
+      "footer": {
+        "title": "Nota de Pie de Página (Personalizada)",
+        "placeholder": "Ej: © 2026 ABDElevators Industrial Division"
+      },
+      "preview": "Vista Previa Estructural",
+      "includeSources": {
+        "title": "Incluir Fuentes RAG",
+        "desc": "Muestra los fragmentos de documentación original en el informe."
+      }
+    },
+    "storageUsage": {
+      "metric": "Métrica de consumo en tiempo real",
+      "used": "Utilizado"
+    }
+  },
+  "playground": {
+    "title": "Spaces Playground",
+    "subtitle": "Explora la jerarquía de espacios y prueba el análisis efímero.",
+    "details": "Detalles del Espacio",
+    "name": "Nombre",
+    "type": "Tipo",
+    "created": "Creado",
+    "qa": {
+      "title": "Quick Q&A",
+      "description": "Prueba el análisis sin necesidad de ingesta previa.",
+      "inputLabel": "Pega tu texto técnico aquí",
+      "analyze": "Analizar"
+    }
+  }
+}

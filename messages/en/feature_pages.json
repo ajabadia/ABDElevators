@@ -1,0 +1,278 @@
+{
+  "dual_engine": {
+    "title": "Dual-Engine Extraction",
+    "subtitle": "Combines traditional OCR with contextual intelligence to extract technical data with pinpoint precision.",
+    "problem_title": "The Problem",
+    "problem_items": "Traditional OCR fails with complex tables and technical diagrams,Context loss in multi-column specifications,Critical errors in numerical values (voltages, dimensions),Inability to extract relationships between components",
+    "solution_title": "Our Solution",
+    "solution_items": "**OCR Engine:** High-precision base text extraction,**AI Engine:** Contextual understanding of tables and diagrams,**Cross-validation:** Both engines verify each other,**99.9% Accuracy:** In critical technical specifications",
+    "how_it_works": "How it Works",
+    "steps": {
+      "1": {
+        "title": "Image Pre-processing",
+        "desc": "The PDF is converted into high-resolution images. Contrast enhancement and noise removal filters are applied."
+      },
+      "2": {
+        "title": "Traditional OCR Extraction",
+        "desc": "Tesseract OCR extracts all visible text. Text blocks, tables, and diagram areas are detected."
+      },
+      "3": {
+        "title": "Contextual AI Analysis",
+        "desc": "The AI analyzes the original images to understand relationships between elements, interpret complex tables, and extract data from diagrams."
+      },
+      "4": {
+        "title": "Intelligent Fusion",
+        "desc": "Results from both engines are combined. The AI corrects OCR errors and adds semantic context."
+      },
+      "5": {
+        "title": "Data Structuring",
+        "desc": "Final text is structured into JSON with metadata: component type, model, technical specifications, regulatory references."
+      }
+    },
+    "use_cases": "Use Cases",
+    "case_1": {
+      "title": "Elevator Orders",
+      "desc": "Automatic extraction of component models (motors, cables, panels) from technical order PDFs."
+    },
+    "case_2": {
+      "title": "Service Manuals",
+      "desc": "Indexing of maintenance procedures with specification tables and wiring diagrams."
+    },
+    "case_3": {
+      "title": "Technical Regulations",
+      "desc": "Analysis of EN 81-20/50 documents with extraction of safety requirements and compliance tables."
+    },
+    "cta_title": "Test Dual-Engine Extraction",
+    "cta_desc": "Upload your first technical document and see the precision for yourself.",
+    "cta_btn": "Get Started Now"
+  },
+  "compliance": {
+    "title": "Compliance & Portability",
+    "subtitle": "Full portability and guaranteed regulatory compliance. Export your knowledge in signed packages and handle the right to be forgotten with legal certificates.",
+    "package_title": "Knowledge Package (.ZIP)",
+    "package_desc": "Download your organization's entire knowledge corpus in a single compressed file. Includes original documents, indexed metadata, taxonomies, and embeddings in an open format.",
+    "package_items": "Zero vendor lock-in,1-Click Export,Digital integrity signature",
+    "gdpr_title": "GDPR Right to be Forgotten",
+    "gdpr_desc": "Execute permanent purges of customer or project data in accordance with the General Data Protection Regulation (GDPR).",
+    "gdpr_items": "Physical deletion from Cloudinary/Atlas,PDF elimination certificate,Immutable purge audit",
+    "security_title": "Security and Digital Signature",
+    "sha_title": "SHA-256 Integrity Hash",
+    "sha_desc": "Each export package includes an electronically signed manifest file. This ensures that data has not been tampered with since leaving our servers.",
+    "cert_title": "Digital Certificates",
+    "cert_desc": "Upon completing a data purge, the system automatically generates a PDF certificate signed by ABD RAG Platform as legal evidence for regulators that data has been irreversibly destroyed.",
+    "portability_tag": "100% Portability Guaranteed",
+    "portability_sub": "Your data is yours. Always.",
+    "cta_title": "Audit-Ready Infrastructure",
+    "cta_desc": "Don't worry about regulatory compliance. We've built the tools so you only have to worry about your business.",
+    "cta_btn": "View Compliance Panel",
+    "cta_outline_btn": "Talk to Legal"
+  },
+  "audit_trail": {
+    "title": "Audit-Trail Pro",
+    "subtitle": "Total traceability: every generated paragraph includes a direct citation to the original source document. Guaranteed regulatory compliance.",
+    "negative_title": "Without Traceability",
+    "negative_items": "**Legal risk:** Impossible to prove information origin,**Undetectable hallucinations:** AI can invent data without you noticing,**Impossible audits:** You don't meet ISO 9001, SOC2, GDPR,**Loss of trust:** Technicians don't trust sourceless answers",
+    "positive_title": "With Audit-Trail Pro",
+    "positive_items": "**Exact citation:** Every statement links to the source document and page,**Instant verification:** Click the citation → original PDF highlighted,**Automatic compliance:** Immutable logs for audits,**Total trust:** Technicians can verify every data point",
+    "how_it_works": "How It Works",
+    "steps": {
+      "1": {
+        "title": "Metadata Chunking",
+        "desc": "Every indexed text chunk includes full metadata: document name, page, paragraph, revision date, version."
+      },
+      "2": {
+        "title": "Source Tracking",
+        "desc": "During RAG generation, it records which chunks were used to generate each part of the response."
+      },
+      "3": {
+        "title": "Automatic Citation",
+        "desc": "The final response includes numbered references [1], [2], [3] linking to specific source documents."
+      },
+      "4": {
+        "title": "Immutable Logs",
+        "desc": "Every query is logged in MongoDB with timestamp, user, query, response, and sources used. Encrypted and non-modifiable logs."
+      }
+    },
+    "example_title": "Traceable Response Example",
+    "example_query_label": "User Query",
+    "example_query": "What cable is specified for order P-2024-0156?",
+    "example_resp_label": "Generated Response",
+    "example_resp_text": "For order P-2024-0156, an **8x19 Seale IWRC steel cable** is specified with the following characteristics:",
+    "example_resp_items": "Diameter: 10mm,Minimum breaking load: 6370 kgf,Length: 45 meters,Complies with EN 12385-5",
+    "example_ref_label": "References",
+    "example_ref_1": {
+      "doc": "Order_P-2024-0156_Rev2.pdf",
+      "page": "3",
+      "excerpt": "Traction cable: 8x19 Seale IWRC, Ø10mm, breaking load 6370 kgf"
+    },
+    "example_ref_2": {
+      "doc": "Order_P-2024-0156_Rev2.pdf",
+      "page": "5",
+      "excerpt": "Total cable length: 45m (includes 3m reserve)"
+    },
+    "example_ref_3": {
+      "doc": "Standard_EN_12385-5_2021.pdf",
+      "page": "12",
+      "excerpt": "Steel wire rope requirements for elevators - 8x19 classification"
+    },
+    "badges": {
+      "iso": "Quality Management",
+      "soc2": "Data Security",
+      "gdpr": "Data Protection",
+      "en81": "Elevator Standards"
+    },
+    "cta_title": "Guarantee the Traceability of Your Analysis",
+    "cta_desc": "Meet audits and regulations from day one. Every response is verifiable.",
+    "cta_btn": "Enable Audit-Trail"
+  },
+  "federated": {
+    "title": "Federated Intelligence",
+    "subtitle": "A global knowledge network that detects anonymous patterns across organizations to optimize technical suggestions and prevent known errors.",
+    "value_1_title": "Global Knowledge",
+    "value_1_desc": "Benefit from patterns detected in thousands of technical documents without compromising privacy.",
+    "value_2_title": "Privacy by Design",
+    "value_2_desc": "Data never leaves your tenant. Only abstract and anonymous mathematical patterns are shared.",
+    "value_3_title": "Proactive Suggestions",
+    "value_3_desc": "Receive immediate alerts if your technical configuration matches a known failure pattern in the global network.",
+    "how_it_works": "How the Federated Network Works",
+    "steps": {
+      "1": {
+        "title": "Local Pattern Extraction",
+        "desc": "Our models analyze your technical documents looking for cause-effect relationships."
+      },
+      "2": {
+        "title": "Anonymization & Hash",
+        "desc": "Client names and identifiers are removed. The pattern is converted into an abstract vector using cryptographic hashes."
+      },
+      "3": {
+        "title": "Network Synchronization",
+        "desc": "The global network validates if other tenants have found the same pattern and publishes it if confidence is high."
+      }
+    },
+    "showcase_title": "Real-Time Intelligent Suggestion",
+    "showcase_badge": "Federated Suggestion Detected",
+    "showcase_text": "We've detected you're configuring a **VF-400 Inverter** with a motor distance exceeding 60 meters.",
+    "showcase_tip": "**Network Recommendation:** 82% of similar configurations in the sector increased the use of dU/dt filters to prevent motor voltage spikes.",
+    "showcase_footer": "This knowledge isn't in your manuals; it comes from the sector's collective anonymized wisdom.",
+    "cta_title": "Join the Knowledge Network",
+    "cta_desc": "Take your technical precision to the next level with the sector's collective wisdom. 100% privacy guaranteed.",
+    "cta_btn": "Start Federated Trial"
+  },
+  "pdf_bridge": {
+    "title": "Advanced PDF Bridge",
+    "subtitle": "High-fidelity Python/Node hybrid engine. Processing blueprints, diagrams, and technical tables with 99.9% precision via PyMuPDF.",
+    "stats": {
+      "s1": {
+        "val": "0.8s",
+        "label": "Inference / Page"
+      },
+      "s2": {
+        "val": "99.9%",
+        "label": "OCR Precision"
+      },
+      "s3": {
+        "val": "Hybrid",
+        "label": "Node/Python"
+      },
+      "s4": {
+        "val": "2026",
+        "label": "Engine Version"
+      }
+    },
+    "why_title": "Why use a Python Bridge?",
+    "features": {
+      "tables": {
+        "title": "Dynamic Table Extraction",
+        "desc": "Our engine identifies invisible cell borders and maintains the logical structure of technical data."
+      },
+      "layers": {
+        "title": "Multi-layer Analysis",
+        "desc": "Separates text from geometric vectors in engineering blueprints, indexing annotations in their original context."
+      },
+      "fonts": {
+        "title": "Non-Standard Font Support",
+        "desc": "Robust decoding of corrupt PDF files or custom character encodings."
+      }
+    },
+    "quote": "The bridge engine allows processing in 5 seconds what a human would take 15 minutes to transcribe.",
+    "pipeline_title": "Processing Pipeline",
+    "pipeline_steps": {
+      "1": {
+        "title": "Strict Ingestion",
+        "desc": "MD5 validation and binary sanitization."
+      },
+      "2": {
+        "title": "Python Worker",
+        "desc": "High-performance extraction via PyMuPDF C++ extension."
+      },
+      "3": {
+        "title": "Gemini Embedding",
+        "desc": "004 vector generation with technical awareness."
+      }
+    },
+    "cta_title": "Ready for true technical processing?",
+    "cta_desc": "Don't settle for basic OCR. Get the precision your engineering department demands.",
+    "cta_btn": "Try Advanced PDF Bridge"
+  },
+  "vector_search": {
+    "title": "Hybrid Vector Search",
+    "subtitle": "Semantic search that understands the expert's intent, not just keywords.",
+    "comparison": {
+      "traditional": {
+        "title": "Traditional Search",
+        "query": "steel cable",
+        "results": "✓ Documents with \"steel\" and \"cable\",✗ Misses \"wire rope\",✗ Doesn't understand synonyms"
+      },
+      "vector": {
+        "title": "Vector Search",
+        "query": "steel cable",
+        "results": "✓ \"steel cable\" (100% match),✓ \"wire rope\" (95% similar),✓ \"suspension system\" (87% similar)"
+      }
+    },
+    "how_it_works": "How the Magic Works",
+    "steps": {
+      "1": {
+        "title": "Semantic Embeddings",
+        "desc": "Each chunk is converted into a 768-dimension vector using Gemini Embeddings."
+      },
+      "2": {
+        "title": "MongoDB Atlas Indexing",
+        "desc": "Vectors are stored with HNSW indices optimized for fast searching."
+      },
+      "3": {
+        "title": "Query Transformation",
+        "desc": "Your query is also converted to a vector, ensuring search happens in the same semantic space."
+      },
+      "4": {
+        "title": "Cosine Similarity",
+        "desc": "Cosine similarity is calculated between vectors. Highest similarity chunks are returned."
+      },
+      "5": {
+        "title": "Hybrid Ranking",
+        "desc": "Results are re-ranked combining semantic similarity with technical metadata."
+      }
+    },
+    "examples_title": "Real Examples",
+    "examples": "[object Object]",
+    "stats": {
+      "latency": {
+        "val": "< 200ms",
+        "label": "Latency",
+        "desc": "P95 on 100k docs corpus"
+      },
+      "precision": {
+        "val": "95%",
+        "label": "Precision",
+        "desc": "In complex technical queries"
+      },
+      "dims": {
+        "val": "768D",
+        "label": "Dimensions",
+        "desc": "Gemini Embeddings"
+      }
+    },
+    "cta_title": "Experience Semantic Search",
+    "cta_desc": "Try natural language queries and discover information traditional search misses.",
+    "cta_btn": "Try Now"
+  }
+}

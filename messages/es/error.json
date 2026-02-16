@@ -1,0 +1,15 @@
+{
+  "page": {
+    "title": "Ups, algo ha salido mal",
+    "defaultMessage": "Ha ocurrido un error inesperado en la plataforma.",
+    "supportMessage": "Si el problema persiste, por favor contacta con nuestro equipo de soporte técnico con el código de error superior.",
+    "technicalDetails": "Detalles Técnicos",
+    "home": "Inicio",
+    "retry": "Reintentar"
+  },
+  "rateLimit": {
+    "title": "Demasiadas Solicitudes",
+    "message": "Has realizado demasiadas solicitudes. Por favor, espera un momento antes de intentarlo de nuevo.",
+    "waitMessage": "Por favor espera {seconds} segundos antes de intentarlo de nuevo."
+  }
+}

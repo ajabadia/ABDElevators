@@ -11,66 +11,19 @@ import { CreditCard, Save } from "lucide-react";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 
-// Sub-components
 import { GeneralTab } from "@/components/admin/organizations/GeneralTab";
 import { BrandingTab } from "@/components/admin/organizations/BrandingTab";
 import { StorageTab } from "@/components/admin/organizations/StorageTab";
 import { FeaturesTab } from "@/components/admin/organizations/FeaturesTab";
 import { BillingTab } from "@/components/admin/organizations/BillingTab";
 import { SecurityCenterCard } from "@/components/admin/organizations/SecurityCenterCard";
+import { TenantConfig } from "@/lib/schemas";
 
-export interface TenantConfig {
-    tenantId: string;
-    name: string;
-    industry: 'ELEVATORS' | 'LEGAL' | 'MEDICAL' | 'GENERIC';
-    storage: {
-        provider: 'cloudinary' | 'gdrive' | 's3';
-        settings: {
-            folder_prefix?: string;
-            bucket?: string;
-            region?: string;
-        };
-        quota_bytes: number;
-    };
-    branding?: {
-        logo?: { url?: string; publicId?: string };
-        favicon?: { url?: string; publicId?: string };
-        colors?: {
-            primary?: string;
-            secondary?: string;
-            accent?: string;
-            primaryDark?: string;
-            accentDark?: string;
-        };
-        autoDarkMode?: boolean;
-        companyName?: string;
-    };
-    billing?: {
-        fiscalName?: string;
-        taxId?: string;
-        shippingAddress?: {
-            line1?: string;
-            city?: string;
-            postalCode?: string;
-            country?: string;
-        };
-        billingAddress?: {
-            differentFromShipping: boolean;
-            line1?: string;
-            city?: string;
-            postalCode?: string;
-            country?: string;
-        };
-        recepcion?: {
-            canal: 'EMAIL' | 'POSTAL' | 'IN_APP' | 'XML_EDI';
-            modo: 'PDF' | 'XML' | 'EDI' | 'CSV' | 'PAPER';
-            email?: string;
-        };
-    };
-}
-
-export default function TenantsPage() {
+export default function OrganizationsPage() {
+    const t = useTranslations('admin.organizations.page');
+    const tTabs = useTranslations('admin.organizations.tabs');
     const { toast } = useToast();
     const [config, setConfig] = useState<TenantConfig | null>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -99,7 +52,6 @@ export default function TenantsPage() {
         }
     }, [config?.tenantId]);
 
-    // 1. Carga de datos con useApiList
     const {
         data: tenants,
         isLoading,
@@ -109,27 +61,39 @@ export default function TenantsPage() {
         dataKey: 'tenants',
         onSuccess: (data) => {
             if (data.length > 0 && !config) {
-                // Seleccionar el primero por defecto o buscar por sesión si fuera necesario
                 setConfig(data[0]);
             }
         }
     });
 
-    // 2. Acción de guardado con useApiMutation
     const { mutate: saveConfig, isLoading: isSaving } = useApiMutation({
         endpoint: '/api/admin/tenants',
-        successMessage: 'Configuración de la organización actualizada correctamente.',
-        onSuccess: () => refreshTenants()
+        successMessage: t('saveSuccess'),
+        onSuccess: () => refreshTenants(),
+        onError: (err) => {
+            console.error("Save config error:", err);
+            toast({
+                title: t('error'),
+                description: typeof err === 'string' ? err : t('saveError'),
+                variant: 'destructive',
+            });
+        }
     });
 
     const handleSave = () => {
-        if (config) saveConfig(config);
+        if (config) {
+            if (!config.tenantId) {
+                toast({ title: t('error'), description: t('errorTenantId'), variant: 'destructive' });
+                return;
+            }
+            saveConfig(config);
+        }
     };
 
     if (!isMounted || (isLoading && !config)) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
@@ -137,19 +101,19 @@ export default function TenantsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Configuración de Organización"
-                highlight="Organización"
-                subtitle="Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento."
+                title={t('title')}
+                highlight=""
+                subtitle={t('subtitle')}
                 actions={
                     <>
-                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>Refrescar</Button>
+                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>{t('refresh')}</Button>
                         <Button
                             onClick={handleSave}
-                            className="bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-lg shadow-teal-600/20"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
                             disabled={isSaving}
                         >
-                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" /> : <Save size={18} />}
-                            Guardar Cambios
+                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} aria-hidden="true" />}
+                            {t('save')}
                         </Button>
                     </>
                 }
@@ -160,34 +124,35 @@ export default function TenantsPage() {
                     <TabsList className="w-full justify-start rounded-none border-b bg-white dark:bg-slate-900 h-14 px-6 gap-8">
                         <TabsTrigger
                             value="general"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            General
+                            {tTabs('general')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="branding"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Identidad y Branding
+                            {tTabs('branding')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="storage"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Almacenamiento
+                            {tTabs('storage')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="features"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            Módulos
+                            {tTabs('features')}
                         </TabsTrigger>
                         <TabsTrigger
                             value="billing"
-                            className="data-[state=active]:text-teal-600 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 rounded-none bg-transparent h-14 px-4 font-bold transition-all"
+                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
                         >
-                            <CreditCard size={16} className="mr-2" /> Facturación
+                            <CreditCard size={16} className="mr-2" aria-hidden="true" /> {tTabs('billing')}
                         </TabsTrigger>
+
                     </TabsList>
 
                     <TabsContent value="general" className="p-8 space-y-8">
@@ -207,8 +172,10 @@ export default function TenantsPage() {
                     </TabsContent>
 
                     <TabsContent value="billing" className="p-8 space-y-12">
-                        <BillingTab config={config} setConfig={setConfig} />
+                        <BillingTab config={config} setConfig={setConfig} usageStats={usageStats} />
                     </TabsContent>
+
+
                 </Tabs>
             </ContentCard>
 

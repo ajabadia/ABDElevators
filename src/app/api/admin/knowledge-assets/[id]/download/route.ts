@@ -42,18 +42,34 @@ export async function GET(
         }
 
         const downloadUrl = getPDFDownloadUrl(publicId);
-        const filename = asset.filename || asset.nombre_archivo;
+        const filename = asset.filename || asset.nombre_archivo || 'documento.pdf';
 
         await logEvento({
             level: 'INFO',
             source: 'API_DOWNLOAD',
-            action: 'PDF_DOWNLOAD',
-            message: `PDF Download: ${filename}`,
+            action: 'PDF_DOWNLOAD_START',
+            message: `Starting PDF Download Proxy: ${filename}`,
             correlationId,
             details: { assetId: id }
         });
 
-        return NextResponse.redirect(downloadUrl);
+        // Proxy the request to Cloudinary to handle naming and potential 401s
+        const response = await fetch(downloadUrl);
+
+        if (!response.ok) {
+            throw new AppError('EXTERNAL_SERVICE_ERROR', 502, `Failed to fetch file from storage: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+
+        return new NextResponse(blob, {
+            status: 200,
+            headers: {
+                'Content-Type': response.headers.get('Content-Type') || 'application/pdf',
+                'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+                'Cache-Control': 'no-store, no-cache, must-revalidate',
+            },
+        });
     } catch (error: any) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });

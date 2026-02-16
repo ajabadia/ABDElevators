@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { ProfileForm } from '@/components/profile/ProfileForm';
 import { PasswordForm } from '@/components/profile/PasswordForm';
 import { ProfilePhotoUpload } from '@/components/profile/ProfilePhotoUpload';
@@ -10,11 +11,8 @@ import { ActiveSessionsForm } from '@/components/profile/ActiveSessionsForm';
 import { MfaSettingsForm } from '@/components/profile/MfaSettingsForm';
 import { UserEfficiencyStats } from '@/components/profile/UserEfficiencyStats';
 import { getTranslations } from 'next-intl/server';
+import { Skeleton } from '@/components/ui/skeleton';
 
-/**
- * Página de Perfil de Usuario
- * Permite gestionar datos personales, foto y seguridad.
- */
 export default async function PerfilPage() {
     const t = await getTranslations('profile.page');
     const tCommon = await getTranslations('common');
@@ -64,8 +62,8 @@ export default async function PerfilPage() {
 
                         <div className="mt-8 w-full space-y-3">
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                                <div className="flex items-center gap-2">
-                                    <Shield size={16} className="text-teal-600" />
+                    <div className="flex items-center gap-2">
+                                    <Shield size={16} className="text-teal-600" aria-hidden="true" />
                                     <span className="text-xs font-bold uppercase text-slate-500">{t('role')}</span>
                                 </div>
                                 <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -73,8 +71,8 @@ export default async function PerfilPage() {
                                 </span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                                <div className="flex items-center gap-2">
-                                    <UserIcon size={16} className="text-teal-600" />
+                    <div className="flex items-center gap-2">
+                                    <UserIcon size={16} className="text-teal-600" aria-hidden="true" />
                                     <span className="text-xs font-bold uppercase text-slate-500">{t('memberSince')}</span>
                                 </div>
                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
@@ -85,11 +83,15 @@ export default async function PerfilPage() {
                     </div>
 
                     {/* Estadísticas de Eficiencia (Fase 24.2 - User View) */}
-                    <UserEfficiencyStats />
+                    <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+                        <UserEfficiencyStats />
+                    </Suspense>
 
                     {/* Sesiones Activas (Movido aquí por petición de UX) */}
                     <div className="mt-6">
-                        <ActiveSessionsForm />
+                        <Suspense fallback={<Skeleton className="h-32 w-full rounded-xl" />}>
+                            <ActiveSessionsForm />
+                        </Suspense>
                     </div>
                 </div>
 
@@ -98,8 +100,8 @@ export default async function PerfilPage() {
                     {/* Datos Personales */}
                     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <UserIcon size={20} className="text-slate-600 dark:text-slate-400" />
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <UserIcon size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('personalInfo')}</h2>
@@ -114,8 +116,8 @@ export default async function PerfilPage() {
                     {/* Notificaciones */}
                     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <Bell size={20} className="text-slate-600 dark:text-slate-400" />
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <Bell size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('notificationPrefs')}</h2>
@@ -130,8 +132,8 @@ export default async function PerfilPage() {
                     {/* Seguridad */}
                     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                <Key size={20} className="text-slate-600 dark:text-slate-400" />
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <Key size={20} className="text-slate-600 dark:text-slate-400" aria-hidden="true" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('securityCenter')}</h2>

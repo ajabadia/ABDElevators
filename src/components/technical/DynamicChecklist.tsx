@@ -5,15 +5,20 @@ import { CheckCircle2, AlertCircle, MessageSquare, ChevronDown, ChevronUp } from
 import { ChecklistConfig, ChecklistItem } from '@/lib/schemas';
 import { useWorkspaceStore } from '@/store/workspace-store';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface DynamicChecklistProps {
+    entityId: string;
     items: ChecklistItem[];
     config: ChecklistConfig;
+    onRefresh?: () => void;
 }
 
 export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
+    entityId,
     items,
-    config
+    config,
+    onRefresh
 }) => {
     const {
         checklistExpandedCategories,
@@ -36,6 +41,42 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
 
     const uncategorizedItems = items.filter(item => !item.categoryId);
 
+    const handleUpdateStatus = async (itemId: string, status: 'OK' | 'REVIEW') => {
+        // Optimistic update
+        updateChecklistItem(itemId, { status });
+
+        try {
+            const res = await fetch(`/api/entities/${entityId}/checklist/validate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemId, status })
+            });
+
+            if (!res.ok) throw new Error('Failed to save validation');
+
+            toast.success('Validación guardada');
+        } catch (err) {
+            console.error(err);
+            toast.error('Error al guardar validación');
+        }
+    };
+
+    const handleUpdateNotes = async (itemId: string, notes: string) => {
+        // Optimistic update
+        updateChecklistItem(itemId, { notes });
+
+        // Debounce would be better, but let's do a direct one for simplicity or assume technician clicks away
+    };
+
+    const renderConfidence = (level?: string) => {
+        switch (level) {
+            case 'HIGH': return <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">ALTA</span>;
+            case 'MEDIUM': return <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">MEDIA</span>;
+            case 'LOW': return <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">BAJA</span>;
+            default: return null;
+        }
+    };
+
     const renderItem = (item: ChecklistItem) => {
         const state = validationStates[item.id] || { status: 'PENDING', notes: '' };
 
@@ -48,6 +89,10 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                         </p>
                         <div className="mt-3 flex items-center gap-2">
                             <span className="text-xs text-slate-400 font-mono">ID: {item.id.substring(0, 8)}</span>
+                            {renderConfidence(item.confidenceLevel)}
+                            {item.ragReference && (
+                                <span className="text-[10px] text-slate-400 italic">Ref: {item.ragReference}</span>
+                            )}
                             {item.notes && (
                                 <div className="flex items-center text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 italic">
                                     <MessageSquare className="h-3 w-3 mr-1" />
@@ -59,7 +104,7 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
 
                     <div className="flex items-center gap-2 self-end md:self-start">
                         <button
-                            onClick={() => updateChecklistItem(item.id, { status: 'OK' })}
+                            onClick={() => handleUpdateStatus(item.id, 'OK')}
                             className={cn(
                                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
                                 state.status === 'OK'
@@ -71,7 +116,7 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                             OK
                         </button>
                         <button
-                            onClick={() => updateChecklistItem(item.id, { status: 'REVIEW' })}
+                            onClick={() => handleUpdateStatus(item.id, 'REVIEW')}
                             className={cn(
                                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
                                 state.status === 'REVIEW'
@@ -168,6 +213,18 @@ export const DynamicChecklist: React.FC<DynamicChecklistProps> = ({
                             {uncategorizedItems.map(renderItem)}
                         </div>
                     )}
+                </div>
+            )}
+
+            {onRefresh && (
+                <div className="pt-6 border-t border-slate-100 flex justify-center">
+                    <button
+                        onClick={onRefresh}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold transition-all"
+                    >
+                        <AlertCircle className="h-4 w-4" />
+                        REGENERAR ANÁLISIS (IA)
+                    </button>
                 </div>
             )}
         </div>

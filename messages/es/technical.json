@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "title": "Análisis",
+    "subtitle": "Procesamiento agentico y validación técnica de especificaciones (Motor del Sistema).",
+    "backToNew": "← Volver a Nuevo Análisis",
+    "newAnalysis": "Nuevo Análisis",
+    "dropPdf": "Arrastra el PDF del pedido aquí",
+    "clickBrowse": "Click para buscar",
+    "pdfFormat": "PDF de pedido (Máx 10MB)",
+    "processing": "Procesando...",
+    "analyze": "Analizar Pedido",
+    "features": {
+      "autoDetect": "Detección automática de modelos y componentes.",
+      "crossRef": "Referenciación cruzada inteligente con manuales activos.",
+      "checklist": "Lista de verificación de compatibilidad generada por IA."
+    },
+    "recents": "Recientes",
+    "searchPlaceholder": "Buscar pedidos...",
+    "patterns": "Patrones",
+    "noRecents": "No se han analizado pedidos recientemente.",
+    "toast": {
+      "processed": "procesado",
+      "startingBrain": "Iniciando cerebro agéntico para análisis técnico...",
+      "error": "Error",
+      "couldNotProcess": "No se pudo procesar el pedido",
+      "connectionFailure": "Fallo de conexión",
+      "fatalError": "Error fatal",
+      "retrievalError": "No se pudieron recuperar los resultados finales"
+    }
+  },
+  "graphs": {
+    "title": "Conocimiento Semántico",
+    "highlight": "Grafo",
+    "subtitle": "Visualiza la red de conexiones lógicas capturadas por el motor inteligente.",
+    "whatIs": "¿Qué es este Grafo?",
+    "description": "A diferencia de una base de datos tradicional, el Grafo de Conocimiento entiende cómo se relacionan los pedidos con los técnicos y las normativas.",
+    "nodes": {
+      "title": "Nodos",
+      "desc": "Entidades físicas (Ascensores, Personas, Papeles)."
+    },
+    "edges": {
+      "title": "Aristas",
+      "desc": "Relaciones lógicas (\"Este pedido CUMPLE esta norma\")."
+    }
+  },
+  "validation": {
+    "loadingEngine": "Cargando motor de validación...",
+    "title": "Validación Técnica",
+    "entityLabel": "Entity",
+    "status": "Estado",
+    "completed": "Validación Completada",
+    "completedDesc": "La validación ha sido guardada exitosamente en el sistema.",
+    "viewEntity": "Ver Entity",
+    "noRagResults": "Sin Resultados RAG",
+    "noRagDesc": "No se encontraron resultados del análisis previo. ¿Deseas iniciar el cerebro agéntico para analizar este pedido ahora?",
+    "startAgent": "Iniciar Razonamiento Agéntico"
+  }
+}

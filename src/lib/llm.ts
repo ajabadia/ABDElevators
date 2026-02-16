@@ -20,7 +20,7 @@ const CallGeminiMiniSchema = z.object({
     prompt: z.string().min(1),
     tenantId: z.string(),
     options: z.object({
-        correlationId: z.string().uuid(),
+        correlationId: z.string(),
         temperature: z.number().min(0).max(1).optional(),
         model: z.string().optional()
     })
@@ -29,7 +29,7 @@ const CallGeminiMiniSchema = z.object({
 /**
  * Genera embeddings para un bloque de texto.
  */
-export async function generateEmbedding(text: string, tenantId: string, correlationId: string): Promise<number[]> {
+export async function generateEmbedding(text: string, tenantId: string, correlationId: string, session?: any): Promise<number[]> {
     return tracer.startActiveSpan('gemini.embed_content', {
         attributes: {
             'tenant.id': tenantId,
@@ -67,7 +67,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
                 });
             }
 
-            await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlationId);
+            await UsageService.trackLLM(tenantId, text.length / 4, 'text-embedding-004', correlationId, session);
 
             span.setStatus({ code: SpanStatusCode.OK });
             return result.embedding.values;
@@ -81,6 +81,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
                 action: 'EMBED_ERROR',
                 message: `Fallo en embedding Gemini: ${(error as Error).message}`,
                 correlationId,
+                tenantId,
                 stack: (error as Error).stack
             });
             throw new ExternalServiceError('Error generating embedding with Gemini', error as Error);
@@ -96,9 +97,10 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 export async function callGeminiMini(
     prompt: string,
     tenantId: string,
-    options: { correlationId: string; temperature?: number; model?: string }
+    options: { correlationId: string; temperature?: number; model?: string },
+    session?: any
 ): Promise<string> {
-    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-2.5-flash' } = options;
     const modelName = mapModelName(rawModel);
 
     return tracer.startActiveSpan('gemini.generate_content', {
@@ -133,7 +135,7 @@ export async function callGeminiMini(
             const usage = (result.response as any).usageMetadata;
             if (usage) {
                 span.setAttribute('genai.tokens', usage.totalTokenCount);
-                await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
             }
 
             span.setStatus({ code: SpanStatusCode.OK });
@@ -149,6 +151,7 @@ export async function callGeminiMini(
                 action: 'CALL_ERROR',
                 message: `Error en Gemini Mini (${modelName}): ${error.message}`,
                 correlationId,
+                tenantId,
                 stack: error.stack
             });
 
@@ -169,7 +172,7 @@ export async function callGeminiPro(
 ): Promise<string> {
     return callGemini(prompt, tenantId, options.correlationId, {
         ...options,
-        model: options.model || 'gemini-1.5-pro'
+        model: options.model || 'gemini-3-pro'
     });
 }
 
@@ -181,7 +184,7 @@ export async function callGeminiStream(
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string }
 ) {
-    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-1.5-flash' } = options;
+    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-2.5-flash' } = options;
     const modelName = mapModelName(rawModel);
 
     return tracer.startActiveSpan('gemini.stream_content', {
@@ -206,6 +209,16 @@ export async function callGeminiStream(
         } catch (error: any) {
             span.recordException(error);
             console.error(`[AI STREAM ERROR]`, error.message);
+
+            await logEvento({
+                level: 'ERROR',
+                source: 'GEMINI_STREAM',
+                action: 'STREAM_ERROR',
+                message: `Error en streaming Gemini: ${error.message}`,
+                correlationId,
+                tenantId,
+                stack: error.stack
+            });
             throw error;
         } finally {
             span.end();
@@ -217,9 +230,9 @@ export async function callGeminiStream(
  * Proxies para servicios especializados (Mantener compatibilidad)
  */
 
-export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string) {
+export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
     const { ExtractionService } = await import("./extraction-service");
-    return ExtractionService.extractModelsWithGemini(text, tenantId, correlationId);
+    return ExtractionService.extractModelsWithGemini(text, tenantId, correlationId, session);
 }
 
 export async function analyzeEntityWithGemini(entitySlug: string, text: string, tenantId: string, correlationId: string) {
@@ -227,9 +240,9 @@ export async function analyzeEntityWithGemini(entitySlug: string, text: string, 
     return AdaptiveAnalysisService.analyzeEntityWithGemini(entitySlug, text, tenantId, correlationId);
 }
 
-export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string) {
+export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string, session?: any) {
     const { VisionService } = await import("./vision-service");
-    return VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId);
+    return VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId, session);
 }
 
 /**
@@ -246,7 +259,7 @@ export async function callGemini(
     }
 ): Promise<string> {
     const start = Date.now();
-    const modelName = mapModelName(options?.model || 'gemini-1.5-flash');
+    const modelName = mapModelName(options?.model || 'gemini-2.5-flash');
 
     return tracer.startActiveSpan('gemini.text_generation', {
         attributes: {
@@ -266,7 +279,13 @@ export async function callGemini(
                 }
             });
 
-            const result = await model.generateContent(prompt);
+            const result = await executeWithResilience(
+                'GEMINI_CALL',
+                'GENERATE_CONTENT',
+                () => model.generateContent(prompt),
+                correlationId,
+                tenantId
+            );
             const text = result.response.text();
 
             const duration = Date.now() - start;
@@ -283,7 +302,7 @@ export async function callGemini(
         } catch (error) {
             span.recordException(error as Error);
             span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
-            throw new ExternalServiceError('Error generating text with Gemini', error as Error);
+            throw new ExternalServiceError(`Gemini API Error: ${(error as Error).message}`, error as Error);
         } finally {
             span.end();
         }

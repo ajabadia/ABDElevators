@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "System Settings",
+    "subtitle": "Manage your profile, interface preferences, and governance options.",
+    "profile": "User Profile",
+    "interface": "Interface & Display",
+    "security": "Security & Permissions",
+    "history": "Change History",
+    "onboarding": {
+      "title": "Welcome Tour",
+      "description": "Restart the interactive tour to discover all features.",
+      "resetting": "Resetting...",
+      "reset": "Reset Tour"
+    },
+    "securitySection": {
+      "title": "Security and Access",
+      "description": "Status of global security policies."
+    },
+    "mfa": {
+      "label": "MFA Mandatory (Admin)",
+      "description": "Force administrators to configure MFA to access critical routes.",
+      "active": "Active (Phase 120.1)",
+      "configurable": "Configurable via FEATURE_ENFORCE_MFA_ADMIN"
+    },
+    "securityPolicy": {
+      "title": "Security Policy",
+      "description": "If this flag is active and you don't have MFA configured, you will be automatically redirected to your profile from any administration route."
+    },
+    "audit": {
+      "title": "Traceability and Audit",
+      "description": "Total transparency about structural changes.",
+      "bankGrade": "Your account has bank-grade audit logging. All configuration changes are recorded with user signature and correlation_id."
+    },
+    "theme": {
+      "title": "Visual Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  }
+}

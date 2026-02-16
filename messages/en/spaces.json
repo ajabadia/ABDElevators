@@ -1,0 +1,26 @@
+{
+  "playground": {
+    "title": "Spaces Playground",
+    "subtitle": "Explore the space hierarchy and test ephemeral analysis.",
+    "details": "Space Details",
+    "name": "Name",
+    "path": "Path",
+    "tabs": {
+      "qa": "Quick Q&A",
+      "settings": "Settings"
+    },
+    "settings": {
+      "title": "Space Settings",
+      "description": "Coming soon: Permission management, invitations and specific quotas.",
+      "moduleInDevelopment": "Module in Development"
+    },
+    "type": "Type",
+    "created": "Created",
+    "qa": {
+      "title": "Quick Q&A",
+      "description": "Test analysis without prior ingestion.",
+      "inputLabel": "Paste your technical text here",
+      "analyze": "Analyze"
+    }
+  }
+}

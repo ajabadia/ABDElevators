@@ -1,0 +1,195 @@
+{
+    "id": "elevators-ontology",
+    "name": "Ascensores ABD",
+    "version": "1.0.0",
+    "entities": [
+        {
+            "name": "pedido",
+            "plural": "pedidos",
+            "slug": "pedidos",
+            "icon": "FileText",
+            "fields": [
+                {
+                    "key": "numero_pedido",
+                    "label": "Nº Pedido",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 1,
+                        "width": "w-32"
+                    }
+                },
+                {
+                    "key": "cliente",
+                    "label": "Cliente",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 2
+                    }
+                },
+                {
+                    "key": "modelo",
+                    "label": "Modelo",
+                    "type": "string",
+                    "ui": {
+                        "order": 3
+                    }
+                },
+                {
+                    "key": "estado",
+                    "label": "Estado",
+                    "type": "select",
+                    "options": [
+                        "PENDING",
+                        "ANALYZED",
+                        "ERROR"
+                    ],
+                    "ui": {
+                        "order": 4
+                    }
+                },
+                {
+                    "key": "creado",
+                    "label": "Fecha",
+                    "type": "date",
+                    "ui": {
+                        "order": 5
+                    }
+                }
+            ],
+            "workflows": {
+                "initial": "PENDING",
+                "states": [
+                    {
+                        "id": "PENDING",
+                        "label": "Pendiente",
+                        "color": "orange"
+                    },
+                    {
+                        "id": "ANALYZED",
+                        "label": "Analizado",
+                        "color": "green"
+                    },
+                    {
+                        "id": "ERROR",
+                        "label": "Error",
+                        "color": "red"
+                    }
+                ]
+            },
+            "api": {
+                "list": "/api/core/entities/pedido",
+                "detail": "/api/core/entities/pedido/:id",
+                "mutate": "/api/core/entities/pedido",
+                "analyze": "/api/tecnico/pedidos/analyze"
+            },
+            "prompts": {
+                "analyze": "Eres un experto en ingeniería de ascensores de ABD. Analiza el siguiente texto de pedido y extrae los componentes técnicos. Devuelve UN ARRAY JSON con objetos {tipo, modelo}. Tipos permitidos: [botonera, motor, cuadro, puerta, otros]. Texto: {{text}}",
+                "summarize": "Resume los puntos clave de este pedido de ascensor: {{text}}"
+            }
+        },
+        {
+            "name": "usuario",
+            "plural": "users",
+            "slug": "users",
+            "icon": "Users",
+            "fields": [
+                {
+                    "key": "nombre",
+                    "label": "Nombre",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 1
+                    }
+                },
+                {
+                    "key": "apellidos",
+                    "label": "Apellidos",
+                    "type": "string",
+                    "ui": {
+                        "order": 2
+                    }
+                },
+                {
+                    "key": "email",
+                    "label": "Email",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 3
+                    }
+                },
+                {
+                    "key": "puesto",
+                    "label": "Puesto",
+                    "type": "string",
+                    "ui": {
+                        "order": 4
+                    }
+                },
+                {
+                    "key": "tenantId",
+                    "label": "Tenant",
+                    "type": "string",
+                    "ui": {
+                        "order": 5,
+                        "width": "font-bold text-xs text-teal-600 uppercase"
+                    }
+                },
+                {
+                    "key": "rol",
+                    "label": "Rol",
+                    "type": "select",
+                    "options": [
+                        "SUPER_ADMIN",
+                        "ADMIN",
+                        "TECHNICAL",
+                        "ENGINEERING"
+                    ],
+                    "ui": {
+                        "order": 6
+                    }
+                },
+                {
+                    "key": "activo",
+                    "label": "Estado",
+                    "type": "boolean",
+                    "ui": {
+                        "order": 5
+                    }
+                }
+            ],
+            "api": {
+                "list": "/api/core/entities/usuario",
+                "detail": "/api/core/entities/usuario/:id",
+                "mutate": "/api/core/entities/usuario"
+            }
+        }
+    ],
+    "relationships": [
+        {
+            "from": "pedido",
+            "to": "usuario",
+            "type": "ANALIZADO_POR",
+            "label": "Analizado por"
+        },
+        {
+            "from": "pedido",
+            "to": "modelo",
+            "type": "CONTIENE_MODELO",
+            "label": "Contiene modelo"
+        },
+        {
+            "from": "modelo",
+            "to": "normativa",
+            "type": "CUMPLE_NORMA",
+            "label": "Cumple norma"
+        }
+    ]
+}

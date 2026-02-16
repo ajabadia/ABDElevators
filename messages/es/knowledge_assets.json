@@ -1,0 +1,128 @@
+{
+  "delete_confirm": "¿Estás seguro de eliminar este documento? Esta acción es irreversible.",
+  "metrics": {
+    "active": "Documentos Activos",
+    "indexed": "Fragmentos Indexados",
+    "last_ingest": "Última Ingesta"
+  },
+  "search_placeholder": "Buscar por nombre, componente o modelo...",
+  "actions": {
+    "new": "Nuevo Documento",
+    "preview": "Vista Previa",
+    "diagnostics": "Ver Diagnóstico",
+    "relationships": "Relaciones",
+    "download": "Ver / Descargar",
+    "retry": "Reintentar Ingesta",
+    "mark_active": "Marcar Vigente",
+    "mark_obsolete": "Marcar Obsoleto",
+    "archive": "Archivar",
+    "delete": "Eliminar Permanente"
+  },
+  "table": {
+    "document": "Documento",
+    "type_model": "Tipo / Modelo",
+    "status": "Estado / Ingesta",
+    "chunks": "Fragmentos",
+    "actions": "Acciones",
+    "loading": "Cargando documentos...",
+    "empty": "No se encontraron documentos.",
+    "uploaded": "Subido el"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "failed": "Fallido",
+    "active": "Vigente",
+    "obsolete": "Obsoleto",
+    "archived": "Archivado",
+    "processing": "Procesando"
+  },
+  "retry_success": "Reintento iniciado",
+  "retry_desc": "El documento se está procesando nuevamente.",
+  "title": "Gestión del Corpus Técnico",
+  "subtitle": "Sube y gestiona los manuales que alimentan el sistema RAG.",
+  "filters": "Filtros",
+  "spaces": {
+    "quick_qa": {
+      "desc": "Pega texto técnico, notas o especificaciones para consultar sin persistencia.",
+      "snippet_badge": "Efímero",
+      "title": "Quick Q&A",
+      "snippet_label": "Fragmento de Texto (Snippet)",
+      "snippet_placeholder": "Pega aquí el contenido a analizar...",
+      "context_label": "Contexto Adicional (Opcional)",
+      "context_placeholder": "Ej: Instrucciones específicas, versión de software...",
+      "clear_all": "Limpiar Todo",
+      "promote": "Promocionar a Documento",
+      "chat_welcome_title": "Haz una pregunta sobre el texto",
+      "chat_title": "Chat Efímero",
+      "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
+      "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
+      "status_loading": "Consultando información...",
+      "promote_success": "Snippet guardado como Documento persistente",
+      "promote_error": "Error al promocionar",
+      "validation_error": "Debes pegar un texto y escribir una pregunta",
+      "conn_error": "Error de conexión",
+      "ia_error": "Error al consultar a la IA"
+    },
+    "placeholders": {
+      "personal_title": "Gestión de Documentos Personales",
+      "personal_desc": "Próximamente: Sube y gestiona tus propios archivos PDF.",
+      "collections_desc": "Próximamente: Organiza documentos en carpetas por proyecto o tema.",
+      "collections_title": "Colecciones Inteligentes"
+    },
+    "tabs": {
+      "collections": "Colecciones",
+      "quick_qa": "Quick Q&A",
+      "personal": "Mi Espacio"
+    },
+    "title": "Espacios de Trabajo",
+    "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
+    "admin": {
+      "manage": "Gestionar",
+      "title": "Gestión de Espacios",
+      "table": {
+        "status": "Estado",
+        "space": "Espacio",
+        "visibility": "Visibilidad",
+        "created": "Creado",
+        "actions": "Acciones",
+        "type": "Tipo"
+      },
+      "search_placeholder": "Buscar espacios...",
+      "new_space": "Nuevo Espacio",
+      "types": {
+        "global": "Global",
+        "industry": "Industria",
+        "tenant": "Tenant",
+        "team": "Equipo",
+        "personal": "Personal"
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
+      }
+    }
+  },
+  "tabs": {
+    "active": "Usuarios Activos",
+    "pending": "Invitaciones Pendientes"
+  },
+  "invitations": {
+    "desc": "Gestiona y revoca las invitaciones que aún no han sido aceptadas.",
+    "title": "Invitaciones Pendientes",
+    "empty": "No hay invitaciones pendientes",
+    "table": {
+      "status": "Estado",
+      "email": "Email",
+      "role": "Rol",
+      "expiry": "Expira"
+    },
+    "revoke_confirm": "¿Estás seguro de que deseas revocar la invitación para {email}?",
+    "status": {
+      "pending": "Pendiente",
+      "accepted": "Aceptada",
+      "expired": "Expirada",
+      "revoked": "Revocada"
+    }
+  },
+  "delete_user_confirm": "¿Estás seguro de eliminar a {name}?"
+}

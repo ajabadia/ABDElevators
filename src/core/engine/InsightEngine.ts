@@ -4,14 +4,20 @@ import { logEvento } from '@/lib/logger';
 import { WorkflowEngine } from './WorkflowEngine';
 
 
-export interface Insight {
-    id: string;
-    type: 'warning' | 'info' | 'success' | 'critical';
-    title: string;
-    description: string;
-    impact: string;
-    suggestion: string;
-}
+import { z } from 'zod';
+
+export const InsightSchema = z.object({
+    id: z.string(),
+    type: z.enum(['warning', 'info', 'success', 'critical']),
+    category: z.enum(['ANOMALY', 'PREDICTIVE', 'GENERAL']),
+    title: z.string(),
+    description: z.string(),
+    impact: z.string(),
+    suggestion: z.string(),
+    metadata: z.record(z.string(), z.any()).optional(),
+});
+
+export type Insight = z.infer<typeof InsightSchema>;
 
 /**
  * InsightEngine: Genera recomendaciones proactivas analizando el Grafo de Conocimiento y la DB.
@@ -41,6 +47,7 @@ export class InsightEngine {
                     {
                         id: 'no-data',
                         type: 'info',
+                        category: 'GENERAL',
                         title: 'Datos insuficientes',
                         description: 'Aún no hay suficientes conexiones en el grafo para generar insights profundos.',
                         impact: 'Bajo',
@@ -59,10 +66,16 @@ export class InsightEngine {
                 Cada insight debe tener:
                 - id: un string único (slug)
                 - type: "warning" | "info" | "success" | "critical"
+                - category: "ANOMALY" | "PREDICTIVE" | "GENERAL"
                 - title: título breve y profesional
                 - description: qué hemos encontrado
                 - impact: estimación de impacto (Bajo, Medio, Alto)
                 - suggestion: qué acción debería tomar el usuario
+                - metadata: objeto con datos técnicos (ej: { confidence: 0.9, sourceDocs: [...] })
+
+                Diferencia claramente:
+                - ANOMALÍAS: Patrones de error, inconsistencia o cuellos de botella actuales.
+                - PREDICTIVO: Basado en el tiempo transcurrido, recomendaciones de fabricantes o desgaste estimado.
 
                 Enfócate en cuellos de botella de técnicos, componentes que suelen aparecer juntos, o normativas que se aplican con frecuencia.
                 Devuelve SOLO el array JSON.
@@ -73,7 +86,7 @@ export class InsightEngine {
             const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
             if (!jsonMatch) return [];
 
-            const insights: Insight[] = JSON.parse(jsonMatch[0]);
+            const insights: Insight[] = z.array(InsightSchema).parse(JSON.parse(jsonMatch[0]));
 
             // 3. Trigger Automated Workflows (Phase 10)
             const workflow = WorkflowEngine.getInstance();
@@ -138,6 +151,31 @@ export class InsightEngine {
                     WHERE NOT (m)-[:CUMPLE_NORMA]->()
                     RETURN m.name as modelo_sin_norma
                     LIMIT 3
+                `
+            },
+            // Patrón 4: Anomalías en errores técnicos (Fase 83)
+            {
+                name: 'anomaly_failure_spikes',
+                query: `
+                    MATCH (e:entity { tenantId: $tenantId })-[r:HAS_CORRECTION]->(c)
+                    WITH e.identifier as pedido, count(c) as correcciones
+                    WHERE correcciones > 5
+                    RETURN pedido, correcciones
+                    ORDER BY correcciones DESC
+                    LIMIT 3
+                `
+            },
+            // Patrón 5: Predicción de Mantenimiento (Proactivo)
+            {
+                name: 'maintenance_prediction',
+                query: `
+                    MATCH (e:entity { tenantId: $tenantId })
+                    WHERE e.lastMaintenance IS NOT NULL
+                    WITH e, duration.between(date(e.lastMaintenance), date()).months as meses
+                    WHERE meses > 12 OR (e.usageIntensity = 'HIGH' AND meses > 6)
+                    RETURN e.identifier as pedido, meses as meses_pasados, e.usageIntensity as intensidad
+                    ORDER BY meses_pasados DESC
+                    LIMIT 5
                 `
             }
         ];

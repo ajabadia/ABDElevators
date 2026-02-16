@@ -22,10 +22,10 @@ export default function PermissionAuditPage() {
     const t = useTranslations('admin.guardian.audit');
     const [isLoading] = useState(false); // Mock loading state
 
-    // Mock data based on schema
+    // Mock data based on schema - using fixed dates to prevent hydration errors
     const auditLogs = [
-        { id: '1', timestamp: new Date(), user: 'ajabadia', resource: 'knowledge-asset:65ba...', action: 'read', decision: 'ALLOW', policy: 'Knowledge Asset Reader' },
-        { id: '2', timestamp: new Date(), user: 'external_user', resource: 'settings:billing', action: 'delete', decision: 'DENY', policy: 'Implicit Deny' },
+        { id: '1', timestamp: new Date('2026-02-10T14:00:00'), user: 'ajabadia', resource: 'knowledge-asset:65ba...', action: 'read', decision: 'ALLOW', policy: 'Knowledge Asset Reader' },
+        { id: '2', timestamp: new Date('2026-02-10T13:30:00'), user: 'external_user', resource: 'settings:billing', action: 'delete', decision: 'DENY', policy: 'Implicit Deny' },
     ];
 
     return (

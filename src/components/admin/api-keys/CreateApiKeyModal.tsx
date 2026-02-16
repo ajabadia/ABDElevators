@@ -17,17 +17,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { createApiKey } from '@/actions/api-keys';
 import { ApiKeyPermission, ApiKeyPermissionSchema } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Key, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Copy, Key, AlertTriangle } from 'lucide-react';
 import {
     Alert,
     AlertDescription,
     AlertTitle,
 } from "@/components/ui/alert";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { useTranslations } from 'next-intl';
 
-export function CreateApiKeyModal() {
+export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
+    const t = useTranslations('admin.api_keys');
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [permissions, setPermissions] = useState<ApiKeyPermission[]>([]);
+    const [spaceId, setSpaceId] = useState<string | null>(null);
     const [generatedKey, setGeneratedKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
@@ -36,15 +46,15 @@ export function CreateApiKeyModal() {
     const availablePermissions = ApiKeyPermissionSchema.options;
 
     const handleCreate = async () => {
-        if (!name) return toast({ title: "Error", description: "Assign a name to the key", variant: "destructive" });
-        if (permissions.length === 0) return toast({ title: "Error", description: "Select at least one permission", variant: "destructive" });
+        if (!name) return toast({ title: "Error", description: t('error_name'), variant: "destructive" });
+        if (permissions.length === 0) return toast({ title: "Error", description: t('error_permissions'), variant: "destructive" });
 
         setLoading(true);
         try {
-            const result = await createApiKey(name, permissions);
+            const result = await createApiKey(name, permissions, undefined, spaceId || undefined);
             if (result.success && result.data) {
                 setGeneratedKey(result.data.plainTextKey);
-                toast({ title: "Success", description: "API Key created successfully" });
+                toast({ title: t('copied'), description: t('create_success') });
             } else {
                 toast({ title: "Error", description: result.error || "Unknown error", variant: "destructive" });
             }
@@ -68,6 +78,7 @@ export function CreateApiKeyModal() {
         setGeneratedKey(null);
         setName('');
         setPermissions([]);
+        setSpaceId(null);
     };
 
     return (
@@ -75,14 +86,14 @@ export function CreateApiKeyModal() {
             <DialogTrigger asChild>
                 <Button className="gap-2 bg-teal-600 hover:bg-teal-700 text-white" onClick={() => setOpen(true)}>
                     <Key className="w-4 h-4" />
-                    Generate New Key
+                    {t('new_key')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white">
                 <DialogHeader>
-                    <DialogTitle>Create API Key</DialogTitle>
+                    <DialogTitle>{t('title')}</DialogTitle>
                     <DialogDescription className="text-slate-400">
-                        Generate a secure key to access the ABD RAG Public API.
+                        {t('subtitle')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -99,8 +110,28 @@ export function CreateApiKeyModal() {
                             />
                         </div>
 
+                        <div className="grid gap-2">
+                            <Label htmlFor="space">{t('space_restriction')}</Label>
+                            <Select onValueChange={setSpaceId} value={spaceId || "none"}>
+                                <SelectTrigger id="space" className="bg-slate-950 border-white/10">
+                                    <SelectValue placeholder={t('select_space')} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                    <SelectItem value="none">{t('global_space')}</SelectItem>
+                                    {spaces.map(s => (
+                                        <SelectItem key={s._id.toString()} value={s._id.toString()}>
+                                            [{s.type}] {s.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-slate-400 italic">
+                                {t('space_restriction_desc')}
+                            </p>
+                        </div>
+
                         <div className="grid gap-3">
-                            <Label>Scopes (Permissions)</Label>
+                            <Label>{t('scopes')}</Label>
                             <div className="grid grid-cols-1 gap-2 border border-white/10 rounded-lg p-3 bg-slate-950/50">
                                 {availablePermissions.map(perm => (
                                     <div key={perm} className="flex items-center space-x-2">
@@ -125,9 +156,9 @@ export function CreateApiKeyModal() {
                     <div className="space-y-4 py-4">
                         <Alert className="border-amber-500/50 bg-amber-500/10 text-amber-200">
                             <AlertTriangle className="h-4 w-4 stroke-amber-500" />
-                            <AlertTitle>Save this key now!</AlertTitle>
+                            <AlertTitle>{t('save_warning')}</AlertTitle>
                             <AlertDescription>
-                                This is the only time we will show you the full API key. If you lose it, you will need to generate a new one.
+                                {t('save_warning_desc')}
                             </AlertDescription>
                         </Alert>
 
@@ -141,7 +172,7 @@ export function CreateApiKeyModal() {
                                 className="absolute top-2 right-2 bg-slate-800 hover:bg-slate-700 text-slate-300"
                                 onClick={() => {
                                     navigator.clipboard.writeText(generatedKey);
-                                    toast({ title: "Copied", description: "Copied to clipboard" });
+                                    toast({ title: t('copied'), description: t('copy_toast') });
                                 }}
                             >
                                 <Copy className="w-3 h-3" />
@@ -153,7 +184,7 @@ export function CreateApiKeyModal() {
                 <DialogFooter>
                     {!generatedKey ? (
                         <Button onClick={handleCreate} disabled={loading} className="bg-teal-600 hover:bg-teal-700 text-white">
-                            {loading ? "Generating..." : "Create Secret Key"}
+                            {loading ? "..." : t('new_key')}
                         </Button>
                     ) : (
                         <Button onClick={handleClose} variant="outline" className="border-white/10 hover:bg-white/5 text-white">

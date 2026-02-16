@@ -14,6 +14,15 @@ export interface LogEntry {
     details?: any;
     stack?: string;
     timestamp?: Date;
+    durationMs?: number;     // Tiempo de ejecución para SLAs
+}
+
+/**
+ * Interface para eventos de log estandarizados (Fase 130.3)
+ */
+export interface AppLogEvent extends LogEntry {
+    source: 'INGESTSERVICE' | 'WORKFLOWENGINE' | 'AUTH' | 'API_CORE' | 'API_ADMIN' | 'LLM' | 'DB' | 'BILLING_SERVICE';
+    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'EXECUTE' | 'VALIDATE' | 'SLA_EXCEEDED' | 'ERROR';
 }
 
 import { createHash } from 'crypto';
@@ -76,5 +85,35 @@ export async function logEvento(entry: LogEntry): Promise<void> {
         // Fallback crítico: Si falla la DB de logs, intentar escribir en stderr para que al menos quede en Vercel Logs
         console.error('CRITICAL: Failed to write log to database. Entry was:', JSON.stringify(logData));
         console.error('DB Error:', error);
+    }
+}
+
+/**
+ * Helper para medir el tiempo de ejecución y validar SLAs (Fase 130.7)
+ */
+export async function withSla<T>(
+    source: string,
+    action: string,
+    slaMs: number,
+    correlationId: string,
+    fn: () => Promise<T>,
+    additionalDetails?: any
+): Promise<T> {
+    const start = Date.now();
+    try {
+        return await fn();
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > slaMs) {
+            await logEvento({
+                level: 'WARN',
+                source,
+                action: 'SLA_EXCEEDED',
+                message: `SLA exceeded: ${duration}ms (target: ${slaMs}ms)`,
+                correlationId,
+                durationMs: duration,
+                details: { ...additionalDetails, slaThreshold: slaMs }
+            });
+        }
     }
 }

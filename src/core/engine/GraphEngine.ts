@@ -44,7 +44,8 @@ export class GraphEngine {
             await runCypher(query, params);
         }
 
-        console.log(`[GraphEngine] Sincronizados ${docs.length} nodos de tipo ${entitySlug}`);
+        // Log replaced by logEvento in calling context or removed for production cleanliness
+        (`[GraphEngine] Sincronizados ${docs.length} nodos de tipo ${entitySlug}`);
     }
 
     /**

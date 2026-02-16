@@ -8,15 +8,14 @@ import { logEvento } from "@/lib/logger";
 import { NotFoundError, DatabaseError, ValidationError } from "@/lib/errors";
 import { ChecklistConfigSchema, ChecklistConfig } from "@/lib/schemas";
 import { ObjectId } from "mongodb";
-
-
-
+import { getTenantCollection } from "@/lib/db-tenant";
 
 /**
  * Retrieves a checklist configuration by its identifier.
- * If `id` is "default", returns the built‑in default configuration.
+ * If `id` is "default", returns the built-in default configuration.
+ * Multi-tenant safe via getTenantCollection.
  */
-export async function getChecklistConfigById(id: string, correlationId?: string): Promise<ChecklistConfig> {
+export async function getChecklistConfigById(id: string, session?: any, correlationId?: string): Promise<ChecklistConfig> {
     const start = Date.now();
     const effectiveCorrelationId = correlationId || crypto.randomUUID();
     try {
@@ -25,8 +24,7 @@ export async function getChecklistConfigById(id: string, correlationId?: string)
             return defaultChecklistConfig;
         }
 
-        const db = await connectDB();
-        const collection = db.collection("configs_checklist");
+        const collection = await getTenantCollection("configs_checklist", session);
 
         const raw = await collection.findOne({ _id: new ObjectId(id) });
         if (!raw) {
@@ -45,7 +43,7 @@ export async function getChecklistConfigById(id: string, correlationId?: string)
             details: { error: (error as Error).message },
             stack: (error as Error).stack
         });
-        if (error instanceof NotFoundError) {
+        if (error instanceof NotFoundError || error instanceof ValidationError) {
             throw error;
         }
         throw new DatabaseError("Failed to retrieve checklist config", error as Error);

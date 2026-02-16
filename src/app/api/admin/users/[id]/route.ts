@@ -7,21 +7,20 @@ import { AdminUpdateUserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * PATCH /api/admin/users/[id]
  * Updates a user's data (ADMIN only)
  * SLA: P95 < 400ms
  */
-export async function PATCH(
+export const PATCH = withPerformanceSLA(async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        // Phase 70: Centralized typed role check
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
         const isAdmin = session.user.role === UserRole.ADMIN;
 
@@ -102,35 +101,21 @@ export async function PATCH(
             new AppError('INTERNAL_ERROR', 500, 'Error updating user').toJSON(),
             { status: 500 }
         );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 400) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_USERS',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `PATCH /api/admin/users/[id] took ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
     }
-}
+}, { endpoint: 'PATCH /api/admin/users/[id]', thresholdMs: 400 });
 
 /**
  * GET /api/admin/users/[id]
  * Retrieves a user by ID
  * SLA: P95 < 200ms
  */
-export async function GET(
+export const GET = withPerformanceSLA(async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        // Phase 70: Centralized typed role check
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
         const isAdmin = session.user.role === UserRole.ADMIN;
 
@@ -165,17 +150,5 @@ export async function GET(
             new AppError('INTERNAL_ERROR', 500, 'Server error').toJSON(),
             { status: 500 }
         );
-    } finally {
-        const durationMs = Date.now() - start;
-        if (durationMs > 200) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_USERS',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `GET /api/admin/users/[id] took ${durationMs}ms`,
-                correlationId,
-                details: { durationMs }
-            });
-        }
     }
-}
+}, { endpoint: 'GET /api/admin/users/[id]', thresholdMs: 200 });

@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     Terminal,
     Save,
@@ -15,7 +17,8 @@ import {
     Sparkles,
     Trash2,
     Rocket,
-    X
+    X,
+    Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
@@ -41,16 +44,19 @@ import { useFormModal } from '@/hooks/useFormModal';
  * Actualizado con Editor Pro y Visual UI.
  */
 export default function AdminPromptsPage() {
+    const t = useTranslations('admin.prompts');
     const modal = useFormModal<any>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [industryFilter, setIndustryFilter] = useState('all');
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
-    const [showGlobalHistory, setShowGlobalHistory] = useState(false);
+    const [showGlobalHistory] = useState(false); // Refactored to not use setShowGlobalHistory if not needed locally or pass to modal
+    const [_showGlobalHistory, setShowGlobalHistory] = useState(false);
     const { environment } = useEnvironmentStore();
 
     // Categorías disponibles
-    const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL'];
+    const CATEGORIES = ['EXTRACTION', 'ANALYSIS', 'RISK', 'CHECKLIST', 'GENERAL', 'ROUTING'];
 
     // 1. Gestión de datos con hook genérico
     const {
@@ -75,12 +81,6 @@ export default function AdminPromptsPage() {
     });
 
     // 2. Lógica de Filtrado y Contadores
-    const categoryCounts = prompts.reduce((acc: any, p: any) => {
-        const cat = p.category || 'GENERAL';
-        acc[cat] = (acc[cat] || 0) + 1;
-        return acc;
-    }, {});
-
     const filteredPrompts = prompts.filter(p => {
         const matchesSearch =
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -89,20 +89,28 @@ export default function AdminPromptsPage() {
 
         const matchesTenant = tenantFilter === 'all' || p.tenantId === tenantFilter;
         const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+        const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter;
 
-        return matchesSearch && matchesTenant && matchesCategory;
+        return matchesSearch && matchesTenant && matchesCategory && matchesIndustry;
     });
+
+    const categoryCounts = filteredPrompts.reduce((acc: any, p: any) => {
+        const cat = p.category || 'GENERAL';
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+    }, {});
 
     const clearFilters = () => {
         setSearchQuery('');
         setTenantFilter('all');
         setCategoryFilter('all');
+        setIndustryFilter('all');
     };
 
     const handleSaved = () => {
         modal.close();
         fetchPrompts();
-        toast({ title: "Guardado", description: "El prompt se ha actualizado correctamente." });
+        toast({ title: t('messages.save_success') });
     };
 
     const handlePromote = async () => {
@@ -118,7 +126,7 @@ export default function AdminPromptsPage() {
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
-            toast({ title: "Promovido", description: "El prompt ha sido promovido a Producción." });
+            toast({ title: t('messages.promote_success'), description: t('messages.promote_desc') });
         } catch (err: any) {
             toast({ title: "Error", description: err.message, variant: "destructive" });
         }
@@ -128,9 +136,9 @@ export default function AdminPromptsPage() {
         <PageContainer className="h-full pb-10">
             {/* Header */}
             <PageHeader
-                title="Motor de Prompts IA"
+                title={t('title')}
                 highlight="Prompts"
-                subtitle="Configura el razonamiento vectorial y la extracción de datos."
+                subtitle={t('subtitle')}
                 actions={
                     <>
                         <Button
@@ -138,7 +146,7 @@ export default function AdminPromptsPage() {
                             variant="outline"
                             className="rounded-xl border-slate-200 dark:border-slate-800"
                         >
-                            <History className="w-4 h-4 mr-2" /> Historial Global
+                            <History className="w-4 h-4 mr-2" /> {t('actions.history')}
                         </Button>
                         {environment === 'STAGING' && modal.isOpen && modal.data && (
                             <Button
@@ -146,18 +154,18 @@ export default function AdminPromptsPage() {
                                 variant="outline"
                                 className="rounded-xl border-amber-200 bg-amber-50 dark:bg-amber-900/10 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/20"
                             >
-                                <Rocket className="w-4 h-4 mr-2" /> Promover a Producción
+                                <Rocket className="w-4 h-4 mr-2" /> {t('actions.promote')}
                             </Button>
                         )}
                         <Button onClick={modal.openCreate} className="bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold">
-                            <Plus className="w-4 h-4 mr-2" /> Nuevo Prompt
+                            <Plus className="w-4 h-4 mr-2" /> {t('new_prompt')}
                         </Button>
                     </>
                 }
             />
 
             <AnimatePresence>
-                {showGlobalHistory && (
+                {_showGlobalHistory && (
                     <PromptGlobalHistory onClose={() => setShowGlobalHistory(false)} />
                 )}
             </AnimatePresence>
@@ -172,19 +180,19 @@ export default function AdminPromptsPage() {
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <input
-                                        placeholder="Buscar por nombre, clave o descripción..."
+                                        placeholder={t('search_placeholder')}
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 pl-9 h-11 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
                                     />
                                 </div>
-                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all') && (
+                                {(searchQuery || tenantFilter !== 'all' || categoryFilter !== 'all' || industryFilter !== 'all') && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={clearFilters}
                                         className="rounded-xl text-slate-400 hover:text-rose-500"
-                                        title="Limpiar filtros"
+                                        title={t('actions.clear_filters')}
                                     >
                                         <X size={18} />
                                     </Button>
@@ -201,7 +209,7 @@ export default function AdminPromptsPage() {
                                             : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 hover:border-teal-500/50"
                                     )}
                                 >
-                                    TODOS ({prompts.length})
+                                    {t('filters.all')} ({prompts.length})
                                 </button>
                                 {CATEGORIES.map(cat => (
                                     <button
@@ -225,18 +233,34 @@ export default function AdminPromptsPage() {
                                 ))}
                             </div>
 
-                            {uniqueTenants.length > 1 && (
+                            <div className="grid grid-cols-2 gap-2">
+                                {uniqueTenants.length > 1 && (
+                                    <select
+                                        value={tenantFilter}
+                                        onChange={e => setTenantFilter(e.target.value)}
+                                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
+                                    >
+                                        <option value="all">{t('filters.organization')}</option>
+                                        {uniqueTenants.map(t => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                )}
                                 <select
-                                    value={tenantFilter}
-                                    onChange={e => setTenantFilter(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none"
+                                    value={industryFilter}
+                                    onChange={e => setIndustryFilter(e.target.value)}
+                                    className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
                                 >
-                                    <option value="all">Todas las Organizaciones</option>
-                                    {uniqueTenants.map(t => (
-                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                    ))}
+                                    <option value="all">{t('filters.industry')}</option>
+                                    <option value="GENERIC">Genérico</option>
+                                    <option value="ELEVATORS">Ascensores</option>
+                                    <option value="LEGAL">Legal</option>
+                                    <option value="BANKING">Banca</option>
+                                    <option value="INSURANCE">Seguros</option>
+                                    <option value="IT">IT</option>
+                                    <option value="MEDICAL">Médico</option>
                                 </select>
-                            )}
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
@@ -287,18 +311,15 @@ export default function AdminPromptsPage() {
                                                         )}>
                                                             V{p.version}
                                                         </span>
-                                                        {!p.active && (
-                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                                                                INACTIVO
-                                                            </span>
-                                                        )}
                                                         <Badge variant="outline" className={cn(
                                                             "text-[8px] h-4 py-0",
-                                                            environment === 'PRODUCTION' ? "text-emerald-500 border-emerald-500/20" :
-                                                                environment === 'STAGING' ? "text-amber-500 border-amber-500/20" :
-                                                                    "text-purple-500 border-purple-500/20"
+                                                            p.industry === 'ELEVATORS' ? "text-blue-500 border-blue-500/20" :
+                                                                p.industry === 'LEGAL' ? "text-purple-500 border-purple-500/20" :
+                                                                    p.industry === 'BANKING' ? "text-emerald-500 border-emerald-500/20" :
+                                                                        p.industry === 'INSURANCE' ? "text-rose-500 border-rose-500/20" :
+                                                                            "text-slate-500 border-slate-500/20"
                                                         )}>
-                                                            {environment}
+                                                            {p.industry || 'GENERIC'}
                                                         </Badge>
                                                     </div>
                                                     <div className="flex items-center gap-2">
@@ -306,8 +327,8 @@ export default function AdminPromptsPage() {
                                                             {p.key}
                                                         </p>
                                                         <span className="text-[10px] opacity-20">|</span>
-                                                        <p className={cn("text-[9px] font-bold tracking-tight italic", modal.data === p && modal.isOpen ? "text-white/70" : "text-teal-500/70")}>
-                                                            {p.tenantInfo?.name || p.tenantId}
+                                                        <p className={cn("text-[10px] font-black tracking-widest text-teal-500", modal.data === p && modal.isOpen ? "text-white/70" : "")}>
+                                                            {p.category}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -319,7 +340,7 @@ export default function AdminPromptsPage() {
                             ) : (
                                 <div className="p-20 text-center opacity-40">
                                     <Search size={40} className="mx-auto mb-4" />
-                                    <p className="text-sm font-bold tracking-tight">No se encontraron prompts</p>
+                                    <p className="text-sm font-bold tracking-tight">{t('messages.no_prompts')}</p>
                                 </div>
                             )}
                         </div>
@@ -329,9 +350,9 @@ export default function AdminPromptsPage() {
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-all">
                             <Sparkles size={64} className="text-teal-500" />
                         </div>
-                        <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Sugerencia Pro</h4>
+                        <h4 className="text-white text-xs font-black uppercase tracking-[0.2em] mb-3">Multi-Vertical RAG</h4>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                            Los prompts con la categoría <strong>EXTRACTION</strong> afectarán directamente a los modelos detectados en el pipeline inicial. Valida siempre que mantengas los placeholders <code className="text-teal-500">{"{{text}}"}</code>.
+                            {t('info.multi_vertical')}
                         </p>
                     </div>
                 </div>
@@ -358,9 +379,9 @@ export default function AdminPromptsPage() {
                                     <Sparkles size={32} className="text-slate-300 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Control Maestro de Gemini</h3>
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('editor_placeholder_title')}</h3>
                                     <p className="text-xs text-slate-500 max-w-xs mt-2 mx-auto font-medium">
-                                        Selecciona una ingeniería de prompt del listado lateral para desbloquear las capacidades de edición avanzada y visualización de versiones.
+                                        {t('editor_placeholder_desc')}
                                     </p>
                                 </div>
                                 <Button
@@ -368,7 +389,7 @@ export default function AdminPromptsPage() {
                                     variant="outline"
                                     className="mt-6 rounded-2xl border-dashed border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
                                 >
-                                    <Plus size={16} className="mr-2" /> Crear Primer Prompt Dinámico
+                                    <Plus size={16} className="mr-2" /> {t('actions.create_first')}
                                 </Button>
                             </motion.div>
                         )}

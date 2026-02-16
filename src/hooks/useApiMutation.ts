@@ -52,6 +52,12 @@ export function useApiMutation<T = any, R = any>({
                 ...headers,
             };
 
+            const isFormData = variables instanceof FormData;
+
+            if (isFormData) {
+                delete requestHeaders['Content-Type']; // Dejar que el navegador establezca el boundary
+            }
+
             // Añadir Idempotency Key si se proporciona
             if (idempotencyKey) {
                 const key = typeof idempotencyKey === 'function' ? idempotencyKey(variables) : idempotencyKey;
@@ -61,13 +67,20 @@ export function useApiMutation<T = any, R = any>({
             const res = await fetch(finalEndpoint, {
                 method,
                 headers: requestHeaders,
-                body: method !== 'DELETE' ? JSON.stringify(variables) : undefined,
+                body: method !== 'DELETE' ? (isFormData ? variables : JSON.stringify(variables)) : undefined,
             });
 
             const json = await res.json();
 
             if (!res.ok || !json.success) {
-                throw new Error(json.message || json.error?.message || errorMessage || 'Error al procesar la solicitud');
+                const apiError = json.error;
+                let errorText = json.message;
+
+                if (!errorText && apiError) {
+                    errorText = typeof apiError === 'string' ? apiError : apiError.message;
+                }
+
+                throw new Error(errorText || errorMessage || 'Error al procesar la solicitud');
             }
 
             // Éxito

@@ -29,6 +29,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [file, setFile] = useState<File | null>(null);
     const [tipo, setTipo] = useState("");
     const [version, setVersion] = useState("1.0");
+    const [chunkingLevel, setChunkingLevel] = useState<"bajo" | "medio" | "alto">("bajo");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [deduplicated, setDeduplicated] = useState(false);
@@ -46,10 +47,10 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
     const fetchTypes = async () => {
         try {
-            const res = await fetch('/api/admin/document-types');
+            const res = await fetch('/api/admin/document-types?category=RAG_ASSET');
             if (res.ok) {
                 const data = await res.json();
-                setTiposDocs(data);
+                setTiposDocs(data.items || []);
             }
         } catch (error) {
             console.error('Error fetching types:', error);
@@ -72,11 +73,18 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
         setIsUploading(true);
         setDeduplicated(false); // Reset por precaución
 
+        // Buscar el ID del tipo si es posible (tipo actualmente es el name o id según el Select)
+        const selectedType = tiposDocs.find(t => t.name.toLowerCase() === tipo.toLowerCase()) as any;
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('tipo', tipo);
         formData.append('version', version);
+        formData.append('chunkingLevel', chunkingLevel);
         formData.append('maskPii', maskPii.toString());
+        if (selectedType && selectedType._id) {
+            formData.append('documentTypeId', selectedType._id.toString());
+        }
 
         let errorDetails: any = null;
         try {
@@ -229,6 +237,20 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                         className="border-slate-200"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="chunkingLevel" className="text-xs font-bold uppercase tracking-widest text-slate-500">{t('fields.chunking_label')}</Label>
+                                <Select onValueChange={(v: any) => setChunkingLevel(v)} value={chunkingLevel}>
+                                    <SelectTrigger className="border-slate-200">
+                                        <SelectValue placeholder={t('fields.chunking_placeholder')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="bajo">{t('fields.chunking_low')}</SelectItem>
+                                        <SelectItem value="medio">{t('fields.chunking_medium')}</SelectItem>
+                                        <SelectItem value="alto">{t('fields.chunking_high')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* PII Masking Toggle */}

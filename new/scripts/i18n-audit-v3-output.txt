@@ -1,0 +1,23 @@
+﻿­ƒöì i18n Audit V2 ÔÇö Scanning for dead and missing keys...
+
+­ƒôä es.json: 1279 flat keys
+­ƒôä en.json: 1279 flat keys
+­ƒôä Union: 1279 unique keys
+
+­ƒôé Scanning 582 files in src/...
+
+­ƒöæ Found 1279 unique key references in code
+ÔÜí Found 5 dynamic key patterns (manual review needed)
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+Ôÿá´©Å  DEAD KEYS (in JSON, not in code): 0
+ÔØô MISSING KEYS (in code, not in JSON): 0
+ÔÜí DYNAMIC KEYS (need manual review): 5
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+ÔöÇÔöÇ Dead Keys by Namespace ÔöÇÔöÇ
+
+ÔöÇÔöÇ Missing Keys by Namespace ÔöÇÔöÇ
+  (none)
+
+­ƒôè Full report written to: D:\desarrollos\ABDElevators\scripts\i18n-audit-report.json

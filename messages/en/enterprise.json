@@ -1,0 +1,14 @@
+{
+  "title": "Enterprise & Compliance",
+  "subtitle": "Security and control for professional teams with advanced governance.",
+  "f1_title": "Identity Governance (Guardian V2)",
+  "f1_desc": "Dynamic RBAC/ABAC control with user overrides. Define complex policies per tenant and manage granular exceptions with our permission matrix.",
+  "f2_title": "Bank-Grade Stability",
+  "f2_desc": "Financial-level security with dynamic CSP (Nonces), AES-256-GCM encryption, and atomic deduplication via MD5 hashing. Absolute data integrity even during high-scale ingestion processes.",
+  "f3_title": "Observability & Quality",
+  "f3_desc": "Native RAG evaluation dashboard with LLM Judge. Measure faithfulness and relevance of every response in real-time for maximum technical reliability.",
+  "f4_title": "Portability & Compliance",
+  "f4_desc": "Export your knowledge in signed ZIP files. GDPR deletion certificates and fully integrated Audit Trail.",
+  "f5_title": "Inclusion & Accessibility",
+  "f5_desc": "100% accessible platform complying with WCAG 2.1 Level AA standards. Interface optimized for screen readers and assisted navigation."
+}

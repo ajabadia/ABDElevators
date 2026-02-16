@@ -9,6 +9,8 @@ interface Version {
     createdAt: string;
     changeReason: string;
     changedBy: string;
+    model?: string;
+    category?: string;
 }
 
 interface HistorySidebarProps {
@@ -51,11 +53,21 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 <div key={v.version} className="p-3 bg-slate-900/50 border border-slate-800 rounded-xl space-y-2 hover:border-slate-700 transition-colors">
                                     <div className="flex items-center justify-between">
                                         <Badge className="bg-slate-800 text-teal-400 text-[9px] font-black">V{v.version}</Badge>
-                                        <span className="text-[9px] text-slate-500 font-mono">{new Date(v.createdAt).toLocaleDateString()}</span>
+                                        <div className="flex gap-1">
+                                            {v.model && (
+                                                <Badge variant="outline" className="text-[8px] px-1 h-3.5 border-slate-700 text-slate-400">
+                                                    {v.model.replace('gemini-', '')}
+                                                </Badge>
+                                            )}
+                                            <span className="text-[9px] text-slate-500 font-mono">{new Date(v.createdAt).toLocaleDateString()}</span>
+                                        </div>
                                     </div>
                                     <p className="text-[10px] text-white font-medium italic line-clamp-2">"{v.changeReason}"</p>
                                     <div className="flex items-center justify-between pt-2">
-                                        <span className="text-[9px] text-slate-500">Por {v.changedBy.split('@')[0]}</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] text-slate-500">Por {v.changedBy.split('@')[0]}</span>
+                                            {v.category && <span className="text-[8px] text-teal-500/50 uppercase font-bold">{v.category}</span>}
+                                        </div>
                                         <Button
                                             size="sm"
                                             variant="ghost"

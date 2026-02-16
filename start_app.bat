@@ -40,17 +40,17 @@ if not exist "node_modules" (
 echo [INFO] Verificando infraestructura local...
 echo.
 
-REM 1. Verificar Redis (Docker)
+REM 1. Verificar Redis (Docker) - Non-blocking check
 docker ps >nul 2>nul
 if %errorlevel% equ 0 (
     echo [OK] Docker detectado.
-    for /f "tokens=*" %%i in ('docker ps -a -q -f name^=abd-redis') do set REDIS_ID=%%i
-    if not defined REDIS_ID (
+    docker ps -a -q -f name=abd-redis >nul 2>nul
+    if %errorlevel% neq 0 (
         echo [INFO] Creando nuevo contenedor Redis 'abd-redis'...
-        docker run -d --name abd-redis -p 6379:6379 redis:alpine >nul
+        docker run -d --name abd-redis -p 6379:6379 redis:alpine >nul 2>nul
     ) else (
         echo [INFO] Asegurando que 'abd-redis' este iniciado...
-        docker start abd-redis >nul
+        docker start abd-redis >nul 2>nul
     )
     echo [OK] Redis esta activo en el puerto 6379.
 ) else (
@@ -70,9 +70,9 @@ if %errorlevel% equ 0 (
 )
 echo.
 
-REM 2. Iniciar Worker en ventana separada
+REM 3. Iniciar Worker en ventana separada
 echo [INFO] Iniciando Background Worker en ventana independiente...
-start "ABD Worker" cmd /c "npm run worker"
+start "ABD Worker" cmd /c "npx tsx src/lib/workers/ingest-worker.ts"
 
 echo.
 echo [OK] Todo listo. Iniciando frontend...

@@ -7,18 +7,19 @@ import bcrypt from 'bcryptjs';
 import { CreateUserSchema, UserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, DatabaseError } from '@/lib/errors';
 import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/admin/users
  * Lists all users (ADMIN only)
  * SLA: P95 < 200ms
  */
-export async function GET(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
+    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        // ... (resto de la lógica igual, pero sin el try/finally manual de performance)
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const db = await connectAuthDB();
@@ -77,29 +78,16 @@ export async function GET(req: NextRequest) {
             new AppError('INTERNAL_ERROR', 500, 'Error retrieving users').toJSON(),
             { status: 500 }
         );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 200) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_USERS',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `GET /api/admin/users took ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
     }
-}
+}, { endpoint: 'GET /api/admin/users', thresholdMs: 200 });
 
 /**
  * POST /api/admin/users
  * Creates a new user (ADMIN or SUPER_ADMIN)
  * SLA: P95 < 1000ms
  */
-export async function POST(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
-    const start = Date.now();
+export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
+    const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -191,17 +179,5 @@ export async function POST(req: NextRequest) {
             new AppError('INTERNAL_ERROR', 500, 'Error creating user').toJSON(),
             { status: 500 }
         );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 1000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ADMIN_USERS',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `POST /api/admin/users took ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
     }
-}
+}, { endpoint: 'POST /api/admin/users', thresholdMs: 1000 });

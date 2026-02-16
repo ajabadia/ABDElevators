@@ -8,14 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, ShieldAlert, Key, QrCode, ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 
 export function MfaSettingsForm() {
     const t = useTranslations('profile.security.mfa');
     const tCommon = useTranslations('common');
     const { toast } = useToast();
+    const { update } = useSession();
     const [enabled, setEnabled] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
-    const [step, setStep] = useState<'IDLE' | 'SETUP' | 'RECOVERY'>('IDLE');
+    const [step, setStep] = useState<'IDLE' | 'SETUP' | 'RECOVERY' | 'VERIFY_SESSION'>('IDLE');
 
     // Setup state
     const [setupData, setSetupData] = useState<{ secret: string, qrCode: string } | null>(null);
@@ -28,6 +30,13 @@ export function MfaSettingsForm() {
             const res = await fetch('/api/auth/mfa/config');
             const data = await res.json();
             setEnabled(data.enabled);
+
+            // Si el MFA está activado en DB pero la sesión dice que NO está verificado,
+            // forzar paso de verificación si estamos en Admin
+            const sessionData = await fetch('/api/auth/session').then(r => r.json());
+            if (data.enabled && sessionData?.user?.mfaVerified === false) {
+                setStep('VERIFY_SESSION');
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -58,9 +67,29 @@ export function MfaSettingsForm() {
     };
 
     const confirmSetup = async () => {
-        if (!setupData || token.length < 6) return;
+        if (token.length < 6) return;
         setVerifying(true);
         try {
+            // Caso 1: Verificación de sesión (MFA ya activo pero sesión pendiente)
+            if (step === 'VERIFY_SESSION') {
+                const res = await fetch('/api/auth/mfa/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'VERIFY', token })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await update({ user: { mfaVerified: true, mfaPending: false } });
+                    setStep('IDLE');
+                    toast({ title: t('verificationSuccess') || "Verificación exitosa" });
+                } else {
+                    toast({ variant: "destructive", title: t('invalidCode') || "Código inválido" });
+                }
+                return;
+            }
+
+            // Caso 2: Setup inicial
+            if (!setupData) return;
             const res = await fetch('/api/auth/mfa/config', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -73,6 +102,14 @@ export function MfaSettingsForm() {
                 setRecoveryCodes(data.recoveryCodes);
                 setStep('RECOVERY');
                 toast({ title: t('successTitle'), description: t('successDesc') });
+
+                // Force session update so middleware sees mfaPending: false immediately
+                await update({
+                    user: {
+                        mfaPending: false,
+                        mfaVerified: true
+                    }
+                });
             } else {
                 toast({ variant: "destructive", title: t('invalidCode'), description: data.error });
             }
@@ -145,6 +182,35 @@ export function MfaSettingsForm() {
                                     {t('setupBtn')}
                                 </Button>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {step === 'VERIFY_SESSION' && (
+                    <div className="space-y-4 animate-in fade-in zoom-in-95">
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+                            <ShieldAlert className="text-amber-600 mt-1" size={20} />
+                            <div>
+                                <h3 className="font-bold text-amber-900">{t('verifySessionTitle') || "Verificación Requerida"}</h3>
+                                <p className="text-xs text-amber-700">{t('verifySessionDesc') || "Para acceder a las funciones administrativas, por favor introduce tu código MFA."}</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 justify-center py-4">
+                            <Input
+                                placeholder="000 000"
+                                className="max-w-[150px] font-mono text-center text-lg tracking-widest"
+                                maxLength={6}
+                                value={token}
+                                onChange={(e) => setToken(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && confirmSetup()}
+                            />
+                            <Button
+                                onClick={confirmSetup}
+                                disabled={verifying || token.length < 6}
+                                className="bg-teal-600 hover:bg-teal-700 text-white"
+                            >
+                                {verifying ? t('verifying') : t('verifyBtn') || "Verificar"}
+                            </Button>
                         </div>
                     </div>
                 )}

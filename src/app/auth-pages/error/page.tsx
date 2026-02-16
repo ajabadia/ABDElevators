@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 enum ErrorCode {
     Configuration = "Configuration",
@@ -13,28 +14,29 @@ enum ErrorCode {
     Default = "Default",
 }
 
-const errorMap = {
-    [ErrorCode.Configuration]: {
-        title: "Error de Configuración",
-        message: "Hay un problema con la configuración del servidor. Contáctanos si el problema persiste.",
-    },
-    [ErrorCode.AccessDenied]: {
-        title: "Acceso Denegado",
-        message: "No tienes permiso para iniciar sesión.",
-    },
-    [ErrorCode.Verification]: {
-        title: "Enlace Expirado",
-        message: "El enlace de inicio de sesión ya no es válido. Inténtalo de nuevo.",
-    },
-    [ErrorCode.Default]: {
-        title: "Error de Autenticación",
-        message: "Ocurrió un error inesperado al iniciar sesión.",
-    },
-};
-
 export default function AuthErrorPage() {
+    const t = useTranslations('auth.error');
     const searchParams = useSearchParams();
-    const error = searchParams.get("error") as ErrorCode || ErrorCode.Default;
+    const error = searchParams?.get("error") as ErrorCode || ErrorCode.Default;
+
+    const errorMap = {
+        [ErrorCode.Configuration]: {
+            title: t('configuration.title'),
+            message: t('configuration.message'),
+        },
+        [ErrorCode.AccessDenied]: {
+            title: t('accessDenied.title'),
+            message: t('accessDenied.message'),
+        },
+        [ErrorCode.Verification]: {
+            title: t('verification.title'),
+            message: t('verification.message'),
+        },
+        [ErrorCode.Default]: {
+            title: t('default.title'),
+            message: t('default.message'),
+        },
+    };
 
     const { title, message } = errorMap[error] || errorMap[ErrorCode.Default];
 
@@ -54,7 +56,7 @@ export default function AuthErrorPage() {
                 <CardFooter className="flex justify-center">
                     <Link href="/login">
                         <Button variant="default" className="bg-slate-900 hover:bg-slate-800 text-white">
-                            Volver al Login
+                            {t('backToLogin')}
                         </Button>
                     </Link>
                 </CardFooter>

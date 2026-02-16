@@ -67,9 +67,9 @@ export async function extractChecklist(
     try {
         // 2️⃣ Prepare dynamic prompt (Fase 7.6)
         const documentsText = docs.map((d) => `Document ${d.id}:\n${d.content}`).join("\n---DOC---\n");
-        const renderedPrompt = await PromptService.renderPrompt(
-            'CHECKLIST_EXTRACTOR',
-            { documents: documentsText },
+        const { text: renderedPrompt } = await PromptService.getRenderedPrompt(
+            'checklist_extraction',
+            { text: documentsText },
             tenantId
         );
 
@@ -96,14 +96,15 @@ export async function extractChecklist(
             throw new ExternalServiceError("Failed to parse LLM response as JSON", e as Error);
         }
 
-        // -------------------
         // 4️⃣ Validate the LLM output against a Zod schema
-        // -------------------
-        const ChecklistItemSchema = z.object({
+        const InternalItemSchema = z.object({
             id: z.string().uuid(),
-            description: z.string().min(1)
+            description: z.string().min(1),
+            confidence: z.number().min(0).max(1).optional(),
+            confidenceLevel: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
+            ragReference: z.string().optional()
         });
-        const ChecklistArraySchema = z.array(ChecklistItemSchema);
+        const ChecklistArraySchema = z.array(InternalItemSchema);
         const parsedItems = ChecklistArraySchema.parse(items);
 
         // -------------------

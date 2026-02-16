@@ -5,18 +5,38 @@ import { ExternalServiceError } from '@/lib/errors';
  * Regla de Oro #3: AppError para manejo de errores
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-    let pdf: any = null;
     try {
-        // Importación dinámica (Lazy Loading) para evitar problemas en Serverless
-        const PDFParse = ((await import('pdf-parse')) as any).default;
-        // @ts-ignore - Depende del tipo de export de la librería
-        const result = await (PDFParse as any)(buffer);
-        return cleanPDFText(result.text);
+        // Importación dinámica robusta
+        const mod = await import('pdf-parse');
+        const PDFParse = (mod as any).default || (mod as any).PDFParse || mod;
+
+        if (typeof PDFParse !== 'function') {
+            throw new Error('pdf-parse is not a function after import');
+        }
+
+        // Compatibilidad con versiones que requieren Uint8Array (pdfjs-dist legacy)
+        const uint8Array = new Uint8Array(buffer);
+        let extractedText = '';
+
+        // Detectar si es una clase (Moderno/Class-based) o función (Legacy/Functional)
+        const isClass = PDFParse.prototype && (PDFParse.prototype.constructor.name === 'PDFParse' || 'getText' in PDFParse.prototype);
+
+        if (isClass) {
+            const instance = new PDFParse(uint8Array);
+            if (instance.load) await instance.load();
+            const result = await instance.getText();
+            extractedText = typeof result === 'string' ? result : (result?.text || '');
+        } else {
+            const result = await PDFParse(buffer);
+            extractedText = result.text;
+        }
+
+        return cleanPDFText(extractedText);
     } catch (error: any) {
         console.error('Error extracting PDF text:', error);
         throw new ExternalServiceError('Fallo al extraer texto del PDF', {
             message: error.message || String(error),
-            stack: error.stack
+            details: { name: error.name, code: error.code }
         });
     }
 }

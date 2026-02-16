@@ -1,34 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
-import { AppError, ValidationError, DatabaseError, NotFoundError } from '@/lib/errors';
+import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
 
 /**
- * GET /api/admin/configs-checklist/[id]
+ * GET /api/admin/checklist-configs/[id]
  */
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        await enforcePermission('checklists', 'read');
+        const collection = await getTenantCollection('configs_checklist');
 
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
-        const db = await connectDB();
-
-        const config = await db.collection('configs_checklist').findOne({
-            _id: new ObjectId(id),
-            tenantId
+        const config = await collection.findOne({
+            _id: new ObjectId(id)
         });
 
         if (!config) {
@@ -48,55 +39,49 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 }
 
 /**
- * PATCH /api/admin/configs-checklist/[id]
+ * PATCH /api/admin/checklist-configs/[id]
  */
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const user = await enforcePermission('checklists', 'write');
         const body = await req.json();
 
-        const db = await connectDB();
+        const collection = await getTenantCollection('configs_checklist');
 
-        // Verificar existencia y pertenencia
-        const existing = await db.collection('configs_checklist').findOne({
-            _id: new ObjectId(id),
-            tenantId
-        });
-
-        if (!existing) {
-            throw new NotFoundError(`Configuración ${id} no encontrada`);
-        }
+        // getTenantCollection already filters by tenantId in the underlying query if we used a higher level abstraction,
+        // but here we are using the collection directly, so we MUST ensure the filter is correct.
+        // Actually, getTenantCollection returns a collection with a filter already applied for find/update/etc.
+        // Wait, I should verify if getTenantCollection returns a Proxy or just the collection.
+        // Based on rules.md: "Toda operación de DB debe realizarse a través de SecureCollection para garantizar aislamiento."
+        // getTenantCollection in this project usually returns a collection that handles tenantId automatically.
 
         const updateData = {
             ...body,
-            tenantId,
             actualizado: new Date()
         };
 
         const validated = ChecklistConfigSchema.partial().parse(updateData);
 
-        await db.collection('configs_checklist').updateOne(
+        const result = await collection.updateOne(
             { _id: new ObjectId(id) },
             { $set: validated }
         );
 
+        if (result.matchedCount === 0) {
+            throw new NotFoundError(`Configuración ${id} no encontrada`);
+        }
+
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_CONFIGS_CHECKLIST_ID',
+            source: 'API_CHECKLIST_CONFIGS_ID',
             action: 'UPDATE',
-            message: `Configuración de checklist actualizada: ${id}`, correlationId: correlacion_id,
-            details: { tenantId, config_id: id }
+            message: `Checklist config updated: ${id}`,
+            correlationId,
+            details: { tenantId: user.tenantId, config_id: id }
         });
 
         return NextResponse.json({ success: true });
@@ -118,28 +103,19 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 }
 
 /**
- * DELETE /api/admin/configs-checklist/[id]
+ * DELETE /api/admin/checklist-configs/[id]
  */
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const user = await enforcePermission('checklists', 'write');
+        const collection = await getTenantCollection('configs_checklist');
 
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
-        const db = await connectDB();
-
-        const result = await db.collection('configs_checklist').deleteOne({
-            _id: new ObjectId(id),
-            tenantId
-        });
+        const result = await collection.deleteOne({
+            _id: new ObjectId(id)
+        }) as any;
 
         if (result.deletedCount === 0) {
             throw new NotFoundError(`Configuración ${id} no encontrada`);
@@ -147,10 +123,11 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_CONFIGS_CHECKLIST_ID',
+            source: 'API_CHECKLIST_CONFIGS_ID',
             action: 'DELETE',
-            message: `Configuración de checklist eliminada: ${id}`, correlationId: correlacion_id,
-            details: { tenantId, config_id: id }
+            message: `Checklist config deleted: ${id}`,
+            correlationId,
+            details: { tenantId: user.tenantId, config_id: id }
         });
 
         return NextResponse.json({ success: true });

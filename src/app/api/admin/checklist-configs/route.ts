@@ -1,105 +1,93 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
-import { AppError, ValidationError, DatabaseError, NotFoundError } from '@/lib/errors';
+import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
-import { ObjectId } from 'mongodb';
 
 /**
- * GET /api/admin/configs-checklist
+ * GET /api/admin/checklist-configs
  * Lista todas las configuraciones de checklist del tenant.
  */
 export async function GET(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        await enforcePermission('checklists', 'read');
+        const collection = await getTenantCollection('configs_checklist');
 
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
-        const db = await connectDB();
-        const configs = await db.collection('configs_checklist')
-            .find({ tenantId })
-            .sort({ creado: -1 })
-            .toArray();
+        const configs = await (collection.find({}, {
+            sort: { creado: -1 } as any
+        }) as any).toArray();
 
         return NextResponse.json({ configs });
     } catch (error: any) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+
         await logEvento({
             level: 'ERROR',
-            source: 'API_ADMIN_CONFIGS_CHECKLIST',
+            source: 'API_CHECKLIST_CONFIGS',
             action: 'GET_ALL',
-            message: error.message, correlationId: correlacion_id,
+            message: error.message,
+            correlationId,
             stack: error.stack
         });
+
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, 'Error al obtener configuraciones').toJSON(),
             { status: 500 }
         );
     } finally {
-        const duracion = Date.now() - inicio;
-        if (duracion > 500) {
+        const duration = Date.now() - start;
+        if (duration > 500) {
             await logEvento({
                 level: 'WARN',
-                source: 'API_ADMIN_CONFIGS_CHECKLIST',
+                source: 'API_CHECKLIST_CONFIGS',
                 action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `GET /api/admin/configs-checklist tomó ${duracion}ms`, correlationId: correlacion_id,
-                details: { duracion_ms: duracion }
+                message: `GET /api/admin/checklist-configs took ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration }
             });
         }
     }
 }
 
 /**
- * POST /api/admin/configs-checklist
+ * POST /api/admin/checklist-configs
  * Crea una nueva configuración de checklist.
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-    const inicio = Date.now();
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
 
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const user = await enforcePermission('checklists', 'write');
         const body = await req.json();
 
-        // Inyectar tenantId si no viene
+        // Inyectar metadatos
         const configToValidate = {
             ...body,
-            tenantId,
+            tenantId: user.tenantId,
             creado: new Date(),
             actualizado: new Date()
         };
 
         const validated = ChecklistConfigSchema.parse(configToValidate);
-        const db = await connectDB();
+        const collection = await getTenantCollection('configs_checklist');
 
-        const result = await db.collection('configs_checklist').insertOne(validated);
+        const result = await collection.insertOne(validated as any);
 
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_CONFIGS_CHECKLIST',
+            source: 'API_CHECKLIST_CONFIGS',
             action: 'CREATE',
-            message: `Configuración de checklist creada: ${validated.name}`, correlationId: correlacion_id,
-            details: { tenantId, config_id: result.insertedId }
+            message: `Checklist config created: ${validated.name}`,
+            correlationId,
+            details: { tenantId: user.tenantId, config_id: result.insertedId }
         });
 
         return NextResponse.json({ success: true, config_id: result.insertedId });
@@ -113,13 +101,16 @@ export async function POST(req: NextRequest) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+
         await logEvento({
             level: 'ERROR',
-            source: 'API_ADMIN_CONFIGS_CHECKLIST',
+            source: 'API_CHECKLIST_CONFIGS',
             action: 'CREATE_ERROR',
-            message: error.message, correlationId: correlacion_id,
+            message: error.message,
+            correlationId,
             stack: error.stack
         });
+
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, 'Error al crear configuración').toJSON(),
             { status: 500 }

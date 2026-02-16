@@ -13,7 +13,7 @@ description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los av
 ## Inputs necesarios
 - `ROADMAP_MASTER.md`: Fuente de verdad del progreso técnico.
 - `walkthrough.md`: Detalle de lo último implementado.
-- `messages/[es|en].json`: Diccionarios de la Landing Page.
+- `messages/[locale]/landing.json`: Diccionario de la Landing Page.
 - `README.md`: Documentación técnica de bienvenida.
 - `map.md`: Registro de rutas y funcionalidades.
 
@@ -26,7 +26,7 @@ description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los av
 ### 2. Sincronización de Marketing & Landing (Killer Features)
 1. Evalúa si el avance es una funcionalidad visible para el usuario final.
 2. Si lo es:
-    - Actualiza `messages/es.json` y `messages/en.json` (secciones `hero`, `features`, `enterprise`).
+    - Actualiza `messages/es/landing.json` y `messages/en/landing.json` (u otros namespaces relevantes).
     - Traduce fielmente manteniendo el tono profesional y premium.
 
 ### 3. Actualización Técnica (README.md)

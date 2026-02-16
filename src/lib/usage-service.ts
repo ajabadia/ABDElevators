@@ -10,7 +10,7 @@ export class UsageService {
     /**
      * Registra el uso de tokens de LLM.
      */
-    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string) {
+    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string, session?: any) {
         return this.logUsage({
             tenantId,
             type: 'LLM_TOKENS',
@@ -18,7 +18,7 @@ export class UsageService {
             resource: model,
             description: `Consumo de ${tokens} tokens en modelo ${model}`,
             correlationId
-        });
+        }, session);
     }
 
     /**
@@ -142,10 +142,10 @@ export class UsageService {
     /**
      * Método interno para persistir el log de uso.
      */
-    private static async logUsage(data: any) {
+    private static async logUsage(data: any, session?: any) {
         try {
             const validated = UsageLogSchema.parse(data);
-            const collection = await getTenantCollection('usage_logs');
+            const collection = await getTenantCollection('usage_logs', session);
 
             await collection.insertOne(validated);
 
@@ -270,6 +270,41 @@ export class UsageService {
                 roi: { totalSavedHours: 0, estimatedCostSavings: 0, currency: 'USD', breakdown: { analysisHours: 0, searchHours: 0, dedupHours: 0 } },
                 efficiencyScore: 0
             };
+        }
+    }
+
+    /**
+     * Obtiene el uso agregado de métricas para un tenant en un periodo.
+     * Fase 120.2: Manual Billing Support
+     */
+    static async getAggregateUsage(tenantId: string, start: Date, end: Date) {
+        try {
+            const collection = await getTenantCollection('usage_logs');
+            const stats = await collection.aggregate<any>([
+                {
+                    $match: {
+                        tenantId,
+                        timestamp: { $gte: start, $lte: end }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$type',
+                        total: { $sum: '$value' }
+                    }
+                }
+            ]);
+
+            // Convertir array a objeto mapa para fácil acceso
+            const usageMap: Record<string, number> = {};
+            stats.forEach((s: any) => {
+                usageMap[s._id] = s.total;
+            });
+
+            return usageMap;
+        } catch (error) {
+            console.error('[UsageService] Error fetching aggregate usage:', error);
+            return {};
         }
     }
 

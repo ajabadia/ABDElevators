@@ -1,0 +1,11 @@
+{
+  "error": "Fallo al extraer texto del PDF",
+  "errorDetails": {
+    "message": "Fallo al extraer texto del PDF",
+    "stack": "AppError: Fallo al extraer texto del PDF\n    at extractTextFromPDF (D:\\desarrollos\\ABDElevators\\.next\\dev\\server\\chunks\\[root-of-the-server]__f87d64d6._.js:3311:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Promise.all (index 0)\n    at async IngestService.executeAnalysis (D:\\desarrollos\\ABDElevators\\.next\\dev\\server\\chunks\\[root-of-the-server]__f87d64d6._.js:4527:47)",
+    "code": "EXTERNAL_SERVICE_ERROR",
+    "status": 503,
+    "type": "ExternalServiceError"
+  },
+  "progress": 15
+}

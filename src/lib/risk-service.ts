@@ -22,13 +22,12 @@ export class RiskService {
 
         try {
             // Render dynamic prompt using PromptService
-            const renderedPrompt = await PromptService.renderPrompt(
-                'RISK_AUDITOR',
+            const { text: prompt } = await PromptService.getRenderedPrompt(
+                'risk_assessment',
                 { industry, caseContent, ragContext },
                 tenantId
             );
-
-            const response = await callGeminiMini(renderedPrompt, tenantId, { correlationId, temperature: 0 });
+            const response = await callGeminiMini(prompt, tenantId, { correlationId, temperature: 0 });
 
             // Extract JSON
             const jsonMatch = response.match(/\[[\s\S]*\]/);

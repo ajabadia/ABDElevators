@@ -26,6 +26,21 @@ const nextConfig: NextConfig = {
         destination: '/contact',
         permanent: true,
       },
+      {
+        source: '/admin/dashboard',
+        destination: '/admin',
+        permanent: true,
+      },
+      {
+        source: '/admin/settings/general',
+        destination: '/admin/settings',
+        permanent: true,
+      },
+      {
+        source: '/admin/settings/profile',
+        destination: '/admin/profile',
+        permanent: true,
+      }
     ];
   },
 };

@@ -89,7 +89,7 @@ export async function PATCH(req: NextRequest) {
         }
 
         const isPrivileged = [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(currentUser.role as UserRole);
-        const identityFields = ['firstName', 'lastName', 'jobTitle'];
+        const identityFields = ['nombre', 'apellidos', 'puesto'];
         const isAttemptingIdentityChange = identityFields.some(field => body[field] !== undefined);
 
         if (!isPrivileged && isAttemptingIdentityChange) {

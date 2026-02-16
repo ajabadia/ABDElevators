@@ -14,7 +14,8 @@ export class RagEvaluationService {
         query: string,
         response: string,
         contexts: string[],
-        tenantId: string
+        tenantId: string,
+        trace: string[] = []
     ): Promise<any> {
         try {
             // 1. Get Prompt
@@ -41,6 +42,7 @@ export class RagEvaluationService {
                 query,
                 generation: response,
                 context_chunks: contexts,
+                trace,
                 metrics: {
                     faithfulness: metrics.faithfulness,
                     answer_relevance: metrics.answer_relevance,

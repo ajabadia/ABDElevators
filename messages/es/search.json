@@ -1,0 +1,18 @@
+{
+  "analyzing": "Analizando...",
+  "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+  "error_connection": "Error de conexión con el servicio de búsqueda",
+  "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+  "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+  "sources_label": "Fuentes encontradas:",
+  "subtitle": "Consulta inteligente sobre especificaciones técnicas",
+  "title": "Búsqueda Conversacional",
+  "welcome_desc": "Escribe tu pregunta técnica y nuestro sistema encontrará la información relevante",
+  "welcome_title": "Bienvenido al buscador inteligente",
+  "input_placeholder": "Escribe tu pregunta aquí...",
+  "suggested_questions": "Preguntas sugeridas",
+  "regenerate": "Regenerate respuesta",
+  "copy": "Copiar respuesta",
+  "feedback_positive": "Útil",
+  "feedback_negative": "No útil"
+}

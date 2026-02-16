@@ -1,0 +1,374 @@
+{
+  "error": "Error",
+  "save": "Guardar",
+  "saving": "Guardando...",
+  "cancel": "Cancelar",
+  "connectionError": "Error de conexión",
+  "notifications": {
+    "success": {
+      "title": "Operación Exitosa"
+    },
+    "error": {
+      "title": "Fallo del Sistema"
+    },
+    "info": {
+      "title": "Información"
+    },
+    "warning": {
+      "title": "Atención Técnica"
+    },
+    "loading": {
+      "title": "Procesando..."
+    },
+    "dismiss": "Cerrar",
+    "upload_success": "El archivo se ha subido e indexado correctamente en la bóveda.",
+    "search_complete": "Análisis semántico completado con éxito.",
+    "workflow_saved": "Estructura del flujo de trabajo persistida atómicamente.",
+    "empty_title": "Todo al día",
+    "empty_desc": "No tienes notificaciones pendientes.",
+    "mark_all": "Marcar todas como leídas",
+    "close": "Cerrar panel"
+  },
+  "navigation": {
+    "sections": {
+      "core": "Core",
+      "inventory": "Inventario Técnico",
+      "studio": "Automation Studio",
+      "corporate": "Corporativo & Admin",
+      "governance": "Gobernanza & Sistemas",
+      "workspace": "Espacio de Conocimiento",
+      "preference": "Preferencias"
+    },
+    "items": {
+      "dashboard": "Panel General",
+      "search": "Búsqueda Inteligente",
+      "documents": "Mis Documentos",
+      "support": "Soporte Técnico",
+      "entities": "Entidades Técnicas",
+      "knowledgeHub": "Knowledge Hub",
+      "assets": "Biblioteca de Documentos",
+      "explorer": "Buscador Semántico",
+      "graph": "Mapa Semántico",
+      "workflows": "Editor de Workflows",
+      "aiHub": "AI Hub",
+      "checklists": "Config. Checklists",
+      "prompts": "Prompts",
+      "docTypes": "Tipos de Documento",
+      "organizations": "Organizaciones",
+      "users": "Usuarios",
+      "billing": "Facturación",
+      "apiKeys": "Claves API",
+      "audit": "Registro de Auditoría",
+      "compliance": "Cumplimiento",
+      "logs": "Logs de Sistema",
+      "analytics": "Analítica Global",
+      "quality": "Control de Calidad",
+      "intelligence": "Inteligencia Activa",
+      "governance_console": "Consola Guardian",
+      "workflow_tasks": "Tareas de Workflow",
+      "notifications": "Notificaciones",
+      "profile": "Perfil",
+      "settings": "Configuración",
+      "i18n": "Gobernanza i18n",
+      "contracts": "Contratos / Casos",
+      "spaces": "Mis Espacios",
+      "admin_spaces": "Gestión de Espacios",
+      "document_library": "Librería de Documentos"
+    },
+    "search": {
+      "title": "Asistente Técnico",
+      "subtitle": "Conectado a manuales de ingeniería",
+      "placeholder": "Escribe tu consulta técnica aqui...",
+      "welcome_title": "¿En qué puedo ayudarte hoy?",
+      "welcome_desc": "Tengo acceso a toda la documentación técnica, esquemas y procedimientos de mantenimiento.",
+      "sources_label": "Fuentes consultadas",
+      "analyzing": "Analizando documentación...",
+      "error_connection": "Tuve un problema de conexión. Por favor intenta de nuevo.",
+      "error_message": "Disculpa, he perdido la conexión con la base de conocimiento. ¿Podrías intentar preguntarme de nuevo?",
+      "disclaimer": "La IA puede cometer errores. Verifica la información crítica en los manuales originales.",
+      "suggested": {
+        "q1": "Error E45 en maniobra Arca II",
+        "q2": "Procedimiento de rescate manual",
+        "q3": "Esquema de series de seguridad",
+        "q4": "Pares de apriete motor gearless"
+      }
+    },
+    "onboarding": {
+      "step_counter": "Paso {current} de {total}",
+      "skip": "Saltar tour",
+      "next": "Siguiente",
+      "finish": "Finalizar",
+      "steps": {
+        "search_title": "Asistente Técnico",
+        "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+        "input_title": "Búsqueda Inteligente",
+        "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+        "actions_title": "Acciones Rápidas",
+        "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets."
+      }
+    }
+  },
+  "verticals": {
+    "elevators": "Inteligencia de Ascensores",
+    "legal": "Mente Legal",
+    "clinical": "Córtex Clínico"
+  },
+  "help": {
+    "title": "Centro de Ayuda Contextual",
+    "subtitle": "Información técnica y consejos de uso para esta sección."
+  },
+  "activateBtn": "Activar",
+  "activities": {
+    "actions": {
+      "history": {
+        "desc": "Ver historial de consultas",
+        "title": "Historial"
+      },
+      "search": {
+        "desc": "Realizar nueva consulta",
+        "title": "Buscar"
+      },
+      "upload": {
+        "desc": "Subir nuevo documento",
+        "title": "Subir"
+      }
+    },
+    "empty": {
+      "desc": "Aquí aparecerán tus acciones recientes",
+      "title": "Sin actividad reciente"
+    },
+    "help": {
+      "search": {
+        "desc": "Usa lenguaje natural para encontrar información",
+        "title": "Cómo buscar"
+      },
+      "upload": {
+        "desc": "Soportamos PDF, DOCX y otros formatos",
+        "title": "Cómo subir"
+      }
+    },
+    "sections": {
+      "activity": "Actividad reciente",
+      "contact": "Contacto",
+      "help": "Ayuda",
+      "view_all": "Ver todo"
+    },
+    "stats": {
+      "accuracy": "Precisión",
+      "documents": "Documentos",
+      "queries": "Consultas",
+      "time": "Tiempo medio"
+    },
+    "subtitle": "Panel de actividad reciente",
+    "system": "Sistema"
+  },
+  "cleanupDesc": "Se han eliminado los datos seleccionados",
+  "cleanupSuccess": "Limpieza completada",
+  "columns_help": "Columnas del archivo",
+  "confirmLabel": "Confirmar",
+  "copyCodes": "Copiar códigos",
+  "csv_read_error": "Error al leer CSV",
+  "currentBadge": "Actual",
+  "currentLabel": "Actual",
+  "default_help": "Valor por defecto",
+  "desc": "Descripción",
+  "description": "Descripción",
+  "disableBtn": "Desactivar",
+  "disableConfirm": "¿Desactivar MFA?",
+  "doneBtn": "Hecho",
+  "drop_active": "Suelta el archivo aquí",
+  "drop_idle": "Arrastra un archivo o haz clic para seleccionar",
+  "email": "Email",
+  "encoding_help": "Codificación del archivo",
+  "errorConnection": "Error de conexión",
+  "errorDescription": "Ha ocurrido un error",
+  "errorSave": "Error al guardar",
+  "errorUpdate": "Error al actualizar",
+  "error_no_valid": "Datos no válidos",
+  "eventType": "Tipo de evento",
+  "excel_read_error": "Error al leer Excel",
+  "file_hint": "Formatos aceptados: PDF, DOCX, XLSX",
+  "firstName": "Nombre",
+  "format": "Formato",
+  "hide_help": "Ocultar ayuda",
+  "inApp": "En la app",
+  "infoDisabled": "MFA desactivado",
+  "infoEnabled": "MFA activado",
+  "instructions": "Instrucciones",
+  "invalidCode": "Código inválido",
+  "lastName": "Apellido",
+  "manualKey": "Clave manual",
+  "matchError": "Las contraseñas no coinciden",
+  "memberSince": "Miembro desde",
+  "mfa": "Autenticación de doble factor",
+  "newLabel": "Nuevo",
+  "note": "Nota",
+  "notificationPrefs": "Preferencias de notificaciones",
+  "notificationPrefsSubtitle": "Configura cómo quieres recibir notificaciones",
+  "onboarding": {
+    "finish": "Finalizar",
+    "next": "Siguiente",
+    "skip": "Omitir"
+  },
+  "parsing": "Procesando...",
+  "password": "Contraseña",
+  "personalInfo": "Información personal",
+  "personalInfoSubtitle": "Actualiza tu información de perfil",
+  "readOnly": "Solo lectura",
+  "recoveryCodesTitle": "Códigos de recuperación",
+  "recoveryCodesWarning": "Guarda estos códigos de recuperación en un lugar seguro",
+  "recoveryDesc": "Puedes usar estos códigos para acceder si pierdes tu dispositivo",
+  "recoveryTitle": "Recuperación",
+  "revokeConfirmOthers": "¿Revocar todas las demás sesiones?",
+  "revokeDesc": "Se cerrarán todas las sesiones excepto la actual",
+  "revokeError": "Error al revocar sesiones",
+  "revokeOthersBtn": "Revocar otras sesiones",
+  "revokeSuccess": "Sesiones revocadas",
+  "role": "Rol",
+  "roles_help": "Asignar roles",
+  "saveBtn": "Guardar",
+  "securityCenter": "Centro de seguridad",
+  "securityCenterSubtitle": "Gestiona tu contraseña y autenticación",
+  "sending": "Enviando...",
+  "setupBtn": "Configurar",
+  "setupStep1": "Escanea el código QR",
+  "setupStep1Desc": "Usa una app de autenticación para escanear",
+  "setupStep2": "Ingresa el código de verificación",
+  "sizeError": "Archivo demasiado grande",
+  "statusDisabled": "Desactivado",
+  "statusEnabled": "Activado",
+  "submitBtn": "Enviar",
+  "subtitle": "Subtítulo",
+  "successDesc": "Operación realizada con éxito",
+  "successDescription": "Operación realizada con éxito",
+  "successTitle": "Éxito",
+  "success_title": "Éxito",
+  "table": {
+    "email": "Email",
+    "invalid_email": "Email inválido",
+    "missing_email": "Email faltante",
+    "no_email": "Sin email",
+    "role": "Rol",
+    "status": "Estado"
+  },
+  "title": "Título",
+  "typeError": "Tipo de archivo no permitido",
+  "unknownBrowser": "Navegador desconocido",
+  "unknownOs": "SO desconocido",
+  "unprivilegedNotice": "No tienes permisos para esta acción",
+  "updateError": "Error al actualizar",
+  "uploadError": "Error al subir archivo",
+  "user": "Usuario",
+  "valid_to_send": "Válido para enviar",
+  "verifying": "Verificando...",
+  "with_errors": "Con errores",
+  "reports": {
+    "title": "Análisis Técnico Avanzado",
+    "subtitle": "Documento de Evaluación Técnica Asistida",
+    "details": "Detalles del Informe",
+    "technician": "Técnico Responsable",
+    "compatibility": "Índice de Compatibilidad",
+    "protocol": "Protocolo de Verificación",
+    "date": "Fecha de Generación",
+    "client": "Cliente",
+    "page": "Página {current} de {total}",
+    "automaticFootnote": "Informe generado automáticamente por el Motor de Inteligencia ABD"
+  },
+  "spaces": {
+    "title": "Espacios de Trabajo",
+    "subtitle": "Gestiona tus documentos personales, colecciones y consultas rápidas.",
+    "tabs": {
+      "quick_qa": "Quick Q&A",
+      "personal": "Mi Espacio",
+      "collections": "Colecciones"
+    },
+    "placeholders": {
+      "personal_title": "Gestión de Documentos Personales",
+      "personal_desc": "Próximamente: Sube y gestiona tus propios archivos PDF.",
+      "collections_title": "Colecciones Inteligentes",
+      "collections_desc": "Próximamente: Organiza documentos en carpetas por proyecto o tema."
+    },
+    "admin": {
+      "table": {
+        "space": "Espacio",
+        "type": "Tipo",
+        "visibility": "Visibilidad",
+        "status": "Estado",
+        "created": "Creado",
+        "actions": "Acciones"
+      },
+      "types": {
+        "global": "Global",
+        "industry": "Industria",
+        "tenant": "Tenant",
+        "team": "Equipo",
+        "personal": "Personal"
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
+      },
+      "manage": "Gestionar",
+      "search_placeholder": "Buscar espacios...",
+      "new_space": "Nuevo Espacio",
+      "title": "Gestión de Espacios"
+    },
+    "quick_qa": {
+      "validation_error": "Debes pegar un texto y escribir una pregunta",
+      "ia_error": "Error al consultar a la IA",
+      "promote_success": "Snippet guardado como Documento persistente",
+      "promote_error": "Error al promocionar",
+      "conn_error": "Error de conexión",
+      "title": "Quick Q&A",
+      "desc": "Pega texto técnico, notas o especificaciones para consultar sin persistencia.",
+      "snippet_label": "Fragmento de Texto (Snippet)",
+      "snippet_badge": "Efímero",
+      "snippet_placeholder": "Pega aquí el contenido a analizar...",
+      "context_label": "Contexto Adicional (Opcional)",
+      "context_placeholder": "Ej: Instrucciones específicas, versión de software...",
+      "clear_all": "Limpiar Todo",
+      "promote": "Promocionar a Documento",
+      "chat_title": "Chat Efímero",
+      "chat_welcome_title": "Haz una pregunta sobre el texto",
+      "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
+      "status_loading": "Consultando información...",
+      "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento..."
+    }
+  },
+  "pagination": {
+    "page_info": "Página {current} de {total}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "total_items": "{total} documentos en total"
+  },
+  "errors": {
+    "forbidden": "Acceso restringido. Permisos insuficientes.",
+    "unauthorized": "Autenticación requerida. Por favor inicia sesión.",
+    "validation_error": "Fallo en la validación de entrada. Revisa los datos proporcionados.",
+    "not_found": "Recurso no encontrado.",
+    "internal_error": "Ocurrió un error inesperado en el sistema. Referencia: {id}",
+    "forbidden_access": "Violación de aislamiento técnico. No tienes acceso a este recurso.",
+    "ticket_not_found": "Ticket de soporte no encontrado o ya archivado."
+  },
+  "search": {
+    "error_message": "Lo siento, hubo un error al procesar tu consulta.",
+    "analyzing": "Analizando...",
+    "suggested_questions": "Preguntas sugeridas",
+    "sources_label": "Fuentes encontradas:",
+    "title": "Búsqueda Conversacional",
+    "input_placeholder": "Escribe tu pregunta aquí...",
+    "placeholder": "¿Qué necesitas saber sobre tus documentos?",
+    "disclaimer": "La IA puede cometer errores. Verifica la información importante.",
+    "copy": "Copiar respuesta",
+    "feedback_positive": "Útil",
+    "regenerate": "Regenerate respuesta",
+    "feedback_negative": "No útil"
+  },
+  "enterpriseSecurity": {
+    "title": "Seguridad de grado empresarial",
+    "f3_desc": "Usted mantiene el control total sobre dónde se almacenan sus documentos y cómo se procesan."
+  },
+  "loading": "Cargando...",
+  "delete": "Eliminar",
+  "actions": "Acciones"
+}

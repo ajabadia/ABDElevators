@@ -17,7 +17,8 @@ export class ApiKeyService {
         name: string,
         permissions: ApiKeyPermission[],
         userId: string,
-        expiresInDays?: number
+        expiresInDays?: number,
+        spaceId?: string
     ): Promise<{ apiKey: ApiKey; plainTextKey: string }> {
         // 1. Generar Key Aleatoria segura
         const randomBytes = crypto.randomBytes(32).toString('hex');
@@ -42,7 +43,8 @@ export class ApiKeyService {
             permissions,
             expiresAt,
             createdBy: userId,
-            isActive: true
+            isActive: true,
+            spaceId: spaceId
         };
 
         // 5. Guardar en DB

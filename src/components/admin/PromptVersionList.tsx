@@ -30,7 +30,7 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
             const res = await fetch(`/api/admin/prompts/${promptId}/versions`, { credentials: 'include' });
             if (!res.ok) throw new Error('Failed to fetch versions');
             const data = await res.json();
-            setVersions(data);
+            setVersions(data.versions || []);
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
             setError(msg);
@@ -44,17 +44,17 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
         fetchVersions();
     }, [promptId]);
 
-    const handleRollback = async (versionId: string) => {
+    const handleRollback = async (version: number) => {
         setLoading(true);
         try {
             const res = await fetch(`/api/admin/prompts/${promptId}/versions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ versionId })
+                body: JSON.stringify({ targetVersion: version })
             });
             if (!res.ok) throw new Error('Rollback failed');
-            await logClientEvent({ level: 'INFO', source: 'PROMPT_UI', action: 'ROLLBACK_SUCCESS', message: `Rollback to ${versionId}`, correlationId: crypto.randomUUID() });
+            await logClientEvent({ level: 'INFO', source: 'PROMPT_UI', action: 'ROLLBACK_SUCCESS', message: `Rollback to v${version}`, correlationId: crypto.randomUUID() });
             onRollback();
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Error desconocido';
@@ -72,15 +72,19 @@ export const PromptVersionList: React.FC<Props> = ({ promptId, onClose, onRollba
                 {error && <p className="text-red-600 mb-2">{error}</p>}
                 {loading && <p className="mb-2">Cargando…</p>}
                 <ul className="space-y-2">
-                    {versions.map(v => (
-                        <li key={v._id} className="border p-2 rounded flex justify-between items-center">
-                            <span>v{v.version} – {new Date(v.updatedAt).toLocaleString()}</span>
+                    {versions.map((v: any) => (
+                        <li key={v._id} className="border p-2 rounded flex justify-between items-center text-sm">
+                            <div className="flex flex-col">
+                                <span className="font-bold">Versión {v.version}</span>
+                                <span className="text-xs text-slate-500">{new Date(v.createdAt).toLocaleString()}</span>
+                                {v.changeReason && <span className="text-[10px] italic">"{v.changeReason}"</span>}
+                            </div>
                             <button
-                                className="px-2 py-1 bg-yellow-500 text-white rounded"
-                                onClick={() => handleRollback(v._id)}
+                                className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                                onClick={() => handleRollback(v.version)}
                                 disabled={loading}
                             >
-                                Rollback
+                                Revertir
                             </button>
                         </li>
                     ))}

@@ -52,12 +52,19 @@ try {
 const response = await callGemini(renderedPrompt, tenantId, correlationId, { model: modelName });
 ```
 
+### 3) Tipado de Payloads (Fase 130.5)
+Asegurar que los datos extraídos o analizados por la IA sigan las interfaces estándar de la plataforma para garantizar la interoperabilidad entre motores.
+
+- ✅ **OBLIGATORIO**: Uso de tipos desde `@/types/ai` (`AIModelFinding`, `AIRiskFinding`, `AIGraphPattern`).
+- ❌ **RED FLAG**: Uso de `any[]` para almacenar resultados de motores agénticos.
+
 ## Checklist de Auditoría
 - [ ] ¿El prompt tiene una entrada en `PromptService`? (Clave única)
 - [ ] ¿Existe una constante equivalente en `src/lib/prompts.ts`?
 - [ ] ¿El servicio usa `try/catch` envolviendo el `getRenderedPrompt`?
 - [ ] ¿Se realiza el reemplazo manual de variables en la rama del `catch`?
 - [ ] ¿Se loguea un aviso cuando ocurre el fallback para que el admin sepa que debe crear el prompt en la BD?
+- [ ] ¿El payload de resultado usa los tipos de `src/types/ai.ts`? (Fase 130.5)
 
 ## Output Esperado
 Al auditar, genera un informe con:

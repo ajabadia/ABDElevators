@@ -1,14 +1,16 @@
 import { AlertTriangle, Home, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
-export default function GeneralErrorPage({
+export default async function GeneralErrorPage({
     searchParams,
 }: {
     searchParams: { message?: string; code?: string };
 }) {
+    const t = await getTranslations('error.page');
     const errorCode = searchParams.code || "UNKNOWN_ERROR";
-    const errorMessage = searchParams.message || "Ha ocurrido un error inesperado en la plataforma.";
+    const errorMessage = searchParams.message || t('defaultMessage');
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-outfit">
@@ -18,7 +20,7 @@ export default function GeneralErrorPage({
                 </div>
 
                 <div className="space-y-3">
-                    <h1 className="text-3xl font-bold text-slate-900">Ups, algo ha salido mal</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">{t('title')}</h1>
                     <p className="text-slate-500 leading-relaxed">
                         {errorMessage}
                     </p>
@@ -26,11 +28,11 @@ export default function GeneralErrorPage({
 
                 <div className="bg-slate-50 rounded-2xl p-6 text-left border border-slate-100 font-mono text-xs">
                     <div className="flex justify-between items-center text-slate-400 mb-2 uppercase tracking-widest font-bold">
-                        <span>Detalles Técnicos</span>
+                        <span>{t('technicalDetails')}</span>
                         <span>{errorCode}</span>
                     </div>
                     <p className="text-slate-600 break-words">
-                        Si el problema persiste, por favor contacta con nuestro equipo de soporte técnico con el código de error superior.
+                        {t('supportMessage')}
                     </p>
                 </div>
 
@@ -38,12 +40,12 @@ export default function GeneralErrorPage({
                     <Button asChild variant="outline" className="rounded-xl h-12 border-slate-200 hover:bg-slate-50">
                         <Link href="/" className="flex items-center justify-center gap-2">
                             <Home size={16} />
-                            Inicio
+                            {t('home')}
                         </Link>
                     </Button>
                     <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12" onClick={() => window.location.reload()}>
                         <RefreshCcw size={16} className="mr-2" />
-                        Reintentar
+                        {t('retry')}
                     </Button>
                 </div>
             </div>

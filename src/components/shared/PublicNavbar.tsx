@@ -22,28 +22,28 @@ export function PublicNavbar() {
                 </div>
             </Link>
             <div className="hidden md:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                <Link href="/#soluciones" className="hover:text-teal-400 transition-colors">
+                <Link href="/#soluciones" className="hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm">
                     {navT('solutions')}
                 </Link>
-                <Link href="/#tecnologia" className="hover:text-teal-400 transition-colors">
+                <Link href="/#tecnologia" className="hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm">
                     {navT('technology')}
                 </Link>
                 <Link
                     href="/pricing"
                     className={cn(
-                        "hover:text-teal-400 transition-colors",
+                        "hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm",
                         isActive('/pricing') && "text-teal-500 border-b-2 border-teal-500 pb-1"
                     )}
                 >
                     {navT('pricing')}
                 </Link>
-                <Link href="/#seguridad" className="hover:text-teal-400 transition-colors">
+                <Link href="/#seguridad" className="hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm">
                     {navT('security')}
                 </Link>
                 <Link
                     href="/about"
                     className={cn(
-                        "hover:text-teal-400 transition-colors",
+                        "hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm",
                         isActive('/about') && "text-teal-500 border-b-2 border-teal-500 pb-1"
                     )}
                 >
@@ -52,7 +52,7 @@ export function PublicNavbar() {
                 <Link
                     href="/contact"
                     className={cn(
-                        "hover:text-teal-400 transition-colors",
+                        "hover:text-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-sm",
                         isActive('/contact') && "text-teal-500 border-b-2 border-teal-500 pb-1"
                     )}
                 >

@@ -1,0 +1,45 @@
+{
+  "pii_label": "Desidentificación de Datos (PII)",
+  "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
+  "pii_warning_title": "ADVERTENCIA: Datos Sensibles",
+  "pii_warning_desc": "Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos. ¿Cómo deseas proceder?",
+  "pii_opt_continue": "Continuar sin protección",
+  "pii_opt_cancel": "Cancelar",
+  "pii_opt_enable": "Activar y continuar",
+  "fields": {
+    "chunking_label": "Nivel de Chunking",
+    "chunking_placeholder": "Seleccionar nivel...",
+    "chunking_low": "Simple (Bajo) - Rápido, bloques fijos",
+    "chunking_medium": "Semántico (Medio) - IA detecta cambios de tema",
+    "chunking_high": "LLM (Alto) - Segmentación inteligente profunda",
+    "type": "Tipo de Componente",
+    "version": "Versión Doc.",
+    "placeholder": "Seleccionar...",
+    "scope": "Alcance del Conocimiento",
+    "industry": "Industria / Sector"
+  },
+  "status": {
+    "error": "Error de Ingesta",
+    "duplicate": "¡Ya Existía!",
+    "success": "¡Documento Recibido!",
+    "duplicate_desc": "Procesado instantáneamente (Smart Ingest).",
+    "success_desc": "Procesando e indexando fragmentos...",
+    "uploading": "IA Procesando...",
+    "processing_note": "Este proceso puede tardar 1-2 min."
+  },
+  "title": "Subir Documentación Técnica",
+  "description": "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",
+  "dropzone": {
+    "idle": "Arrastra un manual PDF aquí o haz clic para seleccionar",
+    "format": "Solo archivos PDF (Max 250MB)",
+    "max_size": "Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.",
+    "active": "Suelta el archivo aquí...",
+    "selected": "Archivo seleccionado"
+  },
+  "actions": {
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "submit": "Subir e Indexar",
+    "done": "Finalizado"
+  }
+}

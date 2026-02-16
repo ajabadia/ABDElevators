@@ -1,0 +1,1271 @@
+Te dejo un resumen muy concreto de cosas a revisar/mejorar:
+
+1. Duplicados y posible confusión de nombres
+Tienes dos WorkflowEngine distintos: uno “AI workflows” (event‑based, processEvent) y otro “case workflows” (estado, executeTransition) en ficheros diferentes, con el mismo nombre de clase.
+
+Peligro: imports ambiguos, árbol de dependencias complicado y tracing/logs difíciles de leer.
+
+Mejora: renombrar a algo tipo:
+
+AIWorkflowEngine (eventos RAG, processEvent).
+
+CaseWorkflowEngine (transiciones de estado sobre cases/entities, executeTransition).
+
+Y/o agruparlos en un index.ts que exporte claramente ambas variantes.
+
+En el bundle nuevo sigues arrastrando definiciones antiguas (ej. WorkflowEngine duplicado al final de algunos scripts de verificación y en lib/workflow-engine).
+​
+
+Conviene limpiar scripts de verificación viejos o por lo menos comentar que son “legacy tests” para que no parezca código de runtime.
+
+2. Checklists: modelo y endpoints
+Nuevo endpoint POST /api/entities/[id]/checklist que genera items desde RAG y los clasifica, y POST /api/entities/[id]/checklist/validate que persiste la validación por item en extractedchecklists.
+​
+
+Conceptualmente está bien: colección dedicada a checklists extraídos, validaciones por item, merging por item.id.
+
+Pequeño detalle: en el PATCH apientities/[id]/checklist estás actualizando metadata.checklist.item.completed dentro de entities, mientras que el resto de validaciones vive en extractedchecklists.
+​
+
+Ojo con la duplicación de estado (un “completed” en entities y una status en extractedchecklists.validations).
+
+Mejora: o te quedas solo con extractedchecklists.validations como única verdad y calculas el “checklist completo” desde allí, o sincronizas explícitamente en un único sitio para evitar divergencias.
+
+El merge de checklist al refrescar:
+
+Buscas existingChecklist.validations con .find(v => v.itemId === item.id).
+​
+
+Asegúrate de que item.id es estable entre regeneraciones; si es un uuidv4 nuevo cada vez, perderás la continuidad. Mejor usar un hash de contenido (ya lo insinúas en el comentario) y que ese hash sea el itemId.
+
+3. Validaciones humanas y generación de informes
+POST /api/entities/[id]/validate y POST /api/entities/[id]/generate-report están muy bien alineados:
+
+Validación se guarda en humanvalidations, y si generalStatus === APPROVED marcas entity.isValidated = true.
+
+El generador de informes exige entity.isValidated y una validación APROBADO; eso está perfecto a nivel de gobernanza.
+
+Pequeña mejora:
+
+En generate-report calculas tokensUsed = reportText.length / 4.
+​
+
+Está bien como aproximación, pero quizás dejarlo explícito como approxTokens para no confundir con métricas “reales” en otras partes donde usas usageMetadata de Gemini.
+
+4. Vector search y performance
+GET /api/entities/[id]/vector-search:
+
+Muy buena la lógica de Tenant isolation y CROSSTENANTACCESSATTEMPT en logs.
+
+El SLA 200 ms + logs VECTORSEARCHSUCCESS y SEARCHEXCEPTION está bien.
+
+Mejora menor:
+
+Si !query devuelves NextResponse.json({ results }) sin success ni metadata.
+​
+
+Para uniformidad con el resto de endpoints, podrías hacer success: true, results: [], metadata: { reason: "NO_QUERY" }.
+
+5. Gobernanza, permisos y Guardian
+GovernanceEngine (políticas IA) + GuardianEngine (ABAC de permisos) + hook useGuardian y enforcePermission en server están muy bien separados.
+
+Cache in‑memory de policies con TTL 60 s para Guardian es una buena decisión.
+
+Cosas a vigilar:
+
+evaluateConditions en Guardian solo implementa ipRange como igualdad, con TODO de CIDR.
+​
+
+Está ok en demo, pero conviene documentar bien que no es “real” para no fiarse demasiado en producción.
+
+matchResource hace un pseudo‑glob con * al final (prefix**), que cubre la mayoría de tus casos (workflow.*).
+​
+
+Bien mientras tengas claro que no soporta comodines internos tipo reports.*.read.
+
+6. Inteligencia, grafos y agentes
+EntityEngine, GraphEngine, PredictiveEngine, InsightEngine, IntelligenceDashboard, CrossVerticalEngine, AgentEngine… presentan una arquitectura muy coherente y modular.
+​
+
+Me gusta que cada uno tenga su propia responsabilidad y que la mayoría trabajen sobre interfaces (I*Repository) en lugar de acoplarse directo a Mongo.
+
+Un par de detalles:
+
+En varias partes hay console.log de debug aún activos (ej. GraphEngine, WorkflowEngine, scripts de verificación, PredictiveEngine).
+​
+
+Para producción quizá conviene centralizarlos en logEvento o behind a flag if (process.env.NODE_ENV !== 'production').
+
+CrossVerticalEngine.semanticHorizontalSearch usa performTechnicalSearch(query, "global", ...) sin una capa fuerte de anonimización real (lo comentas en docstring).
+​
+
+Correcto como demo, pero si esto va a clientes reales convendría que el comentario advierta “no usar en producción sin capa de anonimización”.
+
+7. Scripts de verificación / pruebas
+Has añadido scripts como:
+
+verifyGuardianV2, verifyWorkflowTasksAPI, verifyWorkflowEngineV3, verifyRagDrivenWorkflow, semantic-cache.ts, etc.
+
+Están muy bien para smoke tests manuales y como documentación viva.
+
+Mejora de organización:
+
+Meterlos todos en algo tipo scripts/verification o tools/diagnostics y asegurarte de que no se importan nunca desde código de runtime.
+
+Algunos usan process.exit(0 | 1): perfecto para CLI, pero deja claro que no pasan por la app Next.
+
+8. Errores y handleApiError
+Casi todos los endpoints nuevos siguen la convención:
+
+AppError → status propio, json { error, code }.
+
+Resto → handleApiError o Internal Server Error simple.
+
+Solo he visto pequeñas inconsistencias:
+
+En /api/entities/[id]/vector-search usas un if (error instanceof AppError) manual y luego un NextResponse.json({ code: INTERNALERROR }) genérico, sin pasar por handleApiError.
+
+No está mal, pero es diferente del resto. Si quieres uniformidad, podrías usar handleApiError ahí también.
+
+En algún endpoint antiguo sigues devolviendo error/message sin success (pero esto ya venía de antes).
+
+
+
+La base conceptual está muy sólida; el mayor salto ahora es “ponerle nombres” a las piezas y ajustar contratos/schemas para que el sistema siga entendible dentro de 1–2 años.
+​
+
+Te propongo ajustes en tres ejes: motores de workflow, contratos de tareas y schemas de checklist/validación.
+
+1. Motores de workflow: nombres y responsabilidades
+Ahora mismo conviven dos “WorkflowEngine”:
+
+Motor de eventos IA:
+
+Clase WorkflowEngine que vive en lib/.../WorkflowEngine y maneja AIWorkflow, WorkflowTrigger, WorkflowAction, processEvent(eventType, data, tenantId, correlationId).
+
+Carga desde colección aiworkflows, usa WorkflowAnalyticsService para registrar triggers y acciones.
+​
+
+Motor de caso/estado:
+
+Otro WorkflowEngine (en lib/workflow-engine.ts u otro módulo) que implementa executeTransition(TransitionRequest) sobre cases, con WorkflowDefinitionSchema, states, transitions, etc.
+​
+
+Propuesta de diseño
+Renombrar explícitamente:
+
+AIWorkflowEngine para el de eventos (aiworkflows, processEvent).
+
+CaseWorkflowEngine para el de transiciones (workflowdefinitions, cases, executeTransition).
+
+A nivel de tipos:
+
+AIWorkflow y WorkflowAction/WorkflowTrigger ya están bien nombrados para el motor IA.
+​
+
+WorkflowDefinition y TransitionRequest son correctos para el motor de casos.
+​
+
+API pública clara:
+
+AIWorkflowEngine.processEvent(eventType, data, tenantId, correlationId)
+
+CaseWorkflowEngine.executeTransition({ caseId, toState, role, correlationId, comment, signature })
+
+Así cualquier import deja muy claro “qué workflow” está tocando.
+
+2. WorkflowDefinition y WorkflowTask: contratos
+2.1. WorkflowDefinitionSchema
+Ya tienes algo tipo:
+
+states con id, label, color, rolesAllowed, requiresValidation, isInitial, isFinal.
+​
+
+transitions con from, to, label, requiredRole, conditions, actions.
+​
+
+Mejoras de naming:
+
+requiredrole → requiredRoles (string[]), para estar en línea con rolesallowed (plural).
+​
+
+requiresvalidation en el estado podría llamarse autoGenerateTask o validationTaskConfig, para no confundir con “validación IA”:
+
+Por ejemplo, validationTask: { type: 'DOCUMENT_REVIEW', checklistConfigId?: string } | null.
+
+2.2. WorkflowTask
+Actualmente las tareas se crean en varios sitios con payloads ad‑hoc:
+
+Motor de caso (executeTransition) crea tareas workflowtasks a partir de nextState.requiresvalidation y rellena:
+
+tenantId, caseId, type: "DOCUMENTREVIEW", title, description, assignedRole, status, priority, metadata.
+​
+
+Motor IA (AIWorkflowEngine) crea tareas humantask con:
+
+taskType, assignedRole, priority, checklistConfigId, triggerData, nodeLabel, etc.
+​
+
+El esquema implícito es bueno, pero disperso.
+
+Propuesta
+Definir un WorkflowTaskSchema (Zod) común en lib/schemas y tipar ambos motores contra él:
+
+Campos mínimos:
+
+Identidad/contexto:
+
+id
+
+tenantId
+
+caseId?: string
+
+entitySlug?: string (si no todo se modela como “case”)
+
+workflowId?: string
+
+nodeId?: string (nodo del AI workflow o del canvas de workflow de casos)
+
+Metadatos funcionales:
+
+type: "DOCUMENT_REVIEW" | "TECHNICAL_VALIDATION" | "LEGAL_REVIEW" | ...
+
+title
+
+description
+
+assignedRole y/o assignedUserId
+
+status: "PENDING" | "INPROGRESS" | "COMPLETED" | "REJECTED" | "CANCELLED"
+
+priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+
+Enlaces de reglas:
+
+checklistConfigId?: string
+
+riskScore?: number
+
+source: "AI_WORKFLOW" | "CASE_WORKFLOW" | "MANUAL"
+
+metadata: Record<string, any>
+
+Esto evita que cada engine “invente” su propia estructura y hace más fácil reutilizar la bandeja WorkflowTaskInbox en industrias distintas.
+
+3. Checklist, validación y reportes: schemas y nombres
+Aquí tienes tres piezas que ya casi encajan:
+
+ChecklistConfigSchema (catálogos de categorías/items).
+​
+
+extractedchecklists (items generados por RAG/LLM + validaciones por ítem).
+​
+
+humanvalidations (validación global de la entidad, con generalStatus, items, tiempos).
+
+3.1. Checklist extraído vs checklist de catálogo
+Ahora mismo:
+
+ChecklistConfig define categorías e items (catálogo).
+
+extractedchecklists guarda items que vienen del LLM (con categoryId, descripción, etc.) y un objeto validations indexado por itemId.
+​
+
+Mejoras:
+
+Alinear nombres con el catálogo:
+
+ChecklistItemConfig (lo del catálogo).
+
+ExtractedChecklistItem (lo generado por IA), con:
+
+id (hash estable del contenido, no solo UUID).
+
+description
+
+categoryId
+
+source: "RAG" | "LLM" | "MANUAL".
+
+ItemValidationSchema ya existe en lib/schemas/business.
+​
+
+Confirmar que use el mismo itemId que ExtractedChecklistItem.id.
+
+Asegurar que los estados (status) sean atómicos: "PENDING" | "APPROVED" | "REJECTED" | "N/A".
+
+En extractedchecklists:
+
+ts
+{
+  entityId: string;
+  tenantId: string;
+  configId?: string; // ChecklistConfig usado
+  items: ExtractedChecklistItem[];
+  validations: Record<string, ItemValidation>; // itemId -> validation
+  createdAt: Date;
+  updatedAt: Date;
+}
+3.2. Validación global
+ValidationSchema en humanvalidations:
+
+Tiene generalStatus, items, validationTime, validatedBy, etc.
+
+Propuesta:
+
+Normalizar estados de validación:
+
+generalStatus: "APPROVED" | "REJECTED" | "NEEDS_CHANGES" | "IN_PROGRESS".
+
+Alinear items con los ItemValidation (mismo tipo), o bien:
+
+items: ItemValidation[] directamente, para no multiplicar tipos.
+
+Campo de enlace fuerte con extractedchecklists:
+
+checklistSnapshotId?: string (id de extractedchecklists usado en esa validación).
+
+Esto te permite saber qué versión de checklist se había generado cuando se validó.
+
+4. Nombres de eventos, insights y riesgos
+En el motor IA (AIWorkflowEngine.processEvent), los tipos de evento son literales ("onprediction", "oninsight", etc.).
+​
+
+Mejor extraerlos a un WorkflowTriggerType enum o union ("ON_PREDICTION" | "ON_INSIGHT" | "ON_RISK" | ...) para evitar strings mágicos.
+
+MaintenancePrediction, Insight, RiskFinding (en RiskService) están bien definidos, pero usan campos similares con nombres distintos (riskScore, confidence, impact, etc.).
+​
+
+Valdría la pena un BaseFinding:
+
+ts
+interface BaseFinding {
+  id: string;
+  title?: string;
+  description?: string;
+  riskScore?: number; // 0–100
+  confidence?: number; // 0–1
+  category?: string;   // ANOMALY, PREDICTIVE, GENERAL...
+}
+Luego Insight y MaintenancePrediction extienden eso, y los triggers IA pueden trabajar sobre BaseFinding sin acoplarse a cada tipo concreto.
+
+5. i18n de workflows: claves y fallback
+Con WorkflowDefinition + TranslationSchema e i18n ya puedes tener un diseño coherente.
+​
+
+En WorkflowDefinition.states y transitions:
+
+Añadir labelKey?: string.
+
+Si falta, puedes construir una default:
+
+workflow.{entityType}.{workflowName}.state.{stateId}.label.
+
+En WorkflowTask:
+
+titleKey?: string, descriptionKey?: string, igual patrón.
+
+Servicio central de resolución (como comentamos antes):
+
+resolveLabel(tenantId, key, locale, fallback) que primero busca en Translation por tenant, luego en ficheros i18n, luego usa fallback.
+​
+
+Así los schemas guardan claves estables y los textos finales quedan en una capa i18n/copy, no embebidos en definiciones.
+
+6. Contratos de repositorios (interfaces)
+Las interfaces IWorkflowRepository, ICaseRepository, IEntityRepository, IGovernanceRepository, etc., ya son una buena abstracción.
+​
+
+Pequeños ajustes de naming/consistencia:
+
+IWorkflowRepository:
+
+findActiveByTrigger(triggerType, tenantId) y getDefinition(tenantId, entityType?) mezclan AI workflows y case workflows.
+​
+
+Considera partir en:
+
+IAIWorkflowRepository (event‑based).
+
+ICaseWorkflowRepository (stateful / definitions).
+
+IEntityRepository.updateResult es bastante genérico; si solo se usa para resultados de análisis, renombrar a algo más explícito (updateAnalysisResult o similar).
+
+
+Para un refactor controlado de checklist + validación, te propongo esta familia de schemas Zod y tipos TS, alineados con lo que ya tienes pero más consistente y extensible.
+​
+
+1. Configuración de checklist (catálogo)
+ts
+import z from "zod";
+
+/**
+ * Ítems de catálogo: lo que el negocio define como estructura “ideal”.
+ */
+export const ChecklistCategorySchema = z.object({
+  id: z.string(),                         // UUID estable
+  name: z.string(),
+  color: z.string().optional(),
+  keywords: z.array(z.string()).default([]),
+  priority: z.number().default(1),        // 1 = más prioritario
+  icon: z.string().optional(),
+});
+export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;
+
+export const ChecklistItemTemplateSchema = z.object({
+  id: z.string(),                         // UUID de plantilla
+  categoryId: z.string().nullable().optional(),
+  label: z.string().min(1),               // nombre corto del punto
+  description: z.string().optional(),     // texto guía
+  required: z.boolean().default(false),
+  icon: z.string().optional(),
+});
+export type ChecklistItemTemplate = z.infer<typeof ChecklistItemTemplateSchema>;
+
+export const ChecklistConfigSchema = z.object({
+  id: z.any().optional(),
+  tenantId: z.string(),
+  name: z.string(),
+
+  categories: z.array(ChecklistCategorySchema).default([]),
+  items: z.array(ChecklistItemTemplateSchema).default([]),
+
+  /**
+   * Orden recomendado de categorías (por id), opcional.
+   */
+  workflowOrder: z.array(z.string()).default([]),
+
+  isActive: z.boolean().default(true),
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().default(new Date()),
+});
+export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
+2. Checklist extraído por IA para una entidad
+ts
+/**
+ * Item generado para una entidad concreta (pedido, contrato, etc.).
+ * id debe ser estable (hash de contenido) para poder reusar validaciones.
+ */
+export const ExtractedChecklistItemSchema = z.object({
+  id: z.string(),                         // hash o UUID estable
+  entityId: z.string(),
+  tenantId: z.string(),
+
+  description: z.string().min(1),
+  categoryId: z.string().nullable().optional(),
+
+  source: z.enum(["RAG", "LLM", "MANUAL"]).default("RAG"),
+
+  confidence: z.number().min(0).max(1).optional(),
+  confidenceLevel: z.enum(["HIGH", "MEDIUM", "LOW"]).optional(),
+  ragReference: z.string().optional(),    // id/doc de origen en RAG
+
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().default(new Date()),
+});
+export type ExtractedChecklistItem = z.infer<
+  typeof ExtractedChecklistItemSchema
+>;
+
+/**
+ * Validación por ítem (nivel micro).
+ */
+export const ItemValidationSchema = z.object({
+  itemId: z.string(),                     // mismo que ExtractedChecklistItem.id
+  status: z.enum(["PENDING", "OK", "REVIEW", "REJECTED"]).default("PENDING"),
+  notes: z.string().optional(),
+  technicianId: z.string().optional(),
+  technicianName: z.string().optional(),
+  updatedAt: z.date().default(new Date()),
+});
+export type ItemValidation = z.infer<typeof ItemValidationSchema>;
+
+/**
+ * Snapshot de checklist extraído + validaciones para una entidad.
+ */
+export const ExtractedChecklistSchema = z.object({
+  id: z.any().optional(),
+  entityId: z.string(),
+  tenantId: z.string(),
+  configId: z.string().optional(),        // ChecklistConfig usado
+
+  items: z.array(ExtractedChecklistItemSchema),
+  /**
+   * Mapa itemId -> validación.
+   */
+  validations: z.record(z.string(), ItemValidationSchema).default({}),
+
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().default(new Date()),
+});
+export type ExtractedChecklist = z.infer<typeof ExtractedChecklistSchema>;
+3. Validación global humana de la entidad
+ts
+/**
+ * Ítem de validación “macro”: qué campo cambió, etc.
+ * (lo que ya tienes como ValidationItem).
+ */
+export const ValidationItemSchema = z.object({
+  field: z.string(),
+  originalValue: z.any(),
+  correctedValue: z.any().optional(),
+  status: z.enum(["APPROVED", "CORRECTED", "REJECTED"]).default("APPROVED"),
+  comment: z.string().optional(),
+});
+export type ValidationItem = z.infer<typeof ValidationItemSchema>;
+
+/**
+ * Validación global de la entidad (auditoría).
+ */
+export const ValidationSchema = z.object({
+  id: z.any().optional(),
+  entityId: z.string(),
+  tenantId: z.string(),
+
+  validatedBy: z.string(),                // userId
+  technicianName: z.string().optional(),
+
+  items: z.array(ValidationItemSchema),
+
+  generalStatus: z
+    .enum(["APPROVED", "REJECTED", "PARTIAL", "NEEDS_CHANGES"])
+    .default("APPROVED"),
+
+  validationTime: z.number(),            // segundos
+  observations: z.string().optional(),
+
+  /**
+   * Enlaza con la versión de checklist usada para esta validación.
+   */
+  checklistSnapshotId: z.string().optional(),
+
+  timestamp: z.date().default(new Date()),
+});
+export type Validation = z.infer<typeof ValidationSchema>;
+4. Cómo encaja en tus endpoints actuales
+GET /api/entities/[id]/checklist:
+
+Devuelve ExtractedChecklist (o al menos items + validations) ya tipado con ExtractedChecklistSchema.
+​
+
+POST /api/entities/[id]/checklist (regenerar):
+
+Genera ExtractedChecklistItem[], los pasa por autoClassify + smartSort, los mergea con validations existentes (por itemId) y guarda según ExtractedChecklistSchema.
+​
+
+POST /api/entities/[id]/checklist/validate:
+
+Recibe un ItemValidation, lo valida con ItemValidationSchema y actualiza validations[itemId] en ExtractedChecklist.
+​
+
+POST /api/entities/[id]/validate:
+
+Usa ValidationSchema para la validación global, y opcionalmente guarda checklistSnapshotId apuntando al documento en extractedchecklists usado en ese momento.
+​
+
+Con estos schemas puedes hacer refactor incremental:
+
+Sustituir usos locales de ChecklistItem, ItemValidationSchema, ExtractedChecklistSchema por las versiones anteriores (mismos nombres, estructura más explícita).
+
+Ajustar los endpoints para que siempre lean/escriban usando estos Zod schemas (ya lo haces en gran parte).
+
+
+Me centraría primero en Workflow + AI workflows, porque es donde más impacto tiene un buen diseño de nombres/contratos, y luego remataría Checklist + Validation con los schemas que acabamos de perfilar.
+​
+
+1. Workflow + AI workflows
+Propuesta de alcance para esta área:
+
+Separar claramente:
+
+CaseWorkflowEngine (estados de entidades/casos, workflowdefinitions, executeTransition).
+​
+
+AIWorkflowEngine (eventos de IA, aiworkflows, processEvent).
+​
+
+Definir contratos comunes:
+
+AIWorkflow, WorkflowTrigger, WorkflowAction (ya los tienes en types/workflow), y asegurar que:
+
+trigger.type sea un enum ("ON_PREDICTION" | "ON_INSIGHT" | "ON_RISK" | ...).
+​
+
+actions usen un discriminated union claro (type: "HUMAN_TASK" | "DELAY" | "UPDATE_ENTITY" | ...).
+
+Alinear WorkflowTask con ambos motores:
+
+Un único WorkflowTaskSchema consumido tanto por las transiciones de caso como por las acciones humantask del motor IA.
+​
+
+Ajustar repositorios:
+
+Partir IWorkflowRepository en ICaseWorkflowRepository y IAIWorkflowRepository o, al menos, separar métodos por dominio.
+​
+
+Con eso consigues:
+
+Que el canvas y el motor IA sean reutilizables en otros dominios (legal, seguros) sin tocar el motor de estados de casos.
+
+Que la bandeja de tareas funcione igual tanto si la tarea viene de un flujo “clásico” como de un AI workflow.
+
+2. Checklist + Validation
+Aquí ya tenemos la propuesta de:
+
+ChecklistConfig, ExtractedChecklist, ItemValidation, Validation (global) bien tipados con Zod.
+​
+
+Próximo paso sería aplicar esos schemas al código real:
+
+Endpoints /api/entities/[id]/checklist* y /api/entities/[id]/validate*.
+​
+
+Servicios intermedios (checklist-extractor, checklist-auto-classifier).
+
+
+
+Empiezo por Workflow + AI workflows (modelos y contratos) y luego te doy el caso de Checklist + Validation aplicado a un endpoint concreto.
+
+1. Workflow + AI workflows: modelos y contratos
+1.1. Tipos base (types/workflow.ts)
+ts
+import z from "zod";
+
+/**
+ * Tipos de trigger soportados por el motor IA.
+ */
+export const WorkflowTriggerTypeSchema = z.enum([
+  "ON_PREDICTION",
+  "ON_INSIGHT",
+  "ON_RISK",
+  "ON_EVENT",          // genérico, para extensiones
+]);
+export type WorkflowTriggerType = z.infer<typeof WorkflowTriggerTypeSchema>;
+
+/**
+ * Trigger de un workflow de IA.
+ */
+export const WorkflowTriggerSchema = z.object({
+  type: WorkflowTriggerTypeSchema,          // ej. "ON_INSIGHT"
+  nodeId: z.string().optional(),           // nodo del canvas (para analytics)
+  /**
+   * Condición simple sobre el payload del evento.
+   * Ej: field = "riskScore", operator = "gt", value = 75.
+   */
+  condition: z
+    .object({
+      field: z.string(),
+      operator: z.enum(["gt", "lt", "eq", "contains"]).default("gt"),
+      value: z.any(),
+    })
+    .optional(),
+});
+export type WorkflowTrigger = z.infer<typeof WorkflowTriggerSchema>;
+
+/**
+ * Tipos de acción que el motor IA puede ejecutar.
+ */
+export const WorkflowActionTypeSchema = z.enum([
+  "BRANCH",
+  "HUMAN_TASK",
+  "DELAY",
+  "ITERATOR",
+  "NOTIFY",
+  "LOG",
+  "UPDATE_ENTITY",
+]);
+export type WorkflowActionType = z.infer<typeof WorkflowActionTypeSchema>;
+
+/**
+ * Acción discriminada por type.
+ */
+export const WorkflowActionSchema = z.discriminatedUnion("type", [
+  // Rama lógica (no tiene efectos por sí misma, solo altera flujo)
+  z.object({
+    type: z.literal("BRANCH"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      label: z.string().optional(),
+      confidenceThreshold: z.number().min(0).max(1).optional(),
+      riskThreshold: z.number().min(0).max(100).optional(),
+    }),
+  }),
+
+  // Crea una tarea humana
+  z.object({
+    type: z.literal("HUMAN_TASK"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      taskType: z.string().default("DOCUMENT_REVIEW"),
+      assignedRole: z.string().default("ADMIN"),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
+      checklistConfigId: z.string().optional(),
+    }),
+  }),
+
+  // Delay
+  z.object({
+    type: z.literal("DELAY"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      duration: z.number().int().positive(),   // 1000 = 1s
+      unit: z.enum(["ms", "s", "m"]).default("ms"),
+    }),
+  }),
+
+  // Iterador (placeholder futuro)
+  z.object({
+    type: z.literal("ITERATOR"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      source: z.string(),                      // ej. "items"
+      maxItems: z.number().int().positive().default(10),
+    }),
+  }),
+
+  // Notificación simple
+  z.object({
+    type: z.literal("NOTIFY"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      message: z.string(),
+      method: z.enum(["LOG", "EMAIL", "INAPP"]).default("LOG"),
+      recipientRole: z.string().optional(),
+    }),
+  }),
+
+  // Log estructurado
+  z.object({
+    type: z.literal("LOG"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      message: z.string(),
+      level: z.enum(["INFO", "WARN", "ERROR"]).default("WARN"),
+    }),
+  }),
+
+  // Actualización de entidad
+  z.object({
+    type: z.literal("UPDATE_ENTITY"),
+    nodeId: z.string().optional(),
+    params: z.object({
+      entitySlug: z.string(),                  // colección lógica
+      idField: z.string().default("id"),       // campo en data que contiene el id
+      updates: z.record(z.any()),              // $set directo
+    }),
+  }),
+]);
+export type WorkflowAction = z.infer<typeof WorkflowActionSchema>;
+
+/**
+ * Workflow de IA completo.
+ */
+export const AIWorkflowSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  trigger: WorkflowTriggerSchema,
+  actions: z.array(WorkflowActionSchema),
+
+  active: z.boolean().default(true),
+  environment: z.enum(["STAGING", "PRODUCTION"]).default("PRODUCTION"),
+
+  createdAt: z.date().default(new Date()),
+  updatedAt: z.date().default(new Date()),
+});
+export type AIWorkflow = z.infer<typeof AIWorkflowSchema>;
+1.2. Motor IA renombrado (AIWorkflowEngine)
+ts
+// lib/ai-workflow-engine.ts
+import { AIWorkflow, WorkflowAction, WorkflowTriggerType } from "types/workflow";
+import { getTenantCollection } from "lib/db-tenant";
+import { GovernanceEngine } from "./GovernanceEngine";
+import { WorkflowAnalyticsService } from "lib/workflow-analytics-service";
+import { logEvento } from "lib/logger";
+
+export interface WorkflowContext {
+  workflowId: string;
+  tenantId: string;
+  correlationId: string;
+  triggerData: any;
+}
+
+export class AIWorkflowEngine {
+  private static instance: AIWorkflowEngine;
+
+  private constructor() {}
+
+  public static getInstance(): AIWorkflowEngine {
+    if (!AIWorkflowEngine.instance) {
+      AIWorkflowEngine.instance = new AIWorkflowEngine();
+    }
+    return AIWorkflowEngine.instance;
+  }
+
+  /**
+   * Punto de entrada único: procesa un evento de IA.
+   */
+  public async processEvent(
+    eventType: WorkflowTriggerType,
+    data: any,
+    tenantId: string,
+    correlationId: string
+  ): Promise<void> {
+    try {
+      const collection = await getTenantCollection<AIWorkflow>("aiworkflows", {
+        user: { tenantId },
+      } as any);
+
+      const workflows = await collection
+        .find({ active: true, "trigger.type": eventType })
+        .toArray();
+
+      for (const wf of workflows) {
+        const startTime = Date.now();
+        const isTriggered = this.evaluateTrigger(wf.trigger, data);
+
+        const duration = Date.now() - startTime;
+
+        if (wf.trigger.nodeId) {
+          await WorkflowAnalyticsService.recordEvent({
+            workflowId: wf.id,
+            nodeId: wf.trigger.nodeId,
+            tenantId,
+            type: "trigger",
+            status: isTriggered ? "SUCCESS" : "SKIPPED",
+            durationMs: duration,
+            correlationId,
+          });
+        }
+
+        if (isTriggered) {
+          await this.executeActions(
+            wf.id,
+            wf.actions,
+            data,
+            tenantId,
+            correlationId
+          );
+          await logEvento({
+            level: "INFO",
+            source: "AIWORKFLOWENGINE",
+            action: "EXECUTE_WORKFLOW",
+            message: `Executed workflow ${wf.name} for tenant ${tenantId}`,
+            correlationId,
+            details: { workflowId: wf.id },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("AIWorkflowEngine Error processing event", error);
+    }
+  }
+
+  private evaluateTrigger(trigger: AIWorkflow["trigger"], data: any): boolean {
+    if (!trigger.condition) return true;
+
+    const { field, operator, value } = trigger.condition;
+    const actualValue = (data as any)[field];
+
+    if (actualValue === undefined) return false;
+
+    switch (operator) {
+      case "gt":
+        return actualValue > value;
+      case "lt":
+        return actualValue < value;
+      case "eq":
+        return actualValue === value;
+      case "contains":
+        return Array.isArray(actualValue)
+          ? actualValue.includes(value)
+          : String(actualValue).includes(String(value));
+      default:
+        return false;
+    }
+  }
+
+  private async executeActions(
+    workflowId: string,
+    actions: WorkflowAction[],
+    data: any,
+    tenantId: string,
+    correlationId: string
+  ): Promise<void> {
+    for (const action of actions) {
+      const startTime = Date.now();
+      let status: "SUCCESS" | "FAILED" = "SUCCESS";
+      let errorMessage: string | undefined;
+
+      try {
+        switch (action.type) {
+          case "BRANCH": {
+            const risk = (data.riskScore ?? data.score) ?? 0;
+            const confidence = data.confidenceScore ?? 1;
+            const threshold = action.params.confidenceThreshold ?? 0.7;
+
+            if (confidence < threshold) {
+              console.log(
+                "AIWorkflowEngine Branch: LOW CONFIDENCE path",
+                confidence,
+                threshold
+              );
+            } else if (action.params.riskThreshold && risk >= action.params.riskThreshold) {
+              console.log(
+                "AIWorkflowEngine Branch: HIGH RISK path",
+                risk,
+                action.params.riskThreshold
+              );
+            }
+            break;
+          }
+
+          case "HUMAN_TASK": {
+            const taskCollection = await getTenantCollection(
+              "workflowtasks",
+              { user: { tenantId } } as any
+            );
+
+            const taskPayload = {
+              tenantId,
+              caseId: data.id ?? data.caseId ?? "unlinked-case",
+              type: action.params.taskType,
+              title: action.params.title,
+              description:
+                action.params.description ??
+                "Revisión humana generada por AIWorkflow",
+              assignedRole: action.params.assignedRole,
+              status: "PENDING",
+              priority: action.params.priority,
+              metadata: {
+                correlationId,
+                workflowId,
+                triggerData: data,
+                checklistConfigId: action.params.checklistConfigId,
+              },
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+
+            await taskCollection.insertOne(taskPayload as any);
+            await logEvento({
+              level: "INFO",
+              source: "AIWORKFLOWENGINE",
+              action: "HUMAN_TASK_CREATED",
+              message: `Manual task generated for case ${taskPayload.caseId}`,
+              correlationId,
+              details: { workflowId, taskId: taskPayload.caseId },
+            });
+            break;
+          }
+
+          case "DELAY": {
+            const { duration, unit } = action.params;
+            const ms =
+              unit === "s"
+                ? duration * 1000
+                : unit === "m"
+                ? duration * 60000
+                : duration;
+            await new Promise((resolve) => setTimeout(resolve, ms));
+            break;
+          }
+
+          case "ITERATOR": {
+            // Placeholder actual
+            console.log(
+              "AIWorkflowEngine ITERATOR: source",
+              action.params.source
+            );
+            break;
+          }
+
+          case "NOTIFY": {
+            console.log("AIWorkflowEngine NOTIFY:", action.params.message, data);
+            break;
+          }
+
+          case "LOG": {
+            await logEvento({
+              level: action.params.level,
+              source: "AIAUTOMATION",
+              action: "AUTOMATED_ALERT",
+              message: action.params.message,
+              correlationId,
+              details: { triggerData: data },
+            });
+            break;
+          }
+
+          case "UPDATE_ENTITY": {
+            const gov = GovernanceEngine.getInstance();
+            const decision = await gov.evaluateAction(
+              "AIWORKFLOWENGINE",
+              action.params.entitySlug,
+              "update_entity",
+              tenantId
+            );
+            if (!decision.canExecute) {
+              status = "FAILED";
+              errorMessage = "Blocked by Governance Engine";
+              break;
+            }
+
+            const { entitySlug, idField, updates } = action.params;
+            const id = (data as any)[idField];
+            if (!id) break;
+
+            const coll = await getTenantCollection(entitySlug, {
+              user: { tenantId } as any,
+            } as any);
+            await coll.updateOne({ id } as any, { $set: updates } as any);
+            break;
+          }
+        }
+      } catch (error: any) {
+        status = "FAILED";
+        errorMessage = error.message;
+      } finally {
+        if (action.nodeId) {
+          await WorkflowAnalyticsService.recordEvent({
+            workflowId,
+            nodeId: action.nodeId,
+            tenantId,
+            type: "action",
+            status,
+            durationMs: Date.now() - startTime,
+            correlationId,
+            error: errorMessage,
+          });
+        }
+      }
+    }
+  }
+}
+2. Checklist + Validation: aplicación a endpoint
+Tomando los schemas que definimos antes, aquí un refactor de POST /api/entities/[id]/checklist orientado a:
+
+Generar items vía RAG+LLM.
+
+Clasificar y ordenar.
+
+Merge con validaciones existentes.
+
+Persistir ExtractedChecklist.
+
+ts
+// app/api/entities/[id]/checklist/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
+import { auth } from "lib/auth";
+import { connectDB } from "lib/db";
+import {
+  AppError,
+  ValidationError,
+  ExternalServiceError,
+  NotFoundError,
+} from "lib/errors";
+import { logEvento } from "lib/logger";
+import { extractChecklist } from "lib/checklist-extractor";
+import { autoClassify, smartSort } from "lib/checklist-auto-classifier";
+import {
+  ChecklistConfigSchema,
+  ExtractedChecklistSchema,
+  ExtractedChecklistItemSchema,
+  ItemValidationSchema,
+} from "lib/schemas/checklist"; // donde coloques los schemas propuestos
+
+const ParamsSchema = z.object({
+  id: z.string(),
+});
+
+export async function POST(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const entityId = context.params.id;
+  const correlationId = uuidv4();
+  const start = Date.now();
+
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new AppError("UNAUTHORIZED", 401, "No autorizado");
+    }
+    const tenantId = session.user.tenantId;
+
+    const db = await connectDB();
+
+    // 1. Cargar entidad y asegurar pertenencia
+    const entity = await db.collection("entities").findOne({
+      _id: new ObjectId(entityId),
+      tenantId,
+    });
+    if (!entity) {
+      throw new NotFoundError(`Entidad ${entityId} no encontrada`);
+    }
+
+    // 2. Cargar config de checklist (por tipo de entidad/industry/etc.)
+    const configDoc = await db.collection("configs.checklist").findOne({
+      tenantId,
+      isActive: true,
+      slug: entity.slug ?? "default",
+    });
+    if (!configDoc) {
+      throw new AppError(
+        "CONFIG_NOT_FOUND",
+        404,
+        "Configuración de checklist no encontrada"
+      );
+    }
+    const config = ChecklistConfigSchema.parse(configDoc);
+
+    // 3. Documentos relevantes via vector search (lo tienes ya encapsulado)
+    const docs = await getRelevantDocuments(entityId, tenantId, {
+      topK: 15,
+      correlationId,
+    });
+
+    // 4. Extraer items crudos con LLM
+    const rawItems = await extractChecklist(
+      docs.slice(0, 5),
+      tenantId,
+      correlationId
+    ); // devuelve { id, description, confidence... }
+
+    // 5. Autoclasificar y normalizar items a ExtractedChecklistItem
+    const classified: z.infer<typeof ExtractedChecklistItemSchema>[] = [];
+    for (const item of rawItems) {
+      const categoryId = autoClassify(item, config, correlationId);
+      const normalized = ExtractedChecklistItemSchema.parse({
+        id: item.id, // aquí mejor que sea hash de (description + entityId + configId)
+        entityId,
+        tenantId,
+        description: item.description,
+        categoryId,
+        source: "RAG",
+        confidence: item.confidence,
+        confidenceLevel: item.confidenceLevel,
+        ragReference: item.ragReference,
+      });
+      classified.push(normalized);
+    }
+
+    // 6. Ordenar según prioridad de categorías
+    const finalItems = smartSort(classified, config, correlationId);
+
+    // 7. Merge con validaciones existentes (si refresh)
+    const existing = await db.collection("extractedchecklists").findOne({
+      entityId,
+      tenantId,
+    });
+
+    let validations: Record<string, z.infer<typeof ItemValidationSchema>> = {};
+
+    if (existing) {
+      const parsedExisting = ExtractedChecklistSchema.parse(existing);
+      validations = parsedExisting.validations;
+
+      // Mantener validaciones donde el itemId sigue existiendo
+      const mapped: typeof validations = {};
+      for (const item of finalItems) {
+        const existingValidation = validations[item.id];
+        if (existingValidation) {
+          mapped[item.id] = existingValidation;
+        }
+      }
+      validations = mapped;
+    }
+
+    // 8. Persistir snapshot
+    const extracted = ExtractedChecklistSchema.parse({
+      entityId,
+      tenantId,
+      configId: config.id?.toString(),
+      items: finalItems,
+      validations,
+      updatedAt: new Date(),
+      createdAt: existing?.createdAt ?? new Date(),
+    });
+
+    await db.collection("extractedchecklists").updateOne(
+      { entityId, tenantId },
+      { $set: extracted },
+      { upsert: true }
+    );
+
+    const durationMs = Date.now() - start;
+    await logEvento({
+      level: "INFO",
+      source: "CHECKLIST_ENDPOINT",
+      action: "GET",
+      message: `Returned ${finalItems.length} checklist items for entity ${entityId}`,
+      correlationId,
+      details: {
+        durationMs,
+        configName: config.name,
+        refresh: !!existing,
+      },
+    });
+
+    if (durationMs > 5000) {
+      await logEvento({
+        level: "WARN",
+        source: "CHECKLIST_ENDPOINT",
+        action: "SLA_VIOLATION",
+        message: `Checklist generado pero excedió SLA ${durationMs}ms`,
+        correlationId,
+        details: { durationMs },
+      });
+    }
+
+    return NextResponse.json(
+      { success: true, items: finalItems, validations },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    const durationMs = Date.now() - start;
+    await logEvento({
+      level: "ERROR",
+      source: "CHECKLIST_ENDPOINT",
+      action: "GET_ERROR",
+      message: "Failed to generate checklist",
+      correlationId,
+      details: { durationMs, error: error.message, stack: error.stack },
+    });
+
+    if (error instanceof ValidationError || error.name === "ZodError") {
+      return NextResponse.json(
+        { error: "Invalid input", details: error.issues ?? error.message },
+        { status: 400 }
+      );
+    }
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { error: error.message, code: error.name },
+        { status: error.status }
+      );
+    }
+    if (error instanceof ExternalServiceError) {
+      return NextResponse.json(
+        { error: error.message, code: error.name },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Unexpected error in checklist endpoint" },
+      { status: 500 }
+    );
+  }
+}
+Con estos dos bloques tienes:
+
+Un diseño limpio para AI workflows (modelo, motor, tipos de acciones) listo para refactor sobre tu WorkflowEngine actual.
+​
+
+Un ejemplo concreto de cómo encajar los nuevos schemas de Checklist + Validation en un endpoint real, manteniendo tu patrón de logs/SLA/errores

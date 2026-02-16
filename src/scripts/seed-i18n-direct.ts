@@ -35,12 +35,13 @@ async function seed() {
 
             const operations = Object.entries(flat).map(([key, value]) => ({
                 updateOne: {
-                    filter: { key, locale },
+                    filter: { key, locale, tenantId: 'platform_master' },
                     update: {
                         $set: {
                             key,
                             value,
                             locale,
+                            tenantId: 'platform_master',
                             namespace: key.split('.')[0] || 'common',
                             isObsolete: false,
                             lastUpdated: new Date(),
@@ -64,8 +65,8 @@ async function seed() {
 
         // Crear índices para rendimiento
         console.log('\n🔍 Creando índices...');
-        await collection.createIndex({ locale: 1, key: 1 }, { unique: true });
-        await collection.createIndex({ locale: 1, isObsolete: 1 });
+        await collection.createIndex({ locale: 1, key: 1, tenantId: 1 }, { unique: true, name: 'idx_unique_translation_per_tenant' });
+        await collection.createIndex({ locale: 1, isObsolete: 1, tenantId: 1 });
 
         console.log('\n✨ Migración completada con éxito.');
 
