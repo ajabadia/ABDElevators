@@ -31,6 +31,7 @@
   },
   "navigation": {
     "sections": {
+      "core": "Platform Core",
       "ai_hub": "AI Hub",
       "operations": "Operations",
       "organization": "Organization",

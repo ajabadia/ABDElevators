@@ -9,8 +9,6 @@ import { UserRole } from "@/types/roles";
 import { FeatureFlags } from "./feature-flags";
 import { IndustryType } from "@/lib/schemas";
 import crypto from "crypto";
-import * as fs from "fs";
-import * as path from "path";
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -45,14 +43,8 @@ export async function authorizeCredentials(
         ? crypto.randomUUID()
         : Date.now().toString();
 
-    const debugPath = path.join(process.cwd(), 'debug_auth_v4_2.log');
-    const logToFile = (msg: string) => {
-        const time = new Date().toISOString();
-        const line = `[${time}] [${correlationId}] ${msg}\n`;
-        try { fs.appendFileSync(debugPath, line); } catch (e) { }
-    };
+    logEvento({ level: 'INFO', source: 'AUTH_UTILS', action: 'AUTHORIZE_START', message: `Authorize START | Email: ${credentials?.email}`, correlationId });
 
-    logToFile(`➡️ [AUTH_UTILS] Authorize START | Email: ${credentials?.email}`);
     console.log(`➡️ [AUTH_UTILS] Authorize START | CorrelationId: ${correlationId}`);
 
     const getIp = async () => {
@@ -104,12 +96,12 @@ export async function authorizeCredentials(
         }
 
         if (!user) {
-            logToFile(`❌ User not found in ANY DB: ${email}`);
+            console.log(`❌ User not found in ANY DB: ${email}`);
             console.error("❌ [AUTH_UTILS] User not found in ANY DB:", email);
             throw new UserNotFoundError();
         }
 
-        logToFile(`✅ User found in DB: ${email} | Host: ${db.databaseName}`);
+        console.log(`✅ User found in DB: ${email} | Host: ${db.databaseName}`);
 
         // 🛠️ MAGIC LINK LOGIC
         if (password.startsWith('MAGIC_LINK:')) {
@@ -140,17 +132,17 @@ export async function authorizeCredentials(
             }
 
             console.log(`✅ [AUTH_UTILS] Magic Link success for ${email}`);
-            logToFile(`✅ Magic Link success for ${email}`);
+            console.log(`[AUTH_TRACE] ✅ Magic Link success for ${email}`);
 
             // NEW: After Magic Link, check if user has MFA enabled (Phase 120.1 Consistency)
             const userId = user._id.toString();
             const mfaEnabled = await MfaService.isEnabled(userId);
             const effectiveTenantId = user.tenantId || process.env.SINGLE_TENANT_ID || 'abd_global';
 
-            logToFile(`🔎 Magic Link MFA check for ${email}: ${mfaEnabled} | Tenant: ${effectiveTenantId}`);
+            console.log(`[AUTH_TRACE] 🔎 Magic Link MFA check for ${email}: ${mfaEnabled} | Tenant: ${effectiveTenantId}`);
 
             if (mfaEnabled) {
-                logToFile(`🎟️ MFA Required after Magic Link for ${email}. Returning PENDING state.`);
+                console.log(`[AUTH_TRACE] 🎟️ MFA Required after Magic Link for ${email}. Returning PENDING state.`);
                 return {
                     id: userId,
                     email: user.email,
@@ -168,7 +160,7 @@ export async function authorizeCredentials(
                 };
             }
 
-            logToFile(`🧪 Finalizing session for Magic Link: ${email}...`);
+            console.log(`[AUTH_TRACE] 🧪 Finalizing session for Magic Link: ${email}...`);
             return {
                 id: userId,
                 email: user.email,
@@ -194,10 +186,10 @@ export async function authorizeCredentials(
         }
 
         // 🛠️ STANDAR LOGIN LOGIC
-        logToFile(`⚖️ Verifying password for ${email}...`);
+        console.log(`[AUTH_TRACE] ⚖️ Verifying password for ${email}...`);
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
-            logToFile(`❌ Invalid password for ${email}`);
+            console.log(`[AUTH_TRACE] ❌ Invalid password for ${email}`);
             console.error("❌ [AUTH_UTILS] Invalid password for:", email);
             throw new InvalidPasswordError();
         }
@@ -205,18 +197,18 @@ export async function authorizeCredentials(
         const userId = user._id.toString();
         const mfaEnabled = await MfaService.isEnabled(userId);
         const effectiveTenantId = user.tenantId || process.env.SINGLE_TENANT_ID || 'abd_global';
-        logToFile(`🔎 MFA Enabled: ${mfaEnabled} for ${email} | Tenant: ${effectiveTenantId}`);
+        console.log(`[AUTH_TRACE] 🔎 MFA Enabled: ${mfaEnabled} for ${email} | Tenant: ${effectiveTenantId}`);
 
         if (mfaEnabled) {
             const mfaCodeInput = credentials.mfaCode;
             const mfaCode = typeof mfaCodeInput === 'string' ? mfaCodeInput.trim() : undefined;
             const isInvalidCodeValue = !mfaCode || mfaCode === "undefined" || mfaCode === "null" || mfaCode === "";
 
-            logToFile(`🔎 MFA Check | InputType: ${typeof mfaCodeInput} | Value: [${mfaCode}] | IsInvalid: ${isInvalidCodeValue}`);
+            console.log(`[AUTH_TRACE] 🔎 MFA Check | InputType: ${typeof mfaCodeInput} | Value: [${mfaCode}] | IsInvalid: ${isInvalidCodeValue}`);
 
             if (isInvalidCodeValue) {
-                logToFile(`🎟️ MFA Required for ${email}. Returning PENDING state.`);
-                console.log(`🎟️ [AUTH_UTILS] MFA Required for ${email}. Returning PENDING state.`);
+                console.log(`[AUTH_TRACE] 🎟️ MFA Required for ${email}. Returning PENDING state.`);
+                console.log(`[AUTH_TRACE] 🎟️ [AUTH_UTILS] MFA Required for ${email}. Returning PENDING state.`);
                 return {
                     id: userId,
                     email: user.email,
@@ -270,10 +262,10 @@ export async function authorizeCredentials(
         };
 
     } catch (error: any) {
-        logToFile(`💥 CAUGHT ERROR: ${error.message} | Code: ${error.code}`);
+        console.log(`[AUTH_TRACE] 💥 CAUGHT ERROR: ${error.message} | Code: ${error.code}`);
         // Robust re-throw: check both for instance and for existence of 'code' property
         if (error instanceof CredentialsSignin || (error && typeof error === 'object' && 'code' in error)) {
-            logToFile(`🛑 Handled Auth Error Re-thrown: ${error.code}`);
+            console.log(`[AUTH_TRACE] 🛑 Handled Auth Error Re-thrown: ${error.code}`);
             throw error;
         }
         console.error("💥 [AUTH_UTILS] UNHANDLED CRITICAL ERROR:", error.message, error.stack);

@@ -154,7 +154,11 @@ export function ROICalculator() {
 
                         <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-6">
                             <h4 className="font-semibold text-white mb-2">{t('how_calculated_title')}</h4>
-                            <p className="text-slate-400 text-sm mb-4" dangerouslySetInnerHTML={{ __html: t('how_calculated_desc') }} />
+                            <p className="text-slate-400 text-sm mb-4">
+                                {t.rich('how_calculated_desc', {
+                                    strong: (chunks) => <strong className="text-white font-bold">{chunks}</strong>
+                                })}
+                            </p>
                             <Button className="w-full sm:w-auto bg-white text-slate-900 hover:bg-slate-200">
                                 {t('cta')} <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>

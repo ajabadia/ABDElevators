@@ -7,7 +7,7 @@ const { auth } = NextAuth(authConfig);
 
 export const config = {
     // Broaden matcher to intercept all routes for logic-based filtering
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
 };
 
 export default auth(async function middleware(request: NextRequest & { auth?: any }) {
@@ -18,7 +18,8 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
     // 🛡️ [SECURITY] Rate Limiting (Phase 140)
     // Apply rate limits to API routes
     if (pathname.startsWith('/api/')) {
-        const limitConfig = pathname.startsWith('/api/auth') ? LIMITS.AUTH : LIMITS.CORE;
+        const isAuthTarget = pathname.startsWith('/api/auth') && !pathname.includes('/session');
+        const limitConfig = isAuthTarget ? LIMITS.AUTH : LIMITS.CORE;
         const rateLimit = await checkRateLimit(ip, limitConfig);
 
         if (!rateLimit.success) {
@@ -63,6 +64,7 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             pathname === '/sandbox' ||
             pathname.startsWith('/auth') ||
             pathname.startsWith('/api/auth') ||
+            pathname.startsWith('/api/pricing') ||
             pathname.startsWith('/_next') ||
             pathname === '/favicon.ico';
 

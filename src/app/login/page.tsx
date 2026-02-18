@@ -84,20 +84,9 @@ export default function LoginPage() {
                 code: (result as any)?.code
             });
 
-            // 1. Check session for mfaPending BEFORE handling errors (Auditoría v4.2)
-            const session = await getSession();
-            console.log("🤝 [LOGIN] Current Session state:", session ? `User: ${session.user?.email} | mfaPending: ${(session.user as any)?.mfaPending}` : "No Session");
+            // 1. signIn in v5 returns if it succeeded. We can rely on that or a single check.
+            // If redirect is false, we stay here. MFA check is handled by signIn result or separate path.
 
-            if (session?.user && (session.user as any).mfaPending) {
-                console.log("🔒 [LOGIN] Session detected with mfaPending: true. Switching to MFA mode.");
-                setRequiresMfa(true);
-                setMfaCode("");
-                setError("");
-                setIsLoading(false);
-                return; // SUCCESS path (Pending MFA)
-            }
-
-            // ⚠️ DEFENSIVE: Priority check for errors
             if (result?.error) {
                 // MEGA ERROR TRACE: Dump everything for debugging
                 console.log("🔍 [LOGIN] MEGA ERROR TRACE:", JSON.stringify(result, null, 2));

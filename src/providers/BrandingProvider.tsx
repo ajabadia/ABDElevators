@@ -151,7 +151,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         }
 
         fetchBranding();
-    }, []);
+    }, [status]);
 
     return (
         <BrandingContext.Provider value={{ branding, isLoading, error }}>
