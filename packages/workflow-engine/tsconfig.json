@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "../../src/*"
+            ],
+            "@abd/platform-core": [
+                "../platform-core/src/index.ts"
+            ],
+            "@abd/platform-core/*": [
+                "../platform-core/src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ]
+}

@@ -36,6 +36,24 @@
       ],
       "@/auth.config": [
         "./src/lib/auth.config.ts"
+      ],
+      "@abd/platform-core": [
+        "./packages/platform-core/src/index.ts"
+      ],
+      "@abd/platform-core/*": [
+        "./packages/platform-core/src/*"
+      ],
+      "@abd/workflow-engine": [
+        "./packages/workflow-engine/src/index.ts"
+      ],
+      "@abd/workflow-engine/*": [
+        "./packages/workflow-engine/src/*"
+      ],
+      "@abd/rag-engine": [
+        "./packages/rag-engine/src/index.ts"
+      ],
+      "@abd/rag-engine/*": [
+        "./packages/rag-engine/src/*"
       ]
     }
   },
