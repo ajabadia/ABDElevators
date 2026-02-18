@@ -5,15 +5,27 @@ import { ApiKeyService } from '@/lib/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import { logEvento } from '@/lib/logger';
+import { generateUUID } from '@/lib/utils';
+import { Document, ObjectId } from 'mongodb';
+
+export interface ApiKey extends Document {
+    name: string;
+    key: string;
+    prefix: string;
+    tenantId: string;
+    userId: string;
+    status: 'ACTIVE' | 'REVOKED';
+    lastUsedAt?: Date;
+    createdAt: Date;
+}
 
 /**
  * Crea una nueva API Key con aislamiento seguro de tenant y registro de auditoría.
  */
 export async function createApiKey(name: string, permissions: ApiKeyPermission[], expiresInDays?: number, spaceId?: string) {
-    const correlationId = uuidv4();
+    const correlationId = generateUUID();
     const start = Date.now();
 
     try {
@@ -23,6 +35,24 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
         }
 
         const tenantId = session.user.tenantId;
+        const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
+
+        // 🛡️ SECURITY BUG FIX (Historical Audit 2401): Validate spaceId ownership
+        if (spaceId && !isSuperAdmin) {
+            const spacesCollection = await getTenantCollection('spaces', session);
+            const space = await spacesCollection.findOne({ _id: new ObjectId(spaceId) });
+            if (!space) {
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'API_KEYS',
+                    action: 'TENANT_ISOLATION_VIOLATION',
+                    message: `Attempted to create API key for unauthorized space: ${spaceId}`,
+                    correlationId,
+                    details: { tenantId, spaceId, userId: session.user.id }
+                });
+                throw new AppError('FORBIDDEN', 403, 'El espacio especificado no existe o no pertenece a su organización');
+            }
+        }
 
         await logEvento({
             level: 'INFO',
@@ -76,7 +106,7 @@ export async function createApiKey(name: string, permissions: ApiKeyPermission[]
  * Revoca una API Key de forma segura.
  */
 export async function revokeApiKey(keyId: string) {
-    const correlationId = uuidv4();
+    const correlationId = generateUUID();
     const start = Date.now();
 
     try {
@@ -117,16 +147,14 @@ export async function revokeApiKey(keyId: string) {
  * Obtiene las API Keys del tenant actual usando SecureCollection.
  */
 export async function getApiKeys() {
-    const correlationId = uuidv4();
+    const correlationId = generateUUID();
     const start = Date.now();
 
     try {
         const session = await auth();
-        if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No session');
 
-        const keysCollection = await getTenantCollection<any>('api_keys', session);
+        const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
         const keys = await keysCollection.find({}, { sort: { createdAt: -1 } });
 
         const duration = Date.now() - start;

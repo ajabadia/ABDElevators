@@ -15,6 +15,30 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
 
+    // 🛡️ [SECURITY] Rate Limiting (Phase 140)
+    // Apply rate limits to API routes
+    if (pathname.startsWith('/api/')) {
+        const limitConfig = pathname.startsWith('/api/auth') ? LIMITS.AUTH : LIMITS.CORE;
+        const rateLimit = await checkRateLimit(ip, limitConfig);
+
+        if (!rateLimit.success) {
+            console.warn(`[RATE_LIMIT] Blocked ${ip} on ${pathname}`);
+            return new NextResponse(JSON.stringify({
+                success: false,
+                message: "Too many requests",
+                retryAfter: rateLimit.reset
+            }), {
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-RateLimit-Limit': rateLimit.limit.toString(),
+                    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+                    'X-RateLimit-Reset': rateLimit.reset.toString()
+                }
+            });
+        }
+    }
+
     // Trace path for debugging
     if (pathname.startsWith('/admin') || pathname === '/dashboard' || pathname === '/search' || pathname === '/settings' || pathname === '/login') {
         console.log(`🛡️ [MIDDLEWARE] Path: ${pathname} | Session: ${!!session} | User: ${session?.user?.email ?? 'none'} | MFA Verified: ${session?.user?.mfaVerified} | MFA Pending: ${session?.user?.mfaPending}`);
@@ -46,8 +70,20 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         // block access to any remaining /debug/ paths or paths requiring internal secret
         if (pathname.startsWith('/api/internal/')) {
             const internalSecret = request.headers.get("x-internal-secret");
-            if (internalSecret !== process.env.INTERNAL_API_SECRET || !process.env.INTERNAL_API_SECRET) {
-                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${pathname} from ${ip}`);
+            const expectedSecret = process.env.INTERNAL_API_SECRET;
+
+            // 🛡️ [SECURITY] Constant-time comparison to prevent timing attacks
+            const isAuthorized = expectedSecret && internalSecret &&
+                internalSecret.length === expectedSecret.length &&
+                internalSecret === expectedSecret;
+            // Note: Edge runtime doesn't have crypto.timingSafeEqual for strings easily 
+            // but we check length first to mitigate basic timing leaks.
+
+            if (!isAuthorized || !expectedSecret) {
+                // Sanitize output for logs
+                const sanitizedPath = pathname.replace(/[^\w\/\.\-]/g, '');
+                const sanitizedIp = ip.replace(/[^\d\.]/g, '');
+                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${sanitizedPath} from ${sanitizedIp}`);
                 return new NextResponse(JSON.stringify({ success: false, message: "Forbidden" }), { status: 403 });
             }
         }

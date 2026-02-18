@@ -1,0 +1,695 @@
+la “carcasa” que tienes es muy buena base para una suite, y sólo le faltan unas pocas piezas para ser casi plug‑and‑play para otros productos.
+​
+
+1. ¿Sirve como base multi‑producto?
+Yo diría que sí, claramente, para:
+
+Auth / sesiones / MFA:
+
+Tienes NextAuth bien integrado, tipado fuerte de Session/User, MFA, roles y tenantAccess para multi‑tenant.
+​
+
+El middleware ya aplica whitelist de rutas públicas, protección de APIs, MFA enforcement y cabeceras de seguridad serias (CSP, HSTS, etc.).
+​
+
+Gestión de usuarios y tenants:
+
+Endpoints de admin para usuarios, tenants, branding, módulos activos, etc., con RBAC y guardian/ABAC.
+​
+
+Trazabilidad / auditoría:
+
+logEvento, logs en colección dedicada, correlación por correlationId, UsageService, AccessControlService, SLA interceptors, timeline de entidades, audit de billing, etc.
+​
+
+Gestor de prompts e IA:
+
+PromptService con versionado, environments, prompts por industria/tenant, shadow prompts, RAG quality dashboard, LLM‑node service, orquestadores, etc.
+​
+
+Todo esto es reutilizable para otras apps muy distintas (por ejemplo, un CRM con workflows, un sistema de soporte, un backoffice de compliance) con cambios mínimos de dominio.
+
+Para maximizar esa reutilización te sugiero 3 líneas de mejora.
+
+2. Extraer más “plataforma” de lo “de producto”
+2.1. Núcleo de plataforma
+Agrupar en un “core” reutilizable:
+
+Módulo Auth:
+
+Config de NextAuth, tipos extendidos (User, Session), callbacks, MFA flows, middleware de seguridad base.
+​
+
+Dejar fuera sólo las reglas muy específicas (p.ej. qué rutas son admin de RAG).
+
+Módulo Tenant / RBAC / Guardian:
+
+Todo lo de Guardian, PermissionMatrix, enforcePermission, UserRole, TenantService, DocumentType scope (GLOBAL / TENANT / INDUSTRY).
+​
+
+Módulo Observabilidad y auditoría:
+
+logEvento, UsageService, AccessControlService, interceptores SLA, timeline de casos, métricas de ROI, etc.
+​
+
+Módulo Prompt/LLM:
+
+PromptService, WorkflowLLMNodeService, RagJudgeService, AdaptiveAnalysisService, tipos unificados de findings (AIFinding, AIRiskFinding, etc.).
+​
+
+Luego, tu app RAG actual sería “un producto” que usa este core.
+
+2.2. Desacoplar dominio RAG
+Para que otras apps no hereden cosas que no les aplican:
+
+Evitar usar industry: ELEVATORS y ENTITY hardcodeados donde podría venir de tenant/config.
+​
+
+Donde usas KnowledgeAsset, IngestionStatus, etc., aislarlo en un “módulo vertical” para RAG, separado del core.
+
+3. Mejoras puntuales en código y seguridad
+3.1. Endurecer un poco la seguridad
+Logs y errores:
+
+Tienes buena base, pero aún se ven algunos console.error en rutas sensibles; conviene centralizar en el logger y condicionar detalle de errores a NODE_ENV (en algunos sitios ya lo haces, en otros no).
+​
+
+Rutas internas:
+
+Ya proteges /api/internal con x-internal-secret; si lo vas a reutilizar, estaría bien meter un pequeño “internal gateway” (IP allow‑list opcional, rotación de secret, etc.).
+​
+
+3.2. Limpieza de “experimental scripts”
+Hay bastante tooling interno (*-migration.ts, *-fake-history.ts, scripts de inspección) muy útil pero que no debería ni compilar en builds de produ:
+
+Marcarlos claramente como dev scripts y, si puede ser, sacarlos a un paquete/tools separado o protegerlos por entorno/flag para que en la suite no haya confusión.
+​
+
+3.3. Consolidador de acceso a DB
+Prácticamente todo está ya pasando por connectDB/getTenantCollection/SecureCollection, pero todavía hay comentarios de “asegúrate de usar SecureCollection”.
+​
+
+Para una suite, sería ideal que:
+
+Sólo exista una forma oficial de tocar Mongo (repositorios o getTenantCollection), y
+
+Cualquier acceso “raw” esté muy localizado en scripts de mantenimiento.
+
+4. Funcionalidad “de suite” que te falta poco para tener
+Si piensas en una suite multi‑producto, yo añadiría:
+
+Feature flags centralizados
+
+Tienes AppEnvironment en Zustand y algunos toggles, pero podrías:
+
+Añadir una colección featureflags por tenant/producto.
+
+Un hook/servicio común (FeatureFlagService) que evalúe flags en servidor y cliente.
+
+Catálogo de módulos / licencias
+
+Ya manejas “activeModules” en el usuario/tenant.
+​
+
+Puedes formalizarlo en:
+
+ModuleRegistry (RAG, Workflows, Predictive, etc.)
+
+UI que muestre qué módulos están activos para ese tenant.
+
+Plantilla de “product shell”
+
+El AuthenticatedLayout + sidebar + header + branding + theming ya son un buen shell.
+​
+
+Si lo encapsulas bien, cualquier nuevo producto puede montar sus páginas dentro de este marco sin tocar nada de auth ni branding.
+
+5. Resumen directo
+La base actual sí es suficientemente general como para reutilizar login, usuarios, trazabilidad, prompts y buena parte del motor de workflows en otras aplicaciones muy distintas.
+​
+
+Lo que mejoraría para una suite:
+
+Extraer un core de plataforma más explícito.
+
+Endurecer y homogeneizar algunos detalles de seguridad y acceso a DB.
+
+Añadir un módulo ligero de feature flags / módulo‑licencia para activar/desactivar herramientas por tenant/proyecto.  Una forma limpia de evolucionar esto a suite es separar “plataforma” y “productos” con monorepo (pnpm/Turbo o similar).
+
+1. Estructura de alto nivel
+text
+apps/
+  rag-app/           # Tu app actual (ABD RAG)
+  another-app/       # Futuras apps (CRM, soporte, etc.)
+packages/
+  platform-core/     # Auth, tenants, RBAC, logging, DB, prompts, LLM
+  ui-kit/            # Componentes UI compartidos
+  workflow-engine/   # Motor de workflows + HITL
+  rag-engine/        # Ingesta, chunks, retrieval, RAG, quality
+  dev-tools/         # Scripts, migraciones, i18n tools, linters custom
+config/
+  eslint/
+  tsconfig/
+  tailwind/
+2. platform-core (núcleo reutilizable)
+Contendría todo lo “genérico”:
+
+text
+packages/platform-core/
+  src/
+    auth/
+      auth.config.ts
+      next-auth.ts
+      middleware-helpers.ts
+      mfa/
+    tenants/
+      TenantService.ts
+      TenantConfig.ts
+    rbac/
+      roles.ts
+      guardian/
+        enforcePermission.ts
+        PermissionMatrix.ts
+    db/
+      connectDB.ts
+      connectAuthDB.ts
+      getTenantCollection.ts
+      SecureCollection.ts
+    logging/
+      logEvento.ts
+      SLAInterceptor.ts
+      AuditRepository.ts
+    usage/
+      UsageService.ts
+      AccessControlService.ts
+    prompts/
+      PromptService.ts
+      PromptSchemas.ts
+    tracing/
+      tracing-init.ts
+      correlation.ts
+    config/
+      environments.ts
+      feature-flags.ts (interfaz, sin dominio concreto)
+apps/rag-app sólo importaría de aquí (@abd/platform-core/auth, @abd/platform-core/prompts, etc.).
+​
+
+3. ui-kit (cascarón visual y UX)
+text
+packages/ui-kit/
+  src/
+    layout/
+      RootLayoutShell.tsx      # ThemeProvider + SidebarProvider + Toaster
+      AuthenticatedLayout.tsx  # Shell autenticado
+      AdminLayout.tsx
+    components/
+      PageContainer.tsx
+      PageHeader.tsx
+      DataTable.tsx
+      Skeletons.tsx
+      ErrorBoundary.tsx
+      Modal.tsx
+      FormControls/...
+    hooks/
+      useApiItem.ts
+      useApiState.ts
+      useOnboarding.ts
+    theme/
+      tailwind.config.base.ts
+      tokens.css                # Lo que ya tienes en globals.css
+Cada app sólo define sus páginas y “módulos” encima de este shell.
+
+4. workflow-engine (motor de workflows + HITL)
+text
+packages/workflow-engine/
+  src/
+    types/
+      workflow.ts              # WorkflowDefinition, WorkflowState, Transition...
+      workflow-task.ts         # WorkflowTask, WorkflowTaskStatus, etc.
+    engine/
+      CaseWorkflowEngine.ts    # Versión nueva, sin dependencia a “ELEVATORS”
+      AIWorkflowEngine.ts
+      WorkflowLLMNodeService.ts (interface, sin atar a Gemini)
+    services/
+      WorkflowService.ts       # CRUD definiciones, validaciones
+      WorkflowTaskService.ts   # Creación/resolución tareas HITL
+      WorkflowAnalyticsService.ts
+    validation/
+      validateWorkflowDefinition.ts
+apps/rag-app le aporta:
+
+Definiciones concretas de workflows de “casos”.
+
+Integración con su dominio (Entity, KnowledgeAsset, etc.).
+​
+
+5. rag-engine (todo lo específico de RAG)
+text
+packages/rag-engine/
+  src/
+    ingest/
+      IngestPreparer.ts
+      IngestSchemas.ts
+      ChunkingOrchestrator.ts
+    retrieval/
+      performTechnicalSearch.ts
+      hybridSearch.ts
+      multilingualSearch.ts
+    generation/
+      RAGGenerator.ts
+      AdaptiveAnalysisService.ts
+      RagJudgeService.ts
+    quality/
+      RagEvaluationService.ts
+      dashboards/
+Sólo las apps que hagan RAG lo usan.
+
+Otras apps (p.ej. un simple CRUD SaaS) podrían vivir sin este paquete.
+
+6. dev-tools (scripts, i18n, etc.)
+text
+packages/dev-tools/
+  src/
+    i18n/
+      i18n-audit.ts
+      i18n-cleanup.ts
+      i18n-tool.ts
+    scripts/
+      check-logs.ts
+      user-search.ts
+      seed-demo-data.ts
+    lint/
+      custom-rules.ts
+No se importa desde el runtime de las apps; sólo desde package.json scripts (pnpm dev-tools i18n:audit).
+
+7. Las apps concretas
+7.1. apps/rag-app
+text
+apps/rag-app/
+  app/
+    (public)/
+    (authenticated)/
+    (admin)/
+  lib/
+    # Sólo capas de dominio RAG:
+    knowledge/
+    cases/
+    ui-modules/
+  next.config.mjs
+  tailwind.config.mjs -> extiende de config/tailwind
+  tsconfig.json       -> extiende de config/tsconfig
+Imports típicos:
+
+@abd/platform-core/auth
+
+@abd/platform-core/logging
+
+@abd/workflow-engine
+
+@abd/rag-engine
+
+@abd/ui-kit
+
+7.2. apps/another-app
+Otra app sólo usaría:
+
+@abd/platform-core + @abd/ui-kit + @abd/workflow-engine (si quiere workflows).
+
+No arrastra RAG ni ingestion si no lo necesita.     1. Namespaces de import mínimos
+Pensando en monorepo con paths en TS y baseUrl en tsconfig:
+
+Núcleo plataforma
+@abd/platform-core/auth
+
+Sesiones, auth(), requireRole(), config NextAuth, helpers MFA, middleware helpers.
+
+@abd/platform-core/rbac
+
+UserRole, Guardian (enforcePermission, PermissionMatrix), tipos de políticas.
+
+@abd/platform-core/db
+
+connectDB, connectAuthDB, getTenantCollection, SecureCollection, tipos base.
+
+@abd/platform-core/tenant
+
+TenantService, tipos TenantConfig, PlanTier, límites, módulos activos.
+
+@abd/platform-core/logging
+
+logEvento, tipos de log, withPerformanceSLA, correlationId helpers.
+
+@abd/platform-core/usage
+
+UsageService, AccessControlService (check de cuotas, métricas ROI).
+
+@abd/platform-core/prompts
+
+PromptService, PromptTemplates, tipos de prompt, shadow prompts.
+
+@abd/platform-core/tracing
+
+Inicialización OpenTelemetry, wrappers de trazas genéricos.
+
+UI y experiencia
+@abd/ui/layout
+
+RootLayoutShell, AuthenticatedLayout, AdminLayout.
+
+@abd/ui/components
+
+PageContainer, PageHeader, tablas, Skeleton, ErrorBoundary, Modal, etc.
+
+@abd/ui/hooks
+
+useApiItem, useApiState, useOnboarding, otros hooks de UI genéricos.
+
+@abd/ui/theme
+
+Config Tailwind base, tokens, providers de tema (ThemeProvider, BrandingProvider).
+
+Workflows e IA
+@abd/workflow/engine
+
+CaseWorkflowEngine, AIWorkflowEngine, tipos WorkflowDefinition, WorkflowTask.
+
+@abd/workflow/services
+
+WorkflowService, WorkflowTaskService, WorkflowAnalyticsService.
+
+@abd/workflow/llm
+
+WorkflowLLMNodeService, orquestador LLM para nodos de workflow.
+
+@abd/rag/ingest
+
+IngestPreparer, ChunkingOrchestrator, esquemas de ingesta.
+
+@abd/rag/retrieval
+
+performTechnicalSearch, hybridSearch, performMultilingualSearch.
+
+@abd/rag/generation
+
+RAGGenerator, AdaptiveAnalysisService, RagJudgeService.
+
+@abd/rag/quality
+
+RagEvaluationService, tipos de métricas.
+
+Herramientas
+@abd/dev-tools/i18n
+
+i18nAudit, i18nCleanup, i18nTool.
+
+@abd/dev-tools/scripts
+
+checkLogs, userSearch, seeds, etc. (sólo uso en scripts, no en runtime).
+
+Con esto, en las apps dejarías de tener imports relativos largos y dejarías claro qué viene de “plataforma” y qué es dominio local.
+
+2. Orden de migración en 3–4 commits grandes
+La idea es minimizar roturas: primero alias/paths y core compartido, luego extraer módulos.
+
+Commit 1: Introducir monorepo + aliases sin mover código
+Objetivo: no cambiar funcionalidad, sólo preparar el terreno.
+
+Crear estructura mínima:
+
+text
+apps/rag-app/        # contiene tu Next actual, movido aquí
+packages/platform-core/
+packages/ui/
+packages/workflow/
+packages/rag/
+packages/dev-tools/
+En apps/rag-app/tsconfig.json:
+
+Definir baseUrl y paths apuntando a las rutas actuales:
+
+json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@abd/platform-core/*": ["lib/*"],
+      "@abd/ui/*": ["components/*"],
+      "@abd/workflow/*": ["lib/*"],
+      "@abd/rag/*": ["lib/*"]
+    }
+  }
+}
+Aunque físicamente todo siga en lib/ y components/, ya puedes empezar a usar namespaces en imports.
+
+No toques imports aún; sólo asegúrate de que el build sigue funcionando.
+
+Resultado: preparado para refactor de imports sin cambios de ruta físicos.
+
+Commit 2: Refactor de imports a namespaces
+Objetivo: limpiar imports en el código sin mover archivos.
+
+Sustituir imports internos por alias, por zonas:
+
+Zona auth/rbac:
+
+import { auth, requireRole } from "@/lib/auth" → from "@abd/platform-core/auth".
+
+import { UserRole } from "@/types/roles" → from "@abd/platform-core/rbac".
+
+Zona DB:
+
+import { connectDB, getTenantCollection } from "@/lib/db" → from "@abd/platform-core/db".
+
+Zona logging/usage:
+
+import { logEvento } from "@/lib/logger" → from "@abd/platform-core/logging".
+
+import { UsageService } from "@/lib/usage-service" → from "@abd/platform-core/usage".
+
+Igual con UI:
+
+import PageContainer from "@/components/ui/page-container" → from "@abd/ui/components" (y reexportas en un barrel dentro de components).
+
+Hazlo en tandas por dominio (auth, luego db, luego logging, luego UI) para poder revertir fácil si algo rompe.
+
+Verifica que todo sigue compilando y que no hay imports circulares nuevos.
+
+Resultado: el código ya usa los namespaces “futuros”, aunque físicamente todo siga en las carpetas originales.
+
+Commit 3: Extraer platform-core y ui físicos
+Objetivo: mover código a packages/ y ajustar paths a rutas reales.
+
+Mover ficheros de plataforma a packages/platform-core/src:
+
+lib/auth*, lib/auth.config, lib/auth.ts → platform-core/src/auth/*.
+
+lib/db* → platform-core/src/db/*.
+
+lib/logger, lib/usage-service, lib/access-control-service → logging, usage.
+
+lib/prompt-service, lib/tracing, etc.
+
+Actualizar packages/platform-core/tsconfig.json para que compile el paquete.
+
+Actualizar apps/rag-app/tsconfig.json:
+
+json
+"paths": {
+  "@abd/platform-core/*": ["../packages/platform-core/src/*"],
+  "@abd/ui/*": ["../packages/ui/src/*"],
+  ...
+}
+Hacer lo mismo con UI:
+
+components/ui/*, layouts, shells, providers → packages/ui/src/*.
+
+Reexportar en barrel files (index.ts) para simplificar imports.
+
+Ajustar next.config y/o bundler (Turborepo/PNPM workspaces) para que las apps puedan importar desde packages/.
+
+Resultado: ya tienes una plataforma separada y la app RAG consumiéndola vía namespaces, sin tocar dominio.
+
+Commit 4: Extraer workflow y rag y limpiar restos
+Objetivo: aislar motor de workflows e IA, y dejar dominio específico en la app.
+
+Mover motor de workflows:
+
+CaseWorkflowEngine, AIWorkflowEngine, WorkflowService, WorkflowTaskService, WorkflowAnalyticsService, esquemas de workflow → packages/workflow/src/*.
+
+Dejar en la app sólo definiciones concretas de workflows de “cases” o adaptadores específicos.
+
+Mover RAG:
+
+ingest, chunking, rag-service, RagJudgeService, AdaptiveAnalysisService, RagEvaluationService → packages/rag/src/*.
+
+Ajustar imports (que ya usaban namespaces) para que apunten a las nuevas rutas físicas, modificando sólo los paths en tsconfig si hace falta.
+
+En packages/dev-tools, mover scripts puros (i18n, check logs, seeds) y quitar su import accidental desde runtime.
+
+Pasar un barrido final para:
+
+Eliminar imports relativos ya innecesarios.
+
+Ver que no quedan referencias directas a lib/... desde apps/rag-app para cosas que ya estén en packages.
+
+Resultado: 1 monorepo, con:
+
+App RAG usando:
+
+@abd/platform-core/*
+
+@abd/ui/*
+
+@abd/workflow/*
+
+@abd/rag/*
+
+Listo para añadir una segunda app que reutilice la plataforma sin arrastrar todo el dominio de elevadores/RAG.     Aquí tienes un ejemplo de tsconfig base para el monorepo y cómo lo heredarían app y paquetes.
+
+1. tsconfig.base.json en la raíz
+text
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "allowJs": false,
+    "checkJs": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "noEmit": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@abd/platform-core/*": ["packages/platform-core/src/*"],
+      "@abd/ui/*": ["packages/ui/src/*"],
+      "@abd/workflow/*": ["packages/workflow/src/*"],
+      "@abd/rag/*": ["packages/rag/src/*"],
+      "@abd/dev-tools/*": ["packages/dev-tools/src/*"]
+    },
+
+    // Tipos comunes
+    "types": ["node"],
+
+    // Opcional: para Next
+    "allowImportingTsExtensions": false
+  },
+  "exclude": ["node_modules", ".next", "dist"]
+}
+Con esto, cualquier proyecto que extienda este archivo puede usar directamente:
+
+ts
+import { auth } from "@abd/platform-core/auth";
+import { PageContainer } from "@abd/ui/components";
+import { CaseWorkflowEngine } from "@abd/workflow/engine";
+import { performTechnicalSearch } from "@abd/rag/retrieval";
+2. apps/rag-app/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",          // para imports relativos dentro de la app
+    "paths": {
+      // Opcional: alias internos propios de la app
+      "@rag-app/*": ["./src/*"],
+      "@/*": ["./src/*"]
+    },
+    "jsx": "preserve"
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*",
+    "app/**/*",
+    "pages/**/*",
+    "components/**/*",
+    "lib/**/*"
+  ],
+  "exclude": ["node_modules", ".next", "dist"]
+}
+(ajusta rutas src/app/components/lib a cómo tengas organizada la app ahora mismo).
+
+3. packages/platform-core/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,         // útil si usas project references
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+4. packages/ui/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "react-jsx",   // o "preserve" si prefieres
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+5. packages/workflow/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+6. packages/rag/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+7. packages/dev-tools/tsconfig.json
+text
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": false,     // no hace falta references si sólo es CLI
+    "noEmit": false         // aquí sí queremos JS transpilado
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+Con esta base:
+
+No tienes que tocar los paths de cada app al añadir nuevos paquetes; sólo editas tsconfig.base.json.
+
+Puedes ir moviendo código a packages/* respetando los namespaces que ya has empezado a usa

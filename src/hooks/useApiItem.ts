@@ -42,19 +42,27 @@ export function useApiItem<T, R = any>({
         try {
             const finalEndpoint = typeof endpoint === 'function' ? endpoint() : endpoint;
             const res = await fetch(finalEndpoint);
-            const json = await res.json();
 
-            if (!res.ok || !json.success) {
-                throw new Error(json.message || json.error?.message || 'Error al cargar el recurso');
+            // 🛡️ [PHASE 140] Safe body consumption
+            const text = await res.text();
+            let json: any;
+            try {
+                json = JSON.parse(text);
+            } catch (pErr) {
+                throw new Error(`Invalid JSON response: ${text.slice(0, 100)}...`);
             }
 
-            const item = dataKey ? json[dataKey] : (json.data || json.item || json.definition || json.config || json);
+            if (!res.ok || (json && json.success === false)) {
+                throw new Error(json?.message || json?.error?.message || 'Error al cargar el recurso');
+            }
+
+            const item = dataKey ? json[dataKey] : (json?.data || json?.item || json?.definition || json?.config || json);
             const finalData = transform ? transform(item) : item;
 
             setData(finalData);
             onSuccessRef.current?.(finalData);
-        } catch (err: any) {
-            const message = err.message || 'Error desconocido';
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
             toast({
                 title: 'Error de Carga',
@@ -65,7 +73,7 @@ export function useApiItem<T, R = any>({
         } finally {
             setIsLoading(false);
         }
-    }, [endpoint, dataKey, toast]); // eliminamos callbacks de dependencias
+    }, [endpoint, dataKey, toast, transform]);
 
     useEffect(() => {
         if (autoFetch) {

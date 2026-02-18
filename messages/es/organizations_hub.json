@@ -1,0 +1,26 @@
+{
+  "title": "Configuración de Organización",
+  "subtitle": "Gestión de tenant: branding, almacenamiento, facturación y reportes.",
+  "cards": {
+    "general": {
+      "title": "General",
+      "description": "Configuración básica: ID de tenant, nombre, industria y cumplimiento."
+    },
+    "branding": {
+      "title": "Branding",
+      "description": "Personalización de marca: logo, favicon, colores y preview."
+    },
+    "storage": {
+      "title": "Almacenamiento",
+      "description": "Configuración de almacenamiento: proveedor, cuota y uso."
+    },
+    "features": {
+      "title": "Características",
+      "description": "Módulos disponibles: RAG Search, Gemini Analysis, etc."
+    },
+    "billing": {
+      "title": "Facturación",
+      "description": "Plan actual, datos fiscales, direcciones y facturas."
+    }
+  }
+}

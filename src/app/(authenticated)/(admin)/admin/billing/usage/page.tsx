@@ -235,7 +235,7 @@ export default function BillingUsagePage() {
             <PageHeader
                 title={t('title')}
                 subtitle={t('subtitle')}
-                action={
+                actions={
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={() => router.push('/admin/billing/plan')}>
                             {t('manage_plan')}
@@ -307,7 +307,7 @@ export default function BillingUsagePage() {
                                 />
                                 <RoiStat
                                     icon={TrendingUp}
-                                    value={`${roi.roi.efficiencyScore}%`}
+                                    value={`${(roi as any).efficiencyScore || 0}%`}
                                     label={t('roi.efficiency')}
                                     variant="info"
                                 />

@@ -70,10 +70,10 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
             } else {
                 throw new Error(data.message || 'Error al cambiar plan');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast({
                 title: 'Error al cambiar plan',
-                description: err.message || 'Ocurrió un error inesperado al procesar el cambio manual.',
+                description: err instanceof Error ? err.message : 'Ocurrió un error inesperado al procesar el cambio manual.',
                 variant: 'destructive'
             });
         } finally {

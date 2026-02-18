@@ -1,25 +1,31 @@
-import { connectDB } from './src/lib/db';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import path from 'path';
+import { MongoClient } from 'mongodb';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-async function test() {
+async function testConnection() {
+    console.log('🔍 Testing MongoDB Connection...');
+    const uri = process.env.MONGODB_URI;
+    console.log('URI present:', !!uri);
+
+    if (!uri) return;
+
+    const client = new MongoClient(uri);
     try {
-        const db = await connectDB();
-        const count = await db.collection('usuarios').countDocuments();
-        console.log(`Conexión exitosa. Total usuarios: ${count}`);
+        await client.connect();
+        console.log('✅ Connected successfully to MongoDB');
+        const db = client.db('ABDElevators');
+        const count = await db.collection('prompts').countDocuments({ tenantId: 'demo-tenant' });
+        console.log('📊 Prompts found for demo-tenant:', count);
 
-        const users = await db.collection('usuarios').find({}).toArray();
-        users.forEach(u => {
-            console.log(`- ${u.email} (Rol: ${u.rol})`);
-        });
-
-        process.exit(0);
-    } catch (error) {
-        console.error('Error:', error);
-        process.exit(1);
+        const causalPrompt = await db.collection('prompts').findOne({ key: 'CAUSAL_IMPACT_ANALYSIS', tenantId: 'demo-tenant' });
+        console.log('📑 Causal Prompt exists:', !!causalPrompt);
+    } catch (err) {
+        console.error('❌ Connection failed:', err);
+    } finally {
+        await client.close();
     }
 }
 
-test();
+testConnection();

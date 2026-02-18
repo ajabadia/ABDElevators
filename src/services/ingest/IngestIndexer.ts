@@ -119,15 +119,16 @@ export class IngestIndexer {
                         cloudinaryUrl: asset.cloudinaryUrl,
                         environment: asset.environment,
                         createdAt: new Date(),
+                        realEstateMetadata: industry === 'REAL_ESTATE' ? asset.realEstateMetadata : undefined,
                     });
 
                     await chunksCollection.insertOne(chunk);
                     return true;
-                } catch (error: any) {
+                } catch (error: unknown) {
                     await IngestTracer.endSpanError(embeddingSpan, {
                         correlationId,
                         tenantId: asset.tenantId,
-                    }, error);
+                    }, error as Error);
                     throw error; // Re-throw to be caught by Promise.allSettled
                 }
             }));

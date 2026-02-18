@@ -335,15 +335,118 @@ export class UsageService {
             });
 
             return {
-                validationsCount,
-                ticketsCreated,
-                ticketsResolved,
-                efficiencyScore: Math.min(100, (validationsCount * 5) + (ticketsResolved * 10)) // Score simple
+                validationsCount, ticketsCreated, ticketsResolved, efficiencyScore: Math.min(100, (validationsCount * 5) + (ticketsResolved * 10)) // Score simple
             };
 
         } catch (error) {
             console.error('[UsageService] Error calculating User Metrics:', error);
             return { validationsCount: 0, ticketsCreated: 0, ticketsResolved: 0, efficiencyScore: 0 };
         }
+    }
+
+    /**
+     * Realiza una proyección de costes globales basada en el consumo histórico.
+     * Fase 110: Predictive Costing (SuperAdmin View)
+     */
+    static async getGlobalCostPrediction() {
+        try {
+            const { TenantService } = await import('./tenant-service');
+            const { PLANS } = await import('./plans');
+            const tenants = await TenantService.getAllTenants();
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            let totalTokensLast30Days = 0;
+            let totalStorageLast30Days = 0;
+
+            for (const tenant of tenants) {
+                const usage = await this.getAggregateUsage(tenant._id.toString(), thirtyDaysAgo, new Date());
+                totalTokensLast30Days += (usage['LLM_TOKENS'] || 0);
+                totalStorageLast30Days += (usage['STORAGE_BYTES'] || 0);
+            }
+
+            const dailyBurnTokens = totalTokensLast30Days / 30;
+            const projectedTokensNext30Days = dailyBurnTokens * 30;
+
+            // Precio base para proyección global (PRO tier overage)
+            const PRICE_PER_TOKEN = PLANS.PRO.overage.tokens;
+            const estimatedMonthlySpend = projectedTokensNext30Days * PRICE_PER_TOKEN;
+
+            return {
+                period: '30d',
+                burnRate: {
+                    tokensPerDay: Math.round(dailyBurnTokens),
+                    storagePerDay: Math.round(totalStorageLast30Days / 30)
+                },
+                projection: {
+                    tokensNext30Days: Math.round(projectedTokensNext30Days),
+                    estimatedSpend: Number(estimatedMonthlySpend.toFixed(2)),
+                    currency: 'EUR'
+                },
+                confidenceScore: tenants.length > 5 ? 0.85 : 0.6,
+                trend: dailyBurnTokens > 0 ? 'STABLE' : 'LOW_USAGE'
+            };
+        } catch (error) {
+            console.error('[UsageService] Error generating global cost prediction:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Realiza una proyección de costes específica para un tenant.
+     * Útil para integrar en el PriceSimulator.
+     */
+    static async getTenantCostPrediction(tenantId: string) {
+        try {
+            const { TenantService } = await import('./tenant-service');
+            const { PLANS, calculateOverageCost } = await import('./plans');
+
+            const tenant = await TenantService.getConfig(tenantId);
+            if (!tenant) return null;
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const usage = await this.getAggregateUsage(tenantId, thirtyDaysAgo, new Date());
+            const monthlyTokens = usage['LLM_TOKENS'] || 0;
+            const monthlyStorage = usage['STORAGE_BYTES'] || 0;
+            const monthlySearches = usage['VECTOR_SEARCHES'] || 0;
+
+            // Proyectar overage basado en el plan actual
+            const currentPlan = (tenant as any).planTier || 'FREE';
+            const projectedOverage = calculateOverageCost(currentPlan, {
+                tokens: monthlyTokens,
+                storage: monthlyStorage,
+                searches: monthlySearches
+            });
+
+            // Comparar proyecciones en otros planes
+            const comparisons: Record<string, number> = {};
+            for (const tier of ['BASIC', 'PRO', 'ENTERPRISE'] as const) {
+                comparisons[tier] = calculateOverageCost(tier, {
+                    tokens: monthlyTokens,
+                    storage: monthlyStorage,
+                    searches: monthlySearches
+                });
+            }
+
+            return {
+                usage: { tokens: monthlyTokens, storage: monthlyStorage, searches: monthlySearches },
+                projectedOverage,
+                comparisons,
+                recommendation: this.getPlanRecommendation(currentPlan, monthlyTokens, monthlyStorage)
+            };
+        } catch (error) {
+            console.error('[UsageService] Error generating tenant cost prediction:', error);
+            return null;
+        }
+    }
+
+    private static getPlanRecommendation(currentTier: string, tokens: number, storage: number): string | null {
+        if (currentTier === 'FREE' && tokens > 100000) return 'BASIC';
+        if (currentTier === 'BASIC' && tokens > 500000) return 'PRO';
+        if (currentTier === 'PRO' && tokens > 1000000) return 'ENTERPRISE';
+        return null;
     }
 }

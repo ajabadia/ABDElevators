@@ -1,58 +1,3 @@
-# 🗺️ Mapa de Aplicación - ABD RAG Platform
-
-Este documento relaciona las rutas del sistema con sus funcionalidades principales, sirviendo como guía rápida de la arquitectura funcional.
-
-## 🏢 Área Pública & Marketing
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/` | Landing Page con Hero, Bento y propuesta de valor. | 2026-02-14 |
-| `/about` | Visión estratégica y equipo. | 2026-02-14 |
-| `/pricing` | Planes de suscripción y límites de uso. | 2026-02-14 |
-| `/terms` | Términos de Servicio y condiciones legales. | 2026-02-14 |
-| `/privacy` | Política de Privacidad y tratamiento de datos (GDPR). | 2026-02-14 |
-| `/accessibility` | Declaración de Accesibilidad y compromiso WCAG 2.1. | 2026-02-14 |
-| `/contact` | Formulario de contacto y soporte comercial. | 2026-02-14 |
-| `/login` | Acceso de usuarios autenticados. | 2026-02-14 |
-| `/upgrade` | Gestión de suscripciones y upgrades. | 2026-02-14 |
-| `/sandbox` | Demo interactivo público con documentos de ejemplo (sin autenticación). | 2026-02-09 |
-
-### Features (Landing)
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/features/audit-trail` | Auditoría completa de acciones y trazabilidad. | 2026-02-14 |
-| `/features/compliance` | Cumplimiento normativo GDPR e ISO. | 2026-02-14 |
-| `/features/dual-engine` | Motor dual de procesamiento OCR + IA. | 2026-02-14 |
-| `/features/federated` | Búsqueda federada cross-tenant. | 2026-02-14 |
-| `/features/pdf-bridge` | Puente de integración con sistemas PDF legacy. | 2026-02-14 |
-| `/features/vector-search` | Búsqueda semántica vectorial. | 2026-02-14 |
-
-### Páginas de Autenticación
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/auth-pages/magic-link/verify` | Verificación de Magic Links para autenticación passwordless. | 2026-02-10 |
-| `/auth-pages/signup-invite/[token]` | Registro de usuario mediante invitación. | 2026-02-14 |
-| `/auth-pages/error` | Página de error de autenticación. | 2026-02-14 |
-
-### Páginas de Error
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/error` | Página de error general. | 2026-02-14 |
-| `/error/rate-limit` | Error de límite de peticiones excedido. | 2026-02-14 |
-
-## 👤 Panel de Usuario (Authenticated)
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/dashboard` | **NEW** Dashboard Principal (Role-Based Dispatcher). | 2026-02-13 |
-| `/profile` | Dashboard personal, estadísticas de uso y avatar. | 2026-02-13 10:00 |
-| `/my-documents` | Repositorio personal de archivos analizados. | 2026-02-14 |
-| `/search` | Búsqueda Inteligente Conversacional sobre manuales técnicos. | 2026-02-14 |
-| `/spaces` | Hub de Espacios personales, colecciones y Quick Q&A (Phase 125). | 2026-02-12 |
-| `/spaces/playground` | Entorno de pruebas y experimentación con espacios. | 2026-02-14 |
-| `/settings` | Configuración personal del usuario. | 2026-02-14 |
-| `/support` | Sistema de tickets y centro de ayuda empresarial. | 2026-02-14 |
-| `/support/[id]` | Visualización detallada de ticket de soporte. | 2026-02-14 |
-| `/support/nuevo` | Creación de nuevo ticket de soporte. | 2026-02-14 |
-
 ## 🛡️ Panel de Administración (Control Center)
 Ubicación base: `/admin` (Protegido por Guardian V2)
 
@@ -60,48 +5,55 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
 | `/admin` | Dashboard principal de administración. | 2026-02-16 |
-| `/admin/tasks` | **Tasks Hub**: Gestión de tareas, mi bandeja y asignaciones. | 2026-02-16 |
-| `/admin/security` | **Security Hub**: Permisos, Auditoría y Sesiones activas. | 2026-02-16 |
-| `/admin/operations` | **Operations Hub**: Ingesta, Logs, Observabilidad y Mantenimiento. | 2026-02-16 |
-| `/admin/operations/observability` | Monitorización de métricas y salud del sistema. | 2026-02-16 |
-| `/admin/operations/ingest` | Gestión de colas de ingesta y jobs de procesamiento (DLQ). | 2026-02-16 |
-| `/admin/operations/logs` | Visor de logs técnicos y traza de errores. | 2026-02-16 |
-| `/admin/operations/trace` | **Trace Viewer**: Rastreo técnico end-to-end por Correlation ID. | 2026-02-16 |
+| `/admin/tasks` | **Tasks Hub**: Gestión de tareas, mi bandeja y asignaciones. | 2026-02-17 |
+| `/admin/security` | **Security Hub Dashboard**: Navegación centralizada a módulos de seguridad. | 2026-02-17 (Reviewed Audit 2302) ✅ |
+| `/admin/security/audit` | **Audit Trail**: Registro inmutable de acciones del sistema. | 2026-02-17 |
 | `/admin/operations/maintenance` | Herramientas de mantenimiento y corrección de datos. | 2026-02-16 |
 | `/admin/operations/status` | Estado de servicios externos e infraestructura. | 2026-02-16 |
 | `/admin/settings` | **Settings Hub**: Configuración centralizada (Org, Users, Prompts, i18n). | 2026-02-16 |
 | `/admin/profile` | Perfil de usuario administrador. | 2026-02-16 |
 | `/admin/reports` | Report Hub: Dashboard de informes. | 2026-02-16 |
 | `/admin/reports/schedules` | Schedule Management: Gestión de programación de informes. | 2026-02-16 |
+| `/admin/superadmin` | **Global Platform Dashboard**: Observabilidad multi-tenant, salud del cluster y **Salud Financiera (Predictiva)** (SUPER_ADMIN). | 2026-02-18 (Stabilized) ✅ |
 
 ### 🧠 Knowledge & RAG
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/knowledge` | **Unified Knowledge Hub**: Activos, Explorador Neural y Espacios. | 2026-02-13 |
-| `/admin/knowledge-base` | *Redirects to /admin/knowledge?tab=explorer* | 2026-02-13 |
-| `/admin/knowledge-assets` | *Redirects to /admin/knowledge?tab=assets* | 2026-02-13 |
-| `/admin/spaces` | *Redirects to /admin/knowledge?tab=spaces* | 2026-02-13 11:00 |
+| `/admin/knowledge` | **Knowledge Hub Dashboard**: Navegación centralizada a módulos de conocimiento. | 2026-02-17 |
+| `/admin/knowledge/explorer` | **Neural Explorer**: Exploración de chunks vectorizados y simulación RAG. | 2026-02-17 |
+| `/admin/knowledge/assets` | **Asset Management**: Gestión unificada de activos de conocimiento. | 2026-02-17 |
+| `/admin/knowledge/my-docs` | **My Documents**: Gestión personal de documentos del usuario. | 2026-02-17 |
+| `/admin/knowledge/spaces` | **Knowledge Spaces**: Configuración de espacios y permisos. | 2026-02-17 |
+| `/admin/knowledge-base` | *Redirect to /admin/knowledge* | 2026-02-17 |
+| `/admin/knowledge-assets` | *Redirect to /admin/knowledge/assets* | 2026-02-17 |
+| `/admin/spaces` | *Redirect to /admin/knowledge/spaces* | 2026-02-17 |
 | `/admin/knowledge-base/graph` | **Graph Explorer**: Visualizador de grafos y relaciones (Neo4j) con edición directa. | 2026-02-16 |
 | `/admin/rag-quality` | *Redirects to /admin/ai?tab=rag-quality* | 2026-02-13 |
 
 ### 👮 Guardian & Governance (Gobierno & Permisos)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-14 |
-| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-14 |
-| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-14 |
-| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-06 10:15 |
-| `/admin/users` | Gestión centralizada de usuarios, roles e invitaciones. | 2026-02-16 |
+| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-17 (Reviewed Audit 2307) ✅ |
+| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-17 |
+| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-17 |
+| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-17 |
+| `/admin/users` | **Users Hub Dashboard**: Navegación centralizada a gestión de usuarios. | 2026-02-17 |
+| `/admin/users/active` | **Active Users**: Gestión de usuarios registrados. | 2026-02-17 |
+| `/admin/users/pending` | **Pending Invitations**: Gestión de invitaciones pendientes. | 2026-02-17 |
 | `/admin/settings/i18n` | Gobernanza i18n: Editor de traducciones con asistencia de IA. | 2026-02-14 |
-| `/admin/document-types` | Gestión de tipos de documento personalizados. | - |
+| `/admin/document-types` | Gestión de tipos de documento personalizados. | 2026-02-17 ✅ |
 
 ### ⚡ Automation Studio (Workflows)
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/ai` | **Unified AI Hub**: Workflows, RAG Quality, Predictive & Playground. | 2026-02-13 11:45 |
-| `/admin/workflows` | *Redirects to /admin/ai?tab=workflows* | 2026-02-13 |
+| `/admin/ai` | **AI Hub Dashboard**: Navegación centralizada a módulos de IA. | 2026-02-17 |
+| `/admin/ai/rag-quality` | **RAG Quality**: Evaluación de calidad y precisión de respuestas. | 2026-02-17 |
+| `/admin/ai/workflows` | **Workflows**: Editor de flujos de trabajo y orquestación. | 2026-02-17 |
+| `/admin/ai/predictive` | **Predictive Maintenance**: Análisis de patrones (Próximamente). | 2026-02-17 |
+| `/admin/ai/playground` | **AI Playground**: Entorno de experimentación RAG con multi-modelo y ajuste de parámetros dinámicos. | 2026-02-17 ✅ |
+| `/admin/workflows` | *Redirect to /admin/ai/workflows* | 2026-02-17 |
 | `/admin/workflows/[id]` | Editor y detalle de workflow específico. | - |
-| `/admin/workflow-tasks` | Centro de Colaboración de Tareas (Task Hub). | 2026-02-14 |
+| `/admin/workflow-tasks` | Centro de Colaboración de Tareas (Task Hub). | 2026-02-17 |
 
 ### 📊 Intelligence & Audit
 | Ruta | Funcionalidad | Última Revisión |
@@ -112,6 +64,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/logs` | *Redirects to /admin/operations/logs* | 2026-02-16 |
 | `/admin/analytics` | Métricas globales, KPIs y analytics de plataforma (SUPER_ADMIN). | 2026-02-13 12:15 |
 | `/admin/rag-eval` | Evaluación y testing de calidad RAG. | - |
+| `/api/intelligence/causal-analysis` | **Causal Analysis API**: Motor de simulación de impacto 'What-If'. | 2026-02-17 ✅ |
 | `/admin/reports` | **Report Hub**: Generación y gestión de informes industriales PDF. | 2026-02-16 |
 
 ### 💰 Billing & Organizations
@@ -122,7 +75,12 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/billing/invoices` | Gestión y visualización de facturas. | 2026-02-17 |
 | `/admin/billing/plan` | Detalle y gestión del plan actual. | 2026-02-17 |
 | `/admin/billing/usage` | Métricas de uso y consumo de recursos. | 2026-02-17 |
-| `/admin/organizations` | Configuración de tenant: branding, almacenamiento, facturación y reportes. | 2026-02-14 |
+| `/admin/organizations` | **Organizations Hub Dashboard**: Navegación centralizada a configuración del tenant. | 2026-02-17 |
+| `/admin/organizations/general` | **General Settings**: Configuración básica del tenant. | 2026-02-17 |
+| `/admin/organizations/branding` | **Branding**: Personalización de marca y colores. | 2026-02-17 |
+| `/admin/organizations/storage` | **Storage**: Configuración de almacenamiento y cuotas. | 2026-02-17 |
+| `/admin/organizations/features` | **Features**: Gestión de módulos y características. | 2026-02-17 |
+| `/admin/organizations/billing` | **Billing**: Facturación y datos fiscales. | 2026-02-17 |
 
 ### 📋 Checklist & Compliance
 | Ruta | Funcionalidad | Última Revisión |
@@ -135,7 +93,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 🔧 Configuración Avanzada
 | Ruta | Funcionalidad | Última Revisión |
 |------|---------------|-----------------|
-| `/admin/prompts` | Gestión de directivas de IA e i18n avanzada (Phase 109). | 2026-02-12 |
+| `/admin/prompts` | Gestión de directivas de IA e i18n avanzada (Integrado en AI Hub). | 2026-02-17 ✅ |
 | `/admin/api-keys` | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
 | `/admin/ingest/jobs` | *Redirects to /admin/operations/ingest* | 2026-02-16 |
 | `/admin/api-docs` | Portal Interactivo Swagger (OAS 3.0). | 2026-02-08 |
@@ -187,25 +145,17 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-06 10:15 |
 | `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-06 00:30 |
 | `/api/admin/users/invite/bulk` | Ingesta masiva de invitaciones (Batch Processing). | 2026-02-06 07:45 |
-| `/api/admin/workflow-tasks` | Orquestación y actualización de tareas industriales. | 2026-02-16 |
-| `/api/admin/i18n/stats` | Estadísticas de namespaces para filtrado dinámico. | 2026-02-06 |
-| `/api/admin/graph/nodes` | **MUT**: Mutación de nodos (Create/Update/Delete) en Neo4j. | 2026-02-16 |
-| `/api/admin/graph/nodes/bulk` | **NEW**: Borrado masivo de nodos en una sola transacción. | 2026-02-16 |
-| `/api/admin/graph/nodes/merge` | **NEW**: Fusión de nodos con redirección de relaciones (APOC). | 2026-02-16 |
-| `/api/admin/graph/relations` | **MUT**: Mutación de relaciones en Neo4j. | 2026-02-16 |
-| `/api/swagger/spec` | Generación dinámica de OpenAPI Spec (zod-to-openapi). | 2026-02-08 |
-| `/api/sandbox/chat` | Chat público demo con documentos hardcodeados (rate limit 5/min). | 2026-02-09 |
-| `/api/auth/magic-link/request` | Generación y envío de Magic Links para autenticación passwordless. | 2026-02-10 |
-| `/api/cron/stuck-jobs` | Detección y recuperación automática de procesos de ingesta bloqueados. | 2026-02-10 |
-| `/api/_health` | **Health Check**: Liveness probe para k8s/load balancers (200 OK). | 2026-02-16 |
-| `/api/_ready` | **Readiness Probe**: Verificación de conectividad BB.DD. (200 OK/503). | 2026-02-16 |
-| `/api/admin/spaces` | Gestión administrativa de espacios universales (Quota & Hierarchy). | 2026-02-11 |
-| `/api/spaces` | Recuperación de espacios accesibles para navegación del usuario. | 2026-02-11 |
 | `/api/core/quick-qa` | Endpoint efímero para preguntas rápidas sobre texto pegado. | 2026-02-11 |
 | `/api/collections` | Gestión de colecciones personales (Notebooks). | 2026-02-11 |
 | `/api/billing/simulate-change` | Simulación de prorrateo para cambios de plan (Stripe Integration). | 2026-02-14 |
+| `/api/admin/billing/prediction` | Proyección de costes y burn rate por tenant (Phase 110). | 2026-02-18 ✅ |
 | `/api/admin/prompts/dry-run` | Ejecución de prueba de prompts con Gemini Flash (Sandbox). | 2026-02-15 |
 | `/api/admin/prompts/test-ab` | Comparativa A/B de prompts en tiempo real (Performance). | 2026-02-15 |
+| `/api/admin/superadmin/metrics` | Agregación global de métricas multi-tenant para el Dashboard. | 2026-02-17 ✅ |
+| `/api/admin/superadmin/anomalies` | Detección estadística de anomalías en latencia y errores. | 2026-02-17 ✅ |
+| `/api/admin/superadmin/ontology/evolution` | Review de la deriva de ontología y propuestas del Sovereign Engine. | 2026-02-17 ✅ |
+| `/api/cron/self-healing` | Trigger de auto-curación y auditoría de documentos (Secure Cron). | 2026-02-17 ✅ |
+| `/api/cron/status-check` | Auditoría predictiva y detección de anomalías programada. | 2026-02-17 ✅ |
 
 ## 🗑️ Rutas Deprecadas / No Encontradas
 Rutas que aparecen en versiones anteriores del mapa pero no existen físicamente en el código:
@@ -224,5 +174,16 @@ Rutas que aparecen en versiones anteriores del mapa pero no existen físicamente
 | `/api/debug/*` | ⛔ Deleted | Endpoints de debug eliminados de producción |
 
 ---
-*Mapa actualizado por Antigravity v4.7.0 (Enterprise Curation Edition) - Estructura real al: 2026-02-16*
+---
+### 🏛️ Estructura Futura (Suite Era - FASE 180+)
+*En curso de migración a Monorepo:*
+
+- `apps/rag-app`: Aplicación actual de análisis RAG.
+- `packages/platform-core`: Auth, DB, RBAC, Propmts, Logging.
+- `packages/ui-kit`: Layouts, Themes, Componentes compartidos.
+- `packages/workflow-engine`: Motor de estados agnóstico.
+- `packages/rag-engine`: Lógica específica de ingesta y retrieval.
+
+---
+*Mapa actualizado por Antigravity v5.0.0 (Suite Edition) - Estructura real al: 2026-02-18*
 *Rutas sin fecha (-) están pendientes de auditoría*

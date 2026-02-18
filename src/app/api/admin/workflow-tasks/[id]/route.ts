@@ -14,6 +14,10 @@ const UpdateStatusSchema = z.object({
     decision: z.enum(['ACCEPT', 'OVERRIDE']).optional(),
     chosenNextState: z.string().optional(), // Required if decision === 'OVERRIDE'
     metadata: z.record(z.string(), z.any()).optional(), // ⚡ FASE 128.3: Allow dynamic metadata update
+
+    // ⚡ FASE 82: Feedback for AI
+    feedbackCategory: z.string().optional(),
+    rejectionReason: z.string().optional(),
 });
 
 export async function PATCH(
@@ -43,6 +47,25 @@ export async function PATCH(
             metadata: validated.metadata,
             correlationId
         });
+
+        // ⚡ FASE 82: Record AI Feedback if there's a proposal and task is finished
+        if (['COMPLETED', 'REJECTED'].includes(validated.status) && result.task.metadata?.llmProposal) {
+            const proposal = result.task.metadata.llmProposal;
+            const humanDecision = validated.decision || (validated.status === 'COMPLETED' ? 'ACCEPT' : 'REJECT');
+
+            // Record feedback only if it's a significant decision task or explicitly overridden
+            const FeedbackService = (await import('@/lib/feedback-service')).FeedbackService;
+            await FeedbackService.recordFeedback({
+                taskId: id,
+                workflowId: result.task.metadata.workflowId,
+                nodeLabel: result.task.metadata.nodeLabel,
+                modelSuggestion: proposal.suggestedAction || proposal.suggestedNextState,
+                humanDecision: validated.chosenNextState || humanDecision,
+                category: validated.feedbackCategory,
+                rejectionReason: validated.rejectionReason || validated.notes,
+                correlationId
+            }, correlationId);
+        }
 
         // ⚡ FASE 127: Handle HITL Decision for WORKFLOW_DECISION tasks
         if (validated.status === 'COMPLETED' && result.task?.type === 'WORKFLOW_DECISION') {

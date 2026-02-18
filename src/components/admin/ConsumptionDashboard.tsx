@@ -37,7 +37,13 @@ interface UsageStats {
     api_requests: number;
     savings?: number;
     embeddings?: number;
-    history: any[];
+    history: Array<{
+        _id: string;
+        timestamp: string;
+        type: string;
+        resource: string;
+        value: number;
+    }>;
     tier?: string;
     planSlug?: string;
     limits?: {
@@ -52,6 +58,19 @@ interface UsageStats {
         state: 'ALLOWED' | 'SURCHARGE' | 'BLOCKED';
         details?: string;
     }[];
+}
+
+interface FiscalData {
+    fiscalName: string;
+    taxId: string;
+    address: string;
+}
+
+interface InvoicePreview {
+    totalAmount: number;
+    tierName: string;
+    isManual?: boolean;
+    invoice: any; // Keep any for the complex PDF object for now
 }
 
 export function ConsumptionDashboard() {
@@ -95,7 +114,7 @@ export function ConsumptionDashboard() {
     const {
         data: fiscalData,
         refresh: refreshFiscal
-    } = useApiItem<any>({
+    } = useApiItem<FiscalData>({
         endpoint: '/api/admin/billing/fiscal',
         autoFetch: true,
         onSuccess: (data) => {
@@ -124,7 +143,7 @@ export function ConsumptionDashboard() {
     const {
         data: invoiceData,
         isLoading: loadingInvoice
-    } = useApiItem<any>({
+    } = useApiItem<InvoicePreview>({
         endpoint: '/api/admin/billing/invoice-preview',
         autoFetch: true
     });

@@ -28,7 +28,7 @@ export class WorkflowAnalyticsService {
      */
     static async recordEvent(event: Omit<WorkflowExecutionEvent, 'timestamp'>) {
         try {
-            const collection = await getTenantCollection('workflow_analytics', { user: { tenantId: event.tenantId } });
+            const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId: event.tenantId, role: 'SYSTEM' } } as any);
             await collection.insertOne({
                 ...event,
                 timestamp: new Date()
@@ -47,7 +47,7 @@ export class WorkflowAnalyticsService {
      * Detects anomalies based on error rates and latency spikes.
      */
     static async detectAnomalies(workflowId: string, tenantId: string, nodeId?: string) {
-        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { tenantId } });
+        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         const windowSize = 50; // Last 50 executions
         const errorThreshold = 0.15; // 15% error rate spike
 
@@ -106,7 +106,7 @@ export class WorkflowAnalyticsService {
      * Gets aggregated heatmap and bottleneck data for a specific workflow.
      */
     static async getWorkflowStats(workflowId: string, tenantId: string, timeRangeDays: number = 7) {
-        const collection = await getTenantCollection('workflow_analytics', { user: { tenantId } });
+        const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - timeRangeDays);
 
@@ -177,7 +177,7 @@ export class WorkflowAnalyticsService {
      * Gets detailed execution logs for a specific workflow.
      */
     static async getWorkflowLogs(workflowId: string, tenantId: string, limit: number = 50) {
-        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { tenantId } });
+        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
 
         return await collection.find({
             workflowId,

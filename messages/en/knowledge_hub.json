@@ -1,0 +1,22 @@
+{
+  "title": "Knowledge Hub",
+  "subtitle": "Unified management of assets, semantic exploration and workspaces.",
+  "cards": {
+    "explorer": {
+      "title": "Neural Explorer",
+      "description": "Explore vectorized chunks, simulate RAG queries and audit retrieval quality."
+    },
+    "assets": {
+      "title": "Asset Management",
+      "description": "Unified management of knowledge assets and documents."
+    },
+    "my_docs": {
+      "title": "My Documents",
+      "description": "Personal document management for the authenticated user."
+    },
+    "spaces": {
+      "title": "Knowledge Spaces",
+      "description": "Configure context limits and access permissions for document groups."
+    }
+  }
+}

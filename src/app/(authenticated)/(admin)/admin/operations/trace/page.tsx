@@ -21,7 +21,7 @@ export default async function TracePage({ searchParams }: Props) {
     const user = await enforcePermission('admin:operations', 'read');
     const { correlationId } = searchParams;
 
-    let logs = [];
+    let logs: any[] = [];
     if (correlationId) {
         logs = await TraceService.getTrace(correlationId, user);
     }

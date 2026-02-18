@@ -32,10 +32,10 @@ export const INDUSTRY_LABELS: Record<IndustryType, any> = {
     MEDICAL: {
         singular: 'Paciente',
         plural: 'Pacientes',
-        action: 'Analizar Historial',
-        description: 'Sube un historial clínico o receta para validación.',
-        placeholder: 'ID de paciente...',
-        recent_title: 'Historiales Analizados',
+        action: 'Analizar Expediente',
+        description: 'Gestión de expedientes médicos y cumplimiento legal.',
+        placeholder: 'Ej: EXP-2024-001',
+        recent_title: 'Expedientes Recientes'
     },
     INSURANCE: {
         singular: 'Siniestro',
@@ -44,6 +44,14 @@ export const INDUSTRY_LABELS: Record<IndustryType, any> = {
         description: 'Sube una póliza o parte de siniestro para verificar coberturas y fraude.',
         placeholder: 'Número de siniestro...',
         recent_title: 'Siniestros Auditados',
+    },
+    REAL_ESTATE: {
+        singular: 'Inmueble',
+        plural: 'Inmuebles',
+        action: 'Analizar Contrato',
+        description: 'Gestión de activos inmobiliarios y contratos.',
+        placeholder: 'Ej: INV-MAD-001',
+        recent_title: 'Activos Recientes'
     },
     IT: {
         singular: 'Ticket',

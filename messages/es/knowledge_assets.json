@@ -16,7 +16,9 @@
     "mark_active": "Marcar Vigente",
     "mark_obsolete": "Marcar Obsoleto",
     "archive": "Archivar",
-    "delete": "Eliminar Permanente"
+    "delete": "Eliminar Permanente",
+    "mark_reviewed": "Marcar como Revisado",
+    "snooze_review": "Posponer Revisión"
   },
   "table": {
     "document": "Documento",
@@ -34,7 +36,18 @@
     "active": "Vigente",
     "obsolete": "Obsoleto",
     "archived": "Archivado",
-    "processing": "Procesando"
+    "processing": "Procesando",
+    "reviewed": "Revisado",
+    "expired": "Caducado",
+    "snoozed": "Pospuesto"
+  },
+  "review": {
+    "next_date": "Próxima Revisión",
+    "last_date": "Última Revisión",
+    "dialog_title": "Programar Revisión",
+    "dialog_desc": "Establece la fecha para la próxima revisión técnica de este manual.",
+    "success": "Documento marcado como revisado",
+    "error": "Error al actualizar la revisión"
   },
   "retry_success": "Reintento iniciado",
   "retry_desc": "El documento se está procesando nuevamente.",

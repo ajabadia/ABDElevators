@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { DocumentTypeSchema } from '@/lib/schemas';
+import { z } from 'zod';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -53,18 +54,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ success: true, items: filteredTypes });
     } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_DOC_TYPES',
-            action: 'GET_TYPES_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error retrieving document types').toJSON(),
-            { status: 500 }
-        );
+        return await handleApiError(error, 'API_DOC_TYPES_GET', correlationId);
     } finally {
         const duration = Date.now() - start;
         if (duration > 200) {
@@ -143,29 +133,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, id: result.insertedId });
     } catch (error: any) {
-        if (error.name === 'ZodError') {
-            return NextResponse.json(
-                new ValidationError('Invalid document type data', error.errors).toJSON(),
-                { status: 400 }
-            );
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_DOC_TYPES',
-            action: 'CREATE_TYPE_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error creating document type').toJSON(),
-            { status: 500 }
-        );
+        return await handleApiError(error, 'API_DOC_TYPES_POST', correlationId);
     } finally {
         const duration = Date.now() - start;
         if (duration > 400) {
@@ -187,6 +155,7 @@ export async function POST(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
     const correlationId = crypto.randomUUID();
+    const start = Date.now();
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
@@ -221,6 +190,18 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         return await handleApiError(error, 'API_DOC_TYPES_PATCH', correlationId);
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > 400) {
+            await logEvento({
+                level: 'WARN',
+                source: 'API_DOC_TYPES',
+                action: 'PERFORMANCE_SLA_VIOLATION',
+                message: `PATCH /api/admin/document-types took ${duration}ms`,
+                correlationId,
+                details: { durationMs: duration }
+            });
+        }
     }
 }
 
@@ -230,6 +211,7 @@ export async function PATCH(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
     const correlationId = crypto.randomUUID();
+    const start = Date.now();
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
@@ -248,8 +230,10 @@ export async function DELETE(req: NextRequest) {
         const kaCol = await getTenantCollection('knowledge_assets', session);
         const udCol = await getTenantCollection('user_documents', session);
 
-        const inUseKA = await kaCol.findOne({ documentTypeId: id });
-        const inUseUD = await udCol.findOne({ documentTypeId: id });
+        const [inUseKA, inUseUD] = await Promise.all([
+            kaCol.findOne({ documentTypeId: id }),
+            udCol.findOne({ documentTypeId: id })
+        ]);
 
         if (inUseKA || inUseUD) {
             throw new AppError('CONFLICT', 409, 'Cannot delete: Document type is in use.');
@@ -269,13 +253,25 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         return await handleApiError(error, 'API_DOC_TYPES_DELETE', correlationId);
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > 400) {
+            await logEvento({
+                level: 'WARN',
+                source: 'API_DOC_TYPES',
+                action: 'PERFORMANCE_SLA_VIOLATION',
+                message: `DELETE /api/admin/document-types took ${duration}ms`,
+                correlationId,
+                details: { durationMs: duration }
+            });
+        }
     }
 }
 
 async function handleApiError(error: any, source: string, correlationId: string) {
-    if (error.name === 'ZodError') {
+    if (error instanceof z.ZodError) {
         return NextResponse.json(
-            new ValidationError('Invalid data', error.errors).toJSON(),
+            new ValidationError('Invalid data', error.issues).toJSON(),
             { status: 400 }
         );
     }

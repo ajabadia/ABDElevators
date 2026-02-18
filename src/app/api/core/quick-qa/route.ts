@@ -6,6 +6,7 @@ import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { PromptService } from '@/lib/prompt-service';
+import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 
 const QuickQASchema = z.object({
@@ -24,10 +25,10 @@ export async function POST(req: NextRequest) {
 
     try {
         // 1. Auth & Permissions
-        const user = await enforcePermission('knowledge', 'read');
+        const session = await enforcePermission('knowledge', 'read');
 
         // 2. Rate Limiting
-        const { success } = await checkRateLimit(user.id, LIMITS.CORE);
+        const { success } = await checkRateLimit(session.user.id, LIMITS.CORE);
         if (!success) {
             throw new AppError('FORBIDDEN', 429, 'Demasiadas solicitudes. Por favor, espera un poco.');
         }
@@ -40,9 +41,9 @@ export async function POST(req: NextRequest) {
             level: 'INFO',
             source: 'API_QUICK_QA',
             action: 'START',
-            message: `Quick Q & A request for user ${user.id}`,
+            message: `Quick Q & A request for user ${session.user.id}`,
             correlationId,
-            tenantId: user.tenantId
+            tenantId: session.user.tenantId
         });
 
         // 3. Get Prompt from Governance Service (Regla de Oro #4)
@@ -53,21 +54,21 @@ export async function POST(req: NextRequest) {
                 context: validated.context || "No context provided",
                 question: validated.question
             },
-            user.tenantId
+            session.user.tenantId
         );
 
         // 4. Call Gemini with Stream (Streaming)
-        const stream = await callGeminiStream(systemPromptText, user.tenantId, {
+        const geminiStream = await callGeminiStream(systemPromptText, session.user.tenantId, {
             correlationId,
             temperature: 0.2, // More precise for technical snippets
             model: 'gemini-1.5-flash'
         });
 
-        const response = new Response(new ReadableStream({
+        const stream = new ReadableStream({
             async start(controller) {
                 const encoder = new TextEncoder();
                 try {
-                    for await (const chunk of stream) {
+                    for await (const chunk of geminiStream) {
                         const text = chunk.text();
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })} \n\n`));
                     }
@@ -76,7 +77,11 @@ export async function POST(req: NextRequest) {
                     controller.error(e);
                 }
             }
-        }), {
+        });
+
+        const streamWithHeartbeat = SSEHelper.wrapWithHeartbeat(stream);
+
+        const response = new Response(streamWithHeartbeat, {
             headers: {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',

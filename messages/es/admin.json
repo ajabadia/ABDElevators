@@ -784,7 +784,10 @@
         "active": "ACTIVA",
         "inactive": "INACTIVA",
         "loading_error": "Error al cargar la matriz de permisos",
-        "network_error": "Error de red al conectar con el servicio Guardian"
+        "loading_error_title": "Error de Carga",
+        "network_error": "Error de red al conectar con el servicio Guardian",
+        "network_error_title": "Error de Red",
+        "details_aria": "Detalles de la política"
       },
       "filter": "Filtrar",
       "metadata": {
@@ -810,7 +813,8 @@
         "empty": "No hay grupos definidos.",
         "policies": "{count} políticas asociadas",
         "loading_error": "Error al cargar la jerarquía de grupos",
-        "network_error": "Error de red al conectar con el servicio de Identidad"
+        "network_error": "Error de red al conectar con el servicio de Identidad",
+        "details_aria": "Detalles del grupo"
       },
       "sidebar": {
         "engine_title": "Motor de Herencia",
@@ -1277,6 +1281,22 @@
       "inReview": "En Revisión",
       "avgTime": "Tiempo medio",
       "completedToday": "Completadas hoy"
+    },
+    "feedback": {
+      "title": "Retroalimentación de IA",
+      "correction_title": "Laboratorio de Aprendizaje de IA",
+      "correction_desc": "Tu decisión difiere de la sugerencia de la IA. Por favor, indícanos el motivo para mejorar el modelo.",
+      "category_label": "Categoría del Error",
+      "rejection_reason_label": "Motivo de la Corrección",
+      "rejection_reason_placeholder": "Ej: El manual V-120 ha sido sustituido por la circular técnica #42...",
+      "categories": {
+        "HALLUCINATION": "Alucinación / Datos Inexistentes",
+        "OUTDATED_DATA": "Datos Desactualizados",
+        "LOGIC_ERROR": "Error de Lógica / Razonamiento",
+        "MISSING_CONTEXT": "Falta de Contexto",
+        "OTHER": "Otro"
+      },
+      "submit_btn": "Enviar Feedback y Guardar"
     }
   },
   "api_keys": {
@@ -1579,6 +1599,16 @@
         "error": "Error",
         "errorDesc": "Fallo al subir el logo"
       },
+      "documentLogo": {
+        "title": "Logotipo para Documentos/Emails",
+        "upload": "Subir Logotipo de Documentos",
+        "uploadButton": "Subir Logo Doc",
+        "dimensions": "Recomendado: 800x200px (Horizontal). Se usará el logo general si este no se define.",
+        "success": "Logo de documentos actualizado",
+        "successDesc": "El logo para notificaciones se ha guardado correctamente.",
+        "error": "Error",
+        "errorDesc": "Fallo al subir el logo de documentos"
+      },
       "favicon": {
         "title": "Favicon",
         "upload": "Subir Favicon",
@@ -1600,11 +1630,68 @@
         "desc": "Calcula automáticamente variantes legibles para el tema oscuro."
       },
       "preview": {
-        "title": "Live Preview App",
+        "title": "Vista Previa App",
         "light": "CLARO",
         "dark": "OSCURO",
         "lightDesc": "Vista previa en Modo Claro (colores originales).",
         "darkDesc": "Vista previa en Modo Oscuro (colores auto-optimizados)."
+      }
+    },
+    "notifications": {
+      "editor": {
+        "title": "Editor de Plantillas de Sistema",
+        "subtitle": "Define el contenido global de las notificaciones.",
+        "contentCard": "Editor de Contenido",
+        "contentDesc": "Define el asunto y el HTML del email. Puedes usar variables dinámicas.",
+        "es": "Español (ES)",
+        "en": "Inglés (EN)",
+        "subject": "Asunto del Email",
+        "subjectPlaceholder": "Ej: Su pedido {{orderId}} está listo",
+        "body": "Cuerpo HTML",
+        "bodyDesc": "Soporta HTML básico y Handlebars. Asegúrate de incluir {{{tenant_custom_note}}} si deseas permitir personalización.",
+        "audit": {
+          "title": "Auditoría de Cambios",
+          "reason": "Motivo de la actualización",
+          "reasonPlaceholder": "Ej: Actualización de términos legales 2026...",
+          "save": "Guardar Versión v{version}",
+          "reasonRequired": "Motivo requerido",
+          "reasonRequiredDesc": "Por favor indica el motivo del cambio para la auditoría."
+        },
+        "variables": {
+          "title": "Variables Disponibles",
+          "copy": "Haz clic para copiar. Estas variables se rellenarán automáticamente al enviar."
+        },
+        "version": {
+          "title": "Información de Versión",
+          "current": "Versión Actual:",
+          "lastUpdate": "Última Modificación:",
+          "modifiedBy": "Modificado Por:",
+          "history": "Ver Historial Completo"
+        },
+        "toast": {
+          "success": "Cambios guardados",
+          "successDesc": "La plantilla se ha actualizado y versionado correctamente.",
+          "error": "Error",
+          "errorDesc": "No se pudo guardar la plantilla."
+        }
+      },
+      "settings": {
+        "title": "Configuración de Notificaciones del Tenant",
+        "subtitle": "Personaliza qué notificaciones recibe tu equipo y clientes.",
+        "events": "Eventos de Notificación",
+        "enabled": "Habilitado",
+        "channels": "Canales",
+        "recipients": "Destinatarios (Emails separados por coma)",
+        "customNote": "Nota Personalizada (Opcional)",
+        "customNoteDesc": "Añade un mensaje extra que se inyectará en la plantilla global.",
+        "includeNote": "Incluir nota en Emails",
+        "fallback": "Email de Fallback (Si no hay destinatarios específicos)",
+        "save": "Guardar Configuración",
+        "toast": {
+          "success": "Configuración actualizada",
+          "successDesc": "Tus preferencias de notificación se han guardado.",
+          "error": "Error al guardar"
+        }
       }
     },
     "billing": {

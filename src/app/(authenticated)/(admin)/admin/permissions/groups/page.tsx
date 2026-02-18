@@ -29,11 +29,11 @@ export default function GroupHierarchyPage() {
             if (data.success) {
                 setRoles(data.roles);
             } else {
-                toast.error(t('tree.loading_error') || 'Error loading groups');
+                toast.error(t('tree.loading_error'));
             }
         } catch (error) {
             console.error('Fetch error:', error);
-            toast.error(t('tree.network_error') || 'Network error');
+            toast.error(t('tree.network_error'));
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +109,7 @@ export default function GroupHierarchyPage() {
                                                 <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary">
                                                     {t('tree.policies', { count: group.policies?.length || 0 })}
                                                 </Badge>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Group Details">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" aria-label={t('tree.details_aria')}>
                                                     <Info className="w-4 h-4 text-primary" />
                                                 </Button>
                                             </div>

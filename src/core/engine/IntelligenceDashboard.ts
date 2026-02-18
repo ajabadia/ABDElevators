@@ -33,11 +33,11 @@ export class IntelligenceDashboard {
         const rels = graphStats.records[0]?.get('rels').toNumber() || 0;
 
         // 2. Métricas de Aprendizaje (AgentEngine)
-        const correctionsColl = await getTenantCollection('ai_corrections', { user: { tenantId } });
+        const correctionsColl = await getTenantCollection('ai_corrections', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         const learnedCount = await correctionsColl.countDocuments({});
 
         // 3. Simulación de Tareas Automatizadas y Ahorro (Basado en volumen)
-        const pedidosColl = await getTenantCollection('pedidos', { user: { tenantId } });
+        const pedidosColl = await getTenantCollection('pedidos', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         const totalAnalyses = await pedidosColl.countDocuments({ estado: 'analizado' });
 
         // Asumimos 15 min ahorrados por pedido y 50€/hora de coste técnico

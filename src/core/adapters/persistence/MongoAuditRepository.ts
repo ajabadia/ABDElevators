@@ -9,9 +9,13 @@ export class MongoAuditRepository implements IAuditRepository {
         return await getTenantCollection<any>(this.collectionName);
     }
 
+    async save(log: any) {
+        const collection = await getTenantCollection('audit_trails', { user: { id: 'system', tenantId: log.tenantId, role: 'SYSTEM' } } as any);
+        return await collection.insertOne(log);
+    }
+
     async logAction(action: any): Promise<void> {
-        const collection = await getTenantCollection('audit_logs', { user: { tenantId: action.tenantId } });
-        await collection.insertOne({ ...action, timestamp: new Date() });
+        await this.save({ ...action, timestamp: new Date() });
     }
 
     async logIngestion(details: any): Promise<void> {

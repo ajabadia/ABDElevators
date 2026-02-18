@@ -1,0 +1,16 @@
+{
+  "title": "Gestión de Usuarios",
+  "subtitle_org": "Gestión centralizada de usuarios, roles e invitaciones.",
+  "subtitle_global": "Gestión global de usuarios de todos los tenants.",
+  "cards": {
+    "active": {
+      "title": "Usuarios Activos",
+      "description_org": "Gestiona los usuarios registrados en tu organización.",
+      "description_global": "Gestiona todos los usuarios registrados en la plataforma."
+    },
+    "pending": {
+      "title": "Invitaciones Pendientes",
+      "description": "Visualiza y gestiona las invitaciones de usuario pendientes."
+    }
+  }
+}

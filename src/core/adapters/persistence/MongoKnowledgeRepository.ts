@@ -5,19 +5,19 @@ import { ObjectId } from 'mongodb';
 
 export class MongoKnowledgeRepository implements IKnowledgeRepository {
     async findByHash(hash: string, tenantId: string): Promise<any | null> {
-        const collection = await getTenantCollection('knowledge_assets', { user: { tenantId } });
+        const collection = await getTenantCollection('knowledge_assets', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         return await collection.findOne({ fileMd5: hash });
     }
 
     async create(data: any): Promise<KnowledgeAsset> {
-        const collection = await getTenantCollection('knowledge_assets', { user: { tenantId: data.tenantId } });
+        const collection = await getTenantCollection('knowledge_assets', { user: { id: 'system', tenantId: data.tenantId, role: 'SYSTEM' } } as any);
         const result = await collection.insertOne(data);
         return { ...data, _id: result.insertedId } as KnowledgeAsset;
     }
 
-    async search(query: string, tenantId: string): Promise<any[]> {
-        const collection = await getTenantCollection('knowledge_assets', { user: { tenantId } });
-        return await collection.find({ $text: { $search: query } }) as unknown as any[];
+    async search(query: any, tenantId: string): Promise<any[]> {
+        const collection = await getTenantCollection('knowledge_assets', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        return await collection.find(query) as unknown as any[];
     }
 
     async findAll(params: { tenantId?: string, limit: number, skip: number }): Promise<{ assets: KnowledgeAsset[], total: number }> {
@@ -28,8 +28,8 @@ export class MongoKnowledgeRepository implements IKnowledgeRepository {
         // Note: getTenantCollection relies on session to enforce security. 
         // If we want to support "SuperAdmin sees all", we rely on SecureCollection's logic.
 
-        const dbCtx = { user: { tenantId: params.tenantId } };
-        const collection = await getTenantCollection('knowledge_assets', dbCtx);
+        const dbCtx = { user: { id: 'system', tenantId: params.tenantId || 'platform_master', role: 'SYSTEM' } };
+        const collection = await getTenantCollection('knowledge_assets', dbCtx as any);
 
         // SecureCollection.find already applies tenant filters based on the session/context provided.
         // If params.tenantId is specific, SecureCollection ensures we only see that tenant's data.

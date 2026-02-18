@@ -6,12 +6,13 @@ export class NotifyHandler implements IActionHandler {
     type: WorkflowAction['type'] = 'notify';
 
     async execute(action: WorkflowAction, context: WorkflowContext): Promise<ActionResult> {
-        const { triggerData } = context;
+        const { entitySlug, idField, updates } = action.params as any;
+        const recipient = (action.params as any).recipient || 'admin';
         await logEvento({
             level: 'INFO',
             source: 'NOTIFY_HANDLER',
             action: 'NOTIFICATION_SENT',
-            message: `Notification sent to ${action.params.recipient}`,
+            message: `Notification sent to ${recipient}`,
             correlationId: context.correlationId,
             tenantId: context.tenantId,
             details: action.params

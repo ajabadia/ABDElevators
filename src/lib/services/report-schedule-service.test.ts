@@ -1,6 +1,6 @@
 import { ReportScheduleService } from './report-schedule-service';
 import { getReportSchedulesCollection } from '@/lib/db-tenant';
-import parser from 'cron-parser';
+import cronParser from 'cron-parser';
 
 // Mock dependencies
 jest.mock('@/lib/db-tenant', () => ({
@@ -25,7 +25,7 @@ describe('ReportScheduleService', () => {
 
     const mockCollection = {
         insertOne: jest.fn(),
-        find: jest.fn().mockResolvedValue([]), // SecureCollection.find returns Promise<T[]>
+        find: jest.fn(),
         updateOne: jest.fn()
     };
 
@@ -49,7 +49,7 @@ describe('ReportScheduleService', () => {
             const mockInterval = {
                 next: jest.fn().mockReturnValue({ toDate: () => new Date('2026-02-23T08:00:00Z') })
             };
-            (parser.parseExpression as jest.Mock).mockReturnValue(mockInterval);
+            (cronParser as any).parseExpression.mockReturnValue(mockInterval);
 
             mockCollection.insertOne.mockResolvedValue({ insertedId: 'sched-123' });
 
@@ -57,7 +57,7 @@ describe('ReportScheduleService', () => {
 
             expect(result).toBe('sched-123');
             expect(getReportSchedulesCollection).toHaveBeenCalledWith(mockSession);
-            expect(parser.parseExpression).toHaveBeenCalledWith(data.cronExpression);
+            expect((cronParser as any).parseExpression).toHaveBeenCalledWith(data.cronExpression);
             expect(mockCollection.insertOne).toHaveBeenCalledWith(expect.objectContaining({
                 name: 'Weekly Report',
                 tenantId: 'tenant-abc',
@@ -74,7 +74,7 @@ describe('ReportScheduleService', () => {
                 recipients: ['test@example.com']
             };
 
-            (parser.parseExpression as jest.Mock).mockImplementation(() => {
+            (cronParser as any).parseExpression.mockImplementation(() => {
                 throw new Error('Invalid cron');
             });
 
@@ -86,7 +86,7 @@ describe('ReportScheduleService', () => {
     describe('listSchedules', () => {
         it('should return list of schedules', async () => {
             const mockSchedules = [{ _id: '1', name: 'Sched 1' }];
-            mockCollection.toArray.mockResolvedValue(mockSchedules);
+            mockCollection.find.mockResolvedValue(mockSchedules);
 
             const result = await ReportScheduleService.listSchedules(mockSession);
 

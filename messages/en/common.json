@@ -31,12 +31,10 @@
   },
   "navigation": {
     "sections": {
-      "core": "Core",
-      "inventory": "Technical Inventory",
-      "studio": "Automation Studio",
-      "corporate": "Corporate & Admin",
-      "governance": "Governance & Systems",
-      "workspace": "Knowledge Workspace",
+      "ai_hub": "AI Hub",
+      "operations": "Operations",
+      "organization": "Organization",
+      "personal": "My Space",
       "preference": "Preference"
     },
     "items": {
@@ -334,7 +332,8 @@
       "chat_welcome_title": "Ask a question about the text",
       "chat_welcome_desc": "The assistant will respond using only the provided snippet.",
       "status_loading": "Querying information...",
-      "chat_input_placeholder": "Write your question about the fragment..."
+      "chat_input_placeholder": "Write your question about the fragment...",
+      "back_to_hub": "Back to Hub"
     }
   },
   "loading": "Loading...",

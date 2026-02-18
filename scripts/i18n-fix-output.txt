@@ -1,4 +1,0 @@
-﻿Ô£à Replaced 61 placeholder keys
-Ô£à Added 0 new keys
-­ƒôï Remaining placeholders: 0
-­ƒôè Final es.json: 1279 keys

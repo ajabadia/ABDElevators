@@ -109,11 +109,11 @@ export function useApiList<T>({
             setTotal(resolvedTotal);
 
             onSuccessRef.current?.(transformedItems);
-        } catch (err: any) {
-            if (err.name === 'AbortError') {
+        } catch (err: unknown) {
+            if (err instanceof Error && err.name === 'AbortError') {
                 return; // Ignorar cancelaciones
             }
-            const message = err.message || 'Error desconocido';
+            const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
             toast({
                 title: 'Error de Carga',

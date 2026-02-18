@@ -24,12 +24,10 @@ export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const user = await enforcePermission('knowledge', 'read');
+        const session = await enforcePermission('knowledge', 'read');
         const { searchParams } = new URL(req.url);
         const { limit, skip, search } = AdminQuerySchema.parse(Object.fromEntries(searchParams));
 
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
         const collection = await getTenantCollection<Space>('spaces', session);
 
         const filter: any = {};
@@ -107,10 +105,10 @@ export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const user = await enforcePermission('knowledge', 'manage_spaces');
+        const session = await enforcePermission('knowledge', 'manage_spaces');
 
         // Rate limiting
-        const { success } = await checkRateLimit(user.id, LIMITS.ADMIN);
+        const { success } = await checkRateLimit(session.user.id, LIMITS.ADMIN);
         if (!success) {
             throw new AppError('FORBIDDEN', 429, 'Too many requests. Please slow down.');
         }
@@ -120,12 +118,9 @@ export async function POST(req: NextRequest) {
         // Zod validation BEFORE processing
         const validatedData = SpaceSchema.omit({ _id: true, createdAt: true, updatedAt: true }).parse(body);
 
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-
         const spaceId = await SpaceService.createSpace(
-            user.tenantId,
-            user.id,
+            session.user.tenantId,
+            session.user.id,
             validatedData,
             session
         );

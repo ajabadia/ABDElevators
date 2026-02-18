@@ -99,20 +99,20 @@ export default function DocumentTypesPage() {
         ...(isSuperAdmin ? [
             {
                 header: tTable('scope'),
-                cell: (t: any) => (
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${t.scope === 'GLOBAL' ? 'bg-purple-100 text-purple-700' :
-                        t.scope === 'INDUSTRY' ? 'bg-blue-100 text-blue-700' :
+                cell: (row: any) => (
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${row.scope === 'GLOBAL' ? 'bg-purple-100 text-purple-700' :
+                        row.scope === 'INDUSTRY' ? 'bg-blue-100 text-blue-700' :
                             'bg-slate-100 text-slate-700'
                         }`}>
-                        {tScope(t.scope)}
+                        {tScope(row.scope)}
                     </span>
                 )
             },
             {
                 header: tTable('industries'),
-                cell: (t: any) => {
-                    if (t.scope !== 'INDUSTRY') return '-';
-                    const industries = t.industries || (t.industry ? [t.industry] : []);
+                cell: (row: any) => {
+                    if (row.scope !== 'INDUSTRY') return '-';
+                    const industries = row.industries || (row.industry ? [row.industry] : []);
                     return <span className="text-xs text-slate-500">{industries.join(', ') || t('all')}</span>;
                 }
             }
@@ -120,12 +120,12 @@ export default function DocumentTypesPage() {
         {
             header: tTable('description'),
             accessorKey: "description",
-            cell: (t) => t.description || '-'
+            cell: (row) => row.description || '-'
         },
         // ... (Status & Created columns remain same) ...
         {
             header: tTable('status'),
-            cell: (t) => t.isActive ? (
+            cell: (row) => row.isActive ? (
                 <span className="flex items-center gap-1 text-green-600 text-sm">
                     <CheckCircle2 size={14} /> {tStatus('active')}
                 </span>
@@ -137,25 +137,26 @@ export default function DocumentTypesPage() {
         },
         {
             header: tTable('created'),
-            cell: (t) => (
+            cell: (row: DocumentType) => (
                 <span className="text-slate-500 text-xs">
-                    {new Date(t.createdAt).toLocaleDateString()}
+                    {new Date(row.createdAt).toLocaleDateString()}
                 </span>
             )
         },
         {
             header: tTable('actions'),
             className: "text-right",
-            cell: (t) => (
+            cell: (row: DocumentType) => (
                 <div className="flex justify-end gap-2">
                     {/* Solo permitir editar/borrar si es Tenant (Admin) o si es SuperAdmin (cualquiera) */}
-                    {(isSuperAdmin || t.scope === 'TENANT') && (
+                    {(isSuperAdmin || row.scope === 'TENANT') && (
                         <>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                                onClick={() => modal.openEdit(t)}
+                                onClick={() => modal.openEdit(row)}
+                                aria-label={`${tForm('editTitle')}: ${row.name}`}
                             >
                                 <Pencil className="h-4 w-4" />
                             </Button>
@@ -163,7 +164,8 @@ export default function DocumentTypesPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => deleteType({ id: t._id })}
+                                onClick={() => deleteType({ id: row._id })}
+                                aria-label={`${t('deleteConfirm')}: ${row.name}`}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -173,9 +175,6 @@ export default function DocumentTypesPage() {
             )
         }
     ];
-
-    // Constante de industrias (Hardcoded or fetch from schema enum validation if possible, hardcoded for now matches Schema)
-    const AVAILABLE_INDUSTRIES = ['ELEVATORS', 'LEGAL', 'MEDICAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC'];
 
     return (
         <div className="space-y-6">
@@ -229,7 +228,7 @@ export default function DocumentTypesPage() {
                                             defaultValue={modal.data?.industries || (modal.data?.industry ? [modal.data.industry] : [])}
                                             className="flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         >
-                                            {AVAILABLE_INDUSTRIES.map(ind => (
+                                            {['ELEVATORS', 'LEGAL', 'MEDICAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC'].map(ind => (
                                                 <option key={ind} value={ind}>{ind}</option>
                                             ))}
                                         </select>

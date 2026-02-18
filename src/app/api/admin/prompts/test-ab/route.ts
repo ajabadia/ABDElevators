@@ -80,8 +80,8 @@ export const POST = auth(async function POST(req) {
     } catch (error) {
         console.error('[AB TEST ERROR]', error);
         if (error instanceof z.ZodError) {
-            return new NextResponse(JSON.stringify({ error: 'Validation Failed', details: error.errors }), { status: 400 });
+            return NextResponse.json({ error: 'Validation Failed', details: error.issues }, { status: 400 });
         }
-        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 });

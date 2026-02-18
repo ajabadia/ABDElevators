@@ -28,8 +28,8 @@ interface NotificationConfig {
 }
 
 export function NotificationSettingsForm() {
-    const t = useTranslations('admin.notifications.events');
-    const tForm = useTranslations('admin.notifications.settings.form');
+    const t = useTranslations('admin.notifications.settings');
+    const tEvents = useTranslations('admin.notifications.events');
     const { toast } = useToast();
     const [config, setConfig] = useState<NotificationConfig | null>(null);
     const [loading, setLoading] = useState(true);
@@ -37,11 +37,11 @@ export function NotificationSettingsForm() {
 
     const getEventLabel = (type: string) => {
         const labels: Record<string, any> = {
-            SYSTEM: { label: t('SYSTEM'), icon: FileText },
-            ANALYSIS_COMPLETE: { label: t('ANALYSIS_COMPLETE'), icon: CheckCircle },
-            RISK_ALERT: { label: t('RISK_ALERT'), icon: ShieldAlert },
-            BILLING_EVENT: { label: t('BILLING_EVENT'), icon: CreditCard },
-            SECURITY_ALERT: { label: t('SECURITY_ALERT'), icon: Bell }
+            SYSTEM: { label: tEvents('SYSTEM'), icon: FileText },
+            ANALYSIS_COMPLETE: { label: tEvents('ANALYSIS_COMPLETE'), icon: CheckCircle },
+            RISK_ALERT: { label: tEvents('RISK_ALERT'), icon: ShieldAlert },
+            BILLING_EVENT: { label: tEvents('BILLING_EVENT'), icon: CreditCard },
+            SECURITY_ALERT: { label: tEvents('SECURITY_ALERT'), icon: Bell }
         };
         return labels[type] || { label: type, icon: FileText };
     };
@@ -126,20 +126,20 @@ export function NotificationSettingsForm() {
 
             if (res.ok) {
                 toast({
-                    title: tForm('saveSuccess'),
-                    description: tForm('saveSuccessDesc'),
+                    title: t('toast.success'),
+                    description: t('toast.successDesc'),
                 });
             } else {
                 toast({
-                    title: tForm('saveError'),
-                    description: tForm('saveErrorDesc'),
+                    title: t('toast.error'),
+                    description: t('toast.errorDesc'),
                     variant: "destructive"
                 });
             }
         } catch (e) {
             toast({
-                title: tForm('connectionError'),
-                description: tForm('connectionErrorDesc'),
+                title: t('toast.error'),
+                description: t('toast.errorDesc'),
                 variant: "destructive"
             });
         } finally {
@@ -147,38 +147,36 @@ export function NotificationSettingsForm() {
         }
     };
 
-    if (loading) return <div>{tForm('loading')}</div>;
-    if (!config) return <div>{tForm('loadError')}</div>;
+    if (loading) return <div className="p-8 text-center animate-pulse text-slate-400">Cargando configuración...</div>;
+    if (!config) return <div className="p-8 text-center text-red-500">Error al cargar la configuración.</div>;
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold">{tForm('title')}</h2>
-                    <p className="text-slate-500">{tForm('subtitle')}</p>
+                    <h2 className="text-2xl font-bold">{t('title')}</h2>
+                    <p className="text-slate-500">{t('subtitle')}</p>
                 </div>
                 <Button onClick={saveConfig} disabled={saving} className="gap-2">
                     <Save size={18} />
-                    {saving ? tForm('saving') : tForm('saveBtn')}
+                    {saving ? 'Guardando...' : t('save')}
                 </Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>{tForm('generalTitle')}</CardTitle>
-                    <CardDescription>{tForm('generalDesc')}</CardDescription>
+                    <CardTitle>{t('events')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-2 max-w-md">
-                        <Label htmlFor="fallback">{tForm('fallbackEmail')}</Label>
+                        <Label htmlFor="fallback">{t('fallback')}</Label>
                         <Input
                             id="fallback"
                             type="email"
                             value={config.fallbackEmail || ''}
                             onChange={(e) => setConfig({ ...config, fallbackEmail: e.target.value })}
-                            placeholder={tForm('fallbackPlaceholder')}
+                            placeholder="email@ejemplo.com"
                         />
-                        <p className="text-[10px] text-slate-400">{tForm('fallbackHelp')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -205,14 +203,13 @@ export function NotificationSettingsForm() {
                             <Card className="lg:col-span-1">
                                 <CardHeader>
                                     <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                        {tForm('channelsTitle')}
+                                        {t('channels')}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                                         <div className="space-y-0.5">
-                                            <Label>{tForm('eventActive')}</Label>
-                                            <p className="text-[10px] text-slate-500">{tForm('eventActiveDesc')}</p>
+                                            <Label>{t('enabled')}</Label>
                                         </div>
                                         <Switch
                                             checked={config.events[type]?.enabled}
@@ -221,12 +218,10 @@ export function NotificationSettingsForm() {
                                     </div>
 
                                     <div className="space-y-4 pt-2">
-                                        <Label className="text-xs uppercase text-slate-400">{tForm('enabledChannels')}</Label>
-
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Mail size={16} className="text-slate-400" />
-                                                <span className="text-sm">{tForm('emailChannel')}</span>
+                                                <span className="text-sm">Email</span>
                                             </div>
                                             <Switch
                                                 checked={config.events[type]?.channels.includes('EMAIL')}
@@ -238,7 +233,7 @@ export function NotificationSettingsForm() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Bell size={16} className="text-slate-400" />
-                                                <span className="text-sm">{tForm('inAppChannel')}</span>
+                                                <span className="text-sm">App</span>
                                             </div>
                                             <Switch
                                                 checked={config.events[type]?.channels.includes('IN_APP')}
@@ -254,12 +249,12 @@ export function NotificationSettingsForm() {
                             <Card className="lg:col-span-2">
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <div>
-                                        <CardTitle className="text-sm font-bold">{tForm('recipientsTitle')}</CardTitle>
-                                        <CardDescription className="text-xs">{tForm('recipientsDesc')}</CardDescription>
+                                        <CardTitle className="text-sm font-bold">{t('events')}</CardTitle>
+                                        <CardDescription className="text-xs">{t('subtitle')}</CardDescription>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Input
-                                            placeholder={tForm('newEmailPlaceholder')}
+                                            placeholder="nuevo@email.com"
                                             className="h-8 text-xs w-48"
                                             id={`new-email-${type}`}
                                             onKeyDown={(e) => {
@@ -288,15 +283,15 @@ export function NotificationSettingsForm() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>{tForm('emailCol')}</TableHead>
-                                                <TableHead className="text-right">{tForm('actionCol')}</TableHead>
+                                                <TableHead>{t('recipients')}</TableHead>
+                                                <TableHead className="text-right"></TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {config.events[type]?.recipients.length === 0 ? (
                                                 <TableRow>
                                                     <TableCell colSpan={2} className="text-center py-6 text-slate-400 text-xs italic">
-                                                        {tForm('noRecipients')}
+                                                        No hay destinatarios específicos. Se usará el email de fallback.
                                                     </TableCell>
                                                 </TableRow>
                                             ) : (
@@ -324,14 +319,14 @@ export function NotificationSettingsForm() {
                             {/* Notas Personalizadas */}
                             <Card className="lg:col-span-3 border-dashed bg-slate-50/50">
                                 <CardHeader>
-                                    <CardTitle className="text-sm font-bold">{tForm('customNoteTitle')}</CardTitle>
+                                    <CardTitle className="text-sm font-bold">{t('customNote')}</CardTitle>
                                     <CardDescription className="text-xs">
-                                        {tForm('customNoteDesc')}
+                                        {t('customNoteDesc')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <Input
-                                        placeholder={tForm('customNotePlaceholder')}
+                                        placeholder="Ej: Recuerda revisar los anexos..."
                                         value={config.events[type]?.customNote || ''}
                                         onChange={(e) => {
                                             setConfig({

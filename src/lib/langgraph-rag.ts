@@ -6,6 +6,7 @@ import { PromptService } from "./prompt-service";
 import { PROMPTS } from './prompts';
 import { logEvento } from "./logger";
 import { RagEvaluationService } from "@/services/rag-evaluation-service";
+import { FactCheckerService } from "./rag/fact-checker-service";
 
 /**
  * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)
@@ -176,29 +177,31 @@ export class AgenticRAGService {
     }
 
     /**
-     * Nodo: Grader de Alucinaciones
+     * Nodo: Grader de Alucinaciones Avanzado (Phase 170)
      */
     private static async gradeGenerationNode(state: typeof GraphState.State) {
         const { documents, generation, tenantId, correlationId } = state;
         if (documents.length === 0) return { is_grounded: true };
 
-        const context = documents.map(d => d.text).join("\n\n---\n\n");
-        const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
-            'RAG_HALLUCINATION_GRADER',
-            { documents: context, generation },
-            tenantId
-        );
-
         try {
-            const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
-            const grade = JSON.parse(response);
-            const isGrounded = grade.score === 'yes';
+            const report = await FactCheckerService.verify(
+                generation,
+                documents,
+                tenantId,
+                correlationId
+            );
+
             return {
-                is_grounded: isGrounded,
-                trace: [isGrounded ? "VERIFICATION: Response verified against documents (No hallucinations)." : "VERIFICATION: Hallucination detected. Proceeding to regenerate."]
+                is_grounded: report.isReliable,
+                trace: [
+                    report.isReliable
+                        ? `VERIFICATION: Response verified with score ${report.hallucinationScore.toFixed(2)}. Claims verified: ${report.details.length}.`
+                        : `VERIFICATION: Hallucination detected (Score: ${report.hallucinationScore.toFixed(2)}). Details: ${report.details.filter((d: any) => !d.verified).map((d: any) => d.claim).join("; ")}`
+                ]
             };
         } catch (e) {
-            return { is_grounded: true, trace: ["VERIFICATION: Error in hallucination grader. Assuming grounded (fallback)."] };
+            console.error("[AgenticRAGService] Error in deep verification node:", e);
+            return { is_grounded: true, trace: ["VERIFICATION: Error in deep fact checker. Assuming grounded (fallback)."] };
         }
     }
 

@@ -20,10 +20,7 @@ export async function GET(
 ) {
     const correlationId = generateUUID();
     try {
-        await enforcePermission('knowledge', 'read');
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-
+        const session = await enforcePermission('knowledge', 'read');
         const { id } = await params;
         const collection = await getTenantCollection<Space>('spaces', session);
 
@@ -42,10 +39,7 @@ export async function PATCH(
 ) {
     const correlationId = generateUUID();
     try {
-        await enforcePermission('knowledge', 'manage_spaces');
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-
+        const session = await enforcePermission('knowledge', 'manage_spaces');
         const { id } = await params;
         const body = await req.json();
 
@@ -75,6 +69,7 @@ export async function PATCH(
             action: 'UPDATE_SPACE',
             message: `Espacio ${id} actualizado`,
             correlationId,
+            tenantId: session.user.tenantId,
             details: { spaceId: id, updates: Object.keys(validatedData) }
         });
 
@@ -90,10 +85,7 @@ export async function DELETE(
 ) {
     const correlationId = generateUUID();
     try {
-        await enforcePermission('knowledge', 'manage_spaces');
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-
+        const session = await enforcePermission('knowledge', 'manage_spaces');
         const { id } = await params;
         const collection = await getTenantCollection<Space>('spaces', session);
 
@@ -113,6 +105,7 @@ export async function DELETE(
             action: 'DELETE_SPACE',
             message: `Espacio ${id} marcado como eliminado`,
             correlationId,
+            tenantId: session.user.tenantId,
             details: { spaceId: id }
         });
 

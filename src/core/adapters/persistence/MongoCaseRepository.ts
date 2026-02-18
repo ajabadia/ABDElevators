@@ -5,14 +5,14 @@ import { ObjectId } from 'mongodb';
 
 export class MongoCaseRepository implements ICaseRepository {
     async findById(id: string, tenantId: string): Promise<GenericCase | null> {
-        const collection = await getTenantCollection<any>('cases', { user: { tenantId } });
+        const collection = await getTenantCollection<any>('cases', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         const doc = await collection.findOne({ _id: new ObjectId(id) });
         if (!doc) return null;
         return GenericCaseSchema.parse(doc);
     }
 
     async updateStatus(id: string, status: string, historyEntry: any, tenantId: string): Promise<void> {
-        const collection = await getTenantCollection<any>('cases', { user: { tenantId } });
+        const collection = await getTenantCollection<any>('cases', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         await collection.updateOne(
             { _id: new ObjectId(id) },
             {
@@ -26,7 +26,7 @@ export class MongoCaseRepository implements ICaseRepository {
     }
 
     async update(id: string, updates: Partial<GenericCase>, tenantId: string): Promise<void> {
-        const collection = await getTenantCollection<any>('cases', { user: { tenantId } });
+        const collection = await getTenantCollection<any>('cases', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         await collection.updateOne(
             { _id: new ObjectId(id) },
             {

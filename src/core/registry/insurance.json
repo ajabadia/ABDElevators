@@ -1,0 +1,66 @@
+{
+    "id": "insurance-ontology-synthetic",
+    "name": "Insurance Claims (Synthetic)",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true,
+        "description": "Plantilla sintética para pruebas de vertical de seguros"
+    },
+    "entities": [
+        {
+            "name": "siniestro",
+            "plural": "siniestros",
+            "slug": "siniestros",
+            "icon": "ShieldAlert",
+            "fields": [
+                {
+                    "key": "id_siniestro",
+                    "label": "ID Siniestro",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 1,
+                        "width": "w-32"
+                    }
+                },
+                {
+                    "key": "id_poliza",
+                    "label": "ID Póliza",
+                    "type": "string",
+                    "required": true,
+                    "ui": {
+                        "order": 2
+                    }
+                },
+                {
+                    "key": "tipo_siniestro",
+                    "label": "Tipo",
+                    "type": "select",
+                    "options": [
+                        "ACCIDENTE",
+                        "ROBO",
+                        "DAÑO_AGUA",
+                        "INCENDIO"
+                    ],
+                    "ui": {
+                        "order": 3
+                    }
+                },
+                {
+                    "key": "valoracion_dano",
+                    "label": "Valoración",
+                    "type": "number",
+                    "ui": {
+                        "order": 4
+                    }
+                }
+            ],
+            "api": {
+                "list": "/api/insurance/siniestros",
+                "detail": "/api/insurance/siniestros/:id",
+                "analyze": "/api/insurance/analyze"
+            }
+        }
+    ]
+}

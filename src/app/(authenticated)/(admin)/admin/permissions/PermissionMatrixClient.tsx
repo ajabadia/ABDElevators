@@ -39,7 +39,7 @@ export function PermissionMatrixClient() {
                 setPolicies(data.policies);
             } else {
                 toast({
-                    title: t('table.loading_error_title') || "Error",
+                    title: t('table.loading_error_title'),
                     description: t('table.loading_error'),
                     variant: "destructive"
                 });
@@ -47,7 +47,7 @@ export function PermissionMatrixClient() {
         } catch (error) {
             console.error('Fetch error:', error);
             toast({
-                title: t('table.network_error_title') || "Error",
+                title: t('table.network_error_title'),
                 description: t('table.network_error'),
                 variant: "destructive"
             });
@@ -192,7 +192,7 @@ export function PermissionMatrixClient() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary" aria-label="Policy Details">
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary" aria-label={t('table.details_aria')}>
                                                 <Info className="h-4.5 w-4.5" aria-hidden="true" />
                                             </Button>
                                         </TableCell>

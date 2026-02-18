@@ -28,14 +28,13 @@ export async function GET(request: Request) {
             query.type = type;
         }
 
-        const [data, total] = await Promise.all([
-            reports.find(query, {
-                sort: { 'metadata.generatedAt': -1 },
-                limit,
-                skip: offset
-            }),
-            reports.countDocuments(query)
-        ]);
+        const data = await reports.find(query, {
+            sort: { 'metadata.generatedAt': -1 },
+            limit,
+            skip: offset
+        });
+
+        const total = await reports.countDocuments(query);
 
         await logEvento({
             level: 'INFO',
@@ -70,7 +69,7 @@ export async function GET(request: Request) {
         if (error instanceof AppError) {
             return NextResponse.json(
                 { code: error.code, message: error.message },
-                { status: error.statusCode }
+                { status: error.status }
             );
         }
 

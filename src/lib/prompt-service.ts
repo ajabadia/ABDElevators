@@ -1,8 +1,10 @@
 import { getTenantCollection } from './db-tenant';
+import { unstable_cache } from 'next/cache';
 import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
+import { DEFAULT_MODEL } from './constants/ai-models';
 
 /**
  * Servicio de Gestión de Prompts Dinámicos (Fase 7.6)
@@ -10,7 +12,26 @@ import { ObjectId } from 'mongodb';
  */
 export class PromptService {
     /**
+     * Sanitiza inputs de variables para prevenir prompt injection (Phase 170.2)
+     */
+    private static sanitizePromptInput(input: any): string {
+        if (typeof input !== 'string') return String(input);
+
+        return input
+            .replace(/{{/g, '{')
+            .replace(/}}/g, '}')
+            .replace(/---/g, '-')
+            .replace(/###/g, '#')
+            .replace(/"""/g, '"')
+            .trim();
+    }
+
+    /**
      * Obtiene un prompt activo por su key e industria (con fallback a GENERIC)
+     */
+    /**
+     * Obtiene un prompt activo por su key e industria (con fallback a GENERIC)
+     * Optmizado con unstable_cache (Phase 171.1)
      */
     static async getPrompt(
         key: string,
@@ -19,31 +40,63 @@ export class PromptService {
         industry: string = 'GENERIC',
         session?: any
     ): Promise<Prompt> {
+        try {
+            const cachedFetcher = unstable_cache(
+                async (k, t, e, i) => this.fetchPromptInternal(k, t, e, i),
+                [`prompt-${key}-${tenantId}`],
+                { revalidate: 3600, tags: [`prompts-${tenantId}`, `prompt-${key}`] }
+            );
+
+            return await cachedFetcher(key, tenantId, environment, industry);
+        } catch (error: any) {
+            // Aislamiento de error para entornos fuera de Next.js (Scripts/Fase 175)
+            if (error.message?.includes('incrementalCache') || error.message?.includes('unstable_cache')) {
+                return this.fetchPromptInternal(key, tenantId, environment, industry);
+            }
+            throw error;
+        }
+    }
+
+    private static async fetchPromptInternal(
+        key: string,
+        tenantId: string,
+        environment: string,
+        industry: string,
+        session?: any
+    ): Promise<Prompt> {
         const collection = await getTenantCollection('prompts', session);
 
-        // 1. Intentar específico por industria
-        let prompt = await collection.findOne({
+        const query = {
             key,
             tenantId,
             industry,
             active: true,
             environment
-        });
+        };
+        console.log(`🔍 [PromptService] fetchPromptInternal Query:`, JSON.stringify(query, null, 2));
+
+        // 1. Intentar específico por industria
+        let prompt = await collection.findOne(query);
+
+        console.log(`🔍 [PromptService] First attempt result: ${prompt ? 'FOUND' : 'NOT FOUND'}`);
 
         // 2. Fallback a GENERIC si no es el pedido y no se encontró
         if (!prompt && industry !== 'GENERIC') {
-            prompt = await collection.findOne({
+            const fallbackQuery = {
                 key,
                 tenantId,
                 industry: 'GENERIC',
                 active: true,
                 environment
-            });
+            };
+            console.log(`🔍 [PromptService] Fallback Query:`, JSON.stringify(fallbackQuery, null, 2));
+            prompt = await collection.findOne(fallbackQuery);
+            console.log(`🔍 [PromptService] Fallback result: ${prompt ? 'FOUND' : 'NOT FOUND'}`);
         }
 
         if (!prompt) {
-            console.error(`[DEBUG PROMPT] NOT FOUND: { key: "${key}", tenantId: "${tenantId}", industry: "${industry}", active: true }`);
-            throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado para este tenant (${tenantId}) e industria (${industry})`);
+            console.error(`❌ [PromptService] Prompt not found loop. Key: ${key}, tenantId: ${tenantId}`);
+            throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado`);
         }
 
         return PromptSchema.parse(prompt);
@@ -79,8 +132,9 @@ export class PromptService {
         const allVariables = { ...variables, tenantId };
         let rendered = prompt.template;
         for (const [varName, varValue] of Object.entries(allVariables)) {
+            const sanitizedValue = (PromptService as any).sanitizePromptInput(varValue);
             const placeholder = `{{${varName}}}`;
-            rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), String(varValue));
+            rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), sanitizedValue);
         }
 
         // Auditar uso
@@ -97,7 +151,7 @@ export class PromptService {
             console.error("Error auditing prompt usage:", err);
         }
 
-        const model = (prompt as any).model || 'gemini-2.5-flash';
+        const model = (prompt as any).model || DEFAULT_MODEL;
         return { text: rendered, model };
     }
 
@@ -162,11 +216,12 @@ export class PromptService {
         };
         let rendered = prompt.template;
         for (const [varName, varValue] of Object.entries(allVariables)) {
+            const sanitizedValue = (PromptService as any).sanitizePromptInput(varValue);
             const placeholder = `{{${varName}}}`;
-            rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), String(varValue));
+            rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), sanitizedValue);
         }
 
-        return { text: rendered, model: (prompt as any).model || 'gemini-1.5-flash' };
+        return { text: rendered, model: (prompt as any).model || DEFAULT_MODEL };
     }
 
     /**

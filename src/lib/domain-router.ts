@@ -3,6 +3,7 @@ import { callGeminiMini } from './llm';
 import { PromptService } from './prompt-service';
 import { logEvento } from './logger';
 import { AppError } from './errors';
+import { DEFAULT_MODEL } from './constants/ai-models';
 
 /**
  * DomainRouter: Active Query Classification (Phase 101.1)
@@ -34,7 +35,7 @@ export class DomainRouter {
             const response = await callGeminiMini(prompt, tenantId, {
                 correlationId,
                 temperature: 0, // Deterministic
-                model: 'gemini-1.5-flash'
+                model: DEFAULT_MODEL
             });
 
             // 3. Clean and Validate Response
@@ -67,7 +68,7 @@ export class DomainRouter {
                     query,
                     domain: validation.data,
                     duration_ms: duration,
-                    model: 'gemini-1.5-flash'
+                    model: DEFAULT_MODEL
                 }
             });
 

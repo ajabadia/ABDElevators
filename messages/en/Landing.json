@@ -25,5 +25,18 @@
       "Generation History",
       "Digital Signature"
     ]
+  },
+  "AI_VISION": {
+    "badge": "AI GOVERNANCE",
+    "title": "Total Industrial Control",
+    "description": "Centralized model management and high-performance monorepo architecture for critical environments.",
+    "features": [
+      "Single Model Registry",
+      "RAG Playground",
+      "Prompt Governance",
+      "HITL Feedback Loop",
+      "Industrial Grade Stability",
+      "Multi-product Suite Architecture"
+    ]
   }
 }

@@ -5,6 +5,17 @@ import { IndustryTypeSchema, AppEnvironmentEnum } from './core';
  * 📚 RAG & Knowledge Management Schemas
  */
 
+export const RealEstateMetadataSchema = z.object({
+    buildingId: z.string().optional(),
+    block: z.string().optional(),
+    floor: z.string().optional(),
+    unit: z.string().optional(),
+    cadastralReference: z.string().optional(),
+    propertyType: z.enum(['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'LAND', 'OTHER']).optional(),
+}).passthrough();
+
+export type RealEstateMetadata = z.infer<typeof RealEstateMetadataSchema>;
+
 export const DocumentChunkSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string().optional(), // 'global' if shared
@@ -37,6 +48,9 @@ export const DocumentChunkSchema = z.object({
     deletedAt: z.date().optional(),
     status: z.enum(['vigente', 'obsoleto', 'borrador']).optional(),
     environment: AppEnvironmentEnum.default('PRODUCTION'),
+
+    // Metadata Específica por Vertical (Phase 85)
+    realEstateMetadata: RealEstateMetadataSchema.optional(),
 });
 
 export const TaxonomyValueSchema = z.object({
@@ -203,6 +217,15 @@ export const KnowledgeAssetSchema = z.object({
     spaceId: z.string().optional(), // Reference to the NEW Space entity (Phase 125.2)
     correlationId: z.string().optional(), // Added for tracing
     environment: AppEnvironmentEnum.optional(), // Added for tracing environment (Phase 131)
+
+    // Phase 81: Scheduled Review Dates & Lifecycle
+    nextReviewDate: z.date().optional().nullable(),
+    lastReviewedAt: z.date().optional().nullable(),
+    reviewStatus: z.enum(['pending', 'reviewed', 'expired', 'snoozed']).default('pending'),
+    reviewNotes: z.string().optional(),
+
+    // Metadata Específica por Vertical (Phase 85)
+    realEstateMetadata: RealEstateMetadataSchema.optional(),
 });
 export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
 

@@ -1,8 +1,0 @@
-
---- FAILED ASSET DETAILS ---
-Filename: Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf
-IngestionStatus: FAILED
-Error: Fallo al extraer texto del PDF
-Cloudinary URL: https://res.cloudinary.com/ds81rqpk4/raw/upload/v1770477238/abd-rag-platform/tenants/abd_global/documentos-rag/1770477237436_Real%20Decreto%20203-2016%20-%20BOE-A-2016-4953-consolidado
-CreatedAt: 2026-02-07T15:13:58.783Z
-CorrelationId: undefined

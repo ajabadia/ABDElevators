@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { CreateUserSchema, UserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, DatabaseError } from '@/lib/errors';
 import crypto from 'crypto';
+import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
@@ -168,7 +169,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             activationLink,
         });
     } catch (error: any) {
-        if (error.name === 'ZodError') {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
                 new ValidationError('Invalid user data', error.issues).toJSON(),
                 { status: 400 }

@@ -1,9 +1,11 @@
 
 import { logEvento } from '@/lib/logger';
-import { getTenantCollection } from '@/lib/db-tenant';
 import { GovernanceEngine } from './GovernanceEngine';
-import { AIWorkflow, WorkflowAction, WorkflowTrigger } from '@/types/workflow';
+import { AIWorkflow, WorkflowAction, WorkflowActionType, WorkflowTrigger, WorkflowTriggerType } from '@/types/workflow';
 import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
+import { MongoAIWorkflowRepository } from '../adapters/persistence/MongoAIWorkflowRepository';
+import { MongoCaseWorkflowRepository } from '../adapters/persistence/MongoCaseWorkflowRepository';
+import { WorkflowTask, WorkflowTaskStatus } from '@/lib/schemas/workflow-task';
 
 /**
  * AIWorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
@@ -17,8 +19,13 @@ import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
  */
 export class AIWorkflowEngine {
     private static instance: AIWorkflowEngine;
+    private workflowRepository: MongoAIWorkflowRepository;
+    private caseWorkflowRepository: MongoCaseWorkflowRepository;
 
-    private constructor() { }
+    private constructor() {
+        this.workflowRepository = new MongoAIWorkflowRepository();
+        this.caseWorkflowRepository = new MongoCaseWorkflowRepository();
+    }
 
     public static getInstance(): AIWorkflowEngine {
         if (!AIWorkflowEngine.instance) {
@@ -31,15 +38,13 @@ export class AIWorkflowEngine {
      * Evalúa y ejecuta flujos de trabajo basados en un evento.
      */
     public async processEvent(
-        eventType: WorkflowTrigger['type'],
+        eventType: WorkflowTriggerType,
         data: any,
         tenantId: string,
         correlationId: string
     ) {
         try {
-            const sessionObj = { user: { tenantId } };
-            const collection = await getTenantCollection('ai_workflows', sessionObj);
-            const workflows = await collection.find({ active: true, 'trigger.type': eventType }) as unknown as AIWorkflow[];
+            const workflows = await this.workflowRepository.findActiveByTrigger(eventType, tenantId);
 
             for (const wf of workflows) {
                 const startTime = Date.now();
@@ -107,58 +112,50 @@ export class AIWorkflowEngine {
 
             try {
                 switch (action.type) {
-                    case 'branch':
+                    case (WorkflowActionType as any).branch:
                         // TODO: Implement proper branching execution based on criteria
                         break;
 
-                    case 'human_task':
-                        const taskCollection = await getTenantCollection('workflow_tasks', { user: { tenantId } });
-                        const taskPayload = {
+                    case (WorkflowActionType as any).human_task:
+                        const taskPayload: WorkflowTask = {
                             tenantId,
                             caseId: data._id || data.id || data.caseId || 'unlinked-case',
-                            type: action.params.taskType || 'DOCUMENT_REVIEW',
+                            type: (action.params.taskType as any) || 'DOCUMENT_REVIEW',
                             title: action.params.title || 'Validación requerida por Workflow',
                             description: action.params.description || `Se requiere revisión humana para el flujo ${workflowId}.`,
-                            assignedRole: action.params.assignedRole || 'ADMIN',
-                            status: 'PENDING',
-                            priority: action.params.priority || 'MEDIUM',
+                            assignedRole: (action.params.assignedRole as any) || 'ADMIN',
+                            status: 'PENDING' as WorkflowTaskStatus,
+                            priority: (action.params.priority as any) || 'MEDIUM',
                             metadata: {
                                 correlationId,
                                 workflowId,
-                                triggerData: data,
-                                nodeLabel: action.params.label,
-                                checklistConfigId: action.params.checklistConfigId
+                                nodeLabel: (action.params as any).label,
+                                checklistConfigId: (action.params as any).checklistConfigId
                             },
                             createdAt: new Date(),
                             updatedAt: new Date()
                         };
-                        await taskCollection.insertOne(taskPayload);
-                        await logEvento({
-                            level: 'INFO',
-                            source: 'AI_WORKFLOW_ENGINE',
-                            action: 'HUMAN_TASK_CREATED',
-                            message: `Manual task generated for case ${taskPayload.caseId}`,
-                            correlationId,
-                            details: { workflowId, taskId: taskPayload.caseId }
-                        });
+
+                        await this.caseWorkflowRepository.createTask(taskPayload);
+                        // Logging handled by repository
                         break;
 
-                    case 'delay':
+                    case WorkflowActionType.delay:
                         const duration = Number(action.params.duration) || 1000;
                         const unit = action.params.unit || 'ms';
                         const ms = unit === 's' ? duration * 1000 : unit === 'm' ? duration * 60000 : duration;
                         await new Promise(resolve => setTimeout(resolve, ms));
                         break;
 
-                    case 'iterator':
+                    case WorkflowActionType.iterator:
                         // Mock iteration
                         break;
 
-                    case 'notify':
+                    case WorkflowActionType.notify:
                         // Notification logic
                         break;
 
-                    case 'log':
+                    case WorkflowActionType.log:
                         await logEvento({
                             level: 'WARN',
                             source: 'AI_AUTOMATION',
@@ -169,7 +166,7 @@ export class AIWorkflowEngine {
                         });
                         break;
 
-                    case 'update_entity':
+                    case WorkflowActionType.update_entity:
                         // Governance Check
                         const gov = GovernanceEngine.getInstance();
                         const { canExecute } = await gov.evaluateAction(
@@ -188,8 +185,7 @@ export class AIWorkflowEngine {
                         const { entitySlug, idField, updates } = action.params;
                         const id = data[idField];
                         if (id && entitySlug) {
-                            const coll = await getTenantCollection(entitySlug, { user: { tenantId } });
-                            await coll.updateOne({ _id: id } as any, { $set: updates });
+                            await this.caseWorkflowRepository.updateEntity(entitySlug, id, updates, tenantId);
                         }
                         break;
                 }

@@ -6,6 +6,7 @@ import { logEvento } from '@/lib/logger';
 import { AdminUpdateUserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
+import { z } from 'zod';
 import { UserRole } from '@/types/roles';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
@@ -78,7 +79,7 @@ export const PATCH = withPerformanceSLA(async function PATCH(
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        if (error.name === 'ZodError') {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
                 new ValidationError('Invalid update data', error.issues).toJSON(),
                 { status: 400 }

@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 4.7.2 - RESILIENCE & HARDENING)
+# ABD Multi-Industry RAG Platform (Vision 5.0.0 - SUITE ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v4.7.2** introduce el **Hardening de Resiliencia Agéntica** (Phase 165), con mecanismos de auto-recuperación de JSON, validación estricta de definiciones de flujos y orquestación Human-in-the-loop avanzada ante fallos de IA. Consolida también el **Motor de Reportes Industriales** (Phase 160.1).
+Esta versión **v5.0.0** introduce la **Arquitectura Monorepo Namespace-based** y la **Estabilización de Grado Industrial (Era 5)** para soportar despliegues multi-producto de alta escala.
 
 ## 🚀 Inicio Rápido
 
@@ -117,12 +117,17 @@ src/
 - **🛡️ Enterprise Governance**: Granular permissions (Guardian V3), PII masking, and full audit trail for SOC2 compliance.
 - **⚡ Industrial Ingestion**: High-performance pipeline with MD5 deduplication, asynchronous processing (BullMQ), and self-healing.
 - **📊 Advanced Analytics**: ROI tracking, RAG evaluation (LLM Judge), and real-time usage metrics via Admin Dashboard.
+  - ✅ **Centralized Model Governance (Phase 113)**: Single source of truth for all AI Models in the platform. Support for Gemini 2.5 Flash/Pro, Gemini 3.0, and dynamic model mapping.
+  - ✅ **Revamped AI Playground**: Advanced experimentation laboratory with real-time parameter tuning (temperature, topK) and model switching.
   - ✅ **Industrial Price Simulator (Phase 83)**: Accurate proration calculation for plan upgrades/downgrades via Stripe Integration.
   - ✅ **Multi-Vertical Intelligence**: Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis (Vision 2026).
   - ✅ **Infinite Memory & Streaming**: Ingesta en streaming y de-duplicación inteligente para gestionar bibliotecas técnicas ilimitadas.
   - ✅ **Vercel Serverless Stability Path**: Polyfill de DOMMatrix y workers agnósticos al entorno para evitar crashes en despliegues cloud.
-  - ✅ **Task Collaboration Hub**: Centro de gestión de tareas y validación humana integrada en el flujo de trabajo con trazabilidad total.
-  - ✅ **Automation Studio (Visual Workflow Editor)**: Editor canvas infinito para diseñar flujos agénticos complejos con nodos de decisión, loops y esperas.
+  - ✅ **Gobernanza de Tareas & HITL**: Centro de colaboración para validación humana de resultados de IA con trazabilidad completa.
+- **Inteligencia Vertical (Phase 98)**: Motores especializados para **Legal** (análisis de contratos), **Banking** (pKYC) e **Insurance** (triaje de siniestros) integrados nativamente.
+- **Seguridad Multi-tenant**: Aislamiento estricto de datos por cliente y espacio de conocimiento mediante `SecureCollection`.
+- **Packs de Industria Vertical**: Modelos de datos, prompts y flujos de trabajo pre-configurados para Legal, Banca y Seguros, permitiendo un despliegue instantáneo.
+- **Automation Studio (Visual Workflow Editor)**: Editor canvas infinito para diseñar flujos agénticos complejos con nodos de decisión, loops y esperas.
   - ✅ **Turing-complete Workflow Logic**: Motor de estados avanzado con soporte para bifurcaciones (Switch), retardos (Wait) e iteraciones (Loop).
   - ✅ **Specialized Engine Architecture (Phase 129)**: Separación de `AIWorkflowEngine` y `CaseWorkflowEngine` para máxima escalabilidad y mantenimiento atómico.
   - ✅ **Full Admin Localization (i18n)**: Área privada 100% traducida (ES/EN) con editor dinámico, **lazy loading con filtros de namespace** y patrón TODOS optimizado.
@@ -168,6 +173,13 @@ src/
   - ✅ **Graph RAG Explorer (Phase 136/150/155)**: Interfaz visual interactiva para navegar y **curar profesionalmente** el Grafo de Conocimiento (Neo4j), con soporte para fusión de nodos (Merging) y borrado masivo.
 - ✅ **Enterprise i18n Governance (Phase 155)**: Localización completa del área administrativa con soporte dinámico para ES/EN y traducción asistida por IA.
 - ✅ **Industrial Reporting Engine (Phase 160)**: Motor de generación de PDFs basado en templates declarativos (Inspección, Auditoría, Calidad RAG) con persistencia y firma digital.
+- ✅ **SSE Heartbeat & Connection Recovery (Phase 84)**: Sistema robusto de mantenimiento de conexiones Server-Sent Events con reintentos exponenciales y recuperación automática para streams RAG de larga duración.
+- ✅ **HITL Learning Loop (Phase 82)**: Captura estructurada de feedback humano (categoría de error, corrección) para la mejora continua del motor agéntico.
+- ✅ **Self-Healing Knowledge (Phase 110)**: Auditoría automática de activos expirados y marcado de obsolescencia para garantizar la frescura del RAG.
+- ✅ **Global SuperAdmin Dashboard (Phase 110)**: Consola centralizada para monitoreo de métricas multi-tenant, precisión de IA y salud del cluster.
+- ✅ **Causal AI Simulation Engine (Phase 86)**: Análisis de impacto 'What-If' integrado en Digital Twins para predecir consecuencias en cascada y sugerir planes de mitigación técnica.
+- ✅ **Industrial Stability Cleanup (Era 5)**: Erradicación de +140 errores estructurales de TypeScript, normalización de sesiones multi-tenant y gobernanza estricta de Enums.
+- ✅ **Monorepo Namespace Architecture**: Desacoplamiento físico de @abd/platform-core, @abd/ui y @abd/workflow para máxima reutilización de servicios.
 
 ## 🔧 Scripts Disponibles
 

@@ -1,9 +1,9 @@
 // Phase 131: Extended Ingestion Status for granular retry
-export type IngestionStatus = 
-    | 'PENDING' 
-    | 'QUEUED' 
-    | 'PROCESSING' 
-    | 'COMPLETED' 
+export type IngestionStatus =
+    | 'PENDING'
+    | 'QUEUED'
+    | 'PROCESSING'
+    | 'COMPLETED'
     | 'FAILED'
     | 'STORED_NO_INDEX'    // Cloudinary OK, indexing pending
     | 'INDEXED_NO_STORAGE' // Chunks OK, Cloudinary upload failed
@@ -21,14 +21,14 @@ export interface KnowledgeAsset {
     progress?: number;
     attempts?: number;
     error?: string;
-    
+
     // Phase 131: Storage & Indexing Flags
     hasStorage?: boolean;      // Cloudinary upload successful
     hasChunks?: boolean;        // Chunks created successfully
     storageError?: string;      // Error from Cloudinary upload
     indexingError?: string;      // Error from indexing
     blobId?: string;             // GridFS blob ID for internal processing
-    
+
     totalChunks: number;
     createdAt: string;
     updatedAt: string;
@@ -39,4 +39,10 @@ export interface KnowledgeAsset {
         type: 'SUPERSEDES' | 'COMPLEMENTS' | 'DEPENDS_ON' | 'AMENDS' | 'RELATED_TO';
         description?: string;
     }>;
+
+    // Phase 81: Scheduled Review Dates & Lifecycle
+    nextReviewDate?: string | Date;
+    lastReviewedAt?: string | Date;
+    reviewStatus?: 'pending' | 'reviewed' | 'expired' | 'snoozed';
+    reviewNotes?: string;
 }

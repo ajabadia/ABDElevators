@@ -12,6 +12,7 @@ export const RagQualityReportTemplate: ReportTemplate = {
     },
     sections: [
         {
+            id: 'performance_metrics_grid',
             key: 'performance_metrics',
             title: 'Métricas de Rendimiento',
             type: 'METRICS_GRID',
@@ -20,12 +21,14 @@ export const RagQualityReportTemplate: ReportTemplate = {
             layout: { columns: 2 }
         },
         {
+            id: 'quality_analysis_text',
             key: 'quality_analysis',
             title: 'Análisis de Calidad',
             type: 'TEXT',
             dataSource: 'analysisText'
         },
         {
+            id: 'top_sources_table',
             key: 'top_sources',
             title: 'Fuentes de Mayor Relevancia',
             type: 'DATA_TABLE',
@@ -33,6 +36,7 @@ export const RagQualityReportTemplate: ReportTemplate = {
             dataSource: 'topSources'
         },
         {
+            id: 'hallucination_risks_table',
             key: 'hallucination_risks',
             title: 'Riesgos de Alucinación Detectados',
             type: 'DATA_TABLE',

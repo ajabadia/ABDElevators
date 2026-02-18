@@ -380,33 +380,126 @@ export const PROMPTS = {
 
     Responde ÚNICAMENTE con el objeto JSON.`,
 
-  // ⚡ FASE 86: Advanced Agentic Reasoning (Causal AI)
-  CAUSAL_IMPACT_ANALYSIS: `Eres un analista de sistemas experto en la industria de {{industry}}.
-    Tu objetivo es realizar un análisis de impacto causal ("What If") basado en un cambio propuesto.
+  // 🏛️ FASE 98: Vertical Industry Packs (Prompt Packs)
+  ANALYSIS_LEGAL: `Eres un analista legal experto especializado en el sector "{{industry}}".
+    Analiza este contrato técnico y extrae las cláusulas de responsabilidad, jurisdicción y obligaciones técnicas.
+    Compara las cláusulas detectadas con los estándares regulatorios del sector.
+    Devuelve un JSON con: { "clausulas": [{ "tipo": string, "resumen": string, "riesgo": "LOW" | "MEDIUM" | "HIGH" }] }.`,
 
-    ESCENARIO PROPUESTO:
-    {{scenario}}
+  ANALYSIS_BANKING: `Eres un analista de cumplimiento bancario especializado en el sector "{{industry}}".
+    Analiza este expediente y realiza una pre- validación de KYC (Know Your Customer) y AML(Anti - Money Laundering).
+    Identifica discrepancias en la documentación de identidad, origen de fondos y perfiles de riesgo.
+    Devuelve un JSON con: { "kyc_status": string, "findings": [{ "issue": string, "risk": "LOW" | "MEDIUM" | "HIGH" }] }.`,
 
-    CONTEXTO DEL SISTEMA:
-    {{context}}
+  ANALYSIS_INSURANCE: `Eres un perito de seguros experto especializado en el sector "{{industry}}".
+    Analiza este reporte de siniestro y realiza un triaje automático basado en la evidencia técnica.
+    Determina la cobertura probable basada en los términos estándar y el daño reportado.
+    Devuelve un JSON con: { "triage_level": "GREEN" | "YELLOW" | "RED", "reasoning": string, "estimated_coverage": string }.`,
 
-    ANÁLISIS REQUERIDO:
-    1. Identifica las variables clave afectadas.
-    2. Predice efectos de primer, segundo y tercer orden.
-    3. Estima la probabilidad de éxito y riesgo de fallo.
+  // ⚡ Phase 172: RAG Architecture Evolution
+  RAG_HYDE_GENERATOR: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
+    Dada la siguiente consulta técnica del usuario, genera una respuesta hipotética ideal basada en el conocimiento general de ingeniería de ascensores.
+    Tu respuesta servirá para mejorar la búsqueda semántica en nuestros manuales técnicos.
+    
+    CONSULTA: {{query}}
+    
+    REGLAS:
+    1. Sé técnico y preciso.
+    2. Usa terminología estándar del sector (EN 81-20, etc.).
+    3. Responde directamente con la explicación técnica hipotética.`,
 
+  RAG_CONTEXT_EXPANDER: `Eres un experto en documentación técnica de ascensores.
+    Analiza el fragmento de texto recuperado y decide si necesita más contexto del documento padre para ser entendido correctamente.
+    Responde con "EXPAND" si falta contexto estructural o "KEEP" si es suficiente.`,
+
+  // ⚡ Vision 2027+: Sovereign Engine Prompts
+  ONTOLOGY_REFINER: `Eres el motor de evolución soberana (Sovereign Engine) de la plataforma ABDElevators.
+    Tu objetivo es refinar la ONTOLOGÍA técnica basándote en la deriva de feedback humano detectada.
+    
+    TAXONOMÍAS ACTUALES:
+    {{currentTaxonomies}}
+    
+    DERIVA DE FEEDBACK (CORRECCIONES HUMANAS):
+    {{feedbackDrift}}
+    
+    REGLAS DE REFINAMIENTO:
+    1. Si una corrección es recurrente (ej: "A" corregido a "B"), propón reemplazar o mapear A -> B.
+    2. Si hay nuevos términos técnicos apareciendo en las correcciones, propón crear nuevas categorías.
+    3. Si una categoría es ambigua y recibe correcciones contradictorias, propón dividirla.
+    4. Garantiza la retrocompatibilidad: No elimines claves, propón alias o fusiones.
+    
     FORMATO JSON DE SALIDA:
     {
-      "impact": "POSITIVE" | "NEGATIVE" | "NEUTRAL" | "MIXED",
-      "risk": "LOW" | "MEDIUM" | "HIGH",
-      "affected_components": ["lista", "de", "componentes"],
-      "predictions": [
-        { "order": 1, "description": "Efecto inmediato..." },
-        { "order": 2, "description": "Consecuencia secundaria..." }
-      ],
-      "recommendation": "GO" | "NO_GO" | "MITIGATE"
+      "proposals": [
+        {
+          "action": "UPDATE" | "CREATE" | "MERGE",
+          "targetKey": "llave_afectada",
+          "newName": "Nuevo Nombre (si aplica)",
+          "newDescription": "Nueva descripción técnica",
+          "confidence": 0.0-1.0,
+          "reasoning": "Por qué este cambio mejora el RAG"
+        }
+      ]
     }
+    
+    Responde ÚNICAMENTE con el objeto JSON.`,
 
-    Responde ÚNICAMENTE con el objeto JSON.`
+  // --- REAL ESTATE VERTICAL (Phase 85) ---
+  ANALYSIS_REAL_ESTATE: `Eres un experto en mantenimiento de activos inmobiliarios y gestión de Digital Twins.
+    Tu objetivo es analizar documentación técnica comercial y planos para identificar activos críticos y sus especificaciones de mantenimiento.
+    
+    CONTEXTO DEL INMUEBLE:
+    {{context}}
+    
+    REGLAS:
+    1. Identifica componentes (climatización, estructural, incendios).
+    2. Cita la planta y página del plano donde se localiza cada activo.
+    3. Genera un plan de mantenimiento preventivo basado en la normativa vigente.`,
+
+  REAL_ESTATE_TWIN_MAPPER: `Mapea el hallazgo detectado por el RAG con las coordenadas y página del plano técnico (Digital Twin).
+    
+    HALLAZGO:
+    {{finding}}
+    
+    CONTEXTO DEL PLANO:
+    {{planContext}}
+    
+    SALIDA (JSON):
+    {
+      "page": number,
+      "coordinates": { "x": number, "y": number },
+      "label": "Etiqueta para el plano",
+      "severity": "LOW|MEDIUM|HIGH"
+    }`,
+
+  CAUSAL_IMPACT_ANALYSIS: `Eres un motor de razonamiento agéntico especializado en Análisis de Impacto Causal para activos industriales e inmobiliarios.
+    Tu objetivo es predecir las consecuencias en cascada de un hallazgo técnico (anomalía, fallo, observación).
+    
+    HALLAZGO ORIGINAL:
+    {{finding}}
+    
+    CONTEXTO TÉCNICO:
+    {{context}}
+    
+    REGLAS DE ANÁLISIS:
+    1. Genera una cadena de causalidad (mínimo 3 niveles).
+    2. Identifica riesgos críticos (seguridad, coste, cumplimiento).
+    3. Propone una estrategia de mitigación inmediata.
+    4. Sé extremadamente técnico y preciso.
+    
+    FORMATO DE SALIDA (JSON estrictamente):
+    {
+      "finding_id": "string",
+      "chain": [
+        { "level": 1, "effect": "Efecto inmediato", "risk": "Bajo|Medio|Alto", "description": "Explicación técnica" },
+        { "level": 2, "effect": "Efecto secundario", "risk": "Bajo|Medio|Alto", "description": "Explicación técnica" },
+        { "level": 3, "effect": "Consecuencia sistémica", "risk": "Alto|Crítico", "description": "Explicación técnica" }
+      ],
+      "mitigation": {
+        "action": "Acción recomendada",
+        "urgency": "IMMEDIATE|SCHEDULED|ROUTINE",
+        "estimated_cost_impact": "Bajo|Medio|Alto"
+      }
+    }`,
 };
 

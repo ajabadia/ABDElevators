@@ -1,0 +1,31 @@
+{
+    "name": "Insurance Claim Triage Template (Synthetic)",
+    "industry": "INSURANCE",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true
+    },
+    "items": [
+        {
+            "id": "item-i1",
+            "label": "Verificación de Vigencia de Póliza",
+            "description": "Confirmar que el siniestro ocurrió dentro del periodo de cobertura.",
+            "category": "POLICY",
+            "synthetic": true
+        },
+        {
+            "id": "item-i2",
+            "label": "Inspección de Evidencia Fotográfica",
+            "description": "Validar que las imágenes coinciden con el daño reportado.",
+            "category": "EVIDENCE",
+            "synthetic": true
+        },
+        {
+            "id": "item-i3",
+            "label": "Chequeo de Franquicias y Límites",
+            "description": "Determinar el importe máximo indemnizable según las condiciones.",
+            "category": "COVERAGE",
+            "synthetic": true
+        }
+    ]
+}

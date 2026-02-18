@@ -1,0 +1,31 @@
+{
+    "name": "Banking Compliance Review Template (Synthetic)",
+    "industry": "BANKING",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true
+    },
+    "items": [
+        {
+            "id": "item-b1",
+            "label": "Validación de Documento de Identidad",
+            "description": "Comprobar que el DNI/Pasaporte está vigente y es legible.",
+            "category": "KYC",
+            "synthetic": true
+        },
+        {
+            "id": "item-b2",
+            "label": "Análisis de Origen de Fondos",
+            "description": "Verificar que la documentación justifica el volumen de transacciones.",
+            "category": "COMPLIANCE",
+            "synthetic": true
+        },
+        {
+            "id": "item-b3",
+            "label": "Cotejo en Listas de Sanciones (PEP/OFAC)",
+            "description": "Asegurar que el cliente no figura en listas internacionales de riesgo.",
+            "category": "AML",
+            "synthetic": true
+        }
+    ]
+}

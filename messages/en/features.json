@@ -19,8 +19,8 @@
   "f8_desc": "'Mission Control' execution logs panel to follow every step of your automations live, with detailed performance metrics.",
   "f9_title": "Task Collaboration Hub",
   "f9_desc": "Governance with human validation. Manage critical workflow escalations with industrial-grade audit traceability.",
-  "f10_title": "Multi-Vertical Intelligence",
-  "f10_desc": "Automatic domain detection (Legal, Insurance, Healthcare) with dynamic analysis logic adaptation.",
+  "f10_title": "Advanced Multi-Vertical Intelligence",
+  "f10_desc": "Dynamic domain infrastructure (Legal, Banking, Insurance) with native adaptation of ontologies, checklists, and sector-specific analysis logic.",
   "f11_title": "Infinite Memory",
   "f11_desc": "Streaming ingestion and intelligent deduplication to manage unlimited technical libraries without overhead.",
   "f12_title": "Causal Auto-Correction (IA)",
@@ -36,7 +36,7 @@
   "f16_desc": "Industrial rules configuration engine for technical validation. Categorization, prioritization, and native multi-tenant isolation.",
   "f17_title": "Resilient State Machine",
   "f17_desc": "Armored ingestion pipeline with bank-grade state validation, auto-detection of stuck processes, and resilient AI-to-Human fallback orchestration.",
-  "f18_title": "Access Security (v4.7.2)",
+  "f18_title": "Access Security (v4.7.3)",
   "f18_desc": "Token-based activation flows without password exposure and persistent MFA for maximum corporate identity protection.",
   "f19_title": "Industrial Grade Modules",
   "f19_desc": "Professional optimization of Billing, Permissions, and Assets modules with Vercel standards and secure UUID traceability.",
@@ -47,5 +47,11 @@
   "f22_title": "Visual Graph Explorer",
   "f22_desc": "Interactive interface to navigate, search, and inspect nodes and relationships in the Knowledge Graph (Neo4j) in real-time.",
   "f23_title": "Advanced Knowledge Curation",
-  "f23_desc": "Professional management of the Knowledge Graph. Manual editing, node merging tools, and bulk deletion with industrial-grade traceability."
+  "f23_desc": "Professional management of the Knowledge Graph. Manual editing, node merging tools, and bulk deletion with industrial-grade traceability.",
+  "f24_title": "Core Engine Separation",
+  "f24_desc": "Decoupled architecture that separates the AI workflow engine from industrial case management, allowing for massive scalability and simplified maintenance.",
+  "f25_title": "Industrial Scaffolding (Phase 98)",
+  "f25_desc": "Distributed vertical registry engine enabling rapid deployment of new industries through agentic templates and pre-populated ontologies.",
+  "f26_title": "Causal Simulation Engine",
+  "f26_desc": "Prospective 'What-If' analysis integrated into Digital Twins to predict cascading technical consequences and suggest mitigation plans."
 }

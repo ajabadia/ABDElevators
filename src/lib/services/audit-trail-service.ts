@@ -43,23 +43,48 @@ export class AuditTrailService {
     }
 
     /**
+     * Records an event with context (IP, User Agent) from headers if available.
+     */
+    static async recordWithContext(
+        collectionName: 'audit_config_changes' | 'audit_admin_ops' | 'audit_data_access' | 'audit_trails' | 'audit_security_events',
+        entry: Omit<AuditTrail, '_id' | 'timestamp' | 'ip' | 'userAgent'>,
+        headers?: Headers
+    ): Promise<void> {
+        const ip = headers?.get('x-forwarded-for')?.split(',')[0] || headers?.get('x-real-ip') || undefined;
+        const userAgent = headers?.get('user-agent') || undefined;
+
+        return this.record(collectionName as any, {
+            ...entry,
+            ip,
+            userAgent
+        });
+    }
+
+    /**
      * Logs changes to configurations or policies.
      */
-    static async logConfigChange(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>) {
-        return this.record('audit_config_changes', { ...entry, source: 'CONFIG_CHANGE' });
+    static async logConfigChange(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>, headers?: Headers) {
+        return this.recordWithContext('audit_config_changes', { ...entry, source: 'CONFIG_CHANGE' }, headers);
     }
 
     /**
      * Logs administrative operations (seed, maintenance, etc).
      */
-    static async logAdminOp(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>) {
-        return this.record('audit_admin_ops', { ...entry, source: 'ADMIN_OP' });
+    static async logAdminOp(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>, headers?: Headers) {
+        return this.recordWithContext('audit_admin_ops', { ...entry, source: 'ADMIN_OP' }, headers);
     }
 
     /**
      * Logs sensitive data access.
      */
-    static async logDataAccess(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>) {
-        return this.record('audit_data_access', { ...entry, source: 'DATA_ACCESS' });
+    static async logDataAccess(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>, headers?: Headers) {
+        return this.recordWithContext('audit_data_access', { ...entry, source: 'DATA_ACCESS' }, headers);
+    }
+
+    /**
+     * Logs security related events.
+     */
+    static async logSecurityEvent(entry: Omit<AuditTrail, '_id' | 'timestamp' | 'source'>, headers?: Headers) {
+        return this.recordWithContext('audit_security_events', { ...entry, source: 'SECURITY_EVENT' }, headers);
     }
 }

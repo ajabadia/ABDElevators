@@ -5,6 +5,7 @@ import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
+import { z } from 'zod';
 import { ObjectId } from 'mongodb';
 
 /**
@@ -47,7 +48,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     const start = Date.now();
 
     try {
-        const user = await enforcePermission('checklists', 'write');
+        const session = await enforcePermission('checklists', 'write');
         const body = await req.json();
 
         const collection = await getTenantCollection('configs_checklist');
@@ -81,14 +82,14 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             action: 'UPDATE',
             message: `Checklist config updated: ${id}`,
             correlationId,
-            details: { tenantId: user.tenantId, config_id: id }
+            details: { tenantId: session.user.tenantId, config_id: id }
         });
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        if (error.name === 'ZodError') {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError('Datos de actualización inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de actualización inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }
@@ -110,7 +111,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     const correlationId = crypto.randomUUID();
 
     try {
-        const user = await enforcePermission('checklists', 'write');
+        const session = await enforcePermission('checklists', 'write');
         const collection = await getTenantCollection('configs_checklist');
 
         const result = await collection.deleteOne({
@@ -127,7 +128,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             action: 'DELETE',
             message: `Checklist config deleted: ${id}`,
             correlationId,
-            details: { tenantId: user.tenantId, config_id: id }
+            details: { tenantId: session.user.tenantId, config_id: id }
         });
 
         return NextResponse.json({ success: true });

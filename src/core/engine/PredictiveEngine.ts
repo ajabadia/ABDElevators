@@ -1,7 +1,7 @@
 import { runCypher } from '@/lib/neo4j';
 import { callGeminiMini } from '@/lib/llm';
 import { logEvento } from '@/lib/logger';
-import { WorkflowEngine } from './WorkflowEngine';
+import { AIWorkflowEngine } from './AIWorkflowEngine';
 
 export interface MaintenancePrediction {
     id: string;
@@ -70,7 +70,7 @@ export class PredictiveEngine {
             const predictions: MaintenancePrediction[] = JSON.parse(jsonMatch[0]);
 
             // 3. Trigger Automated Workflows (Phase 10)
-            const workflow = WorkflowEngine.getInstance();
+            const workflow = AIWorkflowEngine.getInstance();
             for (const pred of predictions) {
                 await workflow.processEvent('on_prediction', pred, tenantId, correlationId);
             }
@@ -86,7 +86,14 @@ export class PredictiveEngine {
             return predictions;
 
         } catch (error: any) {
-            console.error('[PredictiveEngine] Error:', error);
+            await logEvento({
+                level: 'ERROR',
+                source: 'PREDICTIVE_ENGINE',
+                action: 'FORECAST_ERROR_INTERNAL',
+                message: error.message,
+                correlationId,
+                details: { stack: error.stack }
+            });
             await logEvento({
                 level: 'ERROR',
                 source: 'PREDICTIVE_ENGINE',

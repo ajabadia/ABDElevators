@@ -3,6 +3,7 @@ import { ApiKeySchema, ApiKeyLogSchema, ApiKey, ApiKeyPermission } from '@/lib/s
 import { AppError } from '@/lib/errors';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { ObjectId } from 'mongodb';
 
 const PREFIX = 'sk_live_';
 

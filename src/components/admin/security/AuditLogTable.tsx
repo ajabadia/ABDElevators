@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { RefreshCw, Search } from "lucide-react";
+import { useTranslations, useFormatter } from "next-intl";
+import { Download, RefreshCw, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LogEntry {
@@ -28,7 +27,14 @@ const LEVEL_COLORS: Record<string, string> = {
     DEBUG: "bg-gray-100 text-gray-800"
 };
 
+/**
+ * 📊 Audit Log Table
+ * Displays application logs with filtering and export capabilities.
+ * Standardized with Phase 175.7 i18n & a11y requirements.
+ */
 export function AuditLogTable() {
+    const t = useTranslations("security_hub");
+    const format = useFormatter();
     const { toast } = useToast();
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(false);
@@ -52,12 +58,26 @@ export function AuditLogTable() {
         } catch (error) {
             toast({
                 variant: "destructive",
-                title: "Error",
-                description: "No se pudieron cargar los logs de auditoría."
+                title: t("audit.table.error_title") || "Error",
+                description: t("audit.table.error_fetch") || "No se pudieron cargar los logs de auditoría."
             });
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleExport = () => {
+        const params = new URLSearchParams();
+        params.set('type', 'audit_logs');
+        params.set('format', 'csv');
+        if (search) params.set('search', search);
+        if (levelFilter !== 'ALL') params.set('level', levelFilter);
+
+        window.location.href = `/api/admin/export?${params.toString()}`;
+    };
+
+    const handleRefresh = () => {
+        fetchLogs();
     };
 
     useEffect(() => {
@@ -71,27 +91,45 @@ export function AuditLogTable() {
         <div className="space-y-4">
             <div className="flex gap-4">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
-                        placeholder="Buscar por mensaje, usuario..."
+                        placeholder={t("audit.table.search_placeholder")}
                         className="pl-8"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        aria-label={t("audit.table.search_placeholder")}
                     />
                 </div>
                 <Select value={levelFilter} onValueChange={setLevelFilter}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Nivel" />
+                    <SelectTrigger className="w-[180px]" aria-label={t("audit.table.level")}>
+                        <SelectValue placeholder={t("audit.table.level")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="ALL">Todos los Niveles</SelectItem>
-                        <SelectItem value="INFO">Info</SelectItem>
-                        <SelectItem value="WARN">Warning</SelectItem>
-                        <SelectItem value="ERROR">Error</SelectItem>
-                        <SelectItem value="DEBUG">Debug</SelectItem>
+                        <SelectItem value="ALL">{t("audit.levels.all")}</SelectItem>
+                        <SelectItem value="INFO">{t("audit.levels.info")}</SelectItem>
+                        <SelectItem value="WARN">{t("audit.levels.warn")}</SelectItem>
+                        <SelectItem value="ERROR">{t("audit.levels.error")}</SelectItem>
+                        <SelectItem value="DEBUG">{t("audit.levels.debug")}</SelectItem>
                     </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" onClick={() => fetchLogs()} disabled={loading}>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleExport()}
+                    title={t("audit.table.export_csv")}
+                    disabled={loading}
+                    aria-label={t("audit.table.export_csv")}
+                >
+                    <Download className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleRefresh()}
+                    disabled={loading}
+                    title={t("audit.table.refresh")}
+                    aria-label={t("audit.table.refresh")}
+                >
                     <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 </Button>
             </div>
@@ -100,22 +138,29 @@ export function AuditLogTable() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[180px]">Fecha</TableHead>
-                            <TableHead className="w-[100px]">Nivel</TableHead>
-                            <TableHead>Origen / Acción</TableHead>
-                            <TableHead>Mensaje</TableHead>
-                            <TableHead className="text-right">Usuario</TableHead>
+                            <TableHead className="w-[180px]">{t("audit.table.date")}</TableHead>
+                            <TableHead className="w-[100px]">{t("audit.table.level")}</TableHead>
+                            <TableHead>{t("audit.table.action")}</TableHead>
+                            <TableHead>{t("audit.table.message")}</TableHead>
+                            <TableHead className="text-right">{t("audit.table.user")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {logs.map((log) => (
                             <TableRow key={log._id} className={log.level === 'ERROR' ? 'bg-red-50/50' : ''}>
                                 <TableCell className="font-mono text-xs">
-                                    {format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss", { locale: es })}
+                                    {format.dateTime(new Date(log.timestamp), {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    })}
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant="outline" className={LEVEL_COLORS[log.level] || ""}>
-                                        {log.level}
+                                        {t(`audit.levels.${log.level.toLowerCase()}` as any)}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -126,14 +171,14 @@ export function AuditLogTable() {
                                 </TableCell>
                                 <TableCell className="text-sm">{log.message}</TableCell>
                                 <TableCell className="text-right text-xs text-muted-foreground">
-                                    {log.userEmail || "Sistema"}
+                                    {log.userEmail || t("audit.table.system") || "Sistema"}
                                 </TableCell>
                             </TableRow>
                         ))}
                         {logs.length === 0 && !loading && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    No se encontraron eventos de auditoría.
+                                    {t("audit.table.no_results")}
                                 </TableCell>
                             </TableRow>
                         )}

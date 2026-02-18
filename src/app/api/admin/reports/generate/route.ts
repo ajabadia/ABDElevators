@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const session = await auth();
-        if (!session?.user?.email) {
+        if (!session?.user?.id) {
             throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
         }
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
         const template = ReportTemplateRegistry.getTemplateByType(validated.templateType);
         if (!template) {
-            throw new AppError('BAD_REQUEST', 400, `Template type ${validated.templateType} not found`);
+            throw new AppError('VALIDATION_ERROR', 400, `Template type ${validated.templateType} not found`);
         }
 
         // TODO: In a real implementation, this switch would call specific Data Services
@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
         const reportData: ReportData = {
             title: template.name,
             subtitle: `Generated for ${session.user.email}`,
-            tenantId: 'default-tenant', // Should come from session
+            tenantId: session.user.tenantId,
             date: new Date(),
-            technician: session.user.name || session.user.email,
+            technician: session.user.name || session.user.email || 'System',
             branding: {},
             data: validated.dataOverride || {
                 // Default stubs to prevent crashing if no data provided
@@ -79,17 +79,16 @@ export async function POST(req: NextRequest) {
             const reports = await getReportsCollection(session);
 
             await reports.insertOne({
-                type: body.templateId,
-                title: body.config.title || template.name,
+                type: validated.templateType,
+                title: body.config?.title || template.name,
                 filters: body.filters,
                 generatedBy: session.user.id,
                 tenantId: session.user.tenantId,
                 status: 'COMPLETED',
                 metadata: {
-                    sectionsCount: reportData.sections.length,
+                    sectionsCount: template.sections.length,
                     generatedAt: new Date(),
                     format: 'pdf',
-                    // @ts-ignore
                     sizeBytes: pdfBuffer.length
                 }
             });
@@ -97,9 +96,6 @@ export async function POST(req: NextRequest) {
             console.error('Error saving report record:', dbError);
             // Non-blocking error
         }
-
-        // In production, we might upload to Cloudinary here and return URL.
-        // For direct download:
 
         await logEvento({
             level: 'INFO',
@@ -110,7 +106,7 @@ export async function POST(req: NextRequest) {
             details: { durationMs: Date.now() - start, size: pdfBuffer.length }
         });
 
-        return new NextResponse(pdfBuffer, {
+        return new NextResponse(new Uint8Array(pdfBuffer), {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `attachment; filename="${template.type.toLowerCase()}-${Date.now()}.pdf"`
@@ -131,7 +127,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 code: 'VALIDATION_ERROR',
                 message: 'Invalid input parameters',
-                details: error.errors
+                details: error.issues
             }, { status: 400 });
         }
 
@@ -139,7 +135,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 code: error.code,
                 message: error.message
-            }, { status: error.statusCode });
+            }, { status: error.status });
         }
 
         return NextResponse.json({

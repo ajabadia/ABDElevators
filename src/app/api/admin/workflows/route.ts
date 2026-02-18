@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { WorkflowService } from '@/lib/workflow-service';
 import { UserRole } from '@/types/roles';
+import { logEvento } from '@/lib/logger';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),
@@ -18,6 +19,7 @@ const WorkflowSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
         // Phase 70: Centralized typed role check
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -39,11 +41,12 @@ export async function GET(req: NextRequest) {
         const nextCursor = (items as any).nextCursor;
         return NextResponse.json({ success: true, items, nextCursor });
     } catch (error) {
-        return handleApiError(error, 'API_WORKFLOWS_GET', 'system');
+        return handleApiError(error, 'API_WORKFLOWS_GET', correlationId);
     }
 }
 
 export async function POST(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
         // Phase 70: Centralized typed role check
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -54,8 +57,7 @@ export async function POST(req: NextRequest) {
         const validated = WorkflowSchema.parse(body);
         const tenantId = session.user.tenantId;
 
-        const db = await connectDB();
-        const workflows = db.collection('workflow_definitions');
+        const workflows = await getTenantCollection('workflow_definitions');
 
         const visibleGraph = {
             nodes: validated.nodes,
@@ -69,7 +71,14 @@ export async function POST(req: NextRequest) {
             const { compileGraphToLogic } = await import('@/lib/workflow-compiler');
             executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId);
         } catch (e: any) {
-            console.warn('Workflow Compilation Failed:', e);
+            await logEvento({
+                level: 'WARN',
+                source: 'API_ADMIN_WORKFLOWS_POST',
+                action: 'COMPILATION_WARNING',
+                message: 'Workflow Compilation Failed',
+                correlationId,
+                details: { error: e.message }
+            });
             compilationError = e.message;
         }
 
@@ -118,6 +127,6 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error) {
-        return handleApiError(error, 'API_ADMIN_WORKFLOWS_POST', 'system');
+        return handleApiError(error, 'API_ADMIN_WORKFLOWS_POST', correlationId);
     }
 }

@@ -1,5 +1,5 @@
 
-import { WorkflowEngine } from '../core/engine/WorkflowEngine';
+import { AIWorkflowEngine } from '../core/engine/AIWorkflowEngine';
 import { compileGraphToLogic } from '../lib/workflow-compiler';
 import { connectDB } from '../lib/db';
 import * as dotenv from 'dotenv';
@@ -39,7 +39,7 @@ async function verify() {
     );
 
     console.log('🚀 Triggering engine execution with LOW CONFIDENCE data...');
-    const engine = WorkflowEngine.getInstance();
+    const engine = AIWorkflowEngine.getInstance();
 
     // Data with LOW confidence (0.45 < 0.85)
     const eventData = {

@@ -1,6 +1,7 @@
 {
   "title": "AI Hub",
   "subtitle": "Boost your productivity with agentic AI tools and intelligent orchestration.",
+  "coming_soon": "Coming Soon",
   "tabs": {
     "ragQuality": "RAG Quality",
     "workflows": "Workflows",
@@ -23,6 +24,24 @@
     "playground": {
       "title": "AI Playground",
       "subtitle": "Experiment with models and prompts in a safe environment."
+    }
+  },
+  "cards": {
+    "rag_quality": {
+      "title": "RAG Quality",
+      "description": "Monitor precision and relevance of generated responses."
+    },
+    "workflows": {
+      "title": "Workflows",
+      "description": "Configure and monitor autonomous agents for complex tasks."
+    },
+    "predictive": {
+      "title": "Predictive Maintenance",
+      "description": "Pattern analysis for real-time failure prevention."
+    },
+    "playground": {
+      "title": "AI Playground",
+      "description": "Experiment with models and prompts in a safe environment."
     }
   }
 }

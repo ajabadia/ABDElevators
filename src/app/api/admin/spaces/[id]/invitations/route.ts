@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -21,7 +22,6 @@ export async function GET(
     const correlationId = generateUUID();
     try {
         await enforcePermission('knowledge', 'read');
-        const { auth } = await import('@/lib/auth');
         const session = await auth();
 
         const { id } = await params;
@@ -41,8 +41,7 @@ export async function POST(
 ) {
     const correlationId = generateUUID();
     try {
-        const user = await enforcePermission('knowledge', 'manage_spaces');
-        const { auth } = await import('@/lib/auth');
+        const user = await enforcePermission('knowledge', 'manage_spaces') as any;
         const session = await auth();
 
         const { id } = await params;
@@ -51,8 +50,8 @@ export async function POST(
         const invitation = await SpaceInvitationService.createInvitation({
             spaceId: id,
             email: body.email,
-            invitedBy: user.id,
-            tenantId: user.tenantId,
+            invitedBy: user.user.id,
+            tenantId: user.user.tenantId,
             role: body.role || 'VIEWER',
             expiresInDays: body.expiresInDays || 7
         }, session as any);
@@ -82,7 +81,6 @@ export async function DELETE(
     const correlationId = generateUUID();
     try {
         await enforcePermission('knowledge', 'manage_spaces');
-        const { auth } = await import('@/lib/auth');
         const session = await auth();
 
         const { searchParams } = new URL(req.url);

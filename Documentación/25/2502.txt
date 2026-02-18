@@ -1,0 +1,446 @@
+Le añadiría utilidades en cuatro bloques: plataforma, producto, IA y operaciones.
+​
+
+1. Plataforma (cross‑product)
+Feature flags y planes: gestor de flags por tenant/módulo (activar RAG, workflows avanzados, auditoría extra, etc.).
+​
+
+Catálogo de módulos: registro de “features” disponibles (RAG, casos, checklists, IA workflows, reporting) con licencias/tier (FREE/PRO/ENTERPRISE).
+​
+
+Gestor de configuración central: UI y API para configurar por tenant: branding, límites, políticas de seguridad, integraciones externas (Stripe, correo, webhooks).
+​
+
+Job scheduler multi‑tenant: ya tienes report schedules; lo generalizaría a un pequeño “cron as a service” por tenant para cualquier job (RAG re‑index, reportes, limpiezas).
+​
+
+2. Utilidades de producto
+Builder de formularios / checklists:
+
+Ya tienes ChecklistConfig; completaría con un pequeño “form builder” (campos, reglas, scoring) reutilizable para auditorías, onboarding, etc.
+​
+
+Motor de plantillas de documentos:
+
+Extender el sistema de reportes PDF (ya lo tienes para workflows y compliance) a un generador genérico de informes/certificados por tenant.
+​
+
+Centro de notificaciones unificado:
+
+Normalizar emails, toasts, notificaciones in‑app y quizá webhooks de evento (case creado, workflow bloqueado, error de IA, etc.).
+​
+
+3. IA / RAG
+Panel de gestión de modelos:
+
+Por tenant: qué LLM usar (Gemini / otros), límites de tokens, modos “seguro vs creativo”, políticas de redacción.
+​
+
+Gestor de datasets de evaluación:
+
+UI para cargar pares pregunta‑respuesta‑contexto y lanzar evaluaciones batch con RagJudge/RagEvaluation.
+​
+
+Registro de prompts y experimentos:
+
+“Prompt registry” + versiones + métricas básicas de éxito por versión (ya tienes parte en PromptService; lo haría visible y editable).
+​
+
+4. Operaciones y calidad
+Panel de observabilidad de plataforma:
+
+Dashboard técnico interno con: errores por endpoint, SLA violados (ya logueas), consumo por tenant, colas de jobs, etc.
+​
+
+Herramientas de migración/versionado:
+
+Consola UI mínima para correr migrations controladas (schema RAG, cambios en workflows, etc.) y ver su estado.
+
+Inspector multi‑tenant seguro:
+
+Una especie de “loupe” para SUPERADMIN: buscar entidades/casos/logs por tenant con filtros fuertes y redacción segura (sin exponer datos sensibles por accidente).
+​
+
+Con lo que ya tienes, muchas de estas utilidades son sobre todo “ponerle cara” (UI) y generalizar servicios existentes (reportes, schedules, prompts, workflows) para que no estén atados al dominio de elevadores/RAG, sino que sirvan a cualquier app que montes encima.
+
+
+
+Te detallo cada bloque, pero pensando en cosas que son realistas de montar sobre lo que ya tienes, no en castillos en el aire.
+​
+
+1. Plataforma cross‑producto
+1.1 Feature flags y planes
+Objetivo: encender/apagar capacidades por tenant sin tocar código.
+
+Modelo: colección featureFlags o parte de tenantConfig con algo tipo:
+
+modules: { rag: 'enabled' | 'disabled', workflows: 'enabled', predictive: 'beta' }
+
+flags: { newUI: true, strictMFA: false }.
+
+Servicio:
+
+FeatureFlagService.isEnabled(tenantId, flag) disponible en server y en middleware.
+
+Uso:
+
+En rutas de API y páginas, compruebas flags para:
+
+Ocultar secciones de UI.
+
+Bloquear llamadas a módulos no contratados, devolviendo 403 controlado.
+
+Esto te permite tener una suite con un solo deploy y “productos” que son combinaciones de flags.
+
+1.2 Catálogo de módulos / licencias
+Complemento a flags, más de negocio.
+
+Modelo:
+
+modules o plan en TenantConfig:
+
+planTier (FREE/PRO/ENTERPRISE).
+
+activeModules: [RAG, WORKFLOWS, REPORTING, CHECKLISTS, PREDICTIVE].
+
+UI Admin:
+
+Panel para SUPERADMIN donde activas módulos por tenant, ves límites (REPORTS_PER_MONTH, TOKENS_PER_DAY), etc.
+
+Integración con Stripe:
+
+Tu webhook de Stripe ya ajusta tier; podrías conectar tier → modules → flags automáticamente.
+​
+
+2. Utilidades de producto
+2.1 Builder de formularios / checklists
+Reutilizando ChecklistConfig como núcleo.
+​
+
+Modelo / esquema (ya lo tienes a medias):
+
+Definición de checklist con:
+
+name, description.
+
+items: [{ id, label, type: 'boolean' | 'text' | 'number' | 'select', required, weight }].
+
+UI genérica:
+
+Un “Checklist Builder” en admin:
+
+Añadir campos, cambiar orden, definir reglas simples (si X es false, bloquear transición).
+
+Motor:
+
+Integración con workflows:
+
+En WorkflowState.conditions.checklistComplete: checklistConfigId.
+
+El motor no deja pasar a siguiente estado si no se cumplen.
+
+Esto vale igual para auditorías RAG, procesos de soporte, onboarding, etc.
+
+2.2 Motor de plantillas de documentos
+Tienes reportes PDF de workflows/compliance; generalizarlo.
+​
+
+Plantillas parametrizables:
+
+templates con:
+
+type (CERT_DESTRUCTION, RAG_REPORT, COMPLIANCE_AUDIT, etc.).
+
+schema de datos esperados (Zod).
+
+layout en markdown/Handlebars simple.
+
+Servicio:
+
+ReportTemplateRegistry ya existe; extenderlo a multi‑producto.
+
+generateTemplatedReport(template, data, locale) genérico.
+​
+
+UI:
+
+Pequeño editor de plantillas con vista previa (aunque sea sólo para SUPERADMIN al principio).
+
+Luego cualquier app puede pedir “generar certificado X” pasando datos, sin reinventar PDF.
+
+2.3 Centro de notificaciones
+Unificar cómo comunicas cosas al usuario y a sistemas externos.
+
+Tipos:
+
+INAPP, EMAIL, WEBHOOK, SLACK… con una cola común.
+
+Modelo:
+
+notifications con:
+
+tenantId, userId?, type, channel, payload, status.
+
+Uso:
+
+Casos típicos:
+
+“Nueva tarea HITL asignada”.
+
+“Workflow bloqueado por gobernanza”.
+
+“Límite de tokens al 80%”.
+
+UI:
+
+Un centro de notificaciones en el header (badge + panel), igual para todas las apps que usen el shell.
+
+3. IA / RAG
+3.1 Panel de gestión de modelos
+Ahora todo está muy “Gemini‑centrado”.
+​
+
+Configuración:
+
+Por tenant:
+
+defaultLLM (gemini-1.5-flash, gemini-1.5-pro, otro…).
+
+Parámetros: temperature, maxTokens, safetyProfile.
+
+Políticas: “no respuestas sin citas”, “modo conservador por defecto”.
+
+UI:
+
+Pantalla en admin:
+
+Dropdown de modelo.
+
+Sliders de temperatura, top‑p, etc. (limitados a rangos seguros).
+
+Integración:
+
+PromptService y WorkflowLLMNodeService usan esa config en lugar de constantes.
+
+3.2 Dataset de evaluación RAG
+Para medir calidad de respuestas por release / cambio de prompt.
+
+Modelo:
+
+evalDatasets:
+
+name, tenantId, domain, items: [{question, expectedAnswer, contextRefs}].
+
+Servicio:
+
+Job que:
+
+Recorre items, llama a RAG, pasa por RagJudgeService, guarda métricas.
+​
+
+UI:
+
+“RAG Evaluation”:
+
+Tabla con accuracy, groundedness, citas correctas, por versión de prompt/modelo.
+
+Esto te sirve para comparar antes/después de cambios, y también vale para otras apps que tengan LLM sin RAG.
+
+3.3 Registro de prompts y experimentos
+Ya tienes PromptService con versiones.
+​
+
+UI de prompts:
+
+Lista de prompts por tipo/tenant, con:
+
+Versión activa, shadow, última modificación, quién tocó.
+
+Métricas por versión:
+
+Enlazar llamadas de LLM (usage + judge) a la versión de prompt usada.
+
+Mostrar “éxito” por versión (por ejemplo, porcentaje de “GOOD” en RagJudge).
+
+Experimentación:
+
+Básico: toggles A/B (shadow prompts que se evalúan pero no se muestran).
+
+Esto ya casi lo tienes con getPromptWithShadow; sólo falta UI.
+
+4. Operaciones y calidad
+4.1 Panel de observabilidad interno
+Por encima de los logs que ya recoges.
+​
+
+Fuentes:
+
+applicationlogs, usage, workflowanalytics, billing, queue.
+​
+
+Vista:
+
+Página interna “Platform Ops”:
+
+Errores por endpoint.
+
+SLA violations por endpoint (ya las logueas con withPerformanceSLA).
+​
+
+Consumo por tenant (tokens, reports, jobs).
+
+Estado de colas (jobs pendientes, fallidos).
+
+Uso:
+
+Te sirve para mantener la suite cuando tengas varias apps compartiendo infra.
+
+4.2 Herramientas de migración/versionado
+Mucho de esto hoy son scripts en dev-tools.
+
+Estado actual:
+
+Scripts de i18n, check logs, user search, etc.
+
+Lo que haría:
+
+Estándar ligero tipo:
+
+migrations/2026-02-18-rename-workflow-field.ts con up() y down().
+
+Un CLI sencillo (pnpm migrate up) y una pequeña UI sólo para SUPERADMIN para ver qué migrations se han aplicado.
+
+No es imprescindible para la suite, pero reduce miedo a tocar cosas compartidas por varias apps.
+
+4.3 Inspector multi‑tenant seguro
+Especialmente útil si la suite crece.
+
+Función:
+
+UI que permita, como SUPERADMIN, buscar:
+
+Por email, correlationId, entityId, tenantId.
+
+Ver:
+
+Casos, logs, tareas HITL, timelines.
+
+Seguridad:
+
+Sólo SUPERADMIN, con logging exhaustivo.
+
+Posible redacción de campos sensibles (PII) por defecto.
+
+Si tu idea es reutilizar plataforma para productos bastante distintos, estas utilidades refuerzan justo las cosas más caras de rehacer: auth/tenant, observabilidad, configuración, prompts/LLM y workflows. El resto (dominio RAG, dominio “otro producto”) ya se puede enchufar encima con bastante tranquilidad.
+
+
+Para ese tipo de entornos (backoffice técnico multi‑sector) tu base encaja muy bien; yo reforzaría estas piezas para hacerla realmente transversal.
+​
+
+1. Núcleo común para cualquier “despacho”
+Gestión de expedientes/casos genéricos
+
+Tu entidad cases/entities ya es casi un “expediente”; haría explícito un módulo de “Case Management” configurable: tipos de caso (expediente laboral, siniestro, proyecto de obra, expediente de finca), estados base y metadatos dinámicos por tipo.
+​
+
+Workflows configurables por tipo de expediente
+
+Lo que tienes de workflows + HITL es ideal para: circuitos de aprobación, revisiones jurídicas, validación de documentación, firmas, etc.
+​
+
+Añadiría plantillas de workflow por vertical:
+
+Legal: intake → análisis → propuesta → revisión cliente → cierre.
+
+Seguros: apertura siniestro → peritación → propuesta indemnización → aceptación.
+
+Fincas: alta incidencia → asignación proveedor → ejecución → validación.
+​
+
+Checklists y formularios
+
+Generalizar ChecklistConfig como “form builder técnico” para: listas de control de cumplimiento, check de documentación mínima, matrices de riesgos.
+​
+
+2. Módulo documental fuerte (independiente del RAG)
+Repositorio documental por expediente
+
+Usar tu pipeline de ingesta (sin necesidad de IA) para gestionar: contratos, informes, pólizas, escrituras, CVs, etc., vinculados a casos.
+​
+
+Versionado de documentos, etiquetas, clasificación por tipo de documento (contrato, acta, póliza, certificado, etc.).
+
+Plantillas y generación de documentos
+
+Extender los reportes PDF a: contratos tipo, cartas a clientes, certificados, informes técnicos, actas de reunión, etc.
+​
+
+Cada vertical define sus plantillas, pero comparte motor.
+
+3. IA/RAG “técnica” pero configurable
+Corpus y prompts por vertical
+
+Reusar el mismo motor RAG, pero con espacios/colecciones por industria (legal, seguros, HR, construcción…) y prompts especializados por vertical.
+​
+
+Tu gestor de prompts sirve para:
+
+“Resumen de expediente”
+
+“Detección de riesgos legales”
+
+“Checklist de cumplimiento normativo”
+
+“Propuesta de respuesta a reclamación”.
+
+Análisis asistido, no automático
+
+Para entornos sensibles (abogacía, bancos, seguros) el patrón LLM sugiere / humano decide que ya tienes (WORKFLOWDECISION) es justo lo que quieren ver los compliance.
+​
+
+4. Capa de cumplimiento y trazabilidad
+Audit trail fuerte
+
+Aprovechar logEvento, timelines, certificados de backup/destrucción de datos, SLA logs, etc., como selling point para banca/seguros/legales.
+​
+
+Políticas y gobernanza de datos
+
+Módulo de “políticas” por tenant: retención de expedientes, purga de datos, export de dossiers completos (ya tienes backup/compliance services).
+​
+
+Gestión de permisos fina
+
+Guardian/ABAC para casuísticas típicas:
+
+Abogacía: acceso por despacho/equipo, secreto profesional.
+
+Bancos/seguros: compartimentación por área, sólo ver expedientes de tu cartera.
+
+HR: distinción entre datos sensibles y datos agregados.
+​
+
+5. Vistas y utilidades específicas de “administrativo técnico”
+Cuadros de mando por rol
+
+Reusar tu dashboard admin, pero parametrizable:
+
+Equipo jurídico: plazos próximos, expedientes en riesgo.
+
+Seguros: siniestros abiertos por fase, tiempos medios de resolución.
+
+Construcción/fincas: incidencias abiertas, proveedores con más retrasos.
+​
+
+Buscador unificado
+
+Global search (que ya tienes) para buscar por: número de expediente, cliente, dirección, referencia de póliza, NIF, etc., además de texto libre.
+​
+
+Agenda/plazos
+
+Encajar los workflows con un pequeño módulo de plazos:
+
+Vencimientos, recordatorios automáticos, tareas calendarizadas (renovaciones de contrato, revisiones periódicas, etc.).
+
+En conjunto: tu plataforma ya es un “backoffice técnico” muy avanzado; orientarla a despachos/áreas técnicas de distintos sectores es sobre todo cuestión de empaquetar bien casos, workflows, checklists y documentos como bloques configurables por vertical, no de reescribir arquitectura.

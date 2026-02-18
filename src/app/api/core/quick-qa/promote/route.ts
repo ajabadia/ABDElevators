@@ -19,7 +19,7 @@ const PromoteSchema = z.object({
 export async function POST(req: NextRequest) {
     const correlationId = generateUUID();
     try {
-        const user = await enforcePermission('knowledge', 'ingest');
+        const session = await enforcePermission('knowledge', 'ingest');
         const body = await req.json();
         const { snippet, title, spaceId } = PromoteSchema.parse(body);
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
             action: 'PROMOTE_START',
             message: `Promocionando snippet a asset: ${title}`,
             correlationId,
-            tenantId: user.tenantId
+            tenantId: session.user.tenantId
         });
 
         // 1. Create a virtual File object for the ingest service
@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
                 version: '1.0',
                 scope: 'USER' as any,
             },
-            tenantId: user.tenantId,
-            userEmail: user.email!,
+            tenantId: session.user.tenantId,
+            userEmail: session.user.email!,
             correlationId
         });
 

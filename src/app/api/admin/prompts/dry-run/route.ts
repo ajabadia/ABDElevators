@@ -69,8 +69,21 @@ export const POST = auth(async function POST(req) {
     } catch (error) {
         console.error('[DRY RUN ERROR]', error);
         if (error instanceof z.ZodError) {
-            return new NextResponse(JSON.stringify({ error: 'Validation Failed', details: error.errors }), { status: 400 });
+            return NextResponse.json({
+                success: false,
+                error: {
+                    code: 'VALIDATION_ERROR',
+                    message: 'Validation Failed',
+                    details: error.issues
+                }
+            }, { status: 400 });
         }
-        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+        return NextResponse.json({
+            success: false,
+            error: {
+                code: 'INTERNAL_ERROR',
+                message: 'Internal Server Error'
+            }
+        }, { status: 500 });
     }
 });

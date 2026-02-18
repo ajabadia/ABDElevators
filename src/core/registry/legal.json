@@ -1,0 +1,66 @@
+{
+    "id": "legal-ontology-synthetic",
+    "name": "Legal Industrial (Synthetic)",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true,
+        "description": "Plantilla sintética para pruebas de vertical legal"
+    },
+    "entities": [
+        {
+            "name": "contrato",
+            "plural": "contratos",
+            "slug": "contratos",
+            "icon": "Gavel",
+            "fields": [
+                {
+                    "key": "id_contrato",
+                    "label": "ID Contrato",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 1,
+                        "width": "w-32"
+                    }
+                },
+                {
+                    "key": "jurisdiccion",
+                    "label": "Jurisdicción",
+                    "type": "string",
+                    "required": true,
+                    "ui": {
+                        "order": 2
+                    }
+                },
+                {
+                    "key": "fecha_firma",
+                    "label": "Fecha de Firma",
+                    "type": "date",
+                    "ui": {
+                        "order": 3
+                    }
+                },
+                {
+                    "key": "estado_legal",
+                    "label": "Estado",
+                    "type": "select",
+                    "options": [
+                        "BORRADOR",
+                        "EN_REVISION",
+                        "FIRMADO",
+                        "EXPIRADO"
+                    ],
+                    "ui": {
+                        "order": 4
+                    }
+                }
+            ],
+            "api": {
+                "list": "/api/legal/contratos",
+                "detail": "/api/legal/contratos/:id",
+                "analyze": "/api/legal/analyze"
+            }
+        }
+    ]
+}

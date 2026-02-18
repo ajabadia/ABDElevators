@@ -1,185 +1,114 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ContentCard } from "@/components/ui/content-card";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, Save } from "lucide-react";
-import { useApiList } from "@/hooks/useApiList";
-import { useApiMutation } from "@/hooks/useApiMutation";
-import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from "next-intl";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Palette, Database, Puzzle, CreditCard, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-import { GeneralTab } from "@/components/admin/organizations/GeneralTab";
-import { BrandingTab } from "@/components/admin/organizations/BrandingTab";
-import { StorageTab } from "@/components/admin/organizations/StorageTab";
-import { FeaturesTab } from "@/components/admin/organizations/FeaturesTab";
-import { BillingTab } from "@/components/admin/organizations/BillingTab";
-import { SecurityCenterCard } from "@/components/admin/organizations/SecurityCenterCard";
-import { TenantConfig } from "@/lib/schemas";
+interface HubCard {
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: React.ReactNode;
+    color: string;
+}
 
-export default function OrganizationsPage() {
-    const t = useTranslations('admin.organizations.page');
-    const tTabs = useTranslations('admin.organizations.tabs');
-    const { toast } = useToast();
-    const [config, setConfig] = useState<TenantConfig | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
-    const [usageStats, setUsageStats] = useState<any>(null);
-    const [isLoadingUsage, setIsLoadingUsage] = useState(false);
+/**
+ * 🏢 Organizations Hub Dashboard (Phase 133)
+ * Central navigation hub for all organization configuration modules.
+ * UI Standardized with Hub Dashboard pattern.
+ */
+export default function OrganizationsHubPage() {
+    const router = useRouter();
+    const t = useTranslations("organizations_hub");
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (config?.tenantId) {
-            const fetchUsage = async () => {
-                setIsLoadingUsage(true);
-                try {
-                    const res = await fetch(`/api/admin/usage/stats?tenantId=${config.tenantId}`);
-                    const data = await res.json();
-                    if (data.success) setUsageStats(data.stats);
-                } catch (err) {
-                    console.error("Error fetching usage stats", err);
-                } finally {
-                    setIsLoadingUsage(false);
-                }
-            };
-            fetchUsage();
+    const hubCards: HubCard[] = [
+        {
+            id: "general",
+            title: t("cards.general.title"),
+            description: t("cards.general.description"),
+            href: "/admin/organizations/general",
+            icon: <Building2 className="w-6 h-6" />,
+            color: "border-l-primary"
+        },
+        {
+            id: "branding",
+            title: t("cards.branding.title"),
+            description: t("cards.branding.description"),
+            href: "/admin/organizations/branding",
+            icon: <Palette className="w-6 h-6" />,
+            color: "border-l-secondary"
+        },
+        {
+            id: "storage",
+            title: t("cards.storage.title"),
+            description: t("cards.storage.description"),
+            href: "/admin/organizations/storage",
+            icon: <Database className="w-6 h-6" />,
+            color: "border-l-accent"
+        },
+        {
+            id: "features",
+            title: t("cards.features.title"),
+            description: t("cards.features.description"),
+            href: "/admin/organizations/features",
+            icon: <Puzzle className="w-6 h-6" />,
+            color: "border-l-muted"
+        },
+        {
+            id: "billing",
+            title: t("cards.billing.title"),
+            description: t("cards.billing.description"),
+            href: "/admin/organizations/billing",
+            icon: <CreditCard className="w-6 h-6" />,
+            color: "border-l-primary/50"
         }
-    }, [config?.tenantId]);
-
-    const {
-        data: tenants,
-        isLoading,
-        refresh: refreshTenants
-    } = useApiList<TenantConfig>({
-        endpoint: '/api/admin/tenants',
-        dataKey: 'tenants',
-        onSuccess: (data) => {
-            if (data.length > 0 && !config) {
-                setConfig(data[0]);
-            }
-        }
-    });
-
-    const { mutate: saveConfig, isLoading: isSaving } = useApiMutation({
-        endpoint: '/api/admin/tenants',
-        successMessage: t('saveSuccess'),
-        onSuccess: () => refreshTenants(),
-        onError: (err) => {
-            console.error("Save config error:", err);
-            toast({
-                title: t('error'),
-                description: typeof err === 'string' ? err : t('saveError'),
-                variant: 'destructive',
-            });
-        }
-    });
-
-    const handleSave = () => {
-        if (config) {
-            if (!config.tenantId) {
-                toast({ title: t('error'), description: t('errorTenantId'), variant: 'destructive' });
-                return;
-            }
-            saveConfig(config);
-        }
-    };
-
-    if (!isMounted || (isLoading && !config)) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    ];
 
     return (
-        <PageContainer>
+        <PageContainer className="animate-in fade-in duration-500">
             <PageHeader
-                title={t('title')}
-                highlight=""
-                subtitle={t('subtitle')}
-                actions={
-                    <>
-                        <Button variant="outline" onClick={() => refreshTenants()} disabled={isSaving}>{t('refresh')}</Button>
-                        <Button
-                            onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20"
-                            disabled={isSaving}
-                        >
-                            {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full" /> : <Save size={18} aria-hidden="true" />}
-                            {t('save')}
-                        </Button>
-                    </>
-                }
+                title={t("title")}
+                subtitle={t("subtitle")}
+                icon={<Building2 className="w-6 h-6 text-primary" />}
             />
 
-            <ContentCard className="overflow-hidden" noPadding={true}>
-                <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="w-full justify-start rounded-none border-b bg-white dark:bg-slate-900 h-14 px-6 gap-8">
-                        <TabsTrigger
-                            value="general"
-                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
-                        >
-                            {tTabs('general')}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="branding"
-                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
-                        >
-                            {tTabs('branding')}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="storage"
-                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
-                        >
-                            {tTabs('storage')}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="features"
-                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
-                        >
-                            {tTabs('features')}
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="billing"
-                            className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent h-14 px-4 font-bold transition-all"
-                        >
-                            <CreditCard size={16} className="mr-2" aria-hidden="true" /> {tTabs('billing')}
-                        </TabsTrigger>
-
-                    </TabsList>
-
-                    <TabsContent value="general" className="p-8 space-y-8">
-                        <GeneralTab config={config} setConfig={setConfig} />
-                    </TabsContent>
-
-                    <TabsContent value="branding" className="p-8 space-y-8">
-                        <BrandingTab config={config} setConfig={setConfig} />
-                    </TabsContent>
-
-                    <TabsContent value="storage" className="p-8 space-y-8">
-                        <StorageTab config={config} setConfig={setConfig} usageStats={usageStats} />
-                    </TabsContent>
-
-                    <TabsContent value="features" className="p-8">
-                        <FeaturesTab config={config} />
-                    </TabsContent>
-
-                    <TabsContent value="billing" className="p-8 space-y-12">
-                        <BillingTab config={config} setConfig={setConfig} usageStats={usageStats} />
-                    </TabsContent>
-
-
-                </Tabs>
-            </ContentCard>
-
-            <SecurityCenterCard config={config} />
-        </PageContainer >
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+                {hubCards.map((card) => (
+                    <Card
+                        key={card.id}
+                        onClick={() => router.push(card.href)}
+                        className={cn(
+                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
+                            "hover:scale-[1.02] relative overflow-hidden",
+                            card.color
+                        )}
+                    >
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        {card.icon}
+                                    </div>
+                                    <CardTitle className="text-xl tracking-tight">
+                                        {card.title}
+                                    </CardTitle>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription className="text-sm leading-relaxed">
+                                {card.description}
+                            </CardDescription>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </PageContainer>
     );
 }

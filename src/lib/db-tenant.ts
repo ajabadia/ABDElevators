@@ -25,10 +25,11 @@ import { ReportSchedule } from './schemas/report-schedule';
 export interface TenantSession {
     user?: {
         id: string;
-        email: string;
+        email?: string | null;
         tenantId: string;
         role: string;
         tenantAccess?: { tenantId: string }[];
+        accessibleSpaces?: string[]; // Added for Phase 125.2
     }
 }
 
@@ -42,7 +43,7 @@ export class SecureCollection<T extends Document> {
     private readonly allowedTenants: string[];
     private readonly isSuperAdmin: boolean;
     private readonly useSoftDeletes: boolean;
-    private readonly session: any; // Added for Phase 125.2 context
+    private readonly session: TenantSession;
 
     public get tenantId(): string {
         return this.primaryTenantId;
@@ -52,14 +53,14 @@ export class SecureCollection<T extends Document> {
         return this.isSuperAdmin;
     }
 
-    constructor(collection: Collection<T>, session: any, options: { softDeletes?: boolean } = {}) {
+    constructor(collection: Collection<T>, session: TenantSession, options: { softDeletes?: boolean } = {}) {
         this.collection = collection;
         this.primaryTenantId = session?.user?.tenantId || process.env.SINGLE_TENANT_ID || 'unknown';
         this.isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
         this.useSoftDeletes = options.softDeletes ?? true; // Por defecto usamos soft deletes para seguridad de datos
         this.session = session;
 
-        const accessList = (session?.user?.tenantAccess || []).map((a: any) => a.tenantId);
+        const accessList = (session?.user?.tenantAccess || []).map((a) => a.tenantId);
         this.allowedTenants = Array.from(new Set([this.primaryTenantId, ...accessList])).filter(Boolean);
 
         // Si es SuperAdmin y no tiene un tenant fijo asignado, permitimos acceso global "platform_master"
@@ -264,7 +265,7 @@ export type DatabaseType = 'MAIN' | 'LOGS' | 'AUTH';
  */
 export async function getTenantCollection<T extends Document>(
     collectionName: string,
-    providedSession?: any,
+    providedSession?: TenantSession | null,
     dbType: DatabaseType = 'MAIN',
     options: { softDeletes?: boolean } = {}
 ): Promise<SecureCollection<T>> {
@@ -273,7 +274,8 @@ export async function getTenantCollection<T extends Document>(
     if (!session) {
         try {
             const { auth } = await import('./auth');
-            session = await auth();
+            const authResult = await auth();
+            session = authResult as TenantSession | null;
         } catch (e) {
             console.warn('[db-tenant] Failed to retrieve session from auth()', e);
         }
@@ -321,8 +323,16 @@ export async function getTenantCollection<T extends Document>(
 
         const rawCollection = db.collection<T>(collectionName);
 
-        // Ensure that if there's no session, we use platform_master context
-        const effectiveSession = session || { user: { tenantId: 'platform_master', role: 'GUEST' } };
+        // Ensure that if there's no session, we use the single tenant mode if configured, or fallback to platform_master
+        const defaultTenantId = process.env.SINGLE_TENANT_ID || 'platform_master';
+        const fallbackSession: TenantSession = {
+            user: {
+                id: 'system',
+                tenantId: defaultTenantId,
+                role: isSingleTenantMode ? 'ADMIN' : 'GUEST'
+            }
+        };
+        const effectiveSession = (session as TenantSession) || fallbackSession;
 
         return new SecureCollection<T>(rawCollection, effectiveSession, options);
     }
@@ -333,23 +343,23 @@ export async function getTenantCollection<T extends Document>(
     throw new AppError('UNAUTHORIZED', 401, errorMsg);
 }
 
-export async function getCaseCollection(session?: any) {
+export async function getCaseCollection(session?: TenantSession) {
     return await getTenantCollection('cases', session);
 }
 
-export async function getEntityCollection(session?: any) {
+export async function getEntityCollection(session?: TenantSession) {
     return await getTenantCollection('entities', session);
 }
 
-export async function getKnowledgeAssetCollection(session?: any) {
+export async function getKnowledgeAssetCollection(session?: TenantSession) {
     return await getTenantCollection('knowledge_assets', session);
 }
 
-export async function getReportsCollection(session?: any) {
+export async function getReportsCollection(session?: TenantSession) {
     return await getTenantCollection('reports', session);
 }
 
-export async function getReportSchedulesCollection(session?: any) {
+export async function getReportSchedulesCollection(session?: TenantSession) {
     return await getTenantCollection<ReportSchedule>('report_schedules', session);
 }
 

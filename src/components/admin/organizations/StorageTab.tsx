@@ -21,20 +21,20 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-6">
-                <Label className="text-slate-700 font-semibold">{t('provider')}</Label>
+                <Label className="text-foreground font-semibold">{t('provider')}</Label>
                 <div className="grid grid-cols-2 gap-4">
                     <div
                         onClick={() => setConfig(prev => prev ? { ...prev, storage: { ...prev.storage, provider: 'cloudinary' } } : null)}
-                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage?.provider === 'cloudinary' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                        className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${config?.storage?.provider === 'cloudinary' ? 'border-primary bg-primary/5' : 'border-muted hover:border-border'}`}
                     >
-                        <Cloud className={config?.storage?.provider === 'cloudinary' ? 'text-primary' : 'text-slate-400'} size={24} aria-hidden="true" />
+                        <Cloud className={config?.storage?.provider === 'cloudinary' ? 'text-primary' : 'text-muted-foreground'} size={24} aria-hidden="true" />
                         <h4 className="font-bold mt-2">{t('cloudinary')}</h4>
-                        <p className="text-[10px] text-slate-500 mt-1">{t('cloudinaryDesc')}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{t('cloudinaryDesc')}</p>
                     </div>
-                    <div className="p-6 rounded-2xl border-2 border-slate-100 opacity-50 cursor-not-allowed bg-slate-50/50 relative overflow-hidden group">
-                        <Server className="text-slate-400" size={24} aria-hidden="true" />
-                        <h4 className="font-bold mt-2 text-slate-400">{t('awsS3')}</h4>
-                        <div className="absolute top-2 right-2 rotate-12 bg-slate-200 text-slate-500 text-[8px] px-2 py-0.5 rounded-full font-bold">{t('comingSoon')}</div>
+                    <div className="p-6 rounded-2xl border-2 border-muted opacity-50 cursor-not-allowed bg-muted/50 relative overflow-hidden group">
+                        <Server className="text-muted-foreground" size={24} aria-hidden="true" />
+                        <h4 className="font-bold mt-2 text-muted-foreground">{t('awsS3')}</h4>
+                        <div className="absolute top-2 right-2 rotate-12 bg-muted text-muted-foreground text-[8px] px-2 py-0.5 rounded-full font-bold">{t('comingSoon')}</div>
                     </div>
                 </div>
 
@@ -50,18 +50,18 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                                 settings: { ...(prev.storage?.settings || {}), folder_prefix: e.target.value }
                             }
                         } : null)}
-                        className="font-mono text-xs bg-slate-50"
+                        className="font-mono text-xs bg-muted"
                     />
-                    <p className="text-[10px] text-slate-400">{t('folderPrefixDesc')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('folderPrefixDesc')}</p>
                 </div>
             </div>
 
             <div className="space-y-6">
-                <div className="p-6 rounded-2xl border bg-slate-50/30 space-y-6">
+                <div className="p-6 rounded-2xl border bg-muted/30 space-y-6">
                     <div className="flex justify-between items-end">
                         <div className="space-y-1">
-                            <Label className="text-slate-700 font-semibold">{tQuota('title')}</Label>
-                            <p className="text-xs text-slate-500">{tQuota('desc')}</p>
+                            <Label className="text-foreground font-semibold">{tQuota('title')}</Label>
+                            <p className="text-xs text-muted-foreground">{tQuota('desc')}</p>
                         </div>
                         <span className="text-3xl font-bold font-outfit text-primary">
                             {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
@@ -85,32 +85,32 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
 
                     <div className="space-y-3 pt-2">
                         <div className="flex justify-between items-end text-xs">
-                            <span className="text-slate-500 font-medium">{tQuota('currentUsage')}</span>
-                            <span className="font-bold text-slate-700">
+                            <span className="text-muted-foreground font-medium">{tQuota('currentUsage')}</span>
+                            <span className="font-bold text-foreground">
                                 {usageStats?.storage ? Math.round(usageStats.storage / (1024 * 1024)) : 0} MB / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
                             </span>
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-border">
                             <div
                                 className={cn(
                                     "h-full transition-all duration-1000",
-                                    (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-red-500" :
+                                    (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
                                         (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
                                 )}
                                 style={{ width: `${Math.min(100, Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
                             />
                         </div>
                         <div className="flex justify-between items-center text-[10px]">
-                            <span className="text-slate-400 italic">{tUsage('metric')}</span>
+                            <span className="text-muted-foreground italic">{tUsage('metric')}</span>
                             <span className={cn(
                                 "font-bold",
-                                (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-red-600" : "text-slate-500"
+                                (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
                             )}>
                                 {Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% {tUsage('used')}
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-100 dark:border-amber-900">
                         <AlertCircle size={16} aria-hidden="true" />
                         <span className="text-[10px]">{tQuota('warning')}</span>
                     </div>

@@ -24,6 +24,7 @@ async function syncMasterPrompts() {
 
         const targetTenantId = process.env.SINGLE_TENANT_ID || 'default_tenant';
         console.log(`🎯 Target Tenant ID: ${targetTenantId}`);
+        console.log(`🔌 DB URI present: ${!!process.env.MONGODB_URI}`);
 
         // 1. Asegurar que el tenant existe con el nombre correcto
         const existingTenant = await tenantsCollection.findOne({ tenantId: targetTenantId });
@@ -46,27 +47,21 @@ async function syncMasterPrompts() {
 
         // 2. Sincronizar prompts forzando PRODUCTION
         for (const [key, template] of Object.entries(PROMPTS)) {
-            // Intentar encontrar el prompt existente por key, tenant y entorno
-            const existing = await promptsCollection.findOne({
-                key,
-                tenantId: targetTenantId,
-                environment: 'PRODUCTION'
-            });
-
-            if (existing) {
-                console.log(`- [SKIP] Prompt "${key}" ya existe para tenant "${targetTenantId}" en PRODUCTION.`);
-                continue;
-            }
+            /* 
+               Removiendo lógica de SKIP para asegurar que los modelos y categorías se actualicen 
+               correctamente si han cambiado en el código maestro.
+            */
 
             // Crear nuevo objeto de prompt
             const newPrompt = {
                 key,
                 name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()),
                 description: `Prompt maestro sincronizado: ${key}`,
-                category: 'SYSTEM',
+                category: key.includes('CAUSAL') ? 'ANALYSIS' : 'GENERAL',
+                industry: key.includes('CAUSAL') ? 'REAL_ESTATE' : 'GENERIC',
                 template,
                 variables: [],
-                model: key.includes('JUDGE') ? 'gemini-1.5-pro' : 'gemini-1.5-flash',
+                model: key.includes('JUDGE') ? 'gemini-3-pro-preview' : 'gemini-2.5-flash',
                 tenantId: targetTenantId,
                 active: true,
                 version: 1,
@@ -77,10 +72,14 @@ async function syncMasterPrompts() {
 
             try {
                 const validated = PromptSchema.parse(newPrompt);
-                await promptsCollection.insertOne(validated);
-                console.log(`+ [SYNC] Prompt "${key}" insertado en "${targetTenantId}" (PRODUCTION).`);
+                await promptsCollection.updateOne(
+                    { key, tenantId: targetTenantId, environment: 'PRODUCTION' },
+                    { $set: validated },
+                    { upsert: true }
+                );
+                console.log(`✅ [SYNC] Prompt "${key}" sincronizado en "${targetTenantId}" (PRODUCTION).`);
             } catch (err: any) {
-                console.error(`❌ Error validando/insertando prompt "${key}":`, err.message);
+                console.error(`❌ Error validando/sincronizando prompt "${key}":`, err.message);
             }
         }
 

@@ -5,6 +5,7 @@ import { UsageService } from './usage-service';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from './resilience';
 import { getGenAI, mapModelName, runShadowCall } from "./gemini-client";
+import { DEFAULT_MODEL } from "./constants/ai-models";
 
 // Re-export core utilities for backward compatibility where needed
 export { getGenAI, mapModelName, runShadowCall };
@@ -92,15 +93,54 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 }
 
 /**
- * Genera contenido de forma atómica.
+ * Genera contenido con estrategia de fallback (Phase 170.3)
  */
-export async function callGeminiMini(
+async function callGeminiDynamic(
     prompt: string,
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string },
     session?: any
 ): Promise<string> {
-    const { correlationId, temperature = 0.7, model: rawModel = 'gemini-2.5-flash' } = options;
+    const { correlationId, temperature = 0.7, model: preferredModel } = options;
+
+    try {
+        // 1. Intento original
+        return await callGeminiRecursive(prompt, tenantId, options, session);
+    } catch (error: any) {
+        // 2. Si es un error de cuota o servicio y no estamos ya en el flash model, intentamos fallback
+        const isQuotaError = error.message?.includes('429') || error.message?.includes('QUOTA_EXCEEDED');
+        const primaryModel = preferredModel || DEFAULT_MODEL;
+
+        if (isQuotaError && primaryModel !== DEFAULT_MODEL) {
+            await logEvento({
+                level: 'WARN',
+                source: 'GEMINI_FALLBACK',
+                action: 'SWITCH_MODEL',
+                message: `Quota excedida en ${primaryModel}. Conmutando a ${DEFAULT_MODEL}.`,
+                correlationId,
+                tenantId
+            });
+
+            return await callGeminiRecursive(prompt, tenantId, {
+                ...options,
+                model: DEFAULT_MODEL
+            }, session);
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Worker interno recursivo (para evitar loops infinitos)
+ */
+async function callGeminiRecursive(
+    prompt: string,
+    tenantId: string,
+    options: { correlationId: string; temperature?: number; model?: string },
+    session?: any
+): Promise<string> {
+    const { correlationId, temperature = 0.7, model: rawModel = DEFAULT_MODEL } = options;
     const modelName = mapModelName(rawModel);
 
     return tracer.startActiveSpan('gemini.generate_content', {
@@ -112,9 +152,6 @@ export async function callGeminiMini(
         }
     }, async (span) => {
         try {
-            CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlationId } });
-            const start = Date.now();
-
             const genAI = getGenAI();
             const model = genAI.getGenerativeModel({ model: modelName });
             const result = await executeWithResilience(
@@ -129,12 +166,8 @@ export async function callGeminiMini(
             );
 
             const responseText = result.response.text();
-            const duration = Date.now() - start;
-            span.setAttribute('genai.duration_ms', duration);
-
             const usage = (result.response as any).usageMetadata;
             if (usage) {
-                span.setAttribute('genai.tokens', usage.totalTokenCount);
                 await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
             }
 
@@ -143,18 +176,6 @@ export async function callGeminiMini(
         } catch (error: any) {
             span.recordException(error);
             span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-            console.error(`[AI ERROR] Gemini Failure in ${modelName}:`, error.message);
-
-            await logEvento({
-                level: 'ERROR',
-                source: 'GEMINI_MINI',
-                action: 'CALL_ERROR',
-                message: `Error en Gemini Mini (${modelName}): ${error.message}`,
-                correlationId,
-                tenantId,
-                stack: error.stack
-            });
-
             throw error;
         } finally {
             span.end();
@@ -163,16 +184,30 @@ export async function callGeminiMini(
 }
 
 /**
+ * Genera contenido de forma atómica.
+ */
+export async function callGeminiMini(
+    prompt: string,
+    tenantId: string,
+    options: { correlationId: string; temperature?: number; model?: string },
+    session?: any
+): Promise<string> {
+    CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlationId: options.correlationId } });
+    return callGeminiDynamic(prompt, tenantId, options, session);
+}
+
+/**
  * Genera contenido usando el modelo Pro (Gemini 1.5 Pro).
  */
 export async function callGeminiPro(
     prompt: string,
     tenantId: string,
-    options: { correlationId: string; temperature?: number; model?: string }
+    options: { correlationId: string; temperature?: number; model?: string; maxTokens?: number }
 ): Promise<string> {
     return callGemini(prompt, tenantId, options.correlationId, {
         ...options,
-        model: options.model || 'gemini-3-pro'
+        model: options.model || 'gemini-3-pro-preview',
+        maxTokens: options.maxTokens || 4096
     });
 }
 

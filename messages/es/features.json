@@ -19,8 +19,8 @@
   "f8_desc": "Panel de registros de ejecución 'Mission Control' para seguir cada paso de tus automatizaciones en vivo, con métricas de performance detalladas.",
   "f9_title": "Centro de colaboración de tareas",
   "f9_desc": "Gobernanza con validación humana. Gestiona derivaciones críticas de los flujos automáticos con trazabilidad industrial y auditoría.",
-  "f10_title": "Inteligencia Multi-Sectorial",
-  "f10_desc": "Detección automática de dominio (Legal, Seguros, Sanidad) con adaptación dinámica de la lógica de análisis.",
+  "f10_title": "Inteligencia Multi-Sectorial Avanzada",
+  "f10_desc": "Infraestructura de dominio dinámico (Legal, Banca, Seguros) con adaptación nativa de ontologías, checklists y lógica de análisis por sector.",
   "f11_title": "Memoria Infinita",
   "f11_desc": "Ingesta en streaming y deduplicación inteligente para gestionar bibliotecas técnicas de tamaño ilimitado sin sobrecostes.",
   "f12_title": "Auto-Corrección Causal (IA)",
@@ -36,7 +36,7 @@
   "f16_title": "Gobernanza de Checklists Avanzada",
   "f17_desc": "Canalización de ingesta blindada con validación de estados de grado bancario, auto-detección de procesos bloqueados y orquestación resiliente ante fallos de IA.",
   "f17_title": "Máquina de Estados Resiliente",
-  "f18_title": "Seguridad de Acceso (v4.7.2)",
+  "f18_title": "Seguridad de Acceso (v4.7.3)",
   "f18_desc": "Flujos de activación por token sin exposición de contraseñas y MFA persistente para máxima protección de identidad empresarial.",
   "f19_desc": "Optimización profesional de los módulos de Facturación, Permisos y Activos con estándares de Vercel y trazabilidad UUID segura.",
   "f19_title": "Módulos de Grado Industrial",
@@ -47,5 +47,11 @@
   "f22_title": "Explorador Visual de Grafos",
   "f22_desc": "Interfaz interactiva para navegar, buscar e inspeccionar nodos y relaciones en el Grafo de Conocimiento (Neo4j) en tiempo real.",
   "f23_title": "Curación de Conocimiento Avanzada",
-  "f23_desc": "Gestión profesional del Grafo de Conocimiento. Edición manual, herramientas de fusión de nodos (Merging) y borrado masivo con trazabilidad total."
+  "f23_desc": "Gestión profesional del Grafo de Conocimiento. Edición manual, herramientas de fusión de nodos (Merging) y borrado masivo con trazabilidad total.",
+  "f24_title": "Separación de Motores Core",
+  "f24_desc": "Arquitectura desacoplada que separa el motor de flujos IA de la gestión de casos industriales, permitiendo escalabilidad masiva y mantenimiento simplificado.",
+  "f25_title": "Scaffolding Industrial (Fase 98)",
+  "f25_desc": "Motor de registro vertical distribuido que permite el despliegue rápido de nuevas industrias mediante plantillas agénticas y ontologías pre-pobladas.",
+  "f26_title": "Motor de Simulación Causal",
+  "f26_desc": "Análisis prospectivo 'What-If' integrado en Digital Twins para predecir consecuencias técnicas en cascada y sugerir planes de mitigación."
 }

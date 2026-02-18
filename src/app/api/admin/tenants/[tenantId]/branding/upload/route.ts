@@ -27,7 +27,7 @@ export async function POST(
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
-        const type = (formData.get('type') as 'logo' | 'favicon') || 'logo';
+        const type = (formData.get('type') as 'logo' | 'favicon' | 'documentLogo') || 'logo';
 
         if (!file) {
             throw new AppError('VALIDATION_ERROR', 400, 'Archivo no proporcionado');
@@ -38,7 +38,7 @@ export async function POST(
 
         // 1. Obtener config actual para ver si hay que borrar el asset anterior
         const currentConfig = await TenantService.getConfig(tenantId);
-        const oldAsset = type === 'logo' ? currentConfig.branding?.logo : currentConfig.branding?.favicon;
+        const oldAsset = type === 'logo' ? currentConfig.branding?.logo : (type === 'favicon' ? currentConfig.branding?.favicon : currentConfig.branding?.documentLogo);
 
         // 2. Subir a Cloudinary
         const result = await uploadBrandingAsset(buffer, file.name, tenantId, type);

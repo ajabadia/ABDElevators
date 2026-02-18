@@ -16,55 +16,23 @@ Este skill asegura que todos los servicios de IA de la plataforma ABDElevators s
 1. **Prioridad Dinámica**: El prompt debe cargarse desde `PromptService.getRenderedPrompt` para permitir ajustes en caliente por el administrador.
 2. **Resiliencia Total**: Todo servicio DEBE tener una constante en `src/lib/prompts.ts` que actúe como "Master Fallback" si la BD falla o el prompt no existe.
 3. **Manejo de Errores Silencioso**: El sistema debe registrar un aviso (`console.warn` / `logEvento`) pero continuar operando usando el fallback.
-
-## Workflow de Implementación
-
-### 1) Definición del Master Fallback
-Añadir la constante al objeto `PROMPTS` en `src/lib/prompts.ts`.
-```typescript
-// src/lib/prompts.ts
-export const PROMPTS = {
-    MI_NUEVO_PROMPT: `Instrucciones maestras aquí... {{variable}}`
-}
-```
-
-### 2) Consumo en el Servicio
-Implementar el bloque `try/catch` con renderizado manual para el fallback.
-
-```typescript
-// src/services/mi-servicio.ts
-let renderedPrompt: string;
-let modelName = 'gemini-1.5-flash';
-
-try {
-    const { text, model } = await PromptService.getRenderedPrompt(
-        'MI_NUEVO_PROMPT',
-        { variable: valor },
-        tenantId
-    );
-    renderedPrompt = text;
-    modelName = model;
-} catch (err) {
-    console.warn(`[MI_SERVICIO] ⚠️ Fallback to Master Prompt:`, err);
-    renderedPrompt = PROMPTS.MI_NUEVO_PROMPT.replace('{{variable}}', valor);
-}
-
-const response = await callGemini(renderedPrompt, tenantId, correlationId, { model: modelName });
-```
-
-### 3) Tipado de Payloads (Fase 130.5)
-Asegurar que los datos extraídos o analizados por la IA sigan las interfaces estándar de la plataforma para garantizar la interoperabilidad entre motores.
-
-- ✅ **OBLIGATORIO**: Uso de tipos desde `@/types/ai` (`AIModelFinding`, `AIRiskFinding`, `AIGraphPattern`).
-- ❌ **RED FLAG**: Uso de `any[]` para almacenar resultados de motores agénticos.
+4. **Registro Único de Modelos**: Ningún componente o servicio debe usar strings hardcodeadas (ej: "gemini-1.5-pro"). Se debe usar EXCLUSIVAMENTE el registro en `src/lib/constants/ai-models.ts`.
 
 ## Checklist de Auditoría
 - [ ] ¿El prompt tiene una entrada en `PromptService`? (Clave única)
 - [ ] ¿Existe una constante equivalente en `src/lib/prompts.ts`?
 - [ ] ¿El servicio usa `try/catch` envolviendo el `getRenderedPrompt`?
 - [ ] ¿Se realiza el reemplazo manual de variables en la rama del `catch`?
-- [ ] ¿Se loguea un aviso cuando ocurre el fallback para que el admin sepa que debe crear el prompt en la BD?
+- [ ] ¿Se loguea un aviso cuando ocurre el fallback?
 - [ ] ¿El payload de resultado usa los tipos de `src/types/ai.ts`? (Fase 130.5)
+- [ ] ¿El modelo utilizado está definido en `src/lib/constants/ai-models.ts`?
+- [ ] ¿Los dropdowns o selectores de modelos mapean sobre la constante `AI_MODELS`?
+
+## Flujo de Creación/Modificación
+Al crear una nueva parte de la aplicación que interactúe con IA:
+1. **Verificar**: Consultar `src/lib/constants/ai-models.ts` para ver qué modelos están habilitados.
+2. **Implementar**: Usar `AI_MODELS` para cualquier selector de UI.
+3. **Mapear**: Asegurar que `src/lib/gemini-client.ts` (`mapModelName`) reconozca el ID del modelo para evitar fallbacks inesperados.
 
 ## Output Esperado
 Al auditar, genera un informe con:

@@ -27,10 +27,11 @@ export async function POST(
         const body = await req.json();
         const { assetIds } = AddAssetsSchema.parse(body);
 
-        const { auth } = await import('@/lib/auth');
+        const { auth } = await import('@/auth');
         const session = await auth();
 
-        const success = await CollectionService.addAssetsToCollection(id, assetIds, user.id, session);
+        // user is actually the session object returned by enforcePermission
+        const success = await CollectionService.addAssetsToCollection(id, assetIds, user.user.id, session as any);
 
         return NextResponse.json({ success });
 

@@ -1,0 +1,31 @@
+{
+    "name": "Legal Contract Review Template (Synthetic)",
+    "industry": "LEGAL",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true
+    },
+    "items": [
+        {
+            "id": "item-l1",
+            "label": "Verificación de Jurisdicción Competente",
+            "description": "Asegurar que el contrato se rige por las leyes locales acordadas.",
+            "category": "JURISDICTION",
+            "synthetic": true
+        },
+        {
+            "id": "item-l2",
+            "label": "Revisión de Cláusula de Limitación de Responsabilidad",
+            "description": "Validar que la responsabilidad no exceda el 100% del valor del contrato.",
+            "category": "LIABILITY",
+            "synthetic": true
+        },
+        {
+            "id": "item-l3",
+            "label": "Cláusula de Resolución de Conflictos",
+            "description": "Confirmar procedimiento de arbitraje o tribunales específicos.",
+            "category": "LEGAL_PROCEDURE",
+            "synthetic": true
+        }
+    ]
+}

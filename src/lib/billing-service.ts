@@ -1,7 +1,7 @@
 import { UsageService } from './usage-service';
 import { TenantService } from './tenant-service';
 import { PLANS, PlanTier } from './plans';
-import { ObjectId } from 'mongodb';
+import { ObjectId, ClientSession } from 'mongodb';
 import { ValidationError, AppError } from './errors';
 import { getTenantCollection } from './db-tenant';
 import { TenantSubscriptionSchema, TenantSubscription } from './schemas/billing';
@@ -9,6 +9,8 @@ import { logEvento } from './logger';
 import { stripe, createCheckoutSession } from './stripe';
 import Stripe from 'stripe';
 import crypto from 'crypto';
+import { connectAuthDB } from './db';
+import { sendPaymentFailedEmail } from './email-service';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -111,22 +113,25 @@ export class BillingService {
     /**
      * Procesa eventos de Stripe (Webhooks).
      */
-    static async handleWebhookEvent(event: Stripe.Event): Promise<void> {
+    static async handleWebhookEvent(event: Stripe.Event, session?: ClientSession): Promise<void> {
         const correlationId = crypto.randomUUID();
 
         try {
             switch (event.type) {
                 case 'checkout.session.completed':
-                    await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, correlationId);
+                    await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, correlationId, session);
                     break;
                 case 'invoice.paid':
-                    await this.handleInvoicePaid(event.data.object as Stripe.Invoice, correlationId);
+                    await this.handleInvoicePaid(event.data.object as Stripe.Invoice, correlationId, session);
                     break;
                 case 'invoice.payment_failed':
-                    await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, correlationId);
+                    await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, correlationId, session);
+                    break;
+                case 'customer.subscription.updated':
+                    await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription, correlationId, session);
                     break;
                 case 'customer.subscription.deleted':
-                    await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription, correlationId);
+                    await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription, correlationId, session);
                     break;
                 default:
                     break;
@@ -144,7 +149,7 @@ export class BillingService {
         }
     }
 
-    private static async handleCheckoutCompleted(session: Stripe.Checkout.Session, correlationId: string): Promise<void> {
+    private static async handleCheckoutCompleted(session: Stripe.Checkout.Session, correlationId: string, dbSession?: ClientSession): Promise<void> {
         const tenantId = session.metadata?.tenantId;
         if (!tenantId) {
             await logEvento({
@@ -163,7 +168,7 @@ export class BillingService {
             'subscription.stripeSubscriptionId': (session.subscription as string) || null,
             'subscription.status': 'active',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId });
+        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         await logEvento({
             level: 'INFO',
@@ -175,7 +180,7 @@ export class BillingService {
         });
     }
 
-    private static async handleInvoicePaid(invoice: Stripe.Invoice, correlationId: string): Promise<void> {
+    private static async handleInvoicePaid(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
         const invoiceObj = invoice as unknown as { subscription: string | Stripe.Subscription | null; id: string };
         const subscriptionId = typeof invoiceObj.subscription === 'string'
             ? invoiceObj.subscription
@@ -203,10 +208,10 @@ export class BillingService {
             'subscription.status': 'active',
             'subscription.currentPeriodEnd': new Date(subData.current_period_end * 1000),
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId });
+        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
     }
 
-    private static async handleInvoicePaymentFailed(invoice: Stripe.Invoice, correlationId: string): Promise<void> {
+    private static async handleInvoicePaymentFailed(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
         const invoiceObj = invoice as unknown as { subscription: string | Stripe.Subscription | null; id: string };
         const subscriptionId = typeof invoiceObj.subscription === 'string'
             ? invoiceObj.subscription
@@ -216,12 +221,92 @@ export class BillingService {
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const tenantId = subscription.metadata?.tenantId;
-        if (!tenantId) return;
+        if (!tenantId) {
+            const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
+            await logEvento({
+                level: 'WARN',
+                source: 'BILLING_SERVICE',
+                action: 'PAYMENT_FAILED_NO_TENANT',
+                correlationId,
+                message: `Payment failed for unknown tenant (Customer: ${customerId})`,
+                details: { invoiceId: invoice.id }
+            });
+            return;
+        }
 
+        // 1. Update status to past_due
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'past_due',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId });
+        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+
+        // 2. Business Logic: Email and Suspension (Transactional)
+        try {
+            const authDb = await connectAuthDB();
+            const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
+
+            // Find tenant and admin
+            const tenant = await authDb.collection('tenants').findOne({ tenantId }, { session: dbSession });
+            if (tenant) {
+                const admin = await authDb.collection('users').findOne({
+                    tenantId,
+                    role: 'ADMIN'
+                }, { session: dbSession });
+
+                if (admin?.email) {
+                    // Count failed payments in the last 30 days using logs
+                    // NOTE: logs might be in a different DB, but let's assume standard access for now
+                    // In a strictly transactional world, we'd check a 'failed_payment_count' field in tenant
+                    const failedPayments = await authDb.collection('logs').countDocuments({
+                        source: 'BILLING_SERVICE',
+                        action: 'PAYMENT_FAILED',
+                        'details.tenantId': tenantId,
+                        timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+                    }, { session: dbSession });
+
+                    await sendPaymentFailedEmail({
+                        to: admin.email,
+                        tenantName: tenant.name || 'Tu Organización',
+                        amount: invoice.amount_due / 100,
+                        currency: invoice.currency,
+                        attemptCount: failedPayments + 1,
+                    });
+
+                    // Suspender cuenta si es el 3er intento fallido
+                    if (failedPayments >= 2) {
+                        await authDb.collection('tenants').updateOne(
+                            { tenantId },
+                            {
+                                $set: {
+                                    'subscription.status': 'suspended',
+                                    'active': false,
+                                    updatedAt: new Date()
+                                }
+                            },
+                            { session: dbSession }
+                        );
+
+                        await logEvento({
+                            level: 'ERROR',
+                            source: 'BILLING_SERVICE',
+                            action: 'ACCOUNT_SUSPENDED',
+                            message: `Cuenta suspendida por 3 pagos fallidos: ${tenantId}`,
+                            correlationId,
+                            details: { tenantId, failedPayments: failedPayments + 1 },
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'BILLING_SERVICE',
+                action: 'PAYMENT_FAILED_LOGIC_ERROR',
+                correlationId,
+                message: `Error in payment failed logic: ${(error as Error).message}`,
+                details: { tenantId }
+            });
+        }
 
         await logEvento({
             level: 'WARN',
@@ -233,14 +318,39 @@ export class BillingService {
         });
     }
 
-    private static async handleSubscriptionDeleted(subscription: Stripe.Subscription, correlationId: string): Promise<void> {
+    private static async handleSubscriptionUpdated(subscription: Stripe.Subscription, correlationId: string, dbSession?: ClientSession): Promise<void> {
+        const tenantId = subscription.metadata?.tenantId;
+        if (!tenantId) return;
+
+        // Map Price ID to Plan Tier
+        const priceId = subscription.items.data[0].price.id;
+        const tier = Object.values(PLANS).find(p => p.stripePriceId === priceId)?.tier || 'FREE';
+
+        await TenantService.updateConfig(tenantId, {
+            'subscription.planSlug': tier,
+            'subscription.status': subscription.status as any,
+            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+            'subscription.updatedAt': new Date()
+        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
+
+        await logEvento({
+            level: 'INFO',
+            source: 'BILLING_SERVICE',
+            action: 'SUBSCRIPTION_UPDATED',
+            correlationId,
+            message: `Subscription updated for tenant ${tenantId} to ${tier}`,
+            details: { tenantId, tier, status: subscription.status }
+        });
+    }
+
+    private static async handleSubscriptionDeleted(subscription: Stripe.Subscription, correlationId: string, dbSession?: ClientSession): Promise<void> {
         const tenantId = subscription.metadata?.tenantId;
         if (!tenantId) return;
 
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'canceled',
             'subscription.updatedAt': new Date()
-        }, { performedBy: 'STRIPE_WEBHOOK', correlationId });
+        }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
         await logEvento({
             level: 'INFO',

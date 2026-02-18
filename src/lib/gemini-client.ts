@@ -18,31 +18,31 @@ export function getGenAI() {
     return genAIInstance;
 }
 
+import { DEFAULT_MODEL } from './constants/ai-models';
+
 /**
  * Mapea nombres de modelos comerciales o técnicos a nombres oficiales de la SDK.
+ * Actualizado para permitir modelos 1.5 y 2.0 sin fallbacks forzados (Phase 172).
  */
 export function mapModelName(model: string): string {
     const m = model.toLowerCase();
 
-    // Soporte para Gemini 3 (Working models per user feedback)
+    // Soporte explícito para modelos conocidos del registro único
+    if (m.includes('gemini-1.5-pro')) return 'gemini-1.5-pro';
+    if (m.includes('gemini-1.5-flash')) return 'gemini-1.5-flash';
+    if (m.includes('gemini-2.0-flash')) return 'gemini-2.0-flash';
+    if (m.includes('gemini-2.5-pro')) return 'gemini-2.5-flash'; // Temporalmente mapeamos 2.5 pro a flash si no hay instancia pro
+    if (m.includes('gemini-2.5-flash')) return 'gemini-2.5-flash';
+    if (m.includes('flash-latest')) return 'gemini-1.5-flash'; // Mapeo a versión estable según disponibilidad de API
+    if (m.includes('pro-latest')) return 'gemini-1.5-pro';
+
     if (m.includes('gemini-3')) {
         if (m.includes('image')) return 'gemini-3-pro-image';
-        if (m.includes('preview')) return 'gemini-3-pro-preview';
         return 'gemini-3-pro';
     }
 
-    // Soporte para Gemini 2.x/1.x (Working models per diagnostic script)
-    // El script de diagnóstico confirmó que gemini-2.5-flash es el único que responde OK (Success).
-    // gemini-1.5-* devuelve 404 y gemini-2.0-* devuelve 429 (Quota 0).
-    if (m.includes('gemini-2.0') || m.includes('gemini-2.5')) {
-        return 'gemini-2.5-flash';
-    }
-    if (m.includes('gemini-1.5')) {
-        return 'gemini-2.5-flash'; // Forzamos 2.5-flash ya que 1.5 dio 404
-    }
-
-    // Fallback absoluto estable confirmado
-    return 'gemini-2.5-flash';
+    // Fallback a modelo por defecto si no se reconoce
+    return DEFAULT_MODEL;
 }
 
 /**

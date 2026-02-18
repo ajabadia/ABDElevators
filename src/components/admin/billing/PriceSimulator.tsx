@@ -6,11 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PLANS, PlanTier, getPlanForTenant } from '@/lib/plans';
+import { PLANS, PlanTier } from '@/lib/plans';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, Calculator } from 'lucide-react';
+import { ArrowRight, Calculator, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
 
 export default function PriceSimulator() {
     const t = useTranslations('admin.billing');
@@ -20,16 +20,39 @@ export default function PriceSimulator() {
     const [daysUsed, setDaysUsed] = useState<number>(15);
     const [daysInCycle, setDaysInCycle] = useState<number>(30);
 
+    const [predictionData, setPredictionData] = useState<any>(null);
+    const [isLoadingUsage, setIsLoadingUsage] = useState(false);
+
     const [simulation, setSimulation] = useState<{
         unusedValue: number;
         newPlanCost: number;
         totalDue: number;
+        projectedOverage: number;
         action: 'CHARGE' | 'CREDIT' | 'NONE';
     } | null>(null);
 
+    // Cargar datos de uso real al inicio
+    useEffect(() => {
+        const fetchUsage = async () => {
+            setIsLoadingUsage(true);
+            try {
+                const res = await fetch('/api/admin/billing/prediction');
+                const data = await res.json();
+                if (data.success && data.prediction) {
+                    setPredictionData(data.prediction);
+                }
+            } catch (error) {
+                console.error('Error fetching usage prediction:', error);
+            } finally {
+                setIsLoadingUsage(false);
+            }
+        };
+        fetchUsage();
+    }, []);
+
     useEffect(() => {
         calculate()
-    }, [currentPlan, newPlan, cycle, daysUsed]);
+    }, [currentPlan, newPlan, cycle, daysUsed, predictionData]);
 
     const calculate = () => {
         const currentPlanData = PLANS[currentPlan];
@@ -43,28 +66,22 @@ export default function PriceSimulator() {
         const unusedRatio = daysRemaining / daysInCycle;
         const unusedValue = currentPrice * unusedRatio;
 
-        // Charge for new plan (full cycle usually starts now, but stripes logic might differ. 
-        // Simplified: We charge full new cycle minus credit)
-        // OR: Pro-rata upgrade for remainder of cycle? 
-        // Stripe default: Charge new plan immediately, subtract unused time credit.
-
-        // Let's implement immediate switch logic:
-        // Credit: Unused time on Old Plan
-        // Debit: Full price of New Plan (starting today)
-        // Total Due: Debit - Credit
-
         const totalDue = newPrice - unusedValue;
+
+        // Predict overage based on newPlan and real usage data
+        const projectedOverage = predictionData?.comparisons?.[newPlan] || 0;
 
         setSimulation({
             unusedValue,
             newPlanCost: newPrice,
             totalDue,
+            projectedOverage,
             action: totalDue > 0 ? 'CHARGE' : totalDue < 0 ? 'CREDIT' : 'NONE'
         });
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(amount);
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
     };
 
     return (
@@ -72,20 +89,20 @@ export default function PriceSimulator() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Calculator className="h-5 w-5" />
-                    {t('simulator.title', { fallback: 'Upgrade/Downgrade Simulator' })}
+                    {t('simulator.title')}
                 </CardTitle>
                 <CardDescription>
-                    {t('simulator.description', { fallback: 'Calculate pro-rata costs before changing subscription plans.' })}
+                    {t('simulator.description')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Current State */}
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Current Subscription</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Suscripción Actual</h4>
 
                         <div className="space-y-2">
-                            <Label>Current Plan</Label>
+                            <Label>Plan Actual</Label>
                             <Select value={currentPlan} onValueChange={(v) => setCurrentPlan(v as PlanTier)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -99,7 +116,7 @@ export default function PriceSimulator() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Days Used in Cycle</Label>
+                            <Label>Días consumidos en el ciclo</Label>
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="number"
@@ -108,17 +125,17 @@ export default function PriceSimulator() {
                                     value={daysUsed}
                                     onChange={(e) => setDaysUsed(parseInt(e.target.value) || 0)}
                                 />
-                                <span className="text-sm text-muted-foreground">of {daysInCycle} days</span>
+                                <span className="text-sm text-muted-foreground">de {daysInCycle} días</span>
                             </div>
                         </div>
                     </div>
 
                     {/* New State */}
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Target Subscription</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Nueva Suscripción</h4>
 
                         <div className="space-y-2">
-                            <Label>New Plan</Label>
+                            <Label>Nuevo Plan</Label>
                             <Select value={newPlan} onValueChange={(v) => setNewPlan(v as PlanTier)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -132,7 +149,7 @@ export default function PriceSimulator() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Billing Cycle</Label>
+                            <Label>Ciclo de Facturación</Label>
                             <Select value={cycle} onValueChange={(v: 'monthly' | 'yearly') => {
                                 setCycle(v);
                                 setDaysInCycle(v === 'monthly' ? 30 : 365);
@@ -141,39 +158,72 @@ export default function PriceSimulator() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="monthly">Monthly</SelectItem>
-                                    <SelectItem value="yearly">Yearly (-17%)</SelectItem>
+                                    <SelectItem value="monthly">Mensual</SelectItem>
+                                    <SelectItem value="yearly">Anual (-17%)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
                 </div>
 
-                {/* Results */}
+                {/* Results with Predictive Data */}
                 {simulation && (
                     <div className="mt-6 p-6 border rounded-xl bg-card shadow-sm space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Unused Time Credit ({PLANS[currentPlan].name}):</span>
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Crédito por tiempo no usado ({PLANS[currentPlan].name}):</span>
                             <span className="text-green-600 font-medium">-{formatCurrency(simulation.unusedValue)}</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">New Plan Cost ({PLANS[newPlan].name}):</span>
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Coste del Nuevo Plan ({PLANS[newPlan].name}):</span>
                             <span className="font-medium">{formatCurrency(simulation.newPlanCost)}</span>
                         </div>
+
+                        {/* Smart Usage Projection Overlay (Predictive Costing) */}
+                        {predictionData && (
+                            <div className="py-2.5 px-3.5 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800 rounded-2xl flex items-center justify-between transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-full bg-white dark:bg-indigo-950 shadow-sm">
+                                        <Sparkles className="h-4 w-4 text-indigo-500 animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">Proyección de Uso Real</div>
+                                        <div className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70">Basado en tu consumo mensual de {predictionData.usage.tokens.toLocaleString()} tokens</div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">+{formatCurrency(simulation.projectedOverage)}</div>
+                                    <div className="text-[9px] text-indigo-600/50 uppercase font-black">Gastos de IA Est.</div>
+                                </div>
+                            </div>
+                        )}
 
                         <Separator />
 
                         <div className="flex items-center justify-between pt-2">
-                            <span className="font-bold text-lg">Total Due Now:</span>
+                            <div>
+                                <span className="font-bold text-lg">Total a pagar ahora:</span>
+                                {simulation.projectedOverage > 0 && (
+                                    <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight max-w-[220px]">
+                                        * El total NO incluye los gastos variables por consumo de IA proyectados ({formatCurrency(simulation.projectedOverage)})
+                                    </div>
+                                )}
+                            </div>
                             <div className="text-right">
                                 <span className={`text-2xl font-bold ${simulation.totalDue > 0 ? '' : 'text-green-600'}`}>
                                     {formatCurrency(simulation.totalDue)}
                                 </span>
-                                <div className="text-xs text-muted-foreground">
-                                    {simulation.action === 'CHARGE' ? 'Immediate charge' : 'Account credit'}
+                                <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                                    {simulation.action === 'CHARGE' ? 'Cargo inmediato' : 'Crédito en cuenta'}
                                 </div>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {isLoadingUsage && (
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Analizando consumo histórico para sincronizar el simulador...
                     </div>
                 )}
             </CardContent>

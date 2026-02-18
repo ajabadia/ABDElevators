@@ -251,6 +251,13 @@
     "personal_desc": "Crea espacios privados para organizar tu conocimiento",
     "collections_title": "Colecciones"
   },
+  "navigator": {
+    "title": "Navegación",
+    "search_placeholder": "Filtrar espacios...",
+    "loading": "Sincronizando...",
+    "empty": "Vacío",
+    "default": "Def"
+  },
   "subtitle": "Organiza y colabora en contextos específicos de trabajo",
   "tabs": {
     "personal": "Mis Espacios",
@@ -504,11 +511,55 @@
     "name": "Nombre",
     "type": "Tipo",
     "created": "Creado",
+    "back_to_hub": "Volver al Hub",
     "qa": {
       "title": "Quick Q&A",
       "description": "Prueba el análisis sin necesidad de ingesta previa.",
       "inputLabel": "Pega tu texto técnico aquí",
       "analyze": "Analizar"
+    }
+  },
+  "hub": {
+    "title": "Espacios de Conocimiento",
+    "subtitle": "Organiza y colabora en contextos específicos de trabajo",
+    "coming_soon": "Próximamente",
+    "cards": {
+      "quick_qa": {
+        "title": "Quick Q&A",
+        "description": "Pega texto técnico y consulta sin persistencia. Ideal para análisis rápidos."
+      },
+      "personal": {
+        "title": "Espacios Personales",
+        "description": "Crea espacios privados para organizar tu conocimiento personal."
+      },
+      "collections": {
+        "title": "Colecciones",
+        "description": "Agrupa documentos relacionados en colecciones temáticas."
+      },
+      "playground": {
+        "title": "Playground",
+        "description": "Explora la jerarquía completa de espacios y prueba funcionalidades."
+      }
+    }
+  },
+  "personal": {
+    "title": "Espacios Personales",
+    "subtitle": "Gestiona tus documentos personales y conocimiento privado",
+    "back_to_hub": "Volver al Hub",
+    "create_space": "Crear Espacio",
+    "empty": {
+      "title": "Sin espacios personales",
+      "description": "Aquí aparecerán tus espacios personales cuando los crees."
+    }
+  },
+  "collections": {
+    "title": "Colecciones",
+    "subtitle": "Organiza documentos en colecciones temáticas",
+    "back_to_hub": "Volver al Hub",
+    "create_collection": "Crear Colección",
+    "empty": {
+      "title": "Sin colecciones",
+      "description": "Aquí aparecerán tus colecciones cuando las crees."
     }
   }
 }

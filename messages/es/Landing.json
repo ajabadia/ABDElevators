@@ -21,5 +21,11 @@
     "title": "Generación de PDF Corporativos",
     "description": "Transforma el análisis de IA en entregables profesionales. Plantillas de Inspección, Auditoría y Calidad con tu marca.",
     "features": "Plantillas Personalizables,Historial de Generación,Firma Digital"
+  },
+  "AI_VISION": {
+    "badge": "GOBERNANZA DE IA",
+    "title": "Control Industrial Total",
+    "description": "Gestión centralizada de modelos y arquitectura monorepo de alto rendimiento para entornos críticos.",
+    "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto"
   }
 }

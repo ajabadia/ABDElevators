@@ -20,7 +20,7 @@ interface MutationOptions<T, R> {
  * Hook universal para mutaciones (POST, PATCH, DELETE, PUT).
  * Gestiona confirmaciones, estados de carga y feedback visual.
  */
-export function useApiMutation<T = any, R = any>({
+export function useApiMutation<T = unknown, R = unknown>({
     endpoint,
     method = 'POST',
     onSuccess,
@@ -84,7 +84,7 @@ export function useApiMutation<T = any, R = any>({
             }
 
             // Éxito
-            const successMsg = typeof successMessage === 'function' ? successMessage(json) : successMessage;
+            const successMsg = typeof successMessage === 'function' ? (successMessage as any)(json) : successMessage;
             if (successMsg) {
                 toast({
                     title: 'Operación Exitosa',
@@ -97,12 +97,12 @@ export function useApiMutation<T = any, R = any>({
                 });
             }
 
-            await onSuccess?.(json, variables);
+            await onSuccess?.(json as R, variables);
             invalidateQueries?.();
 
             return json as R;
-        } catch (err: any) {
-            const message = err.message || 'Error desconocido';
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Error desconocido';
             toast({
                 title: 'Error',
                 description: message,

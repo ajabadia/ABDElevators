@@ -189,7 +189,7 @@ export function QuickQAPanel() {
             </Card>
 
             {/* Chat Section */}
-            <Card className="lg:col-span-7 flex flex-col shadow-xl border-primary/5 bg-slate-50/30 dark:bg-slate-900/30">
+            <Card className="lg:col-span-7 flex flex-col shadow-xl border-primary/5 bg-muted/30">
                 <CardHeader className="pb-2 border-b">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export function QuickQAPanel() {
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${msg.role === 'user'
                                         ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                        : 'bg-white dark:bg-slate-800 border rounded-tl-none prose dark:prose-invert prose-sm'
+                                        : 'bg-card border rounded-tl-none prose dark:prose-invert prose-sm'
                                         }`}>
                                         {msg.role === 'assistant' ? (
                                             <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -226,7 +226,7 @@ export function QuickQAPanel() {
                             ))}
                             {isLoading && (
                                 <div className="flex justify-start">
-                                    <div className="bg-white dark:bg-slate-800 border rounded-2xl rounded-tl-none p-4 flex items-center gap-2">
+                                    <div className="bg-card border rounded-2xl rounded-tl-none p-4 flex items-center gap-2">
                                         <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
                                         <span className="text-xs text-muted-foreground italic">{t("status_loading")}</span>
                                     </div>

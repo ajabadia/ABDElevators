@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { LegacyCaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';

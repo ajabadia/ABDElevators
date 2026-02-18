@@ -1,0 +1,16 @@
+{
+  "title": "User Management",
+  "subtitle_org": "Centralized management of users, roles and invitations.",
+  "subtitle_global": "Global management of users across all tenants.",
+  "cards": {
+    "active": {
+      "title": "Active Users",
+      "description_org": "Manage registered users in your organization.",
+      "description_global": "Manage all registered users across the platform."
+    },
+    "pending": {
+      "title": "Pending Invitations",
+      "description": "View and manage pending user invitations."
+    }
+  }
+}

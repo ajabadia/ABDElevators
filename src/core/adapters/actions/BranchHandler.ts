@@ -7,7 +7,7 @@ export class BranchHandler implements IActionHandler {
 
     async execute(action: WorkflowAction, context: WorkflowContext): Promise<ActionResult> {
         const { triggerData, workflowId } = context;
-        const criteria = action.params.criteria || {};
+        const criteria = (action.params as any).criteria || {};
         const risk = triggerData.riskScore || triggerData.score || 0;
         const confidence = triggerData.confidenceScore || 1;
 
@@ -23,7 +23,7 @@ export class BranchHandler implements IActionHandler {
                 correlationId: context.correlationId,
                 tenantId: context.tenantId
             });
-        } else if (risk > 75 || String(action.params.label).toLowerCase().includes('critical')) {
+        } else if (risk > 75 || String((action.params as any).label).toLowerCase().includes('critical')) {
             await logEvento({
                 level: 'INFO',
                 source: 'BRANCH_HANDLER',

@@ -1,6 +1,6 @@
 
 import { Edge, Node } from '@xyflow/react';
-import { AIWorkflow, WorkflowTrigger, WorkflowAction } from '@/types/workflow';
+import { AIWorkflow, WorkflowTrigger, WorkflowAction, WorkflowTriggerType, WorkflowActionType } from '@/types/workflow';
 
 /**
  * Compiles a visual React Flow graph into an executable AIWorkflow definition.
@@ -27,7 +27,7 @@ export function compileGraphToLogic(
 
     // Default trigger structure based on label
     let trigger: WorkflowTrigger = {
-        type: 'on_entity_change',
+        type: WorkflowTriggerType.on_entity_change,
         nodeId: triggerNode.id, // Tag with node ID
         condition: {
             field: 'riskScore',
@@ -49,7 +49,7 @@ export function compileGraphToLogic(
             // HANDLE CONDITION/SWITCH NODES (Branching)
             if (targetNode.type === 'condition' || targetNode.type === 'switch') {
                 actions.push({
-                    type: 'branch',
+                    type: WorkflowActionType.branch,
                     nodeId: targetNode.id,
                     params: {
                         label: targetNode.data.label,
@@ -63,7 +63,7 @@ export function compileGraphToLogic(
             // HANDLE WAIT NODES (Delay)
             if (targetNode.type === 'wait') {
                 actions.push({
-                    type: 'delay',
+                    type: WorkflowActionType.delay,
                     nodeId: targetNode.id,
                     params: {
                         duration: targetNode.data.duration || 1000,
@@ -76,7 +76,7 @@ export function compileGraphToLogic(
             // HANDLE LOOP NODES (Iteration)
             if (targetNode.type === 'loop') {
                 actions.push({
-                    type: 'iterator',
+                    type: WorkflowActionType.iterator,
                     nodeId: targetNode.id,
                     params: {
                         source: targetNode.data.source || 'items',
@@ -88,25 +88,24 @@ export function compileGraphToLogic(
 
             // HANDLE ACTION NODES
             if (targetNode.type === 'action') {
-                let actionType: WorkflowAction['type'] = 'log';
+                let actionType: WorkflowActionType = WorkflowActionType.log;
                 let params: any = { message: `Executed ${targetNode.data.label}` };
 
                 const label = String(targetNode.data.label).toLowerCase();
 
                 if (label.includes('email')) {
-                    actionType = 'notify';
+                    actionType = WorkflowActionType.notify;
                     params = { method: 'email', template: 'alert_default' };
                 } else if (label.includes('db') || label.includes('log')) {
-                    actionType = 'log';
+                    actionType = WorkflowActionType.log;
                 } else if (label.includes('update')) {
-                    actionType = 'update_entity';
+                    actionType = WorkflowActionType.update_entity;
                 } else if (label.includes('task') || label.includes('validar') || label.includes('human')) {
-                    actionType = 'human_task';
+                    actionType = WorkflowActionType.human_task;
                     params = {
                         title: targetNode.data.label,
                         taskType: 'TECHNICAL_VALIDATION',
                         assignedRole: 'REVIEWER',
-                        priority: 'MEDIUM',
                         checklistConfigId: targetNode.data.checklistConfigId // New: support for dynamic checklists
                     };
                 }

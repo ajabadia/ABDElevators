@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
 
             chunks = await collection
                 .find(filter)
+                .project({ embedding: 0, embedding_multilingual: 0 }) // Phase 171.2: Targeted Projections
                 .sort({ _id: pagination.sortOrder === 'desc' ? -1 : 1 })
                 .skip(pagination.cursor ? 0 : skip) // Si hay cursor, no necesitamos skip
                 .limit(pagination.limit)

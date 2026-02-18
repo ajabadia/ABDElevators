@@ -9,7 +9,7 @@ import { z } from 'zod';
 // --- 1. CONFIGURATION SCHEMAS (Templates) ---
 
 export const ChecklistItemConfigSchema = z.object({
-    id: z.string(), // Stable ID (e.g., 'visual_inspection_motor')
+    id: z.string(), // Stable ID (e.g., 'visual_inspection_motor' or content-hash-based)
     category: z.string(), // Grouping (e.g., 'Safety', 'Mechanical')
     label: z.string(),
     description: z.string().optional(),
@@ -19,7 +19,7 @@ export const ChecklistItemConfigSchema = z.object({
 });
 
 export const ChecklistConfigSchema = z.object({
-    _id: z.string().optional(),
+    _id: z.any().optional(),
     id: z.string(), // Human readable ID (e.g., 'maintenance_monthly_v1')
     tenantId: z.string(),
     title: z.string(),
@@ -42,25 +42,30 @@ export const ValidationStatusSchema = z.enum([
 ]);
 
 export const ItemValidationSchema = z.object({
-    itemId: z.string(), // Refers to ChecklistItemConfigSchema.id
+    itemId: z.string(), // Refers to ChecklistItemConfigSchema.id (must be stable across extractions)
     status: ValidationStatusSchema.default('PENDING'),
-    validationSource: z.enum(['HUMAN', 'AI', 'AUTO']).default('HUMAN'), // ⚡ FASE 129.4
-    value: z.any().optional(), // The actual input value (boolean, text response, etc.)
+    validationSource: z.enum(['HUMAN', 'AI', 'AUTO']).default('HUMAN'),
+    value: z.any().optional(),
     comments: z.string().optional(),
-    evidenceUrls: z.array(z.string()).optional(), // Photos/Docs
-    validatedBy: z.string().optional(), // UserId or AgentId
+    evidenceUrls: z.array(z.string()).optional(),
+    validatedBy: z.string().optional(),
     validatedAt: z.coerce.date().optional(),
-    aiConfidence: z.number().min(0).max(1).optional(), // If validationSource is 'AI'
+    aiConfidence: z.number().min(0).max(1).optional(),
 });
 
 export const ExtractedChecklistSchema = z.object({
-    checklistConfigId: z.string(), // Reference to the template
-    version: z.number(), // Template version
-    validations: z.array(ItemValidationSchema),
+    _id: z.any().optional(),
+    entityId: z.string(), // Reference to the document/case
+    checklistConfigId: z.string().optional(), // Template used (if any)
+    version: z.number().optional().default(1),
+    validations: z.array(ItemValidationSchema).default([]),
     overallStatus: ValidationStatusSchema.default('PENDING'),
-    completionPercentage: z.number().default(0),
+    completionPercentage: z.number().min(0).max(100).default(0),
     metadata: z.record(z.string(), z.any()).default({}),
+    createdAt: z.coerce.date().default(() => new Date()),
+    updatedAt: z.coerce.date().default(() => new Date()),
 });
+
 
 export type ChecklistConfig = z.infer<typeof ChecklistConfigSchema>;
 export type ChecklistItemConfig = z.infer<typeof ChecklistItemConfigSchema>;

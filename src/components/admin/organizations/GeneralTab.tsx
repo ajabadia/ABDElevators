@@ -33,7 +33,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
                         id="tenantId"
                         value={config?.tenantId}
                         disabled
-                        className="bg-slate-50 font-mono text-xs"
+                        className="bg-muted font-mono text-xs"
                     />
                 </div>
                 <div className="space-y-2">
@@ -65,19 +65,19 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
             </div>
 
             <div className="space-y-6">
-                <div className="bg-slate-900 text-white rounded-2xl p-6 space-y-4">
+                <div className="bg-card border rounded-2xl p-6 space-y-4">
                     <h4 className="text-primary font-bold flex items-center gap-2">
                         <Info size={18} aria-hidden="true" />
                         {tComp('title')}
                     </h4>
-                    <div className="space-y-4 text-sm text-slate-300">
-                        <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                    <div className="space-y-4 text-sm text-muted-foreground">
+                        <div className="flex justify-between items-center pb-2 border-b border-border">
                             <span>{tComp('dataIsolation')}</span>
                             <Badge className="bg-primary/20 text-primary border-primary/30">{tComp('active')}</Badge>
                         </div>
-                        <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                        <div className="flex justify-between items-center pb-2 border-b border-border">
                             <span>{tComp('dataRegion')}</span>
-                            <span className="text-white">{tComp('regionValue')}</span>
+                            <span className="text-foreground">{tComp('regionValue')}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span>{tComp('encryption')}</span>

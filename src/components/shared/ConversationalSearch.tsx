@@ -44,6 +44,8 @@ export function ConversationalSearch() {
     const [currentDocs, setCurrentDocs] = useState<any[]>([])
     // Trace state kept for potential debug mode, but not shown by default
     const [currentTrace, setCurrentTrace] = useState<string[]>([])
+    const [retryCount, setRetryCount] = useState(0)
+    const MAX_RETRIES = 2
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -56,101 +58,124 @@ export function ConversationalSearch() {
         scrollToBottom()
     }, [messages, streamingContent])
 
-    const handleSendMessage = async (e?: React.FormEvent, overrideInput?: string) => {
+    const handleSendMessage = async (e?: React.FormEvent, overrideInput?: string, isRetry = false) => {
         if (e) e.preventDefault()
 
         const textToSend = overrideInput || input
-        if (!textToSend.trim() || isLoading) return
+        if (!textToSend.trim() || (isLoading && !isRetry)) return
 
-        const userMessage: Message = { role: "user", content: textToSend }
-        setMessages(prev => [...prev, userMessage])
-        setInput("")
+        if (!isRetry) {
+            const userMessage: Message = { role: "user", content: textToSend }
+            setMessages(prev => [...prev, userMessage])
+            setInput("")
+        }
+
         setIsLoading(true)
         setStreamingContent("")
         setCurrentDocs([])
         setCurrentTrace([])
 
-        try {
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-            const response = await fetch(`${baseUrl}/api/technical/rag/chat`, {
-                method: "POST",
-                cache: "no-store",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    messages: [...messages, userMessage], // Include history
-                    stream: true
+        const performFetch = async (attempt: number): Promise<boolean> => {
+            try {
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+                const response = await fetch(`${baseUrl}/api/technical/rag/chat`, {
+                    method: "POST",
+                    cache: "no-store",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        messages: isRetry ? messages : [...messages, { role: "user", content: textToSend }],
+                        stream: true
+                    })
                 })
-            })
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error ${response.status}: ${errorText}`);
-            }
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
 
-            const reader = response.body?.getReader()
-            const decoder = new TextDecoder()
-            let fullAssistantContent = ""
+                const reader = response.body?.getReader()
+                const decoder = new TextDecoder()
+                let fullAssistantContent = ""
 
-            if (!reader) return
+                if (!reader) return false
 
-            while (true) {
-                const { done, value } = await reader.read()
-                if (done) break
+                let isDone = false
+                while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) {
+                        isDone = true
+                        break
+                    }
 
-                const chunk = decoder.decode(value)
-                const lines = chunk.split("\n")
+                    const chunk = decoder.decode(value)
+                    const lines = chunk.split("\n")
 
-                for (const line of lines) {
-                    if (!line || !line.startsWith('data: ')) continue;
-                    const jsonStr = line.replace('data: ', '');
-                    if (jsonStr === '[DONE]') break;
-
-                    try {
-                        const event = JSON.parse(jsonStr);
-
-                        if (event.type === 'connected') {
-                            // Connection acknowledged
-                            continue;
+                    for (const line of lines) {
+                        if (!line || !line.startsWith('data: ')) continue;
+                        const jsonStr = line.replace('data: ', '');
+                        if (jsonStr === '[DONE]') {
+                            isDone = true;
+                            break;
                         }
 
-                        if (event.type === 'token') {
-                            fullAssistantContent += event.data
-                            setStreamingContent(fullAssistantContent)
-                        } else if (event.type === 'docs') {
-                            setCurrentDocs(event.data)
-                        } else if (event.type === 'trace') {
-                            setCurrentTrace(event.data)
+                        try {
+                            const event = JSON.parse(jsonStr);
+                            if (event.type === 'token') {
+                                fullAssistantContent += event.data
+                                setStreamingContent(fullAssistantContent)
+                            } else if (event.type === 'docs') {
+                                setCurrentDocs(event.data)
+                            } else if (event.type === 'trace') {
+                                setCurrentTrace(event.data)
+                            }
+                        } catch (e) {
+                            // Silent fail for incomplete chunks
                         }
-                    } catch (e) {
-                        // Silent fail for incomplete chunks
                     }
                 }
+
+                if (isDone || fullAssistantContent.length > 0) {
+                    setMessages(prev => [...prev, {
+                        role: "assistant",
+                        content: fullAssistantContent,
+                        documents: currentDocs,
+                        trace: currentTrace
+                    }])
+                    setStreamingContent("")
+                    setRetryCount(0)
+                    return true
+                }
+                return false
+            } catch (error) {
+                console.error(`Attempt ${attempt} failed:`, error)
+                return false
             }
-
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: fullAssistantContent,
-                documents: currentDocs,
-                trace: currentTrace
-            }])
-            setStreamingContent("")
-
-        } catch (error) {
-            console.error("Chat error:", error)
-            toast.error(t("error_connection"))
-
-            // Add error message to chat for UX clarity
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: t("error_message")
-            }])
-        } finally {
-            setIsLoading(false)
-            // Refocus input for flow
-            setTimeout(() => inputRef.current?.focus(), 100)
         }
+
+        let success = await performFetch(1)
+
+        if (!success) {
+            // Retry logic
+            for (let i = 1; i <= MAX_RETRIES; i++) {
+                setRetryCount(i)
+                const delay = Math.pow(2, i) * 1000
+                await new Promise(resolve => setTimeout(resolve, delay))
+                success = await performFetch(i + 1)
+                if (success) break
+            }
+        }
+
+        if (!success) {
+            toast.error(t("error_connection"))
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: "error_retry" // Special flag for error + retry button
+            }])
+        }
+
+        setIsLoading(false)
+        setTimeout(() => inputRef.current?.focus(), 100)
     }
 
     return (
@@ -241,6 +266,21 @@ export function ConversationalSearch() {
                             )}>
                                 {m.role === 'user' ? (
                                     <p>{m.content}</p>
+                                ) : m.content === "error_retry" ? (
+                                    <div className="space-y-3">
+                                        <p className="text-red-500 font-medium">
+                                            {t("error_message")}
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleSendMessage(undefined, messages[messages.length - 1].content, true)}
+                                            className="gap-2 border-red-200 hover:bg-red-50 text-red-600"
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            {t("retry_button") || "Reintentar"}
+                                        </Button>
+                                    </div>
                                 ) : (
                                     <div className="space-y-4">
                                         <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
@@ -278,9 +318,25 @@ export function ConversationalSearch() {
                                         <ReactMarkdown>{streamingContent}</ReactMarkdown>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-2 text-slate-500">
-                                        <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
-                                        <span className="text-sm font-medium animate-pulse">{t("analyzing")}</span>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-2 text-slate-500">
+                                            <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
+                                            <span className="text-sm font-medium animate-pulse">
+                                                {retryCount > 0
+                                                    ? `${t("analyzing")} (Reintento ${retryCount}/${MAX_RETRIES})`
+                                                    : t("analyzing")}
+                                            </span>
+                                        </div>
+                                        {retryCount > 0 && (
+                                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    className="bg-teal-500 h-full"
+                                                    initial={{ width: "0%" }}
+                                                    animate={{ width: "100%" }}
+                                                    transition={{ duration: Math.pow(2, retryCount), ease: "linear" }}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

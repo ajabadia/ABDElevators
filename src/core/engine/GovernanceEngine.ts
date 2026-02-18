@@ -28,7 +28,7 @@ export class GovernanceEngine {
         tenantId: string
     ): Promise<{ canExecute: boolean; requiresReview: boolean; policyId?: string }> {
         try {
-            const collection = await getTenantCollection('ai_policies', { user: { tenantId } });
+            const collection = await getTenantCollection('ai_policies', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
             const policies = await collection.find({ active: true }) as unknown as GovernancePolicy[];
 
             // Encontrar la política más específica
@@ -54,7 +54,7 @@ export class GovernanceEngine {
      */
     public async logDecision(audit: Omit<AIDecisionAudit, 'id' | 'timestamp'>) {
         try {
-            const collection = await getTenantCollection('ai_audit_logs', { user: { tenantId: audit.tenantId } });
+            const collection = await getTenantCollection('ai_audit_logs', { user: { id: 'system', tenantId: audit.tenantId, role: 'SYSTEM' } } as any);
 
             const decisionLog: AIDecisionAudit = {
                 ...audit,
@@ -81,7 +81,7 @@ export class GovernanceEngine {
      * Obtiene los logs de auditoría para un tenant.
      */
     public async getAuditLogs(tenantId: string, limit = 50): Promise<AIDecisionAudit[]> {
-        const collection = await getTenantCollection('ai_audit_logs', { user: { tenantId } });
+        const collection = await getTenantCollection('ai_audit_logs', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
         return await collection.find({}, { sort: { timestamp: -1 }, limit }) as unknown as AIDecisionAudit[];
     }
 }

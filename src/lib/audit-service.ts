@@ -14,7 +14,6 @@ export class AuditService {
         try {
             const auditCollection = await getTenantCollection<AuditTrail>('audit_trails', null, 'LOGS');
 
-            // Validate before insertion
             const validatedEntry = AuditTrailSchema.parse({
                 ...entry,
                 timestamp: new Date()
@@ -23,9 +22,43 @@ export class AuditService {
             await auditCollection.insertOne(validatedEntry as any);
         } catch (error) {
             console.error('[AuditService] Failed to record audit trail:', error);
-            // We don't throw here to avoid breaking the main flow, 
-            // but in a real banking-grade app, this should be synchronous and critical.
-            // For now, we rely on the error log.
+        }
+    }
+
+    /**
+     * Records a specific configuration change (Tenant, Prompt, or Limits).
+     */
+    static async recordConfigChange(params: {
+        userId: string;
+        tenantId: string;
+        action: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE';
+        entityType: 'TENANT' | 'PROMPT' | 'LIMITS' | 'SYSTEM';
+        entityId: string;
+        before: any;
+        after: any;
+        correlationId: string;
+    }): Promise<void> {
+        const { userId, tenantId, action, entityType, entityId, before, after, correlationId } = params;
+
+        await this.record({
+            userId,
+            tenantId,
+            action: `${action}_${entityType}`,
+            entityType: entityType === 'LIMITS' ? 'SYSTEM' : entityType as any,
+            entityId,
+            changes: { before, after },
+            correlationId
+        });
+
+        // 🛡️ Phase 2302: Specialized collection for quick config audit
+        try {
+            const configAuditCollection = await getTenantCollection('audit_config_changes', null, 'LOGS');
+            await configAuditCollection.insertOne({
+                ...params,
+                timestamp: new Date()
+            } as any);
+        } catch (e) {
+            console.error('[AuditService] Failed to record to audit_config_changes:', e);
         }
     }
 

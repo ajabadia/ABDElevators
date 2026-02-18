@@ -1,92 +1,125 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import RagQualityDashboard from "@/components/admin/RagQualityDashboard";
-import { WorkflowCanvas } from "@/components/workflow-editor/WorkflowCanvas";
-import { useTranslations } from "next-intl";
-import { BrainCircuit, Activity, GitFork, Sparkles, LineChart } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrainCircuit, Activity, GitFork, Sparkles, LineChart, ArrowRight, Terminal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+interface HubCard {
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: React.ReactNode;
+    color: string;
+    isActive?: boolean;
+}
+
+/**
+ * 🤖 AI Hub Dashboard (Phase 133)
+ * Central navigation hub for all AI-related modules.
+ * UI Standardized with Hub Dashboard pattern.
+ */
 export default function AIHubPage() {
-    const t = useTranslations('aiHub');
-    const tTab = useTranslations('aiHub.tabs');
-    const tSec = useTranslations('aiHub.sections');
+    const router = useRouter();
+    const t = useTranslations("aiHub");
+
+    const hubCards: HubCard[] = [
+        {
+            id: "rag-quality",
+            title: t("cards.rag_quality.title"),
+            description: t("cards.rag_quality.description"),
+            href: "/admin/ai/rag-quality",
+            icon: <Activity className="w-6 h-6" />,
+            color: "border-l-primary",
+            isActive: true
+        },
+        {
+            id: "workflows",
+            title: t("cards.workflows.title"),
+            description: t("cards.workflows.description"),
+            href: "/admin/ai/workflows",
+            icon: <GitFork className="w-6 h-6" />,
+            color: "border-l-secondary",
+            isActive: true
+        },
+        {
+            id: "predictive",
+            title: t("cards.predictive.title"),
+            description: t("cards.predictive.description"),
+            href: "/admin/ai/predictive",
+            icon: <LineChart className="w-6 h-6" />,
+            color: "border-l-accent"
+        },
+        {
+            id: "playground",
+            title: t("cards.playground.title"),
+            description: t("cards.playground.description"),
+            href: "/admin/ai/playground",
+            icon: <Sparkles className="w-6 h-6" />,
+            color: "border-l-muted",
+            isActive: true
+        },
+        {
+            id: "prompts",
+            title: t("cards.prompts.title"),
+            description: t("cards.prompts.description"),
+            href: "/admin/prompts",
+            icon: <Terminal className="w-6 h-6" />,
+            color: "border-l-emerald-500",
+            isActive: true
+        }
+    ];
 
     return (
-        <PageContainer>
+        <PageContainer className="animate-in fade-in duration-500">
             <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
+                title={t("title")}
+                subtitle={t("subtitle")}
+                icon={<BrainCircuit className="w-6 h-6 text-primary" />}
             />
 
-            <Tabs defaultValue="rag-quality" className="space-y-6">
-                <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full md:w-auto overflow-x-auto flex justify-start">
-                    <TabsTrigger value="rag-quality" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <Activity className="w-4 h-4 text-emerald-600" aria-hidden="true" />
-                        {tTab('ragQuality')}
-                    </TabsTrigger>
-                    <TabsTrigger value="workflows" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <GitFork className="w-4 h-4 text-purple-600" aria-hidden="true" />
-                        {tTab('workflows')}
-                    </TabsTrigger>
-                    <TabsTrigger value="predictive" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <LineChart className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                        {tTab('predictive')}
-                    </TabsTrigger>
-                    <TabsTrigger value="playground" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <Sparkles className="w-4 h-4 text-amber-600" aria-hidden="true" />
-                        {tTab('playground')}
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="rag-quality" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
-                            <BrainCircuit className="w-5 h-5 text-emerald-600" aria-hidden="true" /> {tSec('ragQuality.title')}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            {tSec('ragQuality.subtitle')}
-                        </p>
-                    </div>
-                    <RagQualityDashboard />
-                </TabsContent>
-
-                <TabsContent value="workflows" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
-                            <GitFork className="w-5 h-5 text-purple-600" aria-hidden="true" /> {tSec('workflows.title')}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            {tSec('workflows.subtitle')}
-                        </p>
-                    </div>
-                    <div className="h-[600px] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
-                        <WorkflowCanvas />
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="predictive" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-                        <LineChart className="w-16 h-16 text-slate-300 mx-auto mb-4" aria-hidden="true" />
-                        <h3 className="text-xl font-bold text-slate-800">{tSec('predictive.title')}</h3>
-                        <p className="text-slate-500 max-w-md mx-auto mt-2">
-                            {tSec('predictive.subtitle')}
-                        </p>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="playground" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-                        <Sparkles className="w-16 h-16 text-slate-300 mx-auto mb-4" aria-hidden="true" />
-                        <h3 className="text-xl font-bold text-slate-800">{tSec('playground.title')}</h3>
-                        <p className="text-slate-500 max-w-md mx-auto mt-2">
-                            {tSec('playground.subtitle')}
-                        </p>
-                    </div>
-                </TabsContent>
-
-            </Tabs>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+                {hubCards.map((card) => (
+                    <Card
+                        key={card.id}
+                        onClick={() => router.push(card.href)}
+                        className={cn(
+                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
+                            "hover:scale-[1.02] relative overflow-hidden",
+                            card.color,
+                            !card.isActive && "opacity-75"
+                        )}
+                    >
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        {card.icon}
+                                    </div>
+                                    <CardTitle className="text-xl tracking-tight">
+                                        {card.title}
+                                    </CardTitle>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription className="text-sm leading-relaxed">
+                                {card.description}
+                            </CardDescription>
+                            {!card.isActive && (
+                                <span className="inline-flex items-center mt-3 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+                                    {t("coming_soon")}
+                                </span>
+                            )}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </PageContainer>
     );
 }

@@ -169,7 +169,7 @@ export function AutomationStudio() {
                                                 <p className="text-sm font-bold text-foreground leading-snug capitalize">
                                                     {action.type.replace('_', ' ')}:
                                                     <span className="text-muted-foreground font-medium ml-1">
-                                                        {action.params.message || `${t('update')} ${action.params.entitySlug}`}
+                                                        message: (action.params as any).message || (action.params as any).entitySlug,
                                                     </span>
                                                 </p>
                                             </div>

@@ -3,7 +3,6 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { AppPermission } from '@/types/permissions';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -11,7 +10,9 @@ const QuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
     skip: z.coerce.number().min(0).default(0),
     search: z.string().optional(),
-    spaceId: z.string().optional() // 🌌 Phase 125.2
+    spaceId: z.string().optional(), // 🌌 Phase 125.2
+    status: z.string().optional(),
+    reviewStatus: z.string().optional()
 });
 
 /**
@@ -24,16 +25,13 @@ export async function GET(req: NextRequest) {
 
     try {
         // 1. Enforce specific permission (instead of role-based check)
-        const user = await enforcePermission('knowledge', 'read');
+        const session = await enforcePermission('knowledge', 'read');
 
         // 2. Validate inputs
         const { searchParams } = new URL(req.url);
-        const { limit, skip, search, spaceId } = QuerySchema.parse(Object.fromEntries(searchParams));
+        const { limit, skip, search, spaceId, status, reviewStatus } = QuerySchema.parse(Object.fromEntries(searchParams));
 
         // 3. SECURE COLLECTION: Multi-tenant Isolation
-        const { auth } = await import('@/lib/auth');
-        // Rule #11 Secure Multi-tenant
-        const session = await auth();
         const collection = await getTenantCollection('knowledge_assets', session);
 
         // 4. Build filter
@@ -51,14 +49,21 @@ export async function GET(req: NextRequest) {
             filter.spaceId = spaceId;
         }
 
-        const [assets, total] = await Promise.all([
-            collection.find(filter, {
-                sort: { createdAt: -1 } as any,
-                skip,
-                limit
-            }),
-            collection.countDocuments(filter)
-        ]);
+        if (status) {
+            filter.status = status;
+        }
+
+        if (reviewStatus) {
+            filter.reviewStatus = reviewStatus;
+        }
+
+        const assets = await collection.find(filter, {
+            sort: { createdAt: -1 } as any,
+            skip,
+            limit
+        });
+
+        const total = await collection.countDocuments(filter);
 
         const duration = Date.now() - start;
         if (duration > 500) {
@@ -68,7 +73,7 @@ export async function GET(req: NextRequest) {
                 action: 'LIST_ASSETS_SLOW',
                 message: `Slow query detected: ${duration}ms`,
                 correlationId,
-                details: { duration, tenantId: user.tenantId }
+                details: { duration, tenantId: session.user.tenantId }
             });
         }
 

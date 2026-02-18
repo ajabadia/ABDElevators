@@ -563,6 +563,43 @@
       "activity": {
         "title": "Actividad Reciente del Sistema",
         "empty": "No hay actividad reciente registrada."
+      },
+      "superadmin": {
+        "title": "Consola del Plataforma",
+        "subtitle": "Observabilidad multi-tenant y salud del motor agentico.",
+        "metrics": {
+          "tenants": "Clientes Activos",
+          "cases": "Casos Procesados",
+          "accuracy": "Precisión de IA (HITL)",
+          "accuracy_desc": "{count} validaciones humanas registradas",
+          "storage": "Almacenamiento RAG",
+          "storage_desc": "{count} documentos técnicos indexados"
+        },
+        "usage": {
+          "title": "Consumo por Cliente",
+          "desc": "Distribución de recursos y tokens por organización.",
+          "tenant_id": "ID Cliente",
+          "tokens": "Tokens",
+          "storage": "Disco",
+          "savings": "Ahorro",
+          "no_data": "Sin datos de uso detectados"
+        },
+        "financials": {
+          "title": "Salud Financiera",
+          "desc": "Estimación de costes y valor generado.",
+          "expenditure": "Gasto AI Mensual",
+          "platform_value": "Valor Generado",
+          "prediction_title": "Proyección de Gasto Próximos 30d",
+          "burn_rate": "Tasa de Consumo Diaria",
+          "estimated_total": "Total Estimado",
+          "confidence": "Confianza Predictiva",
+          "currency": "EUR"
+        },
+        "top_tenants": {
+          "title": "Top Clientes (Consumo)",
+          "tokens": "Tokens",
+          "storage": "Almacenamiento"
+        }
       }
     },
     "roi": {

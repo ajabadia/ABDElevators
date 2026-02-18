@@ -58,7 +58,7 @@ export class AgentEngine {
         if (!hasChanges) return null;
 
         try {
-            const collection = await getTenantCollection('ai_corrections', { user: { tenantId } });
+            const collection = await getTenantCollection('ai_corrections', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
 
             const correction: AICorrection = {
                 entitySlug,
@@ -94,7 +94,7 @@ export class AgentEngine {
      */
     public async getCorrectionContext(entitySlug: string, tenantId: string): Promise<string> {
         try {
-            const collection = await getTenantCollection('ai_corrections', { user: { tenantId } });
+            const collection = await getTenantCollection('ai_corrections', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
 
             // Traer las últimas 5 correcciones significativas
             const corrections = await collection.find({ entitySlug }) as any;

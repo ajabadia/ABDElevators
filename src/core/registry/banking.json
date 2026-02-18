@@ -1,0 +1,71 @@
+{
+    "id": "banking-ontology-synthetic",
+    "name": "Banking & Compliance (Synthetic)",
+    "version": "1.0.0",
+    "metadata": {
+        "synthetic": true,
+        "description": "Plantilla sintética para pruebas de vertical bancaria"
+    },
+    "entities": [
+        {
+            "name": "expediente",
+            "plural": "expedientes",
+            "slug": "expedientes",
+            "icon": "Briefcase",
+            "fields": [
+                {
+                    "key": "id_expediente",
+                    "label": "ID Expediente",
+                    "type": "string",
+                    "required": true,
+                    "searchable": true,
+                    "ui": {
+                        "order": 1,
+                        "width": "w-32"
+                    }
+                },
+                {
+                    "key": "id_cliente",
+                    "label": "ID Cliente",
+                    "type": "string",
+                    "required": true,
+                    "ui": {
+                        "order": 2
+                    }
+                },
+                {
+                    "key": "nivel_riesgo",
+                    "label": "Nivel de Riesgo",
+                    "type": "select",
+                    "options": [
+                        "BAJO",
+                        "MEDIO",
+                        "ALTO",
+                        "CRITICO"
+                    ],
+                    "ui": {
+                        "order": 3
+                    }
+                },
+                {
+                    "key": "kyc_status",
+                    "label": "Estado KYC",
+                    "type": "select",
+                    "options": [
+                        "PENDIENTE",
+                        "APROBADO",
+                        "RECHAZADO"
+                    ],
+                    "ui": {
+                        "order": 4
+                    }
+                }
+            ],
+            "api": {
+                "list": "/api/banking/expedientes",
+                "detail": "/api/banking/expedientes/:id",
+                "analyze": "/api/banking/analyze"
+            }
+        }
+    ]
+}

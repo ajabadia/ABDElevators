@@ -1,0 +1,26 @@
+{
+  "title": "Organization Settings",
+  "subtitle": "Tenant management: branding, storage, billing and reports.",
+  "cards": {
+    "general": {
+      "title": "General",
+      "description": "Basic configuration: tenant ID, name, industry and compliance."
+    },
+    "branding": {
+      "title": "Branding",
+      "description": "Brand customization: logo, favicon, colors and preview."
+    },
+    "storage": {
+      "title": "Storage",
+      "description": "Storage configuration: provider, quota and usage."
+    },
+    "features": {
+      "title": "Features",
+      "description": "Available modules: RAG Search, Gemini Analysis, etc."
+    },
+    "billing": {
+      "title": "Billing",
+      "description": "Current plan, fiscal data, addresses and invoices."
+    }
+  }
+}

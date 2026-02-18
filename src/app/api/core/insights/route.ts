@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { InsightEngine } from "@/core/engine/InsightEngine";
 import { logEvento } from "@/lib/logger";
+import { AppError, handleApiError } from "@/lib/errors";
 import crypto from 'crypto';
 
 // Simple in-memory cache for insights (Phase 83 optimize)
@@ -17,7 +18,7 @@ const CACHE_TTL = 3600 * 1000; // 1 hour
 export async function GET(req: NextRequest) {
     const session = await auth();
     if (!session?.user) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
     }
 
     const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
         const hasAnomalies = insights.some(i => i.category === 'ANOMALY' || i.type === 'critical');
 
         // Obtener métrica de aprendizaje del Agente (Phase 7)
-        const agent = await getTenantCollection('ai_corrections', { user: { tenantId } });
+        const agent = await getTenantCollection('ai_corrections', session as any);
         const learnedCount = await agent.countDocuments({});
 
         await logEvento({
@@ -67,11 +68,6 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(responseData);
     } catch (error: any) {
-        console.error('[CORE_INSIGHTS] Error:', error);
-        return NextResponse.json({
-            success: false,
-            message: "Error al generar insights inteligentes",
-            error: error.message
-        }, { status: 500 });
+        return handleApiError(error, 'CORE_INSIGHTS', correlacion_id);
     }
 }

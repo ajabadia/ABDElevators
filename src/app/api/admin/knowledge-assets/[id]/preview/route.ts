@@ -54,7 +54,7 @@ export async function GET(
             action: 'PREVIEW_GENERATED',
             message: `Preview generated for: ${asset.filename}`,
             correlationId,
-            details: { assetId: id, tenantId: user.tenantId }
+            details: { assetId: id, tenantId: (user as any).tenantId }
         });
 
         // We redirect to the Cloudinary URL or return it?

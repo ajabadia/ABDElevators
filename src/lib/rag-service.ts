@@ -1,4 +1,5 @@
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { connectDB } from "@/lib/db";
@@ -14,6 +15,7 @@ import { VectorSearchService } from "./vector-search-service";
 import { KeywordSearchService } from "./keyword-search-service";
 import { MultilingualSearchService } from "./multilingual-search-service";
 import { withSpan } from "./tracing";
+import { PromptService } from "./prompt-service";
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -129,9 +131,28 @@ export async function performTechnicalSearch(
 
         const contextMap = new Map(assets.map(a => [a.filename, a.contextHeader]));
 
+        // 🌳 Phase 172.1: Hierarchical Context Enrichment
+        const parentChunkIds = results
+            .filter(d => d.metadata && d.metadata.parentChunkId)
+            .map(d => d.metadata.parentChunkId);
+
+        const parentChunksMap = new Map<string, string>();
+        if (parentChunkIds.length > 0) {
+            const parentChunks = await collection.find({
+                _id: { $in: parentChunkIds.map((id: string) => new ObjectId(id)) }
+            }).toArray();
+            parentChunks.forEach(pc => parentChunksMap.set(pc._id.toString(), pc.chunkText));
+        }
+
         const ragResults = results.map((doc) => {
             const header = contextMap.get(doc.metadata.sourceDoc);
-            const enrichedText = header ? `[CONTEXTO: ${header}]\n\n${doc.pageContent}` : doc.pageContent;
+            const parentText = doc.metadata.parentChunkId ? parentChunksMap.get(doc.metadata.parentChunkId) : null;
+
+            let enrichedText = header ? `[CONTEXTO: ${header}]\n\n${doc.pageContent}` : doc.pageContent;
+
+            if (parentText) {
+                enrichedText = `[CONTEXTO PADRE: ${parentText}]\n\n---\n\n${enrichedText}`;
+            }
 
             return {
                 text: enrichedText,
@@ -206,9 +227,21 @@ export async function hybridSearch(
 
         const { GraphRetrievalService } = await import('@/services/graph-retrieval-service');
 
+        // 🧠 Phase 172.3: HyDE (Hypothetical Document Embeddings)
+        let hydeQuery = query;
+        try {
+            const { callGeminiMini } = await import('./llm');
+            const { text: hydePrompt } = await PromptService.getRenderedPrompt('RAG_HYDE_GENERATOR', { query }, tenantId);
+            const hypotheticalAnswer = await callGeminiMini(hydePrompt, tenantId, { correlationId, temperature: 0.1 });
+            hydeQuery = `${query}\n\n[HYDE]: ${hypotheticalAnswer}`;
+            span.setAttribute('rag.hyde_enabled', true);
+        } catch (e) {
+            console.warn("[HYDE GENERATION FAILED] Falling back to original query.", e);
+        }
+
         const [geminiResults, bgeResults, keywordResults, graphContext] = await Promise.all([
-            performTechnicalSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
-            MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
+            performTechnicalSearch(hydeQuery, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
+            MultilingualSearchService.performMultilingualSearch(hydeQuery, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
             KeywordSearchService.pureKeywordSearch(query, tenantId, correlationId, limit * 3, effectiveIndustry, environment, spaceId),
             GraphRetrievalService.getGraphContext(query, tenantId, correlationId)
         ]);

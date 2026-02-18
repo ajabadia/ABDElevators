@@ -12,6 +12,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { WorkflowTask } from '@/lib/schemas';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,7 +33,9 @@ import {
     User,
     Hash,
     Loader2,
-    Wrench
+    Wrench,
+    MessageSquare,
+    RotateCcw
 } from 'lucide-react';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useToast } from '@/hooks/use-toast';
@@ -53,6 +62,10 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
     const [checklistStatus, setChecklistStatus] = useState<Record<number, boolean>>(
         task.metadata?.workshop_validation || {}
     );
+    // ⚡ FASE 82: AI Feedback State
+    const [feedbackCategory, setFeedbackCategory] = useState<string>('');
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isOverriding, setIsOverriding] = useState(false);
 
     const { mutate, isLoading } = useApiMutation({
         endpoint: `/api/admin/workflow-tasks/${task._id}`,
@@ -79,6 +92,13 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
         const finalStatus = customStatus || status;
         if (!finalStatus) return;
 
+        // Determine if this is an override of the AI proposal
+        const proposal = task.metadata?.llmProposal;
+        const currentTargetAction = finalStatus === 'COMPLETED' ? 'APPROVE' : finalStatus === 'REJECTED' ? 'RECHAZAR' : null;
+        const suggestion = proposal?.suggestedAction;
+
+        const feedbackRequired = suggestion && currentTargetAction && suggestion !== currentTargetAction;
+
         // Merge metadata updates
         const metadataUpdate = {
             ...(task.metadata || {}),
@@ -88,7 +108,11 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
         mutate({
             status: finalStatus,
             notes,
-            metadata: metadataUpdate
+            metadata: metadataUpdate,
+            // ⚡ FASE 82: Feedback fields
+            feedbackCategory,
+            rejectionReason: feedbackRequired ? rejectionReason : undefined,
+            decision: feedbackRequired ? 'OVERRIDE' : 'ACCEPT'
         });
     };
 
@@ -263,11 +287,69 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                             <Textarea
                                 id="notes"
                                 placeholder="Indica el resultado de la validación o motivos del cambio de estado..."
-                                className="min-h-[120px] bg-white border-slate-200 focus:ring-sidebar-primary/20 text-sm"
+                                className="min-h-[100px] bg-white border-slate-200 focus:ring-sidebar-primary/20 text-sm"
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                             />
                         </div>
+
+                        {/* ⚡ FASE 82: HITL Feedback Loop */}
+                        {task.metadata?.llmProposal && (status === 'COMPLETED' || status === 'REJECTED') && (
+                            (() => {
+                                const proposal = task.metadata.llmProposal;
+                                const currentAction = status === 'COMPLETED' ? 'APPROVE' : 'REJECT';
+                                const suggestion = proposal.suggestedAction;
+
+                                if (suggestion && currentAction !== suggestion) {
+                                    return (
+                                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="bg-amber-50/50 p-5 rounded-2xl border-2 border-amber-200 shadow-sm">
+                                                <h4 className="text-sm font-bold flex items-center gap-2 text-amber-800 mb-2">
+                                                    <RotateCcw className="w-4 h-4" />
+                                                    {t('feedback.correction_title')}
+                                                </h4>
+                                                <p className="text-xs text-amber-700 mb-4">
+                                                    {t('feedback.correction_desc')}
+                                                </p>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase text-amber-800 tracking-wider">
+                                                            {t('feedback.category_label')}
+                                                        </Label>
+                                                        <Select onValueChange={setFeedbackCategory} value={feedbackCategory}>
+                                                            <SelectTrigger className="bg-white border-amber-200 h-9 text-xs">
+                                                                <SelectValue placeholder="Seleccionar..." />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {Object.entries(t.raw('feedback.categories')).map(([key, label]) => (
+                                                                    <SelectItem key={key} value={key} className="text-xs">
+                                                                        {label as string}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase text-amber-800 tracking-wider">
+                                                            {t('feedback.rejection_reason_label')}
+                                                        </Label>
+                                                        <Textarea
+                                                            placeholder={t('feedback.rejection_reason_placeholder')}
+                                                            className="bg-white border-amber-200 min-h-[80px] text-xs resize-none"
+                                                            value={rejectionReason}
+                                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()
+                        )}
                     </div>
 
                     <div className="space-y-4">

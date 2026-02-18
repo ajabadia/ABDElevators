@@ -1,21 +1,10 @@
-import { Resend } from 'resend';
+import { getResend } from '@/lib/resend-client';
 import { renderLimitAlertEmail } from './emails/limit-alert';
 import { renderPaymentFailedEmail } from './emails/payment-failed';
 import { renderInvitationEmail } from './emails/invitation';
 import { renderMfaEnabledEmail } from './emails/mfa-enabled';
 import { renderNewInvoiceEmail } from './emails/new-invoice';
 
-let resendInstance: Resend | null = null;
-
-function getResend(): Resend {
-    if (!resendInstance) {
-        if (!process.env.RESEND_API_KEY) {
-            throw new Error('RESEND_API_KEY is not defined in environment variables');
-        }
-        resendInstance = new Resend(process.env.RESEND_API_KEY);
-    }
-    return resendInstance;
-}
 
 export async function sendLimitAlert(params: {
     to: string;

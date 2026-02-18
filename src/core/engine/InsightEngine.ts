@@ -1,7 +1,8 @@
 import { runCypher } from '@/lib/neo4j';
 import { callGeminiMini } from '@/lib/llm';
 import { logEvento } from '@/lib/logger';
-import { WorkflowEngine } from './WorkflowEngine';
+import { AIWorkflowEngine } from './AIWorkflowEngine';
+import { WorkflowTriggerType } from '@/types/workflow';
 
 
 import { z } from 'zod';
@@ -89,9 +90,9 @@ export class InsightEngine {
             const insights: Insight[] = z.array(InsightSchema).parse(JSON.parse(jsonMatch[0]));
 
             // 3. Trigger Automated Workflows (Phase 10)
-            const workflow = WorkflowEngine.getInstance();
+            const workflow = AIWorkflowEngine.getInstance();
             for (const insight of insights) {
-                await workflow.processEvent('on_insight', insight, tenantId, correlationId);
+                await workflow.processEvent(WorkflowTriggerType.ON_INSIGHT, insight, tenantId, correlationId);
             }
 
             await logEvento({
@@ -106,7 +107,14 @@ export class InsightEngine {
             return insights;
 
         } catch (error: any) {
-            console.error('[InsightEngine] Error:', error);
+            await logEvento({
+                level: 'ERROR',
+                source: 'INSIGHT_ENGINE',
+                action: 'GENERATE_ERROR_INTERNAL',
+                message: error.message,
+                correlationId,
+                details: { stack: error.stack }
+            });
             await logEvento({
                 level: 'ERROR',
                 source: 'INSIGHT_ENGINE',

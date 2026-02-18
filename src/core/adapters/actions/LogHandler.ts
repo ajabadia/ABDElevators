@@ -12,7 +12,7 @@ export class LogHandler implements IActionHandler {
             level: 'WARN',
             source: 'AI_AUTOMATION',
             action: 'AUTOMATED_ALERT',
-            message: action.params.message || 'Alerta automatizada detectada',
+            message: (action.params as any).message || 'Alerta automatizada detectada',
             correlationId,
             details: { triggerData }
         });

@@ -40,17 +40,10 @@ export class SSEHelper {
 
     /**
      * Crea una Response de tipo event-stream ejecutando un callback productor.
-     * Permite enviar eventos con nombre específico (event: ..., data: ...).
-     * 
-     * @example
-     * return SSEHelper.createStream(async (send) => {
-     *   send('status', { msg: 'connected' });
-     *   await doWork();
-     *   send('complete', { result: 1 });
-     * });
      */
     static createStream(
-        producer: (send: (event: string, data: any) => void) => Promise<void>
+        producer: (send: (event: string, data: any) => void) => Promise<void>,
+        options: { heartbeat?: boolean; intervalMs?: number } = {}
     ) {
         const stream = new ReadableStream({
             async start(controller) {
@@ -70,12 +63,63 @@ export class SSEHelper {
             }
         });
 
-        return new Response(stream, {
+        const effectiveStream = options.heartbeat
+            ? this.wrapWithHeartbeat(stream, options.intervalMs)
+            : stream;
+
+        return new Response(effectiveStream, {
             headers: {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
                 'Connection': 'keep-alive',
             },
+        });
+    }
+
+    /**
+     * Envuelve un ReadableStream existente con un pulso de heartbeat (comentarios SSE).
+     * Útil para evitar que Proxies/Load Balancers corten conexiones silentes.
+     */
+    static wrapWithHeartbeat(stream: ReadableStream, intervalMs = 15000): ReadableStream {
+        let timer: any = null;
+        const encoder = new TextEncoder();
+
+        return new ReadableStream({
+            async start(controller) {
+                const reader = stream.getReader();
+
+                const resetHeartbeat = () => {
+                    if (timer) clearInterval(timer);
+                    timer = setInterval(() => {
+                        try {
+                            controller.enqueue(encoder.encode(":\n\n"));
+                        } catch (e) {
+                            if (timer) clearInterval(timer);
+                        }
+                    }, intervalMs);
+                };
+
+                resetHeartbeat();
+
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            if (timer) clearInterval(timer);
+                            controller.close();
+                            break;
+                        }
+                        resetHeartbeat();
+                        controller.enqueue(value);
+                    }
+                } catch (e) {
+                    if (timer) clearInterval(timer);
+                    controller.error(e);
+                }
+            },
+            cancel() {
+                if (timer) clearInterval(timer);
+            }
         });
     }
 

@@ -16,7 +16,9 @@
     "mark_active": "Mark Active",
     "mark_obsolete": "Mark Obsolete",
     "archive": "Archive",
-    "delete": "Permanent Delete"
+    "delete": "Permanent Delete",
+    "mark_reviewed": "Mark as Reviewed",
+    "snooze_review": "Snooze Review"
   },
   "table": {
     "document": "Document",
@@ -34,7 +36,18 @@
     "active": "Active",
     "obsolete": "Obsolete",
     "archived": "Archived",
-    "processing": "Processing"
+    "processing": "Processing",
+    "reviewed": "Reviewed",
+    "expired": "Expired",
+    "snoozed": "Snoozed"
+  },
+  "review": {
+    "next_date": "Next Review",
+    "last_date": "Last Review",
+    "dialog_title": "Schedule Review",
+    "dialog_desc": "Set the date for the next technical review of this manual.",
+    "success": "Document marked as reviewed",
+    "error": "Error updating review"
   },
   "retry_success": "Retry initiated",
   "retry_desc": "The document is being processed again.",

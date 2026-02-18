@@ -1,26 +1,18 @@
-import { connectDB, connectLogsDB } from "@/lib/db";
+import { connectDB, connectLogsDB, connectAuthDB } from "@/lib/db";
 import {
     Notification,
     NotificationTenantConfigSchema,
     SystemEmailTemplateSchema,
     NotificationSchema
 } from "@/lib/schemas";
-import { connectAuthDB } from "@/lib/db";
-import { Resend } from 'resend';
-import Handlebars from 'handlebars';
 import { ObjectId } from 'mongodb';
+import { getResend } from '@/lib/resend-client';
+import Handlebars from 'handlebars';
+import { TenantService } from './tenant-service';
 
 // Cache simple para evitar lecturas masivas a BD de configs que no cambian mucho
 const configCache = new Map<string, { config: any, expires: number }>();
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutos
-
-let resendInstance: Resend | null = null;
-function getResend() {
-    if (!resendInstance && process.env.RESEND_API_KEY) {
-        resendInstance = new Resend(process.env.RESEND_API_KEY);
-    }
-    return resendInstance;
-}
 
 interface NotificationPayload {
     tenantId: string;
@@ -243,6 +235,21 @@ export class NotificationService {
 
         // 2. Si existe template, compilar con Handlebars
         if (template) {
+            // Obtener branding del tenant para inyectar en el template
+            let brandingData = {};
+            try {
+                const tenantConfig = await TenantService.getConfig(payload.tenantId);
+                const branding = tenantConfig?.branding;
+                brandingData = {
+                    branding_logo: branding?.documentLogo?.url || branding?.logo?.url || '',
+                    branding_primary_color: branding?.colors?.primary || '#0f172a',
+                    branding_accent_color: branding?.colors?.accent || '#3b82f6',
+                    company_name: (tenantConfig as any)?.name || branding?.companyName || 'ABD RAG Platform'
+                };
+            } catch (err) {
+                console.error(`[NotificationService] Error fetching tenant branding:`, err);
+            }
+
             // Seleccionar idioma (fallback a 'es')
             const subjTpl = template.subjectTemplates[language] || template.subjectTemplates['es'];
             const bodyTpl = template.bodyHtmlTemplates[language] || template.bodyHtmlTemplates['es'];
@@ -254,6 +261,7 @@ export class NotificationService {
                     message: payload.message,
                     link: payload.link,
                     tenant_custom_note: customNote ? `<div style="background:#fff3cd;padding:10px;border-left:4px solid #ffc107;margin:15px 0;"><strong>Nota Interna:</strong> ${customNote}</div>` : '',
+                    ...brandingData,
                     ...payload.metadata
                 };
 

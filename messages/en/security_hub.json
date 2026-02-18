@@ -1,11 +1,30 @@
 {
     "title": "Security & Audit Center",
     "subtitle": "Centralized management of permissions, access logs, and industrial compliance.",
+    "coming_soon": "Coming Soon",
     "tabs": {
         "permissions": "Permissions & Roles",
         "audit": "Audit",
         "sessions": "Active Sessions",
         "lifecycle": "Data Lifecycle"
+    },
+    "cards": {
+        "permissions": {
+            "title": "Permissions & Roles",
+            "description": "Configure access roles and permissions for your organization using Guardian."
+        },
+        "audit": {
+            "title": "Audit",
+            "description": "Immutable history of actions performed within the system."
+        },
+        "sessions": {
+            "title": "Active Sessions",
+            "description": "Monitor and manage active user sessions."
+        },
+        "lifecycle": {
+            "title": "Data Lifecycle",
+            "description": "Retention policies and right to be forgotten (GDPR)."
+        }
     },
     "permissions": {
         "title": "Role Management (Guardian)",
@@ -14,7 +33,48 @@
     },
     "audit": {
         "title": "Audit Trail",
-        "description": "Immutable history of actions performed within the system."
+        "description": "Immutable history of actions performed within the system.",
+        "table": {
+            "date": "Date",
+            "level": "Level",
+            "action": "Source / Action",
+            "message": "Message",
+            "user": "User",
+            "no_results": "No audit events found.",
+            "export_csv": "Export CSV",
+            "refresh": "Refresh",
+            "search_placeholder": "Search by message, user...",
+            "system": "System",
+            "error_title": "Audit Error",
+            "error_fetch": "Unable to load audit logs."
+        },
+        "levels": {
+            "all": "All Levels",
+            "info": "Information",
+            "warn": "Warning",
+            "error": "Error",
+            "debug": "Debug"
+        },
+        "types": {
+            "all": "All Sources",
+            "application": "Application",
+            "config": "Config Changes",
+            "admin": "Admin Ops",
+            "access": "Data Access",
+            "security": "Security"
+        },
+        "details": {
+            "title": "Event Details",
+            "reason": "Reason",
+            "changes": "Changes performed",
+            "before": "Before",
+            "after": "After",
+            "ip": "IP Address",
+            "userAgent": "Browser/UserAgent",
+            "correlationId": "Correlation ID",
+            "actor": "Actor",
+            "entity": "Entity"
+        }
     },
     "sessions": {
         "title": "Active Sessions",

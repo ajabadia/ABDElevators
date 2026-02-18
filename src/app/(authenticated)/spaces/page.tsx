@@ -1,60 +1,114 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QuickQAPanel } from "@/components/spaces/QuickQAPanel";
-import { Box, Zap, FileText, UserCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Layers, Zap, UserCircle, Box, FlaskConical, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface HubCard {
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: React.ReactNode;
+    color: string;
+    isActive?: boolean;
+}
 
 /**
- * 🌌 Spaces Main Page (Phase 125.3)
- * Hub for Personal Spaces, Collections and Quick Q&A.
+ * 🌌 Spaces Hub Dashboard (Phase 125.3)
+ * Central navigation hub for all Space-related modules.
  */
-export default function SpacesPage() {
-    const t = useTranslations("common.spaces");
+export default function SpacesHubPage() {
+    const router = useRouter();
+    const t = useTranslations("spaces.hub");
+
+    const hubCards: HubCard[] = [
+        {
+            id: "quick-qa",
+            title: t("cards.quick_qa.title"),
+            description: t("cards.quick_qa.description"),
+            href: "/spaces/quick-qa",
+            icon: <Zap className="w-6 h-6" />,
+            color: "border-l-primary",
+            isActive: true
+        },
+        {
+            id: "personal",
+            title: t("cards.personal.title"),
+            description: t("cards.personal.description"),
+            href: "/spaces/personal",
+            icon: <UserCircle className="w-6 h-6" />,
+            color: "border-l-secondary"
+        },
+        {
+            id: "collections",
+            title: t("cards.collections.title"),
+            description: t("cards.collections.description"),
+            href: "/spaces/collections",
+            icon: <Box className="w-6 h-6" />,
+            color: "border-l-accent"
+        },
+        {
+            id: "playground",
+            title: t("cards.playground.title"),
+            description: t("cards.playground.description"),
+            href: "/spaces/playground",
+            icon: <FlaskConical className="w-6 h-6" />,
+            color: "border-l-muted",
+            isActive: true
+        }
+    ];
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-                <p className="text-muted-foreground">{t("subtitle")}</p>
+        <PageContainer className="animate-in fade-in duration-500">
+            <PageHeader
+                title={t("title")}
+                subtitle={t("subtitle")}
+                icon={<Layers className="w-6 h-6 text-primary" />}
+            />
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 mt-6">
+                {hubCards.map((card) => (
+                    <Card
+                        key={card.id}
+                        onClick={() => router.push(card.href)}
+                        className={cn(
+                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
+                            "hover:scale-[1.02] relative overflow-hidden",
+                            card.color,
+                            !card.isActive && "opacity-75"
+                        )}
+                    >
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        {card.icon}
+                                    </div>
+                                    <CardTitle className="text-xl tracking-tight">
+                                        {card.title}
+                                    </CardTitle>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription className="text-sm leading-relaxed">
+                                {card.description}
+                            </CardDescription>
+                            {!card.isActive && (
+                                <span className="inline-flex items-center mt-3 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+                                    {t("coming_soon")}
+                                </span>
+                            )}
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
-
-            <Tabs defaultValue="quick-qa" className="space-y-4">
-                <TabsList className="bg-muted/50 p-1">
-                    <TabsTrigger value="quick-qa" className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-orange-500 fill-orange-500/20" />
-                        {t("tabs.quick_qa")}
-                    </TabsTrigger>
-                    <TabsTrigger value="personal" className="flex items-center gap-2">
-                        <UserCircle className="w-4 h-4" />
-                        {t("tabs.personal")}
-                    </TabsTrigger>
-                    <TabsTrigger value="collections" className="flex items-center gap-2">
-                        <Box className="w-4 h-4" />
-                        {t("tabs.collections")}
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="quick-qa" className="border-none p-0 outline-none">
-                    <QuickQAPanel />
-                </TabsContent>
-
-                <TabsContent value="personal" className="h-[400px] flex items-center justify-center border-2 border-dashed rounded-xl opacity-50">
-                    <div className="text-center">
-                        <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-medium">{t("placeholders.personal_title")}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t("placeholders.personal_desc")}</p>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="collections" className="h-[400px] flex items-center justify-center border-2 border-dashed rounded-xl opacity-50">
-                    <div className="text-center">
-                        <Box className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-medium">{t("placeholders.collections_title")}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t("placeholders.collections_desc")}</p>
-                    </div>
-                </TabsContent>
-            </Tabs>
-        </div>
+        </PageContainer>
     );
 }

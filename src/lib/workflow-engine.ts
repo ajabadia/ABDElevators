@@ -15,10 +15,10 @@ export interface TransitionRequest {
 }
 
 /**
- * Motor de Workflows Avanzado (Visión 2.0 - Fase 7.2)
+ * Motor de Workflows de Casos (CaseWorkflowEngine)
  * Orquestador dinámico de transiciones de estado multi-tenant.
  */
-export class LegacyCaseWorkflowEngine {
+export class CaseWorkflowEngine {
     /**
      * Gets the active workflow definition for a tenant and entity type.
      */
@@ -211,3 +211,5 @@ export class LegacyCaseWorkflowEngine {
         }
     }
 }
+  
+export const LegacyCaseWorkflowEngine = CaseWorkflowEngine; 

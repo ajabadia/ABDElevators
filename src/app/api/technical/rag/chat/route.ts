@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AgenticRAGService } from '@/lib/langgraph-rag';
 import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
+import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 
 /**
@@ -14,19 +15,16 @@ export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
-    console.log('🔥 [API] Starting request to /api/technical/rag/chat');
     try {
         const session = await auth();
-        if (!session) {
-            console.log('❌ [API] No Session');
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        if (!session?.user) {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const tenantId = session.user?.tenantId;
-        console.log('🆔 [API] Tenant:', tenantId);
+        const tenantId = session.user.tenantId;
 
         if (!tenantId) {
-            return NextResponse.json({ error: 'Tenant ID no encontrado en la sesión' }, { status: 403 });
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
         const {
             question,
@@ -80,7 +78,9 @@ export async function POST(req: NextRequest) {
                 }
             });
 
-            return new Response(customStream, {
+            const streamWithHeartbeat = SSEHelper.wrapWithHeartbeat(customStream);
+
+            return new Response(streamWithHeartbeat, {
                 headers: {
                     'Content-Type': 'text/event-stream',
                     'Cache-Control': 'no-cache',
@@ -108,21 +108,7 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error('[RAG_CHAT_ERROR]', error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'TECHNICAL_RAG_CHAT_API',
-            action: 'QUERY_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            { success: false, error: 'Ocurrió un error procesando tu consulta agéntica' },
-            { status: 500 }
-        );
+        return handleApiError(error, 'TECHNICAL_RAG_CHAT_API', correlationId);
     } finally {
         const durationMs = Date.now() - start;
         if (durationMs > 10000) {

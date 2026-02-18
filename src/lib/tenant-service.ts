@@ -1,4 +1,5 @@
 import { connectAuthDB } from "./db";
+import { ClientSession } from "mongodb";
 import { TenantConfigSchema } from "./schemas";
 import { AppError, NotFoundError } from "./errors";
 import { logEvento } from "./logger";
@@ -104,7 +105,11 @@ export class TenantService {
      * Actualiza la configuración de un tenant
      * @returns La configuración actualizada y validada
      */
-    static async updateConfig(tenantId: string, data: any, metadata?: { performedBy: string, correlationId?: string }): Promise<any> {
+    static async updateConfig(
+        tenantId: string,
+        data: any,
+        metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
+    ): Promise<any> {
         const correlationId = metadata?.correlationId || crypto.randomUUID();
 
         // Log inicio
@@ -137,7 +142,7 @@ export class TenantService {
                         updatedAt: new Date()
                     }
                 },
-                { upsert: true }
+                { upsert: true, session: metadata?.session }
             );
 
             // 4. Invalidate Cache

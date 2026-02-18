@@ -1,93 +1,105 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KnowledgeAssetsManager } from "@/components/admin/knowledge/KnowledgeAssetsManager";
-import { KnowledgeExplorer } from "@/components/admin/knowledge/KnowledgeExplorer";
-import { SpaceManager } from "@/components/admin/knowledge/SpaceManager";
-import { useTranslations } from "next-intl";
-import {
-    FileText,
-    Search,
-    Globe,
-    FolderOpen,
-    BrainCircuit
-} from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrainCircuit, FileText, FolderOpen, Globe, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+interface HubCard {
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: React.ReactNode;
+    color: string;
+}
+
+/**
+ * 🧠 Knowledge Hub Dashboard (Phase 133)
+ * Central navigation hub for all knowledge management modules.
+ * UI Standardized with Hub Dashboard pattern.
+ */
 export default function KnowledgeHubPage() {
-    const t = useTranslations('knowledge_hub'); // We might need to add this namespace or reuse others
-    const { data: session } = useSession();
+    const router = useRouter();
+    const t = useTranslations("knowledge_hub");
 
-    // Fallback translation if namespace missing (or use 'common')
-    // Ideally user adds keys to es.json
-    const title = "Centro de Conocimiento";
-    const subtitle = "Gestión unificada de activos, exploración semántica y espacios de trabajo.";
+    const hubCards: HubCard[] = [
+        {
+            id: "explorer",
+            title: t("cards.explorer.title"),
+            description: t("cards.explorer.description"),
+            href: "/admin/knowledge/explorer",
+            icon: <BrainCircuit className="w-6 h-6" />,
+            color: "border-l-primary"
+        },
+        {
+            id: "assets",
+            title: t("cards.assets.title"),
+            description: t("cards.assets.description"),
+            href: "/admin/knowledge/assets",
+            icon: <FileText className="w-6 h-6" />,
+            color: "border-l-secondary"
+        },
+        {
+            id: "my-docs",
+            title: t("cards.my_docs.title"),
+            description: t("cards.my_docs.description"),
+            href: "/admin/knowledge/my-docs",
+            icon: <FolderOpen className="w-6 h-6" />,
+            color: "border-l-accent"
+        },
+        {
+            id: "spaces",
+            title: t("cards.spaces.title"),
+            description: t("cards.spaces.description"),
+            href: "/admin/knowledge/spaces",
+            icon: <Globe className="w-6 h-6" />,
+            color: "border-l-muted"
+        }
+    ];
 
     return (
-        <PageContainer>
+        <PageContainer className="animate-in fade-in duration-500">
             <PageHeader
-                title={title}
-                subtitle={subtitle}
+                title={t("title")}
+                subtitle={t("subtitle")}
             />
 
-            <Tabs defaultValue="explorer" className="space-y-6">
-                <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full md:w-auto overflow-x-auto flex justify-start">
-                    <TabsTrigger value="explorer" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <Search className="w-4 h-4" />
-                        Explorador Neural
-                    </TabsTrigger>
-                    <TabsTrigger value="assets" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <FileText className="w-4 h-4" />
-                        Gestión Activos
-                    </TabsTrigger>
-                    <TabsTrigger value="my-docs" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <FolderOpen className="w-4 h-4" />
-                        Mis Documentos
-                    </TabsTrigger>
-                    <TabsTrigger value="spaces" className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 shadow-sm min-w-[140px]">
-                        <Globe className="w-4 h-4" />
-                        Espacios
-                    </TabsTrigger>
-                </TabsList>
-
-                {/* Explorador (KnowledgeExplorer) */}
-                <TabsContent value="explorer" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
-                            <BrainCircuit className="w-5 h-5 text-teal-600" /> Motor de Búsqueda Semántica
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            Explore chunks vectorizados, simule consultas RAG y audite la calidad de la recuperación.
-                        </p>
-                    </div>
-                    <KnowledgeExplorer />
-                </TabsContent>
-
-                {/* Gestión Activos (Admin View) */}
-                <TabsContent value="assets" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <KnowledgeAssetsManager scope="all" />
-                </TabsContent>
-
-                {/* Mis Documentos (User View) */}
-                <TabsContent value="my-docs" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <KnowledgeAssetsManager scope="user" userId={session?.user?.id} />
-                </TabsContent>
-
-                {/* Espacios */}
-                <TabsContent value="spaces" className="animate-in fade-in slide-in-from-bottom-4 outline-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
-                            <Globe className="w-5 h-5 text-blue-600" /> Espacios de Conocimiento
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            Configure límites de contexto y permisos de acceso para grupos de documentos.
-                        </p>
-                    </div>
-                    <SpaceManager />
-                </TabsContent>
-            </Tabs>
+            <div className="grid gap-6 md:grid-cols-2 mt-6">
+                {hubCards.map((card) => (
+                    <Card
+                        key={card.id}
+                        onClick={() => router.push(card.href)}
+                        className={cn(
+                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
+                            "hover:scale-[1.02] relative overflow-hidden",
+                            card.color
+                        )}
+                    >
+                        <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        {card.icon}
+                                    </div>
+                                    <CardTitle className="text-xl tracking-tight">
+                                        {card.title}
+                                    </CardTitle>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription className="text-sm leading-relaxed">
+                                {card.description}
+                            </CardDescription>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </PageContainer>
     );
 }

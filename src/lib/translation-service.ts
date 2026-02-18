@@ -8,6 +8,7 @@ import { callGemini } from './llm';
 import { PromptService } from './prompt-service';
 import { PROMPTS } from './prompts';
 import { SUPPORTED_LOCALES } from './i18n-config';
+import { DEFAULT_MODEL } from './constants/ai-models';
 
 /**
  * ⚙️ TranslationService (Fase 62+)
@@ -71,7 +72,7 @@ export class TranslationService {
 
         // 2. Obtener Prompt Dinámico
         let prompt: string;
-        let model: string = 'gemini-1.5-flash';
+        let model: string = DEFAULT_MODEL;
 
         try {
             const rendered = await PromptService.getRenderedPrompt(
@@ -162,7 +163,7 @@ export class TranslationService {
         const flatJson = this.nestToFlat(jsonMessages);
 
         // Usamos platform_master user simulation para acceder a la colección
-        const dbCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId, role: 'SUPER_ADMIN' } });
+        const dbCollection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'SUPER_ADMIN' } } as any);
         const dbDocs = await dbCollection.find({ locale, isObsolete: { $ne: true } as any, tenantId });
 
         const dbMap = new Map(dbDocs.map(d => [d.key, d]));
@@ -305,7 +306,7 @@ export class TranslationService {
             let finalMessages = { ...localMessages };
 
             // 3. Capa 2: Overrides de DB (Platform Master)
-            const masterCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+            const masterCollection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any);
             const masterDocs = await masterCollection.find({
                 locale,
                 tenantId: 'platform_master',
@@ -320,7 +321,7 @@ export class TranslationService {
 
             // 4. Capa 3: Overrides específicos del Tenant (si aplica)
             if (tenantId !== 'platform_master') {
-                const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId } });
+                const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'GUEST' } } as any);
                 const tenantDocs = await tenantCollection.find({
                     locale,
                     tenantId,
@@ -363,7 +364,7 @@ export class TranslationService {
         }
 
         // 2. Overrides de DB (Platform Master)
-        const masterCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+        const masterCollection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any);
         const masterDocs = await masterCollection.find({
             locale,
             tenantId: 'platform_master',
@@ -381,7 +382,7 @@ export class TranslationService {
 
         // 3. Overrides de Tenant (si aplica)
         if (tenantId !== 'platform_master') {
-            const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { tenantId } });
+            const tenantCollection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'GUEST' } } as any);
             const tenantDocs = await tenantCollection.find({
                 locale,
                 tenantId,
@@ -394,6 +395,46 @@ export class TranslationService {
         }
 
         return result;
+    }
+
+    public static async deleteTranslation(key: string, locale: string, tenantId = 'platform_master') {
+        const collection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'GUEST' } } as any);
+        console.log(`[i18n] 🗑️ Eliminando '${key}' (${locale}) para '${tenantId}'`);
+
+        const deleteResult = await collection.updateOne(
+            { key, locale, tenantId },
+            { $set: { isObsolete: true, lastUpdated: new Date(), updatedBy: 'SYSTEM_DELETE' } }
+        );
+
+        console.log(`[i18n] ✅ DB Delete: matched=${deleteResult.matchedCount}, modified=${deleteResult.modifiedCount}`);
+
+        // Invalida caché
+        if (tenantId === 'platform_master') {
+            try {
+                const keys = await redis.keys(`i18n:*:${locale}`);
+                if (keys && keys.length > 0) {
+                    await redis.del(...keys);
+                    console.log(`[i18n] 🧹 Global Invalidation: Purged ${keys.length} keys`);
+                } else {
+                    await redis.del(`i18n:platform_master:${locale}`);
+                }
+            } catch (err) {
+                console.error('[i18n] ❌ Error in cache invalidation during delete:', err);
+            }
+        } else {
+            await redis.del(`i18n:${tenantId}:${locale}`);
+        }
+
+        await logEvento({
+            level: 'INFO',
+            source: 'I18N_SERVICE',
+            action: 'TRANSLATION_DELETED',
+            message: `Key '${key}' marked as obsolete in '${locale}' for '${tenantId}'`,
+            correlationId: 'API_I18N_DELETE_' + Date.now(),
+            details: { key, locale, matched: deleteResult.matchedCount, modified: deleteResult.modifiedCount }
+        });
+
+        return { success: deleteResult.modifiedCount > 0 };
     }
 
     static async updateTranslation(params: {
@@ -409,12 +450,12 @@ export class TranslationService {
         const effectiveTenantId = tenantId || 'platform_master';
 
         // Forzamos MAIN clúster y rol de sistema para operaciones i18n
-        const collection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+        const collection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any);
 
         console.log(`[i18n] 📝 Actualizando '${key}' -> '${value.substring(0, 20)}...' (${locale}) para '${effectiveTenantId}'`);
 
         // 🎯 Operación quirúrgica:
-        // Si ya existe registro para este tenant, lo actualizamos. 
+        // Si ya existe registro para este tenant, lo actualizamos.
         // Si no, y estamos en platform_master, buscamos registros huérfanos para consolidar.
         const filter: any = { key, locale };
         if (effectiveTenantId === 'platform_master') {
@@ -479,7 +520,7 @@ export class TranslationService {
     public static async exportToLocalFiles(locale: string, tenantId = 'platform_master'): Promise<{ exported: number; files: string[] }> {
         console.log(`[i18n] 📤 Exportando traducciones de '${tenantId}/${locale}' a archivos locales...`);
 
-        const collection = await getTenantCollection(this.COLLECTION, { user: { tenantId, role: 'SUPER_ADMIN' } });
+        const collection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'SUPER_ADMIN' } } as any);
         const dbDocs = await collection.find({ locale, tenantId, isObsolete: { $ne: true } as any });
 
         if (dbDocs.length === 0) {
@@ -594,7 +635,7 @@ export class TranslationService {
      */
     private static async syncToDb(locale: string, messages: Record<string, any>, tenantId = 'platform_master'): Promise<{ added: number, updated: number }> {
         const flat = this.nestToFlat(messages);
-        const collection = await getTenantCollection(this.COLLECTION, { user: { tenantId, role: 'SUPER_ADMIN' } });
+        const collection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId, role: 'SUPER_ADMIN' } } as any);
         let added = 0;
         let updated = 0;
 
@@ -702,7 +743,7 @@ export class TranslationService {
         const jsonValue = flatLocal[key] || null;
 
         // 2. DB Entries
-        const collection = await getTenantCollection(this.COLLECTION, { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+        const collection = await getTenantCollection(this.COLLECTION, { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any);
         const dbEntries = await collection.find({ key, locale });
 
         // 3. Cache Status

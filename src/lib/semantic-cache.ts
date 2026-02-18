@@ -3,6 +3,9 @@ import { RagResult } from './rag-service';
 import crypto from 'crypto';
 import { logEvento } from './logger';
 import { LRUCache } from 'lru-cache';
+import { trace, Span } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('abd-rag-platform');
 
 /**
  * SemanticCache: Gestión de caché para resultados de búsqueda RAG.
@@ -34,13 +37,13 @@ export class SemanticCache {
     }
 
     /**
-     * Recupera resultados de la caché usando jerarquía L1 -> L2.
+     * Recupera resultados de la caché usando jerarquía L1 -> L2 y Búsqueda Semántica (Phase 171.1).
      */
     static async get(query: string, tenantId: string, environment: string, correlationId: string): Promise<RagResult[] | null> {
         try {
             const key = this.getCacheKey(query, tenantId, environment);
 
-            // 1. Intentar L1 (In-Memory) - Latencia < 1ms
+            // 1. Intentar L1 (Exact match rápido)
             const inMemory = this.l1.get(key);
             if (inMemory) {
                 await logEvento({
@@ -55,9 +58,17 @@ export class SemanticCache {
                 return inMemory;
             }
 
-            // 2. Intentar L2 (Redis) - Latencia ~10-50ms (Upstash REST/Socket)
-            const cached = await redis.get(key) as RagResult[] | null;
+            // 2. Búsqueda Vectorial Semántica en Caché (Phase 171.1)
+            // Si no hay exact match, buscamos queries similares que ya tengan resultados.
+            const similarResults = await this.findSimilarInCache(query, tenantId, environment, correlationId);
+            if (similarResults) {
+                // Promocionar a L1 para futuras peticiones rápidas
+                this.l1.set(key, similarResults); // Cache the semantically found result under the exact key
+                return similarResults;
+            }
 
+            // 3. Fallback a L2 (Redis) - Solo si lo anterior falla
+            const cached = await redis.get(key) as RagResult[] | null;
             if (cached) {
                 // Promocionar a L1 para futuras peticiones rápidas
                 this.l1.set(key, cached);
@@ -82,6 +93,64 @@ export class SemanticCache {
     }
 
     /**
+     * Busca en la base de datos de caché (MongoDB) queries semánticamente similares.
+     */
+    private static async findSimilarInCache(
+        query: string,
+        tenantId: string,
+        environment: string,
+        correlationId: string
+    ): Promise<RagResult[] | null> {
+        return tracer.startActiveSpan('semantic_cache.similarity_lookup', async (span: Span) => {
+            try {
+                const { generateEmbedding } = await import('./llm');
+                const embedding = await generateEmbedding(query, tenantId, correlationId);
+
+                const { connectDB } = await import('./db');
+                const db = await connectDB();
+                const collection = db.collection('semantic_cache');
+
+                const matches = await collection.aggregate([
+                    {
+                        $vectorSearch: {
+                            index: "vector_index",
+                            path: "embedding",
+                            queryVector: embedding,
+                            numCandidates: 10,
+                            limit: 1,
+                            filter: { tenantId, environment }
+                        }
+                    },
+                    {
+                        $project: {
+                            results: 1,
+                            score: { $meta: "vectorSearchScore" }
+                        }
+                    }
+                ]).toArray();
+
+                if (matches.length > 0 && matches[0].score > 0.96) { // Umbral de confianza muy alto para caché
+                    await logEvento({
+                        level: 'INFO',
+                        source: 'SEMANTIC_CACHE',
+                        action: 'SEMANTIC_HIT',
+                        message: `Semantic Hit (Score: ${matches[0].score.toFixed(4)}) para original: "${query.substring(0, 30)}..."`,
+                        correlationId,
+                        tenantId
+                    });
+                    return matches[0].results;
+                }
+                return null;
+            } catch (err) {
+                console.warn("[SEMANTIC_CACHE_SIMILARITY_ERROR]", err);
+                return null;
+            } finally {
+                span.end();
+            }
+        });
+    }
+
+    /**
      * Persiste resultados en ambos niveles de caché.
      */
     static async set(
@@ -103,11 +172,35 @@ export class SemanticCache {
             // Guardar en L2 (Redis)
             await redis.set(key, results, { ex: ttlL2 });
 
+            // 3. Persistencia en MongoDB para Búsqueda Semántica (Phase 171.1)
+            const { generateEmbedding } = await import('./llm');
+            const { connectDB } = await import('./db');
+            const [embedding, db] = await Promise.all([
+                generateEmbedding(query, tenantId, correlationId),
+                connectDB()
+            ]);
+
+            await db.collection('semantic_cache').updateOne(
+                { key },
+                {
+                    $set: {
+                        key,
+                        query,
+                        embedding,
+                        results,
+                        tenantId,
+                        environment,
+                        createdAt: new Date()
+                    }
+                },
+                { upsert: true }
+            );
+
             await logEvento({
                 level: 'DEBUG',
                 source: 'SEMANTIC_CACHE',
                 action: 'CACHE_SET_ALL',
-                message: `Resultados cacheados L1/L2 para: "${query.substring(0, 30)}..."`,
+                message: `Resultados cacheados L1/L2/DB para: "${query.substring(0, 30)}..."`,
                 correlationId,
                 tenantId,
                 details: { key, ttL2: ttlL2, resultCount: results.length }

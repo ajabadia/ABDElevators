@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth } from '@/auth';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
 import { extractTextFromPDF } from '@/lib/pdf-utils';
@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
+        const user = session.user as any;
+        const tenantId = user.tenantId;
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
+        }
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
@@ -46,10 +52,6 @@ export async function POST(req: NextRequest) {
 
         // 1. Extract text from entity
         const textBuffer = Buffer.from(await file.arrayBuffer());
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
 
         // 0. MD5 De-duplication (Token Savings)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
@@ -97,8 +99,8 @@ export async function POST(req: NextRequest) {
 
             const { queueService } = await import('@/lib/queue-service');
             const job = await queueService.addJob('PDF_ANALYSIS', {
-                tenantId,
-                userId: session.user.id || 'unknown',
+                tenantId: tenantId!,
+                userId: user.id || 'unknown',
                 correlationId,
                 data: {
                     entityId: insertResult.insertedId.toString(),

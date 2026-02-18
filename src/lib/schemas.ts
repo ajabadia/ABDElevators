@@ -4,7 +4,7 @@ import { UserRole } from '@/types/roles';
 /**
  * Esquemas para la Visión 2.0 (Generalización)
  */
-export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'IT', 'GENERIC', 'MEDICAL']);
+export const IndustryTypeSchema = z.enum(['ELEVATORS', 'LEGAL', 'BANKING', 'INSURANCE', 'REAL_ESTATE', 'IT', 'GENERIC', 'MEDICAL']);
 export type IndustryType = z.infer<typeof IndustryTypeSchema>;
 
 export const AppEnvironmentEnum = z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']);
@@ -41,6 +41,11 @@ export const DocumentChunkSchema = z.object({
     refChunkId: z.any().optional(),
     cloudinaryUrl: z.string().optional(),
     originalSnippet: z.string().optional(), // Original chunk text before contextualization
+
+    // Phase 172: Hierarchical Chunking
+    parentChunkId: z.any().optional(), // Referencia al chunk padre (contexto superior)
+    hierarchyLevel: z.number().default(0), // 0: Root, 1: Child, 2: Leaf
+    childCount: z.number().default(0).optional(),
 
     createdAt: z.date().default(() => new Date()),
     deletedAt: z.date().optional(),
@@ -95,6 +100,7 @@ export const RiskFindingSchema = z.object({
 
 export const GenericCaseSchema = z.object({
     _id: z.any().optional(),
+    identifier: z.string().optional(), // Added for AI Workflow Engine
     tenantId: z.string(),
     industry: IndustryTypeSchema,
     type: z.string(),
@@ -104,6 +110,10 @@ export const GenericCaseSchema = z.object({
         industry_specific: z.record(z.string(), z.any()),
         taxonomies: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
         tags: z.array(z.string()),
+        workflow: z.object({
+            llmOutputs: z.record(z.string(), z.any()).optional(),
+            lastState: z.string().optional(),
+        }).optional(), // Added for AI Workflow Engine
         risks: z.array(RiskFindingSchema).optional(), // Hallazgos de inteligencia
         federatedInsights: z.array(z.any()).optional(), // Insights Federados
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
@@ -650,6 +660,10 @@ export const TenantConfigSchema = z.object({
     }).optional(),
     branding: z.object({
         logo: z.object({
+            url: z.string().url().optional(),
+            publicId: z.string().optional(),
+        }).optional(),
+        documentLogo: z.object({
             url: z.string().url().optional(),
             publicId: z.string().optional(),
         }).optional(),

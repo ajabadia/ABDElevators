@@ -226,6 +226,10 @@ export const TenantConfigSchema = z.object({
             url: z.string().url().optional(),
             publicId: z.string().optional(),
         }).optional(),
+        documentLogo: z.object({
+            url: z.string().url().optional(),
+            publicId: z.string().optional(),
+        }).optional(),
         favicon: z.object({
             url: z.string().url().optional(),
             publicId: z.string().optional(),

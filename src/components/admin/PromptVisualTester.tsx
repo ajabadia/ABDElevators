@@ -10,6 +10,7 @@ import { Play, Loader2, Bug, CheckCircle2, AlertTriangle, FileJson } from 'lucid
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { AI_MODELS, DEFAULT_MODEL } from '@/lib/constants/ai-models';
 
 interface PromptVisualTesterProps {
     template: string;
@@ -24,9 +25,9 @@ export function PromptVisualTester({ template, variables = [] }: PromptVisualTes
             2
         )
     );
-    const [model, setModel] = useState('gemini-2.5-flash');
+    const [model, setModel] = useState(DEFAULT_MODEL);
     const [compareMode, setCompareMode] = useState(false);
-    const [modelB, setModelB] = useState('gemini-3-pro');
+    const [modelB, setModelB] = useState(AI_MODELS.find(m => m.id !== DEFAULT_MODEL)?.id || DEFAULT_MODEL);
     const [templateB, setTemplateB] = useState(template);
     const [result, setResult] = useState<string | null>(null);
     const [comparison, setComparison] = useState<{ resultA: any, resultB: any } | null>(null);
@@ -124,9 +125,9 @@ export function PromptVisualTester({ template, variables = [] }: PromptVisualTes
                                         <SelectValue placeholder="Modelo A" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                        <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                                        <SelectItem value="gemini-3-pro">Gemini 3 Pro</SelectItem>
-                                        <SelectItem value="gemini-3-pro-image">Gemini 3 Pro (Image)</SelectItem>
+                                        {AI_MODELS.map(m => (
+                                            <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -139,9 +140,9 @@ export function PromptVisualTester({ template, variables = [] }: PromptVisualTes
                                             <SelectValue placeholder="Modelo B" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                            <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                                            <SelectItem value="gemini-3-pro">Gemini 3 Pro</SelectItem>
-                                            <SelectItem value="gemini-3-pro-image">Gemini 3 Pro (Image)</SelectItem>
+                                            {AI_MODELS.map(m => (
+                                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>

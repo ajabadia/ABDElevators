@@ -190,7 +190,7 @@ export async function uploadBrandingAsset(
     buffer: Buffer,
     filename: string,
     tenantId: string,
-    assetType: 'logo' | 'favicon'
+    assetType: 'logo' | 'favicon' | 'documentLogo'
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(

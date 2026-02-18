@@ -5,18 +5,11 @@ import { logEvento } from '@/lib/logger';
 import { getReportSchedulesCollection } from '@/lib/db-tenant';
 import { UpdateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { ObjectId } from 'mongodb';
-import parser from 'cron-parser';
+import cronParser from 'cron-parser';
 import { z } from 'zod';
 
-// We implement update/delete logic here directly or move to service. 
-// For consistency with service pattern, we should probably add methods to ReportScheduleService, 
-// but for now, simple CRUD can live here or be refactored.
-// Given strict rules, let's keep logic in Service.
-// Wait, I missed adding update/delete to Service in previous step. 
-// I will implement them here using Collection directly for speed, 
-// but wrapping in try/catch and logging.
-
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+    const { id } = await context.params;
     const correlationId = `update-sched-${Date.now()}`;
 
     try {
@@ -32,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         let nextRunAt: Date | undefined;
         if (validated.cronExpression) {
             try {
-                const interval = parser.parseExpression(validated.cronExpression);
+                const interval = (cronParser as any).parseExpression(validated.cronExpression);
                 nextRunAt = interval.next().toDate();
             } catch (err) {
                 throw new AppError('VALIDATION_ERROR', 400, 'Invalid cron expression');
@@ -51,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         }
 
         const result = await collection.updateOne(
-            { _id: new ObjectId(params.id) },
+            { _id: new ObjectId(id) },
             { $set: updateData }
         );
 
@@ -63,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             level: 'INFO',
             source: 'API_SCHEDULES',
             action: 'UPDATE',
-            message: `Schedule updated: ${params.id}`,
+            message: `Schedule updated: ${id}`,
             tenantId: session.user.tenantId,
             correlationId,
             details: { updates: Object.keys(validated) }
@@ -76,19 +69,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { error: 'Validation Error', details: error.errors },
+                { error: 'Validation Error', details: error.issues },
                 { status: 400 }
+            );
+        }
+
+        if (error instanceof AppError) {
+            return NextResponse.json(
+                { error: error.message, code: error.code },
+                { status: error.status }
             );
         }
 
         return NextResponse.json(
             { error: error.message || 'Internal Server Error' },
-            { status: error.status || 500 }
+            { status: 500 }
         );
     }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+    const { id } = await context.params;
     const correlationId = `delete-sched-${Date.now()}`;
 
     try {
@@ -98,7 +99,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         }
 
         const collection = await getReportSchedulesCollection(session);
-        const result = await collection.deleteOne({ _id: new ObjectId(params.id) });
+        const result = await collection.deleteOne({ _id: new ObjectId(id) });
 
         // Handle both Soft Delete (UpdateResult) and Hard Delete (DeleteResult)
         const isUpdateResult = 'matchedCount' in result;
@@ -119,7 +120,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             level: 'INFO',
             source: 'API_SCHEDULES',
             action: 'DELETE',
-            message: `Schedule deleted: ${params.id}`,
+            message: `Schedule deleted: ${id}`,
             tenantId: session.user.tenantId,
             correlationId
         });
@@ -128,9 +129,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     } catch (error: any) {
         console.error('Error deleting schedule:', error);
+
+        if (error instanceof AppError) {
+            return NextResponse.json(
+                { error: error.message, code: error.code },
+                { status: error.status }
+            );
+        }
+
         return NextResponse.json(
             { error: error.message || 'Internal Server Error' },
-            { status: error.status || 500 }
+            { status: 500 }
         );
     }
 }

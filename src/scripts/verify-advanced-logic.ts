@@ -1,5 +1,5 @@
 
-import { WorkflowEngine } from '../core/engine/WorkflowEngine';
+import { AIWorkflowEngine } from '../core/engine/AIWorkflowEngine';
 import { compileGraphToLogic } from '../lib/workflow-compiler';
 import { connectDB } from '../lib/db';
 import * as dotenv from 'dotenv';
@@ -41,7 +41,7 @@ async function verify() {
     );
 
     console.log('🚀 Triggering engine execution...');
-    const engine = WorkflowEngine.getInstance();
+    const engine = AIWorkflowEngine.getInstance();
 
     const startTime = Date.now();
     await engine.processEvent('on_entity_change', { riskScore: 90, id: 'ticket_001' }, tenantId, correlationId);

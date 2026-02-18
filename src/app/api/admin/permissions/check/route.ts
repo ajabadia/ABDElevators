@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ const CheckSchema = z.object({
 
 export async function POST(req: Request) {
     const correlationId = crypto.randomUUID();
-    const startTime = Date.now();
+    const start = Date.now();
 
     try {
         const user = await enforcePermission('permission:simulator', 'execute');
@@ -44,22 +44,25 @@ export async function POST(req: Request) {
             });
         }
 
-        const duration = Date.now() - startTime;
-
         return NextResponse.json({
             allowed: result.allowed,
             reason: result.reason,
-            durationMs: duration
+            durationMs: Date.now() - start
         });
 
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+        return handleApiError(error, 'API_ADMIN_PERMISSIONS_CHECK_POST', correlationId);
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > 500) { // SLA Simulator: P95 < 500ms
+            await logEvento({
+                level: 'WARN',
+                source: 'API_PERMISSIONS',
+                action: 'PERF_SLA_VIOLATION',
+                message: `POST /api/admin/permissions/check tardó ${duration}ms`,
+                correlationId,
+                details: { duration_ms: duration, threshold_ms: 500 }
+            });
         }
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-        console.error('[Guardian API] Critical Error', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

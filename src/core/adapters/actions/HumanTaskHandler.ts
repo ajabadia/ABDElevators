@@ -15,18 +15,18 @@ export class HumanTaskHandler implements IActionHandler {
             const taskPayload = {
                 tenantId,
                 caseId: triggerData._id || triggerData.id || triggerData.caseId || 'unlinked-case',
-                type: action.params.taskType || 'DOCUMENT_REVIEW',
-                title: action.params.title || 'Validación requerida por Workflow',
-                description: action.params.description || `Se requiere revisión humana para el flujo ${workflowId}. Motivo: ${triggerData.reason || 'Análisis RAG crítico'}`,
-                assignedRole: action.params.assignedRole || 'ADMIN',
+                type: (action.params as any).taskType || 'DOCUMENT_REVIEW',
+                title: (action.params as any).title || 'Validación requerida por Workflow',
+                description: (action.params as any).description || `Se requiere revisión humana para el flujo ${workflowId}. Motivo: ${triggerData.reason || 'Análisis RAG crítico'}`,
+                assignedRole: (action.params as any).assignedRole || 'ADMIN',
                 status: 'PENDING',
-                priority: action.params.priority || 'MEDIUM',
+                priority: (action.params as any).priority || 'MEDIUM',
                 metadata: {
                     correlationId,
                     workflowId,
                     triggerData,
-                    nodeLabel: action.params.label,
-                    checklistConfigId: action.params.checklistConfigId
+                    nodeLabel: (action.params as any).label,
+                    checklistConfigId: (action.params as any).checklistConfigId
                 }
             };
 

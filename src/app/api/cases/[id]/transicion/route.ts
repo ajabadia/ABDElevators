@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { LegacyCaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 

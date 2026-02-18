@@ -4,6 +4,7 @@ import { logEvento } from "@/lib/logger";
 import { trace } from '@opentelemetry/api';
 import { PROMPTS } from "./prompts";
 import { RagResult } from "./rag-service";
+import { DEFAULT_MODEL } from "./constants/ai-models";
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -31,7 +32,7 @@ export class RerankingService {
             if (results.length <= 1) return results;
 
             let renderedPrompt: string;
-            let modelName = 'gemini-1.5-flash';
+            let modelName = DEFAULT_MODEL;
 
             try {
                 const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');

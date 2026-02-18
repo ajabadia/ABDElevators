@@ -33,7 +33,7 @@ export class AnalyticsService {
                 { $sort: { _id: 1 } }
             ];
 
-            const results = await collection.aggregate(pipeline).toArray();
+            const results = await collection.aggregate(pipeline);
 
             return results.map((r: any) => ({
                 date: r._id,
@@ -75,7 +75,7 @@ export class AnalyticsService {
                 }
             ];
 
-            const result = await collection.aggregate(pipeline).toArray();
+            const result = await collection.aggregate(pipeline);
             return {
                 precision: result[0]?.avgPrecision || 0,
                 samples: result[0]?.count || 0

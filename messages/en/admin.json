@@ -764,7 +764,10 @@
         "active": "ACTIVE",
         "inactive": "INACTIVE",
         "loading_error": "Error loading permission matrix",
-        "network_error": "Network error connecting to Guardian service"
+        "loading_error_title": "Loading Error",
+        "network_error": "Network error connecting to Guardian service",
+        "network_error_title": "Network Error",
+        "details_aria": "Policy details"
       },
       "filter": "Filter",
       "metadata": {
@@ -790,7 +793,8 @@
         "empty": "No groups defined.",
         "policies": "{count} associated policies",
         "loading_error": "Error loading group hierarchy",
-        "network_error": "Network error connecting to Identity service"
+        "network_error": "Network error connecting to Identity service",
+        "details_aria": "Group details"
       },
       "sidebar": {
         "engine_title": "Inheritance Engine",
@@ -1240,6 +1244,22 @@
       "inReview": "In Review",
       "completedToday": "Completed today",
       "avgTime": "Avg time"
+    },
+    "feedback": {
+      "title": "AI Feedback",
+      "correction_title": "AI Learning Lab",
+      "correction_desc": "Your decision differs from the AI suggestion. Please provide the reason to improve the model.",
+      "category_label": "Error Category",
+      "rejection_reason_label": "Correction Reason",
+      "rejection_reason_placeholder": "Ex: Manual V-120 has been replaced by technical circular #42...",
+      "categories": {
+        "HALLUCINATION": "Hallucination / Synthetic Data",
+        "OUTDATED_DATA": "Outdated Data",
+        "LOGIC_ERROR": "Logic / Reasoning Error",
+        "MISSING_CONTEXT": "Missing Context",
+        "OTHER": "Other"
+      },
+      "submit_btn": "Submit Feedback & Save"
     }
   },
   "api_keys": {
@@ -1626,6 +1646,16 @@
         "error": "Error",
         "errorDesc": "Failed to upload logo"
       },
+      "documentLogo": {
+        "title": "Logo for Documents/Emails",
+        "upload": "Upload Document Logo",
+        "uploadButton": "Upload Doc Logo",
+        "dimensions": "Recommended: 800x200px (Landscape). General logo will be used if this is not defined.",
+        "success": "Document logo updated",
+        "successDesc": "The notification logo has been saved successfully.",
+        "error": "Error",
+        "errorDesc": "Failed to upload document logo"
+      },
       "favicon": {
         "title": "Favicon",
         "upload": "Upload Favicon",
@@ -1647,11 +1677,68 @@
         "desc": "Automatically calculates readable variants for the dark theme."
       },
       "preview": {
-        "title": "Live Preview App",
+        "title": "App Preview",
         "light": "LIGHT",
         "dark": "DARK",
         "lightDesc": "Preview in Light Mode (original colors).",
         "darkDesc": "Preview in Dark Mode (auto-optimized colors)."
+      }
+    },
+    "notifications": {
+      "editor": {
+        "title": "System Template Editor",
+        "subtitle": "Define the global content for notifications.",
+        "contentCard": "Content Editor",
+        "contentDesc": "Define the email subject and HTML. You can use dynamic variables.",
+        "es": "Spanish (ES)",
+        "en": "English (EN)",
+        "subject": "Email Subject",
+        "subjectPlaceholder": "Ex: Your order {{orderId}} is ready",
+        "body": "HTML Body",
+        "bodyDesc": "Supports basic HTML and Handlebars. Ensure you include {{{tenant_custom_note}}} if you want to allow customization.",
+        "audit": {
+          "title": "Change Audit",
+          "reason": "Update Reason",
+          "reasonPlaceholder": "Ex: Legal terms update 2026...",
+          "save": "Save Version v{version}",
+          "reasonRequired": "Reason required",
+          "reasonRequiredDesc": "Please indicate the reason for the change for the audit trail."
+        },
+        "variables": {
+          "title": "Available Variables",
+          "copy": "Click to copy. These variables will be filled automatically when sending."
+        },
+        "version": {
+          "title": "Version Information",
+          "current": "Current Version:",
+          "lastUpdate": "Last Modified:",
+          "modifiedBy": "Modified By:",
+          "history": "View Full History"
+        },
+        "toast": {
+          "success": "Changes saved",
+          "successDesc": "The template has been updated and versioned successfully.",
+          "error": "Error",
+          "errorDesc": "Could not save the template."
+        }
+      },
+      "settings": {
+        "title": "Tenant Notification Settings",
+        "subtitle": "Customize which notifications your team and clients receive.",
+        "events": "Notification Events",
+        "enabled": "Enabled",
+        "channels": "Channels",
+        "recipients": "Recipients (Comma-separated emails)",
+        "customNote": "Custom Note (Optional)",
+        "customNoteDesc": "Add an extra message that will be injected into the global template.",
+        "includeNote": "Include note in Emails",
+        "fallback": "Fallback Email (If no specific recipients)",
+        "save": "Save Settings",
+        "toast": {
+          "success": "Settings updated",
+          "successDesc": "Your notification preferences have been saved.",
+          "error": "Error saving settings"
+        }
       }
     },
     "billing": {

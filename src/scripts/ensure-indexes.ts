@@ -38,6 +38,13 @@ async function ensureIndexes() {
         // TTL for events (keep for 48h for idempotency window)
         await events.createIndex({ createdAt: 1 }, { expireAfterSeconds: 172800, name: 'idx_events_ttl' });
 
+        // 3b. Industrial Webhook Idempotency (FASE 84)
+        const webhooks = db.collection('processed_webhooks');
+        console.log('Checking indexes for: processed_webhooks');
+        await webhooks.createIndex({ eventId: 1 }, { unique: true, name: 'idx_webhook_id_unique' });
+        // TTL for webhooks (keep for 90 days as per FASE 84)
+        await webhooks.createIndex({ createdAt: 1 }, { expireAfterSeconds: 7776000, name: 'idx_webhooks_ttl' });
+
         // 4. Rate Limits
         const rates = db.collection('rate_limits');
         console.log('Checking indexes for: rate_limits');

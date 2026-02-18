@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
     ChevronRight,
     ChevronDown,
@@ -28,7 +29,11 @@ interface SpaceNodeProps {
     selectedId?: string;
 }
 
-const SpaceNode: React.FC<SpaceNodeProps> = ({ space, level, onSelect, selectedId }) => {
+interface SpaceNodeWithTProps extends SpaceNodeProps {
+    t: (key: string) => string;
+}
+
+const SpaceNode: React.FC<SpaceNodeWithTProps> = ({ space, level, onSelect, selectedId, t }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const isSelected = selectedId === space._id?.toString();
 
@@ -64,6 +69,7 @@ const SpaceNode: React.FC<SpaceNodeProps> = ({ space, level, onSelect, selectedI
                     isSelected ? "bg-primary/10 text-primary font-bold shadow-sm" : "hover:bg-muted text-muted-foreground"
                 )}
                 style={{ paddingLeft: `${level * 12 + 8}px` }}
+                aria-label={space.name}
             >
                 <div className="w-4 h-4 flex items-center justify-center shrink-0">
                     {isLoading ? (
@@ -78,7 +84,7 @@ const SpaceNode: React.FC<SpaceNodeProps> = ({ space, level, onSelect, selectedI
                 <span className="text-xs truncate flex-1">{space.name}</span>
                 {space.config?.isDefault && (
                     <Badge variant="outline" className="h-4 px-1 text-[8px] uppercase tracking-tighter opacity-70">
-                        Def
+                        {t("default")}
                     </Badge>
                 )}
             </button>
@@ -92,6 +98,7 @@ const SpaceNode: React.FC<SpaceNodeProps> = ({ space, level, onSelect, selectedI
                             level={level + 1}
                             onSelect={onSelect}
                             selectedId={selectedId}
+                            t={t}
                         />
                     ))}
                 </div>
@@ -102,6 +109,7 @@ const SpaceNode: React.FC<SpaceNodeProps> = ({ space, level, onSelect, selectedI
 
 export function SpaceNavigator({ onSelect, selectedId }: { onSelect: (space: Space) => void, selectedId?: string }) {
     const [search, setSearch] = useState("");
+    const t = useTranslations("spaces.navigator");
 
     // Fetch root spaces (those without parentSpaceId)
     const { data: rootSpaces, isLoading } = useApiList<Space>({
@@ -115,16 +123,17 @@ export function SpaceNavigator({ onSelect, selectedId }: { onSelect: (space: Spa
             <div className="p-4 border-b border-border/50 space-y-3">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                        <FolderOpen className="w-4 h-4" /> Navigación
+                        <FolderOpen className="w-4 h-4" /> {t("title")}
                     </h3>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/50" />
                     <Input
-                        placeholder="Filtrar espacios..."
+                        placeholder={t("search_placeholder")}
                         className="pl-8 h-8 text-[11px] bg-muted/30 border-none focus-visible:ring-primary/30"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        aria-label={t("search_placeholder")}
                     />
                 </div>
             </div>
@@ -133,7 +142,7 @@ export function SpaceNavigator({ onSelect, selectedId }: { onSelect: (space: Spa
                 {isLoading && !rootSpaces ? (
                     <div className="flex flex-col items-center justify-center h-40 gap-2 opacity-50">
                         <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Sincronizando...</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{t("loading")}</span>
                     </div>
                 ) : rootSpaces && rootSpaces.length > 0 ? (
                     <div className="flex flex-col gap-0.5">
@@ -144,13 +153,14 @@ export function SpaceNavigator({ onSelect, selectedId }: { onSelect: (space: Spa
                                 level={0}
                                 onSelect={onSelect}
                                 selectedId={selectedId}
+                                t={t}
                             />
                         ))}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-40 opacity-30">
                         <Folder className="w-10 h-10 mb-2" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Vacio</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{t("empty")}</span>
                     </div>
                 )}
             </ScrollArea>

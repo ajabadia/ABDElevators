@@ -11,7 +11,7 @@ export class UpdateEntityHandler implements IActionHandler {
     async execute(action: WorkflowAction, context: WorkflowContext): Promise<ActionResult> {
         try {
             const { tenantId, triggerData } = context;
-            const { entitySlug, idField, updates } = action.params;
+            const { entitySlug, idField, updates } = action.params as any;
 
             // 1. Governance check
             const gov = GovernanceEngine.getInstance();

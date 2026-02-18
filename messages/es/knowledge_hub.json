@@ -1,0 +1,22 @@
+{
+  "title": "Centro de Conocimiento",
+  "subtitle": "Gestión unificada de activos, exploración semántica y espacios de trabajo.",
+  "cards": {
+    "explorer": {
+      "title": "Explorador Neural",
+      "description": "Explore chunks vectorizados, simule consultas RAG y audite la calidad de la recuperación."
+    },
+    "assets": {
+      "title": "Gestión de Activos",
+      "description": "Gestión unificada de activos y documentos de conocimiento."
+    },
+    "my_docs": {
+      "title": "Mis Documentos",
+      "description": "Gestión personal de documentos para el usuario autenticado."
+    },
+    "spaces": {
+      "title": "Espacios de Conocimiento",
+      "description": "Configure límites de contexto y permisos de acceso para grupos de documentos."
+    }
+  }
+}

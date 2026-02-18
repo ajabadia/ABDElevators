@@ -1,10 +1,31 @@
 {
+  "title": "Knowledge Spaces",
+  "subtitle": "Organize and collaborate in specific work contexts",
+  "tabs": {
+    "quick_qa": "Quick Q&A",
+    "personal": "My Spaces",
+    "collections": "Collections"
+  },
+  "placeholders": {
+    "personal_title": "Personal Spaces",
+    "personal_desc": "Create private spaces to organize your knowledge",
+    "collections_title": "Collections",
+    "collections_desc": "Group related documents into thematic collections"
+  },
+  "navigator": {
+    "title": "Navigation",
+    "search_placeholder": "Filter spaces...",
+    "loading": "Syncing...",
+    "empty": "Empty",
+    "default": "Def"
+  },
   "playground": {
     "title": "Spaces Playground",
     "subtitle": "Explore the space hierarchy and test ephemeral analysis.",
     "details": "Space Details",
     "name": "Name",
     "path": "Path",
+    "back_to_hub": "Back to Hub",
     "tabs": {
       "qa": "Quick Q&A",
       "settings": "Settings"
@@ -21,6 +42,49 @@
       "description": "Test analysis without prior ingestion.",
       "inputLabel": "Paste your technical text here",
       "analyze": "Analyze"
+    }
+  },
+  "hub": {
+    "title": "Knowledge Spaces",
+    "subtitle": "Organize and collaborate in specific work contexts",
+    "coming_soon": "Coming Soon",
+    "cards": {
+      "quick_qa": {
+        "title": "Quick Q&A",
+        "description": "Paste technical text and query without persistence. Ideal for quick analysis."
+      },
+      "personal": {
+        "title": "Personal Spaces",
+        "description": "Create private spaces to organize your personal knowledge."
+      },
+      "collections": {
+        "title": "Collections",
+        "description": "Group related documents into thematic collections."
+      },
+      "playground": {
+        "title": "Playground",
+        "description": "Explore the complete space hierarchy and test features."
+      }
+    }
+  },
+  "personal": {
+    "title": "Personal Spaces",
+    "subtitle": "Manage your personal documents and private knowledge",
+    "back_to_hub": "Back to Hub",
+    "create_space": "Create Space",
+    "empty": {
+      "title": "No personal spaces",
+      "description": "Your personal spaces will appear here when you create them."
+    }
+  },
+  "collections": {
+    "title": "Collections",
+    "subtitle": "Organize documents into thematic collections",
+    "back_to_hub": "Back to Hub",
+    "create_collection": "Create Collection",
+    "empty": {
+      "title": "No collections",
+      "description": "Your collections will appear here when you create them."
     }
   }
 }

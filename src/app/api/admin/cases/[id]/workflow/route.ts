@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { WorkflowService } from '@/lib/workflow-service';
 import { WorkflowLLMNodeService } from '@/lib/workflow-llm-node-service';
-import { LegacyCaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';

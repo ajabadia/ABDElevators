@@ -5,6 +5,7 @@ import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
 import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
+import { z } from 'zod';
 
 /**
  * GET /api/admin/checklist-configs
@@ -65,13 +66,13 @@ export async function POST(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const user = await enforcePermission('checklists', 'write');
+        const session = await enforcePermission('checklists', 'write');
         const body = await req.json();
 
         // Inyectar metadatos
         const configToValidate = {
             ...body,
-            tenantId: user.tenantId,
+            tenantId: session.user.tenantId,
             creado: new Date(),
             actualizado: new Date()
         };
@@ -87,14 +88,14 @@ export async function POST(req: NextRequest) {
             action: 'CREATE',
             message: `Checklist config created: ${validated.name}`,
             correlationId,
-            details: { tenantId: user.tenantId, config_id: result.insertedId }
+            details: { tenantId: session.user.tenantId, config_id: result.insertedId }
         });
 
         return NextResponse.json({ success: true, config_id: result.insertedId });
     } catch (error: any) {
-        if (error.name === 'ZodError') {
+        if (error instanceof z.ZodError) {
             return NextResponse.json(
-                new ValidationError('Datos de configuración inválidos', error.errors).toJSON(),
+                new ValidationError('Datos de configuración inválidos', error.issues).toJSON(),
                 { status: 400 }
             );
         }

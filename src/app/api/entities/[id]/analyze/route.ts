@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth } from '@/auth';
 import { OrderAnalysisEngine as agentEngine } from '@/core/engine';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
 import { AccessControlService } from '@/lib/access-control';
 import { UsageService } from '@/lib/usage-service';
+import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 
 /**
@@ -23,11 +24,12 @@ export async function GET(
 
     // 1. Autorización
     const session = await auth();
-    if (!session) {
+    if (!session || !session.user) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const tenantId = session.user.tenantId;
+    const user = session.user as any;
+    const tenantId = user.tenantId;
 
     // 2. Preparar el Stream de Eventos (SSE)
     const encoder = new TextEncoder();
@@ -151,7 +153,9 @@ export async function GET(
         }
     });
 
-    return new Response(stream, {
+    const streamWithHeartbeat = SSEHelper.wrapWithHeartbeat(stream);
+
+    return new Response(streamWithHeartbeat, {
         headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',

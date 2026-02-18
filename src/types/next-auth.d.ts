@@ -38,6 +38,9 @@ declare module "next-auth" {
             mfaVerified?: boolean;
             mfaPending?: boolean;
         } & DefaultSession["user"];
+        tenantId: string;
+        role: UserRole;
+        industry: IndustryType;
     }
 }
 

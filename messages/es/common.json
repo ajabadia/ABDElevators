@@ -31,12 +31,10 @@
   },
   "navigation": {
     "sections": {
-      "core": "Core",
-      "inventory": "Inventario Técnico",
-      "studio": "Automation Studio",
-      "corporate": "Corporativo & Admin",
-      "governance": "Gobernanza & Sistemas",
-      "workspace": "Espacio de Conocimiento",
+      "ai_hub": "AI Hub",
+      "operations": "Operaciones",
+      "organization": "Organización",
+      "personal": "Mi Espacio",
       "preference": "Preferencias"
     },
     "items": {
@@ -334,7 +332,8 @@
       "chat_welcome_title": "Haz una pregunta sobre el texto",
       "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
       "status_loading": "Consultando información...",
-      "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento..."
+      "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
+      "back_to_hub": "Volver al Hub"
     }
   },
   "pagination": {

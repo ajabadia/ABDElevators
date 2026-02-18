@@ -39,6 +39,18 @@ export const LLMProposalSchema = z.object({
     score: z.number().min(0).max(1).optional(),
     reason: z.string().optional(),
     rawOutputId: z.string().optional(), // Reference to full LLM output in logs
+
+    // ⚡ FASE 82: Feedback & Learning
+    humanCorrection: z.string().optional(), // Final state/action decided by human
+    humanNotes: z.string().optional(), // Human notes specifically about the AI suggestion
+    rejectionReason: z.string().optional(), // Concise rejection reason
+    feedbackCategory: z.enum([
+        'HALLUCINATION',
+        'OUTDATED_DATA',
+        'LOGIC_ERROR',
+        'MISSING_CONTEXT',
+        'OTHER'
+    ]).optional(),
 });
 
 export const WorkflowTaskSchema = z.object({

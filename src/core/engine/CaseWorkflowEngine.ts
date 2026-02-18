@@ -1,12 +1,13 @@
 
 
 import { logEvento } from '@/lib/logger';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { WorkflowDefinition, WorkflowTransition, WorkflowState } from '@/lib/schemas/workflow';
+import { WorkflowDefinition } from '@/lib/schemas/workflow';
 import { WorkflowLLMNodeService } from '@/lib/workflow-llm-node-service';
 import { WorkflowTaskService } from '@/lib/workflow-task-service';
-import { ObjectId } from 'mongodb';
 import { UserRole } from '@/types/roles';
+import { MongoCaseRepository } from '../adapters/persistence/MongoCaseRepository';
+import { MongoAIWorkflowRepository } from '../adapters/persistence/MongoAIWorkflowRepository';
+import { MongoCaseWorkflowRepository } from '../adapters/persistence/MongoCaseWorkflowRepository';
 
 /**
  * CaseWorkflowEngine: Gestiona el ciclo de vida (Estados y Transiciones) de un Caso.
@@ -22,8 +23,16 @@ import { UserRole } from '@/types/roles';
  */
 export class CaseWorkflowEngine {
     private static instance: CaseWorkflowEngine;
+    private caseRepository: MongoCaseRepository;
+    private workflowRepository: MongoAIWorkflowRepository;
+    private caseWorkflowRepository: MongoCaseWorkflowRepository;
 
-    private constructor() { }
+
+    private constructor() {
+        this.caseRepository = new MongoCaseRepository();
+        this.workflowRepository = new MongoAIWorkflowRepository();
+        this.caseWorkflowRepository = new MongoCaseWorkflowRepository();
+    }
 
     public static getInstance(): CaseWorkflowEngine {
         if (!CaseWorkflowEngine.instance) {
@@ -45,19 +54,14 @@ export class CaseWorkflowEngine {
     ): Promise<{ success: boolean; newState?: string; error?: string }> {
         try {
             // 1. Get Case
-            const casesCollection = await getTenantCollection('cases', { user: { tenantId } });
-            const caseData = await casesCollection.findOne({ _id: new ObjectId(caseId) });
+            const caseData = await this.caseRepository.findById(caseId, tenantId);
 
             if (!caseData) {
                 throw new Error(`Case ${caseId} not found`);
             }
 
             // 2. Get Workflow Definition
-            // Assuming case has a workflowDefinitionId or we use a default
-            // For now, let's assume we fetch the default one if not present
-            const workflowsCollection = await getTenantCollection('workflows', { user: { tenantId } });
-            // Simplified: Fetch active workflow for this entity type. Real impl needs specific mapping.
-            const workflowDef = await workflowsCollection.findOne({ active: true, entityType: 'ENTITY' }) as unknown as WorkflowDefinition;
+            const workflowDef = await this.workflowRepository.getDefinition(tenantId, 'ENTITY'); // Assuming 'ENTITY' covers Cases for now
 
             if (!workflowDef) {
                 throw new Error('No active workflow definition found for Cases');
@@ -65,7 +69,7 @@ export class CaseWorkflowEngine {
 
             // 3. Find Transition
             const currentState = caseData.status || workflowDef.initial_state;
-            const transition = workflowDef.transitions.find(t => t.from === currentState && t.to === transitionId); // transitionId here treated as target state for simplicity, or we need a real transition ID
+            const transition = workflowDef.transitions.find(t => t.from === currentState && t.to === transitionId);
 
             // If we are passing "targetState" as transitionId
             const targetState = transitionId;
@@ -99,13 +103,21 @@ export class CaseWorkflowEngine {
                     });
 
                     // Store LLM output in case metadata
-                    await casesCollection.updateOne(
-                        { _id: new ObjectId(caseId) },
+                    await this.caseRepository.update(
+                        caseId,
                         {
-                            $set: {
-                                [`metadata.workflow.llmOutputs.${targetState}`]: llmOutput,
-                            },
-                        }
+                            metadata: {
+                                ...caseData.metadata,
+                                workflow: {
+                                    ...caseData.metadata?.workflow,
+                                    llmOutputs: {
+                                        ...caseData.metadata?.workflow?.llmOutputs,
+                                        [targetState]: llmOutput
+                                    }
+                                }
+                            }
+                        },
+                        tenantId
                     );
 
                     await logEvento({
@@ -149,25 +161,18 @@ export class CaseWorkflowEngine {
             }
 
             // 6. Update State
-            await casesCollection.updateOne(
-                { _id: new ObjectId(caseId) },
+            await this.caseRepository.updateStatus(
+                caseId,
+                targetState,
                 {
-                    $set: {
-                        status: targetState,
-                        updatedAt: new Date(),
-                        lastTransitionBy: userId
-                    },
-                    $push: {
-                        workflowHistory: {
-                            from: currentState,
-                            to: targetState,
-                            by: userId,
-                            at: new Date(),
-                            correlationId,
-                            llmOutput: llmOutput ? { riskLevel: llmOutput.riskLevel, confidence: llmOutput.confidence } : undefined,
-                        }
-                    }
-                } as any
+                    from: currentState,
+                    to: targetState,
+                    by: userId,
+                    at: new Date(),
+                    correlationId,
+                    llmOutput: llmOutput ? { riskLevel: llmOutput.riskLevel, confidence: llmOutput.confidence } : undefined,
+                },
+                tenantId
             );
 
             await logEvento({
@@ -209,15 +214,13 @@ export class CaseWorkflowEngine {
     ): Promise<{ success: boolean; newState?: string; taskCreated?: boolean; error?: string }> {
         try {
             // 1. Get Case and Workflow
-            const casesCollection = await getTenantCollection('cases', { user: { tenantId } });
-            const caseData = await casesCollection.findOne({ _id: new ObjectId(caseId) });
+            const caseData = await this.caseRepository.findById(caseId, tenantId);
 
             if (!caseData) {
                 throw new Error(`Case ${caseId} not found`);
             }
 
-            const workflowsCollection = await getTenantCollection('workflows', { user: { tenantId } });
-            const workflowDef = await workflowsCollection.findOne({ active: true, entityType: 'ENTITY' }) as unknown as WorkflowDefinition;
+            const workflowDef = await this.workflowRepository.getDefinition(tenantId, 'ENTITY');
 
             if (!workflowDef) {
                 throw new Error('No active workflow definition found');

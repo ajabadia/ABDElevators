@@ -32,8 +32,11 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
 
     const { toast } = useToast();
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+    const [isUploadingDocumentLogo, setIsUploadingDocumentLogo] = useState(false);
     const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
     const [isPreviewDark, setIsPreviewDark] = useState(false);
+
+    const tDocumentLogo = useTranslations('admin.organizations.branding.documentLogo');
 
     // Utility to lighten/darken a color for preview optimization
     const adjustColor = (hex: string, percent: number) => {
@@ -83,8 +86,8 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                 <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 relative overflow-hidden group">
                                     {isUploadingLogo ? (
                                         <Loader2 className="animate-spin text-teal-600" size={32} aria-hidden="true" />
-                                    ) : config?.branding?.logo?.url ? (
-                                        <img src={config.branding.logo.url} alt="Logo preview" className="object-contain max-w-[90%] max-h-[90%]" />
+                                    ) : (config?.branding?.logo?.url || config?.branding?.documentLogo?.url) ? (
+                                        <img src={config.branding?.logo?.url || config?.branding?.documentLogo?.url} alt="Logo preview" className="object-contain max-w-[90%] max-h-[90%]" />
                                     ) : (
                                         <Building size={40} className="text-slate-200" aria-hidden="true" />
                                     )}
@@ -153,6 +156,87 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         )}
                                     </div>
                                     <p className="text-[11px] text-slate-400">{tLogo('dimensions')}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Document Logo Section (Fase 111 compliance) */}
+                        <div className="space-y-4 pt-4 border-t border-slate-100">
+                            <Label className="text-slate-700 font-semibold">{tDocumentLogo('title')}</Label>
+                            <div className="flex items-center gap-8 p-6 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 transition-colors group">
+                                <div className="w-32 h-16 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 relative overflow-hidden">
+                                    {isUploadingDocumentLogo ? (
+                                        <Loader2 className="animate-spin text-teal-600" size={24} />
+                                    ) : (config?.branding?.documentLogo?.url || config?.branding?.logo?.url) ? (
+                                        <img src={config.branding?.documentLogo?.url || config?.branding?.logo?.url} alt="Document Logo preview" className="object-contain max-w-[90%] max-h-[90%]" />
+                                    ) : (
+                                        <FileText size={40} className="text-slate-200" />
+                                    )}
+                                </div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            id="document-logo-upload"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file || !config) return;
+
+                                                setIsUploadingDocumentLogo(true);
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+                                                formData.append('type', 'documentLogo');
+
+                                                try {
+                                                    const res = await fetch(`/api/admin/tenants/${config.tenantId}/branding/upload`, {
+                                                        method: 'POST',
+                                                        body: formData
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                        setConfig({
+                                                            ...config,
+                                                            branding: {
+                                                                autoDarkMode: config.branding?.autoDarkMode ?? true,
+                                                                ...(config.branding || {}),
+                                                                documentLogo: data.asset
+                                                            }
+                                                        });
+                                                        toast({ title: tDocumentLogo('success'), description: tDocumentLogo('successDesc') });
+                                                    }
+                                                } catch (err) {
+                                                    toast({ title: tDocumentLogo('error'), description: tDocumentLogo('errorDesc'), variant: "destructive" });
+                                                } finally {
+                                                    setIsUploadingDocumentLogo(false);
+                                                }
+                                            }}
+                                        />
+                                        <Label htmlFor="document-logo-upload" className="cursor-pointer">
+                                            <Button variant="outline" size="sm" asChild disabled={isUploadingDocumentLogo}>
+                                                <span>
+                                                    {isUploadingDocumentLogo ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Upload size={14} className="mr-2" />}
+                                                    {tDocumentLogo('uploadButton')}
+                                                </span>
+                                            </Button>
+                                        </Label>
+                                        {config?.branding?.documentLogo?.url && (
+                                            <Button variant="ghost" className="text-destructive h-8 px-2 hover:bg-destructive/10"
+                                                onClick={() => setConfig(prev => prev ? {
+                                                    ...prev,
+                                                    branding: {
+                                                        autoDarkMode: prev.branding?.autoDarkMode ?? true,
+                                                        ...prev.branding,
+                                                        documentLogo: undefined
+                                                    }
+                                                } : null)}
+                                            >
+                                                <Trash2 size={14} />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400">{tDocumentLogo('dimensions')}</p>
                                 </div>
                             </div>
                         </div>

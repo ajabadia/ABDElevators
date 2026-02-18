@@ -12,6 +12,7 @@ export const InspectionReportTemplate: ReportTemplate = {
     },
     sections: [
         {
+            id: 'summary_metrics_grid',
             key: 'summary_metrics',
             title: 'Resumen Ejecutivo',
             type: 'METRICS_GRID',
@@ -20,6 +21,7 @@ export const InspectionReportTemplate: ReportTemplate = {
             layout: { columns: 3 }
         },
         {
+            id: 'equipment_details_table',
             key: 'equipment_details',
             title: 'Detalles del Equipo',
             type: 'DATA_TABLE',
@@ -27,6 +29,7 @@ export const InspectionReportTemplate: ReportTemplate = {
             dataSource: 'equipment'
         },
         {
+            id: 'findings_table',
             key: 'findings',
             title: 'Hallazgos y Observaciones',
             type: 'DATA_TABLE',
@@ -35,12 +38,14 @@ export const InspectionReportTemplate: ReportTemplate = {
             layout: { breakPageBefore: true }
         },
         {
+            id: 'risk_assessment_text',
             key: 'risk_assessment',
             title: 'Evaluación de Riesgos',
             type: 'TEXT',
             dataSource: 'riskText'
         },
         {
+            id: 'recommendations_text',
             key: 'recommendations',
             title: 'Recomendaciones y Próximos Pasos',
             type: 'TEXT',

@@ -8,18 +8,21 @@ import { SpaceNavigator } from "@/components/spaces/SpaceNavigator";
 import { QuickQAPanel } from "@/components/spaces/QuickQAPanel";
 import { Space } from "@/lib/schemas/spaces";
 import {
-    Layout,
     MessageSquare,
     Share2,
     Info,
     Settings,
-    Layers,
-    ExternalLink
+    Layers
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
+/**
+ * 🧪 Spaces Playground Module (Phase 125.3)
+ * Interactive environment for exploring space hierarchy and testing features.
+ * UI Standardized with PageContainer/Header pattern and semantic color tokens.
+ */
 export default function SpacesPlaygroundPage() {
     const t = useTranslations('spaces.playground');
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
@@ -30,6 +33,7 @@ export default function SpacesPlaygroundPage() {
                 title={t('title')}
                 subtitle={t('subtitle')}
                 icon={<Layers className="w-6 h-6 text-primary" />}
+                backHref="/spaces"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6 min-h-[700px]">

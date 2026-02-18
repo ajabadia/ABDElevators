@@ -1,11 +1,30 @@
 {
   "title": "Centro de Seguridad y Auditoría",
   "subtitle": "Gestión centralizada de permisos, logs de acceso y cumplimiento industrial.",
+  "coming_soon": "Próximamente",
   "tabs": {
     "permissions": "Permisos y Roles",
     "audit": "Auditoría",
     "sessions": "Sesiones Activas",
     "lifecycle": "Ciclo de Vida"
+  },
+  "cards": {
+    "permissions": {
+      "title": "Permisos y Roles",
+      "description": "Configure los roles y permisos de acceso para su organización mediante Guardian."
+    },
+    "audit": {
+      "title": "Auditoría",
+      "description": "Historial inmutable de acciones realizadas en el sistema."
+    },
+    "sessions": {
+      "title": "Sesiones Activas",
+      "description": "Supervise y gestione las sesiones de usuario activas."
+    },
+    "lifecycle": {
+      "title": "Ciclo de Vida de Datos",
+      "description": "Políticas de retención y derecho al olvido (GDPR)."
+    }
   },
   "permissions": {
     "title": "Gestión de Roles (Guardian)",
@@ -14,7 +33,48 @@
   },
   "audit": {
     "title": "Registro de Auditoría",
-    "description": "Historial inmutable de acciones realizadas en el sistema."
+    "description": "Historial inmutable de acciones realizadas en el sistema.",
+    "table": {
+      "date": "Fecha",
+      "level": "Nivel",
+      "action": "Origen / Acción",
+      "message": "Mensaje",
+      "user": "Usuario",
+      "no_results": "No se encontraron eventos de auditoría.",
+      "export_csv": "Exportar CSV",
+      "refresh": "Refrescar",
+      "search_placeholder": "Buscar por mensaje, usuario...",
+      "system": "Sistema",
+      "error_title": "Error de Auditoría",
+      "error_fetch": "No se pudieron cargar los logs de auditoría."
+    },
+    "levels": {
+      "all": "Todos los Niveles",
+      "info": "Información",
+      "warn": "Advertencia",
+      "error": "Error",
+      "debug": "Debug"
+    },
+    "types": {
+      "all": "Todos los Orígenes",
+      "application": "Aplicación",
+      "config": "Cambios Config",
+      "admin": "Operaciones Admin",
+      "access": "Acceso a Datos",
+      "security": "Seguridad"
+    },
+    "details": {
+      "title": "Detalles del Evento",
+      "reason": "Motivo",
+      "changes": "Cambios realizados",
+      "before": "Antes",
+      "after": "Después",
+      "ip": "Dirección IP",
+      "userAgent": "Navegador/UserAgent",
+      "correlationId": "Correlation ID",
+      "actor": "Actor",
+      "entity": "Entidad"
+    }
   },
   "sessions": {
     "title": "Sesiones Activas",

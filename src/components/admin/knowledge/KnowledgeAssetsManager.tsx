@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import {
-    Plus, Search, Filter, FileText, CheckCircle2,
+    Plus, Search, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
-    Archive, ShieldOff, RotateCw, Link2, Eye, Activity
+    Archive, RotateCw, Link2, Eye, Activity,
+    CalendarCheck, Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
 import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal";
 import { RelationshipManagerModal } from "@/components/admin/knowledge/RelationshipManagerModal";
@@ -41,8 +41,11 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { Layers, Database, History } from "lucide-react";
 
 import { useTranslations } from "next-intl";
-import { KnowledgeAsset, AssetStatus, IngestionStatus } from "@/types/knowledge";
+import { KnowledgeAsset, AssetStatus } from "@/types/knowledge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface KnowledgeAssetsManagerProps {
     scope?: 'all' | 'user';
@@ -54,16 +57,20 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
     const t = useTranslations('knowledge_assets');
     const tCommon = useTranslations('common');
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [reviewFilter, setReviewFilter] = useState<string>("all");
 
-    // Modal State Refactor (Audit Item 3.2)
+    // Modal State Refactor
     type ModalState =
         | { type: 'closed' }
         | { type: 'upload' }
         | { type: 'preview', id: string, filename: string }
         | { type: 'relationship', asset: KnowledgeAsset }
-        | { type: 'diagnostic', id: string, filename: string };
+        | { type: 'diagnostic', id: string, filename: string }
+        | { type: 'review', asset: KnowledgeAsset };
 
     const [modalState, setModalState] = useState<ModalState>({ type: 'closed' });
+    const [reviewDate, setReviewDate] = useState<string>(format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), "yyyy-MM-dd"));
 
     // Pagination state
     const [page, setPage] = useState(1);
@@ -83,10 +90,31 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
             skip: (page - 1) * limit,
             limit: limit,
             scope: scope,
-            userId: userId
+            userId: userId,
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            reviewStatus: reviewFilter !== 'all' ? reviewFilter : undefined
         },
         dataKey: 'assets'
     });
+
+    const handleReviewSubmit = async () => {
+        if (modalState.type !== 'review') return;
+        try {
+            const res = await fetch(`/api/admin/knowledge-assets/${modalState.asset._id}/review`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nextReviewDate: reviewDate })
+            });
+
+            if (!res.ok) throw new Error("Review update failed");
+
+            toast({ title: t('review.success'), variant: "default" });
+            setModalState({ type: 'closed' });
+            refresh();
+        } catch (error) {
+            toast({ title: t('review.error'), variant: "destructive" });
+        }
+    };
 
     // Reset to page 1 on search
     useEffect(() => {
@@ -95,10 +123,8 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
 
     const totalPages = Math.ceil((total || 0) / limit);
 
-    // ... perceptual optimization ...
     const { updateOptimistic, deleteOptimistic } = useApiOptimistic(documents, setData);
 
-    // 3. Mutations
     const statusMutation = useApiMutation({
         endpoint: '/api/admin/knowledge-assets/status',
         method: 'PATCH',
@@ -147,7 +173,6 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         }
     };
 
-    // 4. Adaptive Polling Optimization (Audit Item 2)
     useEffect(() => {
         const processingItems = documents.filter(d =>
             d.ingestionStatus === 'PROCESSING' ||
@@ -155,7 +180,6 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         );
 
         if (processingItems.length > 0) {
-            // Incremental polling strategy: 3s + 1s per processing item, max 10s
             const intervalMs = Math.min(3000 + (processingItems.length * 1000), 10000);
             const interval = setInterval(refresh, intervalMs);
             return () => clearInterval(interval);
@@ -201,6 +225,27 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                 filename={modalState.type === 'diagnostic' ? modalState.filename : ""}
             />
 
+            <Dialog open={modalState.type === 'review'} onOpenChange={() => setModalState({ type: 'closed' })}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('review.dialog_title')}</DialogTitle>
+                        <DialogDescription>{t('review.dialog_desc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            type="date"
+                            value={reviewDate}
+                            onChange={(e) => setReviewDate(e.target.value)}
+                            min={format(new Date(), "yyyy-MM-dd")}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setModalState({ type: 'closed' })}>{tCommon('actions.cancel')}</Button>
+                        <Button onClick={handleReviewSubmit}>{tCommon('actions.save')}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <MetricCard
                     title={t('metrics.active')}
@@ -224,17 +269,39 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
 
             <ContentCard>
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 justify-between">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" size={18} />
-                        <Input
-                            type="search"
-                            role="searchbox"
-                            aria-label={t('search_placeholder')}
-                            placeholder={t('search_placeholder')}
-                            className="pl-10 border-border focus:ring-primary/20"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex flex-1 items-center gap-3 max-w-2xl">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" size={18} />
+                            <Input
+                                type="search"
+                                role="searchbox"
+                                aria-label={t('search_placeholder')}
+                                placeholder={t('search_placeholder')}
+                                className="pl-10 border-border focus:ring-primary/20"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                            <option value="all">{tCommon('filters.all_status') || 'Todos los Estados'}</option>
+                            <option value="vigente">{t('status.active')}</option>
+                            <option value="obsoleto">{t('status.obsolete')}</option>
+                            <option value="archivado">{t('status.archived')}</option>
+                        </select>
+                        <select
+                            value={reviewFilter}
+                            onChange={(e) => setReviewFilter(e.target.value)}
+                            className="h-10 px-3 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                            <option value="all">{t('review.filter_all') || 'Revisiones: Todas'}</option>
+                            <option value="pending">{t('status.pending')}</option>
+                            <option value="reviewed">{t('status.reviewed')}</option>
+                            <option value="expired">{t('status.expired')}</option>
+                        </select>
                     </div>
                     <Button
                         onClick={() => setModalState({ type: 'upload' })}
@@ -249,10 +316,11 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow>
-                                <TableHead className="w-[35%] font-bold text-foreground">{t('table.document')}</TableHead>
-                                <TableHead className="w-[20%] font-bold text-foreground">{t('table.type_model')}</TableHead>
+                                <TableHead className="w-[30%] font-bold text-foreground">{t('table.document')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-foreground">{t('table.type_model')}</TableHead>
+                                <TableHead className="w-[15%] font-bold text-foreground">{t('review.next_date')}</TableHead>
                                 <TableHead className="w-[15%] font-bold text-foreground">{t('table.status')}</TableHead>
-                                <TableHead className="w-[15%] font-bold text-foreground">{t('table.chunks')}</TableHead>
+                                <TableHead className="w-[10%] font-bold text-foreground">{t('table.chunks')}</TableHead>
                                 <TableHead className="w-[15%] font-bold text-foreground text-right">{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -281,7 +349,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                                     {doc.filename}
                                                 </p>
                                                 <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-tight">
-                                                    {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()} {new Date(doc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {t('table.uploaded')}: {new Date(doc.createdAt).toLocaleDateString()}
                                                 </p>
                                             </div>
                                         </div>
@@ -294,7 +362,47 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                             <p className="text-xs font-bold text-slate-700">{doc.model}</p>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="w-[15%]">
+                                    <TableCell>
+                                        {doc.nextReviewDate ? (
+                                            <div className="flex flex-col gap-1">
+                                                {(() => {
+                                                    const date = new Date(doc.nextReviewDate);
+                                                    const now = new Date();
+                                                    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                                                    let colorClass = "text-slate-500";
+
+                                                    if (date < now) colorClass = "text-red-500";
+                                                    else if (diffDays <= 7) colorClass = "text-amber-500";
+
+                                                    return (
+                                                        <span className={`text-xs font-mono font-bold ${colorClass}`}>
+                                                            {date.toLocaleDateString()}
+                                                        </span>
+                                                    );
+                                                })()}
+                                                {doc.reviewStatus === 'reviewed' && (
+                                                    <Badge className="w-fit bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50 py-0 px-1 text-[9px] uppercase">
+                                                        {t('status.reviewed')}
+                                                    </Badge>
+                                                )}
+                                                {new Date(doc.nextReviewDate) < new Date() && doc.reviewStatus !== 'reviewed' && (
+                                                    <Badge className="w-fit bg-red-50 text-red-700 border-red-100 hover:bg-red-50 py-0 px-1 text-[9px] uppercase">
+                                                        {t('status.expired')}
+                                                    </Badge>
+                                                )}
+                                                {new Date(doc.nextReviewDate) >= new Date() &&
+                                                    Math.ceil((new Date(doc.nextReviewDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 7 &&
+                                                    doc.reviewStatus !== 'reviewed' && (
+                                                        <Badge className="w-fit bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-50 py-0 px-1 text-[9px] uppercase">
+                                                            {t('review.imminent') || 'PRÓXIMA'}
+                                                        </Badge>
+                                                    )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-300 text-xs">—</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="flex flex-col gap-1">
                                             {doc.ingestionStatus === 'PENDING' && (
                                                 <Badge variant="secondary" className="gap-1 animate-pulse">
@@ -341,10 +449,10 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="w-[15%]">
+                                    <TableCell>
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-semibold text-foreground">{doc.totalChunks}</span>
-                                            <div className="flex-1 max-w-[40px] h-1 bg-muted rounded-full overflow-hidden">
+                                            <div className="flex-1 max-w-[30px] h-1 bg-muted rounded-full overflow-hidden">
                                                 <div
                                                     className="bg-primary h-full transition-all duration-1000"
                                                     style={{ width: `${Math.min(100, (doc.totalChunks / 1000) * 100)}%` }}
@@ -361,6 +469,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                             onPreview={() => setModalState({ type: 'preview', id: doc._id, filename: doc.filename })}
                                             onManageRelationships={() => setModalState({ type: 'relationship', asset: doc })}
                                             onViewDiagnostics={() => setModalState({ type: 'diagnostic', id: doc._id, filename: doc.filename })}
+                                            onScheduleReview={() => setModalState({ type: 'review', asset: doc })}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -407,8 +516,9 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, refresh }: any) {
     const { toast } = useToast();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -418,29 +528,64 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-xl border-slate-100">
                 <DropdownMenuLabel className="text-xs text-slate-400">{t('table.actions')}</DropdownMenuLabel>
+
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer text-teal-600 focus:text-teal-600 focus:bg-teal-50"
                     onClick={onPreview}
                 >
                     <Eye size={14} /> {t('actions.preview') || 'Ver Transcripción/PDF'}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer text-primary focus:text-primary focus:bg-primary/5"
                     onClick={onViewDiagnostics}
                 >
                     <Activity size={14} /> {t('actions.diagnostics') || 'Ver Diagnóstico de Ingesta'}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer"
                     onClick={onManageRelationships}
                 >
                     <Link2 size={14} /> {t('actions.relationships') || 'Vincular Documentos'}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                     className="rounded-lg gap-2 cursor-pointer"
                     onClick={() => window.open(`/api/admin/knowledge-assets/${doc._id}/download`, '_blank')}
                 >
                     <Download size={14} /> {t('actions.download')}
+                </DropdownMenuItem>
+
+                {/* Phase 81: Review Actions */}
+                <DropdownMenuSeparator className="bg-slate-50" />
+                <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">{t('review.next_date')}</DropdownMenuLabel>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-indigo-600 focus:text-indigo-600 focus:bg-indigo-50"
+                    onClick={onScheduleReview}
+                >
+                    <CalendarCheck size={14} /> {t('actions.mark_reviewed')}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-50"
+                    onClick={async () => {
+                        try {
+                            const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/review`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'snooze' })
+                            });
+                            if (!res.ok) throw new Error();
+                            toast({ title: t('snooze_success') || 'Snoozed' });
+                            refresh();
+                        } catch (err) {
+                            toast({ variant: 'destructive', title: 'Error' });
+                        }
+                    }}
+                >
+                    <Clock size={14} /> {t('actions.snooze_review')}
                 </DropdownMenuItem>
 
                 {(doc.ingestionStatus === 'FAILED' || doc.ingestionStatus === 'PENDING') && (
@@ -463,15 +608,19 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
 
                 <DropdownMenuSeparator className="bg-slate-50" />
                 <DropdownMenuLabel className="text-[10px] text-slate-400 px-2 py-1 uppercase tracking-widest font-bold">{t('table.status')}</DropdownMenuLabel>
+
                 <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'vigente')}>
                     <CheckCircle2 size={14} className="text-emerald-500" /> {t('actions.mark_active')}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'obsoleto')}>
                     <AlertCircle size={14} className="text-amber-500" /> {t('actions.mark_obsolete')}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem className="rounded-lg gap-2 cursor-pointer" onClick={() => handleStatusChange(doc._id, 'archivado')}>
                     <Archive size={14} className="text-slate-400" /> {t('actions.archive')}
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="bg-slate-50" />
                 <DropdownMenuItem
                     onClick={() => handleDelete(doc._id)}
