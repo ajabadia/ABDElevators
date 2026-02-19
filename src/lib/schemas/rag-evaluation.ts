@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ObjectId } from 'mongodb';
+// Decoupled from mongodb to prevent client bundle leaks (Phase 184 Fix)
 
 /**
  * RAG Evaluation Test Case
@@ -26,7 +26,7 @@ export type RagEvaluationTestCase = z.infer<typeof RagEvaluationTestCaseSchema>;
  * RAG Evaluation Dataset
  */
 export const RagEvaluationDatasetSchema = z.object({
-    _id: z.instanceof(ObjectId).optional(),
+    _id: z.any().optional(), // ObjectId serialized as string on client, object on server
     tenantId: z.string(),
     name: z.string().min(3),
     description: z.string().optional(),
