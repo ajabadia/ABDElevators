@@ -138,8 +138,6 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-10 10:00 |
 | `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
 | `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-06 |
-| `/api/admin/reports` | **GET**: Listado histórico de informes generados. | 2026-02-16 |
-| `/api/admin/reports/generate` | **POST**: Motor de generación de PDF basado en templates (ReportEngine). | 2026-02-16 |
 | `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
 | `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | 2026-02-06 00:30 |
 | `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-06 10:15 |
@@ -157,22 +155,6 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/cron/self-healing` | Trigger de auto-curación y auditoría de documentos (Secure Cron). | 2026-02-17 ✅ |
 | `/api/cron/status-check` | Auditoría predictiva y detección de anomalías programada. | 2026-02-17 ✅ |
 
-## 🗑️ Rutas Deprecadas / No Encontradas
-Rutas que aparecen en versiones anteriores del mapa pero no existen físicamente en el código:
-
-| Ruta | Estado | Notas |
-|------|--------|-------|
-| `/admin/workflows/active` | ❌ No existe | Posiblemente integrado en `/admin/workflows` o `/admin/ai` |
-| `/workshop/orders/new` | ❌ No existe | Ruta incorrecta, el workshop está bajo `/admin/workshop/orders/new` |
-| `/features/*` | ⚠️ Comodín | Reemplazado por rutas específicas: `/features/audit-trail`, `/features/compliance`, etc. |
-| `/graphs` | ❌ Ruta incorrecta | La ruta correcta es `/technical/graphs` |
-| `/admin/dashboard` | 🔄 Redirect | Redirige a `/admin` (Phase 133) |
-| `/admin/settings/general` | 🔄 Redirect | Redirige a `/admin/settings` (Phase 133) |
-| `/admin/knowledge-base` | 🔄 Redirect | Redirige a `/admin/knowledge` |
-| `/admin/workflow-tasks` | 🔄 Redirect | Reemplazado por `/admin/tasks` |
-| `/admin/rag-eval` | ⛔ Deleted | Eliminado por seguridad (usar `/admin/rag-quality`) |
-| `/api/debug/*` | ⛔ Deleted | Endpoints de debug eliminados de producción |
-
 ---
 ---
 ### 🏛️ Estructura Futura (Suite Era - FASE 180+)
@@ -185,5 +167,12 @@ Rutas que aparecen en versiones anteriores del mapa pero no existen físicamente
 - `packages/rag-engine`: Lógica específica de ingesta y retrieval.
 
 ---
-*Mapa actualizado por Antigravity v5.0.0 (Suite Edition) - Estructura real al: 2026-02-18*
+- [X] `src/lib/mfa-service.ts`: Gestión de MFA y códigos de recuperación. (Revisado: 18 Feb 2026)
+- [X] `src/lib/services/ai-model-manager.ts`: Gobernanza de IA y selección de modelos. (Revisado: 19 Feb 2026)
+- [X] `src/lib/services/notification-hub.ts`: Centro de despacho unificado (In-App/Email). (Revisado: 19 Feb 2026)
+- [X] `packages/platform-core/src/server/feature-flag-service.ts`: Flags persistentes multi-tenant. (Revisado: 19 Feb 2026)
+- [X] `packages/platform-core/src/server/job-scheduler-service.ts`: Cron-as-a-Service industrial. (Revisado: 19 Feb 2026)
+
+---
+*Mapa actualizado por Antigravity v5.0.0 (Suite Edition) - Estructura real al: 2026-02-19*
 *Rutas sin fecha (-) están pendientes de auditoría*
