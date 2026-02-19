@@ -25,20 +25,20 @@ export function InlineHelpPanel({
 
     return (
         <div className={cn(
-            "border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 rounded-2xl p-4 space-y-3 mb-6",
+            "border border-secondary/20 bg-secondary/5 rounded-2xl p-4 space-y-3 mb-6",
             variant === "full" && "p-6 space-y-4"
         )}>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl shrink-0 mt-0.5">
-                        <Lightbulb className="w-4 h-4 text-blue-600" />
+                    <div className="p-2 bg-secondary/10 rounded-xl shrink-0 mt-0.5">
+                        <Lightbulb className="w-4 h-4 text-secondary-foreground" />
                     </div>
                     <div>
-                        <p className="font-bold text-sm text-blue-900 dark:text-blue-300">
+                        <p className="font-bold text-sm text-foreground">
                             {t("title")}
                         </p>
-                        <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             {t("subtitle")}
                         </p>
                     </div>
@@ -46,9 +46,9 @@ export function InlineHelpPanel({
                 {dismissible && (
                     <button
                         onClick={() => setIsDismissed(true)}
-                        className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors shrink-0"
+                        className="p-1 hover:bg-secondary/20 rounded-lg transition-colors shrink-0"
                     >
-                        <X className="w-4 h-4 text-blue-600" />
+                        <X className="w-4 h-4 text-muted-foreground" />
                     </button>
                 )}
             </div>
@@ -63,15 +63,15 @@ export function InlineHelpPanel({
                         <div key={help.id} className="ml-10">
                             {variant === "full" ? (
                                 <>
-                                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                                    <p className="text-xs font-semibold text-foreground mb-1">
                                         {help.title}
                                     </p>
-                                    <p className="text-xs text-blue-800 dark:text-blue-400 leading-relaxed">
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
                                         {help.content}
                                     </p>
                                 </>
                             ) : (
-                                <p className="text-xs text-blue-800 dark:text-blue-400 leading-relaxed">
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     <span className="font-semibold">{help.title}:</span> {help.content}
                                 </p>
                             )}
@@ -82,10 +82,10 @@ export function InlineHelpPanel({
 
             {/* Learn More Button */}
             {contextIds.length === 1 && getHelp(contextIds[0])?.learnMore && (
-                <div className="pt-2 border-t border-blue-100 dark:border-blue-900/30">
+                <div className="pt-2 border-t border-secondary/20">
                     <a
                         href={getHelp(contextIds[0])?.learnMore?.href || "#"}
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold group"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-semibold group"
                     >
                         {getHelp(contextIds[0])?.learnMore?.label}
                         <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

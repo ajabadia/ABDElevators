@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Layers, Plus, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
     DndContext,
     closestCenter,
@@ -19,6 +20,7 @@ import { useConfiguratorStore } from '@/store/configurator-store';
 import { SortableCategory } from './SortableCategory';
 
 export function CategoriesSidebar() {
+    const t = useTranslations('admin.configurator.sidebar');
     const {
         config,
         selectedCategoryId,
@@ -44,11 +46,12 @@ export function CategoriesSidebar() {
         <aside className="w-80 border-r border-border bg-muted/30 flex flex-col shrink-0 transition-colors duration-300">
             <div className="p-4 flex items-center justify-between border-b border-border">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Layers size={14} /> Categorías
+                    <Layers size={14} /> {t('title')}
                 </h3>
                 <button
                     onClick={addCategory}
-                    className="p-1.5 bg-muted hover:bg-teal-900/40 hover:text-teal-400 rounded-md transition-all border border-border"
+                    className="p-1.5 bg-muted hover:bg-primary/10 hover:text-primary rounded-md transition-all border border-border"
+                    title={t('add_tooltip')}
                 >
                     <Plus size={16} />
                 </button>
@@ -85,7 +88,7 @@ export function CategoriesSidebar() {
                         <div className="inline-flex p-4 rounded-full bg-card border border-border mb-4">
                             <Sparkles className="text-muted-foreground/50" size={32} />
                         </div>
-                        <p className="text-muted-foreground text-sm">Empieza añadiendo una categoría</p>
+                        <p className="text-muted-foreground text-sm">{t('empty_state')}</p>
                     </div>
                 )}
             </div>

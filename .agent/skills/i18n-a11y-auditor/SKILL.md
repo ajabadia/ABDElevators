@@ -1,6 +1,6 @@
 ---
 name: i18n-a11y-auditor
-description: Audita y corrige la implementación de internacionalización (i18n) y accesibilidad (a11y) en componentes y páginas de React/Next.js, compatible con el sistema dinámico de ABDElevators.
+description: Audita y corrige la implementación de internacionalización (i18n) y accesibilidad (a11y) en componentes y páginas de React/Next.js, compatible con el sistema dinámico de ABDElevators (ERA 6).
 ---
 
 # i18n & a11y Auditor Skill
@@ -43,10 +43,17 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 1. **Presentación de Errores (Toasts)**:
    - Toda acción asíncrona (save, delete, ingest) que falle DEBE mostrar un `toast` con `variant: "destructive"`.
    - El mensaje DEBE estar internacionalizado.
+   - **ERA 6 — Lenguaje de negocio**: El mensaje de error DEBE ser comprensible para un usuario no técnico.
+     - ❌ `"EXTERNAL_SERVICE_ERROR 503"` o `"DATABASE_ERROR"`
+     - ✅ `"No se pudo analizar el documento. Inténtalo de nuevo."` o `"Error al guardar. Por favor, reintenta."`
    - Referencia: `useWorkflowCRUD.ts`.
 2. **Validación Visual de Reglas**:
    - Los errores lógicos o de integridad (ej: bucles en grafos, campos faltantes) DEBEN presentarse como **Badges** o **Warning Labels** sobre el elemento afectado.
-   - Colores standard: Amber (`bg-amber-500`) para advertencias/huérfanos, Red (`bg-red-600`) para errores críticos/anomalías, Purple (`bg-purple-600`) para errores lógicos/ciclos.
+   - Colores de estado (ERA 6):
+     - Advertencias/huérfanos: `bg-amber-500/10 text-amber-600` (amber es estándar UX universal, aceptable).
+     - Errores críticos/anomalías: `bg-destructive/10 text-destructive` (variable semántica, respeta tema).
+     - Errores lógicos/ciclos: `bg-secondary/10 text-secondary` (variable semántica, respeta tema).
+   - **PROHIBIDO**: Usar `bg-red-600`, `bg-purple-600` directamente. Usar `destructive` y `secondary` respectivamente.
    - Referencia: `ActionNode.tsx` (badges de bucle/desconexión).
 3. **Detección de Anomalías**:
    - Desviaciones de datos (ej: tasa de error > 15%) DEBEN resaltarse con efectos visuales (`animate-pulse`) y etiquetas de "ANOMALÍA".

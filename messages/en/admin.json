@@ -5,7 +5,35 @@
     "preview_tab": "Preview",
     "loading": "Loading Configuration...",
     "save_success": "Configuration saved successfully",
-    "save_error": "Error saving configuration"
+    "save_error": "Error saving configuration",
+    "toolbar": {
+      "title": "Visual Checklist Configurator",
+      "name_placeholder": "Configuration Name",
+      "save_btn": "Publish Changes",
+      "saving_btn": "Saving...",
+      "save_success_title": "Configuration Saved",
+      "save_success_desc": "Changes have been successfully persisted.",
+      "save_error_title": "Error Saving",
+      "save_error_desc": "Could not save configuration."
+    },
+    "sidebar": {
+      "title": "Categories",
+      "add_tooltip": "Add Category",
+      "empty_state": "Start by adding a category"
+    },
+    "editor": {
+      "title": "Rules Editor",
+      "subtitle": "Select a category from the left panel to start configuring validation points.",
+      "category_name_placeholder": "Category Name",
+      "color_label": "Identifier Color",
+      "keywords_label": "Keywords (Auto-detection)",
+      "keywords_placeholder": "Comma separated (e.g., motor, traction, pulley)",
+      "validation_points": "Validation Points",
+      "add_item_btn": "Add Item",
+      "empty_items": "No items in this category.",
+      "add_first_item": "Add the first one",
+      "delete_category_tooltip": "Delete Category"
+    }
   },
   "dashboard": {
     "title": "Global Control",

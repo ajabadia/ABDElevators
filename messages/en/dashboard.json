@@ -8,7 +8,14 @@
     "change_week": "+{count} this week",
     "change_today": "+{count} today",
     "change_month": "+{percent}% vs. last month",
-    "change_faster": "-{time} faster"
+    "change_faster": "-{time} faster",
+    "pending_tasks": "Pending Tasks",
+    "assigned_cases": "Assigned Cases",
+    "active_alerts": "Active Alerts",
+    "efficiency": "Efficiency",
+    "health_metrics": "Health Metrics",
+    "recent_activity": "Recent Activity",
+    "priority_tasks": "My Priority Tasks"
   },
   "actions": {
     "upload": {
@@ -45,5 +52,59 @@
     }
   },
   "system": "System",
-  "welcome": "Welcome, {name}"
+  "hub": {
+    "welcome_title": "Welcome, {name}",
+    "welcome_subtitle": "What would you like to do today?",
+    "advanced_section": "Advanced Administration",
+    "cards": {
+      "tasks": {
+        "title": "My Tasks",
+        "description": "Manage your pending tasks and assigned workflows."
+      },
+      "knowledge": {
+        "title": "Knowledge Hub",
+        "description": "Access technical documentation and knowledge base."
+      },
+      "search": {
+        "title": "Smart Search",
+        "description": "AI-powered platform-wide search."
+      },
+      "spaces": {
+        "title": "Workspaces",
+        "description": "Manage your projects and collaborative spaces."
+      },
+      "organizations": {
+        "title": "Organizations",
+        "description": "Manage tenants, branding, and billing."
+      },
+      "users": {
+        "title": "Users",
+        "description": "Manage users, roles, and access."
+      },
+      "ai_console": {
+        "title": "AI Console",
+        "description": "Monitor and configure AI models and agents."
+      },
+      "checklist_config": {
+        "title": "Checklist Configs",
+        "description": "Configure digital checklists and validation rules."
+      },
+      "audit": {
+        "title": "Audit Trail",
+        "description": "View system logs and compliance reports."
+      },
+      "guardian": {
+        "title": "Guardian Console",
+        "description": "Manage permissions and security policies."
+      },
+      "i18n": {
+        "title": "Localization",
+        "description": "Manage translations and internationalization."
+      },
+      "api_keys": {
+        "title": "API Keys",
+        "description": "Manage access keys and tokens."
+      }
+    }
+  }
 }

@@ -16,12 +16,12 @@ export async function GET(req: NextRequest) {
     const start = Date.now();
 
     try {
-        await enforcePermission('checklists', 'read');
-        const collection = await getTenantCollection('configs_checklist');
+        const session = await enforcePermission('checklists', 'read');
+        const collection = await getTenantCollection('configs_checklist', session);
 
-        const configs = await (collection.find({}, {
-            sort: { creado: -1 } as any
-        }) as any).toArray();
+        const configs = await collection.find({}, {
+            sort: { creado: -1 }
+        });
 
         return NextResponse.json({ configs });
     } catch (error: any) {
@@ -63,7 +63,6 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    const start = Date.now();
 
     try {
         const session = await enforcePermission('checklists', 'write');
@@ -78,9 +77,9 @@ export async function POST(req: NextRequest) {
         };
 
         const validated = ChecklistConfigSchema.parse(configToValidate);
-        const collection = await getTenantCollection('configs_checklist');
+        const collection = await getTenantCollection('configs_checklist', session);
 
-        const result = await collection.insertOne(validated as any);
+        const result = await collection.insertOne(validated);
 
         await logEvento({
             level: 'INFO',

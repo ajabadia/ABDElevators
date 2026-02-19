@@ -9,8 +9,8 @@ export const WaitNode = memo(({ data, selected }: { data: any, selected: boolean
 
     return (
         <div className={cn(
-            "px-6 py-4 shadow-lg rounded-full border-2 bg-white flex items-center gap-4 transition-all",
-            selected ? "border-amber-500 ring-4 ring-amber-500/20" : "border-slate-200",
+            "px-6 py-4 shadow-lg rounded-full border-2 bg-card flex items-center gap-4 transition-all",
+            selected ? "border-amber-500 ring-4 ring-amber-500/20" : "border-border",
             data.isOrphan && "border-amber-400 border-dashed"
         )}>
             {/* Orphan Warning */}
@@ -24,18 +24,18 @@ export const WaitNode = memo(({ data, selected }: { data: any, selected: boolean
                     🔄 Bucle Detectado
                 </div>
             )}
-            <Handle type="target" position={Position.Left} className="w-3 h-3 bg-slate-400" />
+            <Handle type="target" position={Position.Left} className="w-3 h-3 bg-muted-foreground" />
 
-            <div className="p-2 bg-amber-100/50 rounded-full text-amber-600">
+            <div className="p-2 bg-amber-100/50 dark:bg-amber-900/20 rounded-full text-amber-600 dark:text-amber-400">
                 <Clock size={20} />
             </div>
 
             <div className="flex flex-col">
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none mb-1">Wait</p>
-                <p className="text-sm font-black text-slate-800 leading-none">{delay}</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider leading-none mb-1">Wait</p>
+                <p className="text-sm font-black text-foreground leading-none">{delay}</p>
             </div>
 
-            <Handle type="source" position={Position.Right} className="w-3 h-3 bg-slate-400" />
+            <Handle type="source" position={Position.Right} className="w-3 h-3 bg-muted-foreground" />
         </div>
     );
 });

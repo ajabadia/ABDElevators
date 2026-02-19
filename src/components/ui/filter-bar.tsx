@@ -76,7 +76,7 @@ export function FilterBar({ config, onFilterChange, className }: FilterBarProps)
                             placeholder={config.find(c => c.type === 'search')?.placeholder || t('search_placeholder')}
                             value={searchQuery}
                             onChange={handleSearchChange}
-                            className="pl-9 w-full bg-white dark:bg-slate-950"
+                            className="pl-9 w-full bg-background"
                         />
                     </div>
                 )}
@@ -91,10 +91,10 @@ export function FilterBar({ config, onFilterChange, className }: FilterBarProps)
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4" align="end">
                         <div className="space-y-4">
-                            <h4 className="font-medium text-sm text-slate-900 dark:text-slate-100">Filtros Avanzados</h4>
+                            <h4 className="font-medium text-sm text-foreground">Filtros Avanzados</h4>
                             {config.filter(c => c.type !== 'search').map((c) => (
                                 <div key={c.id} className="space-y-2">
-                                    <label className="text-xs font-medium text-slate-500">{c.label}</label>
+                                    <label className="text-xs font-medium text-muted-foreground">{c.label}</label>
 
                                     {c.type === 'select' && (
                                         <Select
@@ -137,7 +137,7 @@ export function FilterBar({ config, onFilterChange, className }: FilterBarProps)
             {/* Active Filter Chips */}
             {Object.keys(activeFilters).length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-xs text-slate-500 mr-1">Activos:</span>
+                    <span className="text-xs text-muted-foreground mr-1">Activos:</span>
                     {Object.entries(activeFilters).map(([key, value]) => {
                         const conf = config.find(c => c.id === key);
                         if (!conf) return null;
@@ -148,13 +148,13 @@ export function FilterBar({ config, onFilterChange, className }: FilterBarProps)
                         }
 
                         return (
-                            <Badge key={key} variant="secondary" className="pl-2 pr-1 py-0.5 gap-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">
-                                <span className="font-normal text-indigo-400 mr-0.5">{conf.label}:</span>
+                            <Badge key={key} variant="secondary" className="pl-2 pr-1 py-0.5 gap-1 bg-secondary text-secondary-foreground hover:bg-secondary/80 border-secondary">
+                                <span className="font-normal text-muted-foreground mr-0.5">{conf.label}:</span>
                                 {String(label)}
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-3 w-3 p-0 ml-1 hover:bg-indigo-200 rounded-full"
+                                    className="h-3 w-3 p-0 ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full"
                                     onClick={() => removeFilter(key)}
                                 >
                                     <X className="w-2 h-2" />
@@ -162,7 +162,7 @@ export function FilterBar({ config, onFilterChange, className }: FilterBarProps)
                             </Badge>
                         );
                     })}
-                    <Button variant="ghost" size="sm" onClick={clearAll} className="text-[10px] h-5 px-2 text-slate-400 hover:text-rose-500">
+                    <Button variant="ghost" size="sm" onClick={clearAll} className="text-[10px] h-5 px-2 text-muted-foreground hover:text-destructive">
                         {t('reset')}
                     </Button>
                 </div>

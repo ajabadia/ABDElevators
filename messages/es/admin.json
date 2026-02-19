@@ -5,7 +5,35 @@
     "preview_tab": "Vista Previa",
     "loading": "Cargando Configuración...",
     "save_success": "Configuración guardada correctamente",
-    "save_error": "Error al guardar la configuración"
+    "save_error": "Error al guardar la configuración",
+    "toolbar": {
+      "title": "Configurador Visual de Checklists",
+      "name_placeholder": "Nombre de la configuración",
+      "save_btn": "Publicar Cambios",
+      "saving_btn": "Guardando...",
+      "save_success_title": "Configuración Guardada",
+      "save_success_desc": "Los cambios se han persistido correctamente.",
+      "save_error_title": "Error al Guardar",
+      "save_error_desc": "No se pudo guardar la configuración."
+    },
+    "sidebar": {
+      "title": "Categorías",
+      "add_tooltip": "Añadir Categoría",
+      "empty_state": "Empieza añadiendo una categoría"
+    },
+    "editor": {
+      "title": "Editor de Reglas",
+      "subtitle": "Selecciona una categoría del panel izquierdo para empezar a configurar los puntos de validación.",
+      "category_name_placeholder": "Nombre de la categoría",
+      "color_label": "Color Identificador",
+      "keywords_label": "Palabras Clave (Auto-detección)",
+      "keywords_placeholder": "Separa por comas (ej: motor, tracción, polea)",
+      "validation_points": "Puntos de Validación",
+      "add_item_btn": "Añadir Item",
+      "empty_items": "No hay items en esta categoría.",
+      "add_first_item": "Añadir el primero",
+      "delete_category_tooltip": "Eliminar Categoría"
+    }
   },
   "dashboard": {
     "title": "Control Global",

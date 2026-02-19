@@ -11,7 +11,7 @@ interface MetricCardProps {
     icon?: React.ReactNode;
     trend?: string;
     trendDirection?: "up" | "down" | "neutral";
-    color?: "blue" | "amber" | "emerald" | "purple" | "teal" | "rose" | "slate" | "primary";
+    variant?: "primary" | "secondary" | "muted";
     className?: string;
     description?: string;
 }
@@ -22,23 +22,18 @@ export function MetricCard({
     icon,
     trend,
     trendDirection = "neutral",
-    color = "slate",
     className,
-    description
-}: MetricCardProps) {
+    description,
+    variant = "muted"
+}: MetricCardProps & { variant?: "primary" | "secondary" | "muted" }) {
     const colors = {
-        blue: "bg-blue-500/10 text-blue-500",
-        amber: "bg-amber-500/10 text-amber-500",
-        emerald: "bg-emerald-500/10 text-emerald-500",
-        purple: "bg-purple-500/10 text-purple-500",
-        teal: "bg-teal-500/10 text-teal-500",
-        rose: "bg-rose-500/10 text-rose-500",
-        slate: "bg-slate-100 dark:bg-slate-800 text-slate-500",
         primary: "bg-primary/10 text-primary",
+        secondary: "bg-secondary/10 text-secondary",
+        muted: "bg-muted text-muted-foreground",
     };
 
     const TrendIcon = trendDirection === "up" ? TrendingUp : trendDirection === "down" ? TrendingDown : Minus;
-    const trendColor = trendDirection === "up" ? "text-emerald-500 bg-emerald-50/50" : trendDirection === "down" ? "text-rose-500 bg-rose-50/50" : "text-slate-500 bg-slate-50/50";
+    const trendColor = trendDirection === "up" ? "text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20" : trendDirection === "down" ? "text-rose-600 bg-rose-50/50 dark:bg-rose-950/20" : "text-muted-foreground bg-muted";
 
     return (
         <Card className={cn(
@@ -48,13 +43,13 @@ export function MetricCard({
             <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     {icon && (
-                        <div className={cn("p-3 rounded-2xl shadow-inner", colors[color])}>
+                        <div className={cn("p-3 rounded-2xl shadow-inner", colors[variant])}>
                             {icon}
                         </div>
                     )}
                     {trend && (
                         <Badge variant="outline" className={cn(
-                            "text-[10px] font-black border-slate-100 dark:border-slate-800 py-1 px-2.5 rounded-full flex items-center gap-1",
+                            "text-[10px] font-black border-border py-1 px-2.5 rounded-full flex items-center gap-1",
                             trendColor
                         )}>
                             <TrendIcon size={10} /> {trend}

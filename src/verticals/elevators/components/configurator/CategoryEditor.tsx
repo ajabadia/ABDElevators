@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Layout, Trash2, CheckCircle2, Plus, AlertCircle, Settings } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     DndContext,
@@ -22,6 +23,7 @@ import { useConfiguratorStore } from '@/store/configurator-store';
 import { SortableItem } from './SortableItem';
 
 export function CategoryEditor() {
+    const t = useTranslations('admin.configurator.editor');
     const {
         selectedCategoryId,
         updateCategory,
@@ -56,9 +58,9 @@ export function CategoryEditor() {
                     <Settings className="text-muted-foreground/30 animate-spin-slow" size={40} />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-foreground">Editor de Reglas</h2>
+                    <h2 className="text-xl font-bold text-foreground">{t('title')}</h2>
                     <p className="text-muted-foreground max-w-xs mt-2">
-                        Selecciona una categoría del panel izquierdo para empezar a configurar los puntos de validación.
+                        {t('subtitle')}
                     </p>
                 </div>
             </div>
@@ -86,6 +88,7 @@ export function CategoryEditor() {
                             <div className="flex-1">
                                 <Input
                                     value={currentCategory.name}
+                                    placeholder={t('category_name_placeholder')}
                                     onChange={(e) => updateCategory(selectedCategoryId, { name: e.target.value })}
                                     className="h-10 text-xl font-bold bg-transparent border-none p-0 focus-visible:ring-0 text-foreground"
                                 />
@@ -95,7 +98,7 @@ export function CategoryEditor() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest pl-1">
-                                    Color Identificador
+                                    {t('color_label')}
                                 </label>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -111,15 +114,15 @@ export function CategoryEditor() {
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest pl-1">
-                                    Palabras Clave (Auto-detección)
+                                    {t('keywords_label')}
                                 </label>
                                 <Input
-                                    placeholder="Separa por comas (ej: motor, tracción, polea)"
+                                    placeholder={t('keywords_placeholder')}
                                     value={currentCategory.keywords.join(', ')}
                                     onChange={(e) => updateCategory(selectedCategoryId, {
                                         keywords: e.target.value.split(',').map(k => k.trim()).filter(k => k)
                                     })}
-                                    className="bg-muted/50 border-border h-10 text-sm transition-all focus:border-teal-500"
+                                    className="bg-muted/50 border-border h-10 text-sm transition-all focus:border-primary"
                                 />
                             </div>
                         </div>
@@ -127,7 +130,8 @@ export function CategoryEditor() {
 
                     <button
                         onClick={() => deleteCategory(selectedCategoryId)}
-                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-900/20 rounded-lg transition-all"
+                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                        title={t('delete_category_tooltip')}
                     >
                         <Trash2 size={18} />
                     </button>
@@ -137,15 +141,15 @@ export function CategoryEditor() {
                 <div className="space-y-4 transition-colors duration-300">
                     <div className="flex items-center justify-between px-2">
                         <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2">
-                            <CheckCircle2 size={14} /> Puntos de Validación ({currentItems.length})
+                            <CheckCircle2 size={14} /> {t('validation_points')} ({currentItems.length})
                         </h4>
                         <Button
                             onClick={addItem}
                             variant="outline"
                             size="sm"
-                            className="h-8 border-border hover:bg-teal-900/30 hover:text-teal-400 border-dashed"
+                            className="h-8 border-border hover:bg-primary/10 hover:text-primary border-dashed"
                         >
-                            <Plus size={14} className="mr-2" /> Añadir Item
+                            <Plus size={14} className="mr-2" /> {t('add_item_btn')}
                         </Button>
                     </div>
 
@@ -174,13 +178,13 @@ export function CategoryEditor() {
                     {currentItems.length === 0 && (
                         <div className="py-20 text-center border-2 border-dashed border-border rounded-3xl">
                             <AlertCircle className="mx-auto text-muted-foreground/30" size={32} />
-                            <p className="text-muted-foreground text-sm">No hay items en esta categoría.</p>
+                            <p className="text-muted-foreground text-sm">{t('empty_items')}</p>
                             <Button
                                 variant="link"
                                 onClick={addItem}
-                                className="text-teal-500 font-bold"
+                                className="text-primary font-bold"
                             >
-                                Añadir el primero
+                                {t('add_first_item')}
                             </Button>
                         </div>
                     )}

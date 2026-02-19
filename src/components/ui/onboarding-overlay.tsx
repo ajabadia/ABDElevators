@@ -41,7 +41,7 @@ export function OnboardingOverlay() {
         <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
             {/* Background Dimming with Cutout */}
             <div
-                className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500"
+                className="absolute inset-0 bg-background/80 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500"
                 style={{
                     clipPath: targetRect
                         ? `polygon(0% 0%, 0% 100%, ${targetRect.left}px 100%, ${targetRect.left}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.top}px, ${targetRect.right}px ${targetRect.bottom}px, ${targetRect.left}px ${targetRect.bottom}px, ${targetRect.left}px 100%, 100% 100%, 100% 0%)`
@@ -53,7 +53,7 @@ export function OnboardingOverlay() {
             {/* Target Highlight Ring */}
             {targetRect && (
                 <div
-                    className="absolute border-2 border-teal-400 shadow-[0_0_0_9999px_rgba(2,6,23,0.4)] rounded-xl transition-all duration-500 ease-in-out"
+                    className="absolute border-2 border-primary shadow-[0_0_0_9999px_rgba(2,6,23,0.4)] rounded-xl transition-all duration-500 ease-in-out"
                     style={{
                         top: targetRect.top - 8,
                         left: targetRect.left - 8,
@@ -66,7 +66,7 @@ export function OnboardingOverlay() {
             {/* Tooltip Card */}
             <div
                 className={`absolute pointer-events-auto transition-all duration-500 ease-out transform
-          bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 w-[400px]
+          bg-card border border-border rounded-2xl shadow-2xl p-6 w-[400px]
           ${targetRect ? '' : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'}
         `}
                 style={targetRect ? {
@@ -78,36 +78,36 @@ export function OnboardingOverlay() {
             >
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-teal-500/10 rounded-lg text-teal-600">
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
                             <Sparkles size={18} />
                         </div>
-                        <h3 className="font-black text-slate-900 dark:text-white tracking-tight">
+                        <h3 className="font-black text-foreground tracking-tight">
                             {currentStepData.title}
                         </h3>
                     </div>
                     <button
                         onClick={skipOnboarding}
-                        className="text-slate-400 hover:text-slate-600 transition-colors"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                     {currentStepData.content}
                 </p>
 
                 <div className="space-y-4">
                     {/* Progress Bar */}
-                    <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-teal-500 transition-all duration-500"
+                            className="h-full bg-primary transition-all duration-500"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
 
                     <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                             Paso {currentStep + 1} de {steps.length}
                         </span>
                         <div className="flex gap-2">
@@ -124,7 +124,7 @@ export function OnboardingOverlay() {
                             <Button
                                 size="sm"
                                 onClick={nextStep}
-                                className={`rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 px-6 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'
+                                className={`rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 px-6 ${isLastStep ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'
                                     }`}
                             >
                                 {isLastStep ? (

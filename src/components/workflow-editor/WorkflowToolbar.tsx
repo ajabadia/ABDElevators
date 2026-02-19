@@ -62,13 +62,13 @@ export function WorkflowToolbar() {
     return (
         <div className="contents">
             {/* Left Toolbar (Metadata & Navigation) */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-3 bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-slate-200 shadow-lg">
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-3 bg-background/95 backdrop-blur-sm p-4 rounded-xl border border-border shadow-lg">
                 <div className="flex items-center gap-2">
-                    <Rocket className="w-5 h-5 text-teal-600" />
+                    <Rocket className="w-5 h-5 text-primary" />
                     <div>
-                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-tighter leading-none">{workflowName}</h2>
+                        <h2 className="text-sm font-black text-foreground uppercase tracking-tighter leading-none">{workflowName}</h2>
                         <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-[10px] font-bold h-4 border-teal-200 text-teal-700 bg-teal-50">v{currentVersion}</Badge>
+                            <Badge variant="outline" className="text-[10px] font-bold h-4 border-primary/30 text-primary bg-primary/5">v{currentVersion}</Badge>
                             <Badge variant="secondary" className="text-[10px] uppercase font-bold h-4 tracking-tighter">
                                 {t(`industries.${currentIndustry.toLowerCase()}` as any)}
                             </Badge>
@@ -76,12 +76,12 @@ export function WorkflowToolbar() {
                     </div>
                 </div>
 
-                <div className="h-8 w-px bg-slate-200 mx-2" />
+                <div className="h-8 w-px bg-border mx-2" />
 
                 <div className="flex flex-col gap-1 mr-2">
-                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{t('industry')}</Label>
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">{t('industry')}</Label>
                     <Select value={currentIndustry} onValueChange={setCurrentIndustry}>
-                        <SelectTrigger suppressHydrationWarning className="w-[140px] h-8 text-[11px] font-bold bg-slate-50 border-slate-200">
+                        <SelectTrigger suppressHydrationWarning className="w-[140px] h-8 text-[11px] font-bold bg-muted/50 border-border">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -93,10 +93,10 @@ export function WorkflowToolbar() {
                     </Select>
                 </div>
 
-                <div className="h-8 w-px bg-slate-200 mx-2" />
+                <div className="h-8 w-px bg-border mx-2" />
 
                 <Select onValueChange={(id) => handleWorkflowChange(id, workflows)} value={activeWorkflowId || undefined}>
-                    <SelectTrigger suppressHydrationWarning className="w-[220px] h-9 text-xs font-semibold bg-white">
+                    <SelectTrigger suppressHydrationWarning className="w-[220px] h-9 text-xs font-semibold bg-background">
                         <SelectValue placeholder={t('select_process')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -110,7 +110,7 @@ export function WorkflowToolbar() {
 
                 <button
                     onClick={handleCreateNew}
-                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                    className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
                     title={t('create_new')}
                 >
                     <Plus size={18} />
@@ -120,23 +120,23 @@ export function WorkflowToolbar() {
             {/* Right Toolbar (Actions) */}
             <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
                 {/* Editor Utilities Group */}
-                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
+                <div className="flex bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-sm p-1 gap-0.5">
                     <button
                         onClick={() => setSnapToGrid(!snapToGrid)}
                         className={cn(
                             "p-2 rounded-md transition-all",
-                            snapToGrid ? "bg-teal-50 text-teal-600" : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                            snapToGrid ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                         title={snapToGrid ? "Disable Snap to Grid" : "Enable Snap to Grid"}
                         aria-label={snapToGrid ? "Disable grid alignment" : "Enable grid alignment"}
                     >
                         <Grid3X3 size={16} aria-hidden="true" />
                     </button>
-                    <div className="w-px h-4 bg-slate-200 self-center mx-1" />
+                    <div className="w-px h-4 bg-border self-center mx-1" />
                     <button
                         onClick={() => alignNodes('horizontal')}
                         disabled={selectedCount < 2}
-                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-teal-600 disabled:opacity-30 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted hover:text-primary disabled:opacity-30 rounded-md transition-all"
                         title="Align Selected Nodes Horizontally"
                         aria-label="Align selected nodes horizontally"
                     >
@@ -145,16 +145,16 @@ export function WorkflowToolbar() {
                     <button
                         onClick={() => alignNodes('vertical')}
                         disabled={selectedCount < 2}
-                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-teal-600 disabled:opacity-30 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted hover:text-primary disabled:opacity-30 rounded-md transition-all"
                         title="Align Selected Nodes Vertically"
                         aria-label="Align selected nodes vertically"
                     >
                         <AlignVerticalJustifyCenter size={16} aria-hidden="true" />
                     </button>
-                    <div className="w-px h-4 bg-slate-200 self-center mx-1" />
+                    <div className="w-px h-4 bg-border self-center mx-1" />
                     <button
                         onClick={() => autoLayout('TB')}
-                        className="p-2 text-teal-600 hover:bg-teal-50 rounded-md transition-all"
+                        className="p-2 text-primary hover:bg-primary/10 rounded-md transition-all"
                         title="Auto-organize Layout (Vertical Tree)"
                         aria-label="Apply automatic vertical layout"
                     >
@@ -163,10 +163,10 @@ export function WorkflowToolbar() {
                 </div>
 
                 {/* View Controls Group */}
-                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
+                <div className="flex bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-sm p-1 gap-0.5">
                     <button
                         onClick={() => reactFlowInstance?.zoomIn()}
-                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-all"
                         title="Zoom In"
                         aria-label="Increase zoom level"
                     >
@@ -174,7 +174,7 @@ export function WorkflowToolbar() {
                     </button>
                     <button
                         onClick={() => reactFlowInstance?.zoomOut()}
-                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-all"
                         title="Zoom Out"
                         aria-label="Decrease zoom level"
                     >
@@ -182,7 +182,7 @@ export function WorkflowToolbar() {
                     </button>
                     <button
                         onClick={() => reactFlowInstance?.fitView()}
-                        className="p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-all"
                         title="Reset View / Fit Content"
                         aria-label="Fit entire workflow into view"
                     >
@@ -191,11 +191,11 @@ export function WorkflowToolbar() {
                 </div>
 
                 {/* History Controls */}
-                <div className="flex bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg shadow-sm p-1 gap-0.5">
+                <div className="flex bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-sm p-1 gap-0.5">
                     <button
                         onClick={() => undo(setNodes, setEdges)}
                         disabled={!canUndo}
-                        className="p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted disabled:opacity-30 rounded-md transition-all"
                         title="Undo (Ctrl+Z)"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" /></svg>
@@ -203,7 +203,7 @@ export function WorkflowToolbar() {
                     <button
                         onClick={() => redo(setNodes, setEdges)}
                         disabled={!canRedo}
-                        className="p-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 rounded-md transition-all"
+                        className="p-2 text-muted-foreground hover:bg-muted disabled:opacity-30 rounded-md transition-all"
                         title="Redo (Ctrl+Shift+Z)"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" /></svg>
@@ -217,7 +217,7 @@ export function WorkflowToolbar() {
                             onClick={exportReport}
                             variant="outline"
                             size="sm"
-                            className="h-9 border-teal-200 text-teal-700 hover:bg-teal-50 font-bold text-[10px] uppercase tracking-wider"
+                            className="h-9 border-primary/30 text-primary hover:bg-primary/5 font-bold text-[10px] uppercase tracking-wider"
                             disabled={isAnalyticsLoading}
                         >
                             <Save className="w-3.5 h-3.5 mr-1.5" />
@@ -231,7 +231,7 @@ export function WorkflowToolbar() {
                         size="sm"
                         className={cn(
                             "h-9 font-bold text-[10px] uppercase tracking-wider",
-                            isAnalysisMode ? "bg-teal-600 hover:bg-teal-700" : "text-slate-600"
+                            isAnalysisMode ? "bg-primary hover:bg-primary/90" : "text-muted-foreground"
                         )}
                         disabled={isAnalyticsLoading}
                     >
@@ -243,7 +243,7 @@ export function WorkflowToolbar() {
                         <Button
                             onClick={handleRunSimulation}
                             size="sm"
-                            className="h-9 bg-purple-600 hover:bg-purple-700 font-bold text-[10px] uppercase tracking-wider"
+                            className="h-9 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-[10px] uppercase tracking-wider"
                             disabled={isSimulating}
                         >
                             {isSimulating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Activity className="w-3.5 h-3.5 mr-1.5" />}
@@ -252,12 +252,12 @@ export function WorkflowToolbar() {
                     )}
 
                     {!isAnalysisMode && (
-                        <div className="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                        <div className="flex bg-background border border-border rounded-lg p-0.5 shadow-sm">
                             <button
                                 onClick={() => setShowLogs(!showLogs)}
                                 className={cn(
                                     "p-2 rounded-md transition-all",
-                                    showLogs ? "bg-teal-600 text-white" : "text-slate-500 hover:bg-slate-50"
+                                    showLogs ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
                                 )}
                                 title={showLogs ? t('hide_logs') : t('show_logs')}
                                 aria-label={showLogs ? t('hide_logs') : t('show_logs')}
@@ -266,7 +266,7 @@ export function WorkflowToolbar() {
                             </button>
                             <button
                                 onClick={handleDuplicate}
-                                className="p-2 text-slate-500 hover:bg-slate-50 rounded-md transition-all"
+                                className="p-2 text-muted-foreground hover:bg-muted rounded-md transition-all"
                                 title={t('duplicate')}
                                 aria-label={t('duplicate')}
                             >
@@ -274,7 +274,7 @@ export function WorkflowToolbar() {
                             </button>
                             <button
                                 onClick={() => deleteSelection(nodes, edges)}
-                                className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-all"
+                                className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition-all"
                                 title={t('delete')}
                                 aria-label={t('delete')}
                             >
@@ -286,7 +286,7 @@ export function WorkflowToolbar() {
                     <Button
                         onClick={onSave}
                         size="sm"
-                        className="h-9 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-4"
+                        className="h-9 bg-foreground hover:bg-foreground/90 text-background font-bold text-[10px] uppercase tracking-wider px-4"
                     >
                         <Save className="w-3.5 h-3.5 mr-1.5" />
                         {t('save')}

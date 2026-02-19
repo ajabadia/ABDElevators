@@ -1,14 +1,21 @@
 {
   "subtitle": "¿Qué te gustaría hacer hoy?",
   "stats": {
-    "documents": "Documentos Subizados",
+    "documents": "Documentos Subidos",
     "queries": "Consultas Realizadas",
     "accuracy": "Respuestas Precisas",
     "time": "Tiempo Promedio",
     "change_week": "+{count} esta semana",
     "change_today": "+{count} hoy",
     "change_month": "+{percent}% vs. mes pasado",
-    "change_faster": "-{time} más rápido"
+    "change_faster": "-{time} más rápido",
+    "pending_tasks": "Tareas Pendientes",
+    "assigned_cases": "Casos Asignados",
+    "active_alerts": "Alertas Activas",
+    "efficiency": "Eficiencia",
+    "health_metrics": "Métricas de Salud",
+    "recent_activity": "Actividad Reciente",
+    "priority_tasks": "Mis Tareas Prioritarias"
   },
   "actions": {
     "upload": {
@@ -45,5 +52,59 @@
     }
   },
   "system": "Sistema",
-  "welcome": "Hola, {name}"
+  "hub": {
+    "welcome_title": "Hola, {name}",
+    "welcome_subtitle": "¿Qué te gustaría hacer hoy?",
+    "advanced_section": "Administración Avanzada",
+    "cards": {
+      "tasks": {
+        "title": "Mis Tareas",
+        "description": "Gestiona tus tareas pendientes y flujos de trabajo asignados."
+      },
+      "knowledge": {
+        "title": "Knowledge Hub",
+        "description": "Accede a la base de conocimiento y documentación técnica."
+      },
+      "search": {
+        "title": "Búsqueda Inteligente",
+        "description": "Busca información en toda la plataforma con IA."
+      },
+      "spaces": {
+        "title": "Espacios de Trabajo",
+        "description": "Gestiona tus proyectos y espacios colaborativos."
+      },
+      "organizations": {
+        "title": "Organizaciones",
+        "description": "Gestiona inquilinos, branding y facturación."
+      },
+      "users": {
+        "title": "Usuarios",
+        "description": "Gestiona usuarios, roles y accesos."
+      },
+      "ai_console": {
+        "title": "Consola IA",
+        "description": "Monitorea y configura modelos y agentes de IA."
+      },
+      "checklist_config": {
+        "title": "Config. Checklists",
+        "description": "Configura listas de verificación digitales y reglas."
+      },
+      "audit": {
+        "title": "Auditoría",
+        "description": "Ver registros del sistema e informes de cumplimiento."
+      },
+      "guardian": {
+        "title": "Consola Guardian",
+        "description": "Gestiona permisos y políticas de seguridad."
+      },
+      "i18n": {
+        "title": "Localización",
+        "description": "Gestiona traducciones e internacionalización."
+      },
+      "api_keys": {
+        "title": "Claves API",
+        "description": "Gestiona claves de acceso y tokens."
+      }
+    }
+  }
 }

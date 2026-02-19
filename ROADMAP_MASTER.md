@@ -102,4 +102,241 @@
 - [X] **Secure Loupe**: Inspector de datos restringido con PII Redaction para SuperAdmins. ✅
 - [X] **System Utilities**: `FormBuilderService` y `NotificationHub` unificado. ✅
 
-*Updated on 2026-02-19 by Antigravity v5.0.0 (Suite Edition Integrated ✅)*
+---
+
+### 🎯 ERA 6: UX-FIRST CONSOLIDATION & USABILITY SURGERY (VISION 2026 H1)
+
+**Filosofía:** *"Un técnico debe poder subir un PDF y obtener una respuesta útil en 60 segundos, sin leer un manual."*
+
+**Objetivo:** Congelar desarrollo de features nuevos. Cirugía selectiva sobre lo existente para maximizar usabilidad, consistencia visual y Time-To-First-Value (TTFV).
+
+**Contexto estratégico:** La plataforma cuenta con ~35 subdirectorios admin, 5+ páginas placeholder ("coming_soon"), 50+ archivos con colores hardcodeados y un `OnboardingProvider` vacío. El código es impresionante como portfolio de ingeniería; como producto, necesita cirugía mayor.
+
+> **REGLA DE ERA 6:** No se crea ninguna funcionalidad nueva. Solo se refactoriza, simplifica, consolida o elimina. Cada FASE debe reducir la complejidad percibida por el usuario final.
+
+**📂 Documentación de referencia:** [Documentación/ERA6/](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/)
+- [ERA6_STRATEGY.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_STRATEGY.md) — Estrategia maestra, análisis crítico de propuestas, riesgos y métricas
+- [ERA6_FASE190_VISUAL.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE190_VISUAL.md) — Guía de ejecución con grep commands, tabla de conversión de colores e inventario de archivos
+- [ERA6_FASE191_NAVIGATION.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE191_NAVIGATION.md) — Modelo de navegación propuesto, inventario de 35 dirs admin, implementación técnica
+- [ERA6_FASE192_CORE_FLOWS.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE192_CORE_FLOWS.md) — Especificación de 3 flujos core (Analizar, Buscar, Informes) con modo Simple vs Experto
+- [ERA6_FASE193_ADMIN.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE193_ADMIN.md) — Mapeo completo de consolidación de 35 subdirectorios a 4 secciones
+- [ERA6_FASE194_ONBOARDING.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE194_ONBOARDING.md) — Wireframes de onboarding, WorkContext Engine, plan de ayuda contextual
+- [ERA6_FASE195_196_FEEDBACK_CLEANUP.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE195_196_FEEDBACK_CLEANUP.md) — Feedback widget, dashboard de valor, inventario de placeholders y deuda técnica
+- [ERA6_SKILLS_AUDIT.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_SKILLS_AUDIT.md) — Auditoría de skills existentes: compatibilidad con ERA 6 y plan de adaptación
+
+**🔒 Backup:** Copia de seguridad de ERA 5 confirmada por el usuario antes de iniciar ERA 6 (2026-02-19).
+
+#### 🎨 FASE 190: VISUAL CONSISTENCY & DESIGN TOKEN ENFORCEMENT
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** CRÍTICA | **Estimación:** 2 semanas
+
+**Objetivo:** Eliminar la fractura visual entre módulos. Un solo lenguaje de diseño.
+
+**Diagnóstico real (verificado en codebase):**
+- 50+ archivos `.tsx` con colores hardcodeados (`bg-teal-600`, `bg-orange-500`, `text-purple-600`, etc.)
+- 5+ sistemas de color compitiendo entre componentes
+- Botones con 3-4 variantes de sombra/animación no estandarizadas
+- Inconsistencia entre módulos: `teal` en prompts, `orange` en workshop, `emerald` en compliance
+
+**Tareas:**
+- [ ] **Grep & Destroy**: Auditoría masiva con regex `bg-(teal|orange|emerald|purple|red|green|blue|amber|cyan|violet|indigo|fuchsia|pink|rose|yellow|lime|sky)-[0-9]` → reemplazar por variables semánticas (`primary`, `secondary`, `destructive`, `accent`).
+- [ ] **Button Standardization**: Definir 4 variantes máximo (`primary`, `secondary`, `ghost`, `destructive`) y aplicar en todos los módulos via `ui-styling` skill.
+- [ ] **Shadow/Animation Unification**: Un solo sistema de sombras (`shadow-sm`, `shadow-md`, `shadow-lg`) y animaciones (`transition-all`, `hover:scale-[1.02]`).
+- [ ] **Dark Mode Audit**: Verificar que todos los componentes respetan `dark:` variants y no usan colores que rompen en mode oscuro.
+- [ ] **Metrics de éxito**: 0 colores hardcodeados fuera de `globals.css` y archivos de tema.
+
+---
+
+#### 🧭 FASE 191: NAVIGATION SIMPLIFICATION & PROGRESSIVE DISCLOSURE
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** CRÍTICA | **Estimación:** 2 semanas
+
+**Objetivo:** Reducir la profundidad de navegación de 4 niveles a 2 máximo para el usuario técnico.
+
+**Diagnóstico real:**
+- 35 subdirectorios bajo `admin/` (confirmado en codebase)
+- Hubs anidados 3-4 niveles (Dashboard → Admin → AI Hub → Playground/RAG Quality/Workflows)
+- El usuario debe tomar ~8-12 clicks y 3 decisiones técnicas para hacer una pregunta básica
+
+**Modelo de navegación propuesto (máximo 2 niveles para rol técnico):**
+
+```
+┌────────────────────────────────────────────────────────┐
+│  ROL: TÉCNICO (Vista por defecto)                      │
+│  🔍 Buscar    📄 Analizar    📊 Informes    📋 Casos  │
+│  (Todo lo demás: oculto)                               │
+├────────────────────────────────────────────────────────┤
+│  ROL: ADMIN (Acceso completo)                          │
+│  Panel → Equipo | Documentación | Seguridad | Avanzado │
+│  "Avanzado" (colapsado): Prompts, Workflows,           │
+│   Ontologías, API Keys, Billing, Matriz Guardian       │
+└────────────────────────────────────────────────────────┘
+```
+
+**Tareas:**
+- [ ] **Role-Based View Filtering**: Implementar lógica en `useNavigation` para que `role === 'USER'` solo vea 4 acciones principales. `role === 'ADMIN'` ve panel completo con sección "Avanzado" colapsada.
+- [ ] **Flat Navigation for Technicians**: Crear `SmartNav` con acciones directas (Buscar, Analizar, Informes, Historial) sin sub-menús. Atajos de teclado (`Cmd+K` buscar, `Cmd+U` subir).
+- [ ] **Admin Consolidation**: Agrupar los 35 subdirectorios en 4 secciones lógicas: Equipo, Documentación, Seguridad, Avanzado.
+- [ ] **Breadcrumb Simplification**: Máximo 2 niveles de breadcrumb visibles. El resto colapsado.
+- [ ] **Metrics de éxito**: Clicks para llegar a función principal ≤ 3.
+
+---
+
+#### ⚡ FASE 192: CORE FLOW OPTIMIZATION (SIMPLE vs EXPERT MODE)
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** ALTA | **Estimación:** 3 semanas
+
+**Objetivo:** Los 3 flujos core deben funcionar sin fricción en modo "Simple" por defecto. El "Modo Experto" se oculta bajo un toggle.
+
+**Problema actual:** El flujo de análisis requiere elegir Space, configurar chunking, elegir modelo, escribir prompt template... un técnico de mantenimiento con tablet y 15 minutos no hará esto.
+
+##### Flujo 1: Analizar Documento (TTFV < 60s)
+- [ ] **SimpleAnalyzeFlow**: Drag & drop → auto-detección de tipo → pregunta natural (con sugerencias) → respuesta con fuentes visuales.
+- [ ] **useSmartConfig Hook**: Auto-configurar `chunkSize`, modelo y `temperature` según tipo de documento detectado. El usuario NUNCA ve estos parámetros en modo Simple.
+- [ ] **Confidence humanizada**: Reemplazar "faithfulness: 0.87" por "Confianza: Alta / Media / Baja" con código de color.
+- [ ] **Source Preview**: Miniaturas del PDF en la página exacta de donde viene la respuesta.
+- [ ] **Expert Toggle**: Botón discreto "⚙️ Modo experto (chunking, modelos, temperatura...)" que expande la UI actual.
+
+##### Flujo 2: Buscar en Base de Conocimiento
+- [ ] **Simplified Search**: Una caja de texto prominente con selector sencillo de ámbito (Mi empresa / Mi espacio / Todo). Chips de filtros predefinidos por vertical.
+- [ ] **Results with Context**: Resultados con preview inline del fragmento relevante + highlight.
+- [ ] **Colapsar métricas RAG**: Trazas de agente, faithfulness scores, etc., dentro de acordeón "Ver detalle técnico".
+
+##### Flujo 3: Generar Informe
+- [ ] **Template Selection Visual**: Selección de plantilla con preview visual (no lista de texto).
+- [ ] **Pre-filled Data**: Datos pre-llenados desde el último análisis. Preview antes de exportar.
+- [ ] **One-click Export**: Generar PDF/Email en un solo click.
+
+---
+
+#### 🏗️ FASE 193: ADMIN PANEL CONSOLIDATION
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
+
+**Objetivo:** Consolidar 35 subdirectorios admin en 4 secciones claras con progressive disclosure.
+
+**Estructura propuesta:**
+
+```yaml
+CONFIGURACIÓN (Admin Hub):
+  EQUIPO:
+    - Invitar miembros
+    - Miembros activos
+    - Roles básicos (ADMIN / USER)
+  DOCUMENTACIÓN:
+    - Todos los documentos subidos
+    - Carpetas (abstracción de "Spaces")
+    - Estadísticas de uso (qué se consulta más)
+  SEGURIDAD:
+    - Exportar datos (GDPR)
+    - Accesos recientes
+    - Audit Trail (simplificado)
+  AVANZADO (colapsado por defecto):
+    - Prompt governance
+    - Workflow designer
+    - Permiso Matrix (Guardian)
+    - Modelos de IA (AiModelManager)
+    - API Keys & Integraciones
+    - Billing & Contratos
+    - Ontologías
+    - Operaciones & Logs técnicos
+```
+
+**Tareas:**
+- [ ] **Settings Hub Page**: Crear vista unificada con cards por sección. La sección "Avanzado" colapsa por defecto.
+- [ ] **Route Aliases**: Las rutas existentes siguen funcionando, pero la navegación primaria las agrupa.
+- [ ] **Remove Duplicate Hubs**: Eliminar o fusionar hubs redundantes (ej: `knowledge-assets` + `knowledge-base` → un solo `documents`).
+- [ ] **Contextual Access**: Los items de "Avanzado" solo aparecen si `role === 'SUPERADMIN'`.
+- [ ] **Metrics de éxito**: Reducir páginas admin visibles para un Admin estándar de 35 a 12.
+
+---
+
+#### 🚀 FASE 194: ONBOARDING REAL & CONTEXTUAL HELP
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
+
+**Objetivo:** Reemplazar el `OnboardingProvider` vacío con un flujo de onboarding progresivo y medible.
+
+**Diagnóstico real:** `OnboardingProvider` actual es un shell sin lógica (28 líneas, `value={{}}`). `useOnboarding` hook existe en `onboarding-overlay.tsx` con tours parciales pero desconectados del flujo core.
+
+**Tareas:**
+- [ ] **Progressive Onboarding (3 pasos obligatorios)**:
+  1. "Bienvenido a ABD RAG" → Elegir contexto de trabajo (`inspection`, `maintenance`, `audit`, `training`)
+  2. "Sube tu primer documento" → Drag & drop con opción de PDF demo incluido
+  3. "Haz tu primera pregunta" → Con sugerencias preconfiguradas por contexto elegido
+- [ ] **Context-Based Defaults**: Según el contexto elegido, pre-configurar prompts, documentos relevantes, y checklists asociadas.
+- [ ] **Persistent Progress Bar**: Barra flotante discreta mostrando "Paso X de Y" con opción de saltar.
+- [ ] **Contextual Help Enhancement**: Activar `HelpButton`, `HelpTooltipComponent`, `InlineHelpPanel` ya existentes con contenido real (no placeholders).
+- [ ] **Demo Sandbox**: Integrar un tenant demo con datos sintéticos de ascensores preconfigurados para que el onboarding use datos realistas.
+- [ ] **Placeholders en Search**: Añadir ejemplos concretos en todos los inputs de búsqueda ("Ej: ¿Qué mantenimiento preventivo aplica al modelo X?").
+- [ ] **Metrics de éxito**: Time-to-first-value (TTFV) < 3 minutos. Tasa de completado del onboarding > 80%.
+
+---
+
+#### 📡 FASE 195: FEEDBACK LOOP & VALUE-ORIENTED DASHBOARD
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
+
+**Objetivo:** Implementar mecanismos de feedback y reorientar dashboards hacia valor de negocio.
+
+##### 195.1: Answer Feedback Widget
+- [ ] **Thumbs Up/Down**: Widget embebido en cada respuesta RAG. Thumbs down expande categorías de fallo (Incorrecta, Incompleta, Irrelevante, Fuente errónea).
+- [ ] **Feedback Storage**: Almacenar feedback en colección `rag_feedback` para mejora continua del RAG.
+- [ ] **Quality Loop**: Dashboard admin mostrando ratio de satisfacción y patrones de fallo.
+
+##### 195.2: Action-Oriented Dashboard
+- [ ] **Replace Metrics with Actions**: Sección principal "Requiere tu atención" con items urgentes y tiempo estimado ("2 min").
+- [ ] **Value Summary**: Reemplazar "Procesaste 24 documentos" por "Ahorraste 12 horas" con cálculo basado en análisis × tiempo promedio.
+- [ ] **Smart Suggestions**: Sugerencias basadas en patrones ("3 pedidos similares detectados → ¿Crear checklist estándar?").
+- [ ] **Reduce Cognitive Load**: Máximo 3-4 HeroCards con métricas clave. Todo lo demás en secciones secundarias/colapsables.
+
+---
+
+#### 🧹 FASE 196: PLACEHOLDER CLEANUP & TECHNICAL DEBT REDUCTION
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
+
+**Objetivo:** Eliminar código muerto, placeholders y mock data que generan falsas expectativas.
+
+**Diagnóstico real (verificado en codebase):**
+- `admin/ai/predictive/page.tsx` → "coming_soon" placeholder
+- `admin/security/sessions/page.tsx` → "coming_soon" placeholder
+- `admin/operations/maintenance/page.tsx` → Empty state permanente
+- `spaces/page.tsx` → "coming_soon" placeholder
+- Estimado ~30-40% de rutas admin son placeholders o mock data
+
+**Tareas:**
+- [ ] **Audit All Routes**: Escanear todas las rutas y clasificar en: Funcional / Placeholder / Mock Data.
+- [ ] **Remove or Hide Placeholders**: Las rutas "coming_soon" se eliminan de la navegación. Si se mantiene la ruta, se marca como "En desarrollo" con fecha estimada.
+- [ ] **Mock Data Cleanup**: Verificar que endpoints referenciados en el frontend existen y responden. Eliminar mock de latencia hardcodeados.
+- [ ] **Race Condition Audit**: Revisar handlers con `setIsSaving(true)` sin `finally` (ej: `organizations/general/page.tsx`). Asegurar cleanup de estado.
+- [ ] **Security Review**: Eliminar exposición de `error.message` en middleware de producción. Solo exponer códigos de error, no mensajes internos.
+- [ ] **DOMMatrix Polyfill**: Evaluar si el polyfill de `instrumentation.ts` es necesario o si `pdf-parse` se puede actualizar.
+- [ ] **Toast & Error Text Unification**: Todas las notificaciones en lenguaje de negocio, no técnico ("No se pudo analizar el documento" → no "EXTERNAL_SERVICE_ERROR 503").
+- [ ] **Metrics de éxito**: 0 páginas "coming_soon" visibles en navegación. 0 endpoints frontend sin backend real.
+
+---
+
+### 📊 MÉTRICAS DE ÉXITO GLOBALES (ERA 6)
+
+| Métrica | Objetivo | Medición |
+|---------|----------|----------|
+| Time-to-first-value (TTFV) | < 3 min | Telemetría: upload → first useful answer |
+| Clicks para función principal | ≤ 3 | Audit de flujo |
+| Colores hardcodeados | 0 | `grep` regex en codebase |
+| Páginas placeholder visibles | 0 | Audit de rutas |
+| Tasa de completado onboarding | > 80% | Evento de tracking |
+| Satisfacción de respuestas RAG | > 75% thumbs up | Colección `rag_feedback` |
+| Admin subdirectorios visibles (rol User) | ≤ 4 | Config de navegación |
+
+### 🧠 PRINCIPIOS DE DISEÑO (ERA 6)
+
+1. **Progressive Disclosure**: Lo simple primero, lo complejo bajo "Avanzado"
+2. **Smart Defaults**: Auto-configurar según tipo de documento y contexto de trabajo
+3. **Feedback Inmediato**: Preview de PDF, highlight de fuentes, confianza humanizada
+4. **Contextual Help**: Ayuda en el momento exacto de la duda, no manuales
+5. **Reduce Cognitive Load**: Máximo 3 opciones visibles, el resto en "Más opciones"
+6. **Value-Oriented Metrics**: "Ahorraste 12 horas" > "Procesaste 24 documentos"
+7. **Zero Dead Ends**: Ninguna página sin funcionalidad real visible al usuario
+
+*Updated on 2026-02-19 by Antigravity v6.0.0 (ERA 6 - UX-First Strategy Defined ✅)*

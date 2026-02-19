@@ -65,7 +65,7 @@ export function CanvasArea() {
     } = useWorkflow();
 
     return (
-        <div className="flex h-[calc(100vh-64px)] w-full text-slate-900">
+        <div className="flex h-[calc(100vh-64px)] w-full text-foreground">
             <NodeLibrary />
             <div className="flex-grow h-full relative" ref={reactFlowWrapper}>
                 <ReactFlow

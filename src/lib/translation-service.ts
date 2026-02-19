@@ -296,9 +296,13 @@ export class TranslationService {
 
         try {
             // 1. Capa 0: Redis
-            const cached = await redis.get(cacheKey) as Record<string, any> | null;
-            if (cached && Object.keys(cached).length > 0) {
-                return cached;
+            const isDev = process.env.NODE_ENV === 'development';
+
+            if (!isDev) {
+                const cached = await redis.get(cacheKey) as Record<string, any> | null;
+                if (cached && Object.keys(cached).length > 0) {
+                    return cached;
+                }
             }
 
             // 2. Capa 1: Base (JSON Local)
@@ -336,7 +340,7 @@ export class TranslationService {
             }
 
             // 5. Guardar en Redis
-            if (Object.keys(finalMessages).length > 0) {
+            if (Object.keys(finalMessages).length > 0 && !isDev) {
                 await redis.set(cacheKey, finalMessages, { ex: this.CACHE_TTL });
             }
 

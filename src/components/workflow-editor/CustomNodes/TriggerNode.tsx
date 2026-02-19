@@ -9,8 +9,8 @@ export const TriggerNode = memo(({ data }: { data: { label: string, isCyclic?: b
 
     return (
         <div className={cn(
-            "px-4 py-2 shadow-md rounded-md bg-white border-2 border-amber-400 min-w-[150px] transition-colors relative",
-            analytics && analytics.count > 0 && "bg-amber-50"
+            "px-4 py-2 shadow-md rounded-md bg-card border-2 border-amber-400 dark:border-amber-600 min-w-[150px] transition-colors relative",
+            analytics && analytics.count > 0 && "bg-amber-50 dark:bg-amber-900/20"
         )}>
             {analytics && analytics.count > 0 && (
                 <div className="absolute -top-1 -right-1 flex h-4 w-4">
@@ -26,20 +26,20 @@ export const TriggerNode = memo(({ data }: { data: { label: string, isCyclic?: b
                 </div>
             )}
             <div className="flex items-center">
-                <div className="rounded-full w-8 h-8 flex items-center justify-center bg-amber-100 text-amber-600 mr-2">
+                <div className="rounded-full w-8 h-8 flex items-center justify-center bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 mr-2">
                     <Zap size={16} />
                 </div>
                 <div className="ml-1">
-                    <div className="text-xs font-bold text-slate-500 uppercase">Trigger</div>
-                    <div className="text-sm font-bold text-slate-900">{data.label}</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase">Trigger</div>
+                    <div className="text-sm font-bold text-foreground">{data.label}</div>
                     {analytics && (
-                        <div className="text-[9px] text-slate-400 font-mono mt-0.5 italic">
+                        <div className="text-[9px] text-muted-foreground font-mono mt-0.5 italic">
                             Evaluado {analytics.count} veces
                         </div>
                     )}
                 </div>
             </div>
-            <Handle type="source" position={Position.Right} className="w-3 h-3 bg-slate-400" />
+            <Handle type="source" position={Position.Right} className="w-3 h-3 bg-muted-foreground" />
         </div>
     );
 });

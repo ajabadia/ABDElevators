@@ -1,0 +1,268 @@
+Es una plataforma SaaS de RAG industrial/empresarial para análisis técnico de documentación, con foco fuerte en cumplimiento, observabilidad y multi‑tenant.
+​
+
+Para qué sirve (visión funcional)
+Asistente técnico sobre documentos: carga e indexa PDFs técnicos (manuales, planos, normativa, esquemas eléctricos) y permite hacer preguntas en lenguaje natural (RAG) con Gemini/LLM, recuperando “chunks” de contexto y mostrando las fuentes consultadas.
+​
+
+Gestión de conocimiento multi‑tenant y “spaces”: organiza el conocimiento en “tenants” y “spaces” aislados (global, industry, tenant, team, personal), con control de acceso por espacio y “Scoped API Keys” para integraciones externas (IoT, CRM, etc.).
+​
+
+Gobernanza y compliance: módulo de Audit Trail, Logs, Compliance, permisos RBAC/ABAC, GDPR export/delete, certificaciones de borrado, WCAG 2.1 AA, MFA, rotación de secretos internos y allow‑listing por IP.
+​
+
+Evaluación de calidad RAG: dashboard de “RAG quality” con métricas de faithfulness, relevance, context precision y un “LLM Judge” que evalúa cada respuesta, más causal analysis para diagnosticar por qué falla una respuesta.
+​
+
+Workflows y orquestación: editor visual de workflows (SwitchCase, Wait, Loop), ejecución en tiempo real con Mission Control, tareas humanas para gobernanza y escalados, integración con un “Causal Auto‑Correction IA” y “Causal Simulation Engine” orientado a Digital Twins/What‑If.
+​
+
+Ingesta robusta de documentos: pipeline asíncrono con BullMQ, auto‑reintentos, detección de stuck jobs, deduplicación por MD5, extracción dual OCR+IA, y reporting técnico de errores de ingest (ej. fallos Cloudinary 401).
+​
+
+Módulo de billing y límites de consumo: gestión de planes, cuotas (tokens, almacenamiento, reports), límites de tasa (rate limiting) por IP, circuito de resiliencia ante fallos de pasarelas de pago, y “Billing Hub”.
+​
+
+Playground y laboratorio de prompts: “AI Playground / RAG Experiment Lab” donde se pueden variar modelo, temperatura, chunkSize, topK, instrucción base, y ver chunks, métricas y trazas de evaluación.
+​
+
+Auditoría de arquitectura y seguridad (alto nivel)
+Stack y arquitectura
+
+Next.js App Router con layouts autenticados, middleware de seguridad, instrumentación server‑side y dynamic imports para dashboards pesados.
+​
+
+MongoDB multi‑base (AUTH, LOGS, MAIN / ABDElevators, etc.), Neo4j para Graph‑Enhanced RAG, Cloudinary para assets, BullMQ para workers de ingest.
+​
+
+Separación de core de workflows vs. case management (“Core Engine Separation”) y módulos verticales (Legal, Banking, Insurance, Industrial…).
+​
+
+Autenticación y autorización
+
+NextAuth con Magic Link, MFA opcional (TOTP) y centro de seguridad, control de roles (USER, ADMIN, SUPERADMIN) y “requireRole” en grupos de rutas admin.
+​
+
+Middleware que: aplica rate limiting por IP, fuerza login en todo lo no público, bloquea acceso a rutas internas con secreto rotatorio y allow‑list de IPs, y exige MFA fuera de unas pocas rutas permitidas.
+​
+
+Seguridad de API y multi‑tenant
+
+getTenantCollection y servicios de espacio para garantizar aislamiento de datos por tenant/space; hay corrección explícita de un bug histórico de aislamiento al crear API keys con spaceId.
+​
+
+API Keys con permisos escopados, estado ACTIVE/REVOKED, tracking de lastUsedAt, auditoría exhaustiva en logEvento y revalidación de paths admin tras cambios.
+​
+
+Observabilidad y logging
+
+Sistema de eventos estructurados con source, action, correlationId, tenantId, durationMs, niveles DEBUG/INFO/WARN/ERROR y paneles de “Observabilidad / Alerting”.
+​
+
+Alertas por SLO/SLA (ej. “Asset list slow 1778ms”, “LISTASSETSSLOW”) y reporting de errores en workers (Cloudinary, AI, etc.).
+​
+
+Hardening del front y middleware
+
+Polyfill de DOMMatrix en instrumentation para pdf‑parse bajo Node 20 en Vercel.
+​
+
+CSP muy restrictivo con nonces, HSTS condicional, X‑Frame‑Options DENY, X‑Content‑Type‑Options, Referrer‑Policy, Permissions‑Policy, etc.
+​
+
+Estrategia “fail closed” en middleware: ante error devuelve 500 JSON en vez de dejar pasar la petición.
+​
+
+Módulos principales detectados
+Módulo	Función principal
+Search / Smart Search	Búsqueda conversacional sobre toda la documentación técnica. 
+​
+Document Library / Assets	Gestión, ingesta y deduplicación de PDFs y otros formatos. 
+​
+Knowledge Hub / Spaces	Organización del conocimiento por espacios aislados. 
+​
+AI Hub	Acceso a RAG quality, workflows, predictive, playground, prompts. 
+​
+Quality / RAG Eval	Métricas de calidad de respuestas y panel de fiabilidad. 
+​
+Compliance / Audit	Trazabilidad, exportación, GDPR, logs de sistema. 
+​
+Billing Hub	Planes, consumo, límites de tokens, almacenamiento. 
+​
+Security Hub	MFA, sesiones, API keys, configuración de seguridad. 
+​
+Operations Hub	Monitorización de ingest, colas, errores, SLAs. 
+​
+Comentarios de auditoría (oportunidades/mejoras)
+Workers en Vercel: el propio código advierte sobre evitar workers persistentes en serverless; conviene asegurar despliegue dedicado (Queue/Worker host) para BullMQ si la carga crece.
+​
+
+Gestión de errores de terceros: Cloudinary devuelve 401 en ingest; sería aconsejable circuit breaker y paths de degradación más suaves para no bloquear toda la cola.
+​
+
+Consistencia multi‑DB: hay scripts de inspección de clusters y DB consistency auditor; mantenerlos operativos en CI/cron ayudaría a detectar fugas cross‑tenant o colecciones huérfanas.
+​
+
+UX de seguridad: el sistema ya es muy estricto (MFA, rate limit, fail closed); revisar mensajes de error para no filtrar demasiado detalle técnico en entornos públicos.
+​
+
+Se trata de una plataforma empresarial completa llamada "ABD RAG Platform" - un sistema de Retrieval-Augmented Generation (RAG) para análisis técnico industrial.
+🎯 Propósito General
+Esta es una plataforma de inteligencia artificial empresarial que permite a organizaciones industriales (especialmente del sector de ascensores/elevadores, pero adaptable a otros verticales) procesar documentación técnica, realizar análisis de cumplimiento normativo y generar informes inteligentes mediante RAG (Retrieval-Augmented Generation).
+🏗️ Arquitectura del Sistema
+1. Estructura de Seguridad Multi-Capa
+Table
+Copy
+Capa	Implementación	Descripción
+Middleware (middleware.ts)	NextAuth + Rate Limiting	Autenticación JWT, MFA, CSP, HSTS, rate limiting por IP
+Autorización	RBAC + ABAC	Roles (SUPER_ADMIN, ADMIN, USER) + permisos granulares
+Tenant Isolation	MongoDB multi-tenant	Separación estricta de datos por organización
+API Keys	Scoped + Rotatable	Claves de API con permisos específicos y rotación de secretos
+Características de seguridad notables:
+MFA obligatorio para administradores (ENFORCE_MFA_ADMIN)
+Rate limiting diferenciado (auth vs core endpoints)
+Secret rotation para APIs internas (INTERNAL_API_SECRET + PREVIOUS_INTERNAL_API_SECRET)
+CSP dinámico con nonces (diferente para dev/prod)
+Fail-closed en errores de middleware
+2. Sistema de Ingesta y Procesamiento de Documentos
+TypeScript
+Copy
+// Flujo de procesamiento:
+PDF/Documento → Cloudinary (almacenamiento) 
+    → Ingest Worker (Bull Queue) 
+    → Chunking + Vectorización (Gemini Embeddings)
+    → MongoDB (metadatos) + Vector DB (búsqueda semántica)
+Componentes clave:
+Ingest Worker: Procesamiento asíncrono con colas (Bull/Redis)
+Dead Letter Queue (DLQ): Reintentos automáticos para jobs fallidos
+Deduplicación: Hash MD5 para evitar documentos duplicados
+OCR integrado: Procesamiento de PDFs escaneados
+3. Motor RAG (Retrieval-Augmented Generation)
+Flujo de consulta:
+Query Understanding: Análisis semántico de la pregunta
+Vector Search: Búsqueda en embeddings (top-k chunks relevantes)
+Context Assembly: Construcción de contexto con chunks + metadatos
+LLM Generation: Gemini 2.0 Flash/Pro con prompting especializado
+Evaluation: Métricas de calidad (faithfulness, relevance, precision)
+Características avanzadas:
+Multi-tenancy en vector store (filtros por tenantId)
+Context limits configurables por "Knowledge Spaces"
+Re-ranking basado en relevancia
+Citation tracking (trazabilidad de fuentes)
+4. Sistema Multi-Vertical (Entity Engine)
+El código muestra un motor de entidades genérico (EntityEngine) que permite adaptar la plataforma a diferentes industrias:
+TypeScript
+Copy
+// Ejemplo: Entidad "pedido" (órdenes de trabajo)
+const entity = EntityEngine.getInstance().getEntity('pedido');
+// API endpoints, formularios, tablas generados dinámicamente
+Verticales soportados:
+ELEVATORS: Ascensores y equipos de elevación
+LEGAL: Documentación legal/jurídica
+MEDICAL: Documentación sanitaria
+BANKING/INSURANCE: Financiero
+GENERIC: Propósito general
+5. Sistema de Workflows Agénticos
+Workflow Designer: Editor visual de flujos (React Flow)
+Autonomous Agents: Agentes que ejecutan tareas complejas
+Validation Workflows: Flujos de validación humana (HITL - Human In The Loop)
+Task Inbox: Bandeja de entrada para tareas pendientes
+📊 Módulos Funcionales Detallados
+Administración (Admin Panel)
+Table
+Copy
+Módulo	Función	Fase/Tecnología
+AI Hub	Playground RAG, evaluación de calidad, workflows	Phase 133
+Knowledge Hub	Gestión de espacios de conocimiento, documentos, explorer vectorial	Phase 105
+Organizations	Configuración multi-tenant, branding, facturación, storage	Phase 110
+Permissions (Guardian)	Matriz de permisos RBAC/ABAC, simulador, auditoría	Phase 120+
+Operations	Observabilidad, logs técnicos, tracing, mantenimiento	Phase 31
+Intelligence	Federated learning, patrones globales, análisis predictivo	Phase 160
+Compliance	GDPR, EU AI Act, data portability, right to be forgotten	Phase 183
+Notifications	Gestión de templates, canales, programación	Phase 140
+Billing	Usage tracking, ROI calculator, facturación	Phase 24.2
+Prompts	Governance de prompts, versionado, multi-idioma	Phase 7.6
+i18n	Gestión de traducciones, sincronización JSON↔BD	Phase 62
+SuperAdmin	Dashboard global multi-tenant, métricas de plataforma	Phase 110
+Panel Técnico (Technical Users)
+Entities: Análisis de documentos técnicos con IA
+Graphs: Visualización de grafos de conocimiento (Neo4j)
+Validation: Workflows de validación con trazabilidad
+🔧 Stack Tecnológico
+Frontend
+Framework: Next.js 14+ (App Router, Server Components)
+UI: Tailwind CSS + shadcn/ui (design system consistente)
+Estado: Zustand (stores modulares), React Query (server state)
+Visualización: React Flow (workflows), D3/Cytoscape (grafos)
+Internacionalización: next-intl (es/en principalmente)
+Backend
+Runtime: Node.js (Vercel Serverless + Edge)
+Base de datos:
+MongoDB Atlas (datos estructurados, tenant-sharded)
+Redis (caché, rate limiting, colas Bull)
+Neo4j (grafos de conocimiento)
+Vector Store: Pinecone/Weaviate (implícito por vectorSearches)
+Colas: Bull (Redis) para procesamiento asíncrono
+Storage: Cloudinary (documentos), Vercel Blob (assets)
+IA/ML
+LLM: Google Gemini 2.0 (Flash/Pro/Ultra)
+Embeddings: text-embedding-004
+Framework: LangChain/LangGraph (implícito en "Agent Engine")
+Evaluación: RAGAS-like metrics (faithfulness, relevance, precision)
+Observabilidad
+Tracing: OpenTelemetry (Jaeger/Zipkin)
+Logging: Sistema propio con correlación ID
+Métricas: Dashboard interno de usage, ROI, anomalías
+🚀 Características Empresariales Destacadas
+1. Arquitectura Multi-Tenant Avanzada
+TypeScript
+Copy
+// Ejemplo de aislamiento en código:
+const keysCollection = await getTenantCollection<ApiKey>('api_keys', session);
+// Cada query automáticamente filtra por tenantId del JWT
+2. Federated Intelligence
+Aprendizaje de patrones entre tenants (anónimo/aggregrado)
+Ontología evolutiva que se refina con feedback humano
+"Sovereign Engine" para refinamiento autónomo de taxonomías
+3. Sistema de Reportes Inteligente
+Templates dinámicos (inspección, auditoría, calidad RAG)
+Programación con cron (diario/semanal/mensual)
+Exportación PDF con branding personalizado
+4. Cumplimiento Normativo (Compliance)
+GDPR: Portabilidad de datos, derecho al olvido
+EU AI Act: Registro de modelos, clasificación de riesgo
+SOC 2: Auditoría inmutable de cambios de configuración
+ISO 27001: Gestión de activos, ciclo de vida documental
+5. Sistema de "Knowledge Spaces"
+Permite crear "espacios de conocimiento" aislados con:
+Límites de contexto configurables
+Permisos granulares (quién puede consultar qué)
+Versionado de documentos
+🎨 Patrones de Diseño Implementados
+Table
+Copy
+Patrón	Uso
+Repository Pattern	getTenantCollection<T>() - abstracción de BD
+CQRS	Separación de comandos (mutations) y queries (hooks)
+Factory Pattern	EntityEngine para generar componentes dinámicos
+Strategy Pattern	Diferentes estrategias de chunking/embedding
+Observer Pattern	Sistema de eventos para notificaciones
+Circuit Breaker	Manejo de fallos en APIs externas (rate limiting)
+📈 Escalabilidad y Performance
+Edge Functions: Middleware en Vercel Edge para baja latencia
+Streaming: Respuestas LLM en streaming (implícito en componentes)
+Lazy Loading: Componentes pesados cargados dinámicamente (next/dynamic)
+Optimistic UI: Actualizaciones inmediatas en frontend
+CDN: Cloudinary para assets, Vercel para static
+🔍 Conclusión
+Esta es una plataforma RAG enterprise-grade diseñada para organizaciones industriales que necesitan:
+Procesar grandes volúmenes de documentación técnica
+Consultar información mediante lenguaje natural con precisión
+Cumplir con regulaciones estrictas (GDPR, EU AI Act, ISO)
+Operar en múltiples verticales con configuración flexible
+Escalar multi-tenant con aislamiento de datos garantizado
+El código muestra una madurez arquitectónica considerable (fases 31-183 documentadas), con énfasis en seguridad, observabilidad y gobernanza de IA - características esenciales para despliegues empresariales críticos.
+
+
+
+

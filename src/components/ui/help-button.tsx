@@ -66,12 +66,12 @@ export function HelpButton({
                     ref={buttonRef}
                     variant="ghost"
                     size="icon"
-                    className={cn(sizeClasses[size], "hover:bg-blue-50 dark:hover:bg-blue-900/20", className)}
+                    className={cn(sizeClasses[size], "hover:bg-secondary/10", className)}
                     onClick={handleClick}
                     aria-label={label}
                 >
                     <HelpCircle className={cn(
-                        "text-blue-500 hover:text-blue-600",
+                        "text-muted-foreground hover:text-foreground",
                         size === "sm" && "w-4 h-4",
                         size === "md" && "w-5 h-5",
                         size === "lg" && "w-6 h-6"
@@ -84,7 +84,7 @@ export function HelpButton({
                     ref={buttonRef}
                     variant="ghost"
                     size="sm"
-                    className={cn("text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-1 h-6 px-2", className)}
+                    className={cn("text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/10 gap-1 h-6 px-2", className)}
                     onClick={handleClick}
                 >
                     <HelpCircle className="w-3 h-3" />
@@ -96,7 +96,7 @@ export function HelpButton({
                 <button
                     ref={buttonRef}
                     className={cn(
-                        "inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-help ml-1.5 -mt-0.5 shrink-0",
+                        "inline-flex items-center justify-center w-5 h-5 rounded-full bg-secondary/10 text-secondary-foreground hover:bg-secondary/20 transition-colors cursor-help ml-1.5 -mt-0.5 shrink-0",
                         className
                     )}
                     onClick={handleClick}

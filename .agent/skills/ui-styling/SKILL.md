@@ -3,7 +3,7 @@ name: ui-styling
 description: Audita y estandariza la interfaz de usuario basándose en componentes de sistema (Shadcn + Custom Primitives) y gestión de estado con Zustand.
 ---
 
-# UI Styling & Standardization Skill (v2.0)
+# UI Styling & Standardization Skill (v3.0 — ERA 6)
 
 ## Cuándo usar este skill
 - Cuando el usuario pida "arreglar el estilo" o "mejorar la UX" de una página.
@@ -169,10 +169,11 @@ Para mostrar números grandes o estados, usa `<MetricCard />`:
     icon={<Users />}
     trend="+12%"
     trendDirection="up"
-    color="blue"
   />
 </div>
 ```
+
+> ⚠️ **ERA 6**: NO uses la prop `color` con valores hardcodeados (ej: `color="blue"`). Las MetricCards heredan colores del tema automáticamente. Si necesitas variantes, usa `variant="primary"` o `variant="secondary"`.
 
 ### 10. Animaciones y Transiciones
 Aplica siempre clases de entrada para suavizar la carga:
@@ -191,8 +192,26 @@ Toda interfaz debe ser funcional y estética en ambos temas:
 - **Transiciones**: Añade transiciones suaves al cambiar de tema para evitar destellos (`transition-colors duration-300`).
 - **DataTable Fix**: Asegura que el header use `bg-muted` y las filas tengan bordes `border-border/50` para evitar el efecto de "mancha gris" en modo claro.
 
+### 13. ERA 6: Auditoría Visual Masiva
+Cuando se aplique este skill a escala (FASE 190), usar el siguiente flujo:
+
+**Paso 1: Detectar archivos afectados**
+```bash
+grep -rl --include="*.tsx" -E "bg-(teal|orange|emerald|purple|red|green|blue|amber|cyan|violet|indigo|fuchsia|pink|rose|yellow|lime|sky)-[0-9]" src/
+```
+
+**Paso 2: Para cada archivo, aplicar conversión:**
+- Colores de branding (`teal`, `purple`, `orange`, `blue`, `indigo`) → `primary`, `secondary`, `accent`
+- Colores de estado (`red` para error, `amber` para warning, `green` para success) → `destructive`, se permite `amber-500` y `green-500` como estándares UX universales (no son branding)
+- Grises hardcodeados (`slate-950`, `slate-800`) → `background`, `card`, `muted`, `border`
+
+**Paso 3: Verificar dark mode** tras cada cambio.
+
+**Referencia detallada:** [ERA6_FASE190_VISUAL.md](file:///d:/desarrollos/ABDElevators/Documentación/ERA6/ERA6_FASE190_VISUAL.md)
+
 ## Output (formateo exacto)
 - **Estado**: "Migrada lógica de estado a Zustand Store ([store-name])".
 - **UI**: "Estandarizados componentes visuales ([PageContainer/Header/Card])".
 - **Limpieza**: "Eliminados estilos hardcodeados (slate-X) y aplicadas variables semánticas (bg-card/border-border)".
 - **Modos**: "Verificada legibilidad y contraste en Modo Claro y Oscuro".
+- **ERA 6**: "Auditoría masiva: X archivos limpiados, 0 colores hardcodeados restantes".

@@ -24,7 +24,7 @@ export function HeroCard({ children, className, onClick, variant = 'default' }: 
                 onClick={onClick}
                 className={cn(
                     "transition-all duration-200 hover:shadow-md cursor-pointer group overflow-hidden relative",
-                    variant === 'highlight' ? "bg-indigo-600 border-indigo-500 text-white" : "bg-white dark:bg-slate-950",
+                    variant === 'highlight' ? "bg-primary border-primary text-primary-foreground" : "bg-card border-border",
                     className
                 )}
             >
@@ -34,7 +34,7 @@ export function HeroCard({ children, className, onClick, variant = 'default' }: 
 
                 {/* Decoration for highlight variant */}
                 {variant === 'highlight' && (
-                    <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-background/10 rounded-full blur-2xl pointer-events-none" />
                 )}
             </Card>
         </HeroCardContext.Provider>
@@ -55,14 +55,14 @@ HeroCard.Header = function HeroCardHeader({ title, icon: Icon }: HeroCardHeaderP
         <div className="flex items-center justify-between mb-2">
             <span className={cn(
                 "text-sm font-medium uppercase tracking-wider",
-                variant === 'highlight' ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"
+                variant === 'highlight' ? "text-primary-foreground/90" : "text-muted-foreground"
             )}>
                 {title}
             </span>
             {Icon && (
                 <div className={cn(
                     "p-2 rounded-full",
-                    variant === 'highlight' ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                    variant === 'highlight' ? "bg-background/20 text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}>
                     <Icon className="w-4 h-4" />
                 </div>
@@ -83,14 +83,14 @@ HeroCard.Metric = function HeroCardMetric({ value, description }: HeroCardMetric
         <div>
             <div className={cn(
                 "text-3xl font-bold tracking-tight",
-                variant === 'highlight' ? "text-white" : "text-slate-900 dark:text-slate-50"
+                variant === 'highlight' ? "text-primary-foreground" : "text-foreground"
             )}>
                 {value}
             </div>
             {description && (
                 <p className={cn(
                     "text-xs mt-1",
-                    variant === 'highlight' ? "text-indigo-200" : "text-slate-400"
+                    variant === 'highlight' ? "text-primary-foreground/80" : "text-muted-foreground"
                 )}>
                     {description}
                 </p>
@@ -113,8 +113,8 @@ HeroCard.Trend = function HeroCardTrend({ value, label }: HeroCardTrendProps) {
 
     const Icon = isNeutral ? Minus : (isPositive ? TrendingUp : TrendingDown);
     const trendColor = variant === 'highlight'
-        ? "text-white bg-white/20"
-        : (isPositive ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" : (isNeutral ? "text-slate-600 bg-slate-100" : "text-rose-600 bg-rose-50 dark:bg-rose-950/30"));
+        ? "text-primary-foreground bg-background/20"
+        : (isPositive ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" : (isNeutral ? "text-muted-foreground bg-muted" : "text-rose-600 bg-rose-50 dark:bg-rose-950/30"));
 
     return (
         <div className="flex items-center gap-2 mt-4">
@@ -124,7 +124,7 @@ HeroCard.Trend = function HeroCardTrend({ value, label }: HeroCardTrendProps) {
             </div>
             <span className={cn(
                 "text-xs",
-                variant === 'highlight' ? "text-indigo-200" : "text-slate-400"
+                variant === 'highlight' ? "text-primary-foreground/80" : "text-muted-foreground"
             )}>
                 {label || (isPositive ? t('trend_up') : (isNeutral ? t('trend_neutral') : t('trend_down')))}
             </span>

@@ -79,29 +79,29 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
     };
 
     return (
-        <div className="absolute right-0 top-0 w-80 h-full bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="absolute right-0 top-0 w-80 h-full bg-background border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                 <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-slate-500" />
-                    <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">{t('title')}</h3>
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">{t('title')}</h3>
                 </div>
-                <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-md transition-colors">
-                    <X size={18} className="text-slate-400" />
+                <button onClick={onClose} className="p-1 hover:bg-muted rounded-md transition-colors">
+                    <X size={18} className="text-muted-foreground" />
                 </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 {/* Info de Tipo */}
-                <div className="px-3 py-2 bg-slate-100 rounded-lg flex items-center gap-2 border border-slate-200">
+                <div className="px-3 py-2 bg-muted/50 rounded-lg flex items-center gap-2 border border-border">
                     {nodeType === 'wait' && <Clock className="w-4 h-4 text-amber-500" />}
                     {nodeType === 'switch' && <GitBranch className="w-4 h-4 text-purple-500" />}
                     {nodeType === 'loop' && <Repeat className="w-4 h-4 text-blue-500" />}
                     {nodeType === 'subflow' && <GitFork className="w-4 h-4 text-purple-500" />}
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('node_type', { type: nodeType })}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('node_type', { type: nodeType })}</span>
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400">{t('main_label')}</Label>
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('main_label')}</Label>
                     <Input
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
@@ -110,14 +110,14 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                 </div>
 
                 {/* Simulation Data (General) */}
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <Label className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                        <Activity size={10} className="text-teal-500" />
+                <div className="space-y-3 pt-4 border-t border-border">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                        <Activity size={10} className="text-primary" />
                         Cost & Time Estimates
                     </Label>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                            <Label className="text-[9px] text-slate-500">Avg Cost (€)</Label>
+                            <Label className="text-[9px] text-muted-foreground">Avg Cost (€)</Label>
                             <Input
                                 type="number"
                                 value={metadata.simulationData?.cost_est || 0}
@@ -132,7 +132,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[9px] text-slate-500">Avg Time (min)</Label>
+                            <Label className="text-[9px] text-muted-foreground">Avg Time (min)</Label>
                             <Input
                                 type="number"
                                 value={metadata.simulationData?.time_est || 0}
@@ -151,8 +151,8 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
 
                 {/* Specialized Editor for Wait */}
                 {nodeType === 'wait' && (
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t('wait_config')}</Label>
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('wait_config')}</Label>
                         <div className="flex gap-2">
                             <div className="flex-1">
                                 <Input
@@ -185,16 +185,16 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
 
                 {/* Specialized Editor for Switch */}
                 {nodeType === 'switch' && (
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <div className="space-y-4 pt-4 border-t border-border">
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px] uppercase font-bold text-slate-400">{t('switch_config')}</Label>
-                            <Button variant="ghost" size="sm" onClick={addSwitchPath} className="h-6 px-2 text-[10px] text-purple-600 font-bold">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('switch_config')}</Label>
+                            <Button variant="ghost" size="sm" onClick={addSwitchPath} className="h-6 px-2 text-[10px] text-purple-600 font-bold hover:bg-purple-100/50">
                                 <Plus size={12} className="mr-1" /> {t('branch')}
                             </Button>
                         </div>
                         <div className="space-y-3">
                             {(metadata.paths || []).map((path: any, idx: number) => (
-                                <div key={idx} className="p-2 border border-slate-100 rounded bg-slate-50 space-y-2">
+                                <div key={idx} className="p-2 border border-border rounded bg-muted/30 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-bold text-purple-600">{t('branch')} #{idx + 1}</span>
                                         <button
@@ -203,7 +203,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                                                 newPaths.splice(idx, 1);
                                                 setMetadata({ ...metadata, paths: newPaths });
                                             }}
-                                            className="text-slate-300 hover:text-red-400"
+                                            className="text-muted-foreground hover:text-destructive"
                                         >
                                             <Trash2 size={12} />
                                         </button>
@@ -236,11 +236,11 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
 
                 {/* Specialized Editor for Loop */}
                 {nodeType === 'loop' && (
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t('loop_config')}</Label>
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('loop_config')}</Label>
                         <div className="space-y-3">
                             <div className="space-y-1">
-                                <Label className="text-[9px] text-slate-500">{t('data_source')}</Label>
+                                <Label className="text-[9px] text-muted-foreground">{t('data_source')}</Label>
                                 <Input
                                     placeholder={t('data_source_placeholder')}
                                     value={metadata.source || ""}
@@ -249,7 +249,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[9px] text-slate-500">{t('iterations')}</Label>
+                                <Label className="text-[9px] text-muted-foreground">{t('iterations')}</Label>
                                 <Input
                                     type="number"
                                     value={metadata.maxIterations || 10}
@@ -263,11 +263,11 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
 
                 {/* Specialized Editor for Subflow */}
                 {nodeType === 'subflow' && (
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t('subflow_config')}</Label>
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('subflow_config')}</Label>
                         <div className="space-y-3">
                             <div className="space-y-1">
-                                <Label className="text-[9px] text-slate-500">{t('select_subflow')}</Label>
+                                <Label className="text-[9px] text-muted-foreground">{t('select_subflow')}</Label>
                                 <Select
                                     value={metadata.subflowId || ""}
                                     onValueChange={(v) => {
@@ -306,10 +306,10 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                     </div>
                 )}
 
-                <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="space-y-4 pt-4 border-t border-border">
                     <div className="flex items-center justify-between">
-                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t('extra_features')}</Label>
-                        <Button variant="ghost" size="sm" onClick={addMeta} className="h-6 px-2 text-[10px] text-teal-600 font-bold">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">{t('extra_features')}</Label>
+                        <Button variant="ghost" size="sm" onClick={addMeta} className="h-6 px-2 text-[10px] text-primary font-bold hover:bg-primary/10">
                             <Plus size={12} className="mr-1" /> {t('add')}
                         </Button>
                     </div>
@@ -322,7 +322,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                                         placeholder={t('property')}
                                         value={key}
                                         onChange={(e) => updateMeta(key, e.target.value, value)}
-                                        className="h-7 text-[10px] uppercase font-mono bg-slate-50 border-transparent focus:border-slate-200"
+                                        className="h-7 text-[10px] uppercase font-mono bg-muted/50 border-transparent focus:border-border"
                                     />
                                     <Input
                                         placeholder={t('value')}
@@ -333,7 +333,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                                 </div>
                                 <button
                                     onClick={() => removeMeta(key)}
-                                    className="p-1.5 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all"
+                                    className="p-1.5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
                                 >
                                     <Trash2 size={14} />
                                 </button>
@@ -341,7 +341,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                         ))}
 
                         {Object.keys(metadata).length === 0 && (
-                            <p className="text-[10px] text-slate-400 italic text-center py-4 bg-slate-50 rounded border border-dashed border-slate-200">
+                            <p className="text-[10px] text-muted-foreground italic text-center py-4 bg-muted/30 rounded border border-dashed border-border">
                                 {t('no_features')}
                             </p>
                         )}
@@ -349,11 +349,11 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                 </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-2">
-                <Button onClick={handleSave} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-10 shadow-lg">
+            <div className="p-4 border-t border-border bg-muted/30 space-y-2">
+                <Button onClick={handleSave} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 shadow-lg">
                     {t('apply')}
                 </Button>
-                <p className="text-[9px] text-slate-400 text-center italic">
+                <p className="text-[9px] text-muted-foreground text-center italic">
                     {t('sync_notice')}
                 </p>
             </div>

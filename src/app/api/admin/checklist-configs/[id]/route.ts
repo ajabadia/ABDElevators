@@ -13,11 +13,17 @@ import { ObjectId } from 'mongodb';
  */
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
-    const correlationId = crypto.randomUUID();
+
+    if (!ObjectId.isValid(id)) {
+        return NextResponse.json(
+            new ValidationError('ID inválido', []).toJSON(),
+            { status: 400 }
+        );
+    }
 
     try {
-        await enforcePermission('checklists', 'read');
-        const collection = await getTenantCollection('configs_checklist');
+        const session = await enforcePermission('checklists', 'read');
+        const collection = await getTenantCollection('configs_checklist', session);
 
         const config = await collection.findOne({
             _id: new ObjectId(id)
@@ -45,20 +51,19 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = crypto.randomUUID();
-    const start = Date.now();
+
+    if (!ObjectId.isValid(id)) {
+        return NextResponse.json(
+            new ValidationError('ID inválido', []).toJSON(),
+            { status: 400 }
+        );
+    }
 
     try {
         const session = await enforcePermission('checklists', 'write');
         const body = await req.json();
 
-        const collection = await getTenantCollection('configs_checklist');
-
-        // getTenantCollection already filters by tenantId in the underlying query if we used a higher level abstraction,
-        // but here we are using the collection directly, so we MUST ensure the filter is correct.
-        // Actually, getTenantCollection returns a collection with a filter already applied for find/update/etc.
-        // Wait, I should verify if getTenantCollection returns a Proxy or just the collection.
-        // Based on rules.md: "Toda operación de DB debe realizarse a través de SecureCollection para garantizar aislamiento."
-        // getTenantCollection in this project usually returns a collection that handles tenantId automatically.
+        const collection = await getTenantCollection('configs_checklist', session);
 
         const updateData = {
             ...body,
@@ -110,13 +115,20 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     const { id } = await context.params;
     const correlationId = crypto.randomUUID();
 
+    if (!ObjectId.isValid(id)) {
+        return NextResponse.json(
+            new ValidationError('ID inválido', []).toJSON(),
+            { status: 400 }
+        );
+    }
+
     try {
         const session = await enforcePermission('checklists', 'write');
-        const collection = await getTenantCollection('configs_checklist');
+        const collection = await getTenantCollection('configs_checklist', session);
 
         const result = await collection.deleteOne({
             _id: new ObjectId(id)
-        }) as any;
+        });
 
         if (result.deletedCount === 0) {
             throw new NotFoundError(`Configuración ${id} no encontrada`);
