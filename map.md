@@ -71,7 +71,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 🏠 Admin General (Unified Hubs)
 | Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin` | Dashboard principal de administración. | 2026-02-16 |
+| `/admin` | **Dashboard Unificado (Hub)**: Punto de entrada por roles. | 2026-02-19 (Verified) |
 | `/admin/tasks` | **Tasks Hub**: Gestión de tareas. | 2026-02-19 (Verified) |
 | `/admin/security` | **Security Hub**: Dashboard de seguridad. | 2026-02-19 (Verified) |
 | `/admin/security/audit` | **Audit Trail**: Registro inmutable. | 2026-02-19 (Verified) |

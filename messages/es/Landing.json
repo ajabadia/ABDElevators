@@ -27,5 +27,11 @@
     "title": "Control Industrial Total",
     "description": "Gestión centralizada de modelos y arquitectura monorepo de alto rendimiento para entornos críticos.",
     "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto"
+  },
+  "UX_REVOLUTION": {
+    "badge": "EXPERIENCIA UNIFICADA",
+    "title": "Diseño Agéntico de Vanguardia",
+    "description": "Una interfaz repensada desde cero para la eficiencia técnica. Navegación simplificada, modo oscuro nativo y consistencia visual absoluta.",
+    "features": "Dashboard Híbrido,Hub de Navegación,Modo Oscuro,Diseño Tokens Semánticos"
   }
 }
