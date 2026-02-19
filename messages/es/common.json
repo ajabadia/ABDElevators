@@ -36,7 +36,12 @@
       "operations": "Operaciones",
       "organization": "Organización",
       "personal": "Mi Espacio",
-      "preference": "Preferencias"
+      "preference": "Preferencias",
+      "inventory": "Inventario Técnico",
+      "studio": "Automation Studio",
+      "corporate": "Corporativo & Admin",
+      "governance": "Gobernanza & Sistemas",
+      "workspace": "Espacio de Conocimiento"
     },
     "items": {
       "dashboard": "Panel General",

@@ -2,7 +2,7 @@ import { extractTextFromPDF } from './pdf-utils';
 import { analyzeEntityWithGemini } from './llm';
 import { performTechnicalSearch } from './rag-service';
 import { RiskService } from './risk-service';
-import { getTenantCollection, getCaseCollection } from './db-tenant';
+import { getTenantCollection } from './db-tenant';
 import { EntitySchema, GenericCaseSchema } from './schemas';
 import { mapEntityToCase } from './mappers';
 import { logEvento } from './logger';
@@ -20,7 +20,7 @@ export class AsyncJobsLogic {
      */
     static async processPdfAnalysis(jobData: any, jobId: string, updateProgress: (p: number) => Promise<void>) {
         const { tenantId, userId, data, correlationId = jobId } = jobData;
-        const { entityId, fileBuffer, filename, industry = 'ELEVATORS' } = data;
+        const { entityId, fileBuffer, filename, industry = 'GENERIC' } = data;
 
         try {
             await logEvento({
@@ -103,7 +103,7 @@ export class AsyncJobsLogic {
 
             // 6. Sincronizar con Generic Cases (Visión 2.0)
             try {
-                const caseCollection = await getCaseCollection();
+                const caseCollection = await getTenantCollection('cases');
                 const entityDoc = await entitiesCollection.findOne({ _id: new ObjectId(entityId) });
 
                 if (entityDoc) {

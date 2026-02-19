@@ -1,0 +1,29 @@
+{
+    "title": "Billing Hub",
+    "description": "Manage your subscription, plans, and consumption limits.",
+    "current_plan": "Current Plan",
+    "usage_quota": "Usage Quota",
+    "storage": "Storage",
+    "tokens": "AI Tokens",
+    "manage_subscription": "Manage Subscription",
+    "upgrade_plan": "Upgrade Plan",
+    "billing_history": "Billing History",
+    "sections": {
+        "overview": "Overview",
+        "plans": "Available Plans",
+        "usage": "Consumption Detail",
+        "payment_methods": "Payment Methods"
+    },
+    "status": {
+        "active": "Active",
+        "trial": "Trial",
+        "suspended": "Suspended",
+        "canceled": "Canceled",
+        "past_due": "Past Due"
+    },
+    "limits": {
+        "storage": "Storage ({used} of {total})",
+        "tokens": "Tokens ({used} of {total})",
+        "reports": "Reports ({used} of {total})"
+    }
+}

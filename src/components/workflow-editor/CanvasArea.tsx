@@ -21,6 +21,9 @@ import { SwitchNode } from './CustomNodes/SwitchNode';
 import { WaitNode } from './CustomNodes/WaitNode';
 import { LoopNode } from './CustomNodes/LoopNode';
 import { SubflowNode } from './CustomNodes/SubflowNode';
+import { HumanValidationNode } from './CustomNodes/HumanValidationNode';
+import { RAGCheckNode } from './CustomNodes/RAGCheckNode';
+import { SovereignToolNode } from './CustomNodes/SovereignToolNode';
 
 const nodeTypes = {
     trigger: TriggerNode,
@@ -30,6 +33,9 @@ const nodeTypes = {
     wait: WaitNode,
     loop: LoopNode,
     subflow: SubflowNode,
+    humanValidation: HumanValidationNode,
+    ragCheck: RAGCheckNode,
+    sovereignTool: SovereignToolNode,
 };
 
 export function CanvasArea() {

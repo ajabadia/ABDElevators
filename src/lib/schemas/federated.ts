@@ -22,7 +22,7 @@ export const FederatedPatternSchema = z.object({
     validationCount: z.number().default(0),
 
     // Governance
-    originIndustry: IndustryTypeSchema.default('ELEVATORS'),
+    originIndustry: IndustryTypeSchema.default('GENERIC'),
     originTenantHash: z.string(), // One-way hash of tenantId
     status: z.enum(['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'FLAGGED']).default('DRAFT'),
 

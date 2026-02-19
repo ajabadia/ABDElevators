@@ -1,5 +1,6 @@
 import { connectDB } from '../src/lib/db';
 import { PromptSchema } from '../src/lib/schemas';
+import { PROMPTS } from '../src/lib/prompts';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
@@ -459,6 +460,76 @@ Salida: arca_ii, placa
 CONSULTA: {{query}}`,
         variables: [
             { name: 'query', type: 'string', description: 'Consulta del usuario', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'WORKFLOW_ROUTER',
+        name: 'Enrutador de Workflows',
+        description: 'Decide si usar un workflow existente o crear uno nuevo',
+        category: 'ROUTING',
+        model: 'gemini-1.5-flash',
+        template: PROMPTS.WORKFLOW_ROUTER,
+        variables: [
+            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
+            { name: 'existingWorkflows', type: 'string', description: 'Lista de workflows existentes', required: true },
+            { name: 'description', type: 'string', description: 'Descripción del caso', required: true },
+            { name: 'entityType', type: 'string', description: 'Tipo de entidad', required: true },
+            { name: 'industry', type: 'string', description: 'Industria', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'WORKFLOW_GENERATOR',
+        name: 'Generador de Workflows',
+        description: 'Crea definiciones completas de workflows industriales',
+        category: 'GENERAL',
+        model: 'gemini-1.5-pro',
+        template: PROMPTS.WORKFLOW_GENERATOR,
+        variables: [
+            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
+            { name: 'entityType', type: 'string', description: 'Tipo de entidad', required: true },
+            { name: 'industry', type: 'string', description: 'Industria', required: true },
+            { name: 'description', type: 'string', description: 'Descripción del proceso', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'WORKFLOW_NODE_ANALYZER',
+        name: 'Analista de Nodos de Workflow',
+        description: 'Analiza el estado actual y recomienda la siguiente transición',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-flash',
+        template: PROMPTS.WORKFLOW_NODE_ANALYZER,
+        variables: [
+            { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
+            { name: 'caseContext', type: 'string', description: 'Contexto del caso', required: true },
+            { name: 'currentState', type: 'string', description: 'Estado actual', required: true }
+        ],
+        version: 1,
+        active: true,
+        createdBy: 'system',
+        updatedBy: 'system'
+    },
+    {
+        key: 'ONTOLOGY_REFINER',
+        name: 'Refinador de Ontología Soberana',
+        description: 'Evoluciona la ontología basándose en feedback humano (Sovereign Engine)',
+        category: 'ANALYSIS',
+        model: 'gemini-1.5-pro',
+        template: PROMPTS.ONTOLOGY_REFINER,
+        variables: [
+            { name: 'currentTaxonomies', type: 'string', description: 'Taxonomías actuales', required: true },
+            { name: 'feedbackDrift', type: 'string', description: 'Feedback humano acumulado', required: true }
         ],
         version: 1,
         active: true,

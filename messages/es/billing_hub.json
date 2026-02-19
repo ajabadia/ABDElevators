@@ -1,0 +1,29 @@
+{
+  "title": "Centro de Facturación",
+  "description": "Gestiona tu suscripción, planes y límites de consumo.",
+  "current_plan": "Plan Actual",
+  "usage_quota": "Cuota de Uso",
+  "storage": "Almacenamiento",
+  "tokens": "Tokens de IA",
+  "manage_subscription": "Gestionar Suscripción",
+  "upgrade_plan": "Mejorar Plan",
+  "billing_history": "Historial de Facturación",
+  "sections": {
+    "overview": "Resumen",
+    "plans": "Planes Disponibles",
+    "usage": "Detalle de Consumo",
+    "payment_methods": "Métodos de Pago"
+  },
+  "status": {
+    "active": "Activo",
+    "trial": "Prueba",
+    "suspended": "Suspendido",
+    "canceled": "Cancelado",
+    "past_due": "Pendiente de Pago"
+  },
+  "limits": {
+    "storage": "Almacenamiento ({used} de {total})",
+    "tokens": "Tokens ({used} de {total})",
+    "reports": "Informes ({used} de {total})"
+  }
+}

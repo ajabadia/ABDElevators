@@ -1,9 +1,0 @@
-{
-  "pii_label": "Desidentificación de Datos (PII)",
-  "pii_desc": "Protege datos sensibles eliminándolos antes de procesar.",
-  "pii_warning_title": "ADVERTENCIA: Datos Sensibles",
-  "pii_warning_desc": "Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos. ¿Cómo deseas proceder?",
-  "pii_opt_continue": "Continuar sin protección",
-  "pii_opt_cancel": "Cancelar",
-  "pii_opt_enable": "Activar y continuar"
-}

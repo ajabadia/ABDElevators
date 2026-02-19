@@ -17,7 +17,7 @@ export type AppEnvironment = z.infer<typeof AppEnvironmentEnum>;
 export const DocumentChunkSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string().optional(), // 'global' if shared
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     componentType: z.string(),
     model: z.string(),
     sourceDoc: z.string(),
@@ -127,7 +127,7 @@ export const UserInviteSchema = z.object({
     _id: z.any().optional(),
     email: z.string().email(),
     tenantId: z.string(),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     role: z.nativeEnum(UserRole),
     token: z.string(),
     invitedBy: z.string(),
@@ -424,7 +424,7 @@ export const ApplicationLogSchema = z.object({
 export const KnowledgeAssetSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     filename: z.string(),
     componentType: z.string(),
     model: z.string(),
@@ -477,7 +477,7 @@ export const TenantAccessSchema = z.object({
     tenantId: z.string(),
     name: z.string(),
     role: z.nativeEnum(UserRole),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
 });
 
 /**
@@ -503,7 +503,7 @@ export const UserSchema = z.object({
     photoCloudinaryId: z.string().optional(),
     role: z.nativeEnum(UserRole), // Role principal/default
     tenantId: z.string(), // Tenant actual/default
-    industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
+    industry: IndustryTypeSchema.default('GENERIC'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 
     // Multi-tenancy (Fase 11)
@@ -643,13 +643,10 @@ export const TenantConfigSchema = z.object({
         status: z.preprocess(
             (val) => {
                 if (typeof val === 'string') return val.toUpperCase();
-                // If null or undefined flow into preprocess, validation might fail if schema expects string.
-                // But z.preprocess output is fed to z.enum(...).default('ACTIVE').
-                // If we return undefined here, default() catches it.
                 if (val === null || val === undefined) return undefined;
                 return val;
             },
-            z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED']).default('ACTIVE')
+            z.enum(['ACTIVE', 'SUSPENDED', 'CANCELLED', 'CANCELED', 'TRIAL', 'PAST_DUE', 'EXPIRED']).default('ACTIVE')
         ),
         stripe_customer_id: z.string().optional(),
         stripe_subscription_id: z.string().optional(),

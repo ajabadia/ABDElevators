@@ -74,6 +74,25 @@
         "SYSTEM": "Sistema"
       }
     },
+    "workflows_dashboard": {
+      "title": "Workflow Designer",
+      "subtitle": "Gestión de flujos industriales."
+    },
+    "caseWorkflow": {
+      "currentStatus": "Estado Actual",
+      "pending": "Pendiente",
+      "iaIntelligence": "Inteligencia de Proceso",
+      "recommended": "RECOMENDADO",
+      "risk": "Riesgo: {level}",
+      "confidence": "{value}% Confianza",
+      "iaDescription": "El sistema puede analizar automáticamente la documentación para este estado.",
+      "runAnalysis": "Ejecutar Análisis Inteligente",
+      "availableActions": "Acciones Disponibles",
+      "analysisComplete": "Análisis IA Completado",
+      "statusUpdatedDesc": "El caso ha avanzado a: {to}",
+      "riskDetected": "Riesgo detectado: {level}",
+      "statusUpdated": "Fase Actualizada"
+    },
     "workflows": {
       "syncing": "Sincronizando Motor de Workflows...",
       "title": "Diseñador de Workflows",
@@ -129,21 +148,6 @@
         "default": "Workflow por Defecto",
         "name": "Nombre Interno"
       }
-    },
-    "caseWorkflow": {
-      "currentStatus": "Estado Actual",
-      "pending": "Pendiente",
-      "iaIntelligence": "Inteligencia de Proceso",
-      "recommended": "RECOMENDADO",
-      "risk": "Riesgo: {level}",
-      "confidence": "{value}% Confianza",
-      "iaDescription": "El sistema puede analizar automáticamente la documentación para este estado.",
-      "runAnalysis": "Ejecutar Análisis Inteligente",
-      "availableActions": "Acciones Disponibles",
-      "analysisComplete": "Análisis IA Completado",
-      "statusUpdatedDesc": "El caso ha avanzado a: {to}",
-      "riskDetected": "Riesgo detectado: {level}",
-      "statusUpdated": "Fase Actualizada"
     }
   },
   "roi": {
@@ -569,6 +573,59 @@
     }
   },
   "workflows": {
+    "syncing": "Sincronizando Motor de Workflows...",
+    "loadError": "Error de Carga",
+    "loadErrorDesc": "No se pudo recuperar la definición del workflow: {error}",
+    "backToHub": "Volver al Hub de IA",
+    "back": "Volver",
+    "publish": "Publicar Workflow",
+    "saveSuccess": "Configuración Guardada",
+    "saveSuccessDesc": "El workflow ha sido actualizado con éxito.",
+    "tabs": {
+      "transitions": "Transiciones",
+      "states": "Estados",
+      "config": "Master Config"
+    },
+    "states": {
+      "title": "Estados de Proceso",
+      "id": "ID del Estado",
+      "label": "Etiqueta",
+      "color": "Color (Hex)",
+      "newState": "Nuevo Estado",
+      "iaLayer": "Capa de Inteligencia (LLM)",
+      "promptKey": "Prompt Key",
+      "schemaKey": "Output Schema"
+    },
+    "transitions": {
+      "title": "Configuración de Transiciones",
+      "to": "Hacia",
+      "from": "Desde",
+      "strategy": "Estrategia de Decisión",
+      "add": "Añadir Transición",
+      "label": "Acción / Etiqueta",
+      "strategies": {
+        "human": "🛡️ Solo Humana",
+        "llm_suggest": "🧠 IA + HITL (Sugerida)",
+        "user": "👤 Usuario (Manual)",
+        "llm_direct": "🤖 LLM Directa (Auto)"
+      },
+      "routing": {
+        "branches": "{count} Ramas Configuradas",
+        "promptKey": "Routing Prompt Key"
+      }
+    },
+    "config": {
+      "global": "Estrategia Global",
+      "identity": "Identidad del Workflow",
+      "active": "Estado Activo",
+      "activeDesc": "Disponible para nuevos casos",
+      "publication": "Parámetros de Publicación",
+      "environment": "Entorno",
+      "defaultDesc": "Asignado automáticamente",
+      "version": "Versión",
+      "default": "Workflow por Defecto",
+      "name": "Nombre Interno"
+    },
     "canvas": {
       "new_name": "Nuevo Flujo Automatizado",
       "create_title": "Nuevo Workflow",
@@ -629,8 +686,12 @@
         "wait_5s": "Esperar 5s",
         "loop": "Bucle Iterador",
         "foreach": "Para cada Elemento",
-        "subflow": "Sub-workflow"
-      }
+        "subflow": "Sub-workflow",
+        "human_validation": "Validación Humana (HITL)",
+        "rag_check": "Verificación RAG",
+        "sovereign_tool": "Herramienta Soberana"
+      },
+      "industrial": "Operaciones Industriales"
     },
     "properties": {
       "title": "Propiedades del Nodo",
@@ -757,6 +818,24 @@
       "groups": "Grupos y Jerarquía",
       "simulator": "Simulador",
       "audit": "Logs de Acceso"
+    },
+    "cards": {
+      "matrix": {
+        "title": "Matriz de Permisos",
+        "description": "Gestiona políticas ABAC y reglas de acceso granular."
+      },
+      "groups": {
+        "title": "Grupos y Jerarquía",
+        "description": "Organiza usuarios y gestiona la herencia de permisos."
+      },
+      "simulator": {
+        "title": "Simulador de Seguridad",
+        "description": "Prueba y valida políticas en tiempo real sin riesgo."
+      },
+      "audit": {
+        "title": "Pista de Auditoría",
+        "description": "Registros detallados de accesos y cambios de seguridad."
+      }
     },
     "matrix": {
       "title": "Matriz de Permisos",
@@ -1114,6 +1193,26 @@
       "certificateSuccess": "El certificado legal PDF ha sido descargado.",
       "error": "Error",
       "certificateError": "No se pudo generar el certificado."
+    },
+    "aiGovernance": {
+      "title": "Gobernanza de IA (EU AI Act)",
+      "description": "Supervisión de modelos, categorización de riesgos y transparencia según la normativa europea.",
+      "registryTitle": "Registro de Modelos",
+      "registryDesc": "Listado de LLMs y servicios de embeddings autorizados.",
+      "riskTitle": "Categorización de Riesgo",
+      "riskDesc": "Nivel de criticidad de las implementaciones de IA.",
+      "auditTitle": "Métricas de Transparencia",
+      "auditDesc": "Evidencia de calidad y fidelidad de las respuestas.",
+      "model": "Modelo",
+      "provider": "Proveedor",
+      "status": "Estado de Auditoría",
+      "lastUpdate": "Última Validación",
+      "riskLevels": {
+        "unacceptable": "Inaceptable",
+        "high": "Alto",
+        "limited": "Limitado",
+        "minimal": "Mínimo"
+      }
     }
   },
   "jobs": {
@@ -1351,13 +1450,42 @@
       "status": {
         "active": "ACTIVO",
         "past_due": "VENCIDO",
-        "blocked": "BLOQUEADO"
+        "blocked": "BLOQUEADO",
+        "trial": "PRUEBA"
       },
       "actions": {
         "edit": "Editar Contrato",
         "invoices": "Ver Facturas",
         "upcoming_title": "Próxima Funcionalidad",
         "upcoming_desc": "Esta funcionalidad estará disponible pronto."
+      },
+      "edit": {
+        "title": "Editar Configuración de Contrato",
+        "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
+        "plan_label": "Plan de Suscripción",
+        "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+        "plans": {
+          "basic": "Básico Business",
+          "free": "Prueba Gratuita",
+          "enterprise": "Corporativo",
+          "pro": "Profesional"
+        },
+        "tokens_desc": "0 para usar el valor por defecto del plan.",
+        "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+        "warning_title": "Cambio Crítico de Cuotas",
+        "overrides_title": "Límites Personalizados (Overrides)",
+        "tokens_label": "Límite de Tokens (Mes)",
+        "storage_label": "Límite de Almacenamiento (Bytes)",
+        "success_desc": "Se ha guardado la configuración para {name}",
+        "success": "Contrato Actualizado",
+        "cancel": "Cancelar",
+        "save": "Guardar Cambios",
+        "error_updating": "Error al actualizar el contrato",
+        "spaces_tenant_label": "Límite Espacios (Tenant)",
+        "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
+        "spaces_user_label": "Límite Espacios (Usuario)",
+        "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)"
       }
     },
     "fields": {
@@ -1438,6 +1566,12 @@
         "sso": "SSO & Audit Logs",
         "on_premise": "Opción On-premise"
       }
+    },
+    "page": {
+      "title": "Facturación & Consumo",
+      "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
+      "metadata_title": "Facturación y Consumo | ABD RAG Platform",
+      "metadata_desc": "Gestión de recursos y facturación SaaS."
     }
   },
   "billing_hub": {

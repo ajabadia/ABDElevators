@@ -1,9 +1,0 @@
-{
-  "pii_label": "Data De-identification (PII)",
-  "pii_desc": "Protect sensitive data by removing it before processing.",
-  "pii_warning_title": "WARNING: Sensitive Data",
-  "pii_warning_desc": "You are about to upload a document without data protection. This will save emails, phones, and other sensitive data in the database. How do you want to proceed?",
-  "pii_opt_continue": "Continue without protection",
-  "pii_opt_cancel": "Cancel",
-  "pii_opt_enable": "Enable and continue"
-}

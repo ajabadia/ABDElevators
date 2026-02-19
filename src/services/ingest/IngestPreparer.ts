@@ -19,7 +19,7 @@ export class IngestPreparer {
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
         const scope = metadata.scope || 'TENANT';
-        const industry = metadata.industry || 'ELEVATORS';
+        const industry = metadata.industry || 'GENERIC';
         const spaceId = metadata.spaceId; // 🌌 Phase 125.2
 
         // 0. Strict Chunking Level Validation (Phase 165.3)

@@ -27,5 +27,18 @@
     "query": "Query",
     "metrics": "Metrics (F|R|P)",
     "feedback": "Judge Feedback"
+  },
+  "playground": {
+    "parameters": "Experiment Parameters",
+    "model": "Generative Model",
+    "temperature": "Creativity (Temp)",
+    "chunk_settings": "Retrieval Settings",
+    "chunk_size": "Chunk Size",
+    "top_k": "Top-K (Ranking)",
+    "run_btn": "Run Simulation",
+    "no_results": "Enter a query and press run to see AI reasoning.",
+    "faithfulness": "Faithfulness",
+    "relevance": "Relevance",
+    "precision": "Precision"
   }
 }

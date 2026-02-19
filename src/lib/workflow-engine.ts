@@ -12,6 +12,10 @@ export interface TransitionRequest {
     correlationId: string;
     comment?: string;
     signature?: string;
+
+    // Suite Features (Dynamic Domain)
+    collectionName?: string; // e.g. 'cases', 'equipment', 'incidents'
+    entityLinkTemplate?: string; // e.g. '/admin/cases/${id}'
 }
 
 /**
@@ -22,7 +26,7 @@ export class CaseWorkflowEngine {
     /**
      * Gets the active workflow definition for a tenant and entity type.
      */
-    static async getDefinition(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY') {
+    static async getDefinition(tenantId: string, entityType: string = 'ENTITY') {
         const collection = await getTenantCollection('workflow_definitions');
         return await collection.findOne({
             tenantId,
@@ -35,29 +39,38 @@ export class CaseWorkflowEngine {
      * Executes a state transition validating conditions and triggering actions.
      */
     static async executeTransition(request: TransitionRequest) {
-        const { caseId, toState, role, correlationId, comment, signature } = request;
+        const {
+            caseId,
+            toState,
+            role,
+            correlationId,
+            comment,
+            signature,
+            collectionName = 'cases',
+            entityLinkTemplate = '/admin/cases/${id}'
+        } = request;
 
-        const casesCollection = await getTenantCollection('cases');
-        const tenantId = casesCollection.tenantId;
+        const entityCollection = await getTenantCollection(collectionName as any);
+        const tenantId = entityCollection.tenantId;
         const definition = await this.getDefinition(tenantId);
 
         if (!definition) {
             throw new AppError('NOT_FOUND', 404, `No se encontró definición de workflow activa para el tenant ${tenantId}`);
         }
 
-        const caso = await casesCollection.findOne({
+        const entity = await entityCollection.findOne({
             _id: new ObjectId(caseId)
         }) as any;
 
-        if (!caso) {
-            throw new NotFoundError('Caso/Entity no encontrado');
+        if (!entity) {
+            throw new NotFoundError('Entidad no encontrada');
         }
 
         // 1. Identificar la transición válida
-        const transition = definition.transitions.find(t => t.from === caso.status && t.to === toState);
+        const transition = definition.transitions.find(t => t.from === entity.status && t.to === toState);
 
         if (!transition) {
-            throw new ValidationError(`Transición de '${caso.status}' a '${toState}' no está permitida en este workflow.`);
+            throw new ValidationError(`Transición de '${entity.status}' a '${toState}' no está permitida en este workflow.`);
         }
 
         // 2. Verificar permisos por rol (Transición)
@@ -75,11 +88,11 @@ export class CaseWorkflowEngine {
         if (transition.conditions) {
             const { checklist_complete, min_documents, require_comment, require_signature } = transition.conditions;
 
-            if (checklist_complete && caso.metadata?.checklist_status !== 'COMPLETED') {
+            if (checklist_complete && entity.metadata?.checklist_status !== 'COMPLETED') {
                 throw new ValidationError('No se puede avanzar: el checklist debe estar completado.');
             }
 
-            if (min_documents && (caso.documentos?.length || 0) < min_documents) {
+            if (min_documents && (entity.documentos?.length || 0) < min_documents) {
                 throw new ValidationError(`Se requieren al menos ${min_documents} documentos adjuntos.`);
             }
 
@@ -99,7 +112,7 @@ export class CaseWorkflowEngine {
         };
 
         const logEntry = {
-            from: caso.status,
+            from: entity.status,
             to: toState,
             role,
             comment,
@@ -109,7 +122,7 @@ export class CaseWorkflowEngine {
         };
 
         // Mantener historial de transiciones
-        await casesCollection.updateOne(
+        await entityCollection.updateOne(
             { _id: new ObjectId(caseId) },
             {
                 $set: updateData,
@@ -122,7 +135,7 @@ export class CaseWorkflowEngine {
             const tasksCollection = await getTenantCollection('workflow_tasks');
             await tasksCollection.insertOne({
                 tenantId,
-                caseId: String(caso._id),
+                caseId: String(entity._id),
                 type: 'DOCUMENT_REVIEW',
                 title: `Revisión requerida para estado: ${nextState.label}`,
                 description: `El caso ha avanzado a ${nextState.label} y requiere validación formal.`,
@@ -145,7 +158,7 @@ export class CaseWorkflowEngine {
 
         // 7. Disparar Acciones Automáticas (Secondary Actions)
         if (transition.actions && transition.actions.length > 0) {
-            await this.handleActions(transition.actions, caso, correlationId);
+            await this.handleActions(transition.actions, entity, correlationId, entityLinkTemplate);
         }
 
         await logEvento({
@@ -154,7 +167,7 @@ export class CaseWorkflowEngine {
             action: 'STATE_TRANSITION',
             message: `Entity ${caseId} moved to ${toState} by ${role}`,
             correlationId,
-            details: { caseId, from: caso.status, to: toState, role }
+            details: { caseId, from: entity.status, to: toState, role }
         });
 
         return { success: true, to: toState };
@@ -163,40 +176,41 @@ export class CaseWorkflowEngine {
     /**
      * Orquestador de acciones secundarias (Visión 2.0 - Fase 7.2)
      */
-    private static async handleActions(actions: string[], caso: any, correlationId: string) {
+    private static async handleActions(actions: string[], entity: any, correlationId: string, linkTemplate: string) {
         for (const action of actions) {
+            const dynamicLink = linkTemplate.replace('${id}', entity._id.toString());
             await logEvento({
                 level: 'DEBUG',
                 source: 'WORKFLOW_ENGINE',
                 action: 'TRIGGER_ACTION',
                 message: `Triggering automatic action: ${action}`,
                 correlationId,
-                details: { caseId: caso._id, action }
+                details: { caseId: entity._id, action }
             });
 
             try {
                 if (action === 'notify_admin') {
                     await NotificationService.notify({
-                        tenantId: caso.tenantId,
+                        tenantId: entity.tenantId,
                         type: 'SYSTEM',
                         level: 'INFO',
                         title: 'Entity Update',
-                        message: `The entity ${caso.identifier || caso._id} has changed state to: ${caso.status}`,
-                        link: `/entities/${caso._id}`,
-                        metadata: { caseId: caso._id, status: caso.status }
+                        message: `The entity ${entity.identifier || entity._id} has changed state to: ${entity.status}`,
+                        link: dynamicLink,
+                        metadata: { caseId: entity._id, status: entity.status }
                     });
                 }
 
-                if (action === 'notify_user' && caso.userId) {
+                if (action === 'notify_user' && entity.userId) {
                     await NotificationService.notify({
-                        tenantId: caso.tenantId,
-                        userId: caso.userId,
+                        tenantId: entity.tenantId,
+                        userId: entity.userId,
                         type: 'SYSTEM',
                         level: 'SUCCESS',
                         title: 'Your entity has advanced',
-                        message: `Your entity ${caso.identifier || caso._id} is now in: ${caso.status}`,
-                        link: `/entities/${caso._id}`,
-                        metadata: { caseId: caso._id, status: caso.status }
+                        message: `Your entity ${entity.identifier || entity._id} is now in: ${entity.status}`,
+                        link: dynamicLink,
+                        metadata: { caseId: entity._id, status: entity.status }
                     });
                 }
 
@@ -211,5 +225,5 @@ export class CaseWorkflowEngine {
         }
     }
 }
-  
+
 export const LegacyCaseWorkflowEngine = CaseWorkflowEngine; 

@@ -81,7 +81,7 @@ export const AgentState = Annotation.Root({
      */
     industry: Annotation<string>({
         reducer: (x, y) => y ?? x,
-        default: () => 'ELEVATORS',
+        default: () => 'GENERIC',
     }),
     environment: Annotation<string>({
         reducer: (x, y) => y ?? x,
@@ -296,7 +296,7 @@ async function causalAnalysisNode(state: AgentStateType) {
             {
                 scenario,
                 context,
-                industry: 'ELEVATORS'
+                industry: state.industry || 'GENERIC'
             },
             tenantId!
         );

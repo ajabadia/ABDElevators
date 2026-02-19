@@ -21,7 +21,7 @@ import {
 import { useWorkflow } from './WorkflowContext';
 
 export function WorkflowToolbar() {
-    const t = useTranslations('workflows.canvas');
+    const t = useTranslations('admin.workflows.canvas');
     const {
         workflowName,
         currentVersion,

@@ -7,7 +7,7 @@ export function mapEntityToCase(entity: any, tenantId: string): GenericCase {
     return {
         _id: entity._id?.toString() || '',
         tenantId,
-        industry: 'ELEVATORS' as IndustryType,
+        industry: (entity.industry as IndustryType) || 'GENERIC',
         type: 'General',
         priority: 'MEDIUM', // Default for legacy
         status: entity.status === 'analyzed' ? 'COMPLETED' : 'IN_PROGRESS',

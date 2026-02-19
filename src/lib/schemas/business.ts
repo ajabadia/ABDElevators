@@ -53,7 +53,7 @@ export const EntitySchema = z.object({
     receivedAt: z.date().optional(),
     errorMessage: z.string().nullable().optional(),
     tenantId: z.string().optional(), // Inyectado por el middleware/helper
-    industry: IndustryTypeSchema.default('ELEVATORS'), // Añadido para multi-vertical (Phase 101.1)
+    industry: IndustryTypeSchema.default('GENERIC'), // Añadido para multi-vertical (Phase 101.1)
     metadata: z.object({
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
         modelos: z.array(z.any()).optional(),

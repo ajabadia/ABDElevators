@@ -64,61 +64,9 @@
     "timeline": {
       "actor": "Actor"
     },
-    "workflows": {
+    "workflows_dashboard": {
       "title": "Workflow Designer",
-      "syncing": "Syncing Workflow Engine...",
-      "loadError": "Load Error",
-      "loadErrorDesc": "Could not retrieve workflow definition: {error}",
-      "backToHub": "Back to AI Hub",
-      "back": "Back",
-      "publish": "Publish Workflow",
-      "saveSuccess": "Configuration Saved",
-      "saveSuccessDesc": "The workflow has been successfully updated.",
-      "tabs": {
-        "states": "States",
-        "transitions": "Transitions",
-        "config": "Master Config"
-      },
-      "states": {
-        "title": "Process States",
-        "id": "State ID",
-        "label": "Label",
-        "color": "Color (Hex)",
-        "newState": "New State",
-        "iaLayer": "Intelligence Layer (LLM)",
-        "promptKey": "Prompt Key",
-        "schemaKey": "Output Schema"
-      },
-      "transitions": {
-        "title": "Transition Configuration",
-        "from": "From",
-        "to": "To",
-        "label": "Action / Label",
-        "strategy": "Decision Strategy",
-        "add": "Add Transition",
-        "strategies": {
-          "user": "👤 User (Manual)",
-          "llm_direct": "🤖 LLM Direct (Auto)",
-          "llm_suggest": "🧠 IA + HITL (Suggested)",
-          "human": "🛡️ Human Only"
-        },
-        "routing": {
-          "promptKey": "Routing Prompt Key",
-          "branches": "{count} Branches Configured"
-        }
-      },
-      "config": {
-        "global": "Global Strategy",
-        "identity": "Workflow Identity",
-        "name": "Internal Name",
-        "environment": "Environment",
-        "version": "Version",
-        "publication": "Publication Parameters",
-        "active": "Active Status",
-        "activeDesc": "Available for new cases",
-        "default": "Default Workflow",
-        "defaultDesc": "Automatically assigned"
-      }
+      "subtitle": "Management of industrial flows."
     },
     "caseWorkflow": {
       "currentStatus": "Current Status",
@@ -429,6 +377,59 @@
     }
   },
   "workflows": {
+    "syncing": "Syncing Workflow Engine...",
+    "loadError": "Load Error",
+    "loadErrorDesc": "Could not retrieve workflow definition: {error}",
+    "backToHub": "Back to AI Hub",
+    "back": "Back",
+    "publish": "Publish Workflow",
+    "saveSuccess": "Configuration Saved",
+    "saveSuccessDesc": "The workflow has been successfully updated.",
+    "tabs": {
+      "states": "States",
+      "transitions": "Transitions",
+      "config": "Master Config"
+    },
+    "states": {
+      "title": "Process States",
+      "id": "State ID",
+      "label": "Label",
+      "color": "Color (Hex)",
+      "newState": "New State",
+      "iaLayer": "Intelligence Layer (LLM)",
+      "promptKey": "Prompt Key",
+      "schemaKey": "Output Schema"
+    },
+    "transitions": {
+      "title": "Transition Configuration",
+      "from": "From",
+      "to": "To",
+      "label": "Action / Label",
+      "strategy": "Decision Strategy",
+      "add": "Add Transition",
+      "strategies": {
+        "user": "👤 User (Manual)",
+        "llm_direct": "🤖 LLM Direct (Auto)",
+        "llm_suggest": "🧠 IA + HITL (Suggested)",
+        "human": "🛡️ Human Only"
+      },
+      "routing": {
+        "promptKey": "Routing Prompt Key",
+        "branches": "{count} Branches Configured"
+      }
+    },
+    "config": {
+      "global": "Global Strategy",
+      "identity": "Workflow Identity",
+      "name": "Internal Name",
+      "environment": "Environment",
+      "version": "Version",
+      "publication": "Publication Parameters",
+      "active": "Active Status",
+      "activeDesc": "Available for new cases",
+      "default": "Default Workflow",
+      "defaultDesc": "Automatically assigned"
+    },
     "canvas": {
       "new_name": "New Automated Flow",
       "create_title": "New Workflow",
@@ -482,15 +483,14 @@
         "slack_alert": "Slack Alert",
         "custom_action": "Custom Action",
         "condition": "Condition",
-        "simple_if": "Simple IF",
-        "switch": "Switch / Case",
-        "multi_path": "Multi-Path Route",
-        "wait": "Wait / Delay",
-        "wait_5s": "Wait 5s",
         "loop": "Iterator Loop",
         "foreach": "ForEach Item",
-        "subflow": "Sub-workflow"
-      }
+        "subflow": "Sub-workflow",
+        "human_validation": "Human Validation (HITL)",
+        "rag_check": "RAG Verification",
+        "sovereign_tool": "Sovereign Tool"
+      },
+      "industrial": "Industrial Operations"
     },
     "properties": {
       "title": "Node Properties",
@@ -737,6 +737,24 @@
       "groups": "Groups & Hierarchy",
       "simulator": "Simulator",
       "audit": "Access Logs"
+    },
+    "cards": {
+      "matrix": {
+        "title": "Permission Matrix",
+        "description": "Manage ABAC policies and granular access rules."
+      },
+      "groups": {
+        "title": "Groups & Hierarchy",
+        "description": "Organize users and manage permission inheritance."
+      },
+      "simulator": {
+        "title": "Security Simulator",
+        "description": "Test and validate policies in real-time without risk."
+      },
+      "audit": {
+        "title": "Audit Trail",
+        "description": "Detailed logs of access and security changes."
+      }
     },
     "matrix": {
       "title": "Permission Matrix",
@@ -1088,6 +1106,26 @@
       "error": "Error",
       "backupError": "Could not generate backup.",
       "certificateError": "Could not generate certificate."
+    },
+    "aiGovernance": {
+      "title": "AI Governance (EU AI Act)",
+      "description": "Model oversight, risk categorization, and transparency according to European regulations.",
+      "registryTitle": "Model Registry",
+      "registryDesc": "List of authorized LLMs and embedding services.",
+      "riskTitle": "Risk Categorization",
+      "riskDesc": "Criticality level of AI implementations.",
+      "auditTitle": "Transparency Metrics",
+      "auditDesc": "Evidence of response quality and fidelity.",
+      "model": "Model",
+      "provider": "Provider",
+      "status": "Audit Status",
+      "lastUpdate": "Last Validation",
+      "riskLevels": {
+        "unacceptable": "Unacceptable",
+        "high": "High",
+        "limited": "Limited",
+        "minimal": "Minimal"
+      }
     }
   },
   "documentTypes": {

@@ -71,10 +71,10 @@ export class VerticalRegistryService {
 
     /**
      * Retrieves the configuration for a specific industry.
-     * Defaults to ELEVATORS if not found.
+     * Defaults to GENERIC if not found.
      */
     static getConfig(industry: IndustryType): VerticalConfig {
-        const config = this.configs[industry] || this.configs['ELEVATORS'];
+        const config = this.configs[industry] || this.configs['GENERIC'] || this.configs['ELEVATORS'];
         return VerticalConfigSchema.parse(config);
     }
 

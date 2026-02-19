@@ -27,5 +27,18 @@
     "query": "Consulta",
     "metrics": "Métricas (F|R|P)",
     "feedback": "Feedback Juez"
+  },
+  "playground": {
+    "parameters": "Parámetros del Experimento",
+    "model": "Modelo Generativo",
+    "temperature": "Creatividad (Temp)",
+    "chunk_settings": "Configuración de Recuperación",
+    "chunk_size": "Tamaño de Fragmento",
+    "top_k": "K-Vecinos (Rank)",
+    "run_btn": "Ejecutar Simulacro",
+    "no_results": "Introduce una consulta y pulsa ejecutar para ver el razonamiento de la IA.",
+    "faithfulness": "Fidelidad",
+    "relevance": "Relevancia",
+    "precision": "Precisión"
   }
 }

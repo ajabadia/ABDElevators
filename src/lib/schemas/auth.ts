@@ -11,7 +11,7 @@ export const UserInviteSchema = z.object({
     _id: z.any().optional(),
     email: z.string().email(),
     tenantId: z.string(),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
     role: z.nativeEnum(UserRole),
     token: z.string(),
     invitedBy: z.string(),
@@ -59,7 +59,7 @@ export const TenantAccessSchema = z.object({
     tenantId: z.string(),
     name: z.string(),
     role: z.nativeEnum(UserRole),
-    industry: IndustryTypeSchema.default('ELEVATORS'),
+    industry: IndustryTypeSchema.default('GENERIC'),
 });
 
 export const UserNotificationPreferenceSchema = z.object({
@@ -79,7 +79,7 @@ export const UserSchema = z.object({
     photoCloudinaryId: z.string().optional(),
     role: z.nativeEnum(UserRole), // Role principal/default
     tenantId: z.string(), // Tenant actual/default
-    industry: IndustryTypeSchema.default('ELEVATORS'), // Industria actual/default
+    industry: IndustryTypeSchema.default('GENERIC'), // Industria actual/default
     activeModules: z.array(z.string()).default(['TECHNICAL', 'RAG']),
 
     // Multi-tenancy (Fase 11)
