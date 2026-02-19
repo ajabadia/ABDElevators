@@ -1,178 +1,151 @@
+# 🗺️ Application Map & Architecture Registry
+**Last Audit:** 2026-02-19 (Phase 185)
+**Status:** Verified against source code.
+
+## 🧠 Site Structure (Mermaid)
+
+```mermaid
+graph TD
+    %% Entry Points
+    User((User)) --> Login["/login"]
+    User --> Admin["/admin (Dashboard)"]
+    User --> Technical["/entities (Technical Hub)"]
+
+    %% Admin Hubs
+    subgraph Admin_Panel [Admin Panel /admin]
+        direction TB
+        
+        %% Core Hubs
+        Admin --> UsersHub["/users (Users Hub)"]
+        Admin --> SecurityHub["/security (Security Hub)"]
+        Admin --> KnowledgeHub["/knowledge (Knowledge Hub)"]
+        Admin --> AIHub["/ai (AI & Workflows)"]
+        Admin --> OpsHub["/operations (Operations)"]
+        Admin --> SettingsHub["/settings (Settings)"]
+        Admin --> ReportsHub["/reports (Reports)"]
+        Admin --> BillingHub["/billing (Billing)"]
+        Admin --> OrgHub["/organizations (Organization)"]
+        
+        %% Security Details
+        SecurityHub --> SecAudit["/security/audit"]
+        SecurityHub --> SecSessions["/security/sessions"]
+        
+        %% Knowledge Details
+        KnowledgeHub --> KExplorer["/knowledge/explorer"]
+        KnowledgeHub --> KAssets["/knowledge/assets"]
+        KnowledgeHub --> KSpaces["/knowledge/spaces"]
+        KnowledgeHub --> KDocs["/knowledge/my-docs"]
+        
+        %% Users Details
+        UsersHub --> UActive["/users/active"]
+        UsersHub --> UPending["/users/pending"]
+        
+        %% AI Details
+        AIHub --> AIPlayground["/ai/playground"]
+        AIHub --> AIWorkflows["/ai/workflows"]
+        AIHub --> AIRagQuality["/ai/rag-quality"]
+        
+        %% Operations Details
+        OpsHub --> OpsStatus["/operations/status"]
+        OpsHub --> OpsMaintenance["/operations/maintenance"]
+        OpsHub --> OpsLogs["/operations/logs"]
+        
+        %% Vertical Modules
+        Admin --> Compliance["/compliance"]
+        Admin --> Workshop["/workshop/orders/new"]
+    end
+    
+    %% Technical Panel
+    subgraph Technical_Panel [Technical Mode]
+        Technical --> Entities["/entities"]
+        Technical --> Graphs["/graphs (Neo4j)"]
+        Entities --> Validate["/entities/[id]/validar"]
+    end
+```
+
+---
+
 ## 🛡️ Panel de Administración (Control Center)
 Ubicación base: `/admin` (Protegido por Guardian V2)
 
-### 🏠 Admin General (Unified Hubs - Phase 133)
-| Ruta | Funcionalidad | Última Revisión |
+### 🏠 Admin General (Unified Hubs)
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
 | `/admin` | Dashboard principal de administración. | 2026-02-16 |
-| `/admin/tasks` | **Tasks Hub**: Gestión de tareas, mi bandeja y asignaciones. | 2026-02-17 |
-| `/admin/security` | **Security Hub Dashboard**: Navegación centralizada a módulos de seguridad. | 2026-02-19 (Phase 183 Hardening) ✅ |
-| `/admin/security/audit` | **Audit Trail**: Registro inmutable de acciones del sistema. | 2026-02-19 |
-| `/admin/operations/maintenance` | Herramientas de mantenimiento y corrección de datos. | 2026-02-16 |
-| `/admin/operations/status` | Estado de servicios externos e infraestructura. | 2026-02-19 |
-| `/admin/settings` | **Settings Hub**: Configuración centralizada (Org, Users, Prompts, i18n). | 2026-02-19 |
-| `/admin/profile` | Perfil de usuario administrador. | 2026-02-16 |
-| `/admin/reports` | Report Hub: Dashboard de informes. | 2026-02-16 |
-| `/admin/reports/schedules` | Schedule Management: Gestión de programación de informes. | 2026-02-16 |
-| `/admin/superadmin` | **Global Platform Dashboard**: Observabilidad multi-tenant, salud del cluster y **Salud Financiera (Predictiva)** (SUPER_ADMIN). | 2026-02-18 (Stabilized) ✅ |
+| `/admin/tasks` | **Tasks Hub**: Gestión de tareas. | 2026-02-19 (Verified) |
+| `/admin/security` | **Security Hub**: Dashboard de seguridad. | 2026-02-19 (Verified) |
+| `/admin/security/audit` | **Audit Trail**: Registro inmutable. | 2026-02-19 (Verified) |
+| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones de usuario. | 2026-02-19 (New) |
+| `/admin/operations/maintenance` | Mantenimiento y corrección de datos. | 2026-02-19 (Verified) |
+| `/admin/operations/status` | Estado de servicios e infraestructura. | 2026-02-19 (Verified) |
+| `/admin/settings` | **Settings Hub**: Configuración centralizada. | 2026-02-19 (Verified) |
+| `/admin/profile` | Perfil de usuario. | 2026-02-16 |
+| `/admin/reports` | **Report Hub**: Dashboard de informes. | 2026-02-19 (Verified) |
+| `/admin/reports/schedules` | Gestión de programación de informes. | 2026-02-19 (Verified) |
+| `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin). | 2026-02-19 (Verified) |
 
 ### 🧠 Knowledge & RAG
-| Ruta | Funcionalidad | Última Revisión |
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/knowledge` | **Knowledge Hub Dashboard**: Navegación centralizada a módulos de conocimiento. | 2026-02-17 |
-| `/admin/knowledge/explorer` | **Neural Explorer**: Exploración de chunks vectorizados y simulación RAG. | 2026-02-17 |
-| `/admin/knowledge/assets` | **Asset Management**: Gestión unificada de activos de conocimiento. | 2026-02-17 |
-| `/admin/knowledge/my-docs` | **My Documents**: Gestión personal de documentos del usuario. | 2026-02-17 |
-| `/admin/knowledge/spaces` | **Knowledge Spaces**: Configuración de espacios y permisos. | 2026-02-17 |
-| `/admin/knowledge-base` | *Redirect to /admin/knowledge* | 2026-02-17 |
-| `/admin/knowledge-assets` | *Redirect to /admin/knowledge/assets* | 2026-02-17 |
-| `/admin/spaces` | *Redirect to /admin/knowledge/spaces* | 2026-02-17 |
-| `/admin/knowledge-base/graph` | **Graph Explorer**: Visualizador de grafos y relaciones (Neo4j) con edición directa. | 2026-02-16 |
-| `/admin/rag-quality` | *Redirects to /admin/ai?tab=rag-quality* | 2026-02-13 |
+| `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento. | 2026-02-19 (Verified) |
+| `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG y búsqueda. | 2026-02-19 (Verified) |
+| `/admin/knowledge/assets` | **Asset Management**: Gestión de activos. | 2026-02-19 (Verified) |
+| `/admin/knowledge/my-docs` | **My Documents**: Gestión personal. | 2026-02-19 (Verified) |
+| `/admin/knowledge/spaces` | **Spaces**: Configuración de espacios. | 2026-02-19 (Verified) |
+| `/admin/knowledge-assets` | *Legacy Redirect (Active Route)* | 2026-02-19 (Verified) |
 
-### 👮 Guardian & Governance (Gobierno & Permisos)
-| Ruta | Funcionalidad | Última Revisión |
+### 👮 Guardian & Users
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/permissions` | Matriz de permisos (Roles/Políticas) y overrides de usuario. | 2026-02-17 (Reviewed Audit 2307) ✅ |
-| `/admin/permissions/groups` | Jerarquía organizacional de grupos y departamentos. | 2026-02-17 |
-| `/admin/permissions/simulator` | Sandbox para probar permisos sin afectar producción. | 2026-02-17 |
-| `/admin/permissions/audit` | Registro histórico de decisiones de Guardian. | 2026-02-17 |
-| `/admin/users` | **Users Hub Dashboard**: Navegación centralizada a gestión de usuarios. | 2026-02-17 |
-| `/admin/users/active` | **Active Users**: Gestión de usuarios registrados. | 2026-02-17 |
-| `/admin/users/pending` | **Pending Invitations**: Gestión de invitaciones pendientes. | 2026-02-17 |
-| `/admin/settings/i18n` | Gobernanza i18n: Editor de traducciones con asistencia de IA. | 2026-02-14 |
-| `/admin/document-types` | Gestión de tipos de documento personalizados. | 2026-02-17 ✅ |
+| `/admin/users` | **Users Hub**: Gestión de usuarios. | 2026-02-19 (Verified) |
+| `/admin/users/active` | Usuarios activos. | 2026-02-19 (Verified) |
+| `/admin/users/pending` | Invitaciones pendientes. | 2026-02-19 (Verified) |
+| `/admin/permissions` | Matriz de permisos (Guardian). | 2026-02-17 |
+| `/admin/permissions/groups` | Jerarquía de grupos. | 2026-02-17 |
+| `/admin/permissions/simulator` | Sandbox de permisos. | 2026-02-17 |
+| `/admin/document-types` | Tipos de documento. | 2026-02-19 (Verified) |
 
-### ⚡ Automation Studio (Workflows)
-| Ruta | Funcionalidad | Última Revisión |
+### ⚡ Automation Studio (AI)
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/ai` | **AI Hub Dashboard**: Navegación centralizada a módulos de IA. | 2026-02-17 |
-| `/admin/ai/rag-quality` | **RAG Quality**: Evaluación de calidad y precisión de respuestas. | 2026-02-17 |
-| `/admin/ai/workflows` | **Workflows**: Editor de flujos de trabajo y orquestación. | 2026-02-17 |
-| `/admin/ai/predictive` | **Predictive Maintenance**: Análisis de patrones (Próximamente). | 2026-02-17 |
-| `/admin/ai/playground` | **AI Playground**: Entorno de experimentación RAG con multi-modelo y ajuste de parámetros dinámicos. | 2026-02-17 ✅ |
-| `/admin/workflows` | *Redirect to /admin/ai/workflows* | 2026-02-17 |
-| `/admin/workflows/[id]` | Editor y detalle de workflow específico. | - |
-| `/admin/workflow-tasks` | Centro de Colaboración de Tareas (Task Hub). | 2026-02-17 |
-
-### 📊 Intelligence & Audit
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/intelligence/trends` | Detección de patrones y anomalías en el uso de la IA. | 2026-02-14 |
-| `/admin/audit` | Registro inmutable de acciones críticas (Governance). | 2026-02-06 10:15 |
-| `/admin/audit/config-changes` | **Config Audit**: Historial de cambios en configuración (Prompts, Feature Flags). | 2026-02-16 |
-| `/admin/logs` | *Redirects to /admin/operations/logs* | 2026-02-16 |
-| `/admin/analytics` | Métricas globales, KPIs y analytics de plataforma (SUPER_ADMIN). | 2026-02-13 12:15 |
-| `/admin/rag-eval` | Evaluación y testing de calidad RAG. | - |
-| `/api/intelligence/causal-analysis` | **Causal Analysis API**: Motor de simulación de impacto 'What-If'. | 2026-02-17 ✅ |
-| `/admin/reports` | **Report Hub**: Generación y gestión de informes industriales PDF. | 2026-02-16 |
+| `/admin/ai` | **AI Hub**: Dashboard de Inteligencia. | 2026-02-19 (Verified) |
+| `/admin/ai/playground` | **Playground**: Experimentación RAG. | 2026-02-19 (Verified) |
+| `/admin/ai/workflows` | **Workflows**: Editor de flujos. | 2026-02-19 (Verified) |
+| `/admin/ai/rag-quality` | Calidad RAG. | 2026-02-19 (Verified) |
+| `/admin/ai/predictive` | Mantenimiento Predictivo. | 2026-02-19 (Verified) |
+| `/admin/checklist-configs` | Configuración de Checklists. | 2026-02-19 (Verified) |
+| `/admin/checklist-configs/[id]` | Edición de Checklist. | 2026-02-19 (Verified) |
 
 ### 💰 Billing & Organizations
-| Ruta | Funcionalidad | Última Revisión |
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/billing` | Facturación, consumo de recursos y gestión de planes. | 2026-02-13 11:30 |
-| `/admin/billing/contracts` | Gestión de contratos, límites y planes por tenant. | 2026-02-17 |
-| `/admin/billing/invoices` | Gestión y visualización de facturas. | 2026-02-17 |
-| `/admin/billing/plan` | Detalle y gestión del plan actual. | 2026-02-17 |
-| `/admin/billing/usage` | Métricas de uso y consumo de recursos. | 2026-02-17 |
-| `/admin/organizations` | **Organizations Hub Dashboard**: Navegación centralizada a configuración del tenant. | 2026-02-17 |
-| `/admin/organizations/general` | **General Settings**: Configuración básica del tenant. | 2026-02-17 |
-| `/admin/organizations/branding` | **Branding**: Personalización de marca y colores. | 2026-02-17 |
-| `/admin/organizations/storage` | **Storage**: Configuración de almacenamiento y cuotas. | 2026-02-17 |
-| `/admin/organizations/features` | **Features**: Gestión de módulos y características. | 2026-02-17 |
-| `/admin/organizations/billing` | **Billing**: Facturación y datos fiscales. | 2026-02-17 |
+| `/admin/billing` | **Billing Hub**. | 2026-02-19 (Verified) |
+| `/admin/organizations` | **Organization Hub**. | 2026-02-19 (Verified) |
+| `/admin/compliance` | Centro de Cumplimiento GDPR. | 2026-02-19 (Verified) |
 
-### 📋 Checklist & Compliance
-| Ruta | Funcionalidad | Última Revisión |
+### 🏭 Verticales & Taller
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/checklist-configs` | Configuración de reglas de negocio para checklists IA. | 2026-02-14 |
-| `/admin/checklist-configs/new` | Creación de nueva configuración de checklist. | - |
-| `/admin/checklist-configs/[id]` | Edición de configuración específica. | - |
-| `/admin/compliance` | Centro de Cumplimiento GDPR: Portabilidad de datos y Certificados de destrucción. | 2026-02-14 |
+| `/admin/workshop/orders/new` | Registro de pedidos de taller. | 2026-02-14 |
+| `/admin/cases/[id]` | Detalle de Caso (Case Hero). | 2026-02-13 |
 
-### 🔧 Configuración Avanzada
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/prompts` | Gestión de directivas de IA e i18n avanzada (Integrado en AI Hub). | 2026-02-17 ✅ |
-| `/admin/api-keys` | Gestión de claves API industriales con restricción de Espacios. | 2026-02-12 |
-| `/admin/ingest/jobs` | *Redirects to /admin/operations/ingest* | 2026-02-16 |
-| `/admin/api-docs` | Portal Interactivo Swagger (OAS 3.0). | 2026-02-08 |
-
-### 🔔 Notificaciones
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/notifications` | Centro de notificaciones y alertas del sistema. | - |
-| `/admin/notifications/settings` | Configuración de preferencias de notificación. | - |
-| `/admin/notifications/templates` | Gestión de plantillas de notificación. | - |
-| `/admin/notifications/templates/[type]` | Edición de plantilla específica. | - |
-
-### 👤 My Documents (Admin)
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/my-documents` | *Redirect a /my-documents* | 2026-02-14 |
-
-### 📁 Cases (Gestión de Casos)
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/cases/[id]` | **Case Hero Layout**: Detalle de caso, timeline y chat. | 2026-02-13 |
-
-## 🏭 Verticales Industriales (Workshop & Taller)
-| Ruta | Funcionalidad | Última Revisión |
-|------|---------------|-----------------|
-| `/admin/workshop/orders/new` | Registro de pedidos de taller con extracción de manuales (Phase 128). | 2026-02-14 |
+---
 
 ## 🛠️ Herramientas Técnicas (Expert Mode)
-| Ruta | Funcionalidad | Última Revisión |
+| Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/technical/entities` | Dashboard técnico de análisis de entidades (pedidos) con IA. | 2026-02-14 |
-| `/technical/graphs` | Visualizador de Grafo de Conocimiento (Neo4j) con soporte de mutación masiva. | 2026-02-16 |
-| `/entities/[id]/validar` | Validación técnica de entidad específica con workflow. | 2026-02-14 |
-| `/architecture` | Diagramas de sistema y documentación viva. | 2026-02-14 |
-
-## 🔌 Infraestructura (API Endpoints Clave)
-| Base Path | Propósito | Última Revisión |
-|-----------|-----------|-----------------|
-| `/api/admin/cases/[id]` | Recuperación segura de detalles de casos (Entity Detail). | 2026-02-13 |
-| `/api/admin/ingest` | Pipeline Hexagonal (PrepareIngestionUseCase) + Multi-level Chunking. | 2026-02-16 |
-| `/api/admin/ingest/status/[docId]` | Seguimiento de progreso y reintentos (ExecuteIngestionAnalysis). | 2026-02-08 02:00 |
-| `/api/admin/knowledge-assets` | Gestión de Assets (ListKnowledgeAssetsUseCase). | 2026-02-10 10:00 |
-| `/api/admin/workflows/analytics/[id]` | Analíticas de performance por nodo de workflow. | 2026-02-03 11:25 |
-| `/api/admin/workflows/analytics/[id]/report` | Generación de informes industriales en PDF. | 2026-02-06 |
-| `/api/admin/workflows/analytics/[id]/logs` | Dashboard de registros de ejecución en tiempo real. | 2026-02-03 11:25 |
-| `/api/admin/rag/*` | Búsqueda Híbrida, Re-ranking y expansión de queries. | 2026-02-06 00:30 |
-| `/api/admin/permissions`| Evaluación en tiempo real (Guardian Engine). | 2026-02-06 10:15 |
-| `/api/admin/environments`| Lógica de aislamiento y promoción (Staging/Prod). | 2026-02-06 00:30 |
-| `/api/admin/users/invite/bulk` | Ingesta masiva de invitaciones (Batch Processing). | 2026-02-06 07:45 |
-| `/api/core/quick-qa` | Endpoint efímero para preguntas rápidas sobre texto pegado. | 2026-02-11 |
-| `/api/collections` | Gestión de colecciones personales (Notebooks). | 2026-02-11 |
-| `/api/billing/simulate-change` | Simulación de prorrateo para cambios de plan (Stripe Integration). | 2026-02-14 |
-| `/api/admin/billing/prediction` | Proyección de costes y burn rate por tenant (Phase 110). | 2026-02-18 ✅ |
-| `/api/admin/prompts/dry-run` | Ejecución de prueba de prompts con Gemini Flash (Sandbox). | 2026-02-15 |
-| `/api/admin/prompts/test-ab` | Comparativa A/B de prompts en tiempo real (Performance). | 2026-02-15 |
-| `/api/admin/superadmin/metrics` | Agregación global de métricas multi-tenant para el Dashboard. | 2026-02-17 ✅ |
-| `/api/admin/superadmin/anomalies` | Detección estadística de anomalías en latencia y errores. | 2026-02-17 ✅ |
-| `/api/admin/superadmin/ontology/evolution` | Review de la deriva de ontología y propuestas del Sovereign Engine. | 2026-02-17 ✅ |
-| `/api/cron/self-healing` | Trigger de auto-curación y auditoría de documentos (Secure Cron). | 2026-02-17 ✅ |
-| `/api/cron/status-check` | Auditoría predictiva y detección de anomalías programada. | 2026-02-17 ✅ |
+| `/entities` | Dashboard de Entidades (Technical). | 2026-02-19 (Verified) |
+| `/entities/[id]/validar` | Validación de Entidad. | 2026-02-19 (Verified) |
+| `/graphs` | Visualizador de Grafo (Neo4j). | 2026-02-19 (Verified) |
 
 ---
----
-### 🏛️ Estructura Futura (Suite Era - FASE 180+)
-*En curso de migración a Monorepo:*
 
-- `apps/rag-app`: Aplicación actual de análisis RAG.
-- `packages/platform-core`: Auth, DB, RBAC, Propmts, Logging.
-- `packages/ui-kit`: Layouts, Themes, Componentes compartidos.
-- `packages/workflow-engine`: Motor de estados agnóstico.
-- `packages/rag-engine`: Lógica específica de ingesta y retrieval.
+## 🗑️ DEPRECATED & ARCHIVED
+**Rutas eliminadas o renombradas (No existen en v5.0.0):**
 
----
-- [X] `src/lib/mfa-service.ts`: Gestión de MFA y códigos de recuperación. (Revisado: 18 Feb 2026)
-- [X] `src/lib/services/ai-model-manager.ts`: Gobernanza de IA y selección de modelos. (Revisado: 19 Feb 2026)
-- [X] `src/lib/services/notification-hub.ts`: Centro de despacho unificado (In-App/Email). (Revisado: 19 Feb 2026)
-- [X] `packages/platform-core/src/server/feature-flag-service.ts`: Flags persistentes multi-tenant. (Revisado: 19 Feb 2026)
-- [X] `packages/platform-core/src/server/job-scheduler-service.ts`: Cron-as-a-Service industrial. (Revisado: 19 Feb 2026)
-
----
-*Mapa actualizado por Antigravity v5.0.0 (Suite Edition) - Estructura real al: 2026-02-19*
-*Rutas sin fecha (-) están pendientes de auditoría*
+*   `/technical/entities` -> Movido a `/entities` (Root level authenticated).
+*   `/technical/graphs` -> Movido a `/graphs`.
+*   `/admin/knowledge-base` -> Reemplazado por `/admin/knowledge` (Hub).
+*   `/admin/security/logs` -> Movido a `/admin/operations/logs`.
+*   `/admin/ingest/jobs` -> Movido a `/admin/operations/ingest`.
+*   `/admin/spaces` -> Integrado en `/admin/knowledge/spaces`.
