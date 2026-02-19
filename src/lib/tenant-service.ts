@@ -1,5 +1,4 @@
-import { connectAuthDB } from "./db";
-import { ClientSession } from "mongodb";
+import { getTenantCollection } from "./db-tenant";
 import { TenantConfigSchema } from "./schemas";
 import { AppError, NotFoundError } from "./errors";
 import { logEvento } from "./logger";
@@ -27,8 +26,9 @@ export class TenantService {
         // }
 
         try {
-            const db = await connectAuthDB();
-            const config = await db.collection('tenants').findOne({ tenantId });
+            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+            const collection = await getTenantCollection('tenants', session);
+            const config = await collection.findOne({ tenantId });
 
             if (!config) {
                 throw new NotFoundError(`Tenant config not found for ID: ${tenantId}`);
@@ -81,13 +81,14 @@ export class TenantService {
      */
     static async hasStorageQuota(tenantId: string, bytesToUpload: number): Promise<boolean> {
         const config = await this.getConfig(tenantId);
-        const db = await connectAuthDB();
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('usage_logs', session);
 
         // Sumar todo el almacenamiento registrado en UsageLog
-        const usage = await db.collection('usage_logs').aggregate([
-            { $match: { tenantId, tipo: 'STORAGE_BYTES' } },
+        const usage = await collection.aggregate([
+            { $match: { tipo: 'STORAGE_BYTES' } },
             { $group: { _id: null, total: { $sum: '$valor' } } }
-        ]).toArray();
+        ]);
 
         const currentUsage = usage[0]?.total || 0;
         return (currentUsage + bytesToUpload) <= config.storage.quota_bytes;
@@ -97,8 +98,9 @@ export class TenantService {
      * Obtiene todos los tenants (solo para super-admin)
      */
     static async getAllTenants() {
-        const db = await connectAuthDB();
-        return await db.collection('tenants').find({}).toArray();
+        const session = { user: { role: 'SUPER_ADMIN' } } as any; // Super Admin access
+        const collection = await getTenantCollection('tenants', session);
+        return await collection.find({});
     }
 
     /**
@@ -108,7 +110,7 @@ export class TenantService {
     static async updateConfig(
         tenantId: string,
         data: any,
-        metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
+        metadata?: { performedBy: string, correlationId?: string }
     ): Promise<any> {
         const correlationId = metadata?.correlationId || crypto.randomUUID();
 
@@ -126,15 +128,16 @@ export class TenantService {
             // 1. Validar actualización parcial
             const validated = TenantConfigSchema.partial().parse(data);
 
-            const db = await connectAuthDB();
+            const session = { user: { id: metadata?.performedBy || 'SYSTEM', tenantId, role: 'USER' } } as any;
+            const collection = await getTenantCollection('tenants', session);
 
             // 2. Audit Snapshot Previous
-            const previousState = await db.collection('tenants').findOne({ tenantId });
+            const previousState = await collection.findOne({ tenantId });
 
             // 3. Persistir
             const { _id, tenantId: _ign, ...updateData } = validated as any;
 
-            await db.collection('tenants').updateOne(
+            await collection.updateOne(
                 { tenantId },
                 {
                     $set: {
@@ -142,7 +145,7 @@ export class TenantService {
                         updatedAt: new Date()
                     }
                 },
-                { upsert: true, session: metadata?.session }
+                { upsert: true }
             );
 
             // 4. Invalidate Cache

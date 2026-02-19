@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { RagEvaluationService } from './rag-evaluation-service';
 import crypto from 'crypto';
@@ -65,8 +65,9 @@ export class RagExperimentService {
                 timestamp: new Date()
             };
 
-            const db = await connectDB();
-            await db.collection('rag_experiments').insertOne(experiment);
+            const session = { user: { id: userId, tenantId, role: 'USER' } } as any;
+            const collection = await getTenantCollection('rag_experiments', session);
+            await collection.insertOne(experiment);
 
             return experiment;
 
@@ -87,11 +88,8 @@ export class RagExperimentService {
      * Lists recent experiments
      */
     static async listExperiments(tenantId: string, limit = 10): Promise<any[]> {
-        const db = await connectDB();
-        return await db.collection('rag_experiments')
-            .find({ tenantId })
-            .sort({ timestamp: -1 })
-            .limit(limit)
-            .toArray();
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('rag_experiments', session);
+        return await collection.find({}, { sort: { timestamp: -1 }, limit } as any);
     }
 }

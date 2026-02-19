@@ -1,4 +1,4 @@
-import { connectDB, connectLogsDB, connectAuthDB } from "@/lib/db";
+import { getTenantCollection } from "@/lib/db-tenant";
 import {
     Notification,
     NotificationTenantConfigSchema,
@@ -58,7 +58,7 @@ export class NotificationService {
 
             // 2. Determinar destinatarios y validar preferencias del usuario principal
             let recipients: Set<string> = new Set();
-            let userPrefs = userId ? await this.getUserPreferences(userId, type) : { email: true, inApp: true };
+            let userPrefs = userId ? await this.getUserPreferences(userId, tenantId, type) : { email: true, inApp: true };
 
             // A. Destinatarios de configuración de Tenant (Globales - Siempre reciben si están en la lista)
             if (eventConfig.recipients && eventConfig.recipients.length > 0) {
@@ -67,7 +67,7 @@ export class NotificationService {
 
             // B. Usuario específico (si aplica y si no ha hecho opt-out de EMAIL)
             if (userId && userPrefs.email) {
-                const userEmail = await this.getUserEmail(userId);
+                const userEmail = await this.getUserEmail(userId, tenantId);
                 if (userEmail) recipients.add(userEmail);
             }
 
@@ -95,7 +95,7 @@ export class NotificationService {
 
                 // Actualizar estado de envío (si persistimos)
                 if (notifId) {
-                    await this.markAsSent(notifId, finalRecipients[0]);
+                    await this.markAsSent(notifId, tenantId, finalRecipients[0]);
                 }
             }
 
@@ -119,24 +119,22 @@ export class NotificationService {
 
     // --- Public Queries ---
 
-    static async listUnread(userId: string, limit = 20): Promise<any[]> {
-        const db = await connectLogsDB();
-        return await db.collection('notifications')
-            .find({
-                userId,
-                read: false,
-                archived: false
-            })
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .toArray();
+    static async listUnread(userId: string, tenantId: string, limit = 20): Promise<any[]> {
+        const session = { user: { id: userId, tenantId, role: 'USER' } } as any;
+        const collection = await getTenantCollection('notifications', session);
+        return await collection.find({
+            userId,
+            read: false,
+            archived: false
+        }, { sort: { createdAt: -1 }, limit } as any);
     }
 
-    static async markAsRead(notificationIds: string[]): Promise<void> {
+    static async markAsRead(notificationIds: string[], tenantId: string): Promise<void> {
         if (!notificationIds.length) return;
 
-        const db = await connectLogsDB();
-        await db.collection('notifications').updateMany(
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('notifications', session);
+        await collection.updateMany(
             { _id: { $in: notificationIds.map(id => new ObjectId(id)) } },
             { $set: { read: true, readAt: new Date() } }
         );
@@ -151,8 +149,9 @@ export class NotificationService {
             return cached.config;
         }
 
-        const db = await connectDB();
-        const config = await db.collection('notification_configs').findOne({ tenantId });
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('notification_configs', session);
+        const config = await collection.findOne({ tenantId });
 
         if (!config) {
             // Retornar configuración default si no existe
@@ -168,9 +167,10 @@ export class NotificationService {
         return config;
     }
 
-    private static async getUserPreferences(userId: string, type: string): Promise<{ email: boolean, inApp: boolean }> {
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+    private static async getUserPreferences(userId: string, tenantId: string, type: string): Promise<{ email: boolean, inApp: boolean }> {
+        const session = { user: { id: userId, tenantId, role: 'USER' } } as any;
+        const collection = await getTenantCollection('users', session);
+        const user = await collection.findOne({ _id: new ObjectId(userId) });
 
         if (!user || !user.notificationPreferences) {
             return { email: true, inApp: true }; // Default: Optado por defecto
@@ -183,14 +183,16 @@ export class NotificationService {
         };
     }
 
-    private static async getUserEmail(userId: string): Promise<string | null> {
-        const db = await connectAuthDB();
-        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+    private static async getUserEmail(userId: string, tenantId: string): Promise<string | null> {
+        const session = { user: { id: userId, tenantId, role: 'USER' } } as any;
+        const collection = await getTenantCollection('users', session);
+        const user = await collection.findOne({ _id: new ObjectId(userId) });
         return user?.email || null;
     }
 
     private static async persistNotification(payload: NotificationPayload, mainRecipient?: string): Promise<string> {
-        const db = await connectLogsDB();
+        const session = { user: { id: 'system', tenantId: payload.tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('notifications', session);
         const notification = {
             tenantId: payload.tenantId,
             userId: payload.userId, // Puede ser null
@@ -206,13 +208,14 @@ export class NotificationService {
             metadata: payload.metadata
         };
 
-        const res = await db.collection('notifications').insertOne(notification);
+        const res = await collection.insertOne(notification);
         return res.insertedId.toString();
     }
 
-    private static async markAsSent(notifId: string, recipient: string) {
-        const db = await connectLogsDB();
-        await db.collection('notifications').updateOne(
+    private static async markAsSent(notifId: string, tenantId: string, recipient: string) {
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('notifications', session);
+        await collection.updateOne(
             { _id: new ObjectId(notifId) },
             { $set: { emailSent: true, emailSentAt: new Date(), emailRecipient: recipient } }
         );
@@ -228,7 +231,7 @@ export class NotificationService {
         if (!resend) return;
 
         // 1. Obtener Template del Sistema para ese Tipo e Idioma
-        const template = await this.getSystemTemplate(payload.type);
+        const template = await this.getSystemTemplate(payload.type, payload.tenantId);
 
         let subject = payload.title;
         let htmlBody = `<p>${payload.message}</p>`; // Fallback basic HTML
@@ -288,10 +291,10 @@ export class NotificationService {
 
         console.log(`[NotificationService] Email sent to ${recipients.length} recipients. Lang: ${language}`);
     }
-
-    private static async getSystemTemplate(type: string): Promise<any> {
-        const db = await connectLogsDB();
+    private static async getSystemTemplate(type: string, tenantId: string): Promise<any> {
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('notification_templates', session);
         // Buscar template activo para este tipo
-        return await db.collection('notification_templates').findOne({ type, active: true });
+        return await collection.findOne({ type, active: true });
     }
 }

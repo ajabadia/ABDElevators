@@ -40,6 +40,11 @@ description: Gestiona de forma integral el ROADMAP_MASTER.md y sincroniza los av
     - Añade la nueva entrada al `map.md` relacionándola con su funcionalidad.
     - Si una ruta fue eliminada o deprecada, refléjalo en el mapa.
 
+### 5. Despliegue y Persistencia (Git Push)
+1. Una vez finalizada la sincronización de todos los archivos:
+    - Realiza un `git commit` con un mensaje descriptivo (ej: `docs: sync roadmap and landing for Phase X`).
+    - **OBLIGATORIO**: Ejecuta un `git push` para asegurar que los cambios estén disponibles en el repositorio remoto inmediatamente.
+
 ## Instrucciones y Reglas
 - **REGLA DE ORO**: La sincronización debe ser atómica. Si actualizas el Roadmap, revisa el resto de archivos.
 - **TONO**: Mantén un lenguaje de "Grado Industrial" y "Vanguardia Agéntica".

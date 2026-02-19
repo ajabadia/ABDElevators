@@ -1,6 +1,6 @@
 import { generateSecret, generateURI, verify } from 'otplib';
 import QRCode from 'qrcode';
-import { connectAuthDB } from '@/lib/db';
+import { getTenantCollection, withTransaction } from '@/lib/db-tenant';
 import { MfaConfig, MfaConfigSchema } from '@/lib/schemas';
 import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
@@ -74,18 +74,15 @@ export class MfaService {
             return { success: false, recoveryCodes: [] };
         }
 
-        const db = await connectAuthDB();
-        const session = db.client.startSession();
-
         try {
             let rawCodes: string[] = [];
-
-            await session.withTransaction(async () => {
+            const result = await withTransaction(async (dbSession) => {
                 // 3. Verificar que el usuario existe
-                const user = await db.collection('users').findOne(
-                    { _id: new ObjectId(userId) },
-                    { session }
-                );
+                // Note: since MFA is during auth or for current user, we use a system session or master session
+                const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+                const users = await getTenantCollection('users', masterSession);
+
+                const user = await users.findOne({ _id: new ObjectId(userId) });
 
                 if (!user) {
                     throw new AppError('USER_NOT_FOUND', 404, `User not found: ${userId}`);
@@ -112,17 +109,18 @@ export class MfaService {
                 const validatedConfig = MfaConfigSchema.parse(config);
 
                 // 6. Guardar en mfa_configs (dentro de transaction)
-                await db.collection('mfa_configs').updateOne(
+                const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
+                await mfaConfigs.updateOne(
                     { userId },
                     { $set: validatedConfig },
-                    { upsert: true, session }
+                    { upsert: true, session: dbSession }
                 );
 
                 // 7. Actualizar users.mfaEnabled (dentro de transaction)
-                const updateResult = await db.collection('users').updateOne(
+                const updateResult = await users.updateOne(
                     { _id: new ObjectId(userId) },
                     { $set: { mfaEnabled: true } },
-                    { session }
+                    { session: dbSession }
                 );
 
                 if (updateResult.modifiedCount === 0 && updateResult.matchedCount === 0) {
@@ -156,8 +154,6 @@ export class MfaService {
             }
 
             throw new AppError('MFA_ENABLE_FAILED', 500, `Failed to enable MFA: ${error.message}`);
-        } finally {
-            await session.endSession();
         }
     }
 
@@ -166,12 +162,14 @@ export class MfaService {
      * FAIL-CLOSED: Rechaza si config falta pero user.mfaEnabled=true (inconsistencia).
      */
     static async verify(userId: string, token: string): Promise<boolean> {
-        const correlationId = generateUUID();
-        const db = await connectAuthDB();
+        const correlationId = crypto.randomUUID();
+        const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+        const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
+        const users = await getTenantCollection('users', masterSession);
 
         const [config, user] = await Promise.all([
-            db.collection('mfa_configs').findOne({ userId }),
-            db.collection('users').findOne({ _id: new ObjectId(userId) })
+            mfaConfigs.findOne({ userId }),
+            users.findOne({ _id: new ObjectId(userId) })
         ]);
 
         // Detectar inconsistencia: usuario tiene mfaEnabled pero no hay config
@@ -248,22 +246,23 @@ export class MfaService {
             throw new AppError('INVALID_USER_ID', 400, `Invalid userId format: ${userId}`);
         }
 
-        const authDb = await connectAuthDB();
-        const session = authDb.client.startSession();
-
         try {
-            await session.withTransaction(async () => {
+            await withTransaction(async (dbSession) => {
+                const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+                const mfaConfigs = await getTenantCollection('mfa_configs', masterSession);
+                const users = await getTenantCollection('users', masterSession);
+
                 // 1. Borrar config
-                const deleteResult = await authDb.collection('mfa_configs').deleteOne(
+                const deleteResult = await mfaConfigs.deleteOne(
                     { userId },
-                    { session }
+                    { session: dbSession } as any
                 );
 
                 // 2. Actualizar users.mfaEnabled
-                const updateResult = await authDb.collection('users').updateOne(
+                const updateResult = await users.updateOne(
                     { _id: new ObjectId(userId) },
                     { $set: { mfaEnabled: false } },
-                    { session }
+                    { session: dbSession }
                 );
 
                 if (updateResult.matchedCount === 0) {
@@ -276,7 +275,7 @@ export class MfaService {
                     action: 'MFA_DISABLED',
                     message: `MFA desactivado para usuario: ${userId}`,
                     correlationId,
-                    details: { userId, configDeleted: deleteResult.deletedCount > 0 }
+                    details: { userId, configDeleted: (deleteResult as any).deletedCount > 0 }
                 });
             });
         } catch (error: any) {
@@ -294,8 +293,6 @@ export class MfaService {
             }
 
             throw new AppError('MFA_DISABLE_FAILED', 500, `Failed to disable MFA: ${error.message}`);
-        } finally {
-            await session.endSession();
         }
     }
 
@@ -303,8 +300,9 @@ export class MfaService {
      * Verifica si un usuario tiene MFA habilitado.
      */
     static async isEnabled(userId: string): Promise<boolean> {
-        const db = await connectAuthDB();
-        const config = await db.collection('mfa_configs').findOne({ userId, enabled: true });
+        const masterSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' } } as any;
+        const collection = await getTenantCollection('mfa_configs', masterSession);
+        const config = await collection.findOne({ userId, enabled: true });
 
         console.log(`🔍 [MFA_SERVICE] isEnabled check for ${userId}: ${!!config}`);
 

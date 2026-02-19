@@ -68,24 +68,25 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             pathname.startsWith('/_next') ||
             pathname === '/favicon.ico';
 
-        // 🛡️ [PHASE 132.1] INTERNAL PROTECTION & DEBUG REMOVAL
-        // block access to any remaining /debug/ paths or paths requiring internal secret
+        // 🛡️ [PHASE 183] INTERNAL GATEWAY & SECRET ROTATION
         if (pathname.startsWith('/api/internal/')) {
             const internalSecret = request.headers.get("x-internal-secret");
             const expectedSecret = process.env.INTERNAL_API_SECRET;
+            const previousSecret = process.env.PREVIOUS_INTERNAL_API_SECRET;
 
-            // 🛡️ [SECURITY] Constant-time comparison to prevent timing attacks
-            const isAuthorized = expectedSecret && internalSecret &&
-                internalSecret.length === expectedSecret.length &&
-                internalSecret === expectedSecret;
-            // Note: Edge runtime doesn't have crypto.timingSafeEqual for strings easily 
-            // but we check length first to mitigate basic timing leaks.
+            // 1. Secret rotation check
+            const isAuthorizedSecret =
+                (expectedSecret && internalSecret === expectedSecret) ||
+                (previousSecret && internalSecret === previousSecret);
 
-            if (!isAuthorized || !expectedSecret) {
-                // Sanitize output for logs
+            // 2. IP Allow-listing
+            const allowedIps = (process.env.ALLOWED_INTERNAL_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+            const isAuthorizedIp = allowedIps.length === 0 || allowedIps.includes(ip);
+
+            if (!isAuthorizedSecret || !isAuthorizedIp) {
                 const sanitizedPath = pathname.replace(/[^\w\/\.\-]/g, '');
                 const sanitizedIp = ip.replace(/[^\d\.]/g, '');
-                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${sanitizedPath} from ${sanitizedIp}`);
+                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${sanitizedPath} from ${sanitizedIp} (Secret: ${!!isAuthorizedSecret}, IP: ${!!isAuthorizedIp})`);
                 return new NextResponse(JSON.stringify({ success: false, message: "Forbidden" }), { status: 403 });
             }
         }

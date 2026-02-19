@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { PromptService } from '@/lib/prompt-service';
 import { callGeminiMini } from '@/lib/llm';
 import { RagEvaluationSchema } from '@/lib/schemas';
@@ -57,9 +57,11 @@ export class RagEvaluationService {
             // 4. Persist in DB
             let validated: any;
             try {
-                const db = await connectDB();
+                const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+                const collection = await getTenantCollection('rag_evaluations', session);
+
                 validated = RagEvaluationSchema.parse(evaluation);
-                await db.collection('rag_evaluations').insertOne(validated);
+                await collection.insertOne(validated);
 
                 await logEvento({
                     level: 'INFO',
@@ -111,10 +113,11 @@ export class RagEvaluationService {
                         timestamp: new Date()
                     };
 
-                    const db = await connectDB();
+                    const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+                    const collection = await getTenantCollection('rag_evaluations', session);
                     try {
                         const validatedCorrected = RagEvaluationSchema.parse(correctedEvaluation);
-                        await db.collection('rag_evaluations').insertOne(validatedCorrected);
+                        await collection.insertOne(validatedCorrected);
                         finalOutput = validatedCorrected;
 
                         await logEvento({
@@ -143,24 +146,18 @@ export class RagEvaluationService {
      * Lists recent evaluations for a tenant
      */
     static async listEvaluations(tenantId: string, limit: number = 50): Promise<any[]> {
-        const db = await connectDB();
-        return await db.collection('rag_evaluations')
-            .find({ tenantId })
-            .sort({ timestamp: -1 })
-            .limit(limit)
-            .toArray();
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('rag_evaluations', session);
+        return await collection.find({}, { sort: { timestamp: -1 }, limit } as any);
     }
 
     /**
      * Gets aggregate metrics for the RAG dashboard
      */
     static async getMetrics(tenantId: string): Promise<any> {
-        const db = await connectDB();
-        const evals = await db.collection('rag_evaluations')
-            .find({ tenantId })
-            .sort({ timestamp: -1 })
-            .limit(100)
-            .toArray();
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const collection = await getTenantCollection('rag_evaluations', session);
+        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 } as any);
 
         if (evals.length === 0) {
             return {
@@ -179,7 +176,7 @@ export class RagEvaluationService {
                 precision: avg(evals, 'context_precision'),
                 count: evals.length
             },
-            trends: evals.slice(0, 10).reverse().map(e => ({
+            trends: evals.slice(0, 10).reverse().map((e: any) => ({
                 date: e.timestamp,
                 f: e.metrics.faithfulness,
                 r: e.metrics.answer_relevance

@@ -18,6 +18,28 @@ export interface LogEntry {
     durationMs?: number;
 }
 
+const SENSITIVE_KEYS = [
+    'password', 'token', 'secret', 'key', 'apiKey', 'api_key',
+    'auth', 'authorization', 'credential', 'cookie', 'sessionId'
+];
+
+function sanitizeObject(obj: any): any {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitizeObject);
+
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (SENSITIVE_KEYS.some(k => key.toLowerCase().includes(k.toLowerCase()))) {
+            sanitized[key] = '[REDACTED]';
+        } else if (typeof value === 'object') {
+            sanitized[key] = sanitizeObject(value);
+        } else {
+            sanitized[key] = value;
+        }
+    }
+    return sanitized;
+}
+
 export async function logEvento(entry: LogEntry): Promise<void> {
     const timestamp = new Date();
     const safeEntry = { ...entry };
@@ -29,20 +51,19 @@ export async function logEvento(entry: LogEntry): Promise<void> {
         safeEntry.userEmail = `${local.charAt(0)}***@${domain}`;
     }
 
-    if (safeEntry.details && typeof safeEntry.details === 'object') {
-        const safeDetails = { ...safeEntry.details };
-        if (safeDetails.ip) {
-            safeDetails.ipHash = createHash('sha256').update(safeDetails.ip).digest('hex');
-            safeDetails.ip = '***.***.***.***';
+    if (safeEntry.details) {
+        safeEntry.details = sanitizeObject(safeEntry.details);
+
+        if (safeEntry.details.ip) {
+            safeEntry.details.ipHash = createHash('sha256').update(safeEntry.details.ip).digest('hex');
+            safeEntry.details.ip = '***.***.***.***';
         }
-        safeEntry.details = safeDetails;
     }
 
     const logData = { ...safeEntry, timestamp };
 
     if (entry.level === 'ERROR') {
         console.error(`[${timestamp.toISOString()}] [${entry.source}] [${entry.action}] ${entry.message}`, entry.details || '', entry.stack || '');
-        if (entry.stack) console.error(entry.stack);
     } else {
         console.log(`[${timestamp.toISOString()}] [${entry.source}] [${entry.action}] ${entry.message}`);
     }

@@ -6,11 +6,11 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |------|---------------|-----------------|
 | `/admin` | Dashboard principal de administración. | 2026-02-16 |
 | `/admin/tasks` | **Tasks Hub**: Gestión de tareas, mi bandeja y asignaciones. | 2026-02-17 |
-| `/admin/security` | **Security Hub Dashboard**: Navegación centralizada a módulos de seguridad. | 2026-02-17 (Reviewed Audit 2302) ✅ |
-| `/admin/security/audit` | **Audit Trail**: Registro inmutable de acciones del sistema. | 2026-02-17 |
+| `/admin/security` | **Security Hub Dashboard**: Navegación centralizada a módulos de seguridad. | 2026-02-19 (Phase 183 Hardening) ✅ |
+| `/admin/security/audit` | **Audit Trail**: Registro inmutable de acciones del sistema. | 2026-02-19 |
 | `/admin/operations/maintenance` | Herramientas de mantenimiento y corrección de datos. | 2026-02-16 |
-| `/admin/operations/status` | Estado de servicios externos e infraestructura. | 2026-02-16 |
-| `/admin/settings` | **Settings Hub**: Configuración centralizada (Org, Users, Prompts, i18n). | 2026-02-16 |
+| `/admin/operations/status` | Estado de servicios externos e infraestructura. | 2026-02-19 |
+| `/admin/settings` | **Settings Hub**: Configuración centralizada (Org, Users, Prompts, i18n). | 2026-02-19 |
 | `/admin/profile` | Perfil de usuario administrador. | 2026-02-16 |
 | `/admin/reports` | Report Hub: Dashboard de informes. | 2026-02-16 |
 | `/admin/reports/schedules` | Schedule Management: Gestión de programación de informes. | 2026-02-16 |
