@@ -20,6 +20,7 @@ Este skill asegura que todos los servicios de IA de la plataforma ABDElevators s
 
 ## Checklist de Auditoría
 - [ ] ¿El prompt tiene una entrada en `PromptService`? (Clave única)
+- [ ] ¿Se solicita el prompt indicando la industria (default `'GENERIC'`)?
 - [ ] ¿Existe una constante equivalente en `src/lib/prompts.ts`?
 - [ ] ¿El servicio usa `try/catch` envolviendo el `getRenderedPrompt`?
 - [ ] ¿Se realiza el reemplazo manual de variables en la rama del `catch`?

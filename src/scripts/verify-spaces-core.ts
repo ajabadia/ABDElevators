@@ -27,9 +27,51 @@ async function test() {
             { tenantId: tenantA },
             {
                 $set: {
+                    tenantId: tenantA,
                     name: 'Alpha Tenant',
                     status: 'active',
-                    subscription: { planSlug: 'FREE', status: 'active' }
+                    industry: 'GENERIC',
+                    storage: {
+                        provider: 'cloudinary',
+                        settings: {},
+                        quota_bytes: 1024 * 1024 * 1024
+                    },
+                    subscription: {
+                        planSlug: 'FREE',
+                        status: 'active',
+                        overrides: {
+                            spaces_per_tenant: { type: 'FLAT_FEE_OVERAGE', includedUnits: 3, overagePrice: 0, currency: 'EUR' }
+                        },
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    },
+                    createdAt: new Date()
+                }
+            },
+            { upsert: true }
+        );
+
+        // Provision 'system' tenant for Global tests
+        await tenantsCol.unsecureRawCollection.updateOne(
+            { tenantId: 'system' },
+            {
+                $set: {
+                    tenantId: 'system',
+                    name: 'System Tenant',
+                    status: 'active',
+                    industry: 'GENERIC',
+                    storage: {
+                        provider: 'cloudinary',
+                        settings: {},
+                        quota_bytes: 1024 * 1024 * 1024
+                    },
+                    subscription: {
+                        planSlug: 'ENTERPRISE',
+                        status: 'active',
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    },
+                    createdAt: new Date()
                 }
             },
             { upsert: true }
@@ -118,9 +160,10 @@ async function test() {
 
         console.log('--- VERIFICATION SUCCESS ---');
         process.exit(0);
-    } catch (error) {
+    } catch (error: any) {
+        const util = require('util');
         console.error('--- VERIFICATION FAILED ---');
-        console.error(error);
+        console.error(util.inspect(error, { depth: null, colors: true }));
         process.exit(1);
     }
 }

@@ -16,9 +16,10 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 ## Workflow
 1. **Analizar la Misión:** Entender que este es un sistema Enterprise de misión crítica (RAG Platform para industrias reguladas), no un CRUD simple.
 2. **Cargar Reglas de Oro:** Internalizar las 4 reglas inquebrantables (Tenant Isolation, Zod First, Encryption, Audit).
-3. **Revisar Arquitectura:** Recordar los 3 pilares: Entity Engine, Workflow Engine, RAG System.
-4. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
-5. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
+3. **Revisar Arquitectura (Era 5):** Recordar la estructura monorepo (`packages/@abd/*`) y los 3 pilares desacoplados: Entity Engine, Workflow Engine (Agnóstico), RAG System (Aislado).
+4. **Validar Agosticidad:** Asegurar que no hay dependencias hardcoded de industria (`ELEVATORS`). El fallback siempre es `GENERIC`.
+5. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
+6. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
 
 ## Instrucciones y Conocimiento Crítico (Extracto de GUIA_IA.MD)
 
@@ -31,8 +32,8 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 ### 2. Stack Tecnológico & Arquitectura
 - **Core:** Next.js 15 + MongoDB Atlas + TypeScript Strict.
 - **Auth:** NextAuth (Roles jerárquicos: SUPER_ADMIN > ADMIN > ENGINEERING > COMPLIANCE > REVIEWER > TECHNICAL).
-- **RAG:** Ingesta PDF -> Text Extraction -> Chunking -> Vector Search -> Gemini.
-- **Workflow:** Máquina de estados (FSM) con transiciones visuales, lógica compilada y Generación de Tareas Automáticas (WorkflowTasks).
+- **RAG:** Ingesta PDF -> Text Extraction -> Chunking -> Vector Search -> Gemini (Centralizado en `@abd/rag-engine`).
+- **Workflow:** Máquina de estados (FSM) agnóstica (`@abd/workflow-engine`) con transiciones visuales, lógica compilada y Generación de Tareas Automáticas.
 
 ### 3. Patrones de Frontend
 - **Data Fetching:** NO usar `useEffect` directo. Usar `useApiList`, `useApiItem`.
@@ -48,14 +49,13 @@ Antes de generar código, verifica:
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-```markdown
-**Contexto del Proyecto Cargado: ABD RAG Platform** 🧠
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 5) 🧠
 
-He sincronizado las reglas críticas y arquitectura:
-1.  **Seguridad:** Aislamiento estricto por Tenant (`getTenantCollection`) y Auditoría obligatoria (`logEvento`).
-2.  **Validación:** Zod-First en todos los endpoints.
-3.  **Core Systems:** Entity Engine, RAG Service, y Workflow Engine (Visual + Logic).
-4.  **Frontend:** Uso de hooks estandarizados (`useApiList`) y componentes base.
+He sincronizado las reglas críticas y la arquitectura de la Era 5:
+1.  **Arquitectura Monorepo:** Uso de paquetes desacoplados en `packages/@abd/*` (`platform-core`, `workflow-engine`, `rag-engine`).
+2.  **Agosticidad de Dominio:** El estándar base es `GENERIC`. Prohibido hardcodear `ELEVATORS`.
+3.  **Seguridad & Multi-tenancy:** Aislamiento estricto por Tenant (`getTenantCollection`) y Auditoría obligatoria (`logEvento`).
+4.  **Core Systems:** Entity Engine, RAG Service (aislado), y Workflow Engine (Agnóstico + Visual Logic).
+5.  **Frontend:** Uso de hooks estandarizados (`useApiList`) y componentes base de Shadcn + Custom Primitives.
 
-Estoy listo para desarrollar respetando los estándares Enterprise del proyecto. ¿Por dónde empezamos?
-```
+Estoy listo para desarrollar bajo el paradigma multi-producto de la Era 5. ¿Por dónde empezamos?

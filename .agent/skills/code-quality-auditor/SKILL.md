@@ -23,6 +23,7 @@ Determina qué tipo de archivo estás auditando:
 
 - **API Route** (`app/api/.../route.ts`)
 - **Servicio de Dominio** (`lib/*-service.ts`, `services/*`, `workers/*`)
+- **Paquetes Core** (`packages/@abd/*`)
 - **Página/Componente React** (`app/.../page.tsx`, `components/*`)
 - **Autenticación/Seguridad** (`lib/auth.ts`, `middleware.ts`, `*-guard.ts`)
 - **Logging/Auditoría** (`lib/logger.ts`, `*-audit*.ts`)
@@ -114,12 +115,13 @@ try {
 - [ ] Para operaciones RAG/LLM/vector search:
   - Crea span con `trace.getTracer(...).startActiveSpan`
   - Registra duración, `tenant.id`, `correlation.id`, resultado clave
-  - Llama a `UsageService.trackLLM` / `trackVectorSearch` si aplica
 
-### ✅ Multi-tenant y Entorno
+### ✅ Multi-tenant y Entorno (Era 5)
 - [ ] Filtra **siempre** por `tenantId` y `environment` donde corresponda
 - [ ] Usa `getTenantCollection(collectionName, session)` para aislamiento automático
+- [ ] **Prohibido hardcodear `'ELEVATORS'`**. El fallback debe ser `'GENERIC'`.
 - [ ] Mantiene `industry`, `scope` y `environment` coherentes con el pipeline
+- [ ] Prefiere utilidades de `@abd/platform-core/server` (ej: `connectDB`, `logEvento`)
 
 ### ✅ Seguridad
 - [ ] **Nunca** confía en `tenantId`, `role` ni IDs que vengan del cliente

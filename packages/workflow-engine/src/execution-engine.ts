@@ -107,7 +107,27 @@ export class AIWorkflowEngine {
             try {
                 switch (action.type) {
                     case (WorkflowActionType as any).branch:
-                        // TODO: Implement proper branching execution based on criteria
+                        const { criteria } = action.params;
+                        if (criteria) {
+                            const { confidenceThreshold } = criteria as any;
+                            if (confidenceThreshold !== undefined && data.confidenceScore !== undefined) {
+                                if (data.confidenceScore >= confidenceThreshold) {
+                                    // If confidence is HIGH enough, skip further actions (or stop branching)
+                                    // In this specific test, we want to skip if confidence is > 0.85
+                                    // But let's check the logic: the test uses LOW confidence (0.45 < 0.85) to trigger the task.
+                                    // So if confidence >= threshold, we STOP.
+                                    await logEvento({
+                                        level: 'INFO',
+                                        source: 'AI_WORKFLOW_ENGINE',
+                                        action: 'BRANCH_SKIPPED',
+                                        message: `Confidence ${data.confidenceScore} >= ${confidenceThreshold}. Skipping next actions.`,
+                                        correlationId,
+                                        tenantId
+                                    });
+                                    return; // Stop execution of the rest of the actions in this flow
+                                }
+                            }
+                        }
                         break;
 
                     case (WorkflowActionType as any).human_task:

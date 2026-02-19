@@ -30,7 +30,7 @@ export function compileGraphToLogic(
         type: WorkflowTriggerType.on_entity_change,
         nodeId: triggerNode.id, // Tag with node ID
         condition: {
-            field: 'riskScore',
+            field: 'confidenceScore',
             operator: 'gt',
             value: 0
         }

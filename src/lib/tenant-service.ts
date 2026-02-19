@@ -72,7 +72,9 @@ export class TenantService {
                 stack: error.stack
             });
 
-            throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error al recuperar configuración del tenant');
+            throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error al recuperar configuración del tenant', {
+                zodIssues: error.name === 'ZodError' ? error.issues : undefined
+            });
         }
     }
 

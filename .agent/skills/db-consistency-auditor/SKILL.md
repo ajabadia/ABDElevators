@@ -23,7 +23,7 @@ Contiene trazas de auditoría, uso y notificaciones.
 
 ### 3. Cluster: MAIN (MONGODB_URI)
 Contiene los datos de negocio y activos de conocimiento.
-- **Colecciones:** `document_types`, `taxonomies`, `knowledge_assets`, `user_documents`, `tickets`, `rag_audit`, `audit_ingestion`, `document_chunks`, `reports`, `rag_evaluations`
+- **Colecciones:** `document_types`, `taxonomies`, `knowledge_assets`, `user_documents`, `spaces`, `tickets`, `rag_audit`, `audit_ingestion`, `document_chunks`, `reports`, `rag_evaluations`
 - **Conexión válida:** `connectDB()` o `getTenantCollection(nombre, session, 'MAIN')`
 
 ## 🚫 Red Flags (Errores Críticos)
