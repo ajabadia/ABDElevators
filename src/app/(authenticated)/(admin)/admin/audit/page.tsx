@@ -159,6 +159,7 @@ export default function AuditoriaPage() {
                 title="Registro de Auditoría"
                 highlight="Auditoría"
                 subtitle="Monitoreo de actividad, seguridad y validación de reglas de negocio en tiempo real."
+                helpId="audit-logs"
                 actions={
                     <div className="flex items-center gap-2">
                         <Link href="/admin/audit/config-changes">

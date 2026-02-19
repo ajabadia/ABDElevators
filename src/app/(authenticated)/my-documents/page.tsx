@@ -42,6 +42,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useTranslations } from "next-intl";
+import { PageContainer } from "@/components/ui/page-container";
+import { PageHeader } from "@/components/ui/page-header";
 
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -178,24 +180,20 @@ export default function MyDocumentsPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="bg-teal-600 w-1.5 h-8 rounded-full" />
-                        {t('titleAlt')}
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        {t('subtitleAlt')}
-                    </p>
-                </div>
-                <Button
-                    onClick={() => uploadModal.openCreate()}
-                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
-                >
-                    <Plus size={18} />
-                    {tUpload('button')}
-                </Button>
-            </div>
+            <PageHeader
+                title={t('titleAlt')}
+                subtitle={t('subtitleAlt')}
+                helpId="documents-status"
+                actions={
+                    <Button
+                        onClick={() => uploadModal.openCreate()}
+                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 gap-2 px-6"
+                    >
+                        <Plus size={18} />
+                        {tUpload('button')}
+                    </Button>
+                }
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="md:col-span-1 border-none shadow-md bg-slate-900 text-white">

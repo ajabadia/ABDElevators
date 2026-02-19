@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+import { WorkContext } from '@/lib/work-context';
 
 export interface OnboardingStep {
     id: string;
@@ -12,44 +13,37 @@ export interface OnboardingStep {
 
 export function useOnboarding() {
     const [currentStep, setCurrentStepState] = useState(0);
-    const [isCompleted, setIsCompletedState] = useState(true); // Default to true until checked
+    const [isCompleted, setIsCompletedState] = useState(true);
     const [isVisible, setIsVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [userContext, setUserContextState] = useState<WorkContext | undefined>(undefined);
 
     const steps: OnboardingStep[] = [
         {
             id: 'welcome',
-            title: '¡Bienvenido a ABD RAG!',
-            content: 'Estamos encantados de tenerte aquí. Vamos a darte un pequeño tour para que conozcas las herramientas clave para gestionar tu documentación técnica.',
+            title: '¡Bienvenido a ABD RAG Platform!',
+            content: 'La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?',
             placement: 'bottom',
         },
         {
-            id: 'knowledge-assets',
-            title: 'Corpus de Documentación',
-            content: 'Aquí es donde vive todo el conocimiento. Puedes subir manuales, planos y especificaciones que la IA utilizará para responder tus dudas.',
-            target: '[data-tour="knowledge-assets"]',
-            placement: 'right',
+            id: 'upload',
+            title: 'Sube tu primer documento',
+            content: 'Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.',
+            target: '[data-tour="upload-zone"]',
+            placement: 'bottom',
         },
         {
-            id: 'search',
-            title: 'Búsqueda Inteligente',
-            content: 'Usa la barra de búsqueda para preguntar lo que sea. No necesitas palabras exactas, la IA entiende el contexto técnico de tus manuales.',
+            id: 'ask',
+            title: 'Haz tu primera pregunta',
+            content: 'Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.',
             target: '[data-tour="global-search"]',
             placement: 'bottom',
         },
         {
-            id: 'intelligence',
-            title: 'Inteligencia Técnica',
-            content: 'Accede a análisis profundos, tendencias y métricas de calidad de tus activos de conocimiento.',
-            target: '[data-tour="intelligence-hub"]',
-            placement: 'left',
-        },
-        {
-            id: 'dashboard-actions',
-            title: 'Acciones Rápidas',
-            content: 'Desde aquí puedes acceder directamente a las funciones más usadas: subir manuales, buscar respuestas o ver tu historial.',
-            target: '[data-tour="quick-actions"]',
-            placement: 'top',
+            id: 'explore',
+            title: 'Explora tu entorno',
+            content: 'Hemos personalizado tu tablero basándonos en tu rol. ¡Todo listo para empezar!',
+            placement: 'bottom',
         }
     ];
 
@@ -62,6 +56,7 @@ export function useOnboarding() {
                 if (data.success && data.preferences?.onboarding) {
                     setCurrentStepState(data.preferences.onboarding.currentStep || 0);
                     setIsCompletedState(data.preferences.onboarding.completed);
+                    setUserContextState(data.preferences.onboarding.userContext);
                 }
             } catch (error) {
                 console.error('Failed to fetch onboarding state:', error);
@@ -73,14 +68,13 @@ export function useOnboarding() {
     }, []);
 
     useEffect(() => {
-        // Show onboarding if not completed and after a small delay to ensure UI is ready
         if (!isLoading && !isCompleted) {
             const timer = setTimeout(() => setIsVisible(true), 1500);
             return () => clearTimeout(timer);
         }
     }, [isCompleted, isLoading]);
 
-    const syncWithServer = async (newState: { completed?: boolean, currentStep?: number }) => {
+    const syncWithServer = async (newState: { completed?: boolean, currentStep?: number, userContext?: WorkContext }) => {
         try {
             await fetch('/api/user/preferences', {
                 method: 'POST',
@@ -92,6 +86,13 @@ export function useOnboarding() {
         }
     };
 
+    const setUserContext = useCallback(async (context: WorkContext) => {
+        setUserContextState(context);
+        const next = currentStep + 1;
+        setCurrentStepState(next);
+        await syncWithServer({ userContext: context, currentStep: next });
+    }, [currentStep]);
+
     const nextStep = useCallback(async () => {
         if (currentStep < steps.length - 1) {
             const next = currentStep + 1;
@@ -101,7 +102,7 @@ export function useOnboarding() {
             setIsCompletedState(true);
             setIsVisible(false);
             await syncWithServer({ completed: true });
-            toast.success('¡Tour completado!');
+            toast.success('¡Onboarding completado!');
         }
     }, [currentStep, steps.length]);
 
@@ -124,7 +125,7 @@ export function useOnboarding() {
         setCurrentStepState(0);
         setIsVisible(true);
         await syncWithServer({ completed: false, currentStep: 0 });
-        toast.info('Tour reiniciado');
+        toast.info('Onboarding reiniciado');
     }, []);
 
     const progress = Math.round(((currentStep + 1) / steps.length) * 100);
@@ -135,6 +136,8 @@ export function useOnboarding() {
         isVisible,
         isCompleted,
         isLoading,
+        userContext,
+        setUserContext,
         nextStep,
         prevStep,
         skipOnboarding,
@@ -143,3 +146,4 @@ export function useOnboarding() {
         currentStepData: steps[currentStep]
     };
 }
+

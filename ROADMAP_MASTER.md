@@ -13,7 +13,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 182: DOMAIN DECOUPLING**, FASE 190/191/193: ERA 6 UX REVAMP.
+- **Recent Ship**: **FASE 194: ONBOARDING & CONTEXTUAL HELP**, FASE 192: CORE FLOW OPTIMIZATION, FASE 182: DOMAIN DECOUPLING, FASE 190/191/193: ERA 6 UX REVAMP.
 - **Project Status:** **Industrial Multi-product Suite (v5.0.0 - Production Ready).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -184,28 +184,28 @@
 
 #### ⚡ FASE 192: CORE FLOW OPTIMIZATION (SIMPLE vs EXPERT MODE)
 
-**Status:** `[PLANNED 🚀]` | **Prioridad:** ALTA | **Estimación:** 3 semanas
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 3 semanas
 
 **Objetivo:** Los 3 flujos core deben funcionar sin fricción en modo "Simple" por defecto. El "Modo Experto" se oculta bajo un toggle.
 
 **Problema actual:** El flujo de análisis requiere elegir Space, configurar chunking, elegir modelo, escribir prompt template... un técnico de mantenimiento con tablet y 15 minutos no hará esto.
 
 ##### Flujo 1: Analizar Documento (TTFV < 60s)
-- [ ] **SimpleAnalyzeFlow**: Drag & drop → auto-detección de tipo → pregunta natural (con sugerencias) → respuesta con fuentes visuales.
-- [ ] **useSmartConfig Hook**: Auto-configurar `chunkSize`, modelo y `temperature` según tipo de documento detectado. El usuario NUNCA ve estos parámetros en modo Simple.
-- [ ] **Confidence humanizada**: Reemplazar "faithfulness: 0.87" por "Confianza: Alta / Media / Baja" con código de color.
-- [ ] **Source Preview**: Miniaturas del PDF en la página exacta de donde viene la respuesta.
-- [ ] **Expert Toggle**: Botón discreto "⚙️ Modo experto (chunking, modelos, temperatura...)" que expande la UI actual.
+- [X] **SimpleAnalyzeFlow**: Drag & drop → auto-detección de tipo → pregunta natural (con sugerencias) → respuesta con fuentes visuales.
+- [X] **useSmartConfig Hook**: Auto-configurar `chunkSize`, modelo y `temperature` según tipo de documento detectado. El usuario NUNCA ve estos parámetros en modo Simple.
+- [X] **Confidence humanizada**: Reemplazar "faithfulness: 0.87" por "Confianza: Alta / Media / Baja" con código de color.
+- [X] **Source Preview**: Miniaturas del PDF en la página exacta de donde viene la respuesta.
+- [X] **Expert Toggle**: Botón discreto "⚙️ Modo experto (chunking, modelos, temperatura...)" que expande la UI actual.
 
 ##### Flujo 2: Buscar en Base de Conocimiento
-- [ ] **Simplified Search**: Una caja de texto prominente con selector sencillo de ámbito (Mi empresa / Mi espacio / Todo). Chips de filtros predefinidos por vertical.
-- [ ] **Results with Context**: Resultados con preview inline del fragmento relevante + highlight.
-- [ ] **Colapsar métricas RAG**: Trazas de agente, faithfulness scores, etc., dentro de acordeón "Ver detalle técnico".
+- [X] **Simplified Search**: Una caja de texto prominente con selector sencillo de ámbito (Mi empresa / Mi espacio / Todo). Chips de filtros predefinidos por vertical.
+- [X] **Results with Context**: Resultados con preview inline del fragmento relevante + highlight.
+- [X] **Colapsar métricas RAG**: Trazas de agente, faithfulness scores, etc., dentro de acordeón "Ver detalle técnico".
 
 ##### Flujo 3: Generar Informe
-- [ ] **Template Selection Visual**: Selección de plantilla con preview visual (no lista de texto).
-- [ ] **Pre-filled Data**: Datos pre-llenados desde el último análisis. Preview antes de exportar.
-- [ ] **One-click Export**: Generar PDF/Email en un solo click.
+- [X] **Template Selection Visual**: Selección de plantilla con preview visual (no lista de texto).
+- [X] **Pre-filled Data**: Datos pre-llenados desde el último análisis. Preview antes de exportar.
+- [X] **One-click Export**: Generar PDF/Email en un solo click.
 
 ---
 
@@ -253,23 +253,24 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🚀 FASE 194: ONBOARDING REAL & CONTEXTUAL HELP
 
-**Status:** `[PLANNED 🚀]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
 
 **Objetivo:** Reemplazar el `OnboardingProvider` vacío con un flujo de onboarding progresivo y medible.
 
 **Diagnóstico real:** `OnboardingProvider` actual es un shell sin lógica (28 líneas, `value={{}}`). `useOnboarding` hook existe en `onboarding-overlay.tsx` con tours parciales pero desconectados del flujo core.
 
 **Tareas:**
-- [ ] **Progressive Onboarding (3 pasos obligatorios)**:
+- [X] **Progressive Onboarding (4 pasos obligatorios)**:
   1. "Bienvenido a ABD RAG" → Elegir contexto de trabajo (`inspection`, `maintenance`, `audit`, `training`)
   2. "Sube tu primer documento" → Drag & drop con opción de PDF demo incluido
   3. "Haz tu primera pregunta" → Con sugerencias preconfiguradas por contexto elegido
-- [ ] **Context-Based Defaults**: Según el contexto elegido, pre-configurar prompts, documentos relevantes, y checklists asociadas.
-- [ ] **Persistent Progress Bar**: Barra flotante discreta mostrando "Paso X de Y" con opción de saltar.
-- [ ] **Contextual Help Enhancement**: Activar `HelpButton`, `HelpTooltipComponent`, `InlineHelpPanel` ya existentes con contenido real (no placeholders).
-- [ ] **Demo Sandbox**: Integrar un tenant demo con datos sintéticos de ascensores preconfigurados para que el onboarding use datos realistas.
-- [ ] **Placeholders en Search**: Añadir ejemplos concretos en todos los inputs de búsqueda ("Ej: ¿Qué mantenimiento preventivo aplica al modelo X?").
-- [ ] **Metrics de éxito**: Time-to-first-value (TTFV) < 3 minutos. Tasa de completado del onboarding > 80%.
+  4. "Explorar entorno" → Acciones directas basadas en el rol seleccionado.
+- [X] **Context-Based Defaults**: Según el contexto elegido, pre-configurar prompts, documentos relevantes, y checklists asociadas.
+- [X] **Persistent Progress Bar**: Barra flotante discreta mostrando "Paso X de Y" con opción de saltar.
+- [X] **Contextual Help Enhancement**: Activar `HelpButton`, `HelpTooltipComponent`, `InlineHelpPanel` ya existentes con contenido real (no placeholders) e integración en `PageHeader`.
+- [X] **Demo Sandbox**: Integrar un tenant demo con datos sintéticos de ascensores preconfigurados para que el onboarding use datos realistas.
+- [X] **Placeholders en Search**: Añadir ejemplos concretos en todos los inputs de búsqueda ("Ej: ¿Qué mantenimiento preventivo aplica al modelo X?").
+- [X] **Metrics de éxito**: Time-to-first-value (TTFV) < 3 minutos. Tasa de completado del onboarding > 80%.
 
 ---
 

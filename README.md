@@ -184,6 +184,7 @@ src/
 - ✅ **Security Hardening & Internal Gateway (Phase 183)**: Implementación de IP allow-listing, rotación de secretos y sanitización profunda de PII en logs industriales.
 - ✅ **Suite Evolution & Next-Gen Utilities (Phase 184)**: Infraestructura multi-producto, Feature Flags persistentes, Job Scheduler genérico y Gobernanza de IA por tenant.
 - ✅ **Unified Experience (ERA 6)**: Rediseño visual masivo, dashboard "Hub" unificado y simplificación de navegación para técnicos (Phases 190-193).
+187: - ✅ **Onboarding Real & Contextual Help (Phase 194)**: Sistema de guías interactivas personalizado por rol (WorkContext) y ayuda contextual integrada en todos los PageHeaders.
 
 ## 🔧 Scripts Disponibles
 

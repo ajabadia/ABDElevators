@@ -2100,6 +2100,8 @@
       "subtitle": "Generation and management of industrial technical reports",
       "generateNew": "Generate New Report",
       "noReports": "No reports generated recently.",
+      "recordsFound": "{count} reports found",
+      "searchPlaceholder": "Search by report name...",
       "download": "Download PDF",
       "share": "Share",
       "tableHeaders": {
@@ -2112,10 +2114,15 @@
     },
     "templates": {
       "audit": "Compliance Audit",
+      "auditDesc": "Verify regulations and safety standards",
       "inspection": "Technical Inspection",
+      "inspectionDesc": "Technical detail of components and status",
       "ragQuality": "Technical Intelligence Quality",
+      "ragQualityDesc": "Reliability and context evaluation",
       "entityLlm": "Entity Analysis (LLM)",
-      "workflow": "Workflow Performance"
+      "entityLlmDesc": "Deep analysis of specific assets",
+      "workflow": "Workflow Performance",
+      "workflowDesc": "Efficiency and bottlenecks"
     },
     "generate": {
       "title": "Configure New Report",
@@ -2123,6 +2130,8 @@
       "dateRange": "Date Range",
       "includeSources": "Include Sources",
       "generating": "Generating Report...",
+      "downloadPdf": "Download PDF",
+      "sendEmail": "Send via Email",
       "success": "Report generated successfully",
       "error": "Error generating report"
     },

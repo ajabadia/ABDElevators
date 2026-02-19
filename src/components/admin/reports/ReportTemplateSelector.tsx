@@ -1,7 +1,15 @@
 "use client";
 
 import React from "react";
-import { FileText, ClipboardCheck, Microscope, GitBranch, Sparkles, Check } from "lucide-react";
+import {
+    FileText,
+    ClipboardCheck,
+    Microscope,
+    GitBranch,
+    Sparkles,
+    Check,
+    ArrowRight
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +20,8 @@ interface Template {
     description: string;
     icon: React.ReactNode;
     recommended?: boolean;
-    color: string;
+    colorClass: string;
+    iconClass: string;
 }
 
 interface ReportTemplateSelectorProps {
@@ -25,37 +34,42 @@ const templates: Template[] = [
     {
         id: "inspection",
         title: "Informe de Inspección",
-        description: "Análisis detallado de especificaciones técnicas y componentes del ascensor.",
+        description: "Análisis técnico exhaustivo de especificaciones y componentes.",
         icon: <ClipboardCheck className="w-6 h-6" />,
         recommended: true,
-        color: "text-blue-600 bg-blue-50 border-blue-100"
+        colorClass: "bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30",
+        iconClass: "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30"
     },
     {
         id: "ragQuality",
-        title: "Calidad RAG",
-        description: "Auditoría de precisión y recuperación semántica de la base de conocimientos.",
+        title: "Auditoría de IA",
+        description: "Análisis de precisión, alucinaciones y cobertura semántica.",
         icon: <Microscope className="w-6 h-6" />,
-        color: "text-purple-600 bg-purple-50 border-purple-100"
+        colorClass: "bg-purple-50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-900/30",
+        iconClass: "text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30"
     },
     {
         id: "audit",
-        title: "Auditoría de Cumplimiento",
-        description: "Validación normativa y legal de la documentación técnica.",
+        title: "Cumplimiento Legal",
+        description: "Validación normativa y detección de riesgos contractuales.",
         icon: <FileText className="w-6 h-6" />,
-        color: "text-teal-600 bg-teal-50 border-teal-100"
+        colorClass: "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/30",
+        iconClass: "text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30"
     },
     {
         id: "workflow",
-        title: "Estado de Workflow",
-        description: "Informe ejecutivo sobre el progreso de tareas y cuellos de botella.",
+        title: "Estado de Proyecto",
+        description: "Progreso de tareas, cuellos de botella y eficiencia operativa.",
         icon: <GitBranch className="w-6 h-6" />,
-        color: "text-amber-600 bg-amber-50 border-amber-100"
+        colorClass: "bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30",
+        iconClass: "text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30"
     }
 ];
 
 /**
- * ReportTemplateSelector - ERA 6 UI Improvement
- * A visual, card-based selector for report templates.
+ * ReportTemplateSelector - ERA 6 (FASE 192)
+ * 
+ * Visual card-based selector with premium aesthetics and design tokens.
  */
 export function ReportTemplateSelector({
     selectedId,
@@ -63,56 +77,59 @@ export function ReportTemplateSelector({
     className
 }: ReportTemplateSelectorProps) {
     return (
-        <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4", className)}>
+        <div className={cn("grid grid-cols-1 gap-3", className)}>
             {templates.map((template) => {
                 const isSelected = selectedId === template.id;
 
                 return (
-                    <Card
+                    <div
                         key={template.id}
                         onClick={() => onSelect(template.id)}
                         className={cn(
-                            "relative cursor-pointer transition-all duration-300 border-2 overflow-hidden group",
+                            "relative flex items-center p-4 cursor-pointer transition-all duration-300 border-2 rounded-2xl group",
                             isSelected
-                                ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                                : "border-slate-100 hover:border-slate-200 hover:bg-slate-50 shadow-sm"
+                                ? "border-primary bg-primary/5 shadow-md shadow-primary/5"
+                                : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-sm"
                         )}
                     >
-                        {isSelected && (
-                            <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center animate-in zoom-in duration-300">
-                                <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                        )}
+                        {/* Selector Indicator */}
+                        <div className={cn(
+                            "absolute right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                            isSelected
+                                ? "bg-primary border-primary text-white scale-110"
+                                : "border-slate-200 group-hover:border-primary/50 text-transparent"
+                        )}>
+                            <Check className="w-3.5 h-3.5 stroke-[4]" />
+                        </div>
 
-                        <CardContent className="p-5">
-                            <div className="flex gap-4">
-                                <div className={cn(
-                                    "p-3 rounded-xl transition-transform group-hover:scale-110 duration-300",
-                                    template.color
-                                )}>
-                                    {template.icon}
-                                </div>
-                                <div className="space-y-1 pr-6">
-                                    <div className="flex items-center gap-2">
-                                        <h4 className={cn(
-                                            "font-bold text-sm tracking-tight",
-                                            isSelected ? "text-primary" : "text-slate-900"
-                                        )}>
-                                            {template.title}
-                                        </h4>
-                                        {template.recommended && (
-                                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-tighter shadow-none">
-                                                <Sparkles className="w-2.5 h-2.5 mr-1" /> RECOMENDADO
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                                        {template.description}
-                                    </p>
-                                </div>
+                        <div className="flex gap-4 items-center pr-10">
+                            <div className={cn(
+                                "flex-shrink-0 p-3 rounded-xl transition-all duration-300 group-hover:rotate-6",
+                                template.iconClass
+                            )}>
+                                {template.icon}
                             </div>
-                        </CardContent>
-                    </Card>
+
+                            <div className="space-y-0.5 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h4 className={cn(
+                                        "font-black text-sm uppercase tracking-tight",
+                                        isSelected ? "text-primary" : "text-slate-900 dark:text-slate-100"
+                                    )}>
+                                        {template.title}
+                                    </h4>
+                                    {template.recommended && (
+                                        <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black tracking-[0.1em] px-1.5 py-0 h-4">
+                                            <Sparkles size={8} className="mr-1" /> RECOMENDADO
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
+                                    {template.description}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 );
             })}
         </div>

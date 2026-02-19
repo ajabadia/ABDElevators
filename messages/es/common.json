@@ -108,23 +108,86 @@
       "next": "Siguiente",
       "finish": "Finalizar",
       "steps": {
-        "search_title": "Asistente Técnico",
-        "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
-        "input_title": "Búsqueda Inteligente",
-        "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
-        "actions_title": "Acciones Rápidas",
-        "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets."
+        "welcome_title": "¡Bienvenido a ABD RAG Platform!",
+        "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
+        "upload_title": "Sube tu primer documento",
+        "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
+        "ask_title": "Haz tu primera pregunta",
+        "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
+        "explore_title": "Explora tu entorno",
+        "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!"
       }
     }
   },
-  "verticals": {
-    "elevators": "Inteligencia de Ascensores",
-    "legal": "Mente Legal",
-    "clinical": "Córtex Clínico"
-  },
   "help": {
     "title": "Centro de Ayuda Contextual",
-    "subtitle": "Información técnica y consejos de uso para esta sección."
+    "subtitle": "Información técnica y consejos de uso para esta sección.",
+    "contexts": {
+      "upload-documents": {
+        "title": "Subir Documentos Técnicos",
+        "content": "Puedes subir PDFs, imágenes y documentos Word. El sistema analizará automáticamente el contenido y lo indexará para búsquedas futuras.",
+        "example": "Ej: Manual ARCA II, esquemas de conexionado, procedimientos de mantenimiento",
+        "tips": [
+          "Usa archivos en buen estado (legibles, bien escaneados)",
+          "Nombres descriptivos ayudan a la búsqueda (ej: 'Manual_ARCA2_v3.pdf')",
+          "Máximo 50MB por archivo",
+          "PDFs con texto OCR se indexan mejor"
+        ],
+        "learnMore": {
+          "label": "Ver guía de formatos",
+          "href": "/ayuda/formatos-soportados"
+        }
+      },
+      "search-query": {
+        "title": "Cómo Hacer Mejores Búsquedas",
+        "content": "Escribe preguntas en lenguaje natural, como si hablaras con un técnico. El sistema buscará en todos tus documentos automáticamente.",
+        "example": "✅ Buenos ejemplos:\n• ¿Cuál es el torque del motor principal?\n• Procedimiento de calibración de puertas\n• ¿Qué significa código E07?",
+        "tips": [
+          "Sé específico: incluye el modelo si es importante",
+          "Usa términos técnicos exactos",
+          "Puedes hacer seguimiento: '¿Y el tiempo de espera?'",
+          "Si no encuentras respuesta, intenta reformular"
+        ],
+        "learnMore": {
+          "label": "Tips avanzados de búsqueda",
+          "href": "/ayuda/busquedas-avanzadas"
+        }
+      },
+      "report-hub": {
+        "title": "Generación de Informes",
+        "content": "Crea documentos técnicos PDF basados en el análisis de tus activos de conocimiento.",
+        "tips": [
+          "Elige una plantilla según el tipo de análisis que necesites",
+          "Filtra por fecha para analizar periodos específicos",
+          "Los informes incluyen citas directas a los manuales"
+        ]
+      },
+      "upload-dropzone": {
+        "title": "Bóveda de Documentos",
+        "content": "Arrastra archivos aquí para que el RAG los procese y puedas consultarlos.",
+        "tips": [
+          "Soportamos PDFs técnicos, planos y manuales",
+          "El procesado suele tardar entre 30 y 90 segundos"
+        ]
+      },
+      "confidence-scores": {
+        "title": "Niveles de Confianza",
+        "content": "Indica qué tan seguro está el sistema de que la respuesta es exacta según los documentos.",
+        "tips": [
+          "Alta: Encontrado literalmente en el texto",
+          "Media: Inferido de múltiples fragmentos",
+          "Baja: Información vaga o ausente"
+        ]
+      },
+      "audit-logs": {
+        "title": "Registro de Auditoría",
+        "content": "Trazabilidad total de cada acción realizada en la plataforma para cumplimiento normativo.",
+        "tips": [
+          "Filtra por 'ERROR' para problemas críticos",
+          "Usa el correlationId para rastrear acciones de extremo a extremo"
+        ]
+      }
+    }
   },
   "activateBtn": "Activar",
   "activities": {
@@ -386,5 +449,32 @@
     "all_status": "Todos los Estados"
   },
   "save": "Guardar",
-  "cancel": "Cancelar"
+  "cancel": "Cancelar",
+  "confidence": {
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja",
+    "highMessage": "Respuesta respaldada por múltiples fuentes",
+    "mediumMessage": "Algunas fuentes lo confirman, verifica en el documento original",
+    "lowMessage": "Información limitada, consulta un especialista"
+  },
+  "searchScope": {
+    "company": "Mi empresa",
+    "space": "Mi espacio",
+    "manuals": "Manuales"
+  },
+  "expertMode": {
+    "toggle": "Modo experto",
+    "subtitle": "Chunking, modelos, temperatura...",
+    "technicalDetail": "Ver detalle técnico",
+    "moreContext": "Ver más contexto"
+  },
+  "analyzeFlow": {
+    "askQuestion": "¿Qué quieres saber sobre este documento?",
+    "suggestionsLabel": "Preguntas sugeridas",
+    "analyzing": "Analizando documento...",
+    "analyzeWait": "Esto puede tardar hasta 60 segundos dependiendo del tamaño.",
+    "resultTitle": "Resultado del Análisis",
+    "sourcesLabel": "Fuentes consultadas"
+  }
 }

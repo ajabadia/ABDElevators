@@ -2088,6 +2088,8 @@
       "subtitle": "Generación y gestión de informes técnicos industriales",
       "generateNew": "Generar Nuevo Informe",
       "noReports": "No hay informes generados recientemente.",
+      "recordsFound": "{count} informes encontrados",
+      "searchPlaceholder": "Buscar por nombre de informe...",
       "download": "Descargar PDF",
       "share": "Compartir",
       "tableHeaders": {
@@ -2100,10 +2102,15 @@
     },
     "templates": {
       "audit": "Auditoría de Cumplimiento",
+      "auditDesc": "Verifica normativas y estándares de seguridad",
       "inspection": "Inspección Técnica",
+      "inspectionDesc": "Detalle técnico de componentes y estado",
       "ragQuality": "Calidad RAG",
+      "ragQualityDesc": "Evaluación de fiabilidad y contexto",
       "entityLlm": "Análisis de Entidad (LLM)",
-      "workflow": "Rendimiento de Workflow"
+      "entityLlmDesc": "Análisis profundo de activos específicos",
+      "workflow": "Rendimiento de Workflow",
+      "workflowDesc": "Eficiencia y cuellos de botella"
     },
     "generate": {
       "title": "Configurar Nuevo Informe",
@@ -2111,6 +2118,8 @@
       "dateRange": "Rango de Fechas",
       "includeSources": "Incluir Fuentes",
       "generating": "Generando Informe...",
+      "downloadPdf": "Descargar PDF",
+      "sendEmail": "Enviar por Email",
       "success": "Informe generado exitosamente",
       "error": "Error al generar el informe"
     },

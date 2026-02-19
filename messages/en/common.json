@@ -103,23 +103,86 @@
       "next": "Next",
       "finish": "Finish",
       "steps": {
-        "search_title": "Technical Assistant",
-        "search_content": "Here you can make natural language queries about technical manuals.",
-        "input_title": "Smart Search",
-        "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
-        "actions_title": "Quick Actions",
-        "actions_content": "Quickly access most used functions: Search, File Upload, and Tickets."
+        "welcome_title": "Welcome to ABD RAG Platform!",
+        "welcome_content": "The AI that understands your technical documentation. To start, what is your primary role?",
+        "upload_title": "Upload your first document",
+        "upload_content": "Drag a PDF, Word or technical text. Don't have one handy? Try our demo document.",
+        "ask_title": "Ask your first question",
+        "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
+        "explore_title": "Explore your environment",
+        "explore_content": "We've customized your dashboard based on your role. You're all set to go!"
       }
     }
   },
-  "verticals": {
-    "elevators": "Elevator Intelligence",
-    "legal": "Legal Mind",
-    "clinical": "Clinical Cortex"
-  },
   "help": {
     "title": "Contextual Help Center",
-    "subtitle": "Technical information and usage tips for this section."
+    "subtitle": "Technical information and usage tips for this section.",
+    "contexts": {
+      "upload-documents": {
+        "title": "Upload Technical Documents",
+        "content": "You can upload PDFs, images, and Word documents. The system will automatically analyze the content and index it for future searches.",
+        "example": "Ex: Manual ARCA II, wiring diagrams, maintenance procedures",
+        "tips": [
+          "Use files in good condition (legible, well-scanned)",
+          "Descriptive names help searching (ex: 'Manual_ARCA2_v3.pdf')",
+          "Max 50MB per file",
+          "PDFs with OCR text index better"
+        ],
+        "learnMore": {
+          "label": "View format guide",
+          "href": "/help/supported-formats"
+        }
+      },
+      "search-query": {
+        "title": "How to Search Better",
+        "content": "Write questions in natural language, as if talking to a technician. The system will search all your documents automatically.",
+        "example": "✅ Good examples:\n• What is the main motor torque?\n• Door calibration procedure\n• What does code E07 mean?",
+        "tips": [
+          "Be specific: include the model if important",
+          "Use exact technical terms",
+          "You can follow up: 'And the wait time?'",
+          "If you don't find an answer, try rephrasing"
+        ],
+        "learnMore": {
+          "label": "Advanced search tips",
+          "href": "/help/advanced-search"
+        }
+      },
+      "report-hub": {
+        "title": "Report Generation",
+        "content": "Create technical PDF documents based on the analysis of your knowledge assets.",
+        "tips": [
+          "Choose a template according to the type of analysis you need",
+          "Filter by date to analyze specific periods",
+          "Reports include direct citations to the manuals"
+        ]
+      },
+      "upload-dropzone": {
+        "title": "Document Vault",
+        "content": "Drag files here for the RAG to process so you can query them.",
+        "tips": [
+          "We support technical PDFs, blueprints, and manuals",
+          "Processing usually takes between 30 and 90 seconds"
+        ]
+      },
+      "confidence-scores": {
+        "title": "Confidence Levels",
+        "content": "Indicates how sure the system is that the answer is accurate according to the documents.",
+        "tips": [
+          "High: Found literally in the text",
+          "Medium: Inferred from multiple fragments",
+          "Low: Vague or missing information"
+        ]
+      },
+      "audit-logs": {
+        "title": "Audit Trail",
+        "content": "Full traceability of every action performed on the platform for regulatory compliance.",
+        "tips": [
+          "Filter by 'ERROR' for critical problems",
+          "Use the correlationId to track actions end-to-end"
+        ]
+      }
+    }
   },
   "activateBtn": "Activate",
   "activities": {
@@ -372,5 +435,32 @@
   },
   "filters": {
     "all_status": "All Status"
+  },
+  "confidence": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "highMessage": "Answer supported by multiple sources",
+    "mediumMessage": "Some sources confirm this, verify in the original document",
+    "lowMessage": "Limited information, consult a specialist"
+  },
+  "searchScope": {
+    "company": "My company",
+    "space": "My space",
+    "manuals": "Manuals"
+  },
+  "expertMode": {
+    "toggle": "Expert mode",
+    "subtitle": "Chunking, models, temperature...",
+    "technicalDetail": "View technical detail",
+    "moreContext": "View more context"
+  },
+  "analyzeFlow": {
+    "askQuestion": "What do you want to know about this document?",
+    "suggestionsLabel": "Suggested questions",
+    "analyzing": "Analyzing document...",
+    "analyzeWait": "This may take up to 60 seconds depending on the size.",
+    "resultTitle": "Analysis Result",
+    "sourcesLabel": "Consulted sources"
   }
 }

@@ -15,6 +15,7 @@ export default function SearchPage() {
                 title={t('title')}
                 highlight={t('highlight')}
                 subtitle={t('subtitle')}
+                helpId="search-query"
             />
 
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">

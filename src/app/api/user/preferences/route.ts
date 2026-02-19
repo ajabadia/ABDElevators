@@ -9,7 +9,10 @@ import { z } from 'zod';
 const PreferencesUpdateSchema = z.object({
     onboarding: z.object({
         completed: z.boolean().optional(),
-        currentStep: z.number().optional()
+        currentStep: z.number().optional(),
+        userContext: z.enum(['inspection', 'maintenance', 'engineering', 'admin']).optional(),
+        firstDocUploaded: z.boolean().optional(),
+        firstQuestionAsked: z.boolean().optional()
     }).optional(),
     theme: z.enum(['light', 'dark', 'system']).optional(),
     language: z.string().optional()
