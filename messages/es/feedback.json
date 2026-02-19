@@ -1,0 +1,14 @@
+{
+    "question": "¿Fue útil esta respuesta?",
+    "thanks_positive": "✓ Gracias por tu feedback",
+    "thanks_negative": "Gracias, lo tendremos en cuenta",
+    "categories": {
+        "incorrect": "Incorrecta",
+        "incomplete": "Incompleta",
+        "irrelevant": "Irrelevante",
+        "source_wrong": "Fuente errónea"
+    },
+    "placeholder": "¿Qué información esperabas?",
+    "submit": "Enviar",
+    "submitting": "Enviando..."
+}

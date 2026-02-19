@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { RagResult } from '@/lib/rag-service';
 import { useTranslations } from 'next-intl';
 import { humanizeConfidence, confidencePercent } from '@/lib/confidence-humanizer';
+import AnswerFeedback from '@/components/shared/AnswerFeedback';
 
 /**
  * GlobalSemanticSearch — ERA 6 Core Flow (FASE 192)
@@ -167,6 +168,12 @@ export function GlobalSemanticSearch() {
                             <div className="text-lg text-slate-200 leading-relaxed font-medium italic border-l-4 border-primary pl-6 py-2">
                                 {synthesis}
                             </div>
+                            <AnswerFeedback
+                                answerId={`synth-${crypto.randomUUID()}`}
+                                question={query}
+                                documentSource="Cross-Vertical RAG"
+                                className="border-t-slate-800/50 mt-4"
+                            />
                         </div>
                     </ContentCard>
 

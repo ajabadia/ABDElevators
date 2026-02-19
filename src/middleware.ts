@@ -174,7 +174,7 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         return new NextResponse(JSON.stringify({
             success: false,
             message: 'Middleware Error',
-            error: error.message,
+            error: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred',
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }), {
             status: 500,

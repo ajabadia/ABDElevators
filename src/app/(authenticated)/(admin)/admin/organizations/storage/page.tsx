@@ -46,7 +46,8 @@ export default function OrganizationsStoragePage() {
                 description: typeof err === 'string' ? err : t('saveError'),
                 variant: 'destructive',
             });
-        }
+        },
+        onSettled: () => setIsSaving(false)
     });
 
     const handleSave = () => {
@@ -84,8 +85,8 @@ export default function OrganizationsStoragePage() {
             />
 
             <div className="mt-6">
-                <StorageTab 
-                    config={config} 
+                <StorageTab
+                    config={config}
                     setConfig={(setter) => {
                         if (typeof setter === 'function') {
                             const newConfig = setter(config);

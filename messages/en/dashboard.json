@@ -15,7 +15,16 @@
     "efficiency": "Efficiency",
     "health_metrics": "Health Metrics",
     "recent_activity": "Recent Activity",
-    "priority_tasks": "My Priority Tasks"
+    "priority_tasks": "My Priority Tasks",
+    "value_metrics": "Value Metrics",
+    "attention": "Attention Needed",
+    "attention_desc": "Items requiring immediate action"
+  },
+  "metrics": {
+    "analyzed": "Documents Analyzed",
+    "time_saved": "Estimated Time Saved",
+    "confidence": "Average Confidence",
+    "weekly_growth": "Weekly Growth"
   },
   "actions": {
     "upload": {

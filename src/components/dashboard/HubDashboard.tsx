@@ -37,6 +37,10 @@ import { cn } from "@/lib/utils";
 import { UserRole } from "@/types/roles";
 import { useState } from "react";
 import { PersonalOverview } from "@/components/dashboard/PersonalOverview";
+import { useApiItem } from "@/hooks/useApiItem";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface HubCardProps {
     id: string;
@@ -46,6 +50,7 @@ interface HubCardProps {
     icon: React.ReactNode;
     color: string;
     roles?: UserRole[];
+    inactive?: boolean;
 }
 
 export default function HubDashboard() {
@@ -96,7 +101,8 @@ export default function HubDashboard() {
             description: t("cards.spaces.description"), // "Gestiona tus proyectos y espacios colaborativos."
             href: "/spaces",
             icon: <Box className="w-6 h-6" />,
-            color: "border-l-muted"
+            color: "border-l-muted",
+            inactive: true
         }
     ];
 
@@ -127,7 +133,8 @@ export default function HubDashboard() {
             href: "/admin/ai",
             icon: <BrainCircuit className="w-6 h-6" />,
             color: "border-l-accent",
-            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+            inactive: true // Technical placeholder
         },
         {
             id: "checklist_config",
@@ -149,7 +156,8 @@ export default function HubDashboard() {
             href: "/admin/audit",
             icon: <History className="w-6 h-6" />,
             color: "border-l-slate-400",
-            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+            inactive: true // Coming Soon
         },
         {
             id: "guardian",
@@ -158,7 +166,8 @@ export default function HubDashboard() {
             href: "/admin/permissions",
             icon: <ShieldAlert className="w-6 h-6" />,
             color: "border-l-destructive",
-            roles: [UserRole.SUPER_ADMIN]
+            roles: [UserRole.SUPER_ADMIN],
+            inactive: true // Coming Soon
         },
         {
             id: "i18n",
@@ -167,7 +176,8 @@ export default function HubDashboard() {
             href: "/admin/settings/i18n",
             icon: <Languages className="w-6 h-6" />,
             color: "border-l-indigo-400",
-            roles: [UserRole.SUPER_ADMIN]
+            roles: [UserRole.SUPER_ADMIN],
+            inactive: true // Coming Soon
         },
         {
             id: "api_keys",
@@ -176,14 +186,15 @@ export default function HubDashboard() {
             href: "/admin/api-keys",
             icon: <Key className="w-6 h-6" />,
             color: "border-l-amber-400",
-            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+            roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+            inactive: true // Coming Soon
         }
     ];
 
     // Filter cards
-    const visibleCore = coreCards.filter(c => isVisible(c.roles));
-    const visibleAdmin = adminCards.filter(c => isVisible(c.roles));
-    const visibleSystem = systemCards.filter(c => isVisible(c.roles));
+    const visibleCore = coreCards.filter(c => isVisible(c.roles) && !c.inactive);
+    const visibleAdmin = adminCards.filter(c => isVisible(c.roles) && !c.inactive);
+    const visibleSystem = systemCards.filter(c => isVisible(c.roles) && !c.inactive);
 
     // Combine primary cards (Core + Admin)
     const primaryCards = [...visibleCore, ...visibleAdmin];
@@ -198,6 +209,9 @@ export default function HubDashboard() {
 
             {/* Personal Overview (Stats/Inbox) */}
             <PersonalOverview />
+
+            {/* FASE 195.3: Attention Needed Panel */}
+            <AttentionPanel />
 
             {/* Primary Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
@@ -259,5 +273,58 @@ function HubCard({ card, router }: { card: HubCardProps, router: any }) {
                 </CardDescription>
             </CardContent>
         </Card>
+    );
+}
+
+function AttentionPanel() {
+    const t = useTranslations("dashboard");
+    const router = useRouter();
+    const { data: valueData } = useApiItem<any>({
+        endpoint: '/api/dashboard/value-metrics',
+    });
+
+    const items = valueData?.attentionItems || [];
+
+    if (items.length === 0) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+        >
+            <div className="flex items-center gap-2 mb-4">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+                    {t("stats.attention")}
+                </h3>
+                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] rounded-full">
+                    {items.length}
+                </Badge>
+            </div>
+
+            <div className="grid gap-3">
+                {items.map((item: any, i: number) => (
+                    <button
+                        key={i}
+                        onClick={() => router.push(item.href)}
+                        className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-primary/50 transition-all group text-left"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                            <div>
+                                <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                    {item.label}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">
+                                    Esfuerzo estimado: {item.estimate}
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-primary transition-all" />
+                    </button>
+                ))}
+            </div>
+        </motion.div>
     );
 }

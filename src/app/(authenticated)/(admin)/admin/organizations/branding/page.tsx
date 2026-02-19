@@ -29,7 +29,8 @@ export default function OrganizationsBrandingPage() {
                 description: typeof err === 'string' ? err : t('saveError'),
                 variant: 'destructive',
             });
-        }
+        },
+        onSettled: () => setIsSaving(false)
     });
 
     const handleSave = () => {
@@ -67,8 +68,8 @@ export default function OrganizationsBrandingPage() {
             />
 
             <div className="mt-6">
-                <BrandingTab 
-                    config={config} 
+                <BrandingTab
+                    config={config}
                     setConfig={(setter) => {
                         if (typeof setter === 'function') {
                             const newConfig = setter(config);
@@ -76,7 +77,7 @@ export default function OrganizationsBrandingPage() {
                         } else {
                             setConfig(setter);
                         }
-                    }} 
+                    }}
                 />
             </div>
         </PageContainer>

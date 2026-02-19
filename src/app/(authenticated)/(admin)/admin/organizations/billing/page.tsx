@@ -45,7 +45,8 @@ export default function OrganizationsBillingPage() {
                 description: typeof err === 'string' ? err : t('saveError'),
                 variant: 'destructive',
             });
-        }
+        },
+        onSettled: () => setIsSaving(false)
     });
 
     const handleSave = () => {
@@ -83,8 +84,8 @@ export default function OrganizationsBillingPage() {
             />
 
             <div className="mt-6">
-                <BillingTab 
-                    config={config} 
+                <BillingTab
+                    config={config}
                     setConfig={(setter) => {
                         if (typeof setter === 'function') {
                             const newConfig = setter(config);

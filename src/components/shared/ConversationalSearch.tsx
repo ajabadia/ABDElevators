@@ -21,8 +21,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import ReactMarkdown from "react-markdown"
 import { useTranslations } from "next-intl"
 import { humanizeConfidence, confidencePercent } from "@/lib/confidence-humanizer"
+import AnswerFeedback from "@/components/shared/AnswerFeedback"
 
 interface Message {
+    id?: string
     role: "user" | "assistant"
     content: string
     documents?: any[]
@@ -143,6 +145,7 @@ export function ConversationalSearch() {
 
                 if (isDone || fullAssistantContent.length > 0) {
                     setMessages(prev => [...prev, {
+                        id: crypto.randomUUID(),
                         role: "assistant",
                         content: fullAssistantContent,
                         documents: currentDocs,
@@ -174,6 +177,7 @@ export function ConversationalSearch() {
         if (!success) {
             toast.error(t("error_connection"))
             setMessages(prev => [...prev, {
+                id: crypto.randomUUID(),
                 role: "assistant",
                 content: "error_retry"
             }])
@@ -302,6 +306,14 @@ export function ConversationalSearch() {
                                                 </div>
                                             </div>
                                         )}
+
+                                        {/* Feedback Loop */}
+                                        <AnswerFeedback
+                                            answerId={m.id || `msg-${i}`}
+                                            question={messages[i - 1]?.content || ""}
+                                            documentSource={m.documents?.[0]?.source || "Knowledge Base"}
+                                            className="border-t-0 p-0 mt-2"
+                                        />
                                     </div>
                                 )}
                             </div>

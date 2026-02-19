@@ -185,6 +185,7 @@ src/
 - ✅ **Suite Evolution & Next-Gen Utilities (Phase 184)**: Infraestructura multi-producto, Feature Flags persistentes, Job Scheduler genérico y Gobernanza de IA por tenant.
 - ✅ **Unified Experience (ERA 6)**: Rediseño visual masivo, dashboard "Hub" unificado y simplificación de navegación para técnicos (Phases 190-193).
 187: - ✅ **Onboarding Real & Contextual Help (Phase 194)**: Sistema de guías interactivas personalizado por rol (WorkContext) y ayuda contextual integrada en todos los PageHeaders.
+188: - ✅ **Feedback Loop & Value Dashboard (Phase 195/196)**: Captura de feedback 👍/👎 en chat, métricas de ROI (tiempo ahorrado) y limpieza de deuda técnica industrial.
 
 ## 🔧 Scripts Disponibles
 

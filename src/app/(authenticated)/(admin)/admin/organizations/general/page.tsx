@@ -44,7 +44,8 @@ export default function OrganizationsGeneralPage() {
                 description: typeof err === 'string' ? err : t('saveError'),
                 variant: 'destructive',
             });
-        }
+        },
+        onSettled: () => setIsSaving(false)
     });
 
     const handleSave = () => {
@@ -86,8 +87,8 @@ export default function OrganizationsGeneralPage() {
             />
 
             <div className="mt-6 space-y-6">
-                <GeneralTab 
-                    config={config} 
+                <GeneralTab
+                    config={config}
                     setConfig={(setter) => {
                         if (typeof setter === 'function') {
                             const newConfig = setter(config);
@@ -95,7 +96,7 @@ export default function OrganizationsGeneralPage() {
                         } else {
                             setConfig(setter);
                         }
-                    }} 
+                    }}
                 />
                 <SecurityCenterCard config={config} />
             </div>

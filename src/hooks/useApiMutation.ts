@@ -8,6 +8,7 @@ interface MutationOptions<T, R> {
     method?: 'POST' | 'PATCH' | 'DELETE' | 'PUT';
     onSuccess?: (result: R, variables: T) => void | Promise<void>;
     onError?: (error: string) => void;
+    onSettled?: (result: R | null, variables: T) => void | Promise<void>;
     successMessage?: string | ((result: R) => string);
     errorMessage?: string;
     confirmMessage?: string | ((data: T) => string);
@@ -30,7 +31,8 @@ export function useApiMutation<T = unknown, R = unknown>({
     confirmMessage,
     invalidateQueries,
     headers,
-    idempotencyKey
+    idempotencyKey,
+    onSettled
 }: MutationOptions<T, R>) {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
@@ -112,8 +114,9 @@ export function useApiMutation<T = unknown, R = unknown>({
             return null;
         } finally {
             setIsLoading(false);
+            onSettled?.(null as any, variables); // result is only available in try, but onSettled usually only cares about completion
         }
-    }, [endpoint, method, confirmMessage, errorMessage, successMessage, toast, onSuccess, onError, invalidateQueries, headers, idempotencyKey]);
+    }, [endpoint, method, confirmMessage, errorMessage, successMessage, toast, onSuccess, onError, invalidateQueries, headers, idempotencyKey, onSettled]);
 
     return {
         mutate,

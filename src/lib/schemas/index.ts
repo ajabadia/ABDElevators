@@ -28,6 +28,7 @@ export * from './intelligence';
 // This file only re-exports modules.
 // The provided snippet for 'KnowledgeAssetSchema' definition is syntactically incorrect for this file.
 export * from './pagination';
+export * from './feedback';
 
 // Explicit re-exports for problematic symbols to help Turbopack indexing
 export { DocumentTypeSchema } from './knowledge';
