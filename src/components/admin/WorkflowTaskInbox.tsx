@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApiList } from '@/hooks/useApiList';
-import { WorkflowTask } from '@/lib/schemas';
+import { WorkflowTask } from '@abd/workflow-engine';
 import { WorkflowTaskCard } from './WorkflowTaskCard';
 import { ContentCard } from '@/components/ui/content-card';
 import { Input } from '@/components/ui/input';
@@ -74,9 +74,9 @@ export function WorkflowTaskInbox() {
                 </div>
             ) : tasks && tasks.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tasks.map((task) => (
+                    {tasks.map((task, index) => (
                         <WorkflowTaskCard
-                            key={task._id.toString()}
+                            key={task._id?.toString() || index}
                             task={task}
                             onUpdate={refresh}
                         />

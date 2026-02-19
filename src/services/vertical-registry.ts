@@ -19,6 +19,17 @@ export class VerticalRegistryService {
             },
             fields: []
         },
+        GENERIC: {
+            industry: 'GENERIC',
+            entityLabel: { es: 'Expediente', en: 'Case' },
+            entityLabelPlural: { es: 'Expedientes', en: 'Cases' },
+            promptPack: 'GENERIC',
+            features: {
+                'CHECKLIST_GENERATION': false,
+                'REPORT_BRANDING': false,
+            },
+            fields: []
+        },
         LEGAL: {
             industry: 'LEGAL',
             entityLabel: { es: 'Contrato', en: 'Contract' },

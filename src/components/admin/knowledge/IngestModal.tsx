@@ -40,7 +40,7 @@ export function IngestModal({ open, onOpenChange, onSuccess }: IngestModalProps)
         version: '1.0',
         documentTypeId: '',
         scope: 'TENANT' as 'GLOBAL' | 'INDUSTRY' | 'TENANT',
-        industry: 'ELEVATORS',
+        industry: 'GENERIC',
         description: ''
     });
 
@@ -117,7 +117,7 @@ export function IngestModal({ open, onOpenChange, onSuccess }: IngestModalProps)
                     version: '1.0',
                     documentTypeId: '',
                     scope: 'TENANT',
-                    industry: 'ELEVATORS',
+                    industry: 'GENERIC',
                     description: ''
                 });
             } else {

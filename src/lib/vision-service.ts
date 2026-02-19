@@ -56,8 +56,13 @@ export class VisionService {
                 const duration = Date.now() - start;
                 span.setAttribute('genai.duration_ms', duration);
 
-                // 3. Parsear JSON de la respuesta
-                const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+                // 3. Parsear JSON de la respuesta (Resilience Phase 192)
+                const cleanJson = responseText
+                    .replace(/```json/g, '')
+                    .replace(/```/g, '')
+                    .trim();
+
+                const jsonMatch = cleanJson.match(/\[[\s\S]*\]/);
                 if (!jsonMatch) {
                     await logEvento({
                         level: 'WARN',

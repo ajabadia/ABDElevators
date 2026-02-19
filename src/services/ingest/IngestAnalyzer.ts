@@ -9,7 +9,13 @@ import { logEvento } from '@/lib/logger';
  * IngestAnalyzer: Handles content extraction and semantic processing (Phase 105 Hygiene).
  */
 export class IngestAnalyzer {
-    static async analyze(buffer: Buffer, asset: any, correlationId: string, session?: any) {
+    static async analyze(buffer: Buffer, asset: any, correlationId: string, session?: any, options?: {
+        enableVision?: boolean;
+        enableTranslation?: boolean;
+        enableGraphRag?: boolean;
+        enableCognitive?: boolean;
+        maskPii?: boolean;
+    }) {
         // Phase 2: Import observability utilities
         const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
         const { withLLMRetry } = await import('@/lib/llm-retry');
@@ -24,9 +30,18 @@ export class IngestAnalyzer {
             correlationId,
             tenantId: asset.tenantId
         });
+
+        // DEBUG: Trace exact options for Vision
+        console.log('[INGEST ANALYZER DEBUG] Analyze Options:', JSON.stringify(options, null, 2));
+        console.log('[INGEST ANALYZER DEBUG] Asset Flags:', JSON.stringify({
+            enableVision: asset.enableVision,
+            enableTranslation: asset.enableTranslation,
+            enableCognitive: asset.enableCognitive
+        }, null, 2));
+
         const [rawText, visualFindings] = await Promise.all([
             extractTextAdvanced(buffer),
-            analyzePDFVisuals(buffer, asset.tenantId, correlationId)
+            options?.enableVision ? analyzePDFVisuals(buffer, asset.tenantId, correlationId) : Promise.resolve([])
         ]);
         await logEvento({
             level: 'INFO',
@@ -66,6 +81,28 @@ export class IngestAnalyzer {
         let detectedLang = 'es'; // Default fallback
 
         try {
+            if (!options?.enableTranslation) {
+                await logEvento({
+                    level: 'INFO',
+                    source: 'INGEST_ANALYZER',
+                    action: 'LANGUAGE_DETECTION_SKIPPED',
+                    message: `Language detection skipped (Expert mode toggle off)`,
+                    correlationId,
+                    tenantId: asset.tenantId
+                });
+                return {
+                    rawText,
+                    visualFindings,
+                    detectedIndustry,
+                    detectedLang: 'es', // Default
+                    detectedModels: await extractModelsWithGemini(rawText, asset.tenantId, correlationId, session),
+                    documentContext: options?.enableCognitive ? await (async () => {
+                        const { CognitiveRetrievalService } = await import('@/services/cognitive-retrieval-service');
+                        return await CognitiveRetrievalService.generateDocumentContext(rawText, detectedIndustry, asset.tenantId, correlationId, session);
+                    })() : ''
+                };
+            }
+
             const langStart = Date.now();
             const { text: languagePrompt, model: langModel } = await PromptService.getRenderedPrompt(
                 'LANGUAGE_DETECTOR',
@@ -83,7 +120,7 @@ export class IngestAnalyzer {
                     tenantId: asset.tenantId,
                     correlationId,
                 },
-                { maxRetries: 2, timeoutMs: 5000 }
+                { maxRetries: 1, timeoutMs: 30000 }
             );
 
             detectedLang = langResponse.trim().toLowerCase().substring(0, 2);
@@ -112,17 +149,45 @@ export class IngestAnalyzer {
         }
 
         // 4. Model Extraction - Phase 2: Add observability (delegated to ExtractionService, which we'll enhance)
-        const detectedModels = await extractModelsWithGemini(rawText, asset.tenantId, correlationId, session);
+        // 4. Model Extraction - Phase 2: Add observability (delegated to ExtractionService, which we'll enhance)
+        // Only run if premium features are enabled (Translation or Cognitive), otherwise keep it deterministic
+        let detectedModels: any[] = [];
+        if (options?.enableTranslation || options?.enableCognitive) {
+            console.log('[INGEST] Running Model Extraction (Premium features enabled)');
+            detectedModels = await extractModelsWithGemini(rawText, asset.tenantId, correlationId, session);
+        } else {
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_ANALYZER',
+                action: 'MODEL_EXTRACTION_SKIPPED',
+                message: `Model extraction skipped (Basic mode).`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+        }
 
-        // 5. Cognitive Context (Phase 102) - Already has observability from CognitiveRetrievalService
-        const { CognitiveRetrievalService } = await import('@/services/cognitive-retrieval-service');
-        const documentContext = await CognitiveRetrievalService.generateDocumentContext(
-            rawText,
-            detectedIndustry,
-            asset.tenantId,
-            correlationId,
-            session
-        );
+        // 5. Cognitive Context (Phase 102) - Controlled by Premium Flag
+        let documentContext = '';
+        if (options?.enableCognitive) {
+            const { CognitiveRetrievalService } = await import('@/services/cognitive-retrieval-service');
+            documentContext = await CognitiveRetrievalService.generateDocumentContext(
+                rawText,
+                detectedIndustry,
+                asset.tenantId,
+                correlationId,
+                session
+            );
+        } else {
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_ANALYZER',
+                action: 'COGNITIVE_CONTEXT_SKIPPED',
+                message: `Cognitive context generation skipped (Expert mode toggle off)`,
+                correlationId,
+                tenantId: asset.tenantId
+            });
+            documentContext = 'Contexto cognitivo deshabilitado.';
+        }
 
         return {
             rawText,

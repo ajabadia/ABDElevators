@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
             question,
             messages = [],
             stream = false,
-            industry = 'ELEVATORS',
+            industry = 'GENERIC',
             environment = 'PRODUCTION'
         } = await req.json();
 

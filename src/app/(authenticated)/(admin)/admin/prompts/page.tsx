@@ -53,6 +53,7 @@ export default function AdminPromptsPage() {
     const [uniqueTenants, setUniqueTenants] = useState<{ id: string, name: string }[]>([]);
     const [showGlobalHistory] = useState(false); // Refactored to not use setShowGlobalHistory if not needed locally or pass to modal
     const [_showGlobalHistory, setShowGlobalHistory] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const { environment } = useEnvironmentStore();
 
     // Categorías disponibles
@@ -113,6 +114,39 @@ export default function AdminPromptsPage() {
         toast({ title: t('messages.save_success') });
     };
 
+    const handleSyncFromCode = async () => {
+        try {
+            setIsSyncing(true);
+            const res = await fetch('/api/admin/prompts/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const json = await res.json();
+
+            if (!json.success) throw new Error(json.message);
+
+            // Actualizar lista
+            fetchPrompts();
+
+            toast({
+                title: t('messages.sync_success', {
+                    created: json.results.created,
+                    updated: json.results.updated,
+                    errors: json.results.errors || 0
+                })
+            });
+        } catch (error: any) {
+            console.error('Sync Error:', error);
+            toast({
+                title: t('messages.sync_error'),
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     const handlePromote = async () => {
         if (!modal.data) return;
         try {
@@ -147,6 +181,19 @@ export default function AdminPromptsPage() {
                             className="rounded-xl border-slate-200 dark:border-slate-800"
                         >
                             <History className="w-4 h-4 mr-2" /> {t('actions.history')}
+                        </Button>
+                        <Button
+                            onClick={handleSyncFromCode}
+                            disabled={isSyncing}
+                            variant="outline"
+                            className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/10"
+                        >
+                            {isSyncing ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <Sparkles className="w-4 h-4 mr-2" />
+                            )}
+                            {t('sync')}
                         </Button>
                         {environment === 'STAGING' && modal.isOpen && modal.data && (
                             <Button

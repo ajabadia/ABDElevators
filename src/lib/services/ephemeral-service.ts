@@ -19,7 +19,7 @@ export class EphemeralTenantService {
         const tenantConfig = {
             tenantId,
             name: `Demo Tenant ${tenantId}`,
-            industry: 'ELEVATORS',
+            industry: 'GENERIC',
             storage: {
                 provider: 'cloudinary',
                 quota_bytes: 1024 * 1024 * 100 // 100MB for demo
@@ -53,7 +53,7 @@ export class EphemeralTenantService {
             lastName: 'Admin',
             role: 'ADMIN',
             tenantId,
-            industry: 'ELEVATORS',
+            industry: 'GENERIC',
             activeModules: ['TECHNICAL', 'RAG'],
             isActive: true,
             createdAt: new Date(),

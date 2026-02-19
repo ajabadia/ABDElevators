@@ -14,7 +14,7 @@ import {
     ArrowRight,
     Brain
 } from 'lucide-react';
-import { WorkflowTask } from '@/lib/schemas';
+import { WorkflowTask } from '@abd/workflow-engine';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

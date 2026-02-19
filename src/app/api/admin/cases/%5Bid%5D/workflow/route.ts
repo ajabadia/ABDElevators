@@ -5,7 +5,7 @@ import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { WorkflowService } from '@/lib/workflow-service';
 import { WorkflowLLMNodeService } from '@/lib/workflow-llm-node-service';
-import { LegacyCaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';
@@ -121,14 +121,14 @@ export async function POST(
         }).parse(await req.json());
 
         // Usar el motor para ejecutar la transición
-        const result = await WorkflowEngine.executeTransition({
-            caseId: id,
-            toState,
-            role: session.user.role as string,
-            correlationId,
-            comment,
-            signature
-        });
+        const result = await WorkflowEngine.getInstance().executeTransition(
+            id,
+            toState, // transitionId
+            session.user.tenantId,
+            session.user.id,
+            [session.user.role as string],
+            correlationId
+        );
 
         return NextResponse.json(result);
 

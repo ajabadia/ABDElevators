@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
 
         // 4. Guardar registro en DB (Phase 160.1)
         try {
-            const { getReportsCollection } = await import('@/lib/db-tenant');
-            const reports = await getReportsCollection(session);
+            const { getTenantCollection } = await import('@/lib/db-tenant');
+            const reports = await getTenantCollection('reports', session);
 
             await reports.insertOne({
                 type: validated.templateType,

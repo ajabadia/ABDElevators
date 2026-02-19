@@ -38,7 +38,7 @@ export class ExtractionService {
 
                 // Renderizar el prompt dinámico y obtener el modelo configurado
                 const { production, shadow } = await PromptService.getPromptWithShadow(
-                    'MODEL_EXTRACTOR',
+                    'EXTRAER_MODELOS',
                     { text },
                     tenantId,
                     'GENERIC',
@@ -68,9 +68,16 @@ export class ExtractionService {
                 const duration = Date.now() - start;
                 span.setAttribute('genai.duration_ms', duration);
 
-                const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+                // 3. Limpiar y parsear JSON de la respuesta (Phase 192 Resilience)
+                const cleanJson = responseText
+                    .replace(/```json/g, '')
+                    .replace(/```/g, '')
+                    .trim();
+
+                const jsonMatch = cleanJson.match(/\[[\s\S]*\]/);
                 if (!jsonMatch) {
-                    throw new ExternalServiceError('No valid JSON found in Gemini response');
+                    console.error("[EXTRACTION ERROR] No JSON array found in:", responseText);
+                    throw new ExternalServiceError('No valid JSON array found in Gemini response');
                 }
 
                 let modelos;
@@ -79,6 +86,7 @@ export class ExtractionService {
                     ExtractedModelsArraySchema.parse(modelos);
                     span.setAttribute('extraction.count', modelos.length);
                 } catch (parseError) {
+                    console.error("[EXTRACTION PARSE ERROR] Invalid JSON or Schema:", jsonMatch[0]);
                     throw new ExternalServiceError('Failed to parse or validate Gemini response as expected JSON array', parseError as Error);
                 }
 

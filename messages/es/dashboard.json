@@ -106,5 +106,9 @@
         "description": "Gestiona claves de acceso y tokens."
       }
     }
-  }
+  },
+  "welcome": "Hola, {name}",
+  "welcome_title": "Hola, {name}",
+  "welcome_subtitle": "¿Qué te gustaría hacer hoy?",
+  "advanced_section": "Administración Avanzada"
 }

@@ -18,7 +18,8 @@ export class IngestIndexer {
         correlationId: string,
         session?: any,
         onProgress?: (percent: number) => Promise<void>,
-        chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE' // Phase 134
+        chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE', // Phase 134
+        chunkingConfig?: { size?: number; overlap?: number; threshold?: number } // Phase 134.2
     ) {
         // Phase 2: Import observability utilities
         const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
@@ -33,7 +34,10 @@ export class IngestIndexer {
             metadata: {
                 industry,
                 filename: asset.filename
-            }
+            },
+            chunkSize: chunkingConfig?.size,
+            chunkOverlap: chunkingConfig?.overlap,
+            chunkThreshold: chunkingConfig?.threshold,
         });
 
         const allChunks = [
@@ -106,10 +110,12 @@ export class IngestIndexer {
 
                     const chunk = DocumentChunkSchema.parse({
                         tenantId: asset.tenantId,
-                        industry,
-                        componentType: asset.componentType,
+                        industry, // Using detected industry from analysis
+                        componentType: asset.componentType || 'DOCUMENT',
+                        model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,
-                        version: asset.version,
+                        version: asset.version || '1.0',
+                        revisionDate: asset.revisionDate || new Date(),
                         language: chunkData.type === 'VISUAL' ? 'es' : lang,
                         chunkType: chunkData.type,
                         chunkText: chunkData.text,

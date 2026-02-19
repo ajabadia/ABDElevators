@@ -36,9 +36,11 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Download, Plus, Loader2, Calendar } from 'lucide-react';
+import { FileText, Download, Plus, Loader2, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ReportTemplateSelector } from '@/components/admin/reports/ReportTemplateSelector';
+import { Badge } from '@/components/ui/badge';
 
 interface ReportRecord {
     _id: string;
@@ -151,33 +153,26 @@ export default function ReportHubPage() {
                                 Configure the parameters for your new report.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="template" className="text-right">
-                                    Template
+                        <div className="grid gap-6 py-4">
+                            <div className="space-y-3">
+                                <Label htmlFor="template" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Selecciona una Plantilla
                                 </Label>
-                                <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder={t('reports.generate.selectTemplate')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="inspection">{t('reports.templates.inspection')}</SelectItem>
-                                        <SelectItem value="ragQuality">{t('reports.templates.ragQuality')}</SelectItem>
-                                        <SelectItem value="audit">{t('reports.templates.audit')}</SelectItem>
-                                        <SelectItem value="workflow">{t('reports.templates.workflow')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <ReportTemplateSelector
+                                    selectedId={selectedTemplate}
+                                    onSelect={setSelectedTemplate}
+                                />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="title" className="text-right">
-                                    Title
+                            <div className="space-y-3">
+                                <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Título Personalizado
                                 </Label>
                                 <Input
                                     id="title"
                                     value={reportTitle}
                                     onChange={(e) => setReportTitle(e.target.value)}
-                                    placeholder="Optional custom title"
-                                    className="col-span-3"
+                                    placeholder="Ej: Análisis Schindler 3300 - Q1 2026"
+                                    className="border-slate-200 focus:ring-primary shadow-sm h-11"
                                 />
                             </div>
                         </div>

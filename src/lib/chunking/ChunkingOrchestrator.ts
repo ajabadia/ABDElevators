@@ -15,6 +15,9 @@ export interface OrchestratorInput {
         filename?: string;
     };
     session?: any;
+    chunkSize?: number;
+    chunkOverlap?: number;
+    chunkThreshold?: number;
 }
 
 export class ChunkingOrchestrator {
@@ -50,7 +53,10 @@ export class ChunkingOrchestrator {
             const options: ChunkingOptions = {
                 tenantId,
                 correlationId,
-                session
+                session,
+                chunkSize: input.chunkSize,
+                chunkOverlap: input.chunkOverlap,
+                chunkThreshold: input.chunkThreshold
             };
 
             const results = await strategy.chunk(text, options);

@@ -21,8 +21,10 @@ import { z } from 'zod';
  */
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    const rootSpan = IngestTracer.startIngestSpan({ correlationId, tenantId: 'pending', fileName: 'pending' });
+    // Trace initialization moved after auth for better context
+    let rootSpan: any;
 
+    let metadataRaw: any = {};
     try {
         // Authentication (Rule #9: Security Check)
         const session = await auth();
@@ -37,7 +39,8 @@ export async function POST(req: NextRequest) {
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
-        const metadataRaw = {
+
+        metadataRaw = {
             type: (formData.get('type') || formData.get('tipo')) as string || undefined,
             version: (formData.get('version') as string) || '1.0',
             documentTypeId: (formData.get('documentTypeId') as string) || undefined,
@@ -70,14 +73,34 @@ export async function POST(req: NextRequest) {
             });
         }
 
+        // Calculate MD5 for Trace
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
+
+        // Start Trace with FULL CONTEXT (User Request)
+        rootSpan = IngestTracer.startIngestSpan({
+            correlationId,
+            tenantId: session.user.tenantId,
+            userId: session.user.id,
+            fileName: file.name,
+            fileHash
+        });
+
         const LocalIngestMetadataSchema = z.object({
-            type: z.string().min(1, "Tipo de activo es requerido"),
+            type: z.string().min(1, "Tipo de activo es requerido").default('Documento'),
             version: z.string().min(1, "Versión es requerida").default('1.0'),
-            documentTypeId: z.string().optional().nullable().transform(v => v === "" ? undefined : v ?? undefined),
-            scope: z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT'),
+            documentTypeId: z.string().optional().nullable().transform(v => (!v || v === "") ? undefined : v),
+            scope: z.preprocess(
+                (val) => typeof val === 'string' ? val.toUpperCase() : val,
+                z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT')
+            ),
             industry: z.string().default('ELEVATORS'),
-            ownerUserId: z.string().optional().nullable().transform(v => v === "" ? undefined : v ?? undefined),
-            chunkingLevel: z.enum(['bajo', 'medio', 'alto']).default('bajo'),
+            ownerUserId: z.string().optional().nullable().transform(v => (!v || v === "") ? undefined : v),
+            chunkingLevel: z.enum(['bajo', 'medio', 'alto', 'SIMPLE', 'SEMANTIC', 'LLM']).default('bajo').transform(v => {
+                const map: Record<string, string> = { 'SIMPLE': 'bajo', 'SEMANTIC': 'medio', 'LLM': 'alto' };
+                return map[v] || v;
+            }),
         });
         const metadata = LocalIngestMetadataSchema.parse(metadataRaw);
 
@@ -105,11 +128,56 @@ export async function POST(req: NextRequest) {
         // Environment detection: priority header > body > PRODUCTION
         const environment = req.headers.get('x-environment') || (formData.get('environment') as string) || 'PRODUCTION';
         const maskPii = formData.get('maskPii') !== 'false'; // Default to true if not explicitly 'false'
+        const enableVision = formData.get('enableVision') === 'true';
+        const enableTranslation = formData.get('enableTranslation') === 'true';
+        const enableGraphRag = formData.get('enableGraphRag') === 'true';
+        const chunkSize = formData.get('chunkSize') ? parseInt(formData.get('chunkSize') as string) : undefined;
+        const chunkOverlap = formData.get('chunkOverlap') ? parseInt(formData.get('chunkOverlap') as string) : undefined;
+        const chunkThreshold = formData.get('chunkThreshold') ? parseFloat(formData.get('chunkThreshold') as string) : undefined;
+
+        // Debugging: Enhanced Ingestion Logging (User Request)
+        await logEvento({
+            level: 'INFO',
+            source: 'API_INGEST',
+            action: 'INGEST_REQUEST_RECEIVED',
+            message: `Ingesting file: ${file.name} (${(fileSize / 1024).toFixed(2)} KB)`,
+            correlationId,
+            tenantId,
+            details: {
+                fileName: file.name,
+                fileSize,
+                fileType: file.type,
+                metadata: {
+                    type: metadata.type,
+                    version: metadata.version,
+                    scope: metadata.scope,
+                    industry: metadata.industry,
+                    documentTypeId: metadata.documentTypeId
+                },
+                options: {
+                    maskPii,
+                    enableVision,
+                    enableTranslation,
+                    enableGraphRag,
+                    environment
+                },
+                chunking: {
+                    level: metadata.chunkingLevel,
+                    size: chunkSize,
+                    overlap: chunkOverlap,
+                    threshold: chunkThreshold
+                },
+                user: {
+                    email: userEmail,
+                    role: session.user.role
+                }
+            }
+        });
 
         // 5. DELEGATE TO SERVICE (PHASE 1: PREP)
         const prep = await IngestService.prepareIngest({
             file,
-            metadata,
+            metadata: metadata as any,
             tenantId,
             environment,
             userEmail,
@@ -117,7 +185,12 @@ export async function POST(req: NextRequest) {
             userAgent,
             correlationId,
             maskPii,
-            session
+            enableVision,
+            enableTranslation,
+            enableGraphRag,
+            chunkSize,
+            chunkOverlap,
+            chunkThreshold
         });
 
         if (prep.status === 'DUPLICATE') {
@@ -188,16 +261,19 @@ export async function POST(req: NextRequest) {
         console.error(`[INGEST ERROR] Correlation: ${correlationId}`, error);
 
         if (error instanceof z.ZodError) {
+            console.error('[INGEST VALIDATION ERROR] Details:', JSON.stringify(error.issues, null, 2));
+            console.error('[INGEST VALIDATION ERROR] Metadata Raw:', metadataRaw);
             await logEvento({
                 level: 'ERROR',
                 source: 'API_INGEST',
                 action: 'VALIDATION_ERROR',
                 message: 'Zod validation failed',
                 correlationId,
-                details: { errors: error.issues }
+                details: { errors: error.issues, metadataRaw }
             });
+            const firstIssue = error.issues[0]?.message || 'Invalid ingest metadata';
             return NextResponse.json(
-                new ValidationError('Invalid ingest metadata', error.issues).toJSON(),
+                new ValidationError(`Invalid ingest metadata: ${firstIssue}`, error.issues).toJSON(),
                 { status: 400 }
             );
         }
@@ -223,7 +299,8 @@ export async function POST(req: NextRequest) {
                     code: 'INTERNAL_ERROR',
                     message: 'Critical ingest error',
                     details: error.message
-                }
+                },
+                correlationId // Fix: Return correlationId so UI can fetch logs
             },
             { status: 500 }
         );

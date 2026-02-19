@@ -42,6 +42,10 @@
     "playground": {
       "title": "AI Playground",
       "description": "Experiment with models and prompts in a safe environment."
+    },
+    "prompts": {
+      "title": "Prompt Management",
+      "description": "Manage master instructions and AI system variants."
     }
   }
 }

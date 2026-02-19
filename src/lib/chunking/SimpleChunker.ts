@@ -11,13 +11,17 @@ export class SimpleChunker implements IChunkerStrategy {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async chunk(text: string, _options: ChunkingOptions): Promise<ChunkingResult[]> {
+    async chunk(text: string, options: ChunkingOptions): Promise<ChunkingResult[]> {
+        // Phase 134.2: Dynamic Config
+        const finalChunkSize = options.chunkSize || this.chunkSize;
+        const finalOverlap = options.chunkOverlap !== undefined ? options.chunkOverlap : this.overlap;
+
         const chunks: ChunkingResult[] = [];
         let startIndex = 0;
 
         // Simple robust looping
         while (startIndex < text.length) {
-            let endIndex = startIndex + this.chunkSize;
+            let endIndex = startIndex + finalChunkSize;
 
             // Prevent out of bounds
             if (endIndex > text.length) {
@@ -34,7 +38,7 @@ export class SimpleChunker implements IChunkerStrategy {
                 const breakPoint = Math.max(lastPeriod, lastNewline);
 
                 // Only cut if reasonably far (avoid creating tiny chunks if no punctuation found)
-                if (breakPoint > this.chunkSize * 0.5) {
+                if (breakPoint > finalChunkSize * 0.5) {
                     // Recalculate end index based on breakpoint
                     endIndex = startIndex + breakPoint + 1; // Include the punctuation
                     chunkText = text.slice(startIndex, endIndex);
@@ -51,10 +55,10 @@ export class SimpleChunker implements IChunkerStrategy {
             });
 
             // Move window
-            startIndex += (chunkText.length - this.overlap);
+            startIndex += (chunkText.length - finalOverlap);
 
             // Safety break for infinite loops if overlap >= chunk size (bad config)
-            if (chunkText.length <= this.overlap && startIndex < text.length) {
+            if (chunkText.length <= finalOverlap && startIndex < text.length) {
                 startIndex = endIndex; // Force advance if stuck
             }
         }

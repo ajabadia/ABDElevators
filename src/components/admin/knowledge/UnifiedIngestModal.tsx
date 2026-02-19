@@ -13,10 +13,16 @@ import {
     ShieldOff,
     Globe,
     Building2,
-    Lock
+    Lock,
+    Settings2,
+    Zap,
+    BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { useSmartConfig } from "@/hooks/useSmartConfig";
+import { SimpleAnalyzeView } from "./SimpleAnalyzeView";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Dialog,
@@ -60,9 +66,24 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     const [isUploading, setIsUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [deduplicated, setDeduplicated] = useState(false);
-    const [maskPii, setMaskPii] = useState(true);
+    const [maskPii, setMaskPii] = useState(false);
     const [showPiiWarning, setShowPiiWarning] = useState(false);
     const [tiposDocs, setTiposDocs] = useState<{ _id: string; name: string }[]>([]);
+    const [isExpertMode, setIsExpertMode] = useState(false);
+
+    // Premium Flags (Phase 197)
+    const [enableVision, setEnableVision] = useState(false);
+    const [enableTranslation, setEnableTranslation] = useState(false);
+    const [enableGraphRag, setEnableGraphRag] = useState(false);
+    const [enableCognitive, setEnableCognitive] = useState(false); // Premium
+
+    // Chunking Config (Phase 134.2)
+    const [chunkingLevel, setChunkingLevel] = useState<string>("bajo");
+    const [chunkSize, setChunkSize] = useState<number>(1500);
+    const [chunkOverlap, setChunkOverlap] = useState<number>(200);
+    const [chunkThreshold, setChunkThreshold] = useState<number>(0.75);
+
+    const smartConfig = useSmartConfig(file);
 
     const { toast } = useToast();
     const t = useTranslations('ingest');
@@ -71,6 +92,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
 
     useEffect(() => {
         if (isOpen) {
+            resetForm();
             fetchTypes();
         }
     }, [isOpen]);
@@ -109,20 +131,39 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     });
 
     const handleUpload = async () => {
-        if (!file || !tipo) return;
+        if (!file || (isExpertMode && !tipo)) return;
 
         setIsUploading(true);
         setDeduplicated(false);
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', tipo);
+
+        // Use smart config if not in expert mode
+        const finalTipo = isExpertMode ? (tipo || 'Documento') : (tipo || file.name.split('.')[0] || 'Documento');
+        const finalLevel = isExpertMode ? (chunkingLevel || 'bajo') : smartConfig.chunkingLevel;
+        const finalPii = isExpertMode ? maskPii.toString() : smartConfig.maskPii.toString();
+
+        formData.append('type', finalTipo);
         formData.append('version', version);
-        formData.append('maskPii', maskPii.toString());
+        formData.append('maskPii', finalPii);
         formData.append('documentTypeId', documentTypeId);
         formData.append('scope', scope);
         formData.append('industry', industry);
         formData.append('description', description);
+        formData.append('chunkingLevel', finalLevel);
+
+        formData.append('enableVision', isExpertMode ? enableVision.toString() : 'false');
+        formData.append('enableTranslation', isExpertMode ? enableTranslation.toString() : 'false');
+        formData.append('enableGraphRag', isExpertMode ? enableGraphRag.toString() : 'false');
+        formData.append('enableCognitive', isExpertMode ? enableCognitive.toString() : 'false');
+
+        // Phase 134.2
+        if (isExpertMode) {
+            formData.append('chunkSize', chunkSize.toString());
+            formData.append('chunkOverlap', chunkOverlap.toString());
+            formData.append('chunkThreshold', chunkThreshold.toString());
+        }
 
         try {
             const response = await fetch('/api/admin/ingest', {
@@ -144,10 +185,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
             toast({
                 title: data.isDuplicate ? t('status.duplicate') : t('status.success'),
                 description: data.isDuplicate ? t('status.duplicate_desc') : t('status.success_desc'),
-                variant: 'default',
-                className: data.isDuplicate
-                    ? "bg-indigo-50 border-indigo-200 text-indigo-800"
-                    : "bg-emerald-50 border-emerald-200 text-emerald-800"
+                variant: 'default'
             });
 
             logClientEvent({
@@ -178,20 +216,26 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         setIndustry("ELEVATORS");
         setDescription("");
         setUploadSuccess(false);
+        setUploadSuccess(false);
         setDeduplicated(false);
+        // Phase 134.2 Reset
+        setChunkingLevel("bajo");
+        setChunkSize(1500);
+        setChunkOverlap(200);
+        setChunkThreshold(0.75);
     };
 
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="sm:max-w-[550px] border-none shadow-2xl overflow-y-auto max-h-[90vh]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold font-outfit text-slate-900">
+                <DialogContent className="w-[95vw] md:max-w-4xl border-none shadow-2xl overflow-y-auto max-h-[95vh] bg-background">
+                    <DialogHeader className="px-1">
+                        <DialogTitle className="text-2xl font-bold font-outfit text-foreground">
                             {uploadSuccess
                                 ? (deduplicated ? t('status.duplicate') : t('status.success'))
                                 : t('title')}
                         </DialogTitle>
-                        <DialogDescription className="text-slate-500">
+                        <DialogDescription className="text-muted-foreground">
                             {uploadSuccess
                                 ? (deduplicated ? t('status.duplicate_desc') : t('status.success_desc'))
                                 : t('description')}
@@ -200,184 +244,356 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
 
                     {!uploadSuccess ? (
                         <div className="space-y-5 py-2">
-                            {/* Dropzone */}
-                            <div
-                                {...getRootProps()}
-                                className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${isDragActive ? "border-teal-500 bg-teal-50/50 shadow-inner" : "border-slate-200 hover:border-teal-400 hover:bg-slate-50"
-                                    }`}
-                            >
-                                <input {...getInputProps()} />
-                                {file ? (
-                                    <div className="flex items-center justify-center gap-3">
-                                        <div className="p-3 bg-teal-100 text-teal-600 rounded-lg">
-                                            <FileText size={24} />
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-sm font-bold text-slate-900 truncate max-w-[200px]">{file.name}</p>
-                                            <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="ml-auto text-slate-400 hover:text-red-500"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFile(null);
-                                            }}
-                                        >
-                                            <X size={18} />
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-teal-500 transition-colors">
-                                            <Upload size={24} />
-                                        </div>
-                                        <p className="text-sm font-medium text-slate-900">{t('dropzone.idle')}</p>
-                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">{t('dropzone.format')}</p>
-                                    </div>
-                                )}
+                            {/* Mode Toggle */}
+                            <div className="flex items-center justify-between px-1">
+                                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-border">
+                                    {isExpertMode ? "Configuración Avanzada" : "Modo Simplificado"}
+                                </Badge>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 gap-1.5"
+                                    onClick={() => setIsExpertMode(!isExpertMode)}
+                                >
+                                    {isExpertMode ? <Zap size={14} /> : <Settings2 size={14} />}
+                                    {isExpertMode ? "Volver a Simple" : "Modo Experto"}
+                                </Button>
                             </div>
 
-                            {/* File too large error */}
-                            {fileRejections.length > 0 && (
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-                                    <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
-                                    <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.'}</p>
-                                </div>
-                            )}
-
-                            {/* Base Metadata */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="tipo" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.type')} *</Label>
-                                    <Input
-                                        id="tipo"
-                                        placeholder="Ej: Motor, Cuadro..."
-                                        value={tipo}
-                                        onChange={(e) => setTipo(e.target.value)}
-                                        className="border-slate-200 focus-visible:ring-teal-500 shadow-sm"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="version" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.version')} *</Label>
-                                    <Input
-                                        id="version"
-                                        value={version}
-                                        onChange={(e) => setVersion(e.target.value)}
-                                        placeholder="1.0"
-                                        className="border-slate-200 focus-visible:ring-teal-500 shadow-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label htmlFor="docType" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clasificación de Documento</Label>
-                                <Select onValueChange={setDocumentTypeId} value={documentTypeId}>
-                                    <SelectTrigger id="docType" className="border-slate-200 focus:ring-teal-500 shadow-sm">
-                                        <SelectValue placeholder={t('fields.placeholder')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {tiposDocs.map((docType) => (
-                                            <SelectItem key={docType._id} value={docType._id}>
-                                                {docType.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* PII Masking Toggle */}
-                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${maskPii ? 'bg-teal-100 text-teal-600' : 'bg-amber-100 text-amber-600'}`}>
-                                        {maskPii ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-900">{t('pii_label')}</p>
-                                        <p className="text-[10px] text-slate-500 leading-tight">{t('pii_desc')}</p>
-                                    </div>
-                                </div>
-                                <Switch
-                                    checked={maskPii}
-                                    onCheckedChange={(checked) => {
-                                        if (!checked) {
-                                            setShowPiiWarning(true);
-                                        } else {
-                                            setMaskPii(true);
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            {/* Advantage Metadata (SuperAdmin Only) */}
-                            {isSuperAdmin && (
-                                <div className="space-y-4 pt-2 border-t border-slate-100">
-                                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Lock size={12} /> Configuración de Seguridad & Alcance
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label htmlFor="scope" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.scope')}</Label>
-                                            <Select value={scope} onValueChange={(val: any) => setScope(val)}>
-                                                <SelectTrigger id="scope" className="border-slate-200 focus:ring-teal-500 shadow-sm">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="TENANT">
-                                                        <div className="flex items-center gap-2"><Lock size={14} /> Tenant Local</div>
-                                                    </SelectItem>
-                                                    <SelectItem value="INDUSTRY">
-                                                        <div className="flex items-center gap-2"><Building2 size={14} /> Industria</div>
-                                                    </SelectItem>
-                                                    <SelectItem value="GLOBAL">
-                                                        <div className="flex items-center gap-2"><Globe size={14} /> Global</div>
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        {scope === 'INDUSTRY' && (
-                                            <div className="space-y-1.5">
-                                                <Label htmlFor="industry" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.industry')}</Label>
-                                                <Select value={industry} onValueChange={setIndustry}>
-                                                    <SelectTrigger id="industry" className="border-slate-200 focus:ring-teal-500 shadow-sm">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="ELEVATORS">Ascensores</SelectItem>
-                                                        <SelectItem value="LEGAL">Legal</SelectItem>
-                                                        <SelectItem value="MEDICAL">Médico</SelectItem>
-                                                        <SelectItem value="BANKING">Banca</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                            {isExpertMode ? (
+                                <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
+                                    {/* Dropzone */}
+                                    <div
+                                        {...getRootProps()}
+                                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5 shadow-inner" : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                            }`}
+                                    >
+                                        <input {...getInputProps()} />
+                                        {file ? (
+                                            <div className="flex items-center justify-center gap-3">
+                                                <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                                                    <FileText size={24} />
+                                                </div>
+                                                <div className="text-left">
+                                                    <p className="text-sm font-bold text-foreground truncate max-w-[200px]">{file.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="ml-auto text-muted-foreground hover:text-destructive"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFile(null);
+                                                    }}
+                                                >
+                                                    <X size={18} />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2 group">
+                                                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto text-muted-foreground group-hover:text-primary transition-colors">
+                                                    <Upload size={24} />
+                                                </div>
+                                                <p className="text-sm font-medium text-foreground">{t('dropzone.idle')}</p>
+                                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">{t('dropzone.format')}</p>
                                             </div>
                                         )}
                                     </div>
+
+                                    {/* File too large error */}
+                                    {fileRejections.length > 0 && (
+                                        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">
+                                            <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
+                                            <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB. Archivos muy grandes pueden tardar más en procesarse.'}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Base Metadata */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="tipo" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.type')} *</Label>
+                                            <Input
+                                                id="tipo"
+                                                placeholder="Ej: Motor, Cuadro..."
+                                                value={tipo}
+                                                onChange={(e) => setTipo(e.target.value)}
+                                                className="border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="version" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.version')} *</Label>
+                                            <Input
+                                                id="version"
+                                                value={version}
+                                                onChange={(e) => setVersion(e.target.value)}
+                                                placeholder="1.0"
+                                                className="border-border focus-visible:ring-primary shadow-sm bg-background text-foreground"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="docType" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clasificación de Documento</Label>
+                                        <Select onValueChange={setDocumentTypeId} value={documentTypeId}>
+                                            <SelectTrigger id="docType" className="border-border focus:ring-primary shadow-sm bg-background text-foreground">
+                                                <SelectValue placeholder={t('fields.placeholder')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {tiposDocs.map((docType) => (
+                                                    <SelectItem key={docType._id} value={docType._id}>
+                                                        {docType.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* PII Masking Toggle */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${maskPii ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                                                    {maskPii ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-foreground">{t('pii_label')}</p>
+                                                    <p className="text-[10px] text-muted-foreground leading-tight">{t('pii_desc')}</p>
+                                                </div>
+                                            </div>
+                                            <Switch
+                                                checked={maskPii}
+                                                onCheckedChange={(checked) => {
+                                                    if (!checked) {
+                                                        setShowPiiWarning(true);
+                                                    } else {
+                                                        setMaskPii(true);
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Vision Toggle (Phase 197) */}
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${enableVision ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <Upload size={18} />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs font-bold text-foreground">Análisis Visual (Vision)</p>
+                                                    <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">PREMIUM</Badge>
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground leading-tight">Extrae datos de planos y fotos. <span className="text-destructive font-semibold">Consumo ALTO.</span></p>
+                                            </div>
+                                            <Switch checked={enableVision} onCheckedChange={setEnableVision} />
+                                        </div>
+
+                                        {/* Translation Toggle (Phase 197) */}
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${enableTranslation ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <Globe size={18} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-foreground">Auto-Traducción</p>
+                                                    <p className="text-[10px] text-muted-foreground leading-tight">Traduce términos técnicos automáticamente.</p>
+                                                </div>
+                                            </div>
+                                            <Switch checked={enableTranslation} onCheckedChange={setEnableTranslation} />
+                                        </div>
+
+                                        {/* Graph RAG Toggle (Phase 197) */}
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${enableGraphRag ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <Zap size={18} />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs font-bold text-foreground">Enriquecimiento Grafo</p>
+                                                    <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">EXPERIMENTAL</Badge>
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground leading-tight">Extrae entidades y relaciones para Graph RAG. <span className="text-destructive font-semibold">Costo extra.</span></p>
+                                            </div>
+                                            <Switch checked={enableGraphRag} onCheckedChange={setEnableGraphRag} />
+                                        </div>
+
+                                        {/* Cognitive Context Toggle (Premium) */}
+                                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${enableCognitive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                    <BookOpen size={18} />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xs font-bold text-foreground">Recuperación Contextual</p>
+                                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-amber-500/10 text-amber-600 border-amber-500/20">PREMIUM</Badge>
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground leading-tight">Genera resumen contextual por fragmento. <span className="text-destructive font-semibold">Costo extra.</span></p>
+                                                </div>
+                                            </div>
+                                            <Switch checked={enableCognitive} onCheckedChange={setEnableCognitive} />
+                                        </div>
+                                    </div>
+
+                                    {/* Advantage Metadata (SuperAdmin Only) */}
+                                    {isSuperAdmin && (
+                                        <div className="space-y-4 pt-2 border-t border-border">
+                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                                <Lock size={12} /> Configuración de Seguridad & Alcance
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <Label htmlFor="scope" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('fields.scope')}</Label>
+                                                    <Select value={scope} onValueChange={(val: any) => setScope(val)}>
+                                                        <SelectTrigger id="scope" className="border-border focus:ring-primary shadow-sm bg-background text-foreground">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="TENANT">
+                                                                <div className="flex items-center gap-2"><Lock size={14} /> Tenant Local</div>
+                                                            </SelectItem>
+                                                            <SelectItem value="INDUSTRY">
+                                                                <div className="flex items-center gap-2"><Building2 size={14} /> Industria</div>
+                                                            </SelectItem>
+                                                            <SelectItem value="GLOBAL">
+                                                                <div className="flex items-center gap-2"><Globe size={14} /> Global</div>
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                {scope === 'INDUSTRY' && (
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="industry" className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('fields.industry')}</Label>
+                                                        <Select value={industry} onValueChange={setIndustry}>
+                                                            <SelectTrigger id="industry" className="border-slate-200 focus:ring-teal-500 shadow-sm">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="ELEVATORS">Ascensores</SelectItem>
+                                                                <SelectItem value="LEGAL">Legal</SelectItem>
+                                                                <SelectItem value="MEDICAL">Médico</SelectItem>
+                                                                <SelectItem value="BANKING">Banca</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Chunking Strategy (Phase 134.2) */}
+                                    <div className="space-y-3 pt-2 border-t border-border">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                                <Settings2 size={12} /> Estrategia de Chunking
+                                            </Label>
+                                            <Badge variant="outline" className="text-[10px] h-5">{chunkingLevel.toUpperCase()}</Badge>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs text-muted-foreground">Nivel</Label>
+                                                <Select value={chunkingLevel} onValueChange={setChunkingLevel}>
+                                                    <SelectTrigger className="border-border focus:ring-primary shadow-sm h-8 text-xs bg-background text-foreground">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="bajo">Bajo (Simple - Rápido)</SelectItem>
+                                                        <SelectItem value="medio">Medio (Semántico - Smart)</SelectItem>
+                                                        <SelectItem value="alto">Alto (LLM - Premium)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Dynamic Config Controls */}
+                                            <div className="space-y-3 bg-muted/30 p-3 rounded-lg border border-border">
+                                                {chunkingLevel === 'bajo' && (
+                                                    <>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between">
+                                                                <Label className="text-[10px] font-bold text-muted-foreground">TAMAÑO (CHARS)</Label>
+                                                                <span className="text-[10px] font-mono">{chunkSize}</span>
+                                                            </div>
+                                                            <input
+                                                                type="range" min="500" max="4000" step="100"
+                                                                value={chunkSize} onChange={(e) => setChunkSize(parseInt(e.target.value))}
+                                                                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" // Tailwind 4 accent
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between">
+                                                                <Label className="text-[10px] font-bold text-muted-foreground">SOLAPAMIENTO</Label>
+                                                                <span className="text-[10px] font-mono">{chunkOverlap}</span>
+                                                            </div>
+                                                            <input
+                                                                type="range" min="0" max="500" step="50"
+                                                                value={chunkOverlap} onChange={(e) => setChunkOverlap(parseInt(e.target.value))}
+                                                                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {chunkingLevel === 'medio' && (
+                                                    <div className="space-y-1">
+                                                        <div className="flex justify-between">
+                                                            <Label className="text-[10px] font-bold text-muted-foreground">SIMILITUD (THRESHOLD)</Label>
+                                                            <span className="text-[10px] font-mono">{chunkThreshold}</span>
+                                                        </div>
+                                                        <input
+                                                            type="range" min="0.5" max="0.95" step="0.05"
+                                                            value={chunkThreshold} onChange={(e) => setChunkThreshold(parseFloat(e.target.value))}
+                                                            className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                                                        />
+                                                        <p className="text-[9px] text-muted-foreground pt-1">Más alto = Chunks más cohesivos.</p>
+                                                    </div>
+                                                )}
+
+                                                {chunkingLevel === 'alto' && (
+                                                    <div className="flex items-center gap-2 text-primary text-xs">
+                                                        <Zap size={14} />
+                                                        <span>Gestionado por IA (Gemini 2.5) automágicamente.</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descripción / Notas</Label>
+                                        <Textarea
+                                            id="description"
+                                            placeholder="Notas adicionales sobre este activo..."
+                                            value={description}
+                                            onChange={e => setDescription(e.target.value)}
+                                            className="resize-none border-border focus:ring-primary shadow-sm h-16 text-sm bg-background text-foreground"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <SimpleAnalyzeView
+                                        file={file}
+                                        onDrop={onDrop}
+                                        config={smartConfig}
+                                        isUploading={isUploading}
+                                        onUpload={handleUpload}
+                                        onReset={resetForm}
+                                    />
                                 </div>
                             )}
-
-                            <div className="space-y-1.5">
-                                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Descripción / Notas</Label>
-                                <Textarea
-                                    id="description"
-                                    placeholder="Notas adicionales sobre este activo..."
-                                    value={description}
-                                    onChange={e => setDescription(e.target.value)}
-                                    className="resize-none border-slate-200 focus:ring-teal-500 shadow-sm h-16 text-sm"
-                                />
-                            </div>
                         </div>
                     ) : (
                         <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${deduplicated ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${deduplicated ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"
                                 }`}>
                                 <CheckCircle2 size={32} />
                             </div>
                             <div className="text-center">
-                                <p className="text-lg font-bold text-slate-900">
+                                <p className="text-lg font-bold text-foreground">
                                     {deduplicated ? t('status.duplicate') : t('status.success')}
                                 </p>
-                                <p className="text-sm text-slate-500">
+                                <p className="text-sm text-muted-foreground">
                                     {deduplicated ? t('status.duplicate_desc') : t('status.success_desc')}
                                 </p>
                             </div>
@@ -389,14 +605,14 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                             variant="ghost"
                             onClick={onClose}
                             disabled={isUploading}
-                            className="text-slate-500"
+                            className="text-muted-foreground"
                         >
                             {uploadSuccess ? t('actions.close') || 'Cerrar' : t('actions.cancel')}
                         </Button>
                         {!uploadSuccess && (
                             <Button
-                                className="bg-teal-600 hover:bg-teal-700 text-white min-w-[160px] shadow-lg shadow-teal-600/20"
-                                disabled={!file || !tipo || isUploading}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[160px] shadow-lg shadow-primary/20"
+                                disabled={!file || (isExpertMode && !tipo) || isUploading}
                                 onClick={handleUpload}
                             >
                                 {isUploading ? (
@@ -407,12 +623,17 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                         </div>
                                         <span className="text-[9px] font-normal opacity-70 mt-0.5">{t('status.processing_note')}</span>
                                     </div>
-                                ) : t('actions.submit')}
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        {t('actions.submit')}
+                                        <Zap size={16} />
+                                    </div>
+                                )}
                             </Button>
                         )}
                         {uploadSuccess && (
                             <Button
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[160px] shadow-lg shadow-emerald-600/20"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[160px] shadow-lg shadow-primary/20"
                                 onClick={onClose}
                             >
                                 <CheckCircle2 size={18} className="mr-2" />
@@ -425,42 +646,49 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
 
             {/* PII Warning Sub-Dialog */}
             <Dialog open={showPiiWarning} onOpenChange={setShowPiiWarning}>
-                <DialogContent className="sm:max-w-[450px] border-amber-200 bg-amber-50 shadow-2xl">
-                    <DialogHeader>
-                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4 text-amber-600">
-                            <ShieldAlert size={28} />
+                <DialogContent className="sm:max-w-[480px] border-border bg-background shadow-2xl overflow-hidden p-0">
+                    <div className="bg-amber-500/10 p-6 flex flex-col items-center border-b border-border">
+                        <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 text-amber-600 animate-pulse">
+                            <ShieldAlert size={32} />
                         </div>
-                        <DialogTitle className="text-amber-900 font-bold">{t('pii_warning_title')}</DialogTitle>
-                        <DialogDescription className="text-amber-800/70">
-                            {t('pii_warning_desc')}
+                        <DialogTitle className="text-xl font-extrabold text-foreground text-center">
+                            {t('pii_warning_title') || 'ADVERTENCIA: Datos Sensibles'}
+                        </DialogTitle>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                        <DialogDescription className="text-muted-foreground text-center text-sm leading-relaxed">
+                            {t('pii_warning_desc') || 'Vas a subir un documento sin protección de datos. Esto guardará correos, teléfonos y otros datos sensibles en la base de datos de forma legible. ¿Cómo deseas proceder?'}
                         </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                    </div>
+
+                    <DialogFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0">
                         <Button
                             variant="outline"
-                            className="border-amber-200 text-amber-700 hover:bg-amber-100"
+                            className="flex-1 border-border text-foreground hover:bg-muted"
                             onClick={() => {
                                 setMaskPii(false);
                                 setShowPiiWarning(false);
                             }}
                         >
-                            {t('pii_opt_continue')}
+                            {t('pii_opt_continue') || 'Continuar sin protección'}
                         </Button>
                         <Button
                             variant="ghost"
                             onClick={() => setShowPiiWarning(false)}
-                            className="text-amber-600"
+                            className="text-muted-foreground hover:text-foreground"
                         >
-                            {t('pii_opt_cancel')}
+                            {t('pii_opt_cancel') || 'Cancelar'}
                         </Button>
                         <Button
-                            className="bg-teal-600 hover:bg-teal-700 text-white"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 font-bold"
                             onClick={() => {
                                 setMaskPii(true);
                                 setShowPiiWarning(false);
                             }}
                         >
-                            {t('pii_opt_enable')}
+                            <ShieldCheck size={18} className="mr-2" />
+                            {t('pii_opt_enable') || 'Activar y continuar'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

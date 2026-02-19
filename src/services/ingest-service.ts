@@ -1,4 +1,3 @@
-
 import { getTenantCollection } from '@/lib/db-tenant';
 import { IngestAuditSchema } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
@@ -12,28 +11,7 @@ import { IngestIndexer } from './ingest/IngestIndexer';
 import { getSignedUrl, uploadPDFToCloudinary } from '@/lib/cloudinary';
 import { GraphExtractionService } from './graph-extraction-service';
 import { GridFSUtils } from '@/lib/gridfs-utils';
-
-export interface IngestOptions {
-    file: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
-    metadata: {
-        type: string;
-        version: string;
-        documentTypeId?: string;
-        scope?: 'USER' | 'TENANT' | 'INDUSTRY' | 'GLOBAL';
-        industry?: string;
-        ownerUserId?: string; // For USER scope
-        spaceId?: string; // 🌌 Phase 125.2: Target Space
-        chunkingLevel?: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto'; // Phase 134: Tiered Chunking
-    };
-    tenantId: string;
-    userEmail: string;
-    environment?: string;
-    ip?: string;
-    userAgent?: string;
-    correlationId?: string;
-    maskPii?: boolean;
-    session?: any;
-}
+import { IngestOptions } from './ingest/types';
 
 export interface IngestResult {
     success: boolean;
@@ -65,7 +43,7 @@ export class IngestService {
         const start = Date.now();
         const job = options.job;
 
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', { user: { tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
+        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', { user: { id: 'platform_master', tenantId: 'platform_master', role: 'SUPER_ADMIN' } });
         const assetId = new ObjectId(docId);
         const asset = await knowledgeAssetsCollection.findOne({ _id: assetId });
 
@@ -170,15 +148,26 @@ export class IngestService {
             await updateProgress(15);
 
             // Step 2: Full Analysis
+            // Start Analysis
+            const analysisOptions = {
+                enableVision: Boolean(asset.enableVision ?? options.enableVision),
+                enableTranslation: Boolean(asset.enableTranslation ?? options.enableTranslation),
+                enableGraphRag: Boolean(asset.enableGraphRag ?? options.enableGraphRag),
+                enableCognitive: Boolean(asset.enableCognitive ?? options.enableCognitive),
+                maskPii: Boolean(asset.maskPii ?? options.maskPii)
+            };
+
             await logEvento({
                 level: 'INFO',
                 source: 'INGEST_SERVICE',
                 action: 'ANALYSIS_START',
                 message: `Starting Document Analysis...`,
                 correlationId,
-                tenantId: asset.tenantId
+                tenantId: asset.tenantId,
+                details: { ...analysisOptions }
             });
-            const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession);
+
+            const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession, analysisOptions);
             await logEvento({
                 level: 'INFO',
                 source: 'INGEST_SERVICE',
@@ -208,7 +197,12 @@ export class IngestService {
                 correlationId,
                 workerSession,
                 updateProgress,
-                asset.chunkingLevel // Phase 134
+                asset.chunkingLevel, // Phase 134
+                {
+                    size: options.chunkSize,
+                    overlap: options.chunkOverlap,
+                    threshold: options.chunkThreshold
+                }
             );
             await logEvento({
                 level: 'INFO',
@@ -219,8 +213,8 @@ export class IngestService {
                 tenantId: asset.tenantId
             });
 
-            // Step 4: Graph Extraction (Phase 122) - Feature Flag Controlled (Phase 135)
-            if (FeatureFlags.isGraphRagEnabled()) {
+            // Step 4: Graph Extraction (Phase 122) - Feature Flag & Premium Flag Controlled
+            if (FeatureFlags.isGraphRagEnabled() && asset.enableGraphRag) {
                 await logEvento({
                     level: 'INFO',
                     source: 'INGEST_SERVICE',

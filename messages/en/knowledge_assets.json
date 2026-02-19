@@ -46,8 +46,9 @@
     "last_date": "Last Review",
     "dialog_title": "Schedule Review",
     "dialog_desc": "Set the date for the next technical review of this manual.",
-    "success": "Document marked as reviewed",
-    "error": "Error updating review"
+    "success": "Documento marcado como reviewed",
+    "error": "Error updating review",
+    "filter_all": "Reviews: All"
   },
   "retry_success": "Retry initiated",
   "retry_desc": "The document is being processed again.",

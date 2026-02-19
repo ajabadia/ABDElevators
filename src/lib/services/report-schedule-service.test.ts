@@ -1,10 +1,10 @@
 import { ReportScheduleService } from './report-schedule-service';
-import { getReportSchedulesCollection } from '@/lib/db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import cronParser from 'cron-parser';
 
 // Mock dependencies
 jest.mock('@/lib/db-tenant', () => ({
-    getReportSchedulesCollection: jest.fn()
+    getTenantCollection: jest.fn()
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -31,7 +31,7 @@ describe('ReportScheduleService', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        (getReportSchedulesCollection as jest.Mock).mockResolvedValue(mockCollection);
+        (getTenantCollection as jest.Mock).mockResolvedValue(mockCollection);
         // Reset default return
         mockCollection.find.mockResolvedValue([]);
     });
@@ -56,7 +56,7 @@ describe('ReportScheduleService', () => {
             const result = await ReportScheduleService.createSchedule(mockSession, data);
 
             expect(result).toBe('sched-123');
-            expect(getReportSchedulesCollection).toHaveBeenCalledWith(mockSession);
+            expect(getTenantCollection).toHaveBeenCalledWith('report_schedules', mockSession);
             expect((cronParser as any).parseExpression).toHaveBeenCalledWith(data.cronExpression);
             expect(mockCollection.insertOne).toHaveBeenCalledWith(expect.objectContaining({
                 name: 'Weekly Report',

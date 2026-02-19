@@ -39,27 +39,28 @@ export async function GET(
         }
 
         const publicId = asset.cloudinaryPublicId || asset.cloudinary_public_id;
-        if (!publicId) {
-            throw new AppError('VALIDATION_ERROR', 400, 'This asset does not have a PDF file attached');
+        const blobId = asset.blobId;
+
+        if (publicId) {
+            // Generate Cloudinary URL optimized for inline viewing
+            const previewUrl = getPDFDownloadUrl(publicId).replace('fl_attachment/', '');
+            return NextResponse.redirect(previewUrl);
+        } else if (blobId) {
+            // Serve directly from GridFS
+            console.log(`[PREVIEW] Serving from GridFS fallback for asset ${id}`);
+            const { GridFSUtils } = await import('@/lib/gridfs-utils');
+            const buffer = await GridFSUtils.getForProcessing(blobId, correlationId);
+
+            return new NextResponse(new Uint8Array(buffer), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': 'inline',
+                },
+            });
+        } else {
+            throw new AppError('VALIDATION_ERROR', 400, 'This asset does not have a PDF file attached (Cloudinary or GridFS)');
         }
-
-        // 3. Generate Cloudinary URL optimized for inline viewing
-        // By default Cloudinary might force download if fl_attachment is set.
-        // We ensure we get a URL that can be streamed/displayed.
-        const previewUrl = getPDFDownloadUrl(publicId).replace('fl_attachment/', '');
-
-        await logEvento({
-            level: 'INFO',
-            source: 'API_ASSET_PREVIEW',
-            action: 'PREVIEW_GENERATED',
-            message: `Preview generated for: ${asset.filename}`,
-            correlationId,
-            details: { assetId: id, tenantId: (user as any).tenantId }
-        });
-
-        // We redirect to the Cloudinary URL or return it?
-        // For inline preview in an iframe, redirecting is usually fine if Cloudinary headers allow it.
-        return NextResponse.redirect(previewUrl);
 
     } catch (error: any) {
         if (error instanceof AppError) {

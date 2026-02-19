@@ -1,8 +1,11 @@
 {
   "error": "Error",
-  "save": "Guardar",
   "saving": "Guardando...",
-  "cancel": "Cancelar",
+  "actions": {
+    "label": "Acciones",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
   "connectionError": "Error de conexión",
   "notifications": {
     "success": {
@@ -337,9 +340,10 @@
       "chat_title": "Chat Efímero",
       "chat_welcome_title": "Haz una pregunta sobre el texto",
       "chat_welcome_desc": "El asistente responderá usando solo el snippet proporcionado.",
-      "status_loading": "Consultando información...",
+      "chat_status_loading": "Consultando información...",
       "chat_input_placeholder": "Escribe tu pregunta sobre el fragmento...",
-      "back_to_hub": "Volver al Hub"
+      "back_to_hub": "Volver al Hub",
+      "status_loading": "Consultando información..."
     }
   },
   "pagination": {
@@ -377,5 +381,10 @@
   },
   "loading": "Cargando...",
   "delete": "Eliminar",
-  "actions": "Acciones"
+  "actions_label": "Acciones",
+  "filters": {
+    "all_status": "Todos los Estados"
+  },
+  "save": "Guardar",
+  "cancel": "Cancelar"
 }

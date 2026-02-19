@@ -45,21 +45,21 @@ export const AI_MODELS: AIModel[] = [
         id: 'gemini-1.5-flash',
         name: 'Gemini 1.5 Flash',
         description: 'Modelo equilibrado de la serie 1.5.',
-        isEnabled: true,
+        isEnabled: false,
         provider: 'google'
     },
     {
         id: 'gemini-1.5-pro',
         name: 'Gemini 1.5 Pro',
         description: 'Razonamiento profundo con gran ventana de contexto.',
-        isEnabled: true,
+        isEnabled: false,
         provider: 'google'
     },
     {
         id: 'gemini-2.0-flash',
         name: 'Gemini 2.0 Flash',
         description: 'Nueva arquitectura de baja latencia.',
-        isEnabled: true,
+        isEnabled: false,
         provider: 'google'
     },
     {

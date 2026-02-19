@@ -1280,13 +1280,17 @@
       "delete_success": "Prompt archivado correctamente.",
       "create_success": "Nuevo prompt registrado en el sistema.",
       "error_loading": "Error al cargar la lista de prompts",
-      "error_saving": "Error al guardar el prompt"
+      "error_saving": "Error al guardar el prompt",
+      "sync_success": "Sincronización finalizada: {created} creados, {updated} actualizados, {errors} errores.",
+      "sync_error": "Error al sincronizar prompts desde el código."
     },
     "title": "Gobernanza de Prompts",
     "subtitle": "Gestiona las directivas maestras y el comportamiento de la IA por industria.",
+    "sync": "Sincronizar desde Código",
     "actions": {
       "history": "Historial Global",
       "promote": "Promover a PROD",
+      "sync": "Sincronizar desde Código",
       "clear_filters": "Limpiar Filtros",
       "create_first": "Crear mi primer Prompt",
       "edit": "Editar",
@@ -1333,7 +1337,7 @@
       "title": "Audit Log Global",
       "subtitle": "Seguimiento maestro de cambios en directivas de IA",
       "search": "Buscar por prompt, clave o motivo...",
-      "records": "admin.prompts.history.records-----",
+      "records": "Registros",
       "version": "V",
       "system": "Sistema",
       "no_records": "No se encontraron registros en el historial",

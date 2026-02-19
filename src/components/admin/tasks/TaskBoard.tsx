@@ -1,6 +1,6 @@
 "use client";
 
-import { WorkflowTask } from "@/lib/schemas";
+import { WorkflowTask } from "@abd/workflow-engine";
 import { TaskCard } from "./TaskCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

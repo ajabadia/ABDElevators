@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
 import { ValidationError, AppError } from '@/lib/errors';
-import { IngestOptions } from '../ingest-service';
+import { IngestOptions } from './types';
 import { logEvento } from '@/lib/logger';
 import { validateLanguageCode } from '@/lib/language-validator';
 import { FeatureFlags } from '@/lib/feature-flags';
@@ -114,6 +114,11 @@ export class IngestPreparer {
                             version: metadata.version,
                             documentTypeId: metadata.documentTypeId,
                             correlationId,
+                            // Phase 105: Update flags on restore
+                            enableVision: options.enableVision || false,
+                            enableTranslation: options.enableTranslation || false,
+                            enableGraphRag: options.enableGraphRag || false,
+                            enableCognitive: options.enableCognitive || false,
                         }
                     },
                     { includeDeleted: true }
@@ -165,82 +170,100 @@ export class IngestPreparer {
                     correlationId,
                     tenantId
                 });
+
+                // Also update flags if we are recovering it
+                await knowledgeAssetsCollection.updateOne(
+                    { _id: existingDoc._id },
+                    {
+                        $set: {
+                            enableVision: options.enableVision || false,
+                            enableTranslation: options.enableTranslation || false,
+                            enableGraphRag: options.enableGraphRag || false,
+                            enableCognitive: options.enableCognitive || false,
+                            updatedAt: new Date(),
+                            correlationId
+                        }
+                    }
+                );
+
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
         }
 
-        // 2. Physical Deduplication (Phase 125.1 Unified)
-        let blob;
+        // 2. Physical Storage & Deduplication (Phase 125.1 Unified)
+        let cloudinaryResult: { secureUrl?: string; publicId?: string } = {};
         let isBlobDeduplicated = false;
 
-        try {
-            const { BlobStorageService } = await import('@/services/storage/BlobStorageService');
-            const result = await BlobStorageService.getOrCreateBlob(
-                buffer,
-                { filename: file.name, mimeType: (file as any).type || 'application/pdf' },
-                {
-                    tenantId,
-                    userId: options.userEmail,
+        // Phase 131: If Pipeline V2 is enabled, we skip blocking Cloudinary upload during prep.
+        // The background worker will handle Cloudinary upload later using the GridFS buffer.
+        if (!isV2Enabled) {
+            try {
+                const { BlobStorageService } = await import('@/services/storage/BlobStorageService');
+                const result = await BlobStorageService.getOrCreateBlob(
+                    buffer,
+                    { filename: file.name, mimeType: (file as any).type || 'application/pdf' },
+                    {
+                        tenantId,
+                        userId: options.userEmail,
+                        correlationId,
+                        source: 'RAG_INGEST'
+                    },
+                    session
+                );
+                cloudinaryResult = {
+                    secureUrl: result.blob.secureUrl || result.blob.url || (result.blob as any).cloudinaryUrl,
+                    publicId: result.blob.providerId || (result.blob as any).cloudinaryPublicId
+                };
+                isBlobDeduplicated = result.deduplicated;
+            } catch (error: any) {
+                // Log the storage failure
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'INGEST_PREPARER',
+                    action: 'STORAGE_FAILED',
+                    message: `Cloudinary storage failed: ${error.message}`,
                     correlationId,
-                    source: 'RAG_INGEST'
-                },
-                session
-            );
-            blob = result.blob;
-            isBlobDeduplicated = result.deduplicated;
-        } catch (error: any) {
-            // Log the storage failure
-            await logEvento({
-                level: 'ERROR',
-                source: 'INGEST_PREPARER',
-                action: 'STORAGE_FAILED',
-                message: `Universal storage failed: ${error.message}`,
-                correlationId,
-                tenantId,
-                stack: error.stack
-            });
+                    tenantId,
+                    stack: error.stack
+                });
 
-            // Create a FAILED asset record for traceability
-            const failedAsset = {
-                tenantId: scope === 'TENANT' ? tenantId : 'global',
-                industry,
-                filename: file.name,
-                componentType: metadata.type,
-                model: 'PENDING',
-                version: metadata.version,
-                revisionDate: new Date(),
-                status: 'vigente',
-                ingestionStatus: 'FAILED',
-                error: `Storage failed: ${error.message}`,
-                cloudinaryUrl: null,
-                cloudinaryPublicId: null,
-                fileMd5: fileHash,
-                sizeBytes: fileSize,
-                totalChunks: 0,
-                documentTypeId: metadata.documentTypeId,
-                scope,
-                spaceId, // 🌌 Phase 125.2
-                environment,
-                correlationId,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            };
+                // Create a FAILED asset record for traceability
+                const failedAsset = {
+                    tenantId: scope === 'TENANT' ? tenantId : 'global',
+                    industry,
+                    filename: file.name,
+                    componentType: metadata.type,
+                    model: 'PENDING',
+                    version: metadata.version,
+                    revisionDate: new Date(),
+                    status: 'vigente',
+                    ingestionStatus: 'FAILED',
+                    error: `Storage failed: ${error.message}`,
+                    cloudinaryUrl: null,
+                    cloudinaryPublicId: null,
+                    fileMd5: fileHash,
+                    sizeBytes: fileSize,
+                    totalChunks: 0,
+                    documentTypeId: metadata.documentTypeId,
+                    scope,
+                    spaceId, // 🌌 Phase 125.2
+                    environment,
+                    correlationId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                };
 
-            const result = await knowledgeAssetsCollection.insertOne(failedAsset);
+                const result = await knowledgeAssetsCollection.insertOne(failedAsset);
 
-            return {
-                docId: result.insertedId.toString(),
-                status: 'FAILED',
-                correlationId,
-                error: `Storage failed: ${error.message}`,
-                savings: 0
-            };
+                return {
+                    docId: result.insertedId.toString(),
+                    status: 'FAILED',
+                    correlationId,
+                    error: `Storage failed: ${error.message}`,
+                    savings: 0
+                };
+            }
         }
-
-        const cloudinaryResult = {
-            secureUrl: blob.secureUrl || blob.url || (blob as any).cloudinaryUrl,
-            publicId: blob.providerId || (blob as any).cloudinaryPublicId
-        };
 
         // 3. Initial Registry
         const docMetadata: any = {
@@ -263,6 +286,11 @@ export class IngestPreparer {
             spaceId, // 🌌 Phase 125.2
             chunkingLevel: metadata.chunkingLevel || 'bajo', // Phase 134
             environment,
+            correlationId, // Fix: Pass correlationId to asset for tracing
+            enableVision: options.enableVision || false,
+            enableTranslation: options.enableTranslation || false,
+            enableGraphRag: options.enableGraphRag || false,
+            enableCognitive: options.enableCognitive || false,
             createdAt: new Date(),
             updatedAt: new Date(),
         };

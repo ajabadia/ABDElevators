@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Database, FileText, Layers, Globe, Filter, RefreshCcw, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +19,8 @@ import { useApiExport } from '@/hooks/useApiExport';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgenticSupportSearch } from '@/components/technical/AgenticSupportSearch';
-import { Sparkles, LayoutPanelLeft } from 'lucide-react';
+import { Sparkles, LayoutPanelLeft, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { SimplifiedSearchBox } from './SimplifiedSearchBox';
 
 import { useEnvironmentStore } from '@/store/environment-store';
 
@@ -59,6 +61,7 @@ export const KnowledgeExplorer: React.FC = () => {
 
     const [simulationMode, setSimulationMode] = useState(false);
     const [simulatorSearch, setSimulatorSearch] = useState("");
+    const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 
     // 2. Exportación de Datos
     const { exportData, isExporting } = useApiExport({
@@ -193,85 +196,83 @@ export const KnowledgeExplorer: React.FC = () => {
                         </Card>
                     </div>
 
-                    {/* Search Debugger */}
-                    <div className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-950/20 dark:to-blue-950/20 border border-teal-100 dark:border-teal-900 rounded-xl p-6 shadow-sm transition-colors duration-300">
-                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                            <div className="flex-1 space-y-4">
-                                <div>
-                                    <h3 className="text-lg font-bold text-teal-900 dark:text-teal-100 flex items-center gap-2">
-                                        <Search size={20} className="text-teal-600 dark:text-teal-400" />
-                                        {t('simulator.title')}
-                                    </h3>
-                                    <p className="text-sm text-teal-700/80 dark:text-teal-300/80 mt-1">
-                                        {t('simulator.subtitle')}
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Input
-                                        placeholder={t('simulator.placeholder')}
-                                        className="bg-card border-teal-200 dark:border-teal-900 focus-visible:ring-teal-500"
-                                        value={simulatorSearch}
-                                        onChange={(e) => setSimulatorSearch(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSimulation()}
-                                        aria-label={t('simulator.title')}
-                                    />
-                                    <Button
-                                        onClick={handleSimulation}
-                                        disabled={isLoading || !simulatorSearch}
-                                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20"
-                                    >
-                                        {isLoading && simulationMode ? <RefreshCw className="animate-spin h-4 w-4" /> : t('actions.sim_btn')}
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Simplified Search Experience (ERA 6) */}
+                    <SimplifiedSearchBox
+                        value={simulationMode ? simulatorSearch : filters.query}
+                        onChange={(val) => {
+                            if (simulationMode) setSimulatorSearch(val);
+                            else setFilter('query', val);
+                        }}
+                        onSearch={() => {
+                            if (simulatorSearch && !simulationMode) {
+                                setSimulationMode(true);
+                            }
+                            refresh();
+                        }}
+                        isAdvancedOpen={isAdvancedFiltersOpen}
+                        onToggleAdvanced={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
+                        activeFiltersCount={(filters.language !== 'all' ? 1 : 0) + (filters.type !== 'all' ? 1 : 0)}
+                    />
 
-                    <Card className="bg-card border-border shadow-sm">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                <Filter className="h-4 w-4" /> {t('filters.title')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="md:col-span-2 relative">
-                                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/50" />
-                                    <Input
-                                        placeholder={t('filters.query_placeholder')}
-                                        className="pl-9"
-                                        value={filters.query}
-                                        onChange={(e) => handleBrowserSearch(e.target.value)}
-                                        aria-label={t('filters.query_placeholder')}
-                                    />
+                    {/* Advanced Filters (Progressive Disclosure) */}
+                    {isAdvancedFiltersOpen && (
+                        <Card className="bg-card border-border shadow-sm animate-in slide-in-from-top-2 duration-300">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <SlidersHorizontal className="h-4 w-4" /> Configuración Avanzada de Búsqueda
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="md:col-span-2">
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Método de Recuperación</Label>
+                                        <Tabs
+                                            value={simulationMode ? 'semantic' : 'regex'}
+                                            onValueChange={(v) => setSimulationMode(v === 'semantic')}
+                                            className="w-full"
+                                        >
+                                            <TabsList className="grid w-full grid-cols-2 h-9">
+                                                <TabsTrigger value="regex" className="text-[10px] font-bold uppercase">Búsqueda Exacta</TabsTrigger>
+                                                <TabsTrigger value="semantic" className="text-[10px] font-bold uppercase gap-1.5 text-blue-600">
+                                                    <Sparkles size={12} /> Semántica (IA)
+                                                </TabsTrigger>
+                                            </TabsList>
+                                        </Tabs>
+                                    </div>
+                                    <div>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Idioma de Fuente</Label>
+                                        <Select value={filters.language} onValueChange={(val) => setFilter('language', val)}>
+                                            <SelectTrigger aria-label={t('filters.lang_label')} className="h-9">
+                                                <SelectValue placeholder={t('filters.lang_label')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">{t('filters.lang_all')}</SelectItem>
+                                                <SelectItem value="es">Español (ES)</SelectItem>
+                                                <SelectItem value="en">Inglés (EN)</SelectItem>
+                                                <SelectItem value="de">Alemán (DE)</SelectItem>
+                                                <SelectItem value="it">Italiano (IT)</SelectItem>
+                                                <SelectItem value="fr">Francés (FR)</SelectItem>
+                                                <SelectItem value="pt">Portugués (PT)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Tipo de Fragmento</Label>
+                                        <Select value={filters.type} onValueChange={(val) => setFilter('type', val)}>
+                                            <SelectTrigger aria-label={t('filters.type_label')} className="h-9">
+                                                <SelectValue placeholder={t('filters.type_label')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">{t('filters.type_all')}</SelectItem>
+                                                <SelectItem value="original">{t('filters.type_original')}</SelectItem>
+                                                <SelectItem value="shadow">{t('filters.type_shadow')}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <Select value={filters.language} onValueChange={(val) => setFilter('language', val)}>
-                                    <SelectTrigger aria-label={t('filters.lang_label')}>
-                                        <SelectValue placeholder={t('filters.lang_label')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('filters.lang_all')}</SelectItem>
-                                        <SelectItem value="es">Español (ES)</SelectItem>
-                                        <SelectItem value="en">Inglés (EN)</SelectItem>
-                                        <SelectItem value="de">Alemán (DE)</SelectItem>
-                                        <SelectItem value="it">Italiano (IT)</SelectItem>
-                                        <SelectItem value="fr">Francés (FR)</SelectItem>
-                                        <SelectItem value="pt">Portugués (PT)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={filters.type} onValueChange={(val) => setFilter('type', val)}>
-                                    <SelectTrigger aria-label={t('filters.type_label')}>
-                                        <SelectValue placeholder={t('filters.type_label')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('filters.type_all')}</SelectItem>
-                                        <SelectItem value="original">{t('filters.type_original')}</SelectItem>
-                                        <SelectItem value="shadow">{t('filters.type_shadow')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     <div className="space-y-4">
                         <div className="flex justify-between items-center text-sm text-muted-foreground">

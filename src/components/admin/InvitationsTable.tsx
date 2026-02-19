@@ -90,7 +90,7 @@ export function InvitationsTable() {
             )
         },
         {
-            header: tCommon("actions"),
+            header: tCommon("actions_label"),
             cell: (inv) => (
                 <div className="flex items-center gap-1">
                     {inv.status === 'PENDING' && (

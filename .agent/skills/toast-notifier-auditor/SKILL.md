@@ -32,6 +32,9 @@ Para cada interacción detectada, verifica:
 - [ ] ¿Se notifica el **ÉXITO**? (Ej: "Guardado correctamente").
 - [ ] ¿Se notifica el **ERROR**? (Ej: "Fallo al guardar").
 - [ ] ¿El feedback es inmediato o tras la resolución de la promesa?
+- [ ] **Visibilidad**: ¿Existe el componente `<Toaster />` (ej: `sonner`) en el `RootLayout`?
+- [ ] **Compatibilidad**: ¿El hook `useToast` o la función `toast` utilizada es compatible con el `<Toaster />` instalado? (Evitar mezclar Radix Toast con Sonner Toaster).
+- [ ] **Layering**: ¿El Toast corre el riesgo de quedar oculto por Modales o elementos con alto Z-Index? Asegurar que el Toaster esté al nivel más externo posible.
 
 ### 3. Acción Correctiva (Implementación)
 Si falta feedback en alguna interacción:

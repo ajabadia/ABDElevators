@@ -22,8 +22,8 @@ export const DocumentChunkSchema = z.object({
     model: z.string(),
     sourceDoc: z.string(),
     documentTypeId: z.string().optional(), // Referencia al maestro de tipos
-    version: z.string(),
-    revisionDate: z.date(),
+    version: z.string().default('1.0'),
+    revisionDate: z.date().default(() => new Date()),
     approxPage: z.number().optional(),
     chunkType: z.enum(['TEXT', 'VISUAL']).default('TEXT'),
     chunkText: z.string(),
@@ -359,7 +359,7 @@ export const IngestAuditSchema = z.object({
 
     // Metadata
     correlationId: z.string(),
-    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE']),
+    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'RESTORED']),
     details: z.object({
         chunks: z.number().default(0),
         duration_ms: z.number(),
@@ -448,9 +448,29 @@ export const KnowledgeAssetSchema = z.object({
     cloudinaryUrl: z.string().optional(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(), // Para de-duplicación y ahorro de tokens
-    chunkingLevel: z.enum(['SIMPLE', 'SEMANTIC', 'LLM']).default('SIMPLE'), // Phase 134: Tiered Chunking
+    chunkingLevel: z.enum(['SIMPLE', 'SEMANTIC', 'LLM', 'bajo', 'medio', 'alto']).default('SIMPLE'), // Phase 134: Tiered Chunking
     fileSize: z.number().default(0), // Added for consistency
     totalChunks: z.number().default(0),
+
+    // Phase 197: Premium Ingestion Flags
+    enableVision: z.boolean().default(false),
+    enableTranslation: z.boolean().default(false),
+    enableGraphRag: z.boolean().default(false),
+    enableCognitive: z.boolean().default(false),
+
+    // Phase 131: Storage & Infrastructure Aagnostic Fields
+    blobId: z.string().optional(), // GridFS reference for local processing
+    spaceId: z.string().optional(), // 🌌 Target space
+    scope: z.enum(['USER', 'TENANT', 'INDUSTRY', 'GLOBAL']).default('TENANT'),
+    environment: z.string().default('PRODUCTION'),
+    correlationId: z.string().optional(), // Phase 105: Fix log tracing
+
+    // Status Flags
+    hasStorage: z.boolean().default(false),
+    hasChunks: z.boolean().default(false),
+    indexingError: z.string().optional().nullable(),
+    storageError: z.string().optional().nullable(),
+
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()), // Añadido para seguimiento de cambios
     deletedAt: z.date().optional(),
@@ -1425,7 +1445,7 @@ export const FederatedPatternSchema = z.object({
     validationCount: z.number().default(0), // How many times this pattern helped others
 
     // Governance
-    originIndustry: IndustryTypeSchema.default('ELEVATORS'),
+    originIndustry: IndustryTypeSchema.default('GENERIC'),
     originTenantHash: z.string(), // One-way hash of tenantId for anonymous attribution stats
     status: z.enum(['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'FLAGGED']).default('DRAFT'),
 
@@ -1435,29 +1455,6 @@ export const FederatedPatternSchema = z.object({
 
 export type FederatedPattern = z.infer<typeof FederatedPatternSchema>;
 
-/**
- * ⚡ FASE 97: Multi-Vertical Workflow Engine - Task Schema
- */
-export const WorkflowTaskSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    caseId: z.string(), // ID del Entity/Caso asociado
-    type: z.enum(['DOCUMENT_REVIEW', 'SECURITY_SIGNATURE', 'TECHNICAL_VALIDATION', 'COMPLIANCE_CHECK']).default('DOCUMENT_REVIEW'),
-    title: z.string(),
-    description: z.string().optional(),
-    assignedRole: z.nativeEnum(UserRole),
-    assignedUserId: z.string().optional(),
-    status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']).default('PENDING'),
-    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
-    metadata: z.record(z.string(), z.any()).default({}),
-    dueDate: z.date().optional(),
-    completedAt: z.date().optional(),
-    completedBy: z.string().optional(), // UserId
-    createdAt: z.date().default(() => new Date()),
-    updatedAt: z.date().default(() => new Date()),
-});
-
-export type WorkflowTask = z.infer<typeof WorkflowTaskSchema>;
 
 /**
  * 🔔 FASE 62: System Email Templates

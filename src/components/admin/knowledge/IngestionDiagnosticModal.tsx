@@ -57,7 +57,7 @@ export function IngestionDiagnosticModal({ isOpen, onClose, assetId, filename }:
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col p-0 overflow-hidden border-slate-200">
+            <DialogContent className="max-w-7xl w-[95vw] h-[85vh] flex flex-col p-0 overflow-hidden border-slate-200">
                 <DialogHeader className="p-6 pb-2 border-b border-slate-100">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -177,7 +177,7 @@ export function IngestionDiagnosticModal({ isOpen, onClose, assetId, filename }:
                                                 </Badge>
                                             </div>
                                         </div>
-                                        <ScrollArea className="flex-1 p-4 font-mono">
+                                        <ScrollArea className="flex-1 p-4 font-mono overflow-auto">
                                             <div className="space-y-1">
                                                 {!data.logs || data.logs.length === 0 ? (
                                                     <p className="text-slate-600 italic text-xs">No technical logs emitted for this correlationId.</p>

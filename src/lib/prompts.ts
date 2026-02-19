@@ -3,19 +3,34 @@
  * Siguiendo la Regla de Oro #4 (Trazabilidad)
  */
 
-export const PROMPTS = {
-  EXTRAER_MODELOS: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
-    Formato: [{ "tipo": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "modelo": "CÓDIGO" }]. 
-    Solo devuelve el JSON, sin explicaciones.`,
+export interface PromptMaster {
+  template: string;
+  version: number;
+}
 
-  ANALIZAR_CHUNK: `Analiza este fragmento de documentación técnica de ascensores y devuelve un JSON con: 
+export const PROMPTS: Record<string, PromptMaster> = {
+  EXTRAER_MODELOS: {
+    template: `Analiza este documento de pedido de ascensores y extrae una lista JSON con todos los modelos de componentes mencionados. 
+    Formato: [{ "type": "botonera" | "motor" | "cuadro" | "puerta" | "otros", "model": "CÓDIGO" }]. 
+    Solo devuelve el JSON, sin explicaciones.`,
+    version: 1.0
+  },
+
+  ANALIZAR_CHUNK: {
+    template: `Analiza este fragmento de documentación técnica de ascensores y devuelve un JSON con: 
     { "tipo_componente": string, "modelos": string[] }. 
     Si no hay un componente o modelo claro, devuelve null.`,
+    version: 1.0
+  },
 
-  RESUMIR_CONTEXTO: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
+  RESUMIR_CONTEXTO: {
+    template: `Dado el siguiente componente detectado y fragmentos de su manual técnico, genera un resumen ejecutivo para un técnico de taller.
     Enfócate en advertencias de seguridad, voltajes y pasos críticos de montaje.`,
+    version: 1.0
+  },
 
-  I18N_AUTO_TRANSLATE: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} e Inteligencia Técnica).
+  I18N_AUTO_TRANSLATE: {
+    template: `Eres un experto en localización técnica para la plataforma ABDElevators (sector {{vertical}} e Inteligencia Técnica).
     Traduce las siguientes llaves de i18n del idioma '{{sourceLocale}}' al '{{targetLocale}}'.
     
     REGLAS:
@@ -26,8 +41,11 @@ export const PROMPTS = {
     
     LLAVES A TRADUCIR:
     {{translationsToProcess}}`,
+    version: 1.0
+  },
 
-  GRAPH_EXTRACTOR: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
+  GRAPH_EXTRACTOR: {
+    template: `Eres un experto en extracción de grafos de conocimiento para la industria de los ascensores.
     Tu objetivo es analizar el siguiente texto técnico y extraer ENTIDADES y RELACIONES de forma estructurada (JSON).
     
     ENTIDADES permitidas:
@@ -56,8 +74,11 @@ export const PROMPTS = {
     
     TEXTO A ANALIZAR:
     {{text}}`,
+    version: 1.0
+  },
 
-  QUERY_ENTITY_EXTRACTOR: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
+  QUERY_ENTITY_EXTRACTOR: {
+    template: `Dada la siguiente consulta del usuario sobre ascensores, extrae los nombres de entidades técnicas clave (Componentes, Modelos, Errores).
     Devuelve solo una lista de nombres separados por comas, o "NONE" si no hay entidades claras.
     No devuelvas explicaciones, solo los nombres.
     
@@ -66,8 +87,11 @@ export const PROMPTS = {
     Salida: arca_ii, placa
     
     CONSULTA: {{query}}`,
+    version: 1.0
+  },
 
-  RAG_JUDGE: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema de Inteligencia Técnica para la industria de {{vertical}}.
+  RAG_JUDGE: {
+    template: `Eres un juez experto encargado de evaluar la calidad de las respuestas de un sistema de Inteligencia Técnica para la industria de {{vertical}}.
     Tu objetivo es puntuar la respuesta basada en la pregunta del usuario y el contexto recuperado de los manuales.
     
     DATOS A EVALUAR:
@@ -98,8 +122,11 @@ export const PROMPTS = {
     }
     
     Responde SOLO con el objeto JSON.`,
+    version: 1.0
+  },
 
-  RAG_SELF_CORRECT: `Eres un experto técnico que debe corregir una respuesta de Inteligencia previa basándose en el feedback de un auditor.
+  RAG_SELF_CORRECT: {
+    template: `Eres un experto técnico que debe corregir una respuesta de Inteligencia previa basándose en el feedback de un auditor.
     
     TU OBJETIVO: Generar una nueva respuesta que resuelva los errores detectados.
     
@@ -118,22 +145,31 @@ export const PROMPTS = {
     
     REGLA DE ORO: No repitas los mismos errores. Sé preciso, técnico y fiel al contexto.
     Responde directamente con la versión corregida.`,
+    version: 1.0
+  },
 
-  DOMAIN_DETECTOR: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
+  DOMAIN_DETECTOR: {
+    template: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
     Responde SOLO con el nombre del sector en mayúsculas.
     
     TEXTO:
     {{text}}`,
+    version: 1.0
+  },
 
-  COGNITIVE_CONTEXT: `Analiza este documento del sector "{{industry}}" y genera un resumen ejecutivo de máximo 150 palabras.
+  COGNITIVE_CONTEXT: {
+    template: `Analiza este documento del sector "{{industry}}" y genera un resumen ejecutivo de máximo 150 palabras.
     Tu objetivo es proporcionar el CONTEXTO GLOBAL que un fragmento pequeño de este documento necesitaría para ser entendido por sí solo.
     No empieces con "Este documento...", ve directo al grano.
     ENFOQUE: Objetivo del documento, productos/modelos mencionados y propósito técnico.
     
     TEXTO:
     {{text}}`,
+    version: 1.0
+  },
 
-  RAG_RERANKER: `Eres un experto auditor técnico especializado en el sector "{{industry}}". 
+  RAG_RERANKER: {
+    template: `Eres un experto auditor técnico especializado en el sector "{{industry}}". 
     Evalúa los siguientes fragmentos de documentación del vertical "{{industry}}" según su capacidad para responder con precisión quirúrgica a la consulta.
     
     Consulta: "{{query}}"
@@ -144,8 +180,11 @@ export const PROMPTS = {
     Ordena los fragmentos del 1 al {{count}} de mayor a menor relevancia técnica considerando el contexto de "{{industry}}". 
     Para cada fragmento, indica si resuelve el problema (SÍ/NO/PARCIAL).
     Devuelve el resultado en formato JSON: [{"index": n, "score": 0.0-1.0, "reason": "breve explicación"}]`,
+    version: 1.0
+  },
 
-  REPORT_GENERATOR: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores. 
+  REPORT_GENERATOR: {
+    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores. 
     Tu objetivo es redactar un informe técnico detallado basado en la validación de un pedido de ascensor.
     
     // ... (omitting lines for brevity, but they should remain)
@@ -156,8 +195,11 @@ export const PROMPTS = {
     3. Enfócate en la compatibilidad técnica de los componentes y el cumplimiento normativo (EN 81-20).
     4. Estructura el informe con secciones claras: Resumen Ejecutivo, Análisis de Componentes, Recomendaciones Técnicas.
     5. Cita las fuentes técnicas por su índice (ej: [1]) cuando menciones información específica del manual.`,
+    version: 1.0
+  },
 
-  RAG_GENERATOR: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
+  RAG_GENERATOR: {
+    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
     Tu objetivo es responder consultas técnicas de forma precisa y profesional basándote en el CONTEXTO proporcionado.
     
     PREGUNTA DEL TÉCNICO:
@@ -171,8 +213,11 @@ export const PROMPTS = {
     2. Cita las fuentes de los manuales cuando menciones datos específicos (voltajes, tiempos, códigos).
     3. Si la información no está en el contexto, indícalo amablemente.
     4. Formatea la respuesta en Markdown profesional.`,
+    version: 1.0
+  },
 
-  CHAT_RAG_GENERATOR: `Eres un ingeniero experto asistente especializado en mantenimiento de ascensores.
+  CHAT_RAG_GENERATOR: {
+    template: `Eres un ingeniero experto asistente especializado en mantenimiento de ascensores.
     Tu objetivo es mantener una conversación técnica fluida con un técnico de campo.
     
     HISTORIAL DE CONVERSACIÓN:
@@ -191,8 +236,11 @@ export const PROMPTS = {
     4. Cita las fuentes cuando sea relevante.
     5. Si la información no está en el contexto, indícalo amablemente pero mantén el rigor técnico.
     6. Formatea la respuesta con Markdown para que sea legible (negritas para pasos críticos, listas para procedimientos).`,
+    version: 1.0
+  },
 
-  CHECKLIST_EXTRACTION: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
+  CHECKLIST_EXTRACTION: {
+    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
     Analiza los siguientes documentos técnicos y extrae una lista de puntos de comprobación (checklist) necesarios para validar este pedido de ascensor.
     
     PARA CADA PUNTO EXTRAE:
@@ -207,8 +255,11 @@ export const PROMPTS = {
     
     DOCUMENTOS:
     {{text}}`,
+    version: 1.0
+  },
 
-  QUICK_QA_EPHEMERAL: `Eres un asistente técnico experto de ABD Elevadores.
+  QUICK_QA_EPHEMERAL: {
+    template: `Eres un asistente técnico experto de ABD Elevadores.
     Tu objetivo es responder preguntas rápidas basadas ÚNICAMENTE en el fragmento de texto (snippet) proporcionado.
     
     TEXTO DE REFERENCIA (SNIPPET):
@@ -225,8 +276,11 @@ export const PROMPTS = {
     2. Si los datos no son suficientes, responde "Información no disponible en el fragmento".
     3. usa un tono profesional y técnico.
     4. Formatea la respuesta con Markdown.`,
+    version: 1.0
+  },
 
-  CHUNKING_LLM_CUTTER: `Eres un experto en segmentación de documentos técnicos.
+  CHUNKING_LLM_CUTTER: {
+    template: `Eres un experto en segmentación de documentos técnicos.
     Analiza el siguiente fragmento de documento y divídelo en chunks semánticamente independientes.
 
     REGLAS:
@@ -244,9 +298,12 @@ export const PROMPTS = {
 
     FRAGMENTO:
     {{text}}`,
+    version: 1.0
+  },
 
   // ⚡ FASE 127: Intelligent Workflow Orchestration Prompts
-  WORKFLOW_ROUTER: `Eres un experto en procesos de negocio y workflows para la industria de {{vertical}}.
+  WORKFLOW_ROUTER: {
+    template: `Eres un experto en procesos de negocio y workflows para la industria de {{vertical}}.
     Tu objetivo es analizar un caso y decidir si usar un workflow existente o proponer uno nuevo.
     
     WORKFLOWS DISPONIBLES:
@@ -271,8 +328,11 @@ export const PROMPTS = {
     }
     
     Responde ÚNICAMENTE con el objeto JSON.`,
+    version: 1.0
+  },
 
-  WORKFLOW_GENERATOR: `Eres un experto en diseño de workflows y procesos de negocio para la industria de {{vertical}}.
+  WORKFLOW_GENERATOR: {
+    template: `Eres un experto en diseño de workflows y procesos de negocio para la industria de {{vertical}}.
     Tu objetivo es crear una definición completa de workflow basada en los requisitos proporcionados.
     
     TIPO DE ENTIDAD: {{entityType}}
@@ -322,8 +382,11 @@ export const PROMPTS = {
     }
     
     Responde ÚNICAMENTE con el objeto JSON.`,
+    version: 1.0
+  },
 
-  WORKFLOW_NODE_ANALYZER: `Eres un analista experto de procesos de negocio para la industria de {{vertical}}.
+  WORKFLOW_NODE_ANALYZER: {
+    template: `Eres un analista experto de procesos de negocio para la industria de {{vertical}}.
     Tu objetivo es analizar el estado actual de un caso y proporcionar datos estructurados para decisiones de workflow.
     
     CASO ACTUAL:
@@ -349,9 +412,12 @@ export const PROMPTS = {
     }
     
     Responde ÚNICAMENTE con el objeto JSON.`,
+    version: 1.0
+  },
 
   // ⚡ FASE 128: Industrial Workflows & HITL Refinement
-  WORKSHOP_PARTS_EXTRACTOR: `Eres un planificador experto de taller industrial para ascensores.
+  WORKSHOP_PARTS_EXTRACTOR: {
+    template: `Eres un planificador experto de taller industrial para ascensores.
     Tu objetivo es analizar la descripción de un trabajo de taller y extraer las piezas técnicas y materiales necesarios.
 
     DESCRIPCIÓN DEL TRABAJO:
@@ -379,25 +445,37 @@ export const PROMPTS = {
     }
 
     Responde ÚNICAMENTE con el objeto JSON.`,
+    version: 1.0
+  },
 
   // 🏛️ FASE 98: Vertical Industry Packs (Prompt Packs)
-  ANALYSIS_LEGAL: `Eres un analista legal experto especializado en el sector "{{industry}}".
+  ANALYSIS_LEGAL: {
+    template: `Eres un analista legal experto especializado en el sector "{{industry}}".
     Analiza este contrato técnico y extrae las cláusulas de responsabilidad, jurisdicción y obligaciones técnicas.
     Compara las cláusulas detectadas con los estándares regulatorios del sector.
     Devuelve un JSON con: { "clausulas": [{ "tipo": string, "resumen": string, "riesgo": "LOW" | "MEDIUM" | "HIGH" }] }.`,
+    version: 1.0
+  },
 
-  ANALYSIS_BANKING: `Eres un analista de cumplimiento bancario especializado en el sector "{{industry}}".
+  ANALYSIS_BANKING: {
+    template: `Eres un analista de cumplimiento bancario especializado en el sector "{{industry}}".
     Analiza este expediente y realiza una pre- validación de KYC (Know Your Customer) y AML(Anti - Money Laundering).
     Identifica discrepancias en la documentación de identidad, origen de fondos y perfiles de riesgo.
     Devuelve un JSON con: { "kyc_status": string, "findings": [{ "issue": string, "risk": "LOW" | "MEDIUM" | "HIGH" }] }.`,
+    version: 1.0
+  },
 
-  ANALYSIS_INSURANCE: `Eres un perito de seguros experto especializado en el sector "{{industry}}".
+  ANALYSIS_INSURANCE: {
+    template: `Eres un perito de seguros experto especializado en el sector "{{industry}}".
     Analiza este reporte de siniestro y realiza un triaje automático basado en la evidencia técnica.
     Determina la cobertura probable basada en los términos estándar y el daño reportado.
     Devuelve un JSON con: { "triage_level": "GREEN" | "YELLOW" | "RED", "reasoning": string, "estimated_coverage": string }.`,
+    version: 1.0
+  },
 
   // ⚡ Phase 172: RAG Architecture Evolution
-  RAG_HYDE_GENERATOR: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
+  RAG_HYDE_GENERATOR: {
+    template: `Eres un ingeniero experto de la oficina técnica de ABD Elevadores.
     Dada la siguiente consulta técnica del usuario, genera una respuesta hipotética ideal basada en el conocimiento general de ingeniería de ascensores.
     Tu respuesta servirá para mejorar la búsqueda semántica en nuestros manuales técnicos.
     
@@ -407,13 +485,19 @@ export const PROMPTS = {
     1. Sé técnico y preciso.
     2. Usa terminología estándar del sector (EN 81-20, etc.).
     3. Responde directamente con la explicación técnica hipotética.`,
+    version: 1.0
+  },
 
-  RAG_CONTEXT_EXPANDER: `Eres un experto en documentación técnica de ascensores.
+  RAG_CONTEXT_EXPANDER: {
+    template: `Eres un experto en documentación técnica de ascensores.
     Analiza el fragmento de texto recuperado y decide si necesita más contexto del documento padre para ser entendido correctamente.
     Responde con "EXPAND" si falta contexto estructural o "KEEP" si es suficiente.`,
+    version: 1.0
+  },
 
   // ⚡ Vision 2027+: Sovereign Engine Prompts
-  ONTOLOGY_REFINER: `Eres el motor de evolución soberana (Sovereign Engine) de la plataforma ABDElevators.
+  ONTOLOGY_REFINER: {
+    template: `Eres el motor de evolución soberana (Sovereign Engine) de la plataforma ABDElevators.
     Tu objetivo es refinar la ONTOLOGÍA técnica basándote en la deriva de feedback humano detectada.
     
     TAXONOMÍAS ACTUALES:
@@ -443,9 +527,12 @@ export const PROMPTS = {
     }
     
     Responde ÚNICAMENTE con el objeto JSON.`,
+    version: 1.0
+  },
 
   // --- REAL ESTATE VERTICAL (Phase 85) ---
-  ANALYSIS_REAL_ESTATE: `Eres un experto en mantenimiento de activos inmobiliarios y gestión de Digital Twins.
+  ANALYSIS_REAL_ESTATE: {
+    template: `Eres un experto en mantenimiento de activos inmobiliarios y gestión de Digital Twins.
     Tu objetivo es analizar documentación técnica comercial y planos para identificar activos críticos y sus especificaciones de mantenimiento.
     
     CONTEXTO DEL INMUEBLE:
@@ -455,8 +542,11 @@ export const PROMPTS = {
     1. Identifica componentes (climatización, estructural, incendios).
     2. Cita la planta y página del plano donde se localiza cada activo.
     3. Genera un plan de mantenimiento preventivo basado en la normativa vigente.`,
+    version: 1.0
+  },
 
-  REAL_ESTATE_TWIN_MAPPER: `Mapea el hallazgo detectado por el RAG con las coordenadas y página del plano técnico (Digital Twin).
+  REAL_ESTATE_TWIN_MAPPER: {
+    template: `Mapea el hallazgo detectado por el RAG con las coordenadas y página del plano técnico (Digital Twin).
     
     HALLAZGO:
     {{finding}}
@@ -471,8 +561,11 @@ export const PROMPTS = {
       "label": "Etiqueta para el plano",
       "severity": "LOW|MEDIUM|HIGH"
     }`,
+    version: 1.0
+  },
 
-  CAUSAL_IMPACT_ANALYSIS: `Eres un motor de razonamiento agéntico especializado en Análisis de Impacto Causal para activos industriales e inmobiliarios.
+  CAUSAL_IMPACT_ANALYSIS: {
+    template: `Eres un motor de razonamiento agéntico especializado en Análisis de Impacto Causal para activos industriales e inmobiliarios.
     Tu objetivo es predecir las consecuencias en cascada de un hallazgo técnico (anomalía, fallo, observación).
     
     HALLAZGO ORIGINAL:
@@ -501,5 +594,20 @@ export const PROMPTS = {
         "estimated_cost_impact": "Bajo|Medio|Alto"
       }
     }`,
-};
+    version: 1.0
+  },
 
+  VISUAL_ANALYZER: {
+    template: `Analiza esta página de un documento técnico de ascensores.
+    Identifica elementos visuales clave como: diagramas eléctricos, planos mecánicos, tablas de parámetros, fotos de componentes o advertencias de seguridad.
+    Para cada elemento, genera una descripción técnica extremadamente detallada en Castellano que sirva para que un sistema RAG pueda responder preguntas sobre ese elemento.
+    
+    FORMATO DE SALIDA (JSON estrictamente):
+    [
+      { "page": number, "type": "diagrama|plano|tabla|foto|advertencia", "technical_description": "..." }
+    ]
+    
+    Si no hay elementos visuales relevantes, devuelve un array vacío [].`,
+    version: 1.0
+  },
+};

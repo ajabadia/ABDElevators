@@ -1238,24 +1238,89 @@
   },
   "prompts": {
     "messages": {
-      "save_success": "Prompt version synchronized to DB successfully.",
+      "save_success": "Prompt saved successfully.",
+      "promote_success": "Promoted successfully",
+      "promote_desc": "The prompt has been copied to the production environment.",
+      "no_prompts": "No prompts found with the current filters.",
       "delete_success": "Prompt archived successfully.",
-      "create_success": "New prompt registered in the system."
+      "create_success": "New prompt registered in the system.",
+      "error_loading": "Error loading prompt list",
+      "error_saving": "Error saving the prompt",
+      "sync_success": "Synchronization finished: {created} created, {updated} updated, {errors} errors.",
+      "sync_error": "Error syncing prompts from code."
     },
-    "title": "Prompt Engineering Governance",
-    "subtitle": "Manage master prompts for RAG engines and AI agents.",
-    "new_prompt": "New Master Prompt",
+    "title": "Prompt Governance",
+    "subtitle": "Manage master directives and AI behavior by industry.",
+    "sync": "Sync from Code",
+    "actions": {
+      "history": "Global History",
+      "promote": "Promote to PROD",
+      "sync": "Sync from Code",
+      "clear_filters": "Clear Filters",
+      "create_first": "Create my first Prompt",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Prompt",
+      "view": "View",
+      "delete": "Delete",
+      "simulate": "Simulate",
+      "rollback": "Restore"
+    },
+    "new_prompt": "New Prompt",
+    "search_placeholder": "Search by key, name or category...",
+    "filters": {
+      "all": "All Prompts",
+      "organization": "Filter by Organization",
+      "industry": "Filter by Industry"
+    },
+    "info": {
+      "multi_vertical": "Prompts marked as 'ELEVATORS' only affect that industry."
+    },
+    "editor_placeholder_title": "Master Prompt Editor",
+    "editor_placeholder_desc": "Select a prompt from the list or create a new one to start editing.",
+    "editor": {
+      "rollback_confirm": "Are you sure you want to restore this version?",
+      "configuration": "Configuration",
+      "simulation": "Simulation",
+      "metadata": "Metadata",
+      "key": "Key",
+      "placeholder": {
+        "key": "EX: TECHNICAL_ANALYSIS",
+        "name": "Descriptive name",
+        "template": "Write the AI directive here..."
+      },
+      "name": "Name",
+      "industry": "Industry (Vertical)",
+      "model": "Model",
+      "category": "Category",
+      "template": "Template",
+      "variables": "System Variables",
+      "change_reason": "Reason for change"
+    },
+    "history": {
+      "title": "Global Audit Log",
+      "subtitle": "Master tracking of AI directive changes",
+      "search": "Search by prompt, key or reason...",
+      "records": "Records",
+      "version": "V",
+      "system": "System",
+      "no_records": "No records found in history",
+      "by": "By",
+      "reason": "Reason",
+      "date": "Date"
+    },
     "tabs": {
       "active": "Active Prompts",
       "testing": "Testing / Drafts"
     },
     "form": {
       "key": "Internal Key",
-      "title": "Display Title",
-      "version": "Semantic Version",
-      "content": "System Prompt Content",
+      "is_active": "Set as active version",
       "tags": "Tags",
-      "is_active": "Set as Active Version"
+      "title": "Descriptive Title",
+      "version": "Semantic Version",
+      "content": "System Prompt Content"
     },
     "table": {
       "prompt": "Prompt",

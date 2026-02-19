@@ -179,7 +179,8 @@ src/
 - ✅ **Global SuperAdmin Dashboard (Phase 110)**: Consola centralizada para monitoreo de métricas multi-tenant, precisión de IA y salud del cluster.
 - ✅ **Causal AI Simulation Engine (Phase 86)**: Análisis de impacto 'What-If' integrado en Digital Twins para predecir consecuencias en cascada y sugerir planes de mitigación técnica.
 - ✅ **Industrial Stability Cleanup (Era 5)**: Erradicación de +140 errores estructurales de TypeScript, normalización de sesiones multi-tenant y gobernanza estricta de Enums.
-- ✅ **Monorepo Namespace Architecture**: Desacoplamiento físico de @abd/platform-core, @abd/ui y @abd/workflow para máxima reutilización de servicios.
+- ✅ **Monorepo Namespace Architecture**: Desacoplamiento físico de @abd/platform-core, @abd/ui, @abd/workflow-engine y @abd/rag-engine para máxima reutilización de servicios.
+- ✅ **Domain Decoupling & Industry Agnosticism**: Aislamiento total entre RAG y Workflows, permitiendo desplegar verticales de industria (Legal, Seguros, etc.) sin dependencias cruzadas.
 - ✅ **Security Hardening & Internal Gateway (Phase 183)**: Implementación de IP allow-listing, rotación de secretos y sanitización profunda de PII en logs industriales.
 - ✅ **Suite Evolution & Next-Gen Utilities (Phase 184)**: Infraestructura multi-producto, Feature Flags persistentes, Job Scheduler genérico y Gobernanza de IA por tenant.
 - ✅ **Unified Experience (ERA 6)**: Rediseño visual masivo, dashboard "Hub" unificado y simplificación de navegación para técnicos (Phases 190-193).

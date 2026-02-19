@@ -48,12 +48,12 @@ export class LLMChunker implements IChunkerStrategy {
         }
 
         try {
-            const prompt = PROMPTS.CHUNKING_LLM_CUTTER.replace('{{text}}', safeText);
+            const prompt = PROMPTS.CHUNKING_LLM_CUTTER.template.replace('{{text}}', safeText);
 
             // Call Gemini
             const responseJson = await callGemini(prompt, options.tenantId, options.correlationId, {
                 temperature: 0.1, // Low temp for precision
-                model: 'gemini-1.5-pro' // Use Pro for better instruction following
+                model: 'gemini-2.5-flash' // Phase 197: Use Flash for cost and speed
             });
 
             // Parse JSON

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getReportsCollection } from '@/lib/db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         const offset = parseInt(searchParams.get('offset') || '0');
         const type = searchParams.get('type');
 
-        const reports = await getReportsCollection(session);
+        const reports = await getTenantCollection('reports', session);
         const query: any = {};
 
         if (type) {

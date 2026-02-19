@@ -48,7 +48,9 @@ export class SemanticChunker implements IChunkerStrategy {
 
             const similarity = cosineSimilarity(currentEmbedding, nextEmbedding);
 
-            if (similarity >= this.similarityThreshold) {
+            const finalThreshold = options.chunkThreshold !== undefined ? options.chunkThreshold : this.similarityThreshold;
+
+            if (similarity >= finalThreshold) {
                 // Merge segments
                 currentChunkText += ' ' + nextSegment;
                 // Naive fusion: keep current embedding as anchor. 

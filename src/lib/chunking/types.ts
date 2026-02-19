@@ -15,6 +15,9 @@ export interface ChunkingOptions {
     tenantId: string;
     correlationId: string;
     session?: any; // For billing/usage tracking
+    chunkSize?: number;
+    chunkOverlap?: number;
+    chunkThreshold?: number; // Similarity threshold for Semantic
 }
 
 export interface IChunkerStrategy {

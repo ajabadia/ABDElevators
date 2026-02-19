@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import cronParser from 'cron-parser';
-import { getReportSchedulesCollection } from '@/lib/db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ReportSchedule, CreateReportScheduleSchema, UpdateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -24,7 +24,7 @@ export class ReportScheduleService {
             throw new AppError('VALIDATION_ERROR', 400, 'Invalid cron expression');
         }
 
-        const collection = await getReportSchedulesCollection(session);
+        const collection = await getTenantCollection('report_schedules', session);
 
         // Calculate next run
         const interval = (cronParser as any).parseExpression(validated.cronExpression);
@@ -59,7 +59,7 @@ export class ReportScheduleService {
      * Lists schedules for the current tenant.
      */
     static async listSchedules(session: any): Promise<ReportSchedule[]> {
-        const collection = await getReportSchedulesCollection(session);
+        const collection = await getTenantCollection<ReportSchedule>('report_schedules', session);
         // SecureCollection.find returns Promise<T[]> directly
         return collection.find({});
     }

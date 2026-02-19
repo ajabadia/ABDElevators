@@ -78,7 +78,20 @@ export async function withLLMRetry<T>(
             }
 
             // Calculate delay with jitter
-            const delay = calculateDelay(attempt, initialDelayMs, backoffMultiplier);
+            const delay = calculateDelay(attempt, initialDelayMs, backoffMultiplier, lastError);
+
+            // Log special warning for long delays (Quota)
+            if (delay > 10000) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'LLM_RETRY',
+                    action: 'QUOTA_BACKOFF',
+                    message: `Backing off for ${Math.round(delay / 1000)}s due to Quota/RateLimit.`,
+                    correlationId,
+                    details: { delayMs: delay }
+                });
+            }
+
             await sleep(delay);
         }
     }
@@ -89,8 +102,21 @@ export async function withLLMRetry<T>(
 
 /**
  * Calculate exponential backoff delay with jitter
+ * Handles 429 Quota errors with extended delay
  */
-function calculateDelay(attempt: number, initialDelayMs: number, multiplier: number): number {
+function calculateDelay(attempt: number, initialDelayMs: number, multiplier: number, error?: Error): number {
+    // Check for 429/Quota in error message
+    const isQuota = error?.message?.includes('429') ||
+        error?.message?.includes('Quota') ||
+        error?.message?.includes('Too Many Requests');
+
+    if (isQuota) {
+        // Aggressive backoff for quota: 30s, 60s, 120s
+        // Or respect common RateLimit reset windows (usually 60s is safe)
+        const baseQuotaDelay = 30000;
+        return baseQuotaDelay * Math.pow(2, attempt);
+    }
+
     const exponentialDelay = initialDelayMs * Math.pow(multiplier, attempt);
     const jitter = Math.random() * 0.3 * exponentialDelay; // 30% jitter
     return Math.floor(exponentialDelay + jitter);

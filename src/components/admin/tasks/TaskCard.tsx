@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { WorkflowTask } from "@/lib/schemas"; // Assuming exported from schemas
+import { WorkflowTask } from "@abd/workflow-engine";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Clock, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";

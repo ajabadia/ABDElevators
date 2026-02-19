@@ -1,8 +1,11 @@
 {
   "error": "Error",
-  "save": "Save",
   "saving": "Saving...",
-  "cancel": "Cancel",
+  "actions": {
+    "label": "Actions",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "connectionError": "Connection Error",
   "notifications": {
     "success": {
@@ -332,14 +335,14 @@
       "chat_title": "Ephemeral Chat",
       "chat_welcome_title": "Ask a question about the text",
       "chat_welcome_desc": "The assistant will respond using only the provided snippet.",
-      "status_loading": "Querying information...",
+      "chat_status_loading": "Querying information...",
       "chat_input_placeholder": "Write your question about the fragment...",
       "back_to_hub": "Back to Hub"
     }
   },
   "loading": "Loading...",
   "delete": "Delete",
-  "actions": "Actions",
+  "actions_label": "Actions",
   "errors": {
     "unauthorized": "Authentication required. Please sign in.",
     "forbidden": "Access restricted. Insufficient permissions.",
@@ -366,5 +369,8 @@
   "enterpriseSecurity": {
     "title": "Enterprise-grade security",
     "f3_desc": "You maintain full control over where your documents are stored and how they are processed."
+  },
+  "filters": {
+    "all_status": "All Status"
   }
 }

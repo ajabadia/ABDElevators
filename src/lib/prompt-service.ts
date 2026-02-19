@@ -95,6 +95,37 @@ export class PromptService {
         }
 
         if (!prompt) {
+            console.warn(`[PromptService] Prompt not found in DB for key "${key}". Checking hardcoded fallback...`);
+            const { PROMPTS } = await import('./prompts');
+            const fallback = PROMPTS[key as keyof typeof PROMPTS];
+            console.log(`🔍 [PromptService] Fallback metadata for "${key}":`, fallback ? 'FOUND' : 'NOT FOUND');
+
+            if (fallback) {
+                await logEvento({
+                    level: 'WARN',
+                    source: 'PROMPT_SERVICE',
+                    action: 'FALLBACK_USED',
+                    message: `Prompt "${key}" no encontrado en DB. Usando fallback de lib/prompts.ts`,
+                    correlationId: `fallback-${key}-${Date.now()}`,
+                    details: { key, tenantId, industry, environment }
+                });
+
+                return {
+                    key,
+                    tenantId,
+                    industry,
+                    template: fallback.template,
+                    variables: [], // Fallback prompts usually don't have metadata in PROMPTS object
+                    environment,
+                    active: true,
+                    version: fallback.version,
+                    usageCount: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    category: 'GENERIC'
+                } as any;
+            }
+
             console.error(`❌ [PromptService] Prompt not found loop. Key: ${key}, tenantId: ${tenantId}`);
             throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado`);
         }
@@ -450,5 +481,66 @@ export class PromptService {
             promptName: (promptMap.get(v.promptId.toString()) as any)?.name || 'Prompt Eliminado',
             promptKey: (promptMap.get(v.promptId.toString()) as any)?.key || 'UNKNOWN'
         }));
+    }
+
+    /**
+     * Sincroniza los prompts del archivo lib/prompts.ts con la Base de Datos.
+     * Siguiendo la Regla de Oro #4 (Prompt Governance).
+     */
+    static async syncFallbacks(tenantId: string = 'abd_global', session?: any): Promise<{ created: number, updated: number, errors: number }> {
+        const { PROMPTS } = await import('./prompts');
+        const collection = await getTenantCollection('prompts', session);
+        let created = 0;
+        let updated = 0;
+        let errors = 0;
+
+        for (const [key, master] of Object.entries(PROMPTS)) {
+            try {
+                const existing = await collection.findOne({ key, tenantId });
+
+                if (!existing) {
+                    const newPrompt = {
+                        tenantId,
+                        key,
+                        name: key.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' '),
+                        template: master.template,
+                        version: master.version,
+                        active: true,
+                        environment: 'PRODUCTION',
+                        industry: 'GENERIC',
+                        category: 'GENERAL',
+                        model: DEFAULT_MODEL,
+                        variables: [],
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    };
+                    await collection.insertOne(PromptSchema.parse(newPrompt));
+                    created++;
+                    console.log(`✅ [PromptSync] CREADO prompt: ${key} (v${master.version})`);
+                } else if (master.version > (existing.version || 0)) {
+                    // Si la versión en código es mayor, actualizamos
+                    await collection.updateOne(
+                        { _id: existing._id },
+                        {
+                            $set: {
+                                template: master.template,
+                                version: master.version,
+                                updatedAt: new Date()
+                            }
+                        }
+                    );
+                    updated++;
+                    console.log(`🔄 [PromptSync] ACTUALIZADO prompt: ${key} de v${existing.version} a v${master.version}`);
+                } else if (existing.template !== master.template) {
+                    // Mismo número de versión o menor, pero contenido diferente
+                    console.warn(`⚠️ [PromptSync] Prompt "${key}" difiere del fallback en código pero la versión en DB (${existing.version}) >= código (${master.version}). No se sobreescribe.`);
+                }
+            } catch (err) {
+                console.error(`❌ [PromptSync] Error sincronizando "${key}":`, err);
+                errors++;
+            }
+        }
+
+        return { created, updated, errors };
     }
 }

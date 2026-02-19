@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { WorkflowTask } from "@/lib/schemas";
+import { WorkflowTask } from "@abd/workflow-engine";
 import { TaskBoard } from "./TaskBoard";
 import { TaskList } from "./TaskList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

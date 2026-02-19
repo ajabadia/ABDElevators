@@ -47,7 +47,8 @@
     "dialog_title": "Programar Revisión",
     "dialog_desc": "Establece la fecha para la próxima revisión técnica de este manual.",
     "success": "Documento marcado como revisado",
-    "error": "Error al actualizar la revisión"
+    "error": "Error al actualizar la revisión",
+    "filter_all": "Revisiones: Todas"
   },
   "retry_success": "Reintento iniciado",
   "retry_desc": "El documento se está procesando nuevamente.",

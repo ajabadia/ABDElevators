@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { getReportSchedulesCollection } from '@/lib/db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { UpdateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { ObjectId } from 'mongodb';
 import cronParser from 'cron-parser';
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             }
         }
 
-        const collection = await getReportSchedulesCollection(session);
+        const collection = await getTenantCollection('report_schedules', session);
 
         const updateData: any = {
             ...validated,
@@ -98,7 +98,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             throw new AppError('UNAUTHORIZED', 401, 'User not authenticated');
         }
 
-        const collection = await getReportSchedulesCollection(session);
+        const collection = await getTenantCollection('report_schedules', session);
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
 
         // Handle both Soft Delete (UpdateResult) and Hard Delete (DeleteResult)

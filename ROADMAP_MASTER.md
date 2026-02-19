@@ -6,14 +6,14 @@
 
 - **Status & Metrics (v5.0.0 - SUITE ERA)**
 - **Global Progress:** 100% (Industrialization & Suite foundation complete).
-- **Industrialization Progress:** 100% (Phases 101-181 COMPLETED ✅).
+- **Industrialization Progress:** 100% (Phases 101-182 COMPLETED ✅).
 - **Vertical Industry Support:** ✅ **FASE 98 COMPLETED** - Infrastructure & Synthetic Data for Legal, Banking, Insurance.
 - **UX Transformation:** 100% (Phase 155 COMPLETED, Phase 176 COMPLETED ✅).
-- **Enterprise SaaS Ready:** 100% (Phase 181 COMPLETED ✅).
+- **Enterprise SaaS Ready:** 100% (Phase 182 COMPLETED ✅).
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 190/191/193: ERA 6 UX REVAMP**, FASE 181: PLATFORM-CORE EXTRACTION.
+- **Recent Ship**: **FASE 182: DOMAIN DECOUPLING**, FASE 190/191/193: ERA 6 UX REVAMP.
 - **Project Status:** **Industrial Multi-product Suite (v5.0.0 - Production Ready).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -77,12 +77,12 @@
 
 #### 🧠 FASE 182: DOMAIN DECOUPLING (RAG vs WORKFLOW)
 
-**Status:** `[PLANNED 🚀]`
+**Status:** `[COMPLETADO ✅]`
 
-- [ ] **Workflow Engine Separation**: Mover `CaseWorkflowEngine` y `AIWorkflowEngine` a `workflow-engine`, eliminando alias a `ELEVATORS`.
-- [ ] **HITL Task Management**: Independizar el servicio de tareas humanas de las entidades de RAG.
-- [ ] **RAG Vertical Package**: Aislar ingesta, chunking (`KnowledgeAsset`) y retrieval en `rag-engine`.
-- [ ] **Constants Cleanup**: Reemplazar `industry: ELEVATORS` por configuraciones inyectadas vía `TenantConfig`.
+- [X] **Workflow Engine Separation**: Mover `CaseWorkflowEngine` y `AIWorkflowEngine` a `workflow-engine`, eliminando alias a `ELEVATORS`.
+- [X] **HITL Task Management**: Independizar el servicio de tareas humanas de las entidades de RAG.
+- [X] **RAG Vertical Package**: Aislar ingesta, chunking (`KnowledgeAsset`) y retrieval en `rag-engine`.
+- [X] **Constants Cleanup**: Reemplazar `industry: ELEVATORS` por configuraciones inyectadas vía `TenantConfig`.
 
 #### 🛡️ FASE 183: SECURITY HARDENING & INTERNAL GATEWAY
 
@@ -317,6 +317,25 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
+#### 🔔 FASE 197: GLOBAL NOTIFICATION STANDARDIZATION (SONNER)
+
+**Status:** `[IN PROGRESS 🛠️]` | **Prioridad:** ALTA | **Estimación:** 1 semana
+
+**Objetivo:** Eliminar la inconsistencia entre mecanismos de notificación (Radix legacy vs Sonner) y asegurar visibilidad absoluta del feedback al usuario.
+
+**Diagnóstico actual:**
+- Proyecto usa `sonner` en `RootLayout`, pero ~50 componentes usan un hook `use-toast` legacy desconectado del DOM.
+- Riesgo de feedback "fantasma" (operaciones que ocurren pero no notifican éxito/error).
+
+**Tareas:**
+- [X] **Audit Skill Upgrade**: Actualizar `toast-notifier-auditor` con criterios de visibilidad y compatibilidad técnica. ✅
+- [ ] **Sonner Bridge**: Refactorizar `@/hooks/use-toast.ts` para actuar como un bridge hacia `sonner`, restaurando la visibilidad inmediata en 50+ archivos.
+- [ ] **Full Migration**: Reemplazar progresivamente `useToast` por `import { toast } from "sonner"` en todos los componentes para usar la API nativa y más potente.
+- [ ] **Accessibility Review**: Asegurar que todos los toasts cumplen WCAG (duración suficiente, compatibles con lectores de pantalla).
+- [ ] **Metrics de éxito**: 100% de los componentes usando un solo motor de notificaciones (`sonner`).
+
+---
+
 ### 📊 MÉTRICAS DE ÉXITO GLOBALES (ERA 6)
 
 | Métrica | Objetivo | Medición |
@@ -339,4 +358,51 @@ CONFIGURACIÓN (Admin Hub):
 6. **Value-Oriented Metrics**: "Ahorraste 12 horas" > "Procesaste 24 documentos"
 7. **Zero Dead Ends**: Ninguna página sin funcionalidad real visible al usuario
 
-*Updated on 2026-02-19 by Antigravity v6.0.0 (ERA 6 - UX-First Strategy Defined ✅)*
+
+#### 💎 FASE 198: POST-INGESTION ENRICHMENT & ACTIONS
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
+
+**Objetivo:** Permitir "enriquecer" documentos ya ingestados con funcionalidades Premium (Vision, Traducción, Cognitive) sin necesidad de volver a subirlos.
+
+**Escenario:** Un usuario subió un manual en modo "Simple" (rápido, barato). Semanas después, es crítico para un caso y necesita análisis visual de los diagramas. Actualmente, tendría que borrar y resubir.
+
+**Tareas:**
+- [ ] **Document Action Menu**: Añadir opción "Enriquecer Documento" en el menú de acciones (`...`) de la tabla de documentos.
+- [ ] **Enrichment Modal**: Modal similar a `UnifiedIngestModal` pero solo mostrando las opciones premium disponibles para activar.
+- [ ] **Backend Endpoint**: `POST /api/admin/ingest/[id]/enrich` que acepta flags (`enableVision`, `enableCognitive`, etc.).
+- [ ] **Partial Re-processing**: Lógica en `IngestService` para ejecutar solo los analyzers faltantes y actualizar los chunks/vectores existentes (o invalidarlos y regenerarlos selectivamente).
+
+#### 🛡️ FASE 199: INGESTION PIPELINE INTEGRITY & COMPREHENSIVE AUDIT
+
+**Status:** `[PLANNED 🚀]` | **Prioridad:** CRÍTICA | **Estimación:** 2 semanas
+
+**Objetivo:** Auditoría exhaustiva, paso por paso, de cada rama del flujo de ingesta para garantizar robustez, idempotencia y aislamiento total. "No más debugging en producción".
+
+**Alcance de la Auditoría (Escenarios Obligatorios):**
+
+1.  **Ingesta Simple (Clean Slate)**
+    - [ ] Subida de PDF nuevo sin opciones premium. Validación de parsing básico, chunking default y vectores.
+2.  **Ingesta Premium (Feature Isolation)**
+    - [ ] **Vision Only**: PDF con diagramas. Verificar extracción visual y coste de tokens.
+    - [ ] **Translation Only**: PDF en Alemán. Verificar detección y traducción a Español.
+    - [ ] **Cognitive Only**: Verificar generación de contexto y recuperación mejorada.
+    - [ ] **Graph RAG Only**: Verificar extracción de entidades y relaciones en Neo4j/Memgraph.
+3.  **Recuperación de Estado (Incomplete State)**
+    - [ ] **Crash Recovery**: Simular fallo de worker a mitad de proceso. Verificar que el sistema retoma o limpia correctamente.
+    - [ ] **Stalled Chunking**: Documento que existe en DB pero tiene 0 chunks. Forzar re-chunking.
+4.  **Re-Ingesta & Idempotencia**
+    - [ ] **Duplicate Detection**: Subir el mismo hash MD5. Verificar que NO se duplican vectores ni assets.
+    - [ ] **Contextual Duplicate**: Mismo archivo, diferente usuario/tenant. Verificar que SI se crea nuevo asset aislado.
+5.  **Enriquecimiento Post-Ingesta (Upscaling)**
+    - [ ] Transformar un asset "Simple" a "Premium" (activar Vision a posteriori). Verificar actualización incremental.
+6.  **Ciclo de Vida de Datos (Deletion)**
+    - [ ] **Logical Delete**: Soft-delete. Verificar que desaparece de búsquedas pero persiste en DB marcando `deletedAt`.
+    - [ ] **Physical Delete**: Hard-delete (Purge). Verificar eliminación de: Blob (GridFS/Cloudinary), Vectores (Pinecone/Qdrant), Grafos y Mongodb Doc.
+7.  **Multi-tenant Isolation Hooks**
+    - [ ] Verificar que un usuario del Tenant A JAMÁS puede acceder a vectores/chunks del Tenant B, incluso con hash de archivo idéntico.
+
+**Entregable:**
+- Suite de pruebas de integración (E2E) para cada escenario.
+- Reporte de "Ingestion Integrity" en `docs/audit/ingestion_integrity.md`.
+

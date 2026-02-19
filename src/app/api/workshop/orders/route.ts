@@ -40,7 +40,7 @@ export async function POST(req: Request) {
             tenantId: session.user.tenantId,
             createdAt: new Date(),
             createdBy: session.user.id,
-            industry: 'ELEVATORS' // Default vertical for now
+            industry: 'GENERIC' // Default vertical for now
         };
 
         const result = await collection.insertOne(entityFn);

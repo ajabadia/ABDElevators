@@ -1,437 +1,275 @@
 ---
-description: Guía paso a paso para crear nuevas rutas, servicios o componentes siguiendo los estándares de ABD RAG Platform desde el inicio.
+description: Genera y estructura nuevos archivos (Componentes, APIs, Servicios) asegurando el cumplimiento de los estándares de ABD RAG Platform desde el inicio.
 ---
 
 # Code Scaffolder - ABD RAG Platform
 
 ## Propósito
 
-Esta skill proporciona **plantillas y guías** para crear nuevas rutas, servicios o componentes desde cero, asegurando que cumplan con todos los estándares de ABD RAG Platform **desde el primer momento**.
+Esta skill proporciona **plantillas y reglas de construcción** para crear nuevos archivos en la plataforma. Su objetivo es garantizar que todo **código nuevo** nazca cumpliendo la "Definition of Done", minimizando la necesidad de correcciones posteriores por parte del auditor.
 
 ## Cuándo Usar
 
-- **Antes de crear** una nueva ruta API
-- **Antes de crear** un nuevo servicio de dominio
-- **Antes de crear** una nueva página o componente React
-- **Cuando necesites** una plantilla completa que ya cumpla todos los estándares
+- **Siempre** que debas crear un archivo nuevo.
+- Al implementar una nueva **Ruta API**.
+- Al crear un nuevo **Componente React** o Página.
+- Al definir un nuevo **Servicio de Dominio** o Worker.
 
-## Plantillas Disponibles
+## Proceso de Scaffolding
 
-### 1. API Route Template
+### 1. Identificar el Arquetipo
+Determina qué estás construyendo:
+- **API Route** (Secure, Validated, Logged)
+- **Domain Service** (Typed, Resilient, Observable)
+- **React Client Component** (Interactive, i18n, A11y)
+- **React Server Component** (Data Fetching, Layout)
 
+### 2. Seleccionar el Patrón (Templates)
+Copia y adapta el esqueleto correspondiente. **NO** inventes estructuras nuevas si ya existe un estándar.
+
+---
+
+## 🏗️ Arquetipo 1: API Route (`app/api/.../route.ts`)
+
+**Reglas de Oro**:
+1. Seguridad primero (`auth`, `permissions`).
+2. Validación estricta (`Zod`).
+3. Manejo de errores centralizado (`AppError`).
+4. Observabilidad (`logEvento`).
+
+**Template Base**:
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
-import { AppError, ValidationError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
-import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
+import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth'; // Auth.js v5
 import { z } from 'zod';
-import crypto from 'crypto';
+import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
+import { crypto } from '@/lib/crypto'; // Si necesitas IDs
 
-// 1. Define Zod Schema
+// 1. Zod Schema (Input Validation)
 const RequestSchema = z.object({
-    // TODO: Define your schema
-    name: z.string().min(1),
-    description: z.string().optional(),
+  tenantId: z.string().uuid(),
+  data: z.record(z.any()),
 });
 
-/**
- * [OPERATION_NAME]
- * SLA: P95 < [TIME]ms
- */
-export async function [METHOD](req: NextRequest) {
-    const start = Date.now();
-    const correlationId = crypto.randomUUID();
+export async function POST(req: Request) {
+  const correlationId = crypto.randomUUID();
+  const session = await auth();
+
+  // 2. Auth & RBAC Check
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    // 3. Request Parsing & Validation
+    const body = await req.json();
+    const validated = RequestSchema.parse(body);
+
+    // 4. Permission Check (Granular)
+    // await PermissionService.enforce(session.user.id, 'resource', 'write');
+
+    // 5. Business Logic
+    await logEvento({
+      level: 'INFO',
+      source: 'API_NEW_MODULE',
+      action: 'PROCESS_START',
+      correlationId,
+      details: { user: session.user.email }
+    });
+
+    // ... call service ...
+
+    return NextResponse.json({ success: true, id: correlationId });
+
+  } catch (error: any) {
+    // 6. Centralized Error Handling
+    await logEvento({
+      level: 'ERROR',
+      source: 'API_NEW_MODULE',
+      action: 'PROCESS_ERROR',
+      correlationId,
+      message: error.message,
+      stack: error.stack
+    });
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ code: 'VALIDATION_ERROR', issues: error.issues }, { status: 400 });
+    }
+    if (error instanceof AppError) {
+      return NextResponse.json(error.toJSON(), { status: error.status });
+    }
+
+    return NextResponse.json({ code: 'INTERNAL_ERROR' }, { status: 500 });
+  }
+}
+```
+
+---
+
+## 🏗️ Arquetipo 2: Domain Service (`lib/services/...`)
+
+**Reglas de Oro**:
+1. Singleton o falta de estado (Stateless).
+2. Tipado fuerte (Return Types explícitos).
+3. No mezcla lógica HTTP (Req/Res) con lógica de negocio.
+
+**Template Base**:
+```typescript
+import { SecureCollection } from '@/lib/db'; // Siempre SecureCollection
+import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
+import { z } from 'zod';
+
+// Input/Output Types
+export const InputSchema = z.object({ id: z.string() });
+export type InputType = z.infer<typeof InputSchema>;
+
+export class MyNewService {
+  private static COLLECTION = 'my_collection';
+
+  /**
+   * Descripción de lo que hace el método.
+   */
+  static async executeAction(params: InputType, session?: any): Promise<void> {
+    // 1. Validate (Double check for internal calls)
+    const { id } = InputSchema.parse(params);
 
     try {
-        // 2. Rate Limiting (if needed)
-        const ip = req.headers.get('x-forwarded-for') || 'unknown';
-        await checkRateLimit(ip, LIMITS.CORE);
+      const db = await SecureCollection.get(this.COLLECTION);
+      
+      // 2. DB Operation
+      await db.updateOne(
+        { _id: id },
+        { $set: { updatedAt: new Date() } },
+        { session }
+      );
 
-        // 3. Authentication & Authorization
-        const user = await enforcePermission('[resource]', '[action]');
-
-        // 4. Validate Input
-        const body = await req.json();
-        const validated = RequestSchema.parse(body);
-
-        // 5. Get Tenant Collection
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-        const collection = await getTenantCollection('[collection_name]', session);
-
-        // 6. Business Logic
-        // TODO: Implement your logic here
-
-        // 7. Log Success
-        await logEvento({
-            level: 'INFO',
-            source: '[API_MODULE]',
-            action: '[OPERATION]_SUCCESS',
-            message: `[Operation] completed successfully`,
-            correlationId,
-            tenantId: user.tenantId,
-            details: { /* relevant data */ }
-        });
-
-        // 8. Return Response
-        return NextResponse.json({
-            success: true,
-            data: { /* your data */ },
-            correlationId
-        });
+      // 3. Audit Trail (if critical)
+      // await AuditTrailService.record(...)
 
     } catch (error: any) {
-        // 9. Error Handling
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                code: 'VALIDATION_ERROR',
-                message: 'Invalid input',
-                details: error.issues
-            }, { status: 400 });
-        }
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: '[API_MODULE]',
-            action: '[OPERATION]_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Something went wrong').toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        // 10. Performance Monitoring
-        const duration = Date.now() - start;
-        if (duration > [SLA_MS]) {
-            await logEvento({
-                level: 'WARN',
-                source: '[API_MODULE]',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `Operation slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
+      // 4. Wrap & Throw AppError
+      throw new AppError('SERVICE_OP_FAILED', 500, error.message);
     }
+  }
 }
 ```
 
-### 2. Domain Service Template
+---
 
-```typescript
-import { logEvento } from '@/lib/logger';
-import { AppError, ExternalServiceError } from '@/lib/errors';
-import { executeWithResilience } from '@/lib/resilience';
-import { AuditService } from '@/lib/audit-service';
-import { z } from 'zod';
+## 🏗️ Arquetipo 3: React Client Component (`components/...`)
 
-// 1. Define Schemas
-const InputSchema = z.object({
-    // TODO: Define your input schema
-});
+**Reglas de Oro**:
+1. `useTranslations` para todo texto visible.
+2. Accesibilidad (`aria-label`, headings correctos).
+3. `useApiItem` o `useApiList` para data fetching (standard hooks).
+4. `toast` para feedback de usuario.
 
-const OutputSchema = z.object({
-    // TODO: Define your output schema
-});
+**Template Base**:
+```tsx
+"use client";
 
-type Input = z.infer<typeof InputSchema>;
-type Output = z.infer<typeof OutputSchema>;
-
-/**
- * [SERVICE_NAME]
- * Handles [DESCRIPTION]
- */
-export class [ServiceName] {
-    /**
-     * [METHOD_DESCRIPTION]
-     */
-    static async [methodName](input: Input): Promise<Output> {
-        const correlationId = AuditService.generateCorrelationId();
-
-        // 2. Validate Input
-        const validated = InputSchema.parse(input);
-
-        await logEvento({
-            level: 'INFO',
-            source: '[SERVICE_NAME]',
-            action: '[OPERATION]_START',
-            message: `Starting [operation]`,
-            correlationId,
-            details: { /* relevant data */ }
-        });
-
-        try {
-            // 3. Business Logic with Resilience
-            const result = await executeWithResilience(
-                async () => {
-                    // TODO: Implement your logic
-                    return { /* your result */ };
-                },
-                {
-                    maxRetries: 3,
-                    timeout: 5000,
-                    onRetry: (attempt, error) => {
-                        logEvento({
-                            level: 'WARN',
-                            source: '[SERVICE_NAME]',
-                            action: 'RETRY_ATTEMPT',
-                            message: `Retry attempt ${attempt}: ${error.message}`,
-                            correlationId
-                        });
-                    }
-                }
-            );
-
-            // 4. Validate Output
-            const validatedOutput = OutputSchema.parse(result);
-
-            // 5. Audit Trail (if needed)
-            await AuditService.record({
-                tenantId: validated.tenantId,
-                userId: validated.userId,
-                action: '[OPERATION]',
-                resourceType: '[RESOURCE_TYPE]',
-                resourceId: '[RESOURCE_ID]',
-                status: 'SUCCESS',
-                correlationId,
-                metadata: { /* relevant data */ }
-            });
-
-            await logEvento({
-                level: 'INFO',
-                source: '[SERVICE_NAME]',
-                action: '[OPERATION]_SUCCESS',
-                message: `[Operation] completed successfully`,
-                correlationId
-            });
-
-            return validatedOutput;
-
-        } catch (error: any) {
-            await logEvento({
-                level: 'ERROR',
-                source: '[SERVICE_NAME]',
-                action: '[OPERATION]_FAILED',
-                message: error.message,
-                correlationId,
-                stack: error.stack
-            });
-
-            throw new ExternalServiceError(
-                `[Operation] failed: ${error.message}`,
-                error
-            );
-        }
-    }
-}
-```
-
-### 3. React Page Template (Server Component - Default)
-
-```typescript
-import { getTranslations } from 'next-intl/server';
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { PageContainer, PageHeader, ContentCard } from '@/components/ui';
-import { Suspense } from 'react';
-
-// Use Parallel Data Fetching in Server Components
-async function getPageData() {
-    // const [res1, res2] = await Promise.all([fetch1(), fetch2()]);
-    // return { ... };
-}
-
-export default async function [PageName]() {
-    // 1. Authentication
-    const session = await auth();
-    if (!session) {
-        redirect('/login');
-    }
-
-    // 2. i18n
-    const t = await getTranslations('[namespace]');
-
-    // 3. Data Fetching
-    // const data = await getPageData();
-
-    return (
-        <PageContainer>
-            <PageHeader
-                title={t('title')}
-                description={t('description')}
-            />
-
-            <Suspense fallback={<div>Loading...</div>}>
-                <ContentCard>
-                    {/* Implements business logic or children */}
-                </ContentCard>
-            </Suspense>
-        </PageContainer>
-    );
-}
-
-// 4. Metadata
-export async function generateMetadata() {
-    const t = await getTranslations('[namespace]');
-    return {
-        title: t('metaTitle'),
-        description: t('metaDescription'),
-    };
-}
-```
-
-### 4. React Component Template (Client Component)
-
-```typescript
-'use client';
-
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Input, Label } from '@/components/ui';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-interface [ComponentName]Props {
-    // TODO: Define your props
+interface Props {
+  initialData?: any;
 }
 
-export function [ComponentName]({ /* props */ }: [ComponentName]Props) {
-    // 1. i18n
-    const t = useTranslations('[namespace]');
+export function MyNewComponent({ initialData }: Props) {
+  const t = useTranslations('myModule.namespace'); // Namespace específico
+  const [isLoading, setIsLoading] = useState(false);
 
-    // 2. State
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const handleAction = async () => {
+    setIsLoading(true);
+    try {
+      // Logic
+      toast.success(t('success_message'));
+    } catch (err) {
+      toast.error(t('error_message'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // 3. Handlers
-    const handleSubmit = async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // OPTIMIZATION: Use SWR or native fetch for deduplication
-            const response = await fetch('/api/...', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ /* data */ })
-            });
-
-            if (!response.ok) {
-                throw new Error(t('errors.failed'));
-            }
-
-            toast.success(t('success'));
-        } catch (err: any) {
-            setError(err.message);
-            toast.error(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div role="region" aria-label={t('ariaLabel')}>
-            {/* TODO: Implement your UI */}
-            
-            {isLoading && (
-                <div aria-live="polite" aria-busy="true">
-                    {t('loading')}
-                </div>
-            )}
-
-            {error && (
-                <div role="alert" aria-live="assertive">
-                    {error}
-                </div>
-            )}
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{t('title')}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4" role="region" aria-label={t('title')}>
+          <p className="text-muted-foreground">{t('description')}</p>
+          
+          <Button 
+            onClick={handleAction} 
+            disabled={isLoading}
+            aria-busy={isLoading}
+          >
+            {isLoading ? t('processing') : t('action_button')}
+          </Button>
         </div>
-    );
+      </CardContent>
+    </Card>
+  );
 }
 ```
 
 ---
 
-## Guía de Uso
+## 🏗️ Arquetipo 4: React Server Page (`app/.../page.tsx`)
 
-### Para Crear una Nueva API Route
+**Reglas de Oro**:
+1. `getTranslations` para i18n server-side.
+2. Metadata dinámica.
+3. `PageContainer` y `PageHeader` para consistencia visual.
 
-1. **Copia la plantilla** de API Route
-2. **Reemplaza los TODOs**:
-   - `[METHOD]`: GET, POST, PUT, DELETE
-   - `[OPERATION_NAME]`: Nombre descriptivo
-   - `[TIME]`: SLA en ms (200, 500, 2000)
-   - `[resource]`, `[action]`: Para `enforcePermission`
-   - `[collection_name]`: Nombre de la colección MongoDB
-   - `[API_MODULE]`: Identificador del módulo (ej. `API_KNOWLEDGE_ASSETS`)
-3. **Define el schema Zod** con los campos necesarios
-4. **Implementa la lógica** en la sección "Business Logic"
-5. **Añade rate limiting** si es una ruta sensible
-6. **Verifica** con `code-quality-auditor` antes de commit
+**Template Base**:
+```tsx
+import { getTranslations } from 'next-intl/server';
+import { PageContainer } from '@/components/ui/page-container';
+import { PageHeader } from '@/components/ui/page-header';
+import { MyNewComponent } from '@/components/my-new-component';
 
-### Para Crear un Nuevo Servicio
+export async function generateMetadata() {
+  const t = await getTranslations('myModule.page');
+  return {
+    title: t('meta_title'),
+    description: t('meta_desc')
+  };
+}
 
-1. **Copia la plantilla** de Domain Service
-2. **Reemplaza los TODOs**:
-   - `[SERVICE_NAME]`: Nombre del servicio
-   - `[ServiceName]`: Clase del servicio
-   - `[methodName]`: Nombre del método
-   - `[DESCRIPTION]`: Descripción del servicio
-3. **Define schemas** de entrada y salida
-4. **Implementa la lógica** con resiliencia si llama a externos
-5. **Añade audit trail** si es una operación crítica
-6. **Verifica** con `code-quality-auditor`
+export default async function NewPage() {
+  const t = await getTranslations('myModule.page');
 
-### Para Crear una Nueva Página
-
-1. **Copia la plantilla** de React Page (Server o Client según necesites)
-2. **Reemplaza los TODOs**:
-   - `[PageName]`: Nombre de la página
-   - `[namespace]`: Namespace i18n
-3. **Añade las traducciones** en `es.json` y `en.json`
-4. **Implementa la UI** usando componentes del sistema
-5. **Verifica accesibilidad** (labels, roles, aria)
-6. **Verifica** con `i18n-a11y-auditor`
-
----
-
-## Checklist Pre-Creación
-
-Antes de crear cualquier archivo nuevo, asegúrate de:
-
-- [ ] Tener claro el **propósito** y **responsabilidad** del archivo
-- [ ] Conocer el **SLA** esperado (si es API)
-- [ ] Saber qué **permisos** se requieren
-- [ ] Tener definidos los **schemas Zod** de entrada/salida
-- [ ] Conocer las **colecciones MongoDB** que usarás
-- [ ] Tener las **traducciones i18n** preparadas (si es UI)
-- [ ] Saber si necesitas **rate limiting** o **resilience**
+  return (
+    <PageContainer>
+      <PageHeader 
+        title={t('title')} 
+        description={t('description')} 
+        breadcrumbs={[{ label: t('breadcrumb'), href: '#' }]}
+      />
+      
+      <div className="mt-6">
+        <MyNewComponent />
+      </div>
+    </PageContainer>
+  );
+}
+```
 
 ---
 
-## Integración con Otras Skills
+## Validación Post-Creación
 
-- **code-quality-auditor**: Usa después de crear el archivo para verificar cumplimiento
-- **app-full-reviewer**: Usa para auditoría completa de la feature
-- **guardian-auditor**: Usa para verificar permisos correctos
-- **i18n-a11y-auditor**: Usa para verificar i18n y accesibilidad en UI
+Una vez generado el archivo, **ejecuta mentalmente** la skill `code-quality-auditor` sobre él:
+- ¿He validado inputs?
+- ¿He manejado errores con `AppError`?
+- ¿Están todos los textos en `messages/es/|en/...`?
+- ¿Es accesible?
 
----
-
-## Notas Finales
-
-Estas plantillas son **punto de partida**, no código final. Siempre:
-- **Adapta** a tu caso de uso específico
-- **Elimina** secciones que no necesites
-- **Añade** lógica específica de tu dominio
-- **Verifica** con `code-quality-auditor` antes de commit
-
-El objetivo es **empezar bien** para no tener que refactorizar después.
+Si la respuesta es SÍ, has completado el scaffolding correctamente.

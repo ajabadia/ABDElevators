@@ -3,7 +3,7 @@ import { IKnowledgeRepository } from '../../domain/repositories/IKnowledgeReposi
 import { IAuditRepository } from '../../domain/repositories/IAuditRepository';
 import { IngestPreparer } from '@/services/ingest/IngestPreparer';
 import crypto from 'crypto';
-import { IngestOptions } from '@/services/ingest-service';
+import { IngestOptions } from '@/services/ingest/types';
 import { queueService } from '@/lib/queue-service';
 import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
 
@@ -76,7 +76,10 @@ export class PrepareIngestionUseCase {
                 tenantId,
                 userId: userEmail || 'system',
                 correlationId,
-                maskPii: true,
+                maskPii: options.maskPii ?? true,
+                enableVision: options.enableVision ?? false,
+                enableTranslation: options.enableTranslation ?? false,
+                enableGraphRag: options.enableGraphRag ?? false,
                 userEmail,
                 environment
             });

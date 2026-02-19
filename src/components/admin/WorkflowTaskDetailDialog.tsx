@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { WorkflowTask } from '@/lib/schemas';
+import { WorkflowTask } from '@abd/workflow-engine';
 import { Badge } from '@/components/ui/badge';
 import {
     Paperclip,
