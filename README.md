@@ -115,7 +115,7 @@ src/
 - **🔐 Granular API Security**: API Keys with optional scoping to specific Knowledge Spaces for secure external integrations.
 - **🧠 Hybrid RAG Engine**: Combines semantic (BGE-M3), keyword (BM25), and graph-based retrieval for maximum precision.
 - **🛡️ Enterprise Governance**: Granular permissions (Guardian V3), PII masking, and full audit trail for SOC2 compliance.
-- **⚡ Industrial Ingestion**: High-performance pipeline with MD5 deduplication, asynchronous processing (BullMQ), and self-healing.
+- **⚡ Industrial Ingestion**: High-performance pipeline with MD5 deduplication, asynchronous processing (BullMQ), and self-healing (Phase 199). Features a robust FSM, centralized orchestrator, and persistent cost tracking for auditing.
 - **📊 Advanced Analytics**: ROI tracking, RAG evaluation (LLM Judge), and real-time usage metrics via Admin Dashboard.
   - ✅ **Centralized Model Governance (Phase 113)**: Single source of truth for all AI Models in the platform. Support for Gemini 2.5 Flash/Pro, Gemini 3.0, and dynamic model mapping.
   - ✅ **Revamped AI Playground**: Advanced experimentation laboratory with real-time parameter tuning (temperature, topK) and model switching.
