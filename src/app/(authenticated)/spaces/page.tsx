@@ -42,7 +42,8 @@ export default function SpacesHubPage() {
             description: t("cards.personal.description"),
             href: "/spaces/personal",
             icon: <UserCircle className="w-6 h-6" />,
-            color: "border-l-secondary"
+            color: "border-l-secondary",
+            isActive: false
         },
         {
             id: "collections",
@@ -50,7 +51,8 @@ export default function SpacesHubPage() {
             description: t("cards.collections.description"),
             href: "/spaces/collections",
             icon: <Box className="w-6 h-6" />,
-            color: "border-l-accent"
+            color: "border-l-accent",
+            isActive: false
         },
         {
             id: "playground",
@@ -75,25 +77,31 @@ export default function SpacesHubPage() {
                 {hubCards.map((card) => (
                     <Card
                         key={card.id}
-                        onClick={() => router.push(card.href)}
+                        onClick={() => card.isActive && router.push(card.href)}
                         className={cn(
-                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
-                            "hover:scale-[1.02] relative overflow-hidden",
+                            "border-l-4 transition-all duration-300 relative overflow-hidden",
                             card.color,
-                            !card.isActive && "opacity-75"
+                            card.isActive
+                                ? "group cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+                                : "cursor-not-allowed opacity-60"
                         )}
                     >
                         <CardHeader className="pb-3">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                    <div className={cn(
+                                        "p-2 rounded-lg bg-muted transition-colors",
+                                        card.isActive && "group-hover:bg-primary group-hover:text-primary-foreground text-primary"
+                                    )}>
                                         {card.icon}
                                     </div>
                                     <CardTitle className="text-xl tracking-tight">
                                         {card.title}
                                     </CardTitle>
                                 </div>
-                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                {card.isActive && (
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -101,8 +109,8 @@ export default function SpacesHubPage() {
                                 {card.description}
                             </CardDescription>
                             {!card.isActive && (
-                                <span className="inline-flex items-center mt-3 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
-                                    {t("coming_soon")}
+                                <span className="inline-flex items-center mt-3 text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800">
+                                    🚧 {t("coming_soon")}
                                 </span>
                             )}
                         </CardContent>

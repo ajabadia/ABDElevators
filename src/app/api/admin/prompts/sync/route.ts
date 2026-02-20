@@ -1,51 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { PromptService } from '@/lib/prompt-service';
-import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
+import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
-import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/admin/prompts/sync
- * Sincroniza los prompts desde el código (lib/prompts.ts) hacia la base de datos.
- * Aplica lógica de versionado: solo actualiza si la versión en código es mayor.
+ * Administrative endpoint to synchronize hardcoded fallback prompts with the DB.
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
+
     try {
-        // 1. Validar permisos (Solo Admin o SuperAdmin)
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-        const tenantId = session.user.tenantId;
+        const session = await auth();
 
-        // 2. Ejecutar la sincronización
-        // syncFallbacks ya implementa la lógica de:
-        // - Crear si no existe
-        // - Actualizar si master.version > existing.version
-        const results = await PromptService.syncFallbacks(tenantId);
+        // Estricta validación de rol ADMIN
+        if (!session?.user || session.user.role !== 'ADMIN') {
+            throw new AppError('UNAUTHORIZED', 401, 'No autorizado para realizar sincronización');
+        }
 
-        // 3. Loguear el evento
+        const tenantId = session.user.tenantId || 'abd_global';
+
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_PROMPTS',
-            action: 'SYNC_PROMPTS',
-            message: `Sincronización de prompts ejecutada manualmente desde UI.`,
-            correlationId: correlacion_id,
-            details: {
-                created: results.created,
-                updated: results.updated,
-                errors: results.errors,
-                tenantId
-            },
-            userEmail: session.user.email || 'system'
+            source: 'ADMIN_PROMPT_SYNC_API',
+            action: 'SYNC_START',
+            message: `Manual prompt sync initiated by ${session.user.email}`,
+            tenantId,
+            correlationId
+        });
+
+        const result = await PromptService.syncFallbacks(tenantId);
+
+        await logEvento({
+            level: 'INFO',
+            source: 'ADMIN_PROMPT_SYNC_API',
+            action: 'SYNC_COMPLETE',
+            message: `Manual prompt sync completed. Created: ${result.created}, Updated: ${result.updated}`,
+            tenantId,
+            correlationId,
+            details: result
         });
 
         return NextResponse.json({
             success: true,
-            message: 'Sincronización finalizada exitosamente',
-            results
+            results: result, // Alias for backward compatibility
+            stats: result,
+            correlationId
         });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_SYNC', correlacion_id);
+
+    } catch (error: any) {
+        return handleApiError(error, 'ADMIN_PROMPT_SYNC_API', correlationId);
+    } finally {
+        const durationMs = Date.now() - start;
+        if (durationMs > 2000) {
+            await logEvento({
+                level: 'WARN',
+                source: 'ADMIN_PROMPT_SYNC_API',
+                action: 'PERFORMANCE_ISSUE',
+                message: `Slow prompt sync: ${durationMs}ms`,
+                correlationId,
+                details: { durationMs }
+            });
+        }
     }
 }

@@ -10,7 +10,6 @@ import {
     Play,
     Loader2,
     AlertTriangle,
-    Code,
     Search,
     ChevronRight,
     Plus,
@@ -18,11 +17,24 @@ import {
     Trash2,
     Rocket,
     X,
-    Filter
+    Filter,
+    RefreshCw,
+    ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Prompt } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PromptEditor } from '@/components/admin/PromptEditor';
@@ -123,17 +135,14 @@ export default function AdminPromptsPage() {
             });
             const json = await res.json();
 
-            if (!json.success) throw new Error(json.message);
+            if (!res.ok || !json.success) throw new Error(json.message || "Error en la sincronización sincronización");
 
             // Actualizar lista
             fetchPrompts();
 
             toast({
-                title: t('messages.sync_success', {
-                    created: json.results.created,
-                    updated: json.results.updated,
-                    errors: json.results.errors || 0
-                })
+                title: "Gobernanza Actualizada",
+                description: `Sincronización completada. Creados: ${json.stats?.created ?? json.results?.created}, Actualizados: ${json.stats?.updated ?? json.results?.updated}.`
             });
         } catch (error: any) {
             console.error('Sync Error:', error);
@@ -182,19 +191,46 @@ export default function AdminPromptsPage() {
                         >
                             <History className="w-4 h-4 mr-2" /> {t('actions.history')}
                         </Button>
-                        <Button
-                            onClick={handleSyncFromCode}
-                            disabled={isSyncing}
-                            variant="outline"
-                            className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/10"
-                        >
-                            {isSyncing ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                                <Sparkles className="w-4 h-4 mr-2" />
-                            )}
-                            {t('sync')}
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    disabled={isSyncing}
+                                    variant="outline"
+                                    className="rounded-xl border-slate-200 dark:border-slate-800 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/10"
+                                >
+                                    {isSyncing ? (
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                    )}
+                                    {t('sync')}
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-[2rem] border-slate-100 dark:border-slate-800">
+                                <AlertDialogHeader>
+                                    <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center mb-4">
+                                        <ShieldCheck className="w-6 h-6 text-teal-600" />
+                                    </div>
+                                    <AlertDialogTitle className="text-2xl font-black tracking-tight">
+                                        ¿Ejecutar Sincronización Global?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-base text-muted-foreground">
+                                        Esta acción escarpeará todos los prompts maestros en <code className="bg-muted px-1 rounded text-primary">src/lib/prompts.ts</code> y los cargará en la base de datos para este tenant.
+                                        <br /><br />
+                                        <span className="font-bold text-foreground">Gobernanza:</span> Si un prompt en la DB tiene una versión mayor que el código, no será sobrescrito. Los prompts nuevos serán creados automáticamente.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="gap-2">
+                                    <AlertDialogCancel className="rounded-xl h-12 font-bold">Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleSyncFromCode}
+                                        className="rounded-xl h-12 font-bold bg-teal-600 hover:bg-teal-700 text-white"
+                                    >
+                                        Sincronizar ahora
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                         {environment === 'STAGING' && modal.isOpen && modal.data && (
                             <Button
                                 onClick={handlePromote}

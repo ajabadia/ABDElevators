@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-02-20 (Phase 195/196)
-**Status:** Verified & Synchronized (Feedback Loop & Technical Cleanup Complete).
+**Last Audit:** 2026-02-20 (Phase 194.3)
+**Status:** Verified & Synchronized (Prompt Governance Consolidated & Technical Cleanup).
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -115,6 +115,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/admin/ai/predictive` | Mantenimiento Predictivo. | 2026-02-19 (Verified) |
 | `/admin/checklist-configs` | Configuración de Checklists. | 2026-02-19 (Verified) |
 | `/admin/checklist-configs/[id]` | Edición de Checklist. | 2026-02-19 (Verified) |
+| `/api/admin/prompts/sync` | API: Sincronización de prompts maestros DB <-> Code. | 2026-02-20 (New) |
 
 ### 💰 Billing & Organizations
 | Ruta | Funcionalidad | Ultima Revisión |

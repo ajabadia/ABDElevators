@@ -1,6 +1,7 @@
 export type WorkContext = 'inspection' | 'maintenance' | 'engineering' | 'admin';
 
 export interface ContextConfig {
+    promptKey: string;
     defaultQuestions: string[];
     relevantNorms: string[];
     suggestedChecklists: string[];
@@ -8,6 +9,7 @@ export interface ContextConfig {
 
 export const CONTEXT_DEFAULTS: Record<WorkContext, ContextConfig> = {
     inspection: {
+        promptKey: 'WORK_CONTEXT_INSPECTION',
         defaultQuestions: [
             "¿Cuáles son los requisitos de seguridad principales?",
             "¿Qué puntos debe verificar una inspección anual?",
@@ -17,6 +19,7 @@ export const CONTEXT_DEFAULTS: Record<WorkContext, ContextConfig> = {
         suggestedChecklists: ['inspeccion_anual', 'inspeccion_periodica']
     },
     maintenance: {
+        promptKey: 'WORK_CONTEXT_MAINTENANCE',
         defaultQuestions: [
             "¿Cuál es el programa de lubricación recomendado?",
             "¿Cómo ajustar la holgura de las guías?",
@@ -26,6 +29,7 @@ export const CONTEXT_DEFAULTS: Record<WorkContext, ContextConfig> = {
         suggestedChecklists: ['mantenimiento_mensual', 'ajuste_puertas']
     },
     engineering: {
+        promptKey: 'WORK_CONTEXT_ENGINEERING',
         defaultQuestions: [
             "Especificaciones de carga para el bastidor",
             "Cálculo de tráfico para edificios de oficinas",
@@ -35,6 +39,7 @@ export const CONTEXT_DEFAULTS: Record<WorkContext, ContextConfig> = {
         suggestedChecklists: ['revision_diseno', 'aprobacion_planos']
     },
     admin: {
+        promptKey: 'WORK_CONTEXT_ADMIN',
         defaultQuestions: [
             "Estado de la ingesta de documentos",
             "Usuarios con más actividad de búsqueda",
@@ -44,3 +49,4 @@ export const CONTEXT_DEFAULTS: Record<WorkContext, ContextConfig> = {
         suggestedChecklists: ['auditoria_seguridad', 'gestion_usuarios']
     }
 };
+

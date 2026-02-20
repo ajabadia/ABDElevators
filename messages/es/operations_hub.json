@@ -38,5 +38,6 @@
     "subtitle": "Disponibilidad de la infraestructura en tiempo real.",
     "description": "Verifique el estado de las APIs de Gemini, MongoDB y Cloudinary.",
     "placeholder": "Status page integrada próximamente."
-  }
+  },
+  "coming_soon": "Próximamente"
 }
