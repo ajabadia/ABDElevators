@@ -1,8 +1,10 @@
 import { connectDB } from '@/lib/db';
-import { jsPDF } from 'jspdf';
-import { logEvento } from '@/lib/logger';
 import AdmZip from 'adm-zip';
 
+/**
+ * BackupService
+ * Handles data portability and backup packages.
+ */
 export class BackupService {
 
     /**
@@ -23,10 +25,7 @@ export class BackupService {
     }
 
     /**
-     * Creates a portable .zip package containing:
-     * 1. data.json (Metadata)
-     * 2. README.txt
-     * (Future: could include physical PDF files if we fetch them from storage)
+     * Creates a portable .zip package containing metadata and readme.
      */
     static async createKnowledgePackage(tenantId: string): Promise<Buffer> {
         const zip = new AdmZip();
@@ -48,63 +47,5 @@ export class BackupService {
         zip.addFile("README.txt", Buffer.from(readme));
 
         return zip.toBuffer();
-    }
-}
-
-export class ComplianceService {
-
-    /**
-     * Generates a legal PDF certificate of data destruction.
-     * To be sent to the user after a GDPR "Right to be Forgotten" request is processed.
-     */
-    static async generateDeletionCertificate(
-        tenantId: string,
-        requesterEmail: string,
-        reason: string = "GDPR Rights Request"
-    ): Promise<Buffer> {
-        const doc = new jsPDF();
-        const date = new Date();
-
-        // Header
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text('DATA DESTRUCTION CERTIFICATE', 20, 30);
-
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Certificate ID: ${date.getTime()}-${tenantId.substring(0, 5)}`, 20, 45);
-        doc.text(`Date of Issuance: ${date.toISOString()}`, 20, 52);
-
-        // Body
-        doc.setFontSize(14);
-        doc.text('Certification Statement:', 20, 70);
-
-        doc.setFontSize(11);
-        const text = `
-This document certifies that ABD RAG PLATFORM has permanently deleted 
-all logical and physical data associated with the Tenant ID: ${tenantId}.
-
-Request Details:
-- Requester: ${requesterEmail}
-- Reason: ${reason}
-- Process Completion: ${date.toLocaleString()}
-
-Scope of Deletion:
-- User Accounts and Personal Profiles
-- Uploaded Documents and RAG Knowledge Assets
-- Usage Logs and Audit Trails (Anonymized retention where required by law)
-- Billing Methods and Payment Tokens
-
-This action is irreversible.
-        `;
-
-        doc.text(text, 20, 80);
-
-        // Signature
-        doc.text('Digitally Signed,', 20, 180);
-        doc.setFont('helvetica', 'bold');
-        doc.text('ABD Compliance Officer', 20, 185);
-
-        return Buffer.from(doc.output('arraybuffer'));
     }
 }

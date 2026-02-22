@@ -18,5 +18,8 @@
       "title": "Knowledge Spaces",
       "description": "Configure context limits and access permissions for document groups."
     }
+  },
+  "analyze_modal": {
+    "title": "Smart Consult"
   }
 }

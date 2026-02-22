@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
 import { GridFSUtils } from '@/lib/gridfs-utils';
 import { uploadPDFToCloudinary } from '@/lib/cloudinary';
 import { ObjectId } from 'mongodb';
@@ -42,10 +42,10 @@ export async function POST(
         const retryType = body.retryType || 'auto'; // 'auto' | 'indexing' | 'storage' | 'full'
 
         // 1. Find the asset
-        const filter = userRole === 'SUPER_ADMIN' 
-            ? { _id: new ObjectId(id) } 
+        const filter = userRole === 'SUPER_ADMIN'
+            ? { _id: new ObjectId(id) }
             : { _id: new ObjectId(id), tenantId };
-        
+
         const asset = await db.collection('knowledge_assets').findOne(filter);
 
         if (!asset) {
@@ -55,9 +55,9 @@ export async function POST(
         // Phase 131: Determine retry strategy based on state
         const hasStorage = asset.hasStorage ?? false;
         const hasChunks = asset.hasChunks ?? false;
-        
+
         let finalRetryType = retryType;
-        
+
         if (retryType === 'auto') {
             // Auto-detect what needs to be retried
             if (hasStorage && !hasChunks) {
@@ -76,8 +76,8 @@ export async function POST(
             message: `Retry strategy determined: ${finalRetryType}`,
             correlationId,
             tenantId,
-            details: { 
-                assetId: id, 
+            details: {
+                assetId: id,
                 filename: asset.filename,
                 hasStorage,
                 hasChunks,
@@ -165,13 +165,13 @@ async function retryIndexing(
     // Update status
     await db.collection('knowledge_assets').updateOne(
         { _id: new ObjectId(assetId) },
-        { 
-            $set: { 
+        {
+            $set: {
                 ingestionStatus: 'PROCESSING',
                 indexingError: null,
                 progress: 0,
                 updatedAt: new Date()
-            } 
+            }
         }
     );
 
@@ -212,28 +212,28 @@ async function retryStorage(
     // Update status
     await db.collection('knowledge_assets').updateOne(
         { _id: new ObjectId(assetId) },
-        { 
-            $set: { 
+        {
+            $set: {
                 ingestionStatus: 'PROCESSING',
                 storageError: null,
                 progress: 0,
                 updatedAt: new Date()
-            } 
+            }
         }
     );
 
     try {
         // Read from GridFS
         const buffer = await GridFSUtils.getForProcessing(asset.blobId, correlationId);
-        
+
         // Upload to Cloudinary
         const result = await uploadPDFToCloudinary(buffer, asset.filename, asset.tenantId);
-        
+
         // Update with success
         await db.collection('knowledge_assets').updateOne(
             { _id: new ObjectId(assetId) },
-            { 
-                $set: { 
+            {
+                $set: {
                     ingestionStatus: 'COMPLETED',
                     hasStorage: true,
                     cloudinaryUrl: result.secureUrl,
@@ -241,7 +241,7 @@ async function retryStorage(
                     storageError: null,
                     progress: 100,
                     updatedAt: new Date()
-                } 
+                }
             }
         );
 
@@ -257,16 +257,16 @@ async function retryStorage(
 
     } catch (error) {
         const err = error as Error;
-        
+
         // Update with error
         await db.collection('knowledge_assets').updateOne(
             { _id: new ObjectId(assetId) },
-            { 
-                $set: { 
+            {
+                $set: {
                     ingestionStatus: 'INDEXED_NO_STORAGE',
                     storageError: err.message,
                     updatedAt: new Date()
-                } 
+                }
             }
         );
 
@@ -279,7 +279,7 @@ async function retryStorage(
             tenantId: asset.tenantId,
             details: { assetId, error: err.message }
         });
-        
+
         throw new AppError('EXTERNAL_SERVICE_ERROR', 500, `Storage retry failed: ${err.message}`);
     }
 }
@@ -307,13 +307,13 @@ async function retryFull(
     // Reset to PENDING (legacy behavior)
     await db.collection('knowledge_assets').updateOne(
         { _id: new ObjectId(assetId) },
-        { 
-            $set: { 
+        {
+            $set: {
                 ingestionStatus: 'PENDING',
                 progress: 0,
                 error: null,
                 updatedAt: new Date()
-            } 
+            }
         }
     );
 

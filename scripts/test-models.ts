@@ -1,31 +1,28 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import * as dotenv from 'dotenv';
-import path from 'path';
+import dotenv from 'dotenv';
+import { AI_MODEL_IDS } from '../src/lib/constants/ai-models';
+dotenv.config();
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+async function testConfiguredModels() {
+    console.log("🚀 Testing configured contractual models...");
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-async function listModels() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return;
+    const modelsToTest = [
+        AI_MODEL_IDS.GEMINI_2_5_FLASH,
+        AI_MODEL_IDS.GEMINI_2_5_PRO,
+        AI_MODEL_IDS.GEMINI_3_PRO_PREVIEW
+    ];
 
-    try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        // La librería no tiene un método directo cómodo para listar sin pasar por fetch o rest
-        // Pero intentaremos llamar a uno estándar
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent('hi');
-        console.log('FLASH OK');
-    } catch (e: any) {
-        console.log('FLASH ERROR:', e.message);
-
+    for (const modelId of modelsToTest) {
         try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model2 = genAI.getGenerativeModel({ model: 'gemini-pro' });
-            await model2.generateContent('hi');
-            console.log('GEMINI-PRO OK');
-        } catch (e2: any) {
-            console.log('GEMINI-PRO ERROR:', e2.message);
+            console.log(`Testing ${modelId}...`);
+            const model = genAI.getGenerativeModel({ model: modelId });
+            const result = await model.generateContent("test");
+            console.log(`✅ ${modelId} is AVAILABLE`);
+        } catch (e: any) {
+            console.error(`❌ ${modelId} FAILED:`, e.message);
         }
     }
 }
-listModels();
+
+testConfiguredModels();

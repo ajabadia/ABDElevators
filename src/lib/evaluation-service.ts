@@ -3,6 +3,7 @@ import { RagEvaluationSchema } from "./schemas";
 import { PromptService } from "./prompt-service";
 import { callGeminiMini } from "./llm";
 import { logEvento } from "./logger";
+import { AIMODELIDS } from "./ai-models";
 
 /**
  * Servicio de Evaluación RAG (Fase 26.2)
@@ -45,7 +46,7 @@ export class EvaluationService {
                     answer_relevance: answerRelevance,
                     context_precision: contextPrecision
                 },
-                judge_model: 'gemini-2.5-flash',
+                judge_model: AIMODELIDS.RAG_ANSWER_GRADER,
                 timestamp: new Date()
             };
 

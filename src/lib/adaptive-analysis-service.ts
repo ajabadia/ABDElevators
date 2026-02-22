@@ -3,6 +3,7 @@ import { logEvento } from "@/lib/logger";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { getGenAI, runShadowCall } from "./gemini-client";
 import { UsageService } from "./usage-service";
+import { AI_MODEL_IDS, DEFAULT_MODEL } from '@abd/platform-core';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { AgentEngine } from '@/core/engine/AgentEngine';
 import { ExternalServiceError } from "./errors";
@@ -32,7 +33,7 @@ export class AdaptiveAnalysisService {
                 const agent = AgentEngine.getInstance();
 
                 let renderedPrompt = engine.renderPrompt(entitySlug, 'analyze', { text });
-                let modelName = 'gemini-1.5-flash';
+                let modelName = DEFAULT_MODEL as any;
 
                 // Inyectar aprendizaje del contexto del agente (Feedback Loop)
                 const learningContext = await agent.getCorrectionContext(entitySlug, tenantId);

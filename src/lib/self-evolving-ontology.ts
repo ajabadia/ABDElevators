@@ -74,7 +74,7 @@ export class SovereignOntologyService {
         const taxonomies = await TaxonomyService.getTaxonomies(tenantId, 'ELEVATORS');
         const taxArray = taxonomies; // Removed redundant await for non-promise array 🛡️🛡️🛡️
 
-        const prompt = PROMPTS.ONTOLOGY_REFINER
+        const prompt = (PROMPTS.ONTOLOGY_REFINER?.template || '')
             .replace('{{currentTaxonomies}}', JSON.stringify(taxArray.map(t => ({ key: t.key, name: t.name, desc: t.description }))))
             .replace('{{feedbackDrift}}', JSON.stringify(drift.map(d => ({
                 from: d._id.original,

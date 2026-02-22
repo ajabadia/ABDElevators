@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { hybridSearch, performTechnicalSearch, MultilingualSearchService } from '@abd/rag-engine/server';
+import { RagResult } from '@abd/rag-engine';
 import { publicApiHandler } from '@/lib/api-handler';
-import { performTechnicalSearch, hybridSearch, performMultilingualSearch } from '@/lib/rag-service';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -22,7 +23,7 @@ export const POST = publicApiHandler(
                 results = await hybridSearch(query, tenantId, correlationId, limit, 'PRODUCTION', 'ELEVATORS', spaceId);
                 break;
             case 'multilingual':
-                results = await performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION'); // Still needs spaceId update if needed
+                results = await MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION'); // Still needs spaceId update if needed
                 break;
             case 'standard':
             default:

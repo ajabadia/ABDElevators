@@ -251,6 +251,8 @@ export const TenantConfigSchema = z.object({
         includeSources: z.boolean().default(true),
         contactInfo: z.string().optional(),
         footerText: z.string().optional(),
+        primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+        primaryColorDark: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
     }).optional(),
     active: z.boolean().default(true),
     billing: z.object({

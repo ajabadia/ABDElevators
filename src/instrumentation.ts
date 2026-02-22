@@ -28,7 +28,7 @@ export async function register() {
             console.log('[INSTRUMENTATION] Polyfilled DOMMatrix with basic safety and interface');
         }
 
-        const { initTracing } = await import('./lib/tracing');
+        const { initTracing } = await import('./lib/tracing.server');
         initTracing('abd-rag-platform');
 
         // Phase 54: Ingest Worker

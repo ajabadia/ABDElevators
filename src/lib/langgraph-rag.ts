@@ -1,10 +1,12 @@
 import { StateGraph, END } from "@langchain/langgraph";
 import { Annotation } from "@langchain/langgraph";
-import { RagResult, hybridSearch } from "./rag-service";
+import { hybridSearch, performTechnicalSearch } from '@abd/rag-engine/server';
+import { RagResult } from '@abd/rag-engine';
 import { callGeminiMini, callGeminiStream } from "./llm";
 import { PromptService } from "./prompt-service";
 import { PROMPTS } from './prompts';
 import { logEvento } from "./logger";
+import { DEFAULT_MODEL } from "./constants/ai-models";
 import { RagEvaluationService } from "@/services/rag-evaluation-service";
 import { FactCheckerService } from "./rag/fact-checker-service";
 
@@ -19,10 +21,12 @@ const GraphState = Annotation.Root({
     retry_count: Annotation<number>(),
     tenantId: Annotation<string>(),
     correlationId: Annotation<string>(),
-    industry: Annotation<string>(),
     environment: Annotation<string>(),
+    intensity: Annotation<string>(), // FAST | DEEP | KW_ONLY
+    industry: Annotation<string>(),
     is_grounded: Annotation<boolean>(),
     is_useful: Annotation<boolean>(),
+    filename: Annotation<string | undefined>(),
     trace: Annotation<string[]>({
         reducer: (x, y) => x.concat(y),
         default: () => [],
@@ -39,7 +43,7 @@ export class AgenticRAGService {
      * Nodo: Recuperación de Documentos
      */
     private static async retrieve(state: typeof GraphState.State) {
-        const { question, tenantId, correlationId, environment, industry } = state;
+        const { question, tenantId, correlationId, environment, industry, filename } = state;
 
         try {
             await logEvento({
@@ -50,13 +54,19 @@ export class AgenticRAGService {
                 correlationId
             });
 
+            const { truncateContext } = await import('@abd/rag-engine/server');
+
             const docs = await hybridSearch(
                 question,
                 tenantId,
                 correlationId,
-                3,
-                environment,
-                industry
+                industry,
+                {
+                    limit: state.intensity === 'KW_ONLY' ? 10 : 4,
+                    environment,
+                    filename,
+                    intensity: state.intensity as any
+                }
             );
 
             return {
@@ -74,32 +84,41 @@ export class AgenticRAGService {
 
     /**
      * Nodo: Calificación de Documentos (Garantiza relevancia)
+     * Optimizado: Procesamiento en paralelo para evitar cuellos de botella (Phase 182)
      */
     private static async gradeDocuments(state: typeof GraphState.State) {
         const { question, documents, tenantId, correlationId } = state;
-        const relevantDocs: RagResult[] = [];
 
-        for (const doc of documents) {
-            const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
-                'RAG_RELEVANCE_GRADER',
-                { question, document: doc.text },
-                tenantId
-            );
+        if (!documents || documents.length === 0) {
+            return { documents: [], trace: ["GRADING_DOCS: No documents to grade."] };
+        }
 
+        const gradingPromises = documents.map(async (doc) => {
             try {
+                const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
+                    'RAG_RELEVANCE_GRADER',
+                    { question, document: doc.text },
+                    tenantId,
+                    'PRODUCTION',
+                    'GENERIC',
+                    { user: { tenantId, role: 'SYSTEM' } } as any // Session bridge
+                );
+
                 const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
                 const grade = JSON.parse(response);
-                if (grade.score === 'yes') {
-                    relevantDocs.push(doc);
-                }
+                return grade.score === 'yes' ? doc : null;
             } catch (e) {
-                relevantDocs.push(doc); // Fallback
+                console.warn("[AgenticRAGService] Grading failed for a chunk, keeping as fallback.", e);
+                return doc; // Fallback: Be permissive if grader fails
             }
-        }
+        });
+
+        const results = await Promise.all(gradingPromises);
+        const relevantDocs = results.filter((doc): doc is RagResult => doc !== null);
 
         return {
             documents: relevantDocs,
-            trace: [`GRADING_DOCS: ${relevantDocs.length}/${documents.length} documents are technical and relevant.`]
+            trace: [`GRADING_DOCS: ${relevantDocs.length}/${documents.length} documents verified as relevant.`]
         };
     }
 
@@ -115,7 +134,7 @@ export class AgenticRAGService {
         const promptKey = history && history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
 
         let genPrompt: string;
-        let model: string = 'gemini-1.5-flash';
+        let model: string = DEFAULT_MODEL;
 
         try {
             const result = await PromptService.getRenderedPrompt(
@@ -126,7 +145,10 @@ export class AgenticRAGService {
                     industry: industry || 'ELEVATORS',
                     history: history ? JSON.stringify(history) : "[]"
                 },
-                tenantId
+                tenantId,
+                'PRODUCTION',
+                industry || 'GENERIC',
+                { user: { tenantId, role: 'SYSTEM' } } as any
             );
             genPrompt = result.text;
             model = result.model;
@@ -139,10 +161,21 @@ export class AgenticRAGService {
                 .replace('{{history}}', history ? JSON.stringify(history) : "[]");
         }
 
-        const generation = await callGeminiMini(genPrompt, tenantId, { correlationId, model });
+        const { truncateContext } = await import('@abd/rag-engine/server');
+        const truncated = truncateContext(genPrompt, history || [], documents);
+
+        // Standardize context for callGeminiMini
+        const contextString = truncated.chunks.map(d => d.text).join("\n\n---\n\n");
+        const finalPrompt = genPrompt.replace('{{context}}', contextString);
+
+        const generation = await callGeminiMini(finalPrompt, tenantId, {
+            correlationId,
+            model
+        });
         return {
             generation,
-            trace: [`GENERATION: Response drafted by technical model using ${promptKey}${genPrompt === (PROMPTS as any)[promptKey] ? ' (FALLBACK)' : ''}.`]
+            documents: truncated.chunks,
+            trace: [`GENERATION: Response drafted (Budget: 3k tokens) using ${promptKey}.`]
         };
     }
 
@@ -155,8 +188,11 @@ export class AgenticRAGService {
         try {
             const { text: rewritePrompt, model } = await PromptService.getRenderedPrompt(
                 'RAG_QUERY_REWRITER',
-                { question },
-                tenantId
+                { query: question, question, history: state.history ? JSON.stringify(state.history) : "[]" },
+                tenantId,
+                'PRODUCTION',
+                'GENERIC',
+                { user: { tenantId, role: 'SYSTEM' } } as any
             );
 
             const betterQuestion = await callGeminiMini(rewritePrompt, tenantId, { correlationId, model });
@@ -171,7 +207,7 @@ export class AgenticRAGService {
             return {
                 question,
                 retry_count: (retry_count || 0) + 1,
-                trace: ["RE-WRITE_ERROR: Optimization failed, using original question."]
+                trace: [`RE-WRITE_ERROR: Optimization failed (${error.message || 'Unknown error'}), using original question.`]
             };
         }
     }
@@ -214,7 +250,10 @@ export class AgenticRAGService {
         const { text: gradePrompt, model } = await PromptService.getRenderedPrompt(
             'RAG_ANSWER_GRADER',
             { question, generation },
-            tenantId
+            tenantId,
+            'PRODUCTION',
+            'GENERIC',
+            { user: { tenantId, role: 'SYSTEM' } } as any
         );
 
         try {
@@ -238,85 +277,136 @@ export class AgenticRAGService {
         tenantId: string,
         correlationId: string,
         history: any[] = [],
-        industry: string = 'ELEVATORS',
-        environment: string = 'PRODUCTION'
+        industry: string = 'GENERIC',
+        environment: string = 'PRODUCTION',
+        filename?: string
     ) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
-        // 1. Flush headers immediately to prevent browser timeouts (Phase 96 Stability)
-        yield { type: 'connected', data: { correlationId } };
-
-        const resultState = await app.invoke({
-            question,
-            history,
-            tenantId,
-            correlationId,
-            industry,
-            environment,
-            retry_count: 0,
-            documents: [],
-            generation: "",
-            is_grounded: false,
-            is_useful: false,
-            trace: []
-        });
-
-        // 2. Emitir documentos y traza primero
-        yield { type: 'docs', data: resultState.documents };
-        yield { type: 'trace', data: resultState.trace };
-
-        // 3. Circuit Breaker: Si no hay documentos, no llamar al LLM (ahorrar tokens y evitar alucinaciones/crash)
-        if (resultState.documents.length === 0) {
-            const noDocsMessage = "No he encontrado información relevante en la base de conocimiento para responder a tu pregunta.\n\nPor favor, asegúrate de que has subido los manuales técnicos correspondientes a la plataforma.";
-
-            // Simular streaming de la respuesta estática para mantener UX consistente
-            const tokens = noDocsMessage.split(/(?=[ ])/g); // Split conservando espacios
-            for (const token of tokens) {
-                yield { type: 'token', data: token };
-                await new Promise(r => setTimeout(r, 10)); // Pequeño delay para naturalidad
-            }
-            return;
-        }
-
-        // 4. Obtener el prompt de generación para hacer el streaming real de la respuesta
-        const context = resultState.documents.map((d: any) => d.text).join("\n\n---\n\n");
-
-        const promptKey = history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
-
-        let genPrompt: string;
-        let model: string = 'gemini-1.5-flash';
+        let lastState: any = null;
 
         try {
-            const rendered = await PromptService.getRenderedPrompt(
-                promptKey,
-                {
-                    question,
-                    context,
-                    industry: resultState.industry || 'ELEVATORS',
-                    history: JSON.stringify(history)
-                },
-                tenantId
-            );
-            genPrompt = rendered.text;
-            model = rendered.model;
-        } catch (err) {
-            console.warn(`[AgenticRAGService.runStream] ⚠️ Fallback to Master Prompt (${promptKey}):`, err);
-            const masterTemplate = (PROMPTS as any)[promptKey];
-            genPrompt = masterTemplate
-                .replace('{{question}}', question)
-                .replace('{{context}}', context)
-                .replace('{{history}}', JSON.stringify(history));
-        }
+            // 1. Initial Handshake & Proactive Thinking
+            yield { type: 'connected', data: { correlationId } };
+            yield { type: 'trace', data: ["INICIO: Inicializando motor de razonamiento agéntico..."] };
 
-        const stream = await callGeminiStream(genPrompt, tenantId, { correlationId, model });
+            const initialState = {
+                question,
+                history,
+                tenantId,
+                correlationId,
+                industry,
+                environment,
+                retry_count: 0,
+                documents: [],
+                generation: "",
+                is_grounded: false,
+                is_useful: false,
+                filename,
+                intensity: (question.includes('--deep') ? 'DEEP' : (question.includes('--fast') ? 'FAST' : 'FAST')), // Default to FAST for quota safety
+                trace: []
+            };
 
-        // 4. Emitir tokens conforme llegan
-        for await (const chunk of stream) {
-            const text = chunk.text();
-            if (text) {
-                yield { type: 'token', data: text };
+            lastState = initialState;
+
+            // 2. Stream the graph execution node by node
+            yield { type: 'trace', data: ["GRAFO: Iniciando ejecución de nodos secuenciales..."] };
+            yield { type: 'trace', data: ["PASO 1: Recuperación de contexto técnico (Buscando documentos)..."] };
+
+            const streamChunks = await app.stream(initialState, {
+                streamMode: "updates"
+            });
+
+            for await (const chunk of streamChunks) {
+                const nodeName = Object.keys(chunk as any)[0];
+                const updates = (chunk as any)[nodeName];
+
+                // Feedback reactivo proactivo por nodo
+                const nodeFeedback: Record<string, string> = {
+                    'retrieve': 'PASO 2: Documentos recuperados. Iniciando validación de relevancia...',
+                    'grade_documents': 'PASO 3: Validación completada. Verificando hechos técnicos...',
+                    'transform_query': 'PASO 2.1: Re-enfocando búsqueda para mayor precisión...',
+                    'generate': 'PASO 4: Información consolidada. Redactando respuesta técnica...',
+                };
+
+                if (nodeFeedback[nodeName]) {
+                    yield { type: 'trace', data: [nodeFeedback[nodeName]] };
+                }
+                yield { type: 'trace', data: [`NODO_ACTIVO: Finalizado ${nodeName.toUpperCase()}.`] };
+
+                // Update local state copy
+                lastState = { ...lastState, ...updates };
+
+                if (updates.trace) {
+                    yield { type: 'trace', data: updates.trace };
+                }
+                if (updates.documents) {
+                    yield { type: 'docs', data: updates.documents };
+                }
             }
+
+            // 3. Generation Logic (Real-time Text Streaming)
+            if (!lastState.documents || lastState.documents.length === 0) {
+                yield { type: 'trace', data: ["SISTEMA: No se encontraron documentos técnicos relevantes."] };
+                const noDocsMessage = "No he encontrado información relevante en la base de conocimiento para responder a tu pregunta.\n\nPor favor, asegura que el documento solicitado está procesado.";
+                const tokens = noDocsMessage.split(/(?=[ ])/g);
+                for (const token of tokens) {
+                    yield { type: 'token', data: token };
+                    await new Promise(r => setTimeout(r, 10));
+                }
+                return;
+            }
+
+            yield { type: 'trace', data: ["GENERACIÓN: Iniciando streaming de respuesta final..."] };
+
+            const context = lastState.documents.map((d: any) => d.text).join("\n\n---\n\n");
+            const promptKey = history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
+
+            let genPrompt: string;
+            let model: string = DEFAULT_MODEL;
+
+            try {
+                const rendered = await PromptService.getRenderedPrompt(
+                    promptKey,
+                    {
+                        question,
+                        context,
+                        industry: lastState.industry || 'ELEVATORS',
+                        history: JSON.stringify(history)
+                    },
+                    tenantId
+                );
+                genPrompt = rendered.text;
+                model = rendered.model;
+            } catch (err) {
+                console.warn(`[AgenticRAGService.runStream] Fallback to Master Prompt:`, err);
+                genPrompt = (PROMPTS as any)[promptKey]
+                    .replace('{{question}}', question)
+                    .replace('{{context}}', context)
+                    .replace('{{history}}', JSON.stringify(history));
+            }
+
+            const stream = await callGeminiStream(genPrompt, tenantId, { correlationId, model });
+
+            for await (const chunk of stream) {
+                const text = chunk.text();
+                if (text) {
+                    yield { type: 'token', data: text };
+                }
+            }
+            yield { type: 'connected', data: { status: 'complete' } };
+
+        } catch (error: any) {
+            console.error("[AgenticRAGService.runStream] Fatal Error:", error);
+            yield {
+                type: 'error',
+                data: {
+                    message: error.message || "Error interno del motor RAG",
+                    trace: lastState?.trace
+                }
+            };
+            throw error;
         }
     }
 
@@ -328,19 +418,21 @@ export class AgenticRAGService {
         tenantId: string,
         correlationId: string,
         history: any[] = [],
-        industry: string = 'ELEVATORS',
-        environment: string = 'PRODUCTION'
+        industry: string = 'GENERIC',
+        environment: string = 'PRODUCTION',
+        filename?: string
     ) {
         const workflow = this.createWorkflow();
         const app = workflow.compile();
 
         const result = await app.invoke({
             question, history, tenantId, correlationId, retry_count: 0,
-            industry, environment,
+            industry, environment, filename,
+            intensity: 'FAST', // Default
             documents: [], generation: "", is_grounded: false, is_useful: false, trace: []
         });
 
-        // Iniciar evaluación asíncrona (no bloquea la respuesta al usuario)
+        // Iniciar evaluación asíncrona
         RagEvaluationService.evaluateQuery(
             correlationId,
             question,

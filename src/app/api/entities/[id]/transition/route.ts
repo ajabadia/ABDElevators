@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { CaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -34,14 +34,14 @@ export async function POST(
         }
 
         // Execute transition through the engine
-        const result = await WorkflowEngine.executeTransition({
-            caseId: id,
+        const result = await WorkflowEngine.getInstance().executeTransition(
+            id,
             toState,
-            role: session.user.role,
-            correlationId,
-            comment,
-            signature
-        });
+            session.user.tenantId,
+            session.user.id,
+            [session.user.role],
+            correlationId
+        );
 
         return NextResponse.json(result);
 

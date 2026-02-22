@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SpaceInvitationService } from '@/services/space-invitation-service';
+import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
 import { logEvento } from '@/lib/logger';

@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from '../lib/db';
-import { IngestService } from '../services/ingest-service';
+import { IngestService } from '../services/ingest/IngestService';
 import crypto from 'crypto';
 import * as fs from 'fs';
 

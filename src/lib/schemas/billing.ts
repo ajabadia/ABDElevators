@@ -9,7 +9,7 @@ export const UsageLogSchema = z.object({
     tenantId: z.string(),
     type: z.enum(['LLM_TOKENS', 'STORAGE_BYTES', 'VECTOR_SEARCH', 'API_REQUEST', 'SAVINGS_TOKENS', 'EMBEDDING_OPS', 'REPORTS_GENERATED', 'RAG_PRECISION']),
     value: z.number(),                  // Cantidad (tokens, bytes, etc)
-    resource: z.string(),                // 'gemini-1.5-pro', 'cloudinary', etc
+    resource: z.string(),                // 'gemini-2.5-pro', 'cloudinary', etc
     description: z.string().optional(),
     correlationId: z.string().optional(),
     metadata: z.record(z.string(), z.any()).optional(),

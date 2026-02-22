@@ -329,7 +329,7 @@ export class BillingService {
         await TenantService.updateConfig(tenantId, {
             'subscription.planSlug': tier,
             'subscription.status': subscription.status as any,
-            'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000),
+            'subscription.currentPeriodEnd': new Date((subscription as any).current_period_end * 1000),
             'subscription.updatedAt': new Date()
         }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 

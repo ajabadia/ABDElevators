@@ -1,5 +1,5 @@
 import { IAIWorkflowRepository } from '../../domain/repositories/IAIWorkflowRepository';
-import { AIWorkflow, WorkflowTriggerType } from '@/types/workflow';
+import type { AIWorkflow, WorkflowTriggerType } from '@abd/workflow-engine';
 import { getTenantCollection } from '@/lib/db-tenant';
 
 export class MongoAIWorkflowRepository implements IAIWorkflowRepository {

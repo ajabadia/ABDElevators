@@ -24,16 +24,8 @@ export default function LoginPage() {
     const [requiresMfa, setRequiresMfa] = useState(false);
     const [mfaCode, setMfaCode] = useState("");
 
-    // Verificar si ya hay una sesión con MFA pendiente al cargar la página
-    useEffect(() => {
-        const checkMfaSession = async () => {
-            const session = await getSession();
-            if (session?.user?.mfaPending) {
-                setRequiresMfa(true);
-            }
-        };
-        checkMfaSession();
-    }, []);
+    // Nota: El chequeo de mfaPending en sesión ya no es necesario 
+    // porque ahora lanzamos un error en lugar de crear una sesión parcial.
 
     const handleMagicLink = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,6 +90,8 @@ export default function LoginPage() {
                     setRequiresMfa(true);
                     setMfaCode("");
                     setError("");
+                    // No limpiamos email/password aquí para permitir que handleCredentialsLogin los use de nuevo
+                    // junto con el mfaCode en el segundo intento (o se pasan en el mismo objeto si se prefiere).
                     return;
                 }
 

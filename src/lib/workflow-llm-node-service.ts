@@ -10,6 +10,7 @@ import { logEvento } from './logger';
 import { AppError } from './errors';
 import { callGeminiMini } from './llm';
 import { safeParseLlmJson } from './safe-llm-json';
+import { AI_MODEL_IDS, DEFAULT_MODEL } from '@abd/platform-core';
 
 // Generic LLM Node Output Schema
 const LLMNodeOutputSchema = z.object({
@@ -96,7 +97,7 @@ export class WorkflowLLMNodeService {
                     throw new AppError('PROMPT_NOT_FOUND', 500, `Master prompt not found: ${llmNodeConfig.promptKey}`);
                 }
 
-                renderedPrompt = masterPrompt
+                renderedPrompt = (masterPrompt?.template || '')
                     .replace(/{{caseContext}}/g, JSON.stringify(caseContext, null, 2))
                     .replace(/{{currentState}}/g, stateId)
                     .replace(/{{vertical}}/g, caseContext.industry || 'elevadores');
@@ -106,7 +107,7 @@ export class WorkflowLLMNodeService {
             const text = await callGeminiMini(
                 renderedPrompt,
                 tenantId,
-                { correlationId, temperature: 0.3, model: 'gemini-2.0-flash-exp' }
+                { correlationId, temperature: 0.3, model: DEFAULT_MODEL }
             );
 
             // Parse and validate response using resilient utility

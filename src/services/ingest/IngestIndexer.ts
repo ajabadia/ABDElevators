@@ -1,11 +1,13 @@
+
 import { ChunkingOrchestrator } from '@/lib/chunking/ChunkingOrchestrator';
-import { generateEmbedding } from '@/lib/llm';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { DocumentChunkSchema } from '@/lib/schemas';
-import { ObjectId } from 'mongodb';
+import { DocumentChunkRepository } from './DocumentChunkRepository';
+import { IngestEmbeddingService } from './IngestEmbeddingService';
+import { logEvento } from '@/lib/logger';
+import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
 
 /**
- * IngestIndexer: Handles chunking, embedding and vector storage (Phase 105 Hygiene).
+ * IngestIndexer: Handles chunking, embedding and vector storage.
+ * Refactored Phase 213: Delegating to specialized modules.
  */
 export class IngestIndexer {
     static async index(
@@ -18,41 +20,22 @@ export class IngestIndexer {
         correlationId: string,
         session?: any,
         onProgress?: (percent: number) => Promise<void>,
-        chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE', // Phase 134
-        chunkingConfig?: { size?: number; overlap?: number; threshold?: number } // Phase 134.2
+        chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE',
+        chunkingConfig?: { size?: number; overlap?: number; threshold?: number }
     ) {
-        // Phase 2: Import observability utilities
-        const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
-        const { withLLMRetry } = await import('@/lib/llm-retry');
-        const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
-
+        // 1. Chunking
         const textChunks = await ChunkingOrchestrator.chunk({
-            tenantId: asset.tenantId,
-            correlationId,
-            level: chunkingLevel,
-            text,
-            metadata: {
-                industry,
-                filename: asset.filename
-            },
-            chunkSize: chunkingConfig?.size,
-            chunkOverlap: chunkingConfig?.overlap,
-            chunkThreshold: chunkingConfig?.threshold,
+            tenantId: asset.tenantId, correlationId, level: chunkingLevel, text,
+            metadata: { industry, filename: asset.filename },
+            chunkSize: chunkingConfig?.size, chunkOverlap: chunkingConfig?.overlap, chunkThreshold: chunkingConfig?.threshold,
         });
 
         const allChunks = [
             ...textChunks.map(tc => ({ type: 'TEXT' as const, text: tc.text, page: undefined })),
-            ...visualFindings.map(vf => ({
-                type: 'VISUAL' as const,
-                text: vf.technical_description,
-                page: vf.page
-            }))
+            ...visualFindings.map(vf => ({ type: 'VISUAL' as const, text: vf.technical_description, page: vf.page }))
         ];
 
-        const chunksCollection = await getTenantCollection('document_chunks', session);
-        const { multilingualService } = await import('@/lib/multilingual-service');
-
-        const BATCH_SIZE = 10;
+        const BATCH_SIZE = 5;
         let successCount = 0;
 
         for (let i = 0; i < allChunks.length; i += BATCH_SIZE) {
@@ -61,89 +44,47 @@ export class IngestIndexer {
                 const chunkIndex = i + batchIndex;
                 const contextualizedText = `[CONTEXT: ${context}]\n\n${chunkData.text}`;
 
-                // Phase 2: Wrap embedding generation with retry + tracing
-                const embeddingSpan = IngestTracer.startEmbeddingSpan({
-                    correlationId,
-                    tenantId: asset.tenantId,
-                    chunkIndex,
-                });
+                const span = IngestTracer.startEmbeddingSpan({ correlationId, tenantId: asset.tenantId, chunkIndex });
 
                 try {
-                    const embeddingStart = Date.now();
+                    // Embeddings
+                    const isPremium = asset.enableVision || asset.enableTranslation || asset.enableGraphRag || asset.enableCognitive;
+                    const shouldSkipGemini = asset.usage === 'REFERENCE' && !isPremium;
 
-                    // Gemini embedding with retry
-                    const embeddingGemini = await withLLMRetry(
-                        () => generateEmbedding(contextualizedText, asset.tenantId, correlationId, session),
-                        {
-                            operation: 'EMBEDDING_GEMINI',
-                            tenantId: asset.tenantId,
-                            correlationId,
-                        },
-                        { maxRetries: 2, timeoutMs: 5000 }
-                    );
+                    const [embGemini, embBGE] = await Promise.all([
+                        shouldSkipGemini ? Promise.resolve(undefined) : IngestEmbeddingService.generateGeminiEmbedding(contextualizedText, asset.tenantId, correlationId, session),
+                        IngestEmbeddingService.generateBGEEmbedding(contextualizedText)
+                    ]);
 
-                    // BGE embedding (no retry needed - local model)
-                    const embeddingBGE = await multilingualService.generateEmbedding(contextualizedText);
-
-                    const embeddingDuration = Date.now() - embeddingStart;
-
-                    // Track cost (Gemini embedding only, BGE is local)
-                    const embeddingTokens = Math.ceil(contextualizedText.length / 4);
-                    await LLMCostTracker.trackOperation(
-                        correlationId,
-                        'EMBEDDING',
-                        'text-embedding-004',
-                        embeddingTokens,
-                        0, // Embeddings don't have output tokens
-                        embeddingDuration
-                    );
-
-                    // End span success
-                    await IngestTracer.endSpanSuccess(embeddingSpan, {
-                        correlationId,
+                    await DocumentChunkRepository.insertOne({
                         tenantId: asset.tenantId,
-                    }, {
-                        'llm.tokens.input': embeddingTokens,
-                        'chunk.index': chunkIndex,
-                        'chunk.type': chunkData.type,
-                    });
-
-                    const chunk = DocumentChunkSchema.parse({
-                        tenantId: asset.tenantId,
-                        industry, // Using detected industry from analysis
+                        industry,
                         componentType: asset.componentType || 'DOCUMENT',
                         model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,
                         version: asset.version || '1.0',
                         revisionDate: asset.revisionDate || new Date(),
-                        language: chunkData.type === 'VISUAL' ? 'es' : lang,
+                        language: lang || 'es',
                         chunkType: chunkData.type,
                         chunkText: chunkData.text,
                         approxPage: chunkData.page,
-                        embedding: embeddingGemini,
-                        embedding_multilingual: embeddingBGE,
-                        cloudinaryUrl: asset.cloudinaryUrl,
+                        embedding: embGemini,
+                        embedding_multilingual: embBGE,
+                        cloudinaryUrl: asset.cloudinaryUrl ?? undefined,
                         environment: asset.environment,
                         createdAt: new Date(),
-                        realEstateMetadata: industry === 'REAL_ESTATE' ? asset.realEstateMetadata : undefined,
-                    });
+                    }, session);
 
-                    await chunksCollection.insertOne(chunk);
+                    await IngestTracer.endSpanSuccess(span, { correlationId, tenantId: asset.tenantId }, { 'chunk.index': chunkIndex });
                     return true;
-                } catch (error: unknown) {
-                    await IngestTracer.endSpanError(embeddingSpan, {
-                        correlationId,
-                        tenantId: asset.tenantId,
-                    }, error as Error);
-                    throw error; // Re-throw to be caught by Promise.allSettled
+                } catch (error: any) {
+                    await IngestTracer.endSpanError(span, { correlationId, tenantId: asset.tenantId }, error);
+                    throw error;
                 }
             }));
 
             successCount += results.filter(r => r.status === 'fulfilled').length;
-            if (onProgress) {
-                const percent = Math.min(95, 70 + Math.floor((i + batch.length) / allChunks.length * 25));
-                await onProgress(percent);
-            }
+            if (onProgress) await onProgress(Math.min(95, 70 + Math.floor((i + batch.length) / allChunks.length * 25)));
         }
 
         return successCount;

@@ -122,8 +122,6 @@ export function CollectiveIntelligenceDashboard() {
                         trend={card.trend}
                         // @ts-ignore
                         trendDirection={card.trendDirection}
-                        // @ts-ignore
-                        color={card.color}
                     />
                 ))}
             </div>

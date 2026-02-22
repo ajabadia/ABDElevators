@@ -16,33 +16,7 @@ import fs from 'fs';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-// ── Helpers ──────────────────────────────────────────
-
-function flattenObject(obj: Record<string, any>, prefix = ''): Record<string, string> {
-    const result: Record<string, string> = {};
-    for (const key in obj) {
-        const val = obj[key];
-        const newKey = prefix ? `${prefix}.${key}` : key;
-        if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-            Object.assign(result, flattenObject(val, newKey));
-        } else {
-            result[newKey] = String(val);
-        }
-    }
-    return result;
-}
-
-function setNestedKey(obj: Record<string, any>, flatKey: string, value: string): void {
-    const parts = flatKey.split('.');
-    let current = obj;
-    for (let i = 0; i < parts.length - 1; i++) {
-        if (!current[parts[i]] || typeof current[parts[i]] !== 'object') {
-            current[parts[i]] = {};
-        }
-        current = current[parts[i]];
-    }
-    current[parts[parts.length - 1]] = value;
-}
+import { I18nObjectUtils } from '@/lib/i18n/i18n-object-utils';
 
 function deleteNestedKey(obj: Record<string, any>, flatKey: string): boolean {
     const parts = flatKey.split('.');
@@ -414,28 +388,28 @@ async function main(): Promise<void> {
                 const dbEn = await collection.findOne({ key, locale: 'en', tenantId: 'platform_master' });
 
                 if (dbEs?.value && !dbEs.value.startsWith('[TRADUCIR]') && !dbEs.value.startsWith('[TRANSLATE]')) {
-                    setNestedKey(es, key, dbEs.value);
+                    I18nObjectUtils.setNestedKey(es, key, dbEs.value);
                     dbFoundEs++;
                     // Also set EN if found
                     if (dbEn?.value && !dbEn.value.startsWith('[TRADUCIR]') && !dbEn.value.startsWith('[TRANSLATE]')) {
-                        setNestedKey(en, key, dbEn.value);
+                        I18nObjectUtils.setNestedKey(en, key, dbEn.value);
                         dbFoundEn++;
                     } else {
                         const inferred = inferTranslation(key, 'en');
-                        setNestedKey(en, key, inferred.en);
+                        I18nObjectUtils.setNestedKey(en, key, inferred.en);
                         inferredCount++;
                     }
                 } else if (dbEn?.value && !dbEn.value.startsWith('[TRADUCIR]') && !dbEn.value.startsWith('[TRANSLATE]')) {
-                    setNestedKey(en, key, dbEn.value);
+                    I18nObjectUtils.setNestedKey(en, key, dbEn.value);
                     dbFoundEn++;
                     const inferred = inferTranslation(key, 'es');
-                    setNestedKey(es, key, inferred.es);
+                    I18nObjectUtils.setNestedKey(es, key, inferred.es);
                     inferredCount++;
                 } else {
                     // Not in DB — use inference
                     const inferred = inferTranslation(key, 'both');
-                    setNestedKey(es, key, inferred.es);
-                    setNestedKey(en, key, inferred.en);
+                    I18nObjectUtils.setNestedKey(es, key, inferred.es);
+                    I18nObjectUtils.setNestedKey(en, key, inferred.en);
                     inferredCount++;
                 }
             }
@@ -497,8 +471,8 @@ async function main(): Promise<void> {
     fs.writeFileSync(enPath, JSON.stringify(en, null, 2) + '\n', 'utf8');
 
     // Count final keys
-    const finalFlatEs = flattenObject(es);
-    const finalFlatEn = flattenObject(en);
+    const finalFlatEs = I18nObjectUtils.flattenObject(es);
+    const finalFlatEn = I18nObjectUtils.flattenObject(en);
 
     console.log(`  ✅ es.json: ${Object.keys(finalFlatEs).length} keys (was 1302)`);
     console.log(`  ✅ en.json: ${Object.keys(finalFlatEn).length} keys (was 1302)`);

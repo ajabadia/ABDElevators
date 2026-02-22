@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Download, ShieldAlert, FileCheck, Trash2, Database, Shield, Info, LayoutGrid } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
+import { AI_MODELS } from "@abd/platform-core";
 
 export default function CompliancePage() {
     const { toast } = useToast();
@@ -22,12 +23,13 @@ export default function CompliancePage() {
     const [downloading, setDownloading] = useState(false);
     const [generatingCert, setGeneratingCert] = useState(false);
 
-    // Mock models for registry
-    const models = [
-        { name: "Gemini 2.0 Flash", provider: "Google", status: "Audited", risk: "Minimal" },
-        { name: "Gemini 1.5 Pro", provider: "Google", status: "Audited", risk: "Minimal" },
-        { name: "Text Embedding 004", provider: "Google", status: "Audited", risk: "Minimal" }
-    ];
+    // Dynamic models from registry
+    const models = AI_MODELS.filter(m => m.isEnabled).map(m => ({
+        name: m.name,
+        provider: m.provider.charAt(0).toUpperCase() + m.provider.slice(1),
+        status: "Gobernado",
+        risk: "Minimal" // Default for RAG technical assistance
+    }));
 
     const handleDownloadBackup = async () => {
         try {
@@ -49,7 +51,7 @@ export default function CompliancePage() {
             toast({
                 title: tToasts('backupDownloaded'),
                 description: tToasts('backupSuccess'),
-                variant: "success"
+                variant: "default"
             });
         } catch (error) {
             toast({ title: tToasts('error'), description: tToasts('backupError'), variant: "destructive" });
@@ -80,7 +82,7 @@ export default function CompliancePage() {
             toast({
                 title: tToasts('certificateGenerated'),
                 description: tToasts('certificateSuccess'),
-                variant: "success"
+                variant: "default"
             });
         } catch (error) {
             toast({ title: tToasts('error'), description: tToasts('certificateError'), variant: "destructive" });

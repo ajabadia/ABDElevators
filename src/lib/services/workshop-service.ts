@@ -1,10 +1,13 @@
 import { z } from 'zod';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { callGeminiMini } from '@/lib/llm';
+import { PromptService } from '@/lib/prompt-service';
+import { AI_MODEL_IDS, ModelName } from '@abd/platform-core';
 import { PROMPTS } from '@/lib/prompts';
-import { performTechnicalSearch } from '@/lib/rag-service';
+import { performTechnicalSearch } from '@abd/rag-engine/server';
+import { RagResult } from '@abd/rag-engine';
 import { ObjectId } from 'mongodb';
 
 // --- Schemas ---
@@ -63,11 +66,11 @@ export class WorkshopService {
                 throw new AppError('PROMPT_NOT_FOUND', 500, 'Prompt WORKSHOP_PARTS_EXTRACTOR not found');
             }
 
-            const prompt = promptTemplate.replace('{{description}}', orderDescription);
+            const prompt = (promptTemplate?.template || '').replace('{{description}}', orderDescription);
 
             const llmResponse = await callGeminiMini(prompt, tenantId, {
                 correlationId,
-                model: 'gemini-2.0-flash-exp', // Fast model for extraction
+                model: AI_MODEL_IDS.GEMINI_2_5_FLASH, // Fast model for extraction
                 temperature: 0.1
             });
 
@@ -96,7 +99,7 @@ export class WorkshopService {
                         'PRODUCTION'
                     );
 
-                    manuals = results.map(r => ({
+                    manuals = results.map((r: RagResult) => ({
                         title: r.source,
                         snippet: r.text.substring(0, 150) + '...',
                         score: r.score ?? 0

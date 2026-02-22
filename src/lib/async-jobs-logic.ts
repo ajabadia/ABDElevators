@@ -1,4 +1,4 @@
-import { extractTextFromPDF } from './pdf-utils';
+import { PDFIngestionPipeline } from '@/services/pdf/PDFIngestionPipeline';
 import { analyzeEntityWithGemini } from './llm';
 import { performTechnicalSearch } from './rag-service';
 import { RiskService } from './risk-service';
@@ -34,9 +34,16 @@ export class AsyncJobsLogic {
 
             await updateProgress(10);
 
-            // 1. Extraer Texto
+            // 1. Extraer Texto via Pipeline (Phase 8.2)
             const buffer = Buffer.from(fileBuffer, 'base64');
-            const text = await extractTextFromPDF(buffer);
+            const pipelineResult = await PDFIngestionPipeline.runPipeline(buffer, {
+                tenantId,
+                correlationId,
+                industry: industry as any,
+                strategy: 'GEMINI_1.5_PRO_EXTREME',
+                pii: { enabled: true }
+            });
+            const text = pipelineResult.maskedText || pipelineResult.cleanedText;
             await updateProgress(30);
 
             // 2. Análisis IA (Componentes/Patrones)

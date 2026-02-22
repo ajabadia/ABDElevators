@@ -16,6 +16,7 @@ import { connectDB, connectLogsDB, connectAuthDB, getMongoClient } from './db';
 import { AppError } from '../errors';
 import { logEvento } from './logger';
 import { UserRole } from '../types/roles';
+export { UserRole };
 
 /**
  * Interface para el contexto de sesión necesario para el aislamiento.
@@ -186,20 +187,28 @@ export class SecureCollection<T extends Document> {
         if (options?.hardDelete) {
             return this.collection.deleteOne(this.applyTenantFilter(filter), options);
         }
-        return this.collection.updateOne(
+        const result = await this.collection.updateOne(
             this.applyTenantFilter(filter),
             { $set: { deletedAt: new Date(), updatedAt: new Date() } } as any
         );
+        return {
+            acknowledged: result.acknowledged,
+            deletedCount: result.modifiedCount
+        };
     }
 
     async deleteMany(filter: Filter<T>, options?: { hardDelete?: boolean } & DeleteOptions) {
         if (options?.hardDelete) {
             return this.collection.deleteMany(this.applyTenantFilter(filter), options);
         }
-        return this.collection.updateMany(
+        const result = await this.collection.updateMany(
             this.applyTenantFilter(filter),
             { $set: { deletedAt: new Date(), updatedAt: new Date() } } as any
         );
+        return {
+            acknowledged: result.acknowledged,
+            deletedCount: result.modifiedCount
+        };
     }
 
     get unsecureRawCollection() {
@@ -281,4 +290,32 @@ export async function getTenantCollection<T extends Document>(
     const errorMsg = `Aislamiento de Tenant fallido para '${collectionName}': Contexto no encontrado`;
     console.error(`[SECURITY ALERT] ${errorMsg}`);
     throw new AppError('UNAUTHORIZED', 401, errorMsg);
+}
+
+/**
+ * Helper para obtener la colección de Casos (unificada)
+ */
+export async function getCaseCollection(session: TenantSession, options?: { softDeletes?: boolean }) {
+    return getTenantCollection('cases', session, 'MAIN', options);
+}
+
+/**
+ * Helper para obtener la colección de Notificaciones
+ */
+export async function getNotificationCollection(session: TenantSession, options?: { softDeletes?: boolean }) {
+    return getTenantCollection('notifications', session, 'LOGS', options);
+}
+
+/**
+ * Helper para obtener la colección de Configuración de Notificaciones
+ */
+export async function getNotificationConfigCollection(session: TenantSession, options?: { softDeletes?: boolean }) {
+    return getTenantCollection('notification_configs', session, 'LOGS', options);
+}
+
+/**
+ * Helper para obtener la colección de Auditoría (Audit Trails)
+ */
+export async function getAuditTrailCollection(session: TenantSession, options?: { softDeletes?: boolean }) {
+    return getTenantCollection('audit_trails', session, 'LOGS', options);
 }

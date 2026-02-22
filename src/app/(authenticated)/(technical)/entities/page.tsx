@@ -31,7 +31,18 @@ export default function EntitiesPage() {
     const { toast } = useToast();
 
     // 0. Get entity definition from "Cerebro" (Entity Vision)
-    const entity = EntityEngine.getInstance().getEntity('pedido')!;
+    const entity = EntityEngine.getInstance().getEntity('pedido');
+
+    if (!entity) {
+        return (
+            <PageContainer>
+                <div className="p-8 text-red-600 bg-red-50 rounded-xl border border-red-100 font-bold">
+                    Error: Entidad 'pedido' no encontrada en el motor de entidades.
+                    Contacte con soporte técnico.
+                </div>
+            </PageContainer>
+        );
+    }
 
     const [isUploading, setIsUploading] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -140,7 +151,7 @@ export default function EntitiesPage() {
 
             {analysisResult ? (
                 <div className="space-y-6">
-<Button variant="ghost" onClick={() => setAnalysisResult(null)} className="text-slate-500 hover:text-teal-600 gap-2">
+                    <Button variant="ghost" onClick={() => setAnalysisResult(null)} className="text-slate-500 hover:text-teal-600 gap-2">
                         {t('backToNew')}
                     </Button>
                     <RagReportView
@@ -163,7 +174,7 @@ export default function EntitiesPage() {
                                 <Upload size={120} />
                             </div>
                             <CardHeader>
-<CardTitle className="text-xl font-bold">{t('newAnalysis')}</CardTitle>
+                                <CardTitle className="text-xl font-bold">{t('newAnalysis')}</CardTitle>
                                 <CardDescription className="text-slate-400">{t('dropPdf')}</CardDescription>
                             </CardHeader>
                             <CardContent className="relative z-10">
@@ -181,7 +192,7 @@ export default function EntitiesPage() {
                                     <div className="w-12 h-12 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                         <Upload size={24} />
                                     </div>
-<p className="text-sm font-medium">{file ? file.name : t('clickBrowse')}</p>
+                                    <p className="text-sm font-medium">{file ? file.name : t('clickBrowse')}</p>
                                     <p className="text-xs text-slate-500 mt-1 uppercase font-bold">{t('pdfFormat')}</p>
                                 </div>
                                 <Button
@@ -189,7 +200,7 @@ export default function EntitiesPage() {
                                     disabled={!file || isUploading || showTrace}
                                     className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white border-none py-6 text-lg font-bold shadow-teal-500/20 shadow-lg active:scale-[0.98] transition-transform"
                                 >
-{isUploading ? (
+                                    {isUploading ? (
                                         <>
                                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                             {t('processing')}
@@ -210,7 +221,7 @@ export default function EntitiesPage() {
 
                         <Card className="border-none shadow-lg bg-teal-50/50 dark:bg-slate-900/50">
                             <CardContent className="pt-6 space-y-4">
-<div className="flex items-start gap-3">
+                                <div className="flex items-start gap-3">
                                     <CheckCircle2 className="text-teal-600 mt-1 shrink-0" size={18} />
                                     <p className="text-sm text-slate-700 dark:text-slate-300">{t('features.autoDetect')}</p>
                                 </div>
@@ -228,7 +239,7 @@ export default function EntitiesPage() {
 
                     {/* Right Side: History / Recents PURE REAL DATA */}
                     <div className="lg:col-span-2 space-y-6">
-<div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('recents')}</h3>
                             <div className="flex items-center gap-2">
                                 <div className="relative">
@@ -270,7 +281,7 @@ export default function EntitiesPage() {
                                                         {p.identifier || p.filename || p.numero_pedido}
                                                     </h4>
                                                     <div className="flex items-center gap-2 mt-1">
-<Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 border-teal-500/20 text-teal-600 bg-teal-50/50">
+                                                        <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 border-teal-500/20 text-teal-600 bg-teal-50/50">
                                                             {(p.detectedPatterns?.length || p.modelos_detectados?.length || 0)} {t('patterns')}
                                                         </Badge>
                                                         <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
@@ -314,7 +325,7 @@ export default function EntitiesPage() {
                                 ))
                             ) : (
                                 <Card className="border-dashed border-2 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 p-12 text-center">
-<div className="flex flex-col items-center gap-4 text-slate-400">
+                                    <div className="flex flex-col items-center gap-4 text-slate-400">
                                         <FileText size={48} className="opacity-20" />
                                         <p className="font-medium">{t('noRecents')}</p>
                                     </div>

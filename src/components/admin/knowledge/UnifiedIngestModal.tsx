@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useSmartConfig } from "@/hooks/useSmartConfig";
-import { SimpleAnalyzeView } from "./SimpleAnalyzeView";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Dialog,
@@ -60,7 +60,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     const [version, setVersion] = useState("1.0");
     const [documentTypeId, setDocumentTypeId] = useState("");
     const [scope, setScope] = useState<"GLOBAL" | "INDUSTRY" | "TENANT">("TENANT");
-    const [industry, setIndustry] = useState("ELEVATORS");
+    const [industry, setIndustry] = useState<string>("GENERIC");
     const [description, setDescription] = useState("");
 
     const [isUploading, setIsUploading] = useState(false);
@@ -83,6 +83,9 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     const [chunkOverlap, setChunkOverlap] = useState<number>(200);
     const [chunkThreshold, setChunkThreshold] = useState<number>(0.75);
 
+    const [activeCorrelationId, setActiveCorrelationId] = useState<string | null>(null);
+    const [lastLog, setLastLog] = useState<string>("");
+
     const smartConfig = useSmartConfig(file);
 
     const { toast } = useToast();
@@ -96,6 +99,27 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
             fetchTypes();
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        let interval: any;
+        if (isUploading && activeCorrelationId) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/admin/ingest/logs/${activeCorrelationId}`);
+                    const data = await res.json();
+                    if (data.success && data.logs?.length > 0) {
+                        const latest = data.logs[data.logs.length - 1];
+                        setLastLog(latest.message);
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 2500);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isUploading, activeCorrelationId]);
 
     const fetchTypes = async () => {
         try {
@@ -135,12 +159,17 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
 
         setIsUploading(true);
         setDeduplicated(false);
+        setLastLog("Iniciando conexión...");
+
+        const correlationId = crypto.randomUUID();
+        setActiveCorrelationId(correlationId);
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('correlationId', correlationId);
 
         // Use smart config if not in expert mode
-        const finalTipo = isExpertMode ? (tipo || 'Documento') : (tipo || file.name.split('.')[0] || 'Documento');
+        const finalTipo = isExpertMode ? (tipo || 'Documento') : (tipo || 'Documento');
         const finalLevel = isExpertMode ? (chunkingLevel || 'bajo') : smartConfig.chunkingLevel;
         const finalPii = isExpertMode ? maskPii.toString() : smartConfig.maskPii.toString();
 
@@ -218,6 +247,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         setUploadSuccess(false);
         setUploadSuccess(false);
         setDeduplicated(false);
+        setLastLog("");
+        setActiveCorrelationId(null);
         // Phase 134.2 Reset
         setChunkingLevel("bajo");
         setChunkSize(1500);
@@ -228,7 +259,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="w-[95vw] md:max-w-4xl border-none shadow-2xl overflow-y-auto max-h-[95vh] bg-background">
+                <DialogContent className="w-[95vw] md:max-w-[95vw] border-none shadow-2xl overflow-y-auto max-h-[95vh] bg-background">
                     <DialogHeader className="px-1">
                         <DialogTitle className="text-2xl font-bold font-outfit text-foreground">
                             {uploadSuccess
@@ -571,15 +602,66 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                                     </div>
                                 </div>
                             ) : (
-                                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                                    <SimpleAnalyzeView
-                                        file={file}
-                                        onDrop={onDrop}
-                                        config={smartConfig}
-                                        isUploading={isUploading}
-                                        onUpload={handleUpload}
-                                        onReset={resetForm}
-                                    />
+                                <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+                                    {/* Simple Mode: Clean Dropzone Only */}
+                                    <div
+                                        {...getRootProps()}
+                                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5 shadow-inner" : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                            }`}
+                                    >
+                                        <input {...getInputProps()} />
+                                        {file ? (
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-primary/10 text-primary rounded-lg shrink-0">
+                                                    <FileText size={28} />
+                                                </div>
+                                                <div className="text-left flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-foreground truncate">{file.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                                <Badge variant="outline" className="text-[9px] h-5 shrink-0">
+                                                    <Zap size={10} className="mr-1" /> {smartConfig.chunkingLevel === 'bajo' ? 'Básico' : smartConfig.chunkingLevel === 'medio' ? 'Semántico' : 'IA'}
+                                                </Badge>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-muted-foreground hover:text-destructive shrink-0"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFile(null);
+                                                    }}
+                                                >
+                                                    <X size={18} />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3 py-4 group">
+                                                <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto text-muted-foreground group-hover:text-primary transition-colors">
+                                                    <Upload size={28} />
+                                                </div>
+                                                <p className="text-sm font-medium text-foreground">{t('dropzone.idle')}</p>
+                                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-tighter">{t('dropzone.format')}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* File rejection error */}
+                                    {fileRejections.length > 0 && (
+                                        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive">
+                                            <p className="font-medium">{t('status.file_too_large') || 'Archivo demasiado grande'}</p>
+                                            <p className="text-xs mt-1">{t('dropzone.max_size') || 'Máximo 250MB.'}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Simple mode info */}
+                                    {file && (
+                                        <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                                            <p className="text-xs text-muted-foreground">
+                                                El documento se analizará e indexará automáticamente con configuración optimizada.
+                                                Para opciones avanzadas, cambia a <span className="font-bold text-primary">Modo Experto</span>.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -600,7 +682,15 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
                         </div>
                     )}
 
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-2 sm:gap-0 items-center">
+                        {isUploading && lastLog && (
+                            <div className="flex-1 flex items-center text-[10px] sm:text-[11px] text-muted-foreground animate-in fade-in duration-500 pr-4 overflow-hidden">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mr-2 flex-shrink-0 animate-pulse" />
+                                <span className="truncate italic">
+                                    {lastLog}
+                                </span>
+                            </div>
+                        )}
                         <Button
                             variant="ghost"
                             onClick={onClose}

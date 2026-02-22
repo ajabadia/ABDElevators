@@ -43,16 +43,32 @@ export function useApiItem<T, R = any>({
             const finalEndpoint = typeof endpoint === 'function' ? endpoint() : endpoint;
             const res = await fetch(finalEndpoint);
 
-            // 🛡️ [PHASE 140] Safe body consumption
             const text = await res.text();
+
+            if (!res.ok) {
+                // If it's not JSON, provide a cleaner error than the raw HTML
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    throw new Error(`API Error (${res.status}): El servidor devolvió una página HTML en lugar de datos. Verifica si la ruta existe.`);
+                }
+
+                let errorData: any;
+                try {
+                    errorData = JSON.parse(text);
+                } catch {
+                    throw new Error(`Error del servidor (${res.status}): ${text.slice(0, 50)}...`);
+                }
+                throw new Error(errorData?.message || errorData?.error?.message || `Error ${res.status} al cargar el recurso`);
+            }
+
             let json: any;
             try {
                 json = JSON.parse(text);
             } catch (pErr) {
-                throw new Error(`Invalid JSON response: ${text.slice(0, 100)}...`);
+                console.error("JSON Parse Error. Data received:", text.slice(0, 200));
+                throw new Error(`Respuesta inválida del servidor: No se pudo procesar el formato de datos.`);
             }
 
-            if (!res.ok || (json && json.success === false)) {
+            if (json && json.success === false) {
                 throw new Error(json?.message || json?.error?.message || 'Error al cargar el recurso');
             }
 

@@ -23,7 +23,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, isSuperAdmin, isCom
                 icon={<Building2 />}
                 trend="+12%"
                 trendDirection="up"
-                color="blue"
                 className={isCompact ? "p-4" : ""}
             />
             <MetricCard
@@ -32,7 +31,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, isSuperAdmin, isCom
                 icon={<FileText />}
                 trend="+5.4%"
                 trendDirection="up"
-                color="amber"
                 className={isCompact ? "p-4" : ""}
             />
             <MetricCard
@@ -41,7 +39,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, isSuperAdmin, isCom
                 icon={<ShieldCheck />}
                 trend="+18%"
                 trendDirection="up"
-                color="emerald"
                 className={isCompact ? "p-4" : ""}
             />
             <MetricCard
@@ -50,7 +47,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, isSuperAdmin, isCom
                 icon={<Search />}
                 trend="+24%"
                 trendDirection="up"
-                color="purple"
                 className={isCompact ? "p-4" : ""}
             />
         </div>

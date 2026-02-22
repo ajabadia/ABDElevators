@@ -5,13 +5,15 @@ import {
     Plus, Search, FileText, CheckCircle2,
     AlertCircle, Clock, Trash2, Download, MoreVertical,
     Archive, RotateCw, Link2, Eye, Activity,
-    CalendarCheck, Info
+    CalendarCheck, Info, Sparkles, Skull, Ghost, Coins, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
 import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal";
 import { RelationshipManagerModal } from "@/components/admin/knowledge/RelationshipManagerModal";
 import { IngestionDiagnosticModal } from "@/components/admin/knowledge/IngestionDiagnosticModal";
+import { QuickAnalyzeModal } from "@/components/admin/knowledge/QuickAnalyzeModal";
+import { ChunksViewModal } from "@/components/admin/knowledge/ChunksViewModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -67,7 +69,9 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         | { type: 'preview', id: string, filename: string }
         | { type: 'relationship', asset: KnowledgeAsset }
         | { type: 'diagnostic', id: string, filename: string }
-        | { type: 'review', asset: KnowledgeAsset };
+        | { type: 'review', asset: KnowledgeAsset }
+        | { type: 'analyze', asset: KnowledgeAsset }
+        | { type: 'chunks', asset: KnowledgeAsset };
 
     const [modalState, setModalState] = useState<ModalState>({ type: 'closed' });
     const [reviewDate, setReviewDate] = useState<string>(format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), "yyyy-MM-dd"));
@@ -251,19 +255,16 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                     title={t('metrics.active')}
                     value={stats.active}
                     icon={<Layers className="w-5 h-5" />}
-                    color="blue"
                 />
                 <MetricCard
                     title={t('metrics.indexed')}
                     value={stats.totalChunks}
                     icon={<Database className="w-5 h-5" />}
-                    color="blue"
                 />
                 <MetricCard
                     title={t('metrics.last_ingest')}
                     value={stats.lastIngest}
                     icon={<History className="w-5 h-5" />}
-                    color="blue"
                 />
             </div>
 
@@ -427,6 +428,16 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                                     <AlertCircle size={12} /> {t('status.failed')}
                                                 </Badge>
                                             )}
+                                            {doc.ingestionStatus === 'STUCK' && (
+                                                <Badge className="bg-amber-500 text-white border-amber-600 gap-1 animate-pulse">
+                                                    <Ghost size={12} /> {t('status.stuck') || 'Atascado'}
+                                                </Badge>
+                                            )}
+                                            {doc.ingestionStatus === 'DEAD' && (
+                                                <Badge className="bg-slate-900 text-white border-black gap-1">
+                                                    <Skull size={12} /> {t('status.dead') || 'Mortal'}
+                                                </Badge>
+                                            )}
 
                                             {(!doc.ingestionStatus || doc.ingestionStatus === 'COMPLETED') && (
                                                 <>
@@ -450,14 +461,25 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold text-foreground">{doc.totalChunks}</span>
-                                            <div className="flex-1 max-w-[30px] h-1 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="bg-primary h-full transition-all duration-1000"
-                                                    style={{ width: `${Math.min(100, (doc.totalChunks / 1000) * 100)}%` }}
-                                                ></div>
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-foreground">{doc.totalChunks}</span>
+                                                <div className="flex-1 max-w-[30px] h-1 bg-muted rounded-full overflow-hidden">
+                                                    <div
+                                                        className="bg-primary h-full transition-all duration-1000"
+                                                        style={{ width: `${Math.min(100, (doc.totalChunks / 1000) * 100)}%` }}
+                                                    ></div>
+                                                </div>
                                             </div>
+                                            {doc.ingestionCost && (
+                                                <div
+                                                    className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50/50 w-fit px-1.5 rounded-full border border-amber-100"
+                                                    title={t('table.cost_tooltip', { cost: doc.ingestionCost.totalUSD.toFixed(4), tokens: doc.ingestionCost.totalTokens }) || `Costo: $${doc.ingestionCost.totalUSD.toFixed(4)}`}
+                                                >
+                                                    <Coins size={10} />
+                                                    <span>${doc.ingestionCost.totalUSD.toFixed(3)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -470,6 +492,8 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                             onManageRelationships={() => setModalState({ type: 'relationship', asset: doc })}
                                             onViewDiagnostics={() => setModalState({ type: 'diagnostic', id: doc._id, filename: doc.filename })}
                                             onScheduleReview={() => setModalState({ type: 'review', asset: doc })}
+                                            onAnalyze={() => setModalState({ type: 'analyze', asset: doc })}
+                                            onViewChunks={() => setModalState({ type: 'chunks', asset: doc })}
                                             refresh={refresh}
                                         />
                                     </TableCell>
@@ -512,11 +536,23 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                     </div>
                 )}
             </ContentCard>
+
+            <QuickAnalyzeModal
+                asset={modalState.type === 'analyze' ? modalState.asset : null}
+                open={modalState.type === 'analyze'}
+                onClose={() => setModalState({ type: 'closed' })}
+            />
+
+            <ChunksViewModal
+                asset={modalState.type === 'chunks' ? modalState.asset : null}
+                open={modalState.type === 'chunks'}
+                onClose={() => setModalState({ type: 'closed' })}
+            />
         </div>
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onViewChunks, refresh }: any) {
     const { toast } = useToast();
 
     return (
@@ -534,6 +570,22 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     onClick={onPreview}
                 >
                     <Eye size={14} /> {t('actions.preview') || 'Ver Transcripción/PDF'}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-indigo-600 dark:text-indigo-400 focus:text-indigo-600 focus:bg-indigo-50 font-bold"
+                    onClick={onAnalyze}
+                    disabled={doc.ingestionStatus !== 'COMPLETED'}
+                >
+                    <Sparkles size={14} /> {t('actions.analyze') || 'Analizar/Consultar'}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-blue-600 dark:text-blue-400 focus:text-blue-600 focus:bg-blue-50"
+                    onClick={onViewChunks}
+                    disabled={doc.totalChunks === 0}
+                >
+                    <Database size={14} /> {t('actions.view_chunks') || 'Ver Chunks Ingestados'}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -588,7 +640,7 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     <Clock size={14} /> {t('actions.snooze_review')}
                 </DropdownMenuItem>
 
-                {(doc.ingestionStatus === 'FAILED' || doc.ingestionStatus === 'PENDING') && (
+                {(doc.ingestionStatus === 'FAILED' || doc.ingestionStatus === 'PENDING' || (doc.ingestionStatus === 'COMPLETED' && (doc.totalChunks || 0) === 0)) && (
                     <DropdownMenuItem
                         className="rounded-lg gap-2 cursor-pointer text-teal-600 focus:text-teal-600 focus:bg-teal-50"
                         onClick={async () => {

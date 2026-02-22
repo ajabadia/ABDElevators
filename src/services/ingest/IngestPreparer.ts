@@ -1,17 +1,16 @@
-import crypto from 'crypto';
-import { getTenantCollection } from '@/lib/db-tenant';
-import { KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
-import { ValidationError, AppError } from '@/lib/errors';
-import { IngestOptions } from './types';
-import { logEvento } from '@/lib/logger';
-import { validateLanguageCode } from '@/lib/language-validator';
-import { FeatureFlags } from '@/lib/feature-flags';
-import { GridFSUtils } from '@/lib/gridfs-utils';
 
-import { IngestPrepareResult } from './types';
+import crypto from 'crypto';
+import { KnowledgeAssetRepository } from './KnowledgeAssetRepository';
+import { IngestAuditService } from './IngestAuditService';
+import { IngestValidator } from './IngestValidator';
+import { IngestStorageService } from './IngestStorageService';
+import { IngestStrategyService } from './IngestStrategyService';
+import { IngestOptions, IngestPrepareResult } from './types';
+import { logEvento } from '@/lib/logger';
 
 /**
- * IngestPreparer: Handles validations, deduplication and initial storage (Phase 105 Hygiene).
+ * IngestPreparer: Handles validations, deduplication and initial storage.
+ * Refactored Phase 213: Delegating to specialized services.
  */
 export class IngestPreparer {
     static async prepare(options: IngestOptions): Promise<IngestPrepareResult> {
@@ -19,33 +18,19 @@ export class IngestPreparer {
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
         const scope = metadata.scope || 'TENANT';
-        const industry = metadata.industry || 'GENERIC';
-        const spaceId = metadata.spaceId; // 🌌 Phase 125.2
+        const spaceId = metadata.spaceId;
 
-        // 0. Strict Chunking Level Validation (Phase 165.3)
-        const supportedLevels = ['bajo', 'medio', 'alto'];
-        if (metadata.chunkingLevel && !supportedLevels.includes(metadata.chunkingLevel)) {
-            throw new ValidationError(`Nivel de fragmentación (chunkingLevel) no soportado: ${metadata.chunkingLevel}. Valores válidos: ${supportedLevels.join(', ')}`);
-        }
+        // 1. Validations
+        metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel);
+        const sizeBytes = (file as any).size || 0;
+        IngestValidator.validateFileSize(sizeBytes);
 
-        // 1. Critical Size Validation (Phase 131.6: Large File Support)
-        const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
-        // @ts-ignore
-        const fileSize = file.size || 0;
-        if (fileSize > MAX_FILE_SIZE) {
-            throw new ValidationError(`File too large. Max size is 250MB. Received: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
-        }
-
-        // Phase 131.6: Warn for large files (>100MB) - use streaming
-        const USE_STREAMING_THRESHOLD = 100 * 1024 * 1024; // 100MB - use streaming above this
-        const useStreaming = fileSize > USE_STREAMING_THRESHOLD;
-
-        if (useStreaming) {
+        if (IngestValidator.shouldUseStreaming(sizeBytes)) {
             await logEvento({
                 level: 'WARN',
                 source: 'INGEST_PREPARER',
                 action: 'LARGE_FILE_DETECTED',
-                message: `Large file detected (${(fileSize / 1024 / 1024).toFixed(2)}MB). Using streaming mode.`,
+                message: `Large file (${(sizeBytes / 1024 / 1024).toFixed(2)}MB). Streaming mode.`,
                 correlationId,
                 tenantId
             });
@@ -54,221 +39,73 @@ export class IngestPreparer {
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileHash = crypto.createHash('md5').update(buffer).digest('hex');
 
-        // Phase 131: Check if new pipeline is enabled
-        const isV2Enabled = FeatureFlags.isIngestPipelineV2Enabled();
-
-        // Phase 131: Save to GridFS first (for processing buffer)
+        // 2. Storage Strategy (v2 Pipeline)
         let blobId: string | undefined;
-        if (isV2Enabled) {
+        const isV2 = IngestStrategyService.isV2Enabled();
+
+        if (isV2) {
             try {
-                blobId = await GridFSUtils.saveForProcessing(buffer, tenantId, 'pending', correlationId);
-                await logEvento({
-                    level: 'INFO',
-                    source: 'INGEST_PREPARER',
-                    action: 'GRIDFS_SAVE_SUCCESS',
-                    message: `File saved to GridFS for processing: ${blobId}`,
-                    correlationId,
-                    tenantId
-                });
-            } catch (gridfsError) {
-                await logEvento({
-                    level: 'WARN',
-                    source: 'INGEST_PREPARER',
-                    action: 'GRIDFS_SAVE_FAILED',
-                    message: `Failed to save to GridFS, continuing with Cloudinary only: ${gridfsError}`,
-                    correlationId,
-                    tenantId,
-                    details: { error: (gridfsError as Error).message }
-                });
-                // Continue without GridFS - Cloudinary-only mode
+                blobId = await IngestStorageService.saveToGridFS(buffer, tenantId, correlationId);
+            } catch (err) {
+                console.warn('[IngestPreparer] GridFS save failed, falling back...');
             }
         }
 
-        // Enforcement of Rule #11 (Using SecureCollection indirectly via getTenantCollection)
-        const session = options.session;
-        const knowledgeAssetsCollection = await getTenantCollection('knowledge_assets', session);
-        const auditCollection = await getTenantCollection('audit_ingestion', session);
-
-        const dedupeQuery: any = {
+        // 3. Deduplication Check
+        const dedupeQuery = {
             fileMd5: fileHash,
             tenantId: scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] },
-            spaceId: spaceId, // 🌌 Refinar por espacio si se provee
+            spaceId,
             environment
         };
 
-        const existingDoc = await knowledgeAssetsCollection.findOne(dedupeQuery, { includeDeleted: true });
+        const existingDoc = await KnowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session);
 
         if (existingDoc) {
-            // restoration logic for soft-deleted docs
+            // Restoration logic
             if (existingDoc.deletedAt) {
-                console.log(`[IngestPreparer] Restoring soft-deleted asset: ${existingDoc._id}`);
-                await knowledgeAssetsCollection.updateOne(
-                    { _id: existingDoc._id },
-                    {
-                        $unset: { deletedAt: "" },
-                        $set: {
-                            status: 'vigente',
-                            ingestionStatus: 'PENDING',
-                            updatedAt: new Date(),
-                            // Update metadata if it changed
-                            version: metadata.version,
-                            documentTypeId: metadata.documentTypeId,
-                            correlationId,
-                            // Phase 105: Update flags on restore
-                            enableVision: options.enableVision || false,
-                            enableTranslation: options.enableTranslation || false,
-                            enableGraphRag: options.enableGraphRag || false,
-                            enableCognitive: options.enableCognitive || false,
-                        }
-                    },
-                    { includeDeleted: true }
-                );
+                await KnowledgeAssetRepository.update(existingDoc._id, {
+                    $unset: { deletedAt: "" },
+                    $set: {
+                        status: 'vigente',
+                        ingestionStatus: 'PENDING',
+                        updatedAt: new Date(),
+                        correlationId
+                    }
+                }, options.session, { includeDeleted: true });
 
-                await auditCollection.insertOne(IngestAuditSchema.parse({
-                    tenantId,
-                    performedBy: options.userEmail,
-                    filename: file.name,
-                    fileSize,
-                    md5: fileHash,
-                    docId: existingDoc._id,
-                    correlationId,
-                    status: 'RESTORED',
-                    details: { source: 'ADMIN_INGEST', duration_ms: Date.now() - start }
-                }));
+                await IngestAuditService.log({
+                    tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
+                    md5: fileHash, docId: existingDoc._id, correlationId, status: 'RESTORED'
+                }, options.session);
 
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
 
-            // Rule #7: If it's failed/pending, let the worker handle retry if needed, 
-            // but for the prep phase it already "exists" in the registry.
-            if (existingDoc.ingestionStatus === 'COMPLETED') {
-                await auditCollection.insertOne(IngestAuditSchema.parse({
-                    tenantId,
-                    performedBy: options.userEmail,
-                    filename: file.name,
-                    fileSize,
-                    md5: fileHash,
-                    docId: existingDoc._id,
-                    correlationId,
-                    status: 'DUPLICATE',
-                    details: { source: 'ADMIN_INGEST', duration_ms: Date.now() - start }
-                }));
+            // Duplicate Prevention
+            const hasChunks = (existingDoc.totalChunks || 0) > 0;
+            const isForce = (metadata as any).force === true || (metadata as any).force === 'true';
+
+            if (existingDoc.ingestionStatus === 'COMPLETED' && hasChunks && !isForce) {
+                await IngestAuditService.log({
+                    tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
+                    md5: fileHash, docId: existingDoc._id, correlationId, status: 'DUPLICATE'
+                }, options.session);
                 return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true, savings: 0 };
             }
 
-            // If it's PENDING or FAILED, check if it's corrupted (missing URL)
-            if (!existingDoc.cloudinaryUrl) {
-                console.warn(`[IngestPreparer] Existing asset ${existingDoc._id} is corrupted (missing Cloudinary URL). Deleting to allow fresh re-upload.`);
-                await knowledgeAssetsCollection.deleteOne({ _id: existingDoc._id });
-                // Fall through to allow creating a new clean record
+            // Fallback for corrupted records
+            if (!existingDoc.cloudinaryUrl && !isV2) {
+                await KnowledgeAssetRepository.deletePhysical(existingDoc._id, options.session);
             } else {
-                await logEvento({
-                    level: 'INFO',
-                    source: 'INGEST_PREPARER',
-                    action: 'DOCUMENT_RECOVERY_SUCCESS',
-                    message: `Existing asset ${existingDoc._id} recovered and updated to PENDING.`,
-                    correlationId,
-                    tenantId
-                });
-
-                // Also update flags if we are recovering it
-                await knowledgeAssetsCollection.updateOne(
-                    { _id: existingDoc._id },
-                    {
-                        $set: {
-                            enableVision: options.enableVision || false,
-                            enableTranslation: options.enableTranslation || false,
-                            enableGraphRag: options.enableGraphRag || false,
-                            enableCognitive: options.enableCognitive || false,
-                            updatedAt: new Date(),
-                            correlationId
-                        }
-                    }
-                );
-
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
         }
 
-        // 2. Physical Storage & Deduplication (Phase 125.1 Unified)
-        let cloudinaryResult: { secureUrl?: string; publicId?: string } = {};
-        let isBlobDeduplicated = false;
-
-        // Phase 131: If Pipeline V2 is enabled, we skip blocking Cloudinary upload during prep.
-        // The background worker will handle Cloudinary upload later using the GridFS buffer.
-        if (!isV2Enabled) {
-            try {
-                const { BlobStorageService } = await import('@/services/storage/BlobStorageService');
-                const result = await BlobStorageService.getOrCreateBlob(
-                    buffer,
-                    { filename: file.name, mimeType: (file as any).type || 'application/pdf' },
-                    {
-                        tenantId,
-                        userId: options.userEmail,
-                        correlationId,
-                        source: 'RAG_INGEST'
-                    },
-                    session
-                );
-                cloudinaryResult = {
-                    secureUrl: result.blob.secureUrl || result.blob.url || (result.blob as any).cloudinaryUrl,
-                    publicId: result.blob.providerId || (result.blob as any).cloudinaryPublicId
-                };
-                isBlobDeduplicated = result.deduplicated;
-            } catch (error: any) {
-                // Log the storage failure
-                await logEvento({
-                    level: 'ERROR',
-                    source: 'INGEST_PREPARER',
-                    action: 'STORAGE_FAILED',
-                    message: `Cloudinary storage failed: ${error.message}`,
-                    correlationId,
-                    tenantId,
-                    stack: error.stack
-                });
-
-                // Create a FAILED asset record for traceability
-                const failedAsset = {
-                    tenantId: scope === 'TENANT' ? tenantId : 'global',
-                    industry,
-                    filename: file.name,
-                    componentType: metadata.type,
-                    model: 'PENDING',
-                    version: metadata.version,
-                    revisionDate: new Date(),
-                    status: 'vigente',
-                    ingestionStatus: 'FAILED',
-                    error: `Storage failed: ${error.message}`,
-                    cloudinaryUrl: null,
-                    cloudinaryPublicId: null,
-                    fileMd5: fileHash,
-                    sizeBytes: fileSize,
-                    totalChunks: 0,
-                    documentTypeId: metadata.documentTypeId,
-                    scope,
-                    spaceId, // 🌌 Phase 125.2
-                    environment,
-                    correlationId,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                };
-
-                const result = await knowledgeAssetsCollection.insertOne(failedAsset);
-
-                return {
-                    docId: result.insertedId.toString(),
-                    status: 'FAILED',
-                    correlationId,
-                    error: `Storage failed: ${error.message}`,
-                    savings: 0
-                };
-            }
-        }
-
-        // 3. Initial Registry
-        const docMetadata: any = {
+        // 4. Register Asset
+        const docMetadata = {
             tenantId: scope === 'TENANT' ? tenantId : 'global',
-            industry,
+            industry: metadata.industry || 'GENERIC',
             filename: file.name,
             componentType: metadata.type,
             model: 'PENDING',
@@ -276,52 +113,34 @@ export class IngestPreparer {
             revisionDate: new Date(),
             status: 'vigente',
             ingestionStatus: 'PENDING',
-            cloudinaryUrl: cloudinaryResult.secureUrl,
-            cloudinaryPublicId: cloudinaryResult.publicId,
             fileMd5: fileHash,
-            sizeBytes: fileSize,
-            totalChunks: 0,
+            sizeBytes,
             documentTypeId: metadata.documentTypeId,
             scope,
-            spaceId, // 🌌 Phase 125.2
-            chunkingLevel: metadata.chunkingLevel || 'bajo', // Phase 134
+            spaceId,
+            chunkingLevel: metadata.chunkingLevel,
             environment,
-            correlationId, // Fix: Pass correlationId to asset for tracing
-            enableVision: options.enableVision || false,
-            enableTranslation: options.enableTranslation || false,
-            enableGraphRag: options.enableGraphRag || false,
-            enableCognitive: options.enableCognitive || false,
+            correlationId,
+            enableVision: !!options.enableVision,
+            enableTranslation: !!options.enableTranslation,
+            enableGraphRag: !!options.enableGraphRag,
+            enableCognitive: !!options.enableCognitive,
+            usage: metadata.usage || 'REFERENCE',
+            skipIndexing: !!metadata.skipIndexing,
+            blobId,
+            hasStorage: !!blobId,
             createdAt: new Date(),
             updatedAt: new Date(),
         };
 
-        // Phase 131: Add blobId if GridFS save was successful
-        if (isV2Enabled && blobId) {
-            docMetadata.blobId = blobId;
-            docMetadata.hasStorage = true; // GridFS storage is available
-        }
+        const result = await KnowledgeAssetRepository.create(docMetadata, options.session);
 
-        const result = await knowledgeAssetsCollection.insertOne(KnowledgeAssetSchema.parse(docMetadata));
+        await IngestAuditService.log({
+            tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
+            md5: fileHash, docId: result.insertedId, correlationId, status: 'PENDING',
+            details: { source: 'ADMIN_INGEST', pipelineV2: isV2, blobId: blobId || null }
+        }, options.session);
 
-        await auditCollection.insertOne(IngestAuditSchema.parse({
-            tenantId,
-            performedBy: options.userEmail,
-            filename: file.name,
-            fileSize,
-            md5: fileHash,
-            docId: result.insertedId,
-            correlationId,
-            status: 'PENDING',
-            details: {
-                source: 'ADMIN_INGEST',
-                scope,
-                duration_ms: Date.now() - start,
-                deduplicated: isBlobDeduplicated, // Audit if it was deduplicated
-                blobId: blobId || null, // Phase 131: GridFS blob ID
-                pipelineV2: isV2Enabled // Phase 131: Track which pipeline was used
-            }
-        }));
-
-        return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: isBlobDeduplicated ? fileSize : 0 };
+        return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: 0 };
     }
 }

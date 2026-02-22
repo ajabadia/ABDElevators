@@ -1,38 +1,49 @@
+
 import jsPDF from 'jspdf';
 import { InvoiceData } from '@/lib/billing-service';
+import { PdfLayout } from './pdf/PdfLayout';
+import { PdfTheme } from './pdf/PdfTheme';
 
-export const generateInvoicePDF = (invoice: InvoiceData) => {
+/**
+ * generateInvoicePDF - Generates a standardized invoice document.
+ * Phase 8.1: Service consolidation.
+ */
+export const generateInvoicePDF = (invoice: InvoiceData, locale: string = 'es') => {
     const doc = new jsPDF();
+    const theme = PdfTheme.getTheme(locale, (invoice.tenant as any).industry);
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // --- Header ---
-    doc.setFillColor(13, 148, 136); // Teal-600
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // Attach Metadata
+    PdfLayout.attachDocumentMetadata(doc, {
+        tenantId: invoice.tenant.id,
+        correlationId: invoice.id, // Assuming invoice ID as trace
+        generatedBy: 'BillingEngine'
+    });
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FACTURA', 20, 25);
+    // --- Header unificado ---
+    PdfLayout.drawStandardHeader(doc, {
+        title: locale === 'es' ? 'FACTURA' : 'INVOICE',
+        subtitle: `# ${invoice.number || 'DRAFT'}`,
+        locale,
+        industry: (invoice.tenant as any).industry || 'GENERIC'
+    });
 
-    doc.setFontSize(10);
+    doc.setTextColor(theme.colors.secondary);
+    doc.setFontSize(PdfTheme.FONTS.BODY);
     doc.setFont('helvetica', 'normal');
-    const invoiceNum = invoice.number || 'DRAFT';
-    doc.text(`# ${invoiceNum}`, pageWidth - 20, 20, { align: 'right' });
-    doc.text(`Fecha: ${new Date(invoice.issueDate).toLocaleDateString()}`, pageWidth - 20, 28, { align: 'right' });
+    doc.text(`${locale === 'es' ? 'Fecha' : 'Date'}: ${PdfTheme.formatDate(new Date(invoice.issueDate), locale)}`, pageWidth - PdfTheme.MARGINS.RIGHT, 32, { align: 'right' });
 
     // --- Emisor (Plataforma) ---
-    doc.setTextColor(50, 50, 50);
-    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('ABD Elevators SaaS', 20, 55);
+    doc.text('ABD Elevators SaaS', PdfTheme.MARGINS.LEFT, 55);
     doc.setFont('helvetica', 'normal');
-    doc.text('CIF: B-99999999', 20, 60);
-    doc.text('Calle Innovación 10', 20, 65);
-    doc.text('28000 Madrid, España', 20, 70);
+    doc.text('CIF: B-99999999', PdfTheme.MARGINS.LEFT, 60);
+    doc.text('Calle Innovación 10', PdfTheme.MARGINS.LEFT, 65);
+    doc.text('28000 Madrid, España', PdfTheme.MARGINS.LEFT, 70);
 
     // --- Cliente ---
     doc.setFont('helvetica', 'bold');
-    doc.text('Facturar a:', pageWidth - 80, 55);
+    doc.text(locale === 'es' ? 'Facturar a:' : 'Bill to:', pageWidth - 80, 55);
     doc.setFont('helvetica', 'normal');
     doc.text(invoice.tenant.fiscalName || invoice.tenant.name, pageWidth - 80, 60);
     if (invoice.tenant.taxId) doc.text(`CIF/NIF: ${invoice.tenant.taxId}`, pageWidth - 80, 65);
@@ -44,12 +55,12 @@ export const generateInvoicePDF = (invoice: InvoiceData) => {
     let yPos = 90;
 
     // Header Row
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, yPos, pageWidth - 40, 10, 'F');
+    doc.setFillColor(theme.colors.background);
+    doc.rect(PdfTheme.MARGINS.LEFT, yPos, pageWidth - (PdfTheme.MARGINS.LEFT + PdfTheme.MARGINS.RIGHT), 10, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.text('Descripción', 25, yPos + 7);
-    doc.text('Cant', pageWidth - 60, yPos + 7, { align: 'right' });
-    doc.text('Precio U.', pageWidth - 40, yPos + 7, { align: 'right' });
+    doc.text(locale === 'es' ? 'Descripción' : 'Description', PdfTheme.MARGINS.LEFT + 5, yPos + 7);
+    doc.text(locale === 'es' ? 'Cant' : 'Qty', pageWidth - 60, yPos + 7, { align: 'right' });
+    doc.text(locale === 'es' ? 'Precio U.' : 'Unit Price', pageWidth - 40, yPos + 7, { align: 'right' });
     doc.text('Total', pageWidth - 25, yPos + 7, { align: 'right' });
 
     yPos += 18;
@@ -57,40 +68,38 @@ export const generateInvoicePDF = (invoice: InvoiceData) => {
     // Items
     doc.setFont('helvetica', 'normal');
     invoice.lineItems.forEach(item => {
-        doc.text(item.description, 25, yPos);
+        yPos = PdfLayout.ensurePageSpace(doc, yPos, 10);
+        doc.text(item.description, PdfTheme.MARGINS.LEFT + 5, yPos);
         doc.text(item.quantity.toString(), pageWidth - 60, yPos, { align: 'right' });
-        doc.text(item.unitPrice.toFixed(2) + ' €', pageWidth - 40, yPos, { align: 'right' });
-        doc.text(item.total.toFixed(2) + ' €', pageWidth - 25, yPos, { align: 'right' });
+        doc.text(PdfTheme.formatCurrency(item.unitPrice, locale), pageWidth - 40, yPos, { align: 'right' });
+        doc.text(PdfTheme.formatCurrency(item.total, locale), pageWidth - 25, yPos, { align: 'right' });
         yPos += 10;
     });
 
     // --- Totales ---
     yPos += 10;
-    doc.line(20, yPos, pageWidth - 20, yPos);
+    doc.setDrawColor(theme.colors.muted);
+    doc.line(PdfTheme.MARGINS.LEFT, yPos, pageWidth - PdfTheme.MARGINS.RIGHT, yPos);
     yPos += 10;
 
     doc.setFont('helvetica', 'bold');
-
     doc.text('Subtotal:', pageWidth - 60, yPos, { align: 'right' });
-    doc.text(invoice.subtotal.toFixed(2) + ' €', pageWidth - 25, yPos, { align: 'right' });
+    doc.text(PdfTheme.formatCurrency(invoice.subtotal, locale), pageWidth - 25, yPos, { align: 'right' });
     yPos += 8;
 
     doc.text(`IVA (${(invoice.taxRate * 100).toFixed(0)}%):`, pageWidth - 60, yPos, { align: 'right' });
-    doc.text(invoice.taxAmount.toFixed(2) + ' €', pageWidth - 25, yPos, { align: 'right' });
+    doc.text(PdfTheme.formatCurrency(invoice.taxAmount, locale), pageWidth - 25, yPos, { align: 'right' });
     yPos += 12;
 
-    doc.setFillColor(245, 255, 255); // Light Teal
+    doc.setFillColor(theme.colors.background);
     doc.rect(pageWidth - 85, yPos - 8, 65, 14, 'F');
-    doc.setTextColor(13, 148, 136); // Teal-600
-    doc.setFontSize(12);
+    doc.setTextColor(theme.colors.primary);
+    doc.setFontSize(PdfTheme.FONTS.SECTION);
     doc.text('TOTAL:', pageWidth - 60, yPos + 2, { align: 'right' });
-    doc.text(invoice.total.toFixed(2) + ' €', pageWidth - 25, yPos + 2, { align: 'right' });
+    doc.text(PdfTheme.formatCurrency(invoice.total, locale), pageWidth - 25, yPos + 2, { align: 'right' });
 
-    // --- Footer ---
-    doc.setTextColor(150, 150, 150);
-    doc.setFontSize(8);
-    const bottom = doc.internal.pageSize.getHeight() - 20;
-    doc.text('Gracias por su confianza. Documento generado electrónicamente.', 20, bottom);
+    // --- Footer unificado ---
+    PdfLayout.drawStandardFooter(doc, undefined, locale);
 
     doc.save(`factura_${invoice.number}.pdf`);
 };

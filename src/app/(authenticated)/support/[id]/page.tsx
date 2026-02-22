@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDateLong, formatDateTime } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { TicketStatusBadge, TicketPriorityBadge } from '@/components/tickets/TicketBadges';
+import { TicketStatusBadge, TicketPriorityBadge } from '@/components/support/TicketBadges';
 import { TicketDetailSkeleton } from '@/components/shared/LoadingSkeleton';
 import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';

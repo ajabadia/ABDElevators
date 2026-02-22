@@ -4,6 +4,7 @@ import { generateEmbedding } from './llm';
 import { ApplicationLogSchema } from './schemas';
 import crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AI_MODEL_IDS } from '@abd/platform-core';
 import { ObjectId } from 'mongodb';
 
 // Initialize Gemini for Anonymization
@@ -23,7 +24,7 @@ export class FederatedKnowledgeService {
     ): Promise<FederatedPattern | null> {
 
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+            const model = genAI.getGenerativeModel({ model: AI_MODEL_IDS.GEMINI_1_5_PRO });
 
             const prompt = `
             You are a Technical Knowledge Architect for the ${industry} industry.

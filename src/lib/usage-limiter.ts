@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AppError } from '@/lib/errors';
 import { PlanTier } from '@/lib/plans';
 import { logEvento } from '@/lib/logger';
-import { sendLimitAlert } from '@/lib/email-service';
-import { connectAuthDB } from '@/lib/db';
-import { QuotaService, QuotaCheckResult } from '@/lib/quota-service';
+import { QuotaService } from '@/lib/quota-service';
+import { LimitAlertService } from '@/services/security/limit-alert-service';
 
 /**
  * Middleware de Límites de Consumo (Fase 9)
@@ -19,83 +18,6 @@ export interface UsageLimitCheck {
     percentage: number;
 }
 
-/**
- * Helper para enviar notificación de límite si es necesario
- */
-async function sendLimitNotificationIfNeeded(
-    tenantId: string,
-    resourceType: 'tokens' | 'storage' | 'searches' | 'api_requests',
-    currentUsage: number,
-    limit: number,
-    percentage: number,
-    tier: string
-): Promise<void> {
-    // Solo enviar notificación al 80% o 100%
-    if (percentage < 80) return;
-
-    try {
-        // Obtener email del admin del tenant
-        const authDb = await connectAuthDB();
-        // Buscar admin del tenant
-        const admin = await authDb.collection('users').findOne({
-            tenantId,
-            role: 'ADMIN'
-        });
-
-        const tenant = await authDb.collection('tenants').findOne({ tenantId });
-
-        if (!admin?.email) return;
-
-        // Verificar si ya se envió notificación recientemente (evitar spam)
-        const lastNotification = await authDb.collection('email_notifications').findOne({
-            tenantId,
-            resourceType,
-            percentage: percentage >= 100 ? 100 : 80,
-            createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Últimas 24h
-        });
-
-        if (lastNotification) return; // Ya se envió notificación
-
-        // Enviar email
-        await sendLimitAlert({
-            to: admin.email,
-            tenantName: tenant?.name || 'Tu Organización',
-            resourceType,
-            currentUsage,
-            limit,
-            percentage,
-            tier,
-        });
-
-        // Registrar que se envió la notificación
-        await authDb.collection('email_notifications').insertOne({
-            tenantId,
-            resourceType,
-            percentage: percentage >= 100 ? 100 : 80,
-            sentTo: admin.email,
-            createdAt: new Date(),
-        });
-
-        await logEvento({
-            level: 'INFO',
-            source: 'USAGE_LIMITER',
-            action: 'EMAIL_SENT',
-            message: `Email de alerta enviado a ${admin.email} (${percentage.toFixed(1)}% de ${resourceType})`,
-            correlationId: `email-${tenantId}`,
-            details: { resourceType, percentage, to: admin.email },
-        });
-    } catch (error) {
-        // No bloquear la ejecución si falla el email
-        await logEvento({
-            level: 'ERROR',
-            source: 'USAGE_LIMITER',
-            action: 'EMAIL_FAILED',
-            message: `Error enviando email de alerta: ${(error as Error).message}`,
-            correlationId: `email-error-${tenantId}`,
-            stack: (error as Error).stack,
-        });
-    }
-}
 
 /**
  * Verifica si un tenant puede consumir tokens de LLM
@@ -107,16 +29,16 @@ export async function checkLLMLimit(
 ): Promise<UsageLimitCheck> {
     const check = await QuotaService.evaluateQuota(tenantId, 'TOKENS', tokensToConsume);
 
-    // Enviar notificación si es necesario (80% o 100%)
+    // Enviar notificación si es necesario (vía LimitAlertService)
     if (check.percentage >= 80) {
-        await sendLimitNotificationIfNeeded(
+        await LimitAlertService.sendLimitNotificationIfNeeded({
             tenantId,
-            'tokens',
-            check.current,
-            check.limit,
-            check.percentage,
-            tier || 'FREE'
-        );
+            resourceType: 'tokens',
+            currentUsage: check.current,
+            limit: check.limit,
+            percentage: check.percentage,
+            tier: tier || 'FREE'
+        });
     }
 
     return {

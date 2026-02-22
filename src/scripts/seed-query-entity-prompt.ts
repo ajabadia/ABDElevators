@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from '../lib/db';
 import { PromptSchema } from '../lib/schemas';
+import { AIMODELIDS } from '../lib/ai-models';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
@@ -29,7 +30,7 @@ CONSULTA: {{query}}`,
         variables: [
             { name: 'query', description: 'User query to analyze', required: true }
         ],
-        model: 'gemini-1.5-flash',
+        model: AIMODELIDS.QUERY_ENTITY_EXTRACTOR,
         tenantId,
         active: true,
         version: 1,

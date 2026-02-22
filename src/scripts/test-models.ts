@@ -1,35 +1,29 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { callGeminiMini } from '../lib/llm';
+import { AI_MODEL_IDS } from '@abd/platform-core';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-async function listModels() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        console.error('❌ GEMINI_API_KEY not found');
-        return;
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
+async function testModels() {
+    console.log('🧪 Testing Model Connectivity...');
     const models = [
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
-        'gemini-2.5-flash'
+        AI_MODEL_IDS.GEMINI_1_5_PRO,
+        AI_MODEL_IDS.GEMINI_2_5_FLASH
     ];
 
-    for (const modelName of models) {
-        console.log(`Testing ${modelName}...`);
+    for (const model of models) {
         try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent("Hi");
-            console.log(`✅ ${modelName} works:`, result.response.text());
-        } catch (error: any) {
-            console.error(`❌ ${modelName} failed:`, error.message);
+            console.log(`Testing ${model}...`);
+            const res = await callGeminiMini("Hello, respond with OK", "platform_master", {
+                correlationId: `test-${model}`,
+                model
+            });
+            console.log(`✅ ${model}: ${res}`);
+        } catch (err: any) {
+            console.error(`❌ ${model} failed:`, err.message);
         }
     }
 }
 
-listModels();
+testModels();

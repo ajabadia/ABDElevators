@@ -18,7 +18,7 @@ export function getGenAI() {
     return genAIInstance;
 }
 
-import { DEFAULT_MODEL } from './constants/ai-models';
+import { DEFAULT_MODEL, AI_MODEL_IDS } from './constants/ai-models';
 
 /**
  * Mapea nombres de modelos comerciales o técnicos a nombres oficiales de la SDK.
@@ -27,19 +27,13 @@ import { DEFAULT_MODEL } from './constants/ai-models';
 export function mapModelName(model: string): string {
     const m = model.toLowerCase();
 
-    // Soporte explícito para modelos conocidos del registro único
-    if (m.includes('gemini-1.5-pro')) return 'gemini-1.5-pro';
-    if (m.includes('gemini-1.5-flash')) return 'gemini-1.5-flash';
-    if (m.includes('gemini-2.0-flash')) return 'gemini-2.0-flash';
-    if (m.includes('gemini-2.5-pro')) return 'gemini-2.5-flash'; // Temporalmente mapeamos 2.5 pro a flash si no hay instancia pro
-    if (m.includes('gemini-2.5-flash')) return 'gemini-2.5-flash';
-    if (m.includes('flash-latest')) return 'gemini-1.5-flash'; // Mapeo a versión estable según disponibilidad de API
-    if (m.includes('pro-latest')) return 'gemini-1.5-pro';
-
-    if (m.includes('gemini-3')) {
-        if (m.includes('image')) return 'gemini-3-pro-image';
-        return 'gemini-3-pro';
-    }
+    // ⚡ Alineación Estricta Contrato (Phase 207)
+    if (m.includes(AI_MODEL_IDS.GEMINI_1_5_FLASH)) return AI_MODEL_IDS.GEMINI_1_5_FLASH;
+    if (m.includes(AI_MODEL_IDS.GEMINI_1_5_PRO)) return AI_MODEL_IDS.GEMINI_1_5_PRO;
+    if (m.includes(AI_MODEL_IDS.GEMINI_2_0_FLASH)) return AI_MODEL_IDS.GEMINI_2_0_FLASH;
+    if (m.includes(AI_MODEL_IDS.GEMINI_2_5_FLASH)) return AI_MODEL_IDS.GEMINI_2_5_FLASH;
+    if (m.includes(AI_MODEL_IDS.GEMINI_2_5_PRO)) return AI_MODEL_IDS.GEMINI_2_5_PRO;
+    if (m.includes(AI_MODEL_IDS.GEMINI_3_PRO_PREVIEW)) return AI_MODEL_IDS.GEMINI_3_PRO_PREVIEW;
 
     // Fallback a modelo por defecto si no se reconoce
     return DEFAULT_MODEL;
@@ -59,7 +53,7 @@ export async function runShadowCall(
     try {
         const start = Date.now();
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: modelName });
+        const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1beta' });
 
         const result = await model.generateContent(prompt);
         const duration = Date.now() - start;

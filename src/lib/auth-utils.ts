@@ -142,22 +142,10 @@ export async function authorizeCredentials(
             console.log(`[AUTH_TRACE] 🔎 Magic Link MFA check for ${email}: ${mfaEnabled} | Tenant: ${effectiveTenantId}`);
 
             if (mfaEnabled) {
-                console.log(`[AUTH_TRACE] 🎟️ MFA Required after Magic Link for ${email}. Returning PENDING state.`);
-                return {
-                    id: userId,
-                    email: user.email,
-                    name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-                    role: user.role,
-                    baseRole: user.role,
-                    tenantId: effectiveTenantId,
-                    industry: user.industry as IndustryType,
-                    activeModules: user.activeModules || [],
-                    tenantAccess: user.tenantAccess || [],
-                    permissionGroups: user.permissionGroups || [],
-                    permissionOverrides: user.permissionOverrides || [],
-                    mfaVerified: false,
-                    mfaPending: true
-                };
+                console.log(`[AUTH_TRACE] 🎟️ MFA Required after Magic Link for ${email}. Throwing MfaRequiredError.`);
+                // Return minimal user data in the error if possible, but NextAuth v5 CredentialsSignin
+                // doesn't easily support passing data back. The client should know based on the code.
+                throw new MfaRequiredError();
             }
 
             console.log(`[AUTH_TRACE] 🧪 Finalizing session for Magic Link: ${email}...`);
@@ -207,23 +195,8 @@ export async function authorizeCredentials(
             console.log(`[AUTH_TRACE] 🔎 MFA Check | InputType: ${typeof mfaCodeInput} | Value: [${mfaCode}] | IsInvalid: ${isInvalidCodeValue}`);
 
             if (isInvalidCodeValue) {
-                console.log(`[AUTH_TRACE] 🎟️ MFA Required for ${email}. Returning PENDING state.`);
-                console.log(`[AUTH_TRACE] 🎟️ [AUTH_UTILS] MFA Required for ${email}. Returning PENDING state.`);
-                return {
-                    id: userId,
-                    email: user.email,
-                    name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-                    role: user.role,
-                    baseRole: user.role,
-                    tenantId: effectiveTenantId,
-                    industry: user.industry as IndustryType,
-                    activeModules: user.activeModules || [],
-                    tenantAccess: user.tenantAccess || [],
-                    permissionGroups: user.permissionGroups || [],
-                    permissionOverrides: user.permissionOverrides || [],
-                    mfaVerified: false,
-                    mfaPending: true
-                };
+                console.log(`[AUTH_TRACE] 🎟️ MFA Required for ${email}. Throwing MfaRequiredError.`);
+                throw new MfaRequiredError();
             }
 
             console.log(`🧪 [AUTH_UTILS] Verifying MFA code for ${email}...`);

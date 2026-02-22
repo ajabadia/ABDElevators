@@ -1,9 +1,8 @@
+/**
+ * 🌐 RAG Engine - Shared Entry Point
+ * Safe for both Client and Server bundles.
+ * Only exports types and schemas (No Node.js/MongoDB dependencies).
+ */
+
 export * from './types';
-export * from './vector-search';
-export * from './rag-service';
 export * from './schemas';
-export * from './keyword-search';
-export * from './multilingual-search';
-export * from './query-expansion';
-export * from './reranking';
-export * from './semantic-cache';

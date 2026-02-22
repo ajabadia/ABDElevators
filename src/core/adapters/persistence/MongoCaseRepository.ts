@@ -1,5 +1,5 @@
 import { ICaseRepository } from '../../domain/repositories/ICaseRepository';
-import { GenericCase, GenericCaseSchema } from '@/lib/schemas';
+import { GenericCase, GenericCaseSchema } from '@/lib/schemas/business';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 

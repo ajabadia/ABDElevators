@@ -1,0 +1,131 @@
+{
+  "samples": [
+    {
+      "id": "699a503c0abca35e355de47d",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "ción de conformidad de los ascensores y componentes de seguridad para\nascensores.. . . . . . . . . ."
+    },
+    {
+      "id": "699a503c0abca35e355de47e",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "Obligación de información de la autoridad notificante. . . . . . . . . . . . . . . . . . . . . . . ."
+    },
+    {
+      "id": "699a503c0abca35e355de47f",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": ". . . . . . 9\nCAPÍTULO II. Obligaciones de los agentes económicos . . . . . . . . . . . . . . . . . "
+    },
+    {
+      "id": "699a503c0abca35e355de480",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "ancia del mercado de la Unión Europea, control de los ascensores o componentes de\nseguridad para asc"
+    },
+    {
+      "id": "699a503c0abca35e355de481",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "Real Decreto 203/2016, de 20 de mayo, por el que se establecen los\nrequisitos esenciales de segurida"
+    },
+    {
+      "id": "699a50450abca35e355de487",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "idad basada en el sistema de garantía de calidad total más examen del diseño para\nascensores . . . ."
+    },
+    {
+      "id": "699a50450abca35e355de488",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "disposiciones nacionales que adapten la legislación española a las previsiones contenidas\nen la menc"
+    },
+    {
+      "id": "699a50450abca35e355de489",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": "es derogatorias . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "
+    },
+    {
+      "id": "699a50450abca35e355de48a",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23\nDisposiciones adicionales . . . . . ."
+    },
+    {
+      "id": "699a50450abca35e355de48b",
+      "tenantId": "demo-tenant",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "textSample": ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28\nANEXO III. Lista de los componentes d"
+    }
+  ],
+  "stats": [
+    {
+      "_id": {
+        "industry": "ELEVATORS",
+        "env": "PRODUCTION",
+        "tenantId": "demo-tenant"
+      },
+      "count": 153
+    }
+  ],
+  "kwTest": [
+    {
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "tenantId": "demo-tenant",
+      "textSample": "ción de conformidad de los ascensores y componentes de seguridad para\nascensores.. . . . . . . . . ."
+    },
+    {
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "tenantId": "demo-tenant",
+      "textSample": "Obligación de información de la autoridad notificante. . . . . . . . . . . . . . . . . . . . . . . ."
+    },
+    {
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "tenantId": "demo-tenant",
+      "textSample": ". . . . . . 9\nCAPÍTULO II. Obligaciones de los agentes económicos . . . . . . . . . . . . . . . . . "
+    },
+    {
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "tenantId": "demo-tenant",
+      "textSample": "ancia del mercado de la Unión Europea, control de los ascensores o componentes de\nseguridad para asc"
+    },
+    {
+      "sourceDoc": "Real Decreto 203-2016 - BOE-A-2016-4953-consolidado.pdf",
+      "industry": "ELEVATORS",
+      "environment": "PRODUCTION",
+      "tenantId": "demo-tenant",
+      "textSample": "Real Decreto 203/2016, de 20 de mayo, por el que se establecen los\nrequisitos esenciales de segurida"
+    }
+  ]
+}

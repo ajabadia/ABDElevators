@@ -74,7 +74,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
             toast({
                 title: "Tarea actualizada",
                 description: `La tarea ha sido marcada como ${status}`,
-                variant: "success"
+                variant: "default"
             });
             onUpdate?.();
             onOpenChange(false);

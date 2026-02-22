@@ -1,48 +1,41 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+
 import * as dotenv from 'dotenv';
-import path from 'path';
+import * as path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function listModels() {
-    console.log('🔍 Listing available models...');
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    // Using a trick: try to get a model and ask for info, or use listModels if available in this SDK version?
-    // @google/generative-ai typically exposing ModelManager in newer versions, but let's try to infer from error or documentation.
-    // Actually, currently most users use curl to list models because SDK support for listing varies.
-    // BUT, we can try to test a few known candidates.
-
-    const fs = require('fs');
-    let output = '🔍 Listing available models...\n';
-
-    const candidates = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-001',
-        'gemini-1.5-flash-002',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
-        'gemini-pro',
-        'gemini-1.0-pro'
-    ];
-
-    for (const modelName of candidates) {
-        try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent("Test");
-            console.log(`✅ ${modelName} IS AVAILABLE`);
-            output += `✅ ${modelName} IS AVAILABLE\n`;
-        } catch (error: any) {
-            // console.log(`❌ ${modelName} failed: ${error.message.split('\n')[0]}`);
-            if (error.message.includes('404')) {
-                console.log(`❌ ${modelName}: Not Found (404)`);
-                output += `❌ ${modelName}: Not Found (404)\n`;
-            } else {
-                console.log(`⚠️ ${modelName}: Error ${error.message.split('\n')[0]}`);
-                output += `⚠️ ${modelName}: Error ${error.message.split('\n')[0]}\n`;
-            }
-        }
+    if (!process.env.GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY not found');
+        return;
     }
-    fs.writeFileSync('models_output.txt', output);
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+    console.log('--- LISTING AVAILABLE MODELS ---\n');
+    try {
+        // We use a dummy model to get the genAI object if needed, 
+        // but the SDK has a listModels method on the client? 
+        // Actually, the standard way in Node SDK is genAI.getGenerativeModel({model: '...'}) 
+        // but to list models we might need a direct fetch or check documentation.
+        // The @google/generative-ai doesn't have a direct listModels yet? 
+        // Let's check the REST API via fetch as a fallback.
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+        const data = await response.json();
+
+        if (data.models) {
+            console.log('Available Models:');
+            data.models.forEach((m: any) => {
+                console.log(`- ${m.name} (Methods: ${m.supportedGenerationMethods.join(', ')})`);
+            });
+        } else {
+            console.log('No models found or error in response:', data);
+        }
+    } catch (error: any) {
+        console.error('Error listing models:', error.message);
+    }
+    process.exit(0);
 }
 
 listModels();

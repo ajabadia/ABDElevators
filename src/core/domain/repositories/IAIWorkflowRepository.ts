@@ -1,4 +1,4 @@
-import { AIWorkflow, WorkflowTriggerType } from '@/types/workflow';
+import type { AIWorkflow, WorkflowTriggerType } from '@abd/workflow-engine';
 
 export interface IAIWorkflowRepository {
     findActiveByTrigger(triggerType: WorkflowTriggerType, tenantId: string): Promise<AIWorkflow[]>;

@@ -3,7 +3,7 @@ import { logEvento } from '@abd/platform-core/server';
 import { WorkflowDefinition } from '@/lib/schemas/workflow';
 import { WorkflowLLMNodeService } from '@/lib/workflow-llm-node-service';
 import { WorkflowTaskService } from '@/lib/workflow-task-service';
-import { UserRole } from '@/types/roles';
+import { UserRole } from '@abd/platform-core/server';
 import { MongoCaseRepository } from '@/core/adapters/persistence/MongoCaseRepository';
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
@@ -269,7 +269,7 @@ export class CaseWorkflowEngine {
                         type: 'WORKFLOW_DECISION',
                         title: `Review LLM Decision for ${caseData.identifier || caseId}`,
                         description: `The AI has analyzed this case and suggests transitioning to: ${suggestedState}`,
-                        assignedRole: transition.required_role?.[0] as UserRole || UserRole.ADMIN,
+                        assignedRole: (transition.required_role?.[0] as any) as UserRole || UserRole.ADMIN,
                         priority: llmOutput.riskLevel === 'HIGH' || llmOutput.riskLevel === 'CRITICAL' ? 'HIGH' : 'MEDIUM',
                         metadata: {
                             workflowId: workflowDef._id?.toString(),

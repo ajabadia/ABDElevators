@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.0.0 - SUITE ERA)
+# ABD Multi-Industry RAG Platform (Vision 5.1.0 - SUITE ERA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.0.0** introduce la **Arquitectura Monorepo Namespace-based** y la **Estabilización de Grado Industrial (Era 5)** para soportar despliegues multi-producto de alta escala.
+Esta versión **v5.1.0** introduce la **Consolidación de Hubs de Soporte y Observabilidad**, reforzando la independencia de módulos en la **Arquitectura Monorepo**.
 
 ## 🚀 Inicio Rápido
 
@@ -186,6 +186,8 @@ src/
 - ✅ **Unified Experience (ERA 6)**: Rediseño visual masivo, dashboard "Hub" unificado y simplificación de navegación para técnicos (Phases 190-193).
 187: - ✅ **Onboarding Real & Contextual Help (Phase 194)**: Sistema de guías interactivas personalizado por rol (WorkContext) y ayuda contextual integrada en todos los PageHeaders.
 188: - ✅ **Feedback Loop & Value Dashboard (Phase 195/196)**: Captura de feedback 👍/👎 en chat, métricas de ROI (tiempo ahorrado) y limpieza de deuda técnica industrial.
+- ✅ **Simplified Support Hub (Phase 200)**: Módulo de soporte independiente con gestión unificada de tickets y aislamiento de datos por tenant.
+- ✅ **Centralized Observability Hub (Phase 201)**: Telemetría unificada, auditoría forense inmutable y monitoreo de performance SLA integrado.
 
 ## 🔧 Scripts Disponibles
 

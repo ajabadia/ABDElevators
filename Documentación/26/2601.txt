@@ -1,0 +1,1730 @@
+Análisis del Código Actual
+1. Estructura de Ingesta de Documentos
+Veo que tienes varios puntos de entrada para la ingesta:
+/api/entities - Para análisis de entidades (pedidos)
+/api/auth/knowledge-assets - Para documentos personales
+/api/admin/ingest/jobs - Para jobs de ingesta en cola
+2. Problemas Potenciales en Ingesta
+Basándome en los patrones que veo, aquí hay algunos problemas comunes que podrían estar afectando tu ingesta:
+A. Inconsistencia en manejo de archivos
+En MyDocumentsPage veo que usas useApiFileUpload pero en EntitiesPage usas fetch directamente con FormData. Esto puede causar:
+Diferente manejo de errores
+Problemas de headers (Content-Type boundary)
+Inconsistencias en el streaming de archivos grandes
+B. Problema en EntityEngine
+Veo que usas EntityEngine.getInstance().getEntity('pedido') pero no veo la implementación de esta clase. Si hay un error aquí, todo el flujo de entidades falla.
+C. Jobs de Ingesta Atascados
+En ingest/page.tsx veo que manejas estados de jobs (failed, active, waiting, etc.) pero no veo el worker que procesa estos jobs. Si el worker no está corriendo, los documentos se quedan en cola indefinidamente.
+3. Errores Específicos que Detecto
+Error de tipos en useApiList:
+TypeScript
+Copy
+// En EntitiesPage.tsx
+const { data: entities, ... } = useApiList<any>({
+    endpoint: entity.api.list,  // ← ¿Qué pasa si entity es null?
+    dataKey: 'entities',
+});
+Si EntityEngine.getInstance().getEntity('pedido') retorna undefined, entity.api.list fallará.
+Problema en el análisis de entidades:
+TypeScript
+Copy
+// En entities/page.tsx
+const resp = await fetch(entity.api.analyze!, {
+    method: "POST",
+    body: formData,
+});
+El ! (non-null assertion) es peligroso. Si entity.api.analyze no existe, esto fallará en runtime.
+4. Sugerencias de Corrección
+A. Añade validación defensiva en EntityEngine:
+TypeScript
+Copy
+// En EntitiesPage.tsx
+const entity = EntityEngine.getInstance().getEntity('pedido');
+if (!entity) {
+    return (
+        <PageContainer>
+            <div className="p-8 text-red-600">
+                Error: Entidad 'pedido' no encontrada en el motor de entidades
+            </div>
+        </PageContainer>
+    );
+}
+B. Unifica el manejo de archivos:
+Crea un hook consistente para todos los uploads. El useApiFileUpload parece más robusto que el fetch directo.
+C. Verifica el estado del worker de ingesta:
+En tu instrumentation.ts veo lógica condicional para el worker:
+TypeScript
+Copy
+if (!isVercel || enableWorker) {
+    await import('./lib/workers/ingest-worker');
+}
+Si estás en Vercel y ENABLE_WORKER no está en true, el worker no se inicia y los jobs nunca se procesan.
+5. Preguntas para Diagnosticar Mejor
+Para ayudarte más específicamente, necesito saber:
+¿Qué error específico ves? (consola del navegador, logs del servidor, o UI)
+¿Dónde se atasca exactamente?
+¿El archivo sube a Cloudinary pero no se analiza?
+¿No se crea el job en la cola?
+¿El job se crea pero se queda en "waiting" o "active" para siempre?
+¿Estás en Vercel o local? (afecta al worker de ingesta)
+¿Qué dice el endpoint /api/admin/ingest/jobs cuando consultas los jobs?
+¿Hay errores en los logs de MongoDB o en la colección notifications?
+6. Quick Fix Inmediato
+Si el problema es que los documentos se quedan "en proceso" infinitamente, prueba añadir esto a tu .env.local:
+bash
+Copy
+ENABLE_WORKER=true
+Y verifica que tu ingest-worker.ts tenga un loop de procesamiento activo, no solo una función que se ejecuta una vez.
+
+-----------------------
+
+
+El nuevo código da un salto claro en robustez y trazabilidad de la ingesta, pero también introduce varios puntos donde es fácil que “no termine de ir bien del todo” si algo no está perfectamente alineado. Te resumo lo más relevante y dónde miraría primero.
+​
+
+Qué has mejorado claramente
+Pipeline estructurado por fases: executeAnalysis tiene fases claras (fetch buffer GridFS/Cloudinary, análisis, indexación, graph extraction, subida asíncrona a Cloudinary) con logs detallados por acción.
+​
+
+Trazabilidad “banking‑grade”:
+
+FSM de estados (IngestState / IngestionState) con validación de transiciones y marcado STUCK/FAILED.
+​
+
+IngestTracer con spans PREPARE/ANALYZE/INDEX y hashing SHA‑256 de los datos del span.
+​
+
+LLMCostTracker agregando costes por correlationId.
+​
+
+DeadLetterQueue + StuckDetector + BlobGarbageCollector para recuperación y limpieza.
+​
+
+Resiliencia operativa: Cola BullMQ (IngestWorkerService) con attempts=5 y backoff exponencial, más scripts de estrés (test-ingest.ts) y detección de stuck jobs cada 5 minutos.
+​
+
+Guardian de ingest: capa IngestGuardian con scopes USER/TENANT/INDUSTRY/GLOBAL y logs de autorizaciones/denegaciones.
+​
+
+A nivel diseño estás bastante cerca de “ingestión de grado bancario”; los problemas que ves ahora seguramente son de coordinación entre capas más que de falta de piezas.
+
+Puntos delicados que pueden explicar que “no termine de ir bien”
+Te señalo los focos donde yo depuraría:
+
+Estados de knowledgeassets y FSM
+
+Usas dos validadores de estado: uno para IngestState (QUEUED/PROCESSING/COMPLETED/FAILED/STUCK/DEAD) y otro para IngestionState (PENDING/QUEUED/PROCESSING/COMPLETED/FAILED/STUCK).
+​
+
+Si en algún sitio escribes ingestionStatus con un valor que no encaja con el validador que luego usas, el FSM marcará como STUCK y la ingesta parecerá “muerta” aunque el worker haya hecho parte del trabajo.
+​
+
+Propuesta: unificar y tipar duro un único enum de estado usado en todo el código, y añadir tests que verifiquen todas las transiciones válidas/ inválidas.
+
+Fetch del buffer (GridFS vs Cloudinary)
+
+Camino feliz v2: asset.blobId → GridFSUtils.getForProcessing → si falla, fallback a Cloudinary.
+​
+
+Camino legacy: sin blobId → solo Cloudinary (asset.cloudinaryUrl + cloudinaryPublicId).
+​
+
+Si el asset está en un estado intermedio (por ejemplo, se creó el registro pero no se guardó bien en GridFS ni en Cloudinary), executeAnalysis lanza AppError y marca FAILED, y la UI ve un asset en fallo sin chunks.
+​
+
+Propuesta inmediata:
+
+En tu panel de documentos, mostrar claramente hasBlobId, hasCloudinaryUrl, ingestionStatus, error, attempts para ver en qué estado concreto se atascan.
+​
+
+Añadir un endpoint/botón “Reparar asset” que reintente solo el fetch (regenerar blob desde Cloudinary o viceversa) antes de relanzar el análisis.
+
+Indexación condicional (skipIndexing / hasChunks)
+
+shouldIndex = !asset.skipIndexing && !options.metadata?.skipIndexing. Si por configuración te llega skipIndexing o metadata con ese flag, el documento pasa por análisis pero no crea chunks ni vectores, y processedChunks = 0.
+​
+
+Después marcas hasChunks en función de shouldIndex, con lo que la UI puede mostrarlo como “ingestado” pero luego no aparecer en búsquedas.
+​
+
+Propuesta:
+
+Para entornos de demo/producción inicial, fuerza indexing ON por defecto y loguea WARN si alguien manda skipIndexing distinto de false.
+​
+
+En tu “Technical Assistant / Search”, muestra un aviso cuando un asset tiene ingestionStatus=COMPLETED pero totalChunks=0 para que se vea que ese documento no es searchable.
+​
+
+Cola BullMQ vs scripts/manual
+
+enqueueIngest usa BullMQ, pero también tienes scripts que llaman directamente a IngestService.processDocument.
+​
+
+Si partes de un entorno donde a veces pasas por la cola y a veces no, puedes tener assets en estados distintos y tests que no reproducen lo que ocurre en producción.
+​
+
+Propuesta: decide una política clara:
+
+API pública / UI siempre encola en BullMQ y solo el worker llama a executeAnalysis.
+​
+
+Scripts de test/stress que simulan la misma ruta (añadir job y esperar a que termine).
+​
+
+StuckDetector y DeadLetterQueue
+
+El StuckDetector marca como FAILED y manda a Dead Letter jobs que lleven >30 min en PROCESSING.
+​
+
+Si la ingest realmente tarda mucho (PDF grande + vision + graph + embeddings), puedes caer en esa ventana aunque el worker siga trabajando, y tu UI verá un “FAILED” mientras el proceso continúa.
+​
+
+Propuesta:
+
+Ajustar STUCKTHRESHOLDMS a valores realistas según tu SLA (ej. 5–10 min para demo, 30–60 min para producción grande), y quizá usar la última actividad (logs/heartbeat) en lugar de updatedAt bruto.
+​
+
+En la UI de admin de ingest, enseñar claramente la Dead Letter Queue (tipo de fallo, failureReason, retryCount) y exponer un flujo de reingesta manual.
+​
+
+Recomendación práctica para depurar la ingesta ahora
+Para localizar por qué “no termina de ir bien” yo haría:
+
+Elegir un doc problemático y mirar en knowledgeassets:
+
+ingestionStatus, progress, attempts, hasChunks, hasStorage, error, blobId, cloudinaryUrl.
+​
+
+Localizar su correlationId y revisar:
+
+Spans de IngestTracer para ver en qué fase se queda (prepare, analyze, index, upload).
+​
+
+Logs INGESTSERVICE y QUEUESERVICE para ver si hay múltiples intentos o errores repetidos.
+​
+
+Ver si ha caído en Dead Letter Queue o marcado como STUCK:
+
+Consultar deadletterqueue por docId/tenantId y ver failureReason.
+​
+
+Con eso deberías ver si el problema real es:
+
+No se obtiene el buffer (GridFS/Cloudinary).
+
+Análisis LLM (tiempos, errores de modelo).
+
+Indexación (chunker/embedding).
+
+Estados inconsistentes (FSM/validators).
+
+
+
+Veo varias mejoras posibles, sobre todo de simplificación, coherencia y DX/operación alrededor de la ingesta y trazabilidad.
+​
+
+1. Reducir complejidad y duplicidades en estados
+Tienes dos máquinas de estados similares (IngestState y IngestionState/STATEVALIDATOR) con reglas distintas y lógicas de “STUCK/FAILED/DEAD”. Unificarlas en un solo enum + un solo validador reduciría bugs sutiles.
+​
+
+StateTransitionValidator y el FSM “extendido” para stuck/dead comparten intención; podrías consolidar reglas y puntos de escritura a knowledgeassets.ingestionStatus para evitar divergencias entre servicios.
+​
+
+2. Clarificar responsabilidades entre servicios de ingest
+IngestService.executeAnalysis, IngestWorkerService, FSM, tracer, cost tracker, Dead Letter Queue, Blob GC… están bien modularizados, pero el “orquestador” global no es obvio.
+​
+
+Te ayudaría un único “Ingestion Orchestrator” que llame secuencialmente a: validator de estado → tracer → cost tracker → análisis → index → storage → actualización de estado final; ahora esa responsabilidad está repartida en muchas clases.
+​
+
+3. Configuración y flags más explícitos
+Hay muchos feature flags (isIngestPipelineV2Enabled, isGraphRagEnabled, enableVision, enableCognitive, skipIndexing, etc.) que afectan ramas críticas del flujo.
+​
+
+Un objeto de config validado (Zod) por tenant/entorno para ingesta (con defaults claros) reduciría la posibilidad de combinaciones raras de flags que dejan documentos “medio procesados”.
+​
+
+4. Trazas y costes: de “banking‑grade” a operables
+IngestTracer y LLMCostTracker generan muchísima señal (hashes, breakdowns por operación), pero no se ve aún un panel operativo para explotarlo.
+​
+
+Podrías:
+
+Añadir una vista “Ingest Debug” por documento con timeline PREPARE/ANALYZE/INDEX, duración, coste total, coste por paso.
+​
+
+Agregar agregados por tenant (P95 de ingest, coste medio por doc, coste por tipo de operación) a tu Analytics/Operations Hub.
+​
+
+5. BullMQ y recuperación: endurecer bordes
+IngestWorkerService configura attempts=5 y removeOnFail=false, y tienes Dead Letter Queue y StuckDetector, pero no veo aún una política única de “qué hacer con un job FAILED de BullMQ vs asset FAILED en DB”.
+​
+
+Unificar: cuando BullMQ marca failed, crear SIEMPRE un entry en Dead Letter Queue y actualizar knowledgeassets.ingestionStatus=FAILED con failureReason normalizado, para que UI/operaciones tengan una única fuente de verdad.
+​
+
+6. Errores Cloudinary/GridFS más resilientes
+fetchFromCloudinary y uploadToCloudinaryAsync lanzan o devuelven errores que acabas guardando en storageError, pero no hay una estrategia de “degradación elegante”: el doc puede ser utilizable sin preview/descarga aunque el storage externo falle.
+​
+
+Te convendría:
+
+Distinguir “ingest OK, storage KO” con un estado específico y un icono en UI.
+
+Ofrecer un botón de “Reintentar subida a storage” sin rehacer todo el análisis/indexación.
+​
+
+7. Testing y contratos de ingest
+Has avanzado en trazas/costes, pero no se ve aún una batería fuerte de tests unitarios/integración para el pipeline completo, especialmente para combinaciones de flags y transiciones de estado.
+​
+
+Añadir tests que simulen: PDF grande, fallo en GridFS pero Cloudinary OK, skipIndexing, enableGraphRag, y varios reintentos BullMQ, te evitará regresiones en cada refactor.
+​
+
+8. Observabilidad más accionable
+Generas logs muy ricos (source=INGESTSERVICE, INGESTTRACER, STATEVALIDATOR, BLOBGC, etc.) con correlationId y hashes, pero falta una capa de “alertas” de alto nivel:
+
+% de ingestas FAILED por hora, % STUCK, tiempo medio, coste medio fuera de rango, etc.
+​
+
+Integrar esos KPIs en tu Operations Hub (ya tienes AnalyticsService para tokens/RAG performance) cerraría el círculo: no sólo sabes que algo va mal, sino dónde.
+​
+
+Si quieres, en el siguiente paso puedo centrarme solo en el diseño de estados y FSM o en la interacción BullMQ ↔ DB ↔ Dead Letter Queue y proponerte un diagrama mental y algunos cambios concretos de código para simplificar
+
+
+
+
+Lo más rentable ahora es simplificar “el sistema nervioso” de la ingesta: estados, flags, orquestación y señales que ve el usuario.
+​
+
+1. Unificar estados y puntos de escritura
+Dónde tocar
+
+Todos los sitios donde se escribe ingestionStatus en knowledgeassets y donde se definen enums/tipos de estado (IngestState, IngestionState, StateTransitionValidator, FSM STUCK/DEAD).
+​
+
+Qué hacer
+
+Decidir un único conjunto de estados (por ejemplo: PENDING → QUEUED → PROCESSING → COMPLETED / FAILED / STUCK / DEAD) y un solo validador.
+​
+
+Asegurarte de que solo hay uno o dos puntos centralizados que cambian el estado (por ejemplo, antes y después de executeAnalysis, y en el detector de stuck/dead), nunca “a mano” en otros servicios.
+​
+
+Por qué
+
+Ahora hay lógica de transición válida en dos sitios distintos; eso abre la puerta a estados incoherentes y a assets que acaban marcados como STUCK o FAILED “sin motivo aparente” desde la UI.
+​
+
+2. Definir un “Ingestion Orchestrator” claro
+Dónde tocar
+
+IngestService.executeAnalysis, IngestWorkerService (worker), clases de tracing (IngestTracer), cost tracker (LLMCostTracker), y FSM.
+​
+
+Qué hacer
+
+Conceptualmente, introducir una capa “IngestionOrchestrator” (aunque sea solo una función) que haga SIEMPRE la misma secuencia:
+
+validar transición de estado →
+
+iniciar spans de tracing →
+
+ejecutar análisis + index + graph →
+
+registrar costes →
+
+actualizar estado final.
+​
+
+Mover a esta capa todo cambio de estado, arranque/cierre de span y registro de coste, y dejar executeAnalysis más centrada en el trabajo técnico (buffer, análisis, indexación).
+​
+
+Por qué
+
+Ahora la responsabilidad está repartida: algunos sitios cambian estado, otros sólo loguean, otros solo trazan. Eso hace difícil seguir mentalmente qué pasa con un doc concreto y complica el debugging.
+​
+
+3. Hacer explícita la configuración de ingest por tenant
+Dónde tocar
+
+Donde se calculan flags como isIngestPipelineV2Enabled, isGraphRagEnabled, enableVision, enableTranslation, enableCognitive, skipIndexing y derivan en ramas de código dentro de executeAnalysis.
+​
+
+Qué hacer
+
+Definir un “contrato” de configuración de ingest por tenant/entorno: un objeto bien definido que diga qué está activado y qué no, con defaults conservadores.
+​
+
+Validar ese contrato al inicio de la ingestión (por ejemplo con Zod o similar) y derivar de ahí los analysisOptions y el shouldIndex, en lugar de mezclar valores de asset, options y feature flags dispersos.
+​
+
+Por qué
+
+Muchas combinaciones de flags pueden dejar documentos “analizados pero no indexados” o saltarse GraphRAG sin ser obvio para quien configura. Un contrato explícito reduce estados raros.
+​
+
+4. Clarificar la relación BullMQ ↔ DB ↔ Dead Letter
+Dónde tocar
+
+IngestWorkerService (cola y reintentos BullMQ).
+​
+
+Servicios de Dead Letter Queue y StateValidator que marcan STUCK/FAILED.
+​
+
+Qué hacer
+
+Definir una política única:
+
+Cuando BullMQ marca un job como failed tras attempts máximos, SIEMPRE:
+
+Escribes ingestionStatus=FAILED en el asset con un failureReason normalizado.
+
+Creas una entrada en Dead Letter Queue con docId, tenantId, correlationId, causa y retryCount.
+​
+
+El detector de STUCK decide cuándo pasar de PROCESSING a STUCK y, si luego se abandona, cuándo a DEAD, pero esa “historia” siempre aparece reflejada en el asset y en DeadLetter.
+​
+
+Por qué
+
+Ahora tienes piezas para recuperación, pero no una narrativa clara de “qué le ha pasado a este documento”. Alinear BullMQ, DB y DLQ crea una única fuente de verdad explotable desde la UI y operaciones.
+​
+
+5. Hacer visibles en la UI los estados intermedios importantes
+Dónde tocar
+
+Vistas de “Document Library / Knowledge Assets” y de “Technical Assistant / Search”, donde se listan assets y se muestran estados.
+​
+
+Qué hacer
+
+Exponer en tablas/celdas clave: ingestionStatus, totalChunks, hasStorage, attempts, error/storageError.
+​
+
+Usar iconos/etiquetas claras tipo:
+
+“Analizado pero sin indexar (no aparecerá en búsquedas)” cuando COMPLETED + totalChunks=0.
+
+“Ingreso correcto, fallo de almacenamiento externo” cuando análisis/index OK pero Cloudinary/GridFS falla.
+​
+
+Añadir acciones de usuario sobre estas situaciones: “Reintentar ingestión”, “Reintentar subida a storage”, “Ver detalle de error”.
+​
+
+Por qué
+
+Técnicamente ya distingues entre análisis, indexación y almacenamiento, pero para el usuario ahora todo se traduce en “funciona/no funciona”. Dar nombres y acciones a esos estados intermedios evita tickets confusos.
+​
+
+6. Endurecer el fetch y storage (GridFS / Cloudinary)
+Dónde tocar
+
+Métodos fetchFromCloudinary, uploadToCloudinaryAsync y el código que decide si usa GridFS o Cloudinary (isV2Enabled, asset.blobId, asset.cloudinaryUrl).
+​
+
+Qué hacer
+
+Asegurarte de que hay una fuente preferida clara (p.ej. GridFS) y una estrategia de recuperación documentada cuando algo falla (regenerar blob desde Cloudinary o marcar el asset para reparación).
+​
+
+Añadir logs y campos en asset que distingan:
+
+“Storage primario OK, backup KO”.
+
+“Registro corrupto: ni blobId ni cloudinaryUrl válidos”.
+​
+
+Proporcionar desde UI admin un botón “Reparar almacenamiento” que dispare esa lógica de reparación sin reanalizar el PDF.
+​
+
+Por qué
+
+Muchos problemas de ingest se manifiestan como “no termina de ir bien” cuando el análisis ya está, pero el archivo no está bien almacenado; separar bien estos dos mundos permite actuar con bisturí.
+​
+
+7. Convertir tracer y cost tracker en herramientas operativas
+Dónde tocar
+
+IngestTracer, LLMCostTracker y el módulo de Analytics/Operations Hub.
+​
+
+Qué hacer
+
+Exponer, al menos internamente, una pantalla donde puedas ver por correlationId o docId: fases, duración por fase, coste por fase, modelo usado, y cualquier SLA violado.
+​
+
+Añadir agregados por tenant: P95 de ingest, coste medio por documento, operaciones de LLM más caras. Integrarlo en el dashboard existente de Analytics.
+​
+
+Por qué
+
+Ahora tienes un nivel de trazabilidad brutal, pero sin vistas que te digan “dónde se está atascando” o “qué parte es cara”, es difícil decidir qué optimizar (ej. reducir contexto en análisis o embeddings).
+​
+
+8. Ajustar tiempos y umbrales “de la vida real”
+Dónde tocar
+
+Umbrales de SLA en IngestTracer (PREPARE, ANALYZE, INDEX, TOTAL).
+​
+
+Umbrales de StuckDetector y configuración de reintentos BullMQ.
+​
+
+Qué hacer
+
+Basar estos números en observación real:
+
+Medir durante unos días cuánto tarda de verdad la ingestión para PDFs de distintos tamaños y con/sin visión/graph.
+
+Ajustar SLA y thresholds de STUCK en consecuencia, para que los avisos marquen cosas anómalas de verdad, no casos normales.
+​
+
+Por qué
+
+Umbrales demasiado agresivos generan falsos positivos de STUCK/FAILED y ruido operativo. Umbrales demasiado laxos tapan problemas reales. Afinarlos con datos hará que todo tu aparato de trazas y FSM valga su peso.
+​
+
+Si quieres, el siguiente paso podría ser que elijas uno de estos bloques (por ejemplo, “relación BullMQ–DB–Dead Letter” o “cómo exponer estados útiles en la UI”) y te detallo un mapa de decisiones concreto: qué campos normalizar, qué transiciones permitir y qué mensajes mostrar al usuario.
+
+
+
+
+Empiezo por los dos bloques que comentamos: 1) BullMQ–DB–Dead Letter/Jobs, y 2) estados de ingestión + cómo exponerlos en UI. Si quieres luego seguimos con más capas.
+
+1) BullMQ ↔ DB ↔ Dead Letter / Jobs
+Aquí ya tienes casi todo, pero falta cerrar el “contrato mental” de qué significa cada cosa.
+
+a) Use cases y flujos a revisar
+Dónde mirar/tocar
+
+PrepareIngestionUseCase (prepara asset y lo encola).
+​
+
+ExecuteIngestionAnalysisUseCase (hace el análisis, indexa y decide SUCCESS/FAILED + DLQ).
+​
+
+IngestWorkerService (cola BullMQ) y los endpoints de admin api/admin/ingest-jobs, api/admin/operations/queues.
+​
+
+StuckDetector y DeadLetterQueue.
+​
+
+Objetivo conceptual
+
+Un único modelo mental:
+
+JOB (cola): lifecycle de BullMQ: waiting → active → completed/failed.
+
+ASSET (DB): ingestionStatus: PENDING → QUEUED → PROCESSING → COMPLETED/FAILED/STUCK/DEAD.
+
+DLQ: registro de “jobs que ya no vamos a reintentar automáticamente” con failureReason y retryCount.
+​
+
+b) Decidir una política clara de fallo y reintento
+Ahora:
+
+ExecuteIngestionAnalysisUseCase ya escribe FAILED, mete en DeadLetterQueue, y loguea audit cuando algo peta.
+​
+
+StuckDetector marca FAILED y envía a DLQ si se pasa del umbral.
+​
+
+El panel de “Ingesta y Jobs / Reliability Dashboard + DLQ Management” ya ofrece Retry/Delete a nivel de BullMQ y DLQ.
+​
+
+Qué ajustaría:
+
+Cuando un job de análisis falla definitivamente (tras attempts de BullMQ, o vía use case):
+
+Asegurarte de que SIEMPRE se cumple este trío:
+
+knowledgeassets.ingestionStatus = FAILED + error claro.
+​
+
+entrada en DeadLetterQueue con jobType y failureReason.
+​
+
+job en BullMQ marcado como failed (o purgado si lo decides).
+​
+
+Razón: ahora hay varios sitios que pueden marcar FAILED y/o escribir en DLQ; centralizar la “decisión final de muerte” en el use case de análisis o en el StuckDetector y que ese sea EL sitio que llame a DeadLetterQueue.addToQueue.
+​
+
+Cuando un job se marca como STUCK por tiempo:
+
+StuckDetector ya hace:
+
+detectar ingestionStatus=PROCESSING con updatedAt antiguo,
+
+validar transición PROCESSING → FAILED,
+
+setear FAILED y error con “stuck X mins”,
+
+añadir a DLQ.
+​
+
+Aquí sólo te falta confirmar que no hay otro lugar cambiando ingestionStatus para esos mismos assets en paralelo; la idea es que si el detector decide “esto está muerto”, nadie más intenta procesarlo de fondo.
+
+Reintentos manuales desde la UI (DLQ):
+
+Tienes método DeadLetterQueue.retryJob que marca un job como resolved y devuelve “Job marked for retry. Process it via re-ingestion.”.
+​
+
+En el dashboard de jobs, el botón Retry actualmente opera sobre BullMQ (api/admin/ingest-jobs), y en DLQ sobre el registro.
+​
+
+Lo que falta es una historia única de reintento:
+
+Cuando el admin pulsa Retry en DLQ:
+
+Opción A (más limpia): volver a lanzar PrepareIngestionUseCase (con mismo asset/docId) que:
+
+valida estado (FAILED → PENDING con allowOverride=true),
+​
+
+pasa a QUEUED,
+
+re-encola el job (cola simple o BullMQ según modo actual).
+​
+
+Marcar en DLQ ese job como resolved=true y añadir una nota tipo “reingested via PrepareIngestionUseCase”.
+​
+
+Razón: ahora retryJob sólo marca “resolved” y te dice que reproceses vía re-ingest, pero no explicita “qué hay que llamar”. Queremos que la acción de admin haga algo muy definido.
+
+c) Unificar colas: BullMQ vs simple queue
+Veo coexistencia:
+
+IngestWorkerService con BullMQ (ingest-queue).
+​
+
+lib/simple-queue en PrepareIngestionUseCase (“Use simple queue instead of BullMQ”).
+​
+
+Esto es fuente de bugs sutiles, porque:
+
+Algunos entornos/test usarán simple queue, otros BullMQ,
+
+la semántica de reintentos, métricas e inspección de jobs cambia.
+
+Dónde decidir:
+
+En PrepareIngestionUseCase: ahí ya metes comentario “Use simple queue instead of BullMQ”.
+​
+
+Qué te propongo:
+
+Elegir un solo mecanismo para producción (digamos BullMQ) y dejar la simple queue únicamente como modo desarrollo/local, controlada por un flag/env.
+
+Internamente, una pequeña factory queueService (ya mencionada en el comentario) que devuelva “BullMQ” o “simple queue” según NODE_ENV / QUEUE_MODE.
+​
+
+Razón: mantienes un único flujo conceptual de estado y DLQ, pero puedes seguir teniendo una implementación ligera para scripts/local.
+
+2) Estados de ingestión y cómo exponerlos en UI
+Aquí la clave es alinear lo que sabe el sistema con lo que ve el usuario.
+
+a) Normalizar el modelo de estados
+Dónde tocar
+
+KnowledgeAsset.ingestionStatus y el enum que uses en IKnowledgeRepository.updateStatus.
+​
+
+StateTransitionValidator (el de ingestión PENDING/QUEUED/PROCESSING/COMPLETED/FAILED/STUCK).
+​
+
+Sitios que actualizan ingestionStatus: PrepareIngestionUseCase, ExecuteIngestionAnalysisUseCase, StuckDetector, y cualquier servicio legacy de ingest que aún toque ese campo.
+​
+
+Qué decidir
+
+Un único enum “oficial” de ingestión (PENDING, QUEUED, PROCESSING, COMPLETED, FAILED, STUCK, DEAD si lo necesitas).
+​
+
+Un único validador de transiciones (el StateTransitionValidator moderno) y eliminar/enrutar a través de él cualquier lógica duplicada.
+​
+
+Razón
+
+Vas a poder razonar rápido: “este asset está PENDING/QUEUED/… y sé qué implica”, sin tener que recordar qué versión del FSM ha tocado ese estado.
+
+b) Aumentar la señal visible en la biblioteca de documentos
+Dónde tocar
+
+Vista/admin de “Knowledge Assets / Document Library”, y tabla de “Ingesta y Jobs / Reliability Dashboard”.
+​
+
+Campos que conviene mostrar en tabla de assets:
+
+ingestionStatus.
+​
+
+progress.
+​
+
+totalChunks.
+​
+
+hasStorage (o equivalent: Cloudinary/GridFS OK).
+​
+
+attempts.
+​
+
+error / storageError.
+​
+
+Qué hacer con ellos (semántica de UX)
+
+COMPLETED + totalChunks > 0:
+
+Estado: “Indexado y listo para búsqueda”.
+
+COMPLETED + totalChunks = 0:
+
+Estado: “Analizado sin indexar (no se usará en búsquedas)”.
+
+Acción sugerida: botón “Forzar indexación” que reejecute sólo la fase de index.
+
+FAILED:
+
+Mostrar icono de error con tooltip error.
+
+Indicador si está en DLQ (ej. badge “En cola de errores”).
+​
+
+STUCK:
+
+Mostrar como “Bloqueado · en recuperación automática” si el StuckDetector está activo de forma periódica.
+​
+
+hasStorage=false pero COMPLETED + totalChunks>0:
+
+Estado: “Disponible para búsqueda, pero no hay archivo original (fallo de almacenamiento)”.
+
+Acción: “Reintentar subida de archivo”.
+
+Razón
+
+Ahora mismo el sistema distingue muy bien entre análisis, index, storage y estados, pero el usuario ve algo más binario. Si etiquetas claramente estos estados intermedios, se acaban muchas dudas de “por qué este PDF no sale en la búsqueda”.
+
+c) Conectar estados con el panel de Jobs/DLQ/Trace
+Tienes:
+
+Panel “Ingesta y Jobs” (BullMQ + DLQ).
+​
+
+Panel de “Observabilidad / Queues Status”.
+​
+
+Pantalla de “Trace (Rastreo Técnico)” por correlationId.
+​
+
+Mejoras fáciles:
+
+En la tabla de assets, añadir columnas/links:
+
+“Ver jobs” → filtrar la tabla de jobs por docId o correlationId.
+​
+
+“Ver trazas” → abrir directamente /admin/operations/trace?correlationId=....
+​
+
+En la tabla de DLQ:
+
+Mostrar docId, jobType, failureReason y un link “Ir al documento” que abre la ficha del asset.
+​
+
+Razón
+
+Cierras el círculo de debugging: desde un asset que “no va”, saltas a sus jobs y trazas; desde un job en failed, saltas al asset y entiendes impacto.
+
+Si te parece bien, en la siguiente respuesta puedo bajar a otro bloque: por ejemplo, cómo simplificar el contrato de configuración de ingestión (flags, skipIndexing, GraphRAG, vision) y cómo usar eso para evitar documentos “COMPLETED pero invisibles”. Dime “sí” y sigo con ese.
+
+
+
+Te propongo centrar ahora en el “contrato de configuración de ingesta”: qué flags hay, quién los decide y cómo evitar combinaciones raras que dejan docs “COMPLETED pero invisibles”.
+
+1) Identificar claramente todas las palancas de configuración
+Dónde mirar/tocar
+
+API POST /api/admin/ingest (lee formData: maskPii, enableVision, enableTranslation, enableGraphRag, chunkingLevel, chunkSize, chunkOverlap, chunkThreshold, usage, skipIndexing, etc.).
+​
+
+UnifiedIngestModal (simple vs expert mode, smart config, toggles premium y chunking).
+​
+
+IngestPreparer (setea enableVision, enableTranslation, enableGraphRag, enableCognitive, skipIndexing, chunkingLevel en el asset).
+​
+
+IngestService.executeAnalysis/IngestAnalyzer (cómo combinan asset.enableX con options.enableX y cómo construyen analysisOptions, shouldIndex).
+​
+
+Flags relevantes hoy:
+
+Nivel de ingest:
+
+usage: REFERENCE / TRANSACTIONAL.
+​
+
+skipIndexing.
+​
+
+Premium/IA:
+
+enableVision, enableTranslation, enableGraphRag, enableCognitive.
+​
+
+Chunking:
+
+chunkingLevel (bajo/medio/alto → SIMPLE/SEMANTIC/LLM).
+​
+
+chunkSize, chunkOverlap, chunkThreshold.
+​
+
+Ahora mismo, decisiones se reparten entre:
+
+UI (simple vs experto, smartConfig).
+​
+
+API (defaults si no llegan flags).
+​
+
+Preparer (setea flags en asset con defaults).
+​
+
+Analyzer (vuelve a interpretar opciones en base a isSimpleMode).
+​
+
+2) Definir un “IngestConfig” estable por tenant/entorno
+Qué haría conceptualmente
+
+Crear un “contrato” mental (y luego de código) de configuración:
+
+ts
+IngestConfig {
+  mode: SIMPLE | ADVANCED;
+  usage: REFERENCE | TRANSACTIONAL;
+  indexing: {
+    enabled: boolean;
+    chunkingLevel: SIMPLE | SEMANTIC | LLM;
+    chunkSize?: number;
+    chunkOverlap?: number;
+    chunkThreshold?: number;
+  };
+  premium: {
+    vision: boolean;
+    translation: boolean;
+    graphRag: boolean;
+    cognitiveContext: boolean;
+  };
+  privacy: {
+    maskPii: boolean;
+  };
+}
+Dónde aplicarlo
+
+En el API POST /api/admin/ingest:
+
+Tomar formData + smartConfig (si no es expert) y construir un IngestConfig completo, con defaults claros.
+​
+
+Validar este config una sola vez (con Zod) y, a partir de ahí, derivar:
+
+lo que va en metadata/asset (usage, skipIndexing, chunkingLevel, flags enableX),
+
+y lo que se pasa a IngestService.executeAnalysis como options.
+​
+
+En IngestPreparer:
+
+En vez de mezclar options.enableX y metadata, asumir que lo que llega ya es el config final.
+
+Guardar los flags en el asset sin reinterpretarlos más: enableVision, enableTranslation, enableGraphRag, enableCognitive, skipIndexing, chunkingLevel.
+​
+
+En IngestService.executeAnalysis / IngestAnalyzer:
+
+Construir analysisOptions directamente desde el asset, y usar las options sólo para overrides técnicos muy concretos si hiciera falta.
+​
+
+Dejar de remezclar “asset.enableX ?? options.enableX” salvo que haya un caso muy justificado.
+​
+
+Por qué
+
+Ahora mismo hay demasiadas fuentes de verdad: UI, API, Preparer y Analyzer toman decisiones sobre los mismos flags. Forzar un IngestConfig único reduce combinaciones inesperadas.
+
+3) Política clara para usage y skipIndexing (documentos invisibles)
+Situación actual
+
+usage viene del API/metadata (REFERENCE o TRANSACTIONAL).
+​
+
+skipIndexing se setea en asset desde metadata y puede llegar también en options.
+​
+
+En executeAnalysis:
+
+shouldIndex = !asset.skipIndexing && !options.metadata?.skipIndexing.
+​
+
+Si no se indexa, processedChunks = 0, hasChunks = false pero ingestionStatus se marca COMPLETED.
+​
+
+Resultado: puedes tener documentos “COMPLETED” que no aparecen en búsqueda.
+
+Qué propondría como contrato:
+
+Por defecto, indexar siempre
+
+Para cualquier usage=REFERENCE, indexing.enabled = true, salvo que un admin lo desactive explícitamente a nivel de tenant/config.
+
+Para usage=TRANSACTIONAL, decides:
+
+o bien “no se indexa nunca” (docs solo para un proceso puntual),
+
+o bien “se indexa en un índice temporal/sectorizado”, pero eso ya es otra historia.
+
+Eliminar skipIndexing desde la UI estándar
+
+En el UnifiedIngestModal simple, no ofrecer skipIndexing como opción; que sólo pueda tocarlo un admin desde una pantalla avanzada de configuración global de ingest.
+​
+
+En la API, si no llega skipIndexing, asumir false por defecto.
+
+Cambiar la semántica de COMPLETED
+
+Para que un asset se marque COMPLETED, exigir que se haya pasado por la fase que el contrato dice que toca:
+
+si indexing.enabled = true, sólo COMPLETED si totalChunks > 0;
+
+si indexing.enabled = false, COMPLETED_NO_INDEX o similar, para distinguirlo en UI.
+
+Alternativamente, mantienes COMPLETED pero añades un flag indexingMode = NONE/OK/FAILED, para que la UI pueda decir “Analizado sin indexar” en vez de dar a entender que está todo perfecto.
+
+Dónde tocar
+
+executeAnalysis (lógica de shouldIndex y de actualización final de ingestionStatus y hasChunks).
+​
+
+UnifiedIngestModal (sacar skipIndexing del flujo normal).
+​
+
+4) Simplificar la lógica de “Simple vs Expert mode” en Analyzer
+Ahora mismo
+
+IngestAnalyzer calcula isSimpleMode = !options?.enableVision && !options?.enableTranslation && !options?.enableGraphRag && !options?.enableCognitive.
+​
+
+Si isSimpleMode, cambia heurísticas de detección de industria y modelo, y salta ciertas features (model extraction, cognitive context).
+​
+
+Esto mezcla dos conceptos:
+
+“Modo simple de UI” (usuario no experto).
+​
+
+“Modo técnico sin features premium activadas” (porque el tenant no las paga).
+​
+
+Qué haría
+
+Añadir explícito en IngestConfig:
+
+mode: SIMPLE | ADVANCED.
+
+Y separar mode de premium.*.
+
+Al construir analysisOptions:
+
+Pasar mode, premium.flags y no recalcular isSimpleMode dentro de Analyzer.
+
+Si quieres mantener heurísticas específicas para “SIMPLE UI mode”, haz que dependan de mode, no de “no hay ningún premium activo”.
+
+Mantener premium.flags como decisión de producto:
+
+el tenant puede tener Vision desactivado aunque la UI esté en modo experto,
+
+o puede tener Vision activado por defecto aunque la UI simple no muestre la palanca (pero el admin sí).
+​
+
+Dónde tocar
+
+UnifiedIngestModal para decidir mode.
+​
+
+API /api/admin/ingest para incluir mode en el config.
+​
+
+IngestAnalyzer para dejar de re-derivar isSimpleMode por flags individuales y usar mode.
+​
+
+5) Relacionar configuración con observabilidad
+Tienes:
+
+Logs ricos en IngestService e IngestAnalyzer que ya imprimen analysisOptions y flags.
+​
+
+IngestTracer y LLMCostTracker por documento.
+​
+
+Mejora útil:
+
+En los logs de INGESTSERVICE/INGESTANALYZER, incluir siempre un snapshot del IngestConfig final (o un hash + resumen legible) con mode, indexing.enabled, chunkingLevel, premium.flags.
+​
+
+En Analytics/Operations Hub, añadir filtros por chunkingLevel y premium.feature para ver el impacto en coste y tiempo:
+
+p.ej. “Docs con Vision ON tardan X% más y cuestan Y más”.
+
+Por qué
+
+Te permitirá justificar decisiones de defaults: si ves que Vision ON dispara coste y no aporta tanto, puedes apagarlo por defecto y ofrecerlo como extra.
+
+Si te parece, en otra respuesta podemos meternos en la parte de chunking (niveles, tamaño/overlap/threshold) y cómo fijar valores razonables por defecto según tipo de documento, para que el usuario casi nunca tenga que tocar sliders.
+
+
+Te doy una pasada centrada en chunking: cómo fijar defaults sensatos y cuándo merece la pena exponer controles avanzados.
+
+1) Fijar un mapa claro de niveles → parámetros
+Ahora tienes:
+
+chunkingLevel (bajo, medio, alto, SIMPLE, SEMANTIC, LLM) con sliders para chunkSize, chunkOverlap, chunkThreshold.
+​
+
+Lo que falta es un contrato explícito “si no tocas nada, esto es lo que pasa”.
+
+Dónde tocar
+
+UnifiedIngestModal (smartConfig + sliders).
+​
+
+API /api/admin/ingest (transformación de chunkingLevel textual a parámetros).
+​
+
+IngestService.executeAnalysis / IngestIndexer (uso final de chunkSize, overlap, threshold).
+​
+
+Qué haría
+
+Definir una tabla de defaults (ajústala a tu experiencia real):
+
+SIMPLE / bajo:
+
+chunkSize ≈ 1200–1500, overlap ≈ 150–200, threshold no relevante.
+
+SEMANTIC / medio:
+
+chunkSize ≈ 700–900, overlap ≈ 150–200, threshold ≈ 0.75.
+
+LLM / alto:
+
+Dejar que sea la pipeline “premium” la que decida (p.ej. usa un LLM para agrupar párrafos), sin sliders en UI.
+
+Codifica estos defaults en un único sitio (p.ej. un helper resolveChunkParams(chunkingLevel, overrides)) y úsalo:
+
+en la API al construir IngestConfig,
+
+y/o en IngestIndexer si faltan valores.
+​
+
+2) Modo simple: no enseñar sliders casi nunca
+En el UnifiedIngestModal ya tienes:
+
+Modo simplificado con dropzone y un badge que indica “Básico / Semántico IA” basado en smartConfig.
+​
+
+Modo experto con todos los sliders.
+
+Qué ajustaría
+
+En modo simple:
+
+No exponer chunkSize/overlap/threshold.
+
+Dejar que smartConfig elija chunkingLevel según tamaño del archivo y quizá tipo (manual, normativa, etc.).
+​
+
+Por ejemplo:
+
+PDFs < 20 páginas → SIMPLE,
+
+entre 20–80 → SEMANTIC,
+
+80 → SEMANTIC pero con chunkSize algo mayor para no generar miles de chunks.
+
+En modo experto:
+
+Mantener sliders, pero inicializarlos siempre a los defaults del nivel seleccionado, para que si el usuario cambia de nivel, los sliders se reajusten.
+​
+
+Mostrar debajo un texto tipo “Recomendado para manuales largos / contratos / informes” según el nivel.
+
+Por qué
+
+Evitas que el usuario se obsesione con la ingeniería de chunks si no es necesario; la mayoría de casos estará bien con un nivel + defaults.
+
+3) Conectar chunking con tipo de documento
+Tienes documentTypeId y categorías (RAGASSET, etc.), y sabes si algo es “manual técnico”, “normativa”, “pedido”, etc.
+​
+
+Dónde usarlo
+
+En la lógica de smartConfig (hook useSmartConfig(file) y/o en el backend al construir IngestConfig).
+​
+
+Ideas prácticas
+
+Para documentos tipo “pedido” / usage = TRANSACTIONAL:
+
+Pueden requerir menos contexto, incluso chunk único, o no indexarse.
+
+Para “manual” / “normativa”:
+
+SEMANTIC con chunkSize mediano y overlap generoso funciona mejor.
+
+Para “checklist” / “ficha corta”:
+
+SIMPLE, chunks grandes (2000+) para no fragmentar demasiado.
+
+La clave es: según documentTypeId y tamaño, eliges automáticamente el chunkingLevel y sus parámetros, y el usuario experto sólo los retoca si realmente lo necesita.
+
+4) Evitar combinaciones peligrosas
+Cosas que pueden causar problemas:
+
+chunkSize muy pequeño (<400) → cientos/miles de chunks, coste elevado y ruido.
+
+overlap muy grande relativo a chunkSize → mucho coste de embeddings duplicados.
+
+threshold muy alto con SEMANTIC → demasiada fusión y pérdida de contexto.
+
+Dónde mitigar
+
+Validación en la API o en la propia UI (Zod + límites duros):
+​
+
+chunkSize mínimo 500, máximo 4000.
+
+overlap máximo 50–70% de chunkSize.
+
+threshold en [0.5, 0.95], con descripción visual de lo que implica.
+
+Si el usuario se sale de rango o deja valores raros, puedes:
+
+corregirlos silenciosamente a valores máximos/mínimos razonables,
+
+y loguear un WARN en INGESTSERVICE para debugging.
+
+5) Relacionar chunking con métricas operativas
+Tienes:
+
+AnalyticsService.getRAGPerformance (precisión, samples).
+​
+
+IngestTracer + LLMCostTracker con coste/tokens por documento.
+​
+
+Mejora interesante
+
+Al final de la ingestión de un documento, guardar en knowledgeassets el chunkingLevel y quizá estadísticos (totalChunks, avgChunkLength).
+​
+
+En Analytics, permitir filtrar por chunkingLevel y ver:
+
+coste medio por doc,
+
+precisión RAG media,
+
+satisfacción (si recolectas feedback).
+
+Con eso puedes tomar decisiones basadas en datos:
+
+por ejemplo, descubrir que SEMANTIC ofrece casi la misma precisión que LLM chunking pero mucho más barato, y usarlo como default.
+
+Si quieres, el siguiente bloque podría ser cómo cerrar el círculo entre toda esta configuración de ingest y la experiencia de búsqueda/respuesta (por ejemplo, cómo exponer al usuario qué chunking y flags se han aplicado en un informe o respuesta técnica, sin abrumarlo).
+
+
+
+
+La siguiente pieza es conectar todo lo de ingest (flags, chunking, modos) con lo que el usuario ve cuando busca o lee un informe, sin meterle toda la jerga.
+
+1) Mostrar “lo justo” del contexto en la búsqueda técnica
+Dónde tocar
+
+Componente del asistente técnico / búsqueda (Technical Assistant / Technical Search) y el visor de informes RAG (RagReportView, AgentTraceViewer).
+​
+
+Qué conviene exponer al usuario final técnico
+
+En cada respuesta del asistente:
+
+Una sección “Contexto utilizado” con:
+
+lista corta de documentos (título, tipo, fecha, estado) y número aproximado de fragmentos usados.
+
+indicador simple de chunking, tipo “fragmentos de párrafos” vs “fragmentos largos”, sin hablar de chunkSize=1500.
+
+Un marcador de fiabilidad:
+
+Puedes reutilizar las métricas que ya calculas (faithfulness, relevance, context precision) para un badge de confianza (Alta / Media / Baja) en vez de enseñar los números crudos.
+
+Por qué
+
+El técnico necesita saber si la respuesta está bien fundada y sobre qué documentos, pero no le interesa el detalle de tokens y tamaños de chunk.
+
+2) Exponer los “detalles frikis” sólo en vista avanzada
+Dónde tocar
+
+Tabs o paneles avanzados de la vista de respuesta:
+
+Chunks Context, Evaluation, Agent Trace, etc., que ya existen.
+
+Qué meter ahí (para ti / power users)
+
+Lista de chunks con:
+
+longitud, score, documento y página.
+
+Config de ingest aplicada:
+
+chunkingLevel, chunkSize/overlap efectivos, premium.flags, maskPii, usage, modelo de embeddings.
+​
+
+Coste y tiempos:
+
+total tokens y coste por consulta (ya los tienes con LLMCostTracker) y duración de cada fase (IngestTracer).
+​
+
+UX
+
+Ocultarlo por defecto bajo algo tipo “Ver detalles técnicos de RAG”.
+
+Puedes añadir un toggle global “Modo experto” para que quien sí quiere verlo lo vea siempre.
+
+3) Inyectar metadatos de ingest en informes PDF
+Generas informes con ReportEngine y generateServerPDF/generateTemplatedReport.
+
+Qué podrías añadir
+
+En una sección final (o en una pequeña caja de “Metadatos técnicos”):
+
+Fecha de ingestión.
+
+Versión del motor / modelo (ej. “Gemini 2.0 flash”).
+
+Tipo de chunking (“Semántico”) y si se usó GraphRAG / Vision.
+
+Una frase estándar tipo:
+
+“Este informe se ha generado a partir de fragmentos de documentación técnica con recuperación semántica y revisión automática de coherencia.”
+
+Sin números ni parámetros; sólo suficiente para auditoría y confianza.
+
+4) Relacionar problemas de ingest con la experiencia de búsqueda
+Cuando algo falla en ingest, ahora se refleja en estados, DLQ, etc.
+​
+
+Qué vería un usuario normal en la búsqueda
+
+Si el documento relevante está FAILED o STUCK:
+
+Mostrar un aviso suave tipo:
+
+“Algunos documentos relevantes no se han podido procesar todavía. Esta respuesta puede estar incompleta.”
+
+Opción de “Ver detalle técnico / avisar a soporte” que lleva a la ficha del asset o al panel de errores (para admins).
+
+Si el doc está COMPLETED pero totalChunks=0 (o COMPLETED_NO_INDEX):
+
+No tiene sentido que aparezca en “Contexto utilizado”.
+
+Si el usuario lo abre desde la biblioteca, mostrar un banner:
+
+“Este documento se ha cargado pero aún no está indexado para búsqueda. Contacta con tu administrador.”
+
+Por qué
+
+Evitas que el usuario piense “la IA no encuentra nada” cuando en realidad el problema es de ingest.
+
+5) Cerrar el bucle con correcciones humanas
+Tienes AgentEngine.recordCorrection y getCorrectionContext para few-shot con correcciones anteriores.
+​
+
+Cómo lo conectaría con la UX de respuesta
+
+En cada respuesta, un bloque simple “¿La respuesta es correcta?” con botones:
+
+“Es correcta” / “Le falta algo” / “Es incorrecta”.
+
+Si marcan “Le falta algo” o “Es incorrecta”:
+
+Abrir un mini formulario donde el usuario puede escribir o adjuntar qué cambiaría (o seleccionar un valor correcto).
+
+Internamente, usar recordCorrection para guardar diff en aicorrections.
+​
+
+En la parte técnica, eso ya lo puedes reutilizar para mejorar prompts y dar contexto a futuros análisis; en la parte visible, el usuario ve que tiene un canal claro para “educar” al sistema.
+
+Con esto, ingest + chunking + flags quedan alineados con lo que ve el usuario en búsqueda e informes, y tú sigues teniendo todos los diales finos por debajo. Si quieres, el siguiente paso podría ser revisar sólo la parte de governance/compliance (audit trail, PII, scopes USER/TENANT/INDUSTRY/GLOBAL) y cómo hacer que esas capacidades se entiendan desde la UI sin que parezca un panel de SIEM.
+
+
+
+Puedes presentar toda la parte de governance/compliance como “seguridad y control de uso” para negocio, sin enseñarles un SIEM, y a la vez aprovecharla para monetizar las funciones premium de LLM.
+​
+
+1) Scopes USER / TENANT / INDUSTRY / GLOBAL: cómo contarlo en UI
+Técnicamente ya tienes:
+
+scope en ingest (USER, TENANT, INDUSTRY, GLOBAL) validado por Zod en el API y autorizado por IngestGuardian.
+​
+
+IngestGuardian.authorize que aplica políticas distintas según scope, con log de cada decisión (incluido ip, userAgent, tenantId, correlationId).
+​
+
+En la UI, en vez de hablar de scopes:
+
+USER → “Mi espacio privado”
+
+TENANT → “Biblioteca de mi organización”
+
+INDUSTRY → “Catálogo sectorial (solo lectura / compartido)”
+
+GLOBAL → “Conocimiento compartido global (anonimizado)”
+
+Dónde tocar
+
+UnifiedIngestModal:
+
+En simple mode, elegir por defecto “Biblioteca de mi organización (TENANT)” y ocultar el resto.
+​
+
+En modo avanzado y para roles altos, mostrar el selector con copy claro y pequeños tooltips (“Los documentos globales pueden alimentar conocimiento compartido anonimizado”).
+​
+
+Así el usuario entiende “dónde cae” el documento, no la palabra GLOBAL.
+
+2) PII / maskPii: de checkbox técnico a promesa de cumplimiento
+Tienes:
+
+maskPii en ingest (por defecto true salvo que se mande explícitamente false).
+​
+
+Un toggle en el modal con explicación de PII y advertencias.
+​
+
+Qué haría en UI
+
+En el panel de ingesta (simple y avanzado):
+
+Texto corto: “Enmascarar datos personales” con subtexto “Recomendado. Anonimiza nombres, emails, identificadores para reducir riesgo de exposición.”
+​
+
+En la ficha del documento / panel de detalle:
+
+Un chip “PII enmascarada” / “PII sin enmascarar (uso restringido)” para que un auditor o responsable de compliance pueda ver de un vistazo qué docs son “sensibles”.
+
+En informes PDF:
+
+Pie o cuadro pequeño “Este análisis se ha generado con enmascarado de datos personales activado/desactivado”.
+
+Por qué
+
+Traducen una bandera técnica (maskPii) a algo que compliance y negocio pueden entender y revisar.
+
+3) Audit trail y trazabilidad: simplificar vistas
+Tienes:
+
+logEvento en prácticamente todo, con correlationId, tenantId, userId, source, action, hash SHA‑256 en varios casos.
+​
+
+Repositorio de auditoría (IAuditRepository) y páginas de Logs/Audit en admin.
+​
+
+IngestTracer, StateTransitionValidator, DeadLetterQueue, StuckDetector todos logueando con nivel INFO/WARN/ERROR.
+​
+
+En vez de mostrar un timeline de eventos tipo SIEM, propón dos vistas:
+
+Vista “Registro de actividad” por documento (en la ficha de documento):
+
+Últimas 5–10 acciones legibles: “Subido por X”, “Ingestión completada”, “Indexación fallida”, “Reprocesado por Y”, con fecha y correo.
+
+Botón “Ver trazado técnico completo” que abre el TraceViewer con el correlationId (solo admins).
+​
+
+Vista “Registro de acciones de usuario” (en Security/Audit Hub):
+
+Tabla sencilla: usuario, acción (ingestó documento, promovió workflow, exportó datos), fecha, resultado (ok/error).
+​
+
+Filtros básicos por usuario y rango de fechas.
+
+Link a detalles: si hacen clic, entonces sí se puede abrir un panel más técnico.
+
+Dónde tocar
+
+Componentes AuditLogTable, TraceViewer y la navegación de Operations/Security Hub, para separar claramente:
+
+vistas de auditoría “business-readable”,
+
+de vistas “engineer-readable”.
+​
+
+4) Funciones premium LLM: gobierno + monetización visibles
+Tienes:
+
+Flags enableVision, enableTranslation, enableGraphRag, enableCognitive, y chunking avanzado; LLM cost tracking por doc (LLMCostTracker).
+​
+
+Controles premium en el UnifiedIngestModal en modo experto, marcados como “PREMIUM”, “EXPERIMENTAL”, etc.
+​
+
+Cómo presentarlo en UI sin ruido:
+
+En el modal de ingest:
+
+Agrupar funciones premium en un bloque “Análisis avanzado (consume créditos de IA)” con:
+
+checkboxes Vision, GraphRAG, Contexto cognitivo, etc., cada uno con un badge pequeño “Premium / Coste extra”.
+​
+
+Para planes básicos, mostrar las opciones deshabilitadas con un candado y un tooltip: “Disponible en plan Pro / Enterprise”.
+
+En la ficha de documento:
+
+Chips claros:
+
+“Análisis estándar (sin LLM)”
+
+o “Análisis IA avanzado: Vision, Graph, Cognitive” según los flags activados.
+
+Campo “Créditos IA consumidos” por doc, derivado de LLMCostTracker (puedes convertir coste USD a créditos, o mostrar sólo un número relativo).
+​
+
+En el panel de Billing / Usage:
+
+Gráficos simples:
+
+“Créditos IA consumidos este mes”
+
+“Docs con análisis avanzado vs estándar”
+
+“Top usuarios que más consumen AI avanzado”
+
+Esto aprovecha lo que ya agregas en usagelogs y en LLMCostTracker.
+​
+
+Por qué
+
+De cara a governance: sabes quién activa features caras y sobre qué documentos.
+
+De cara a monetización: puedes justificar planes por límites de “docs premium al mes” o créditos de IA.
+
+5) Hacer comprensible la jerarquía de permisos y scopes
+Internamente:
+
+IngestGuardian aplica un modelo de 4 niveles y registra cada autorización/denegación con contexto (scope, ownerUserId, ip, userAgent, correlationId).
+​
+
+En la UI:
+
+En Security Hub / Governance Console:
+
+Una sección “Política de acceso a documentos” que muestre en lenguaje natural:
+
+“Los usuarios pueden subir documentos a su espacio personal.”
+
+“Los administradores pueden publicar documentos en la biblioteca de la organización.”
+
+“Solo seguridad/compliance puede publicar contenido global o sectorial.”
+
+Tal vez un sencillo “policy viewer” que liste reglas tipo:
+
+“Scope USER → solo propietario.”
+
+“Scope TENANT → todos los usuarios del tenant.”
+
+etc.
+
+En los formularios donde se elige scope:
+
+Mostrar quién podrá ver el documento (pequeño resumen dinámico debajo del selector):
+
+“Visible solo para ti.”
+
+“Visible para todo el equipo de [empresa].”
+
+“Visible para equipos de [industria], sin datos personales.”
+
+Así el usuario entiende el impacto de su elección sin ver IngestScope.USER.
+
+6) Minimizar el “efecto SIEM” en Operations / Compliance
+Tienes muchos módulos potentes: Logs, Observability, Dead Letter Queue, Trace, etc.
+​
+
+Para que no parezca un SIEM:
+
+En Operations Hub, mantén las tarjetas principales muy orientadas a negocio:
+
+“Salud de ingestión” (OK / Algunos fallos / Crítico).
+
+“Documentos en fallo pendientes de revisión” (número).
+
+“Consumo IA este mes vs límite del plan.”
+
+Deja las tablas densas y trazas profundas siempre a un clic de distancia (“Ver detalle técnico”), no como vista por defecto.
+
+Si quieres, el siguiente paso podría ser diseñar contigo un “Security / Governance Hub” concreto: qué tarjetas pondrías en la portada, qué pestañas (PII, políticas, auditoría, uso premium) y qué elementos tiene cada una para que un responsable de planta/compliance lo entienda sin tocar nada técnico.
+
+
+Te propongo un “Security / Governance Hub” pensado para un responsable de planta/compliance, no para un ingeniero, usando lo que ya tienes construido por debajo.
+​
+
+1) Estructura general del Governance Hub
+Dónde encajarlo
+
+Como nueva entrada en el menú admin, reutilizando el patrón de hubs (Organizations Hub, Operations Hub): tarjetas que llevan a secciones.
+​
+
+Secciones (tabs o tarjetas):
+
+Visión general
+
+Políticas y scopes
+
+Privacidad y PII
+
+Auditoría y acciones de usuario
+
+Uso de IA premium
+
+Así separas control de acceso, privacidad, registros y costes de IA.
+
+2) Visión general (landing del hub)
+Objetivo: una mirada rápida de “¿estamos en verde o en ámbar?”.
+
+Qué mostrar
+
+Tarjeta “Estado de seguridad”:
+
+Número de errores críticos últimos 30 días (ya lo mides en logs).
+​
+
+Número de documentos con fallo de ingestión pendiente (FAILED/STUCK).
+​
+
+Tarjeta “Privacidad”:
+
+% de documentos ingestados con maskPii=true.
+​
+
+Número de documentos globales/industriales publicados.
+
+Tarjeta “Uso IA avanzado”:
+
+Docs con análisis avanzado este mes (Vision/Graph/Cognitive activados).
+​
+
+Créditos IA consumidos vs límite de plan (o % de cuota).
+​
+
+Tarjeta “Registros y exportación”:
+
+Botones: “Exportar datos (GDPR)” y “Ver registros de auditoría”.
+​
+
+Todo con texto plano tipo:
+
+“X documentos con datos personales enmascarados.”
+
+“Y análisis IA avanzados este mes (plan permite hasta Z).”
+
+3) Políticas y scopes
+Objetivo: explicar quién ve qué, usando tus scopes y guardianes.
+
+Contenido
+
+Explicación corta arriba:
+
+“Aquí defines qué documentos pueden ser privados, de equipo, de sector o globales.”
+
+Tabla o cards con filas por scope:
+
+Ámbito	Scope técnico	Quién puede verlo	Quién puede crearlo
+Mi espacio	USER	Solo el usuario	Cualquier usuario
+Mi organización	TENANT	Todos los usuarios del tenant	Admin, ciertos roles técnicos
+Sector/industria	INDUSTRY	Tenants de la misma industria (según reglas)	Solo admin/compliance
+Global	GLOBAL	Espacio compartido anonimizado	Solo superadmin
+Para cada fila, un texto editable/cfg para matizar (aunque internamente siga siendo IngestGuardian quien manda).
+​
+
+Un pequeño “policy helper”:
+
+Por ejemplo, un switch:
+
+“Permitir a usuarios técnicos publicar documentos a ‘Biblioteca de organización’ sin revisión previa.”
+
+Si lo apagas, obligar workflow de aprobación (que ya puedes modelar con tu motor de workflows/cases).
+​
+
+4) Privacidad y PII
+Objetivo: que alguien de compliance pueda ver la situación de PII sin ver Zod ni flags.
+
+Contenido
+
+Contadores:
+
+“Documentos con PII enmascarada: X” vs “Documentos sin enmascarar: Y”.
+​
+
+“Última exportación de datos personales (GDPR): fecha / usuario.”
+
+Configuración:
+
+Toggle global: “Requerir enmascarado de PII por defecto” (ya lo haces, pero aquí lo explicas).
+​
+
+Opción para permitir excepciones:
+
+“Permitir desactivar el enmascarado solo a roles: Admin / Compliance / Nadie.”
+
+Listas filtradas (para roles altos):
+
+Tabla con documentos sin maskPii y su scope (user/tenant/global), con filtros básicos.
+​
+
+Acciones: “Re-ver PII de este documento” (workflow manual).
+
+Enlace a exportación:
+
+Botón “Exportar datos de usuario” que llama a api/admin/export con tipo LOGS/ASSETS según esquema, para cubrir obligaciones de acceso/borrado.
+​
+
+5) Auditoría y acciones de usuario
+Objetivo: ver quién ha hecho qué, sin la verbosidad de logEvento.
+
+Contenido
+
+Filtro simple:
+
+Por usuario, rango de fechas, tipo de acción (“Ingestar documento”, “Promover a producción”, “Exportar datos”, “Cambiar políticas”).
+​
+
+Tabla mí­nima:
+
+Fecha/hora.
+
+Usuario.
+
+Acción legible (a partir de source/action mapeados):
+
+APIINGEST.INGESTREQUESTRECEIVED → “Ingestó documento”.
+​
+
+Resultado (OK / Error) a partir de nivel o código.
+
+Click en una fila:
+
+Muestra detalles: documento implicado, correlationId, y botón “Ver traza técnica” que abre TraceViewer.
+​
+
+Así un responsable puede responder “quién subió esto”, “quién cambió esta política” sin navegar un SIEM.
+
+6) Uso de IA premium (governance + billing)
+Objetivo: unir control funcional y monetización.
+
+Contenido
+
+Resumen:
+
+“Créditos IA consumidos este mes: X / cuota del plan: Y.”
+
+“Docs con análisis avanzado: N (Vision), M (Graph RAG), K (Cognitive).”
+​
+
+Por usuario o departamento:
+
+Tabla simple “Usuario / Documentos con IA avanzada / Créditos IA usados”.
+
+Te alimentas de LLMCostTracker + usagelogs.
+​
+
+Controles:
+
+Limitar por plan:
+
+“Máximo documentos con análisis avanzado por mes: 100” (para plan Pro) vs ilimitado en Enterprise.
+​
+
+Opcionalmente, switch:
+
+“Permitir IA avanzada solo en documentos marcados como ‘Críticos’ (campo extra en metadata/documentType).”
+
+Mensaje de gobernanza:
+
+Texto explicando:
+
+“El análisis avanzado se reserva para documentos críticos. Aquí puedes configurar cuántos al mes y quién puede activarlo.”
+
+7) Cómo conectar con la ingesta sin abrumar
+Desde Governance Hub, en las secciones de Privacidad y Uso IA, incluir enlaces concretos:
+
+“Ver documentos ingestados este mes” → abre Document Library con filtro por fechas.
+
+“Ver documentos con IA avanzada” → aplica filtro enableVision/Graph/Cognitive.
+​
+
+En la pantalla de ingesta (modal):
+
+Un pequeño texto/link “Política de seguridad y privacidad” que abre un resumen (no un panel inmenso):
+
+“Los documentos se almacenan en la biblioteca de tu organización. Los datos personales se enmascaran por defecto. El uso de IA avanzada consume créditos según el plan.”
+
+Con eso, governance/compliance deja de ser un conjunto de señuelos técnicos y se convierte en un hub coherente para negocio, mientras tú reaprovechas todo lo que ya tienes (IngestGuardian, maskPii, logEvento, LLMCostTracker, scopes y roles).
+
+
+
+
+
+í, está claramente modelada con dos modos en la propia UI de ingesta.
+​
+
+Tienes un estado isExpertMode en UnifiedIngestModal con un toggle que muestra “Modo Simplificado / Configuración Avanzada (Modo Experto)”.
+​
+
+En modo básico:
+
+Usas useSmartConfig(file) para decidir chunkingLevel y maskPii sin que el usuario toque sliders ni flags.
+​
+
+En el FormData mandas valores derivados: finalTipo, finalLevel, finalPii, y todas las flags premium (enableVision, enableTranslation, enableGraphRag, enableCognitive) fijas a false.
+​
+
+En modo experto:
+
+Permites elegir manualmente tipo, scope, industria, mask PII, y activar/desactivar Vision, Translation, GraphRAG, Cognitive, además de ajustar chunkSize, chunkOverlap, chunkThreshold.
+​
+
+Es justo aquí donde se disparan las funcionalidades “premium” de LLM y el consumo de tokens/cuota, como comentabas.
+​
+
+Es decir: el modo básico siempre hace una ingesta “segura y económica”, y el modo experto abre los diales caros (LLM premium, chunking avanzado, etc.) que quieres reservar para documentos importantes o planes de pago superiores.
+
+
+Sí, lo he tenido en cuenta en todas las recomendaciones desde que vimos el nuevo código.
+​
+
+En concreto:
+
+Cuando te sugería reservar Vision/GraphRAG/Cognitive y chunking avanzado para “docs importantes” o planes superiores, lo hacía apoyándome en que solo se activan en modo experto (isExpertMode) y van etiquetados como PREMIUM/EXPERIMENTAL.
+​
+
+Las ideas de defaults “seguros/baratos” (chunking SIMPLE/SEMANTIC, maskPii activo, sin flags premium) asumían que el modo básico usa useSmartConfig y fuerza esas opciones sin enseñarlas al usuario.
+​
+
+Las propuestas de governance/monetización (créditos IA por doc, límites mensuales, chips “Análisis estándar vs IA avanzada”) parten precisamente de esta separación: básica = sin extras LLM, experta = activa las capacidades que quieres cobrar o limitar.

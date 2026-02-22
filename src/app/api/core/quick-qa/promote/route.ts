@@ -4,7 +4,7 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { generateUUID } from '@/lib/utils';
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
 
 const PromoteSchema = z.object({
     snippet: z.string().min(1),

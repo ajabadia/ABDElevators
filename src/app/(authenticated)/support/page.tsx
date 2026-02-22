@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { TicketStatusBadge, TicketPriorityBadge } from '@/components/tickets/TicketBadges';
+import { TicketStatusBadge, TicketPriorityBadge } from '@/components/support/TicketBadges';
 import { formatRelative } from '@/lib/date-utils';
 import { Input } from '@/components/ui/input';
 import { AgenticSupportSearch } from '@/components/technical/AgenticSupportSearch';

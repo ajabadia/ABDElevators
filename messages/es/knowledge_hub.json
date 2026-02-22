@@ -18,5 +18,8 @@
       "title": "Espacios de Conocimiento",
       "description": "Configure límites de contexto y permisos de acceso para grupos de documentos."
     }
+  },
+  "analyze_modal": {
+    "title": "Consulta Inteligente"
   }
 }

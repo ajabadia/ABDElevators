@@ -7,12 +7,17 @@ export type IngestionStatus =
     | 'FAILED'
     | 'STORED_NO_INDEX'    // Cloudinary OK, indexing pending
     | 'INDEXED_NO_STORAGE' // Chunks OK, Cloudinary upload failed
-    | 'PARTIAL';           // Both present but inconsistent
+    | 'PARTIAL'
+    | 'STUCK'
+    | 'DEAD';
+// Both present but inconsistent
+export type AssetUsage = 'REFERENCE' | 'TRANSACTIONAL';
 export type AssetStatus = 'vigente' | 'obsoleto' | 'borrador' | 'archivado' | 'active' | 'obsolete' | 'draft' | 'archived';
 
 export interface KnowledgeAsset {
     _id: string;
     filename: string;
+    usage?: AssetUsage; // REFERENCE (RAG) vs TRANSACTIONAL (Extraction only)
     componentType: string;
     model: string;
     version: string;
@@ -45,4 +50,21 @@ export interface KnowledgeAsset {
     lastReviewedAt?: string | Date;
     reviewStatus?: 'pending' | 'reviewed' | 'expired' | 'snoozed';
     reviewNotes?: string;
+
+    // Phase 199: Cost Persistence & Metrics
+    ingestionCost?: {
+        totalTokens: number;
+        totalUSD: number;
+        breakdown: Array<{
+            operation: string;
+            model: string;
+            tokens: number;
+            costUsd: number;
+        }>;
+    };
+    executionMetrics?: {
+        durationMs: number;
+        steps?: Record<string, number>;
+        lastStep?: string;
+    };
 }

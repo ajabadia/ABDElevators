@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
-import { extractTextFromPDF } from '@/lib/pdf-utils';
+import { PDFIngestionPipeline } from '@/services/pdf/PDFIngestionPipeline';
 import { analyzeEntityWithGemini } from '@/lib/llm';
 import { performTechnicalSearch } from '@/lib/rag-service';
 import { AppError, ValidationError } from '@/lib/errors';
@@ -79,8 +79,15 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        const entityText = await extractTextFromPDF(textBuffer);
-        const industry = session.user.industry || 'ELEVATORS';
+        const industry = (session.user as any).industry || 'ELEVATORS';
+        const pipelineResult = await PDFIngestionPipeline.runPipeline(textBuffer, {
+            tenantId,
+            correlationId,
+            industry: industry as any,
+            strategy: 'GEMINI_1.5_PRO_EXTREME',
+            pii: { enabled: true }
+        });
+        const entityText = pipelineResult.maskedText || pipelineResult.cleanedText;
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
         if (ingestOnly) {
@@ -159,7 +166,7 @@ export async function POST(req: NextRequest) {
 
         // 5. Vision 2.0: Save as Generic Case
         try {
-            const caseCollection = await getCaseCollection();
+            const caseCollection = await getCaseCollection(session.user as any);
             const genericCase = mapEntityToCase({ ...validatedEntity, _id: insertResult.insertedId }, tenantId);
 
             genericCase.metadata = {

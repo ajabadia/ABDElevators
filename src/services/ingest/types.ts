@@ -7,6 +7,8 @@ export interface IngestOptions {
         scope?: 'GLOBAL' | 'INDUSTRY' | 'TENANT';
         industry?: string;
         spaceId?: string;
+        usage?: 'REFERENCE' | 'TRANSACTIONAL';
+        skipIndexing?: boolean;
         chunkingLevel?: 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
     };
     tenantId: string;

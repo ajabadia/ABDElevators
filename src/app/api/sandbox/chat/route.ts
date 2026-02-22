@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { DEMO_DOCUMENTS, DEMO_CONTEXT_PROMPT } from '@/lib/demo-data';
+import { DEMO_DOCUMENTS } from '@/lib/demo-data';
+import { PromptService } from '@/lib/prompt-service';
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
@@ -31,17 +32,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Message required" }, { status: 400 });
         }
 
-        // 2. Context Construction
-        // In this demo, we inject ALL demo docs into the context window.
-        // They are small enough.
         const contextText = DEMO_DOCUMENTS.map(doc =>
             `--- DOCUMENT: ${doc.title} (${doc.type}) ---\n${doc.content}\n`
         ).join('\n');
 
-        const systemPrompt = `${DEMO_CONTEXT_PROMPT}\n\nCONTEXT:\n${contextText}`;
+        const { text: systemPrompt, model: modelId } = await PromptService.getRenderedPrompt(
+            'SANDBOX_CHAT_GENERATOR',
+            { context: contextText, question: message },
+            'abd_global' // Sandbox is global
+        );
 
-        // 3. Call LLM (Gemini Flash for speed/cost)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // 3. Call LLM
+        const model = genAI.getGenerativeModel({ model: modelId });
 
         const chat = model.startChat({
             history: [

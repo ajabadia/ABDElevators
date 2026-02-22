@@ -56,7 +56,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
             toast({
                 title: t('saveSuccess'),
                 description: t('saveSuccessDesc'),
-                variant: "success"
+                variant: "default"
             });
         }
     });

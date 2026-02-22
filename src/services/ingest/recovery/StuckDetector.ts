@@ -1,6 +1,6 @@
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { StateTransitionValidator } from '../observability/StateTransitionValidator';
+import { StateTransitionValidator, IngestState } from '../core/StateTransitionValidator';
 import { DeadLetterQueue } from './DeadLetterQueue';
 
 /**
@@ -78,24 +78,24 @@ export class StuckDetector {
 
         for (const job of stuckJobs) {
             try {
-                // Validate state transition: PROCESSING -> FAILED
-                await StateTransitionValidator.validate(
-                    'PROCESSING',
-                    'FAILED',
-                    job.correlationId || 'stuck-recovery',
-                    job.tenantId,
-                    job.docId,
-                    `Job stuck in PROCESSING for > 30 mins (auto-detected)`
-                );
+                // Validate and execute state transition: PROCESSING -> STUCK
+                // Using the more robust transition method
+                await StateTransitionValidator.transition('PROCESSING', 'STUCK', {
+                    docId: job.docId,
+                    correlationId: job.correlationId || 'stuck-recovery',
+                    tenantId: job.tenantId,
+                    userId: 'SYSTEM_STUCK_DETECTOR',
+                    reason: `Job stuck in PROCESSING for > 30 mins (auto-detected)`
+                });
 
-                // Update status to FAILED
+                // Update status to STUCK
                 const collection = await getTenantCollection('knowledge_assets', session, 'MAIN');
                 const { ObjectId } = await import('mongodb');
                 await collection.updateOne(
                     { _id: new ObjectId(job.docId) as any },
                     {
                         $set: {
-                            ingestionStatus: 'FAILED',
+                            ingestionStatus: 'STUCK',
                             error: `Job stuck in PROCESSING for ${Math.round(job.stuckDuration / 60000)} mins (auto-detected)`,
                             updatedAt: new Date()
                         }
@@ -109,7 +109,7 @@ export class StuckDetector {
                     correlationId: job.correlationId || 'stuck-recovery',
                     jobType: 'PDF_ANALYSIS',
                     failureReason: `Stuck in PROCESSING for ${Math.round(job.stuckDuration / 60000)} mins`,
-                    retryCount: 0, // Stuck detection, not retry
+                    retryCount: 0,
                     lastAttempt: new Date()
                 }, session);
 

@@ -509,9 +509,19 @@
     "subtitle": "Explora la jerarquía de espacios y prueba el análisis efímero.",
     "details": "Detalles del Espacio",
     "name": "Nombre",
+    "path": "Ruta",
+    "back_to_hub": "Volver al Hub",
+    "tabs": {
+      "qa": "Quick Q&A",
+      "settings": "Configuración"
+    },
+    "settings": {
+      "title": "Ajustes del Espacio",
+      "description": "Próximamente: Gestión de permisos, invitaciones y cuotas específicas.",
+      "moduleInDevelopment": "Módulo en Desarrollo"
+    },
     "type": "Tipo",
     "created": "Creado",
-    "back_to_hub": "Volver al Hub",
     "qa": {
       "title": "Quick Q&A",
       "description": "Prueba el análisis sin necesidad de ingesta previa.",

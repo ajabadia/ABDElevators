@@ -1,6 +1,6 @@
 import { connectDB } from '@/lib/db';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { SpaceService } from '@/services/space-service';
+import { SpaceService } from '@/services/tenant/space-service';
 import { IngestService } from '@/services/ingest-service';
 import { Space } from '@/lib/schemas/spaces';
 import { KnowledgeAsset } from '@/lib/schemas/knowledge';

@@ -1,0 +1,1215 @@
+además de ingest, hay varias áreas donde veo posibles problemas o mejoras claras.
+​
+
+1) Doble FSM / estados de ingestión
+Hay dos validadores de estados: StateTransitionValidator (PENDING/QUEUED/PROCESSING/COMPLETED/FAILED/STUCK, con allowOverride) y otro StateTransitionValidator/FSM específico de ingest (IngestState con QUEUED/PROCESSING/COMPLETED/FAILED/STUCK/DEAD).
+​
+
+Riesgo: reglas de transición distintas, logs duplicados y estados inconsistentes entre assets y auditoría.
+​
+
+Mejora: unificar en una sola FSM “oficial” de ingest, usarla en todos los puntos que cambian ingestionStatus y deprecar la otra.
+​
+
+2) Mezcla de modos de cola (BullMQ vs “simple queue”)
+Coexisten IngestWorkerService (BullMQ) y lib/simple-queue, y ENABLE_QUEUE_WORKER decide si se hace cola o sync.
+​
+
+Riesgo: en entornos sin worker BullMQ, jobs que se quedan eternamente en PENDING/QUEUED; divergencia de comportamiento entre entornos.
+​
+
+Mejora: definir claramente:
+
+producción = siempre BullMQ,
+
+local/test = simple queue,
+
+y encapsularlo en queueService para que el resto del código no sepa qué implementación hay.
+​
+
+3) Fuente de verdad de flags de ingest (asset vs options)
+executeAnalysis mezcla asset.enableX ?? options.enableX para vision/translation/graph/cognitive y options.metadata?.skipIndexing con asset.skipIndexing.
+​
+
+Riesgo: ejecuciones donde el asset indica una cosa y las options otra, especialmente en reintentos o procesos offline.
+​
+
+Mejora: decidir una fuente de verdad:
+
+normalmente el asset,
+
+y usar options solo para overrides controlados, o construir un IngestConfig único antes de entrar al servicio.
+​
+
+4) Memoria en LLMCostTracker
+LLMCostTracker guarda costes en un Map en memoria y los purga con clearDocument(correlationId).
+​
+
+Riesgo: si un worker cae entre trackOperation y getDocumentCost, se pierde el detalle; en procesos largos o con muchos docs, el Map puede crecer sin límite si no se limpia correctamente.
+​
+
+Mejora:
+
+asegurar llamadas a getDocumentCost/clearDocument en todos los paths de éxito y error,
+
+y valorar persistir un resumen mínimo en DB (ya logueas un hash en logs, pero no queda estructurado para billing).
+​
+
+5) Duplicación de lógica de logging/audit
+Varias capas distintas loguean transiciones, coste, spans, DLQ, GC, etc., todas con su propio hash SHA‑256 y formato.
+​
+
+Riesgo: dificultad para reconstruir un timeline completo si cada servicio serializa el contexto de forma distinta; ruido para auditores.
+​
+
+Mejora: estandarizar un pequeño “audit envelope” (tenantId, correlationId, docId, userId, operation, status) que todos los logEvento rellenen, y dejar la parte específica como details.
+​
+
+6) Placeholders y rutas incompletas en admin
+El ROADMAP señala que ~30–40% de rutas admin son placeholders o mock data (coming soon, páginas vacías como maintenance, ciertas páginas de operations/security/spaces).
+​
+
+Riesgo: usuarios viendo secciones que “no hacen nada”, generando desconfianza o soporte innecesario.
+​
+
+Mejora: ocultar en navegación todo lo que siga marcado como placeholder y exponer sólo features terminadas; seguir el plan de “PLACEHOLDER CLEANUP” ya documentado.
+​
+
+7) Scripts y código de pruebas mezclados en el repo principal
+Hay muchos scripts de test/manual (stress test de ingest, pruebas de Gemini, GC, circuit breaker, backup/compliance, etc.) en el mismo árbol.
+​
+
+Riesgo: alguien ejecutando scripts contra entornos de producción sin querer, o arrastrándolos a pipelines; ruido cognitivo al leer el código.
+​
+
+Mejora: mover esos scripts a scripts/ o a un paquete de tooling en el monorepo y etiquetarlos claramente como “dev/test only”.
+​
+
+8) Doble representación de estados de ingest en DB
+Tienes ingestionStatus, hasChunks, hasStorage, storageError, stuckReason, stuckAt, etc.
+​
+
+Riesgo: combinaciones incoherentes (p.ej. COMPLETED pero hasChunks=false, sin motivo claro), que complican la UI.
+​
+
+Mejora: documentar una matriz pequeña de estados válidos (COMPLETED con chunks, COMPLETED sin index, FAILED, STUCK) y hacer que los updaters la respeten siempre.
+
+
+
+Te los separo en dos bloques: 1) FSM única de ingestión, 2) estados válidos en DB y cómo usarlos en UI. Si en algún punto quieres que baje más a detalle de implementación, me lo dices.
+
+1) FSM única de ingestión: cómo unificar y dónde tocar
+1.1. Decisión conceptual
+Instrucción para el equipo:
+
+Elegid una sola FSM de ingestión como “oficial” para todo el ciclo de vida de un asset, incluyendo:
+
+PENDIENTE / PENDING (documento preparado, pero no en cola).
+
+EN COLA / QUEUED.
+
+EN PROCESO / PROCESSING.
+
+COMPLETADO / COMPLETED.
+
+FALLIDO / FAILED.
+
+BLOQUEADO / STUCK.
+
+MUERTO / DEAD (opcional, si queréis distinguir “no se tocará más”).
+
+Documentad en un diagrama simple (Confluence/miro) las transiciones permitidas y quién puede ejecutarlas:
+
+Sistema (ingest worker, StuckDetector).
+
+Usuario/administrador (reintentos manuales desde UI).
+
+Acordad un único nombre de tipo para el código (IngestState o similar) y usadlo en todas las capas:
+
+dominio (use cases),
+
+repositorios,
+
+API admin,
+
+front.
+
+1.2. Inventario de transiciones actuales
+Tareas para los devs:
+
+Revisar todos los sitios donde se cambia ingestionStatus o se validan transiciones:
+
+PrepareIngestionUseCase (PENDING → QUEUED).
+
+ExecuteIngestionAnalysisUseCase (QUEUED/PENDING → PROCESSING → COMPLETED/FAILED).
+
+StuckDetector (PROCESSING → FAILED + STUCK, dependiendo de la versión).
+
+IngestService/executeAnalysis (PENDING/QUEUED → PROCESSING → COMPLETED/FAILED).
+
+Cualquier job de mantenimiento que marque STUCK/FAILED/DEAD.
+
+Para cada punto, anotar:
+
+estado actual antes del cambio,
+
+estado final que pone,
+
+si valida transición con alguna clase FSM o lo setea “a pelo”,
+
+si registra en logs/auditoría.
+
+Con esto, construir una tabla “estado actual → estado deseado” y decidir si hay transiciones que deben prohibirse (por ejemplo, COMPLETED → PENDING salvo override manual explícito).
+
+1.3. Elegir el validador “oficial” y deprecar el otro
+Instrucciones:
+
+Elegid uno de los dos validadores (StateTransitionValidator de ingest vs el más genérico) como único punto de verdad para transiciones:
+
+Lo ideal: el más nuevo que ya tiene:
+
+registro de transiciones,
+
+allowOverride para reintentos manuales,
+
+hash de auditoría.
+
+En todos los sitios donde hoy:
+
+se cambia el estado directamente (updateStatus(..., 'FAILED', ...)),
+
+o se usa el validador “viejo”,
+
+sustituir por:
+
+llamada al validador oficial:
+
+primero validate/transition,
+
+después el updateStatus sobre el repositorio,
+
+asegurando que se usa el mismo correlationId y tenantId.
+
+Marcar el validador descartado como @deprecated en el código y evitar añadir nuevas llamadas allí.
+
+1.4. Reintentos manuales y overrides
+Casos que deben quedar claros para los devs:
+
+Reintento manual desde UI (asset FAILED):
+
+Solo permitido si se pasa explícitamente allowOverride=true (o equivalente) al validador para la transición FAILED → PENDING.
+
+Debe quedar registrado:
+
+quién ha disparado el reintento,
+
+cuándo,
+
+qué motivo (texto simple: “reintento manual desde panel admin”).
+
+Jobs en STUCK:
+
+Decidir política:
+
+¿permitimos STUCK → PENDING con override manual?,
+
+¿o STUCK → FAILED/DEAD y solo se puede clonar/re-ingestar?
+
+Implementar esas reglas en la FSM, no en lógica ad‑hoc en los workers.
+
+Reintentos automáticos (BullMQ):
+
+Los reintentos internos de BullMQ no deben tocar ingestionStatus a PENDING;
+
+solo deben reflejarse en:
+
+contador attempts,
+
+logs de job,
+
+y, si tras el último intento sigue fallando, entonces sí transicionar a FAILED y enviar a DLQ.
+
+1.5. Estrategia de migración
+Pasos recomendados:
+
+Fase 1 (solo logs):
+
+Inyectar el nuevo validador oficial en los puntos clave pero sin cambiar la lógica de updateStatus (es decir, usarlo solo para verificar y loguear).
+
+Configurar para que, si detecta transiciones inválidas, registre un ERROR pero no rompa aún el flujo (modo “observe”).
+
+Fase 2 (enforcement):
+
+Tras un tiempo de observación, activar que las transiciones inválidas sí tiren error (como ya está diseñado).
+
+Revisar casos en los que la aplicación estaba “saltándose” el flujo correcto y corregirlos.
+
+Fase 3 (limpieza):
+
+Eliminar el código del validador antiguo y cualquier transición manual no registrada.
+
+Documentar la FSM como parte del diseño oficial de la plataforma.
+
+2) Matriz de estados válidos en DB y cómo usarla
+La idea es que, aparte de ingestionStatus, tienes otras columnas que describen el estado real del documento:
+
+hasChunks
+
+hasStorage
+
+storageError
+
+progress
+
+error
+
+attempts
+
+stuckReason, stuckAt
+
+Si no se ordenan, se pueden producir combinaciones raras.
+
+2.1. Definir una matriz pequeña de estados “canónicos”
+Para los devs de dominio/DB:
+
+Acordad 4–6 “situaciones” de alto nivel, cada una con una combinación permitida de campos, por ejemplo:
+
+PENDING:
+
+ingestionStatus = PENDING,
+
+hasChunks = false, hasStorage = false,
+
+progress = 0, attempts = 0, error = null.
+
+QUEUED:
+
+ingestionStatus = QUEUED,
+
+hasChunks = false, hasStorage puede ser false o true (si ya subiste a storage),
+
+progress pequeño pero > 0 si lo actualizáis al encolar.
+
+PROCESSING:
+
+ingestionStatus = PROCESSING,
+
+progress en (0,100), error = null,
+
+hasChunks puede seguir false hasta que termine indexación.
+
+COMPLETED_INDEXED:
+
+ingestionStatus = COMPLETED,
+
+hasChunks = true,
+
+progress = 100,
+
+error = null.
+
+COMPLETED_NO_INDEX:
+
+ingestionStatus = COMPLETED,
+
+hasChunks = false,
+
+progress = 100,
+
+error = null,
+
+se supone que skipIndexing = true o usage = TRANSACTIONAL.
+
+FAILED:
+
+ingestionStatus = FAILED,
+
+error no nulo,
+
+progress puede ser < 100,
+
+hasChunks en función de si falló en análisis o indexación.
+
+STUCK:
+
+ingestionStatus = STUCK,
+
+stuckReason no nulo, stuckAt no nulo.
+
+Documentad estas combinaciones en un README técnico, y usad ese documento como referencia cuando se hagan cambios en la pipeline.
+
+2.2. Asegurar que los servicios respetan la matriz
+Acciones para los devs backend:
+
+Revisar los puntos finales de la ingestión:
+
+Cuando ejecutas análisis (executeAnalysis),
+
+cuando termina indexación,
+
+cuando falla (catch),
+
+cuando el StuckDetector marca un asset.
+
+En cada uno, asegurar que:
+
+Además de cambiar ingestionStatus, se actualizan hasChunks, hasStorage, progress, error, etc., de forma coherente con la “situación” que aplica.
+
+Ejemplos:
+
+Si indexación se salta por skipIndexing, acabar en COMPLETED_NO_INDEX y no poner hasChunks=true.
+
+Si el análisis ha terminado bien pero Cloudinary falla, hasChunks=true, hasStorage=false, storageError con mensaje, pero ingestionStatus sigue siendo COMPLETED_INDEXED.
+
+Opcional pero recomendable:
+
+Implementar una pequeña función “normalizadora” en el repositorio de assets que, dado un ingestionStatus y un contexto, setee todos los campos relacionados de una vez.
+
+Esto reduce las posibilidades de que una ruta se olvide de actualizar algo.
+
+2.3. Validación de integridad (sanity checks)
+Para devops/ops:
+
+Crear una tarea periódica (job de mantenimiento) que:
+
+Revise los knowledgeassets buscando combinaciones incoherentes, por ejemplo:
+
+ingestionStatus = COMPLETED y progress < 100.
+
+hasChunks = true pero totalChunks = 0.
+
+ingestionStatus = FAILED y error = null.
+
+Para cada caso:
+
+Lo registre en logs,
+
+y opcionalmente marque el asset como STUCK y envíe a DLQ para revisión manual.
+
+Esta tarea es especialmente útil durante la transición a la nueva FSM, para detectar “residuos” del comportamiento antiguo.
+
+2.4. Uso en la UI (biblioteca de documentos)
+Para el equipo frontend/Product:
+
+Derivar un estado de UI a partir de la matriz, sin exponer todos los flags técnicos:
+
+“Subido / en cola” (PENDING/QUEUED).
+
+“Procesando” (PROCESSING).
+
+“Disponible para búsqueda” (COMPLETED_INDEXED).
+
+“Subido, pero no indexado” (COMPLETED_NO_INDEX).
+
+“Error en ingestión” (FAILED / STUCK).
+
+Decidir qué acciones se permiten en cada estado:
+
+“Reintentar ingestión” solo en FAILED/STUCK.
+
+“Forzar indexado” solo en COMPLETED_NO_INDEX.
+
+Nada en COMPLETED_INDEXED salvo eliminar, archivar, etc.
+
+Mostrar la mínima información técnica que ayude:
+
+Para FAILED/STUCK:
+
+icono de error + tooltip con error o stuckReason.
+
+Para COMPLETED_NO_INDEX:
+
+badge de aviso (“no participa en búsqueda”).
+
+Evitar mostrar campos crudos como hasChunks, hasStorage al usuario de negocio; usarlos solo internamente o en vistas avanzadas.
+
+
+
+Cojo el flujo de reintento manual desde DLQ y lo dejo como “caso modelo” extremo a extremo.
+
+1) Punto de partida: asset en FAILED + entrada en DLQ
+Situación de inicio:
+
+Asset con:
+
+ingestionStatus = FAILED.
+
+error con el motivo técnico.
+
+attempts >= 1.
+
+Dead Letter Queue con un registro:
+
+docId, tenantId, jobType (PDFANALYSIS), failureReason, retryCount, lastAttempt, stackTrace, jobData, startTime.
+​
+
+UI:
+
+En el panel de DLQ, el usuario ve una fila con:
+
+documento, motivo de fallo, cuántos reintentos automáticos ha habido (retryCount), cuándo fue el último intento.
+​
+
+También ve un botón “Reintentar ingestión” (o similar) y, opcionalmente, “Marcar como resuelto sin reintentar”.
+
+2) Qué debe ocurrir cuando el admin pulsa “Reintentar”
+2.1. Reglas de negocio
+Instrucciones para el equipo:
+
+Solo se permite reintento si:
+
+el asset está en FAILED o STUCK,
+
+el usuario tiene rol suficiente (Admin/Engineering/Support, según política),
+
+y el documento sigue existiendo.
+
+El reintento manual debe:
+
+quedar auditado (quién lo hizo, cuándo, por qué),
+
+usar la FSM con un override explícito,
+
+respetar las flags de ingestión que ya tenía el asset (scope, maskPii, premium, chunking, etc.).
+
+2.2. Secuencia de acciones backend
+El endpoint que atiende el botón de reintento debería hacer, en orden:
+
+Recuperar el registro de DLQ por dlqId + validar:
+
+Leer docId, tenantId, jobType, retryCount, failureReason.
+
+Verificar que el jobType es uno de los que soportan reintento (por ejemplo, solo PDFANALYSIS de ingest).
+
+Verificar que el usuario actual tiene permiso para reintentar jobs de ese tenant.
+
+Leer el asset actual:
+
+Buscar el asset por docId en knowledgeassets.
+
+Comprobar su ingestionStatus actual:
+
+si está en FAILED/STUCK → OK, se puede plantear reintento;
+
+si está en COMPLETED o en cualquier otro estado inesperado → abortar y mostrar mensaje claro (“el documento ya no está fallido; revise la ficha”).
+
+Decidir el tipo de reintento:
+
+Re-ingesta completa del documento (preparación + análisis + indexación) es la opción más robusta:
+
+útil si el error fue transitorio (LLM, red, servicio externo).
+
+Reintento solo de la fase que falló:
+
+por ejemplo, solo indexación si el análisis ya tiene resultados guardados.
+
+Para simplificar el modelo, lo más práctico suele ser:
+
+volver a lanzar la ingestión completa, reutilizando el archivo original (desde blob storage/Cloudinary) y la configuración del asset.
+
+FSM: transición FAILED/STUCK → PENDING con override
+
+Invocar al validador oficial de estados con:
+
+currentState = FAILED (o STUCK),
+
+nextState = PENDING,
+
+allowOverride = true,
+
+reason = "Manual retry from DLQ",
+
+docId, tenantId, correlationId del job original (si se conserva) o uno nuevo si se decide regenerarlo.
+
+Si el validador rechaza la transición (por reglas futuras), registrar el intento y devolver error legible al cliente.
+
+Actualizar asset a PENDING
+
+Hacer un updateStatus del asset con:
+
+ingestionStatus = PENDING,
+
+error = null o mover el error a un historial aparte si queréis conservarlo,
+
+quizás progress = 0,
+
+attempts incrementado (para diferenciar intentos manuales de automáticos).
+
+Re-encolar ingestión
+
+Reutilizar un único punto de entrada para encolar (no reimplementar lógica):
+
+Idealmente un use case tipo “RetryIngestionUseCase” que:
+
+re-usa la configuración almacenada en el asset (scope, maskPii, chunking, premium flags),
+
+llama a la cola (BullMQ o simple queue según política),
+
+actualiza ingestionStatus a QUEUED,
+
+y devuelve jobId para mostrarlo en UI.
+
+Actualizar el registro de DLQ
+
+Marcar el registro como “reintentado”/“resuelto” con:
+
+resolved = true,
+
+resolvedAt,
+
+resolvedBy (email/userId),
+
+resolutionType = "RETRY".
+
+No borrar el registro: se puede usar para analytics posteriores (tasa de éxito tras reintento manual).
+
+Auditoría
+
+Registrar un evento de auditoría en tu IAuditRepository o sistema de logs:
+
+“Manual ingest retry triggered from DLQ for docId X, by user Y, previous failure Z”.
+
+3) Comportamiento en la UI tras disparar el reintento
+3.1. En la pantalla de DLQ
+Decisiones para frontend:
+
+Tras pulsar “Reintentar”:
+
+indicar feedback inmediato (“Reintento programado”) sin esperar a que termine la ingestión.
+
+ocultar el registro de DLQ de la lista principal o pasarlo a una sección “resueltos”/histórico.
+
+Mostrar, en algún sitio de detalles (si existen):
+
+el enlace al asset,
+
+un enlace a la vista de “Jobs recientes” filtrada por docId/correlationId,
+
+e indicar que está “Encolado” o “En proceso”.
+
+3.2. En la biblioteca de documentos
+Cuando el usuario vaya a la Document Library:
+
+El asset debe aparecer con el nuevo estado:
+
+primero PENDING / QUEUED,
+
+luego PROCESSING con barra de progreso,
+
+y finalmente COMPLETED o FAILED de nuevo.
+
+En la ficha del documento, conviene mostrar:
+
+un pequeño historial legible:
+
+“Fallo el día X: [mensaje de error]”
+
+“Reintento manual lanzado por [usuario] el día Y”
+
+“Estado actual: [COMPLETED/FAILED]”.
+
+Esto se construye a partir de:
+
+logs de ingest,
+
+registros de DLQ,
+
+y la nueva FSM de estados.
+
+4) Qué pasa si el reintento vuelve a fallar
+Reglas de negocio recomendadas:
+
+Si el reintento manual falla:
+
+el asset vuelve a FAILED;
+
+se crea un nuevo registro en DLQ (no se reusa el anterior) con:
+
+retryCount incrementado,
+
+failureReason nuevo.
+
+La UI debería indicar que:
+
+“Este documento ha fallado N veces (incluidos reintentos manuales). Recomendado: revisión técnica o excluir de ingestión”.
+
+A partir de cierto número de fallos (configurable):
+
+Podéis decidir marcar el asset como DEAD en la FSM y no ofrecer más reintentos desde UI, salvo que alguien con rol muy alto lo fuerce expresamente.
+
+5) Rol de la matriz de estados en este flujo
+En todo este caso modelo, la matriz de estados que definimos antes ayuda a:
+
+Verificar que, tras pulsar “Reintentar”, el asset pasa por combinaciones coherentes:
+
+FAILED → PENDING (sin chunks nuevos).
+
+PENDING → QUEUED → PROCESSING → COMPLETED_INDEXED o COMPLETED_NO_INDEX.
+
+Detectar anomalías si algo se salta el proceso:
+
+por ejemplo, un asset en COMPLETED pero con hasChunks=false y skipIndexing=false, lo que debería disparar una alerta.
+
+
+Para “obsoleto/archivado” el truco es separarlo mentalmente de ingestión: son estados de ciclo de vida funcional, no de pipeline técnica.
+​
+
+1) Modelo conceptual: dos ejes distintos
+Instrucciones para el equipo:
+
+Eje 1: Ingestión técnica
+
+ingestionStatus: PENDING, QUEUED, PROCESSING, COMPLETED, FAILED, STUCK, etc.
+​
+
+Campos técnicos: hasChunks, hasStorage, progress, error, etc.
+​
+
+Eje 2: Ciclo de vida funcional del asset
+
+status o similar (ya lo tenéis): vigente/active, obsoleto/obsolete, archivado/archived.
+​
+
+Regla general:
+
+Los cambios “obsoleto/archivado” no deben tocar ingestionStatus ni nada de pipeline.
+
+Son solo decisiones de negocio: si el documento se sigue usando en búsqueda, análisis, informes, etc.
+
+2) Definir claramente qué significa cada estado funcional
+Acordad con producto:
+
+ACTIVO / vigente:
+
+El documento participa en búsquedas RAG y en respuestas del asistente.
+​
+
+OBSOLETO:
+
+El documento sigue indexado (no rompemos el histórico), pero:
+
+se priorizan otros activos más recientes,
+
+podría excluirse de ciertos flujos (ej. no usar en informes por defecto).
+
+ARCHIVADO:
+
+El documento no participa en RAG por defecto:
+
+se excluye de búsquedas normales,
+
+solo aparece si se filtra explícitamente por “incluir archivados” o se accede a él desde histórica.
+
+Importante para devs:
+
+Para ARCHIVADO, no borréis los chunks del índice sin una decisión explícita:
+
+primero desactivadlo lógicamente (flag “no searchable”),
+
+y solo si hay política de borrado físico, haced una tarea de limpieza que elimine chunks y actualice hasChunks=false (manteniendo audit trail).
+​
+
+3) Flujos de cambio de estado desde la UI
+3.1. Cambiar a obsoleto o archivado
+En la KnowledgeAssetsManager ya tenéis un menú de acciones y cambios de status mediante un endpoint (api/admin/knowledge-assets/status).
+​
+
+Instrucciones:
+
+Al pulsar “Marcar como obsoleto”:
+
+Backend:
+
+Validar permisos (solo ciertos roles).
+
+Actualizar campo funcional status = obsolete (o similar) sin tocar ingestionStatus.
+​
+
+Registrar en auditoría qué usuario hizo el cambio y sobre qué doc.
+​
+
+Front:
+
+Mostrar badge “Obsoleto” en la tabla.
+​
+
+Opcional: icono/tooltip indicando por qué (p.ej. hay un documento más nuevo).
+
+Al pulsar “Archivar”:
+
+Backend:
+
+Igual que arriba, status = archived, sin tocar ingest.
+​
+
+Opcional: disparar un workflow que marque el asset como “no searchable” en el índice (flag en metadata de chunks o filtro en la capa de búsqueda).
+
+Front:
+
+Badge “Archivado” y posible icono de caja.
+​
+
+En el buscador simple, no mostrarlo a menos que se active un filtro “Incluir archivados”.
+
+3.2. Evitar interferencias con ingestión
+Reglas para desarrolladores:
+
+No permitir cambiar a obsoleto/archivado si ingestionStatus no es COMPLETED/FAILED:
+
+si está PENDING/PROCESSING, bloquear acción y mostrar mensaje:
+
+“No se puede archivar un documento mientras se está procesando; espera a que termine o falle la ingestión.”
+
+Nunca cambiar ingestionStatus a FAILED/COMPLETED/etc. desde las acciones de “obsoleto/archivado”; esos estados solo los maneja la pipeline.
+​
+
+4) Efecto en la búsqueda y en los asistentes
+Para los devs de RAG/búsqueda:
+
+Incluir el status funcional en los filtros por defecto:
+
+Búsqueda estándar y asistente técnico:
+
+por defecto, solo status in (active/vigente).
+​
+
+Añadir un flag opcional en APIs de búsqueda:
+
+includeObsolete, includeArchived (o una lista de estados permitidos).
+
+Política sugerida:
+
+Obsoleto:
+
+se pueden incluir pero con menor relevancia (penalización en scoring).
+
+Archivado:
+
+excluidos por defecto, solo si la query lo pide explícitamente (ej. en filtros avanzados).
+
+En la UI de resultados:
+
+Si un chunk procede de un doc obsoleto o archivado, mostrar un pequeño indicador (“Origen: documento obsoleto/archivado”) para transparencia.
+
+5) Interacción con la FSM de ingestión y la matriz de estados
+Relación clara para el equipo:
+
+FSM de ingestión y matriz de estados (COMPLETED_INDEXED, COMPLETED_NO_INDEX, FAILED, STUCK, etc.) determinan si el documento está técnicamente disponible.
+​
+
+Estados funcionales (activo/obsoleto/archivado) determinan si se debe usar en negocio y cómo.
+
+Ejemplos para que los devs lo usen como referencia:
+
+COMPLETED_INDEXED + status = active:
+
+uso normal en RAG.
+
+COMPLETED_INDEXED + status = obsolete:
+
+uso en RAG con penalización, preferir docs activos.
+
+COMPLETED_INDEXED + status = archived:
+
+no usar salvo petición explícita.
+
+FAILED + status = active:
+
+documento visible en biblioteca pero no utilizable en RAG; mostrar banner de error.
+
+FAILED + status = archived:
+
+error histórico, pero el documento está “fuera de servicio”; probablemente dejar solo la ficha, sin intentar reingesta.
+
+6) Auditoría y gobernanza
+Finalmente, para governance/compliance:
+
+Cada cambio de estado funcional (activo/obsoleto/archivado) debe:
+
+generar un log/auditoria (fuente UIDOCS o similar) con:
+
+usuario, docId, estado anterior → nuevo, motivo si se recoge.
+​
+
+En el Governance Hub:
+
+sección pequeña “Estados funcionales de documentos” que muestre:
+
+cuántos activos, obsoletos, archivados,
+
+quién ha archivado qué en los últimos X días.
+
+Así dejáis muy claro, dentro y fuera del equipo, que:
+
+“Ingestión” es puro pipeline técnico,
+
+“Activo/obsoleto/archivado” es un eje funcional separado,
+
+y las acciones de negocio no rompen la maquinaria de ingestión ni su FSM.
+
+
+
+í, dos puntos transversales que pueden ayudar bastante si los tenéis en cuenta al implementar todo lo anterior.
+​
+
+1) Documentar “contratos” en vez de solo código
+Recomendación para el equipo:
+
+Por cada pieza que hemos tocado (FSM de ingestión, matriz de estados DB, modos de ingest, estados funcionales activo/obsoleto/archivado, IA premium), preparad una página corta de referencia con:
+
+Qué problema resuelve.
+
+Cuáles son los estados posibles y qué significan.
+
+Qué servicios tienen permiso para cambiarlos.
+
+Qué ve el usuario en la UI cuando eso pasa.
+
+Esa documentación debería ser la referencia para:
+
+PRs de nuevas features,
+
+revisiones de diseño,
+
+y onboarding de nuevos devs.
+
+Eso reduce el riesgo de que alguien, dentro de unos meses, vuelva a duplicar FSMs, flags o lógica de estados porque no entendía el contrato existente.
+​
+
+2) Tests de extremo a extremo orientados a “historias”
+Más que tests unitarios aislados (que ya tenéis bastante), os conviene añadir unos pocos tests de historia completa, por ejemplo:
+
+“Subo documento → se procesa bien → lo marco como obsoleto → hago búsqueda → el sistema prefiere docs activos pero todavía sabe que existe el obsoleto”.
+​
+
+“Documento falla en ingestión → entra en DLQ → reintento manual → pasa por la FSM correcta → termina en COMPLETED_INDEXED”.
+​
+
+“Documento con IA premium en modo experto → se registra coste en LLMCostTracker → aparece en panel de uso de IA”.
+​
+
+Estos tests pueden ser:
+
+de API (via supertest/playwright) o
+
+flows de integración con una base de datos real pero aislada.
+
+El objetivo es asegurar que los contratos que definís (FSM, estados DB, visibilidad en UI, monetización de IA) siguen cumpliéndose cuando el producto evoluciona.
+
+
+Si vais justos de tiempo/equipo, priorizaría en este orden:
+
+FSM única de ingest + matriz de estados coherente (evita bugs raros y “fantasmas” en producción).
+​
+
+Flujo de reintento manual desde DLQ bien definido (reduce mucho soporte).
+​
+
+Separar claramente estados funcionales (activo/obsoleto/archivado) de ingestión en la UI.
+​
+
+Exponer y monetizar bien el modo experto / IA premium sin complicar el modo básico.
+​
+
+
+A. FSM única de ingestión
+A1. Diseño y documentación
+
+ Redactar documento de diseño de la FSM única de ingestión (estados, transiciones, actores).
+​
+
+ Acordar naming final del tipo de estado (IngestionState o IngestState) y lista cerrada de valores.
+​
+
+ Añadir diagrama simple (mermaid/miro) y enlazarlo desde el repo.
+
+A2. Inventario de transiciones actuales
+
+ Localizar todos los puntos que modifican ingestionStatus:
+
+PrepareIngestionUseCase.
+
+ExecuteIngestionAnalysisUseCase.
+
+IngestService.executeAnalysis / processDocument.
+
+StuckDetector.recoverStuckJobs.
+
+Cualquier script de mantenimiento que toque estados.
+​
+
+ Para cada punto, documentar currentState esperado, nextState actual y contexto.
+​
+
+A3. Unificación del validador
+
+ Elegir el validador de estados que será “oficial” (FSM ingest vs STATEVALIDATOR genérico).
+​
+
+ Marcar el otro como deprecado en código y bloquear nuevos usos.
+​
+
+ En cada lugar inventariado en A2:
+
+ Sustituir cambios directos de ingestionStatus por:
+
+llamada al validador oficial,
+
+luego updateStatus en el repositorio.
+​
+
+ Asegurar que se pasa correlationId, tenantId, docId y reason adecuados.
+​
+
+A4. Reintentos y overrides
+
+ Definir política oficial para:
+
+FAILED → PENDING (solo con override manual explícito).
+
+STUCK → PENDING/FAILED/DEAD según decisión de negocio.
+​
+
+ Implementar allowOverride/equivalente en el validador oficial si no existe en esa versión.
+​
+
+ Actualizar los flujos:
+
+reintento manual (DLQ, panel de assets),
+
+StuckDetector,
+para que usen el override solo donde esté permitido.
+​
+
+A5. Fase de observación y enforcement
+
+ Añadir logging de transiciones inválidas en modo “observe” (no tirar error aún).
+​
+
+ Monitorizar durante X semanas: número de transiciones inválidas, rutas implicadas.
+​
+
+ Corregir rutas conflictivas.
+
+ Activar modo “enforcement” (transiciones inválidas lanzan error y se registran para forensics).
+​
+
+B. Matriz de estados válidos en DB
+B1. Definición de combinaciones válidas
+
+ Definir 4–6 “situaciones” canónicas de asset:
+
+PENDING, QUEUED, PROCESSING, COMPLETED_INDEXED, COMPLETED_NO_INDEX, FAILED, STUCK.
+​
+
+ Para cada situación, fijar valores esperados de:
+
+ingestionStatus, hasChunks, hasStorage, progress, error, totalChunks, stuckReason, etc.
+​
+
+ Documentar la tabla y añadirla al repo (ej. docs/ingestion-states.md).
+
+B2. Normalización desde backend
+
+ Implementar un helper de dominio (p.ej. applyIngestionState(asset, newState, context)) que:
+
+calcule y setee todos los campos relacionados de forma coherente,
+
+se use desde los use cases y servicios, no directamente desde controladores.
+​
+
+ Refactorizar:
+
+IngestService.executeAnalysis (COMPLETED/FAILED).
+​
+
+IngestWorkerService / ExecuteIngestionAnalysisUseCase.
+​
+
+StuckDetector.recoverStuckJobs.
+​
+para que llamen a ese helper en vez de manipular campos sueltos.
+
+B3. Job de sanity check
+
+ Crear job periódico de integridad de knowledgeassets que:
+
+busque combinaciones incoherentes (COMPLETED con progress<100, hasChunks=true pero totalChunks=0, FAILED sin error, etc.).
+​
+
+registre resultados y, opcionalmente, marque como STUCK y añada a DLQ ciertos casos.
+​
+
+ Exponer un resumen de incidencias en algún panel de operaciones (número de assets “inconsistentes”).
+​
+
+C. Reintento manual desde DLQ
+C1. Backend
+
+ Diseñar endpoint específico p.ej. POST /api/admin/dead-letter/:id/retry con:
+
+validación de rol/tenant,
+
+lectura del registro DLQ,
+
+verificación de tipo de job soportado.
+​
+
+ Implementar flujo:
+
+cargar asset por docId, validar estado FAILED/STUCK,
+
+pasar por FSM: FAILED/STUCK → PENDING con override,
+
+actualizar asset a PENDING (limpiando error, reseteando progreso según política),
+
+re-encolar ingestión reutilizando un use case existente,
+
+marcar registro DLQ como resolved con resolvedBy, resolvedAt, resolutionType.
+​
+
+ Registrar en auditoría (IAuditRepository/logEvento) la acción de reintento manual.
+​
+
+C2. Frontend (panel DLQ)
+
+ Añadir botón “Reintentar ingestión” en cada fila aplicable, con confirmación.
+​
+
+ Mostrar feedback inmediato (“Reintento programado”) sin bloquear hasta que termine el proceso.
+​
+
+ Mover el registro a sección “Resueltos”/histórico o marcarlo visualmente como tal.
+​
+
+ Añadir enlace rápido a:
+
+ficha del documento,
+
+tabla de jobs recientes filtrada por docId/correlationId.
+​
+
+D. Estados funcionales activo/obsoleto/archivado
+D1. Modelo de dominio
+
+ Revisar el enumerado status de KnowledgeAsset y consolidar valores active/vigente, obsolete/obsoleto, archived/archivado.
+​
+
+ Documentar significado de cada estado y su efecto en:
+
+inclusión en RAG,
+
+presencia en UI,
+
+posibles borrados físicos futuros.
+​
+
+D2. API de cambio de estado funcional
+
+ Asegurar endpoint de cambio de status (ya existe api/admin/knowledge-assets/status) con:
+
+validación de roles,
+
+restricción para no cambiar a obsoleto/archivado si ingestionStatus está PENDING/PROCESSING.
+​
+
+ Garantizar que estos cambios no tocan ingestionStatus ni campos técnicos.
+​
+
+ Añadir logging/auditoría por cambio (usuario, estado anterior → nuevo, motivo opcional).
+​
+
+D3. UI de Document Library
+
+ Usar status funcional para:
+
+badges de ACTIVO/OBSOLETO/ARCHIVADO.
+​
+
+acciones disponibles en menú (no mostrar “archivar” si ya está archivado, etc.).
+​
+
+ Impedir acciones de estado funcional si ingestión está en curso (mostrar mensaje claro).
+​
+
+D4. Integración con búsqueda/RAG
+
+ Ajustar consultas de búsqueda para:
+
+por defecto, filtrar a status = active.
+​
+
+permitir flags includeObsolete/includeArchived en modo avanzado.
+​
+
+ Implementar penalización de relevancia para obsoletos y exclusión por defecto de archivados.
+​
+
+ Añadir indicador en las fuentes mostradas en las respuestas cuando vienen de docs obsoletos/archivados.
+
+E. Gobernanza de IA premium (modo experto)
+E1. Contrato de configuración
+
+ Definir IngestConfig claro (mode, indexing, premium.flags, privacy, chunking) y documentarlo.
+​
+
+ Asegurar que:
+
+UnifiedIngestModal simple usa useSmartConfig y no permite activar premium flags.
+​
+
+Modo experto sí permite toggles Vision/Translation/GraphRag/Cognitive y sliders de chunking.
+​
+
+ Unificar la construcción de analysisOptions a partir de asset/config, evitando mezclar asset.enableX y options.enableX arbitrariamente.
+​
+
+E2. Monetización/usage
+
+ Persistir resumen de coste LLM por doc usando LLMCostTracker.getDocumentCost, no sólo logs:
+
+colección usagelogs/equivalente para billing.
+​
+
+ En Billing/Usage:
+
+mostrar nº de docs con IA avanzada, coste aproximado, usuarios que más consumen.
+​
+
+ Implementar límites:
+
+por plan: máximo de docs premium/mes, o créditos IA,
+
+bloqueo visual de toggles premium en modo experto cuando se excede el límite.
+​
+
+E3. UI
+
+ Etiquetar claramente en ficha de documento:
+
+“Análisis estándar” vs “Análisis IA avanzado (Vision/Graph/Cognitive)”.
+​
+
+ Mostrar, en Governance Hub, un resumen de uso IA premium por mes y por tenant.
+​
+
+F. Documentación y tests de historia
+F1. Documentación
+
+ Crear sección “Ingestion & Lifecycle” en docs del proyecto con:
+
+FSM, matriz de estados, estados funcionales, contratos de ingest.
+​
+
+F2. Tests E2E por historias
+
+ Test “Ingestión simple completa + marcar obsoleto y búsqueda”:
+​
+
+ Test “Fallo ingestión + DLQ + reintento manual → COMPLETED_INDEXED”:
+​
+
+ Test “Doc premium en modo experto → tracking de coste LLM + panel de uso IA”.
+​
+
+Con esto tienes un checklist bastante directo para repartir por áreas (backend ingest, admin UI, RAG/búsqueda, billing/governance, QA).

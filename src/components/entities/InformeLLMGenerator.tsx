@@ -160,7 +160,7 @@ export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMG
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 animate-in slide-in-from-top-2 duration-300">
                                         <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                                             <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Modelo de Datos</p>
-                                            <p className="text-xs font-mono text-slate-700">{metadata.model || 'Gemini 1.5'}</p>
+                                            <p className="text-xs font-mono text-slate-700">{metadata.model || 'Gemini 2.5'}</p>
                                         </div>
                                         <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                                             <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Volumen Procesado</p>

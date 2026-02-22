@@ -3,7 +3,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { SpaceService } from '@/services/space-service';
+import { SpaceService } from '@/services/tenant/space-service';
 import { SpaceSchema, Space } from '@/lib/schemas/spaces';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { z } from 'zod';

@@ -18,7 +18,9 @@
     "archive": "Archive",
     "delete": "Permanent Delete",
     "mark_reviewed": "Mark as Reviewed",
-    "snooze_review": "Snooze Review"
+    "snooze_review": "Snooze Review",
+    "analyze": "Analyze / Consult",
+    "view_chunks": "View Ingested Chunks"
   },
   "table": {
     "document": "Document",
@@ -28,7 +30,8 @@
     "actions": "Actions",
     "loading": "Loading documents...",
     "empty": "No documents found.",
-    "uploaded": "Uploaded on"
+    "uploaded": "Uploaded on",
+    "cost_tooltip": "Estimated processing cost (tokens/vision)"
   },
   "status": {
     "pending": "Pending",

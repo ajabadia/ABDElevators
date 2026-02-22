@@ -1,8 +1,9 @@
 
 import { z } from 'zod';
 
-// Temporary imports from root until core schemas are moved
 import { IndustryTypeSchema, AppEnvironmentEnum } from '@/lib/schemas/core';
+// Re-export core schemas to ensure monorepo consistency
+export { IndustryTypeSchema, AppEnvironmentEnum };
 
 /**
  * 📚 RAG & Knowledge Management Schemas
@@ -37,13 +38,13 @@ export const DocumentChunkSchema = z.object({
     textBefore: z.string().optional(),
     textAfter: z.string().optional(),
     language: z.string().default('es'),
-    embedding: z.array(z.number()),
+    embedding: z.array(z.number()).optional(),
     embedding_multilingual: z.array(z.number()).optional(),
 
     isShadow: z.boolean().default(false).optional(),
     originalLang: z.string().optional(),
     refChunkId: z.any().optional(),
-    cloudinaryUrl: z.string().optional(),
+    cloudinaryUrl: z.string().optional().nullable(),
     originalSnippet: z.string().optional(),
 
     createdAt: z.date().default(() => new Date()),
@@ -73,6 +74,8 @@ export const TaxonomySchema = z.object({
     active: z.boolean().default(true),
     createdAt: z.date().default(() => new Date()),
 });
+export type Taxonomy = z.infer<typeof TaxonomySchema>;
+export type TaxonomyValue = z.infer<typeof TaxonomyValueSchema>;
 
 export const RagAuditSchema = z.object({
     _id: z.any().optional(),
@@ -97,7 +100,7 @@ export const IngestAuditSchema = z.object({
     userAgent: z.string().optional(),
 
     filename: z.string(),
-    fileSize: z.number(),
+    sizeBytes: z.number(),
     md5: z.string(),
     docId: z.any().optional(),
 
@@ -168,7 +171,9 @@ export const IngestionStatusEnum = z.enum([
     'FAILED',
     'STORED_NO_INDEX',
     'INDEXED_NO_STORAGE',
-    'PARTIAL'
+    'PARTIAL',
+    'STUCK',
+    'DEAD'
 ]);
 export type IngestionStatus = z.infer<typeof IngestionStatusEnum>;
 
@@ -176,6 +181,7 @@ export const KnowledgeAssetSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
     industry: IndustryTypeSchema.default('ELEVATORS'),
+    usage: z.enum(['REFERENCE', 'TRANSACTIONAL']).default('REFERENCE'),
     filename: z.string(),
     componentType: z.string(),
     model: z.string(),
@@ -196,7 +202,7 @@ export const KnowledgeAssetSchema = z.object({
 
     chunkingLevel: z.enum(['bajo', 'medio', 'alto']).default('bajo'),
 
-    cloudinaryUrl: z.string().optional(),
+    cloudinaryUrl: z.string().optional().nullable(),
     cloudinaryPublicId: z.string().optional(),
     fileMd5: z.string().optional(),
     sizeBytes: z.number().default(0),
@@ -211,6 +217,25 @@ export const KnowledgeAssetSchema = z.object({
     spaceId: z.string().optional(),
     correlationId: z.string().optional(),
     environment: AppEnvironmentEnum.optional(),
+    skipIndexing: z.boolean().default(false), // Phase 204: Skip vector indexing for transactional docs
+    enablePremiumEmbedding: z.boolean().default(false), // Phase 205: Control Gemini embedding for deterministic flows
+
+    // Phase 199: Cost Persistence & Metrics
+    ingestionCost: z.object({
+        totalTokens: z.number().default(0),
+        totalUSD: z.number().default(0),
+        breakdown: z.array(z.object({
+            operation: z.string(),
+            model: z.string(),
+            tokens: z.number(),
+            costUsd: z.number()
+        })).default([])
+    }).optional(),
+    executionMetrics: z.object({
+        durationMs: z.number().default(0),
+        steps: z.record(z.string(), z.number()).optional(),
+        lastStep: z.string().optional()
+    }).optional(),
 
     nextReviewDate: z.date().optional().nullable(),
     lastReviewedAt: z.date().optional().nullable(),
@@ -235,3 +260,10 @@ export const FileBlobSchema = z.object({
     metadata: z.record(z.string(), z.any()).optional(),
 });
 export type FileBlob = z.infer<typeof FileBlobSchema>;
+
+
+// Inferred Types for Export
+export type DocumentChunk = z.infer<typeof DocumentChunkSchema>;
+export type RagAudit = z.infer<typeof RagAuditSchema>;
+export type IngestAudit = z.infer<typeof IngestAuditSchema>;
+export type RagEvaluation = z.infer<typeof RagEvaluationSchema>;

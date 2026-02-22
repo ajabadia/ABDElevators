@@ -17,7 +17,8 @@ export class MultilingualSearchService {
         limit = 5,
         industry: string = 'GENERIC',
         environment: string = 'PRODUCTION',
-        spaceId?: string
+        spaceId?: string,
+        filename?: string
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.multilingual_search', {
             attributes: {
@@ -27,7 +28,8 @@ export class MultilingualSearchService {
                 'rag.industry': industry,
                 'rag.strategy': 'BGE-M3',
                 'rag.environment': environment,
-                'rag.space_id': spaceId
+                'rag.space_id': spaceId,
+                'rag.filename': filename
             }
         }, async (span) => {
             const inicio = Date.now();
@@ -48,10 +50,11 @@ export class MultilingualSearchService {
                             "limit": limit,
                             "filter": {
                                 "$and": [
-                                    { "tenantId": { "$in": ["global", tenantId] } },
-                                    { "industry": industry },
-                                    { "environment": environment },
-                                    ...(spaceId ? [{ "spaceId": spaceId }] : [])
+                                    { "tenantId": { "$in": ["abd_global", tenantId] } },
+                                    { "industry": industry === 'GENERIC' ? { "$exists": true } : { "$in": [industry, "GENERIC"] } },
+                                    { "environment": environment === 'PRODUCTION' ? { "$in": ["PRODUCTION", "STAGING"] } : environment },
+                                    ...(spaceId ? [{ "spaceId": spaceId }] : []),
+                                    ...(filename ? [{ "sourceDoc": filename }] : [])
                                 ]
                             }
                         }

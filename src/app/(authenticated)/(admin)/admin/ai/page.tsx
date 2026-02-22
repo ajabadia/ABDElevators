@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrainCircuit, Activity, GitFork, Sparkles, LineChart, ArrowRight, Terminal } from "lucide-react";
+import { BrainCircuit, Activity, GitFork, Sparkles, LineChart, ArrowRight, Terminal, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
 
@@ -65,12 +65,21 @@ export default function AIHubPage() {
             isActive: true
         },
         {
+            id: "governance",
+            title: "Gobernanza de IA",
+            description: "Control central de modelos y límites de uso.",
+            href: "/admin/ai/governance",
+            icon: <Shield className="w-6 h-6 text-emerald-500" />,
+            color: "border-l-emerald-500",
+            isActive: true
+        },
+        {
             id: "prompts",
             title: t("cards.prompts.title"),
             description: t("cards.prompts.description"),
             href: "/admin/prompts",
             icon: <Terminal className="w-6 h-6" />,
-            color: "border-l-emerald-500",
+            color: "border-l-blue-500",
             isActive: true
         }
     ];

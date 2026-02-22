@@ -39,7 +39,7 @@ async function createUsageLogs(db: any, tenantId: string) {
             switch (type) {
                 case 'LLM_TOKENS':
                     value = Math.floor(Math.random() * 5000) + 100;
-                    resource = Math.random() > 0.5 ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+                    resource = Math.random() > 0.5 ? 'gemini-2.5-flash' : 'gemini-2.0-flash';
                     break;
                 case 'RAG_PRECISION':
                     value = Math.random() * (1 - 0.7) + 0.7; // 0.7 to 1.0

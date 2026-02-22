@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { connectDB, connectLogsDB } from "@/lib/db"
+import { TicketService } from "@/lib/ticket-service"
 import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
 
@@ -80,7 +81,11 @@ export async function GET(req: NextRequest) {
                 totalDocuments,
                 totalQueries,
                 accuracyRate,
-                avgResponseTime: 2.3 // Simulado, obtener de logs reales si es necesario
+                avgResponseTime: 2.3,
+                openTickets: (await TicketService.getTickets({
+                    userId: session.user.id,
+                    status: 'OPEN'
+                })).length
             },
             activities,
             correlationId

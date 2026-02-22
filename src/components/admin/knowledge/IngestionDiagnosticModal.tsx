@@ -57,7 +57,7 @@ export function IngestionDiagnosticModal({ isOpen, onClose, assetId, filename }:
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-7xl w-[95vw] h-[85vh] flex flex-col p-0 overflow-hidden border-slate-200">
+            <DialogContent className="max-w-none w-[98vw] h-[85vh] flex flex-col p-0 overflow-hidden border-slate-200">
                 <DialogHeader className="p-6 pb-2 border-b border-slate-100">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">

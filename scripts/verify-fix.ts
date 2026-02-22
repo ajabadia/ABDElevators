@@ -10,8 +10,8 @@ async function verifyModels() {
     const tenantId = 'test_tenant';
 
     try {
-        console.log('1. Testing "gemini-1.5-flash" (Direct)...');
-        const res1 = await callGeminiMini('Hello, respond only OK', tenantId, { correlationId, model: 'gemini-1.5-flash' });
+        console.log('1. Testing "gemini-2.5-flash" (Direct)...');
+        const res1 = await callGeminiMini('Hello, respond only OK', tenantId, { correlationId, model: 'gemini-2.5-flash' });
         console.log('   ✅ Response:', res1);
 
         console.log('\n2. Testing Mapping "gemini-3-flash-preview" -> Fallback...');

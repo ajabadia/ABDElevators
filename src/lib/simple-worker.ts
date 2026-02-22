@@ -1,5 +1,5 @@
 import { ingestionQueue } from './simple-queue';
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
 import { logEvento } from './logger';
 import * as dotenv from 'dotenv';
 import * as path from 'path';

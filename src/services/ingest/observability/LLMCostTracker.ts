@@ -2,33 +2,15 @@
  * LLM Cost Tracker for Ingestion Pipeline
  * 
  * Single Responsibility: Track and aggregate LLM costs per document
- * Max Lines: < 200 (Modularization Rule)
- * 
- * Banking-Grade Traceability:
- * - All cost calculations logged immutably
- * - Per-document cost aggregation
- * - Model pricing tracked
  */
 
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
+import { AI_MODEL_IDS, ModelName, MODEL_COSTS } from '@abd/platform-core';
 
 /**
- * LLM Cost Configuration (USD per 1K tokens)
- * Source: Gemini pricing as of 2024
- */
-const MODEL_COSTS = {
-    'gemini-1.5-pro': { input: 0.00125, output: 0.00375 },
-    'gemini-1.5-flash': { input: 0.000075, output: 0.0003 },
-    'gemini-2.0-flash': { input: 0.0001, output: 0.0004 },
-    'gemini-pro': { input: 0.00025, output: 0.0005 }, // Legacy
-    'text-embedding-004': { input: 0.00001, output: 0 }, // Embedding model
-} as const;
-
-type ModelName = keyof typeof MODEL_COSTS;
-
-/**
- * LLM Operation Cost
+ * Document Operation Cost
  */
 export interface LLMOperationCost {
     operation: string;
@@ -56,20 +38,12 @@ export interface DocumentCostSummary {
  * LLM Cost Tracker
  * 
  * Purpose: Aggregate LLM costs per document for billing and analytics
- * Scope: Per correlation ID (1 document = 1 correlation ID)
  */
 export class LLMCostTracker {
     private static costStore: Map<string, LLMOperationCost[]> = new Map();
 
     /**
      * Track single LLM operation cost
-     * 
-     * @param correlationId - Document correlation ID
-     * @param operation - Operation name (INDUSTRY_DETECTION, EMBEDDING, etc.)
-     * @param model - Model used
-     * @param inputTokens - Input tokens consumed
-     * @param outputTokens - Output tokens consumed
-     * @param durationMs - Operation duration
      */
     static async trackOperation(
         correlationId: string,
@@ -90,7 +64,6 @@ export class LLMCostTracker {
             durationMs,
         };
 
-        // Store in memory (keyed by correlationId)
         const existing = this.costStore.get(correlationId) || [];
         existing.push(operationCost);
         this.costStore.set(correlationId, existing);
@@ -100,11 +73,6 @@ export class LLMCostTracker {
 
     /**
      * Get cost summary for document
-     * 
-     * @param correlationId - Document correlation ID
-     * @param tenantId - Tenant ID
-     * @param docId - Document ID
-     * @returns Cost summary
      */
     static async getDocumentCost(
         correlationId: string,
@@ -136,7 +104,7 @@ export class LLMCostTracker {
     }
 
     /**
-     * Clear cost tracking for document (after processing complete)
+     * Clear cost tracking for document
      */
     static clearDocument(correlationId: string): void {
         this.costStore.delete(correlationId);
@@ -144,18 +112,13 @@ export class LLMCostTracker {
 
     /**
      * Calculate cost for LLM operation
-     * 
-     * @param model - Model name
-     * @param inputTokens - Input tokens
-     * @param outputTokens - Output tokens
-     * @returns Cost in USD
      */
     private static calculateCost(
         model: string,
         inputTokens: number,
         outputTokens: number
     ): number {
-        const pricing = MODEL_COSTS[model as ModelName] || MODEL_COSTS['gemini-1.5-flash'];
+        const pricing = MODEL_COSTS[model as ModelName] || MODEL_COSTS[AI_MODEL_IDS.GEMINI_2_5_FLASH];
 
         const inputCost = (inputTokens / 1000) * pricing.input;
         const outputCost = (outputTokens / 1000) * pricing.output;
@@ -164,7 +127,7 @@ export class LLMCostTracker {
     }
 
     /**
-     * Log operation cost (audit trail)
+     * Log operation cost
      */
     private static async logOperationCost(
         correlationId: string,
@@ -176,26 +139,16 @@ export class LLMCostTracker {
             action: 'OPERATION_COST_TRACKED',
             message: `LLM ${cost.operation}: ${cost.inputTokens + cost.outputTokens} tokens, $${cost.costUSD.toFixed(6)}`,
             correlationId,
-            details: {
-                operation: cost.operation,
-                model: cost.model,
-                inputTokens: cost.inputTokens,
-                outputTokens: cost.outputTokens,
-                totalTokens: cost.inputTokens + cost.outputTokens,
-                costUSD: cost.costUSD,
-                durationMs: cost.durationMs,
-                timestamp: new Date().toISOString(),
-            },
+            details: cost,
         });
     }
 
     /**
-     * Log document cost summary (audit trail with SHA-256)
+     * Log document cost summary
      */
     private static async logDocumentCostSummary(
         summary: DocumentCostSummary
     ): Promise<void> {
-        // Hash summary for immutability
         const summaryHash = crypto
             .createHash('sha256')
             .update(JSON.stringify(summary))
@@ -205,26 +158,9 @@ export class LLMCostTracker {
             level: 'INFO',
             source: 'LLM_COST_TRACKER',
             action: 'DOCUMENT_COST_SUMMARY',
-            message: `Document processing cost: $${summary.totalCostUSD.toFixed(4)} (${summary.totalTokens} tokens, ${summary.operations.length} operations)`,
+            message: `Document processing cost: $${summary.totalCostUSD.toFixed(4)}`,
             correlationId: summary.correlationId,
-            details: {
-                tenantId: summary.tenantId,
-                docId: summary.docId,
-                operationCount: summary.operations.length,
-                totalTokens: summary.totalTokens,
-                totalCostUSD: summary.totalCostUSD,
-                totalDurationMs: summary.totalDurationMs,
-                operationsBreakdown: summary.operations.map((op) => ({
-                    operation: op.operation,
-                    model: op.model,
-                    tokens: op.inputTokens + op.outputTokens,
-                    costUSD: op.costUSD,
-                })),
-                audit: {
-                    hash: summaryHash,
-                    timestamp: new Date().toISOString(),
-                },
-            },
+            details: { ...summary, audit: { hash: summaryHash, timestamp: new Date().toISOString() } },
         });
     }
 }

@@ -3,8 +3,8 @@
 
 import React, { useState, useCallback, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
-import TicketList from '@/components/tickets/TicketList';
-import TicketDetail from '@/components/tickets/TicketDetail';
+import TicketList from '@/components/support/TicketList';
+import TicketDetail from '@/components/support/TicketDetail';
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { RefreshCw } from 'lucide-react';

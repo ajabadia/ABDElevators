@@ -26,12 +26,18 @@ export async function POST(req: NextRequest) {
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
+
+        // Fetch tenant config to get industry dynamically (Regla de Oro #11)
+        const { TenantService } = await import('@/lib/tenant-service');
+        const tenantConfig = await TenantService.getConfig(tenantId);
+
         const {
             question,
             messages = [],
             stream = false,
-            industry = 'GENERIC',
-            environment = 'PRODUCTION'
+            industry = tenantConfig.industry || 'GENERIC',
+            environment = 'PRODUCTION',
+            filename // Phase 204
         } = await req.json();
 
         if (!question && messages.length === 0) {
@@ -57,7 +63,8 @@ export async function POST(req: NextRequest) {
                 correlationId,
                 messages,
                 industry,
-                environment
+                environment,
+                filename
             );
 
             const customStream = new ReadableStream({
@@ -96,7 +103,8 @@ export async function POST(req: NextRequest) {
             correlationId,
             messages,
             industry,
-            environment
+            environment,
+            filename
         );
 
         return NextResponse.json({

@@ -59,20 +59,17 @@ export default function GroupHierarchyPage() {
                     title={t('stats.total')}
                     value={roles.length}
                     icon={<Users className="w-5 h-5 text-teal-600" />}
-                    color="teal"
                 />
                 <MetricCard
                     title={t('stats.depth')}
                     value="1.0"
                     icon={<GitFork className="w-5 h-5 text-blue-600" />}
-                    color="blue"
                     description={t('stats.depth_desc')}
                 />
                 <MetricCard
                     title={t('stats.orphan')}
                     value={0}
                     icon={<UserPlus className="w-5 h-5 text-amber-600" />}
-                    color="amber"
                     description={t('stats.orphan_desc')}
                 />
             </div>

@@ -18,7 +18,9 @@
     "archive": "Archivar",
     "delete": "Eliminar Permanente",
     "mark_reviewed": "Marcar como Revisado",
-    "snooze_review": "Posponer Revisión"
+    "snooze_review": "Posponer Revisión",
+    "analyze": "Analizar / Consultar",
+    "view_chunks": "Ver Chunks Ingestados"
   },
   "table": {
     "document": "Documento",
@@ -28,7 +30,8 @@
     "actions": "Acciones",
     "loading": "Cargando documentos...",
     "empty": "No se encontraron documentos.",
-    "uploaded": "Subido el"
+    "uploaded": "Subido el",
+    "cost_tooltip": "Coste estimado de procesamiento (tokens/visión)"
   },
   "status": {
     "pending": "Pendiente",

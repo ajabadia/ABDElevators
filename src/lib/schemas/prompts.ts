@@ -41,7 +41,7 @@ export const PromptSchema = z.object({
     environment: AppEnvironmentEnum.default('PRODUCTION'),
     category: z.enum(['EXTRACTION', 'RISK', 'ANALYSIS', 'GENERAL', 'TICKET', 'CHECKLIST', 'ROUTING']).default('GENERAL'),
     industry: IndustryTypeSchema.default('GENERIC'),
-    model: z.string().default('gemini-1.5-flash'), // Permite elegir el modelo por cada prompt
+    model: z.string().default('gemini-2.5-flash'), // Permite elegir el modelo por cada prompt
     template: z.string(),
     variables: z.array(PromptVariableSchema).default([]),
     version: z.number().default(1),

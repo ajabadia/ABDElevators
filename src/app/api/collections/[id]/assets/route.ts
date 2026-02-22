@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CollectionService } from '@/services/collection-service';
+import { CollectionService } from '@/services/core/collection-service';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';

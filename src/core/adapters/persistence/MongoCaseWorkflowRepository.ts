@@ -1,7 +1,7 @@
 import { ICaseWorkflowRepository } from '../../domain/repositories/ICaseWorkflowRepository';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
-import { WorkflowTask } from '@/lib/schemas/workflow-task';
+import type { WorkflowTask } from '@abd/workflow-engine';
 import { logEvento } from '@/lib/logger';
 
 export class MongoCaseWorkflowRepository implements ICaseWorkflowRepository {

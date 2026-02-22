@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RagJudgeService } from '@/services/rag-judge-service';
+import { RagJudgeService } from '@/services/core/rag-judge-service';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';

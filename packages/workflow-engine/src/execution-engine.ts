@@ -1,11 +1,11 @@
 
 import { logEvento } from '@abd/platform-core/server';
 import { GovernanceEngine } from '@/core/engine/GovernanceEngine';
-import { AIWorkflow, WorkflowAction, WorkflowActionType, WorkflowTrigger, WorkflowTriggerType } from '@abd/workflow-engine';
+import { AIWorkflow, WorkflowAction, WorkflowActionType, WorkflowTrigger, WorkflowTriggerType } from './types';
 import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
-import { WorkflowTask, WorkflowTaskStatus } from '@/lib/schemas/workflow-task';
+import { WorkflowTask, WorkflowTaskStatus } from './schemas';
 
 /**
  * AIWorkflowEngine: Automatiza acciones basadas en eventos detectados por el Sistema.
@@ -107,7 +107,7 @@ export class AIWorkflowEngine {
             try {
                 switch (action.type) {
                     case (WorkflowActionType as any).branch:
-                        const { criteria } = action.params;
+                        const { criteria } = action.params as any;
                         if (criteria) {
                             const { confidenceThreshold } = criteria as any;
                             if (confidenceThreshold !== undefined && data.confidenceScore !== undefined) {
@@ -137,9 +137,9 @@ export class AIWorkflowEngine {
                             type: (action.params.taskType as any) || 'DOCUMENT_REVIEW',
                             title: action.params.title || 'Validación requerida por Workflow',
                             description: action.params.description || `Se requiere revisión humana para el flujo ${workflowId}.`,
-                            assignedRole: (action.params.assignedRole as any) || 'ADMIN',
+                            assignedRole: ((action.params as any).assignedRole as any) || 'ADMIN',
                             status: 'PENDING' as WorkflowTaskStatus,
-                            priority: (action.params.priority as any) || 'MEDIUM',
+                            priority: ((action.params as any).priority as any) || 'MEDIUM',
                             metadata: {
                                 correlationId,
                                 workflowId,

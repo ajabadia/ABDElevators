@@ -54,14 +54,17 @@ export async function POST(req: NextRequest) {
                 context: validated.context || "No context provided",
                 question: validated.question
             },
-            session.user.tenantId
+            session.user.tenantId,
+            'PRODUCTION',
+            'GENERIC',
+            session
         );
 
         // 4. Call Gemini with Stream (Streaming)
         const geminiStream = await callGeminiStream(systemPromptText, session.user.tenantId, {
             correlationId,
             temperature: 0.2, // More precise for technical snippets
-            model: 'gemini-1.5-flash'
+            model
         });
 
         const stream = new ReadableStream({

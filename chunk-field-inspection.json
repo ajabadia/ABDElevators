@@ -1,0 +1,16 @@
+{
+  "stats": [
+    {
+      "_id": {
+        "industry": "ELEVATORS",
+        "env": "PRODUCTION",
+        "tenantId": "demo-tenant"
+      },
+      "total": 153,
+      "hasEmbedding": 0,
+      "hasMultilingual": 153,
+      "hasChunkText": 153
+    }
+  ],
+  "fieldChecks": []
+}

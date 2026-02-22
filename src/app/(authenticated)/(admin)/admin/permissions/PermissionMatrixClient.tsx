@@ -24,7 +24,7 @@ import { PermissionPolicy } from '@/lib/schemas';
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { PermissionMatrixGrid } from './PermissionMatrixGrid';
+import { PermissionMatrixGrid } from '@/components/admin/permissions/PermissionMatrixGrid';
 
 export function PermissionMatrixClient() {
     const t = useTranslations('admin.guardian.matrix');
@@ -77,26 +77,22 @@ export function PermissionMatrixClient() {
                     title={t('stats.total')}
                     value={policies.length}
                     icon={<Shield className="w-5 h-5 text-teal-600" aria-hidden="true" />}
-                    color="teal"
                     description={t('stats.total_desc')}
                 />
                 <MetricCard
                     title={t('stats.active')}
                     value={policies.filter(p => p.isActive).length}
                     icon={<ShieldAlert className="w-5 h-5 text-emerald-600" aria-hidden="true" />}
-                    color="emerald"
                 />
                 <MetricCard
                     title={t('stats.deny')}
                     value={policies.filter(p => p.effect === 'DENY').length}
                     icon={<ShieldAlert className="w-5 h-5 text-rose-600" aria-hidden="true" />}
-                    color="rose"
                 />
                 <MetricCard
                     title={t('stats.global')}
                     value={policies.filter(p => p.resources.includes('*')).length}
                     icon={<Globe className="w-5 h-5 text-blue-600" aria-hidden="true" />}
-                    color="blue"
                 />
             </div>
 

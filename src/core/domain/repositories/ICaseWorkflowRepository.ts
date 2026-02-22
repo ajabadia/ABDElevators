@@ -1,4 +1,4 @@
-import { WorkflowTask } from '@/lib/schemas/workflow-task';
+import type { WorkflowTask } from '@abd/workflow-engine';
 
 export interface ICaseWorkflowRepository {
     createTask(task: WorkflowTask | any): Promise<void>; // Allowing any for transition but prefer WorkflowTask

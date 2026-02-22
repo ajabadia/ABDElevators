@@ -17,23 +17,31 @@ import { AppError } from '@/lib/errors';
  * Ingestion lifecycle states (Extended with stuck/dead handling)
  */
 export type IngestState =
-    | 'QUEUED'       // File uploaded, awaiting processing
-    | 'PROCESSING'   // Actively being analyzed
-    | 'COMPLETED'    // Successfully completed
-    | 'FAILED'       // Processing failed (retryable)
-    | 'STUCK'        // Processing timeout (requires manual intervention)
-    | 'DEAD';        // Permanently failed after retries
+    | 'PENDING'       // Created but not yet in queue
+    | 'QUEUED'        // File uploaded, awaiting processing
+    | 'PROCESSING'    // Actively being analyzed
+    | 'COMPLETED'     // Successfully completed
+    | 'FAILED'        // Processing failed (retryable)
+    | 'STORED_NO_INDEX'   // Files saved but vector sync failed
+    | 'INDEXED_NO_STORAGE' // Vectors sync'd but file storage failed
+    | 'PARTIAL'       // Some features failed but others succeeded
+    | 'STUCK'         // Processing timeout (requires manual intervention)
+    | 'DEAD';         // Permanently failed after retries
 
 /**
  * Valid state transitions per current state
  */
 const STATE_TRANSITIONS: Record<IngestState, IngestState[]> = {
+    PENDING: ['QUEUED', 'PROCESSING', 'FAILED'],
     QUEUED: ['PROCESSING', 'FAILED', 'STUCK'],
-    PROCESSING: ['COMPLETED', 'FAILED', 'STUCK'],
-    COMPLETED: [], // Terminal state (no transitions)
+    PROCESSING: ['COMPLETED', 'FAILED', 'STUCK', 'STORED_NO_INDEX', 'INDEXED_NO_STORAGE', 'PARTIAL'],
+    COMPLETED: ['QUEUED'], // Era 6: Allowed for Enrichment (FASE 198)
     FAILED: ['QUEUED', 'PROCESSING', 'DEAD'], // Can retry or mark dead
+    STORED_NO_INDEX: ['QUEUED', 'PROCESSING', 'COMPLETED'],
+    INDEXED_NO_STORAGE: ['QUEUED', 'PROCESSING', 'COMPLETED'],
+    PARTIAL: ['QUEUED', 'PROCESSING', 'COMPLETED'],
     STUCK: ['PROCESSING', 'DEAD'], // Can retry or abandon
-    DEAD: [], // Terminal state (no transitions)
+    DEAD: ['QUEUED'], // Manual resurrection allowed for hard-retries
 };
 
 /**

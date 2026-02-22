@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { CaseWorkflowEngine as WorkflowEngine } from '@/lib/workflow-engine';
+import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
@@ -28,13 +28,14 @@ export async function POST(
             throw new ValidationError('Faltan el parámetro: toState');
         }
 
-        const result = await WorkflowEngine.executeTransition({
-            caseId: id,
+        const result = await WorkflowEngine.getInstance().executeTransition(
+            id,
             toState,
-            role: session.user.role, correlationId: correlacion_id,
-            comment,
-            signature
-        });
+            session.user.tenantId,
+            session.user.id,
+            [session.user.role],
+            correlacion_id
+        );
 
         return NextResponse.json({ ...result });
 

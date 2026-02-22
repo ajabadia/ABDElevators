@@ -96,14 +96,12 @@ export default function IntelligenceDashboard() {
                     value={stats?.validatedPatterns || 0}
                     icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />}
                     description={t('metrics.avg_confidence', { percent: stats?.averageConfidence ? (stats.averageConfidence * 100).toFixed(0) : 0 })}
-                    color="emerald"
                 />
                 <MetricCard
                     title={t('metrics.network_reach')}
                     value={t('metrics.network_reach_value')}
                     icon={<Globe className="h-4 w-4" aria-hidden="true" />}
                     description={t('metrics.network_reach_desc')}
-                    color="blue"
                 />
                 <ContentCard noPadding className="border-emerald-100 bg-emerald-50/20 dark:bg-emerald-900/10 dark:border-emerald-900 overflow-hidden flex flex-col justify-center">
                     <ImpactScoreCard score={Math.round((stats?.validatedPatterns || 0) * 1.5)} />

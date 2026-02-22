@@ -65,7 +65,7 @@ export class RerankingService {
                     tenantId
                 });
                 const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');
-                renderedPrompt = PROMPTS.RAG_RERANKER
+                renderedPrompt = (PROMPTS.RAG_RERANKER?.template || '')
                     .replace('{{query}}', query)
                     .replace('{{fragments}}', fragments)
                     .replace('{{count}}', String(results.length))

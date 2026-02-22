@@ -29,12 +29,18 @@ export default function ProfilePage() {
     const { user, loading, fetchProfile } = useProfileStore();
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [showMfaForm, setShowMfaForm] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (!user) {
             fetchProfile();
         }
     }, [user, fetchProfile]);
+
+    if (!mounted) {
+        return null; // Evita mismatch de hidratación con IDs de Radix y FeatureFlags
+    }
 
     if (loading && !user) {
         return (
@@ -140,11 +146,11 @@ export default function ProfilePage() {
                                             setShowMfaForm(show);
                                             if (!show) fetchProfile();
                                         }}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="h-7 text-xs px-3">
-                                                {user?.mfaEnabled ? t('deactivate') : t('activate')}
-                                            </Button>
-                                        </DialogTrigger>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" size="sm" className="h-7 text-xs px-3">
+                                                    {user?.mfaEnabled ? t('deactivate') : t('activate')}
+                                                </Button>
+                                            </DialogTrigger>
                                             <DialogContent className="sm:max-w-2xl bg-white dark:bg-slate-950 max-h-[90vh] overflow-y-auto">
                                                 <DialogHeader>
                                                     <DialogTitle>{t('mfa')}</DialogTitle>

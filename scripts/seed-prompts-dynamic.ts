@@ -14,6 +14,7 @@ async function seedPrompts() {
         const { PromptSchema } = await import('../src/lib/schemas');
         const { PROMPTS } = await import('../src/lib/prompts');
         const { ObjectId } = await import('mongodb');
+        const { AIMODELIDS } = await import('../src/lib/ai-models');
 
         console.log("Dependencies loaded.");
 
@@ -32,7 +33,7 @@ async function seedPrompts() {
                 name: 'Auditor de Riesgos',
                 description: 'Analiza casos en busca de riesgos técnicos, legales o de seguridad',
                 category: 'RISK',
-                model: 'gemini-2.5-flash',
+                model: AIMODELIDS.RAG_GENERATOR,
                 template: `Actúa como un Auditor de Riesgos experto en la industria de {{industry}}.
 Tu tarea es analizar el CONTENIDO DEL CASO comparándolo con el CONTEXTO DE NORMATIVA/MANUALES extraído del RAG.
 
@@ -69,7 +70,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Extractor de Modelos',
                 description: 'Extrae componentes y modelos de documentos técnicos',
                 category: 'EXTRACTION',
-                model: 'gemini-2.5-flash',
+                model: AIMODELIDS.RAG_GENERATOR,
                 template: PROMPTS.EXTRAER_MODELOS,
                 variables: [
                     { name: 'text', type: 'string', description: 'Texto del documento a analizar', required: true }
@@ -84,7 +85,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Enrutador de Workflows',
                 description: 'Decide si usar un workflow existente o crear uno nuevo',
                 category: 'ROUTING',
-                model: 'gemini-1.5-flash',
+                model: AIMODELIDS.WORKFLOW_ROUTER,
                 template: PROMPTS.WORKFLOW_ROUTER,
                 variables: [
                     { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
@@ -103,7 +104,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Generador de Workflows',
                 description: 'Crea definiciones completas de workflows industriales',
                 category: 'GENERAL',
-                model: 'gemini-1.5-pro',
+                model: AIMODELIDS.WORKFLOW_GENERATOR,
                 template: PROMPTS.WORKFLOW_GENERATOR,
                 variables: [
                     { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
@@ -121,7 +122,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Analista de Nodos de Workflow',
                 description: 'Analiza el estado actual y recomienda la siguiente transición',
                 category: 'ANALYSIS',
-                model: 'gemini-1.5-flash',
+                model: AIMODELIDS.WORKFLOW_NODE_ANALYZER,
                 template: PROMPTS.WORKFLOW_NODE_ANALYZER,
                 variables: [
                     { name: 'vertical', type: 'string', description: 'Vertical del tenant', required: true },
@@ -138,7 +139,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Refinador de Ontología Soberana',
                 description: 'Evoluciona la ontología basándose en feedback humano (Sovereign Engine)',
                 category: 'ANALYSIS',
-                model: 'gemini-1.5-pro',
+                model: AIMODELIDS.ONTOLOGY_REFINER,
                 template: PROMPTS.ONTOLOGY_REFINER,
                 variables: [
                     { name: 'currentTaxonomies', type: 'string', description: 'Taxonomías actuales', required: true },
@@ -154,7 +155,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Generador de Informe Técnico',
                 description: 'Genera informes técnicos profesionales basados en validaciones y contexto RAG',
                 category: 'ANALYSIS',
-                model: 'gemini-2.5-flash',
+                model: AIMODELIDS.REPORT_GENERATOR,
                 template: PROMPTS.REPORT_GENERATOR,
                 variables: [
                     { name: 'numeroPedido', type: 'string', description: 'Número del pedido', required: true },
@@ -174,7 +175,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Extractor de Checklist de Documentos',
                 description: 'Extrae items de checklist accionables de documentos técnicos',
                 category: 'EXTRACTION',
-                model: 'gemini-2.5-flash',
+                model: AIMODELIDS.REPORT_GENERATOR,
                 template: PROMPTS.CHECKLIST_EXTRACTION,
                 variables: [
                     { name: 'text', type: 'string', description: 'Documentos técnicos concatenados', required: true }
@@ -189,7 +190,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Extractor de Grafos de Conocimiento',
                 description: 'Extrae entidades y relaciones para el grafo de conocimiento (Graph RAG)',
                 category: 'ANALYSIS',
-                model: 'gemini-1.5-flash',
+                model: AIMODELIDS.GRAPH_EXTRACTOR,
                 template: PROMPTS.GRAPH_EXTRACTOR,
                 variables: [
                     { name: 'text', type: 'string', description: 'Texto técnico a analizar', required: true }
@@ -204,7 +205,7 @@ Responde ÚNICAMENTE con el array JSON.`,
                 name: 'Extractor de Entidades en Consultas',
                 description: 'Identifica entidades clave en preguntas de usuario para búsqueda en grafo',
                 category: 'ANALYSIS',
-                model: 'gemini-1.5-flash',
+                model: AIMODELIDS.QUERY_ENTITY_EXTRACTOR,
                 template: PROMPTS.QUERY_ENTITY_EXTRACTOR,
                 variables: [
                     { name: 'query', type: 'string', description: 'Consulta del usuario', required: true }

@@ -1,5 +1,6 @@
 import { connectDB } from "../src/lib/db";
 import { v4 as uuidv4 } from "uuid";
+import { AIMODELIDS } from "../src/lib/ai-models";
 import dotenv from "dotenv";
 
 dotenv.config({ path: '.env.local' });
@@ -27,7 +28,7 @@ async function seedEvaluations() {
                 answer_relevance: 0.95,
                 context_precision: 1.0
             },
-            judge_model: 'gemini-1.5-flash',
+            judge_model: AIMODELIDS.RAG_ANSWER_GRADER,
             timestamp: new Date(Date.now() - 1000 * 60 * 60)
         },
         {
@@ -48,7 +49,7 @@ async function seedEvaluations() {
                 answer_relevance: 0.7,
                 context_precision: 0.5
             },
-            judge_model: 'gemini-1.5-flash',
+            judge_model: AIMODELIDS.RAG_ANSWER_GRADER,
             timestamp: new Date(Date.now() - 1000 * 60 * 120)
         }
     ];

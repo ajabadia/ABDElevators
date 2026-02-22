@@ -14,7 +14,7 @@ async function testPromptTester() {
         },
         tenantId: 'platform_master',
         industry: 'BANKING',
-        model: 'gemini-1.5-flash' as const,
+        model: 'gemini-2.5-flash' as const,
         correlationId: 'test-prompt-tester-123'
     };
 

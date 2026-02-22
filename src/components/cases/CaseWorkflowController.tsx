@@ -54,7 +54,7 @@ export function CaseWorkflowController({ caseId }: CaseWorkflowControllerProps) 
             toast({
                 title: t('analysisComplete'),
                 description: t('riskDetected', { level: res.analysis?.riskLevel || 'BAJO' }),
-                variant: "success"
+                variant: "default"
             });
             fetchStatus();
         }
@@ -67,7 +67,7 @@ export function CaseWorkflowController({ caseId }: CaseWorkflowControllerProps) 
             toast({
                 title: t('statusUpdated'),
                 description: t('statusUpdatedDesc', { to: res.to }),
-                variant: "success"
+                variant: "default"
             });
             fetchStatus();
             // Optional: trigger a page refresh or parent update

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema } from './core';
-import { WorkflowLogSchema } from './workflow';
+import { WorkflowLogSchema } from './workflow-base';
 
 /**
  * 🏢 Business Logic & Asset Schemas

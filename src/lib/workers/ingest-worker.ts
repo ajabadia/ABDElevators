@@ -1,6 +1,7 @@
 import { Worker, Job } from 'bullmq';
 import { getRedisConnection } from '../redis';
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
+import { IngestOrchestrator } from '@/services/ingest/core/IngestOrchestrator';
 import { logEvento } from '../logger';
 
 /**
@@ -25,10 +26,10 @@ export const IngestWorker = new Worker(
         });
 
         try {
-            // Pasamos el job para que IngestService pueda actualizar el progreso en BullMQ
-            const result = await IngestService.executeAnalysis(docId, {
+            // Era 6: Use central orchestrator for state validation & cost persistence
+            const result = await IngestOrchestrator.coordinate(docId, correlationId, {
                 ...options,
-                correlationId,
+                tenantId,
                 job
             });
 

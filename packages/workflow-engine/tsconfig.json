@@ -11,6 +11,12 @@
             ],
             "@abd/platform-core/*": [
                 "../platform-core/src/*"
+            ],
+            "@abd/workflow-engine": [
+                "./src/index.ts"
+            ],
+            "@abd/workflow-engine/*": [
+                "./src/*"
             ]
         }
     },

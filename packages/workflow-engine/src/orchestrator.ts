@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { WorkflowDefinition, WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
 import { PromptService } from '@/lib/prompt-service';
@@ -8,47 +7,13 @@ import { safeParseLlmJson } from '@/lib/safe-llm-json';
 import { ValidationError } from '@abd/platform-core';
 import { callGeminiMini } from '@/lib/llm';
 import { validateWorkflowDefinition } from '@/lib/workflow-definition-validator';
+import {
+    WorkflowSuggestionSchema,
+    WorkflowProposalSchema,
+    WorkflowSuggestion,
+    WorkflowProposal
+} from './schemas';
 
-// Zod schemas for LLM outputs
-const WorkflowSuggestionSchema = z.object({
-    action: z.enum(['USE_EXISTING', 'PROPOSE_NEW']),
-    workflowId: z.string().optional(),
-    reason: z.string(),
-    confidence: z.number().min(0).max(1).transform(v => Math.round(v * 100) / 100),
-});
-
-const WorkflowProposalSchema = z.object({
-    name: z.string(),
-    entityType: z.enum(['ENTITY', 'EQUIPMENT', 'USER']),
-    states: z.array(z.object({
-        id: z.string(),
-        label: z.string(),
-        color: z.string().optional(),
-        icon: z.string().optional(),
-        is_initial: z.boolean(),
-        is_final: z.boolean(),
-        can_edit: z.boolean().optional(),
-        requires_validation: z.boolean().optional(),
-        roles_allowed: z.array(z.string()).optional(),
-    })),
-    transitions: z.array(z.object({
-        from: z.string(),
-        to: z.string(),
-        label: z.string(),
-        required_role: z.array(z.string()).optional(),
-        conditions: z.object({
-            checklist_complete: z.boolean().optional(),
-            min_documents: z.number().optional(),
-            require_signature: z.boolean().optional(),
-            require_comment: z.boolean().optional(),
-        }).optional(),
-        actions: z.array(z.string()).optional(),
-    })),
-    initial_state: z.string(),
-});
-
-export type WorkflowSuggestion = z.infer<typeof WorkflowSuggestionSchema>;
-export type WorkflowProposal = z.infer<typeof WorkflowProposalSchema>;
 
 export class AIWorkflowOrchestrator {
     /**
@@ -109,7 +74,7 @@ export class AIWorkflowOrchestrator {
                     correlationId,
                 });
 
-                renderedPrompt = PROMPTS.WORKFLOW_ROUTER
+                renderedPrompt = (PROMPTS.WORKFLOW_ROUTER?.template || '')
                     .replace(/{{vertical}}/g, industry || 'elevadores')
                     .replace(/{{existingWorkflows}}/g, JSON.stringify(workflowsSummary, null, 2))
                     .replace(/{{description}}/g, description)
@@ -204,7 +169,7 @@ export class AIWorkflowOrchestrator {
                     correlationId,
                 });
 
-                renderedPrompt = PROMPTS.WORKFLOW_GENERATOR
+                renderedPrompt = (PROMPTS.WORKFLOW_GENERATOR?.template || '')
                     .replace(/{{vertical}}/g, industry || 'elevadores')
                     .replace(/{{entityType}}/g, entityType)
                     .replace(/{{industry}}/g, industry || 'elevadores')

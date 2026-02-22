@@ -1,5 +1,6 @@
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
-import { RagResult, performTechnicalSearch } from "./rag-service";
+import { RagResult } from "@abd/rag-engine";
+import { hybridSearch, performTechnicalSearch } from "@abd/rag-engine/server";
 import { extractModelsWithGemini, callGeminiMini } from "./llm";
 import { logEvento } from "./logger";
 

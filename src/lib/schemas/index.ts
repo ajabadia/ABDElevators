@@ -23,6 +23,8 @@ export * from './collaboration';
 export * from './checklist';
 export * from './workshop';
 export * from './intelligence';
+export * from './audit-logs';
+export * from './rag-evaluation';
 // The instruction to add 'spaceId' to 'KnowledgeAssetSchema' cannot be applied directly here
 // as 'KnowledgeAssetSchema' is defined within the './knowledge' module, not in this 'index.ts' file.
 // This file only re-exports modules.
@@ -33,3 +35,14 @@ export * from './feedback';
 // Explicit re-exports for problematic symbols to help Turbopack indexing
 export { DocumentTypeSchema } from './knowledge';
 export type { DocumentType } from './knowledge';
+export type { WorkflowTask } from './workflow';
+
+// Re-exports for Ingest & RAG (pointing to source of truth in knowledge/rag-engine)
+export {
+    DocumentChunkSchema,
+    RagAuditSchema,
+    IngestAuditSchema,
+    RagEvaluationSchema,
+    TaxonomySchema,
+    TaxonomyValueSchema
+} from './knowledge';

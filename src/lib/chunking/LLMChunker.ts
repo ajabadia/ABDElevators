@@ -1,7 +1,8 @@
 import { ChunkingResult, IChunkerStrategy, ChunkingOptions } from './types';
-import { callGemini } from '@/lib/llm';
+import { logEvento } from '../logger';
+import { callGeminiMini } from '../llm';
+import { AI_MODEL_IDS } from '@abd/platform-core';
 import { PROMPTS } from '@/lib/prompts';
-import { logEvento } from '@/lib/logger';
 
 export class LLMChunker implements IChunkerStrategy {
     level = 'LLM' as const;
@@ -51,9 +52,10 @@ export class LLMChunker implements IChunkerStrategy {
             const prompt = PROMPTS.CHUNKING_LLM_CUTTER.template.replace('{{text}}', safeText);
 
             // Call Gemini
-            const responseJson = await callGemini(prompt, options.tenantId, options.correlationId, {
+            const responseJson = await callGeminiMini(prompt, options.tenantId, {
+                correlationId: options.correlationId,
                 temperature: 0.1, // Low temp for precision
-                model: 'gemini-2.5-flash' // Phase 197: Use Flash for cost and speed
+                model: AI_MODEL_IDS.GEMINI_2_5_FLASH // Phase 197: Use Flash for cost and speed
             });
 
             // Parse JSON

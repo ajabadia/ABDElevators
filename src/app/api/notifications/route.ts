@@ -16,7 +16,7 @@ export async function GET() {
             throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
         }
 
-        const notifications = await NotificationService.listUnread(session.user.id);
+        const notifications = await NotificationService.listUnread(session.user.id, session.user.tenantId);
         return NextResponse.json({ notifications });
 
     } catch (error) {
@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
             throw new AppError('VALIDATION_ERROR', 400, 'Array de IDs requerido');
         }
 
-        await NotificationService.markAsRead(ids);
+        await NotificationService.markAsRead(ids, session.user.tenantId);
 
         return NextResponse.json({ success: true });
 

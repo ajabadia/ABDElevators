@@ -1,6 +1,6 @@
 import { getTenantCollection } from './db-tenant';
 import { ObjectId } from 'mongodb';
-import { WorkflowTask } from './schemas';
+import type { WorkflowTask } from './schemas';
 import { AppError } from './errors';
 import { logEvento } from './logger';
 import { UserRole } from '../types/roles';

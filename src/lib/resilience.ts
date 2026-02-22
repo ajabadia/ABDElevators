@@ -70,6 +70,35 @@ export const geminiResilience = wrap(
 /**
  * Helper para ejecutar tareas con resiliencia y logueo estandarizado.
  */
+// Variable para mantener el control de aislamiento manual
+let isolationDisposable: { dispose(): void } | null = null;
+
+/**
+ * Reinicia manualmente el estado del Circuit Breaker de Gemini.
+ * Útil para recuperación tras corregir errores de configuración (Phase 213).
+ */
+export function resetGeminiCircuitBreaker() {
+    // Si ya hay un aislamiento activo, lo liberamos primero
+    if (isolationDisposable) {
+        isolationDisposable.dispose();
+        isolationDisposable = null;
+    }
+
+    // Forzamos el cierre del circuito activando y desactivando aislamiento.
+    // En cockatiel, isolate() devuelve un objeto con dispose().
+    isolationDisposable = geminiCircuitBreaker.isolate();
+
+    // El reset es casi instantáneo, liberamos tras 100ms para asegurar
+    // que el breaker reconozca el cambio de estado antes de volver a dejarlo libre.
+    setTimeout(() => {
+        if (isolationDisposable) {
+            isolationDisposable.dispose();
+            isolationDisposable = null;
+            console.log("♻️ Gemini Circuit Breaker reset completed (State closed).");
+        }
+    }, 100);
+}
+
 export async function executeWithResilience<T>(
     source: string,
     action: string,

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
         const session = await auth();
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
-        const collection = await getCaseCollection();
+        const collection = await getCaseCollection(session.user as any);
         const casos = await collection.find({}, { sort: { actualizado: -1 } });
 
         return NextResponse.json({ success: true, casos });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
         const body = await req.json();
-        const collection = await getCaseCollection();
+        const collection = await getCaseCollection(session.user as any);
 
         // No es necesario inyectar tenantId o fechas aquí,
         // SecureCollection.insertOne lo hace automáticamente.

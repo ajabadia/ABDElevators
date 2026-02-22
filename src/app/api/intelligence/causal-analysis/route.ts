@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { CausalImpactService } from '@/services/causal-impact-service';
+import { CausalImpactService } from '@/services/core/causal-impact-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 

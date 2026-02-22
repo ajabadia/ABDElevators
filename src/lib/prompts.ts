@@ -149,7 +149,7 @@ export const PROMPTS: Record<string, PromptMaster> = {
   },
 
   DOMAIN_DETECTOR: {
-    template: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC.
+    template: `Analiza el siguiente extracto de un documento y clasifícalo en uno de estos sectores: ELEVATORS, LEGAL, BANKING, INSURANCE, IT, GENERIC, REAL_ESTATE, MEDICAL.
     Responde SOLO con el nombre del sector en mayúsculas.
     
     TEXTO:
@@ -298,6 +298,22 @@ export const PROMPTS: Record<string, PromptMaster> = {
 
     FRAGMENTO:
     {{text}}`,
+    version: 1.0
+  },
+
+  RAG_QUERY_REWRITER: {
+    template: `Dada la siguiente consulta técnica del usuario y el historial de la conversación, reescribe la consulta para que sea una búsqueda independiente y optimizada para un sistema RAG (Vector Search).
+    
+    HISTORIAL:
+    {{history}}
+    
+    CONSULTA ORIGINAL:
+    {{query}}
+    
+    REGLAS:
+    1. Si la consulta es ambigua o depende del contexto anterior ("¿Cómo se instala?", "Dáme más detalles"), complétala con la información del historial.
+    2. Si la consulta ya es clara, mantenla o mejora la terminología técnica.
+    3. Responde ÚNICAMENTE con la consulta reescrita. No añadas explicaciones.`,
     version: 1.0
   },
 
@@ -675,5 +691,23 @@ export const PROMPTS: Record<string, PromptMaster> = {
     Responde de forma concisa y con orientación a la gestión de la plataforma.`,
     version: 1.0
   },
+
+  SANDBOX_CHAT_GENERATOR: {
+    template: `You are an AI assistant in a DEMO Sandbox environment for ABDElevators.
+You have access to a LIMITED set of documents provided in the context below.
+User is anonymous.
+
+RULES:
+1. ONLY answer based on the provided context.
+2. If the user asks about something not in the context, say: "In this demo, I only have access to the provided sample documents (Otis Gen2 Manual and Torre Norte Contract)."
+3. Be professional and concise.
+
+CONTEXT:
+{{context}}
+
+USER QUESTION:
+{{question}}`,
+    version: 1.0
+  }
 };
 

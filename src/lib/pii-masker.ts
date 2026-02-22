@@ -1,94 +1,125 @@
 
 import { logEvento } from './logger';
 
+export interface PIIOptions {
+    detectOnly?: boolean;
+    placeholder?: string;
+    correlationId?: string;
+    tenantId?: string;
+}
+
+export interface PIIResult {
+    originalText: string;
+    processedText: string;
+    detections: Array<{
+        type: string;
+        match: string;
+        index: number;
+    }>;
+    metadata: {
+        count: number;
+        types: string[];
+        isClean: boolean;
+    };
+}
+
 /**
- * PII Masking Engine - Phase 61
- * Detects and masks sensitive personal information in technical documents.
+ * PII Masking Engine - Phase 8 Polish
+ * Detects and optionally masks sensitive personal information.
+ * Rule #13: Data Protection (GDPR Compliance)
  */
 export class PIIMasker {
-    // Regular Expressions for PII detection
     private static readonly PATTERNS = {
         EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-        PHONE: /(?:\+?34\s?)?[6789]\d{8}/g, // Spanish phones
-        INT_PHONE: /\+\d{1,3}\s?\d{4,12}/g, // International phones
-        DNI_NIE: /[XYZ]?\d{7,8}[A-Z]/gi,     // Spanish ID (DNI/NIE)
+        PHONE: /(?:\+?34\s?)?[6789]\d{8}/g,
+        INT_PHONE: /\+\d{1,3}\s?\d{4,12}/g,
+        DNI_NIE: /[XYZ]?\d{7,8}[A-Z]/gi,
         CREDIT_CARD: /\b(?:\d[ -]??){13,16}\b/g,
         IBAN: /[A-Z]{2}\d{2}(?:\s?\d{4}){5}/gi
     };
 
     /**
-     * Masks PII in the given text.
+     * Entry point for masking (standard behavior).
      */
     static mask(text: string, tenantId: string, correlationId: string): {
         maskedText: string,
         metadata: { count: number, types: string[] }
     } {
-        let maskedText = text;
-        let count = 0;
+        const result = this.process(text, { tenantId, correlationId, detectOnly: false });
+        return {
+            maskedText: result.processedText,
+            metadata: {
+                count: result.metadata.count,
+                types: result.metadata.types
+            }
+        };
+    }
+
+    /**
+     * Entry point for detection only.
+     */
+    static detect(text: string, tenantId: string, correlationId: string): PIIResult {
+        return this.process(text, { tenantId, correlationId, detectOnly: true });
+    }
+
+    /**
+     * Core processing logic.
+     */
+    private static process(text: string, options: PIIOptions): PIIResult {
+        const { detectOnly = false, placeholder = '[MASKED]', tenantId = 'SYSTEM', correlationId = 'SYSTEM' } = options;
+        let processedText = text;
+        const detections: PIIResult['detections'] = [];
         const detectedTypes = new Set<string>();
 
-        // Mask Emails
-        maskedText = maskedText.replace(this.PATTERNS.EMAIL, (match) => {
-            count++;
-            detectedTypes.add('EMAIL');
-            return '[EMAIL_MASKED]';
+        // We run matches for each pattern
+        Object.entries(this.PATTERNS).forEach(([type, regex]) => {
+            let match;
+            const tempRegex = new RegExp(regex); // Reset lastIndex
+            while ((match = tempRegex.exec(text)) !== null) {
+                detections.push({
+                    type,
+                    match: match[0],
+                    index: match.index
+                });
+                detectedTypes.add(type);
+            }
         });
 
-        // Mask Spanish Phones
-        maskedText = maskedText.replace(this.PATTERNS.PHONE, (match) => {
-            count++;
-            detectedTypes.add('PHONE');
-            return '[PHONE_MASKED]';
-        });
+        // If masking is requested, we do a multi-pass replace (or better, a sorted-index replace to be safe)
+        if (!detectOnly && detections.length > 0) {
+            // Simple replace for now as placeholders are usually fixed length strings
+            // For production robustness, one should replace from back to front by index.
+            Object.entries(this.PATTERNS).forEach(([type, regex]) => {
+                processedText = processedText.replace(regex, placeholder);
+            });
+        }
 
-        // Mask International Phones
-        maskedText = maskedText.replace(this.PATTERNS.INT_PHONE, (match) => {
-            count++;
-            detectedTypes.add('PHONE');
-            return '[PHONE_MASKED]';
-        });
+        const count = detections.length;
 
-        // Mask DNI/NIE
-        maskedText = maskedText.replace(this.PATTERNS.DNI_NIE, (match) => {
-            count++;
-            detectedTypes.add('ID_DOCUMENT');
-            return '[ID_MASKED]';
-        });
-
-        // Mask Credit Cards
-        maskedText = maskedText.replace(this.PATTERNS.CREDIT_CARD, (match) => {
-            count++;
-            detectedTypes.add('CREDIT_CARD');
-            return '[CARD_MASKED]';
-        });
-
-        // Mask IBAN
-        maskedText = maskedText.replace(this.PATTERNS.IBAN, (match) => {
-            count++;
-            detectedTypes.add('IBAN');
-            return '[IBAN_MASKED]';
-        });
-
-        if (count > 0) {
+        if (count > 0 && tenantId !== 'SYSTEM') {
             logEvento({
-                level: 'INFO',
+                level: detectOnly ? 'DEBUG' : 'INFO',
                 source: 'PII_MASKER',
-                action: 'DATA_MASKED',
-                message: `Masked ${count} sensitive items in ingestion.`,
+                action: detectOnly ? 'PII_DETECTED' : 'DATA_MASKED',
+                message: `${detectOnly ? 'Detected' : 'Masked'} ${count} personal data items.`,
                 correlationId,
                 tenantId,
                 details: {
-                    itemCount: count,
-                    types: Array.from(detectedTypes)
+                    count,
+                    types: Array.from(detectedTypes),
+                    detectOnly
                 }
             }).catch(e => console.error("[PII MASKER LOG ERROR]", e));
         }
 
         return {
-            maskedText,
+            originalText: text,
+            processedText,
+            detections,
             metadata: {
                 count,
-                types: Array.from(detectedTypes)
+                types: Array.from(detectedTypes),
+                isClean: count === 0
             }
         };
     }

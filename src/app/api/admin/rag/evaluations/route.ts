@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RagEvaluationService } from '@/services/rag-evaluation-service';
+import { RagEvaluationService } from '@/services/core/rag-evaluation-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';

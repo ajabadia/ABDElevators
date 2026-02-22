@@ -16,7 +16,8 @@ export class KeywordSearchService {
         limit = 5,
         industry: string = 'GENERIC',
         environment: string = 'PRODUCTION',
-        spaceId?: string
+        spaceId?: string,
+        filename?: string
     ): Promise<RagResult[]> {
         return tracer.startActiveSpan('rag.keyword_search', {
             attributes: {
@@ -25,7 +26,8 @@ export class KeywordSearchService {
                 'rag.query': query,
                 'rag.strategy': 'BM25',
                 'rag.environment': environment,
-                'rag.space_id': spaceId
+                'rag.space_id': spaceId,
+                'rag.filename': filename
             }
         }, async (span) => {
             const inicio = Date.now();
@@ -45,15 +47,15 @@ export class KeywordSearchService {
                     },
                     {
                         $match: {
-                            status: { $ne: "obsoleto" },
-                            deletedAt: { $exists: false },
-                            industry: industry,
+                            "industry": industry === 'GENERIC' ? { "$exists": true } : { "$in": [industry, "GENERIC"] },
                             environment: environment,
                             $or: [
+                                { tenantId: "abd_global" },
                                 { tenantId: "global" },
                                 { tenantId: tenantId }
                             ],
-                            ...(spaceId ? { spaceId } : {})
+                            ...(spaceId ? { spaceId } : {}),
+                            ...(filename ? { sourceDoc: filename } : {})
                         }
                     },
                     {

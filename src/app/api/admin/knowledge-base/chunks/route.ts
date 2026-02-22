@@ -1,9 +1,9 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { performTechnicalSearch } from '@abd/rag-engine/server';
 import { CursorPaginationSchema, getCursorFilter } from '@/lib/schemas/pagination';
 import { ObjectId } from 'mongodb';
 
@@ -14,7 +14,7 @@ import { ObjectId } from 'mongodb';
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
+        const session = await auth() as any;
         if (!['ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role || '')) {
             throw new AppError('UNAUTHORIZED', 401, 'Unauthorized');
         }
@@ -22,19 +22,24 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
 
         // Validar paginación con el nuevo esquema
-        const pagination = CursorPaginationSchema.parse({
-            cursor: searchParams.get('cursor'),
-            limit: searchParams.get('limit'),
-            sortOrder: searchParams.get('sortOrder') || 'desc',
-        });
+        let pagination;
+        try {
+            pagination = CursorPaginationSchema.parse({
+                cursor: searchParams.get('cursor') || undefined,
+                limit: searchParams.get('limit') || undefined,
+                sortOrder: searchParams.get('sortOrder') || undefined,
+            });
+        } catch (zodError: any) {
+            throw new ValidationError('Paginación inválida', zodError.errors);
+        }
 
         const query = searchParams.get('query') || '';
         const skip = parseInt(searchParams.get('skip') || '0');
         const language = searchParams.get('language');
         const environment = searchParams.get('environment') || 'PRODUCTION';
+        const sourceDoc = searchParams.get('sourceDoc');
 
-        const db = await connectDB();
-        const collection = db.collection('document_chunks');
+        const collection = await getTenantCollection('document_chunks', session);
 
         const type = searchParams.get('type');
         const searchType = searchParams.get('searchType'); // 'regex' | 'semantic'
@@ -43,15 +48,27 @@ export async function GET(req: NextRequest) {
         let total = 0;
 
         if (searchType === 'semantic' && query) {
-            const { hybridSearch } = await import('@/lib/rag-service');
-            // hybridSearch already takes environment or filters by tenant (we should update it if needed)
-            // For now, RAG service should be environment-aware.
-            chunks = await hybridSearch(query, session?.user?.tenantId || 'global', correlationId, pagination.limit, environment);
+            const { hybridSearch } = await import('@abd/rag-engine/server');
+            chunks = await hybridSearch(
+                query,
+                session?.user?.tenantId || 'abd_global',
+                correlationId,
+                pagination.limit,
+                environment,
+                'ELEVATORS', // Default industry
+                undefined,   // spaceId
+                sourceDoc || undefined
+            );
             total = chunks.length;
         } else {
             // Build filter for traditional search (Regex)
             const filter: any = {};
             filter.environment = environment;
+
+            if (sourceDoc) {
+                filter.sourceDoc = sourceDoc;
+            }
+
             if (query) {
                 filter.$or = [
                     { chunkText: { $regex: query, $options: 'i' } },
@@ -80,13 +97,12 @@ export async function GET(req: NextRequest) {
                 }
             }
 
-            chunks = await collection
-                .find(filter)
-                .project({ embedding: 0, embedding_multilingual: 0 }) // Phase 171.2: Targeted Projections
-                .sort({ _id: pagination.sortOrder === 'desc' ? -1 : 1 })
-                .skip(pagination.cursor ? 0 : skip) // Si hay cursor, no necesitamos skip
-                .limit(pagination.limit)
-                .toArray();
+            chunks = await collection.find(filter, {
+                projection: { embedding: 0, embedding_multilingual: 0 },
+                sort: { _id: pagination.sortOrder === 'desc' ? -1 : 1 },
+                skip: pagination.cursor ? 0 : skip,
+                limit: pagination.limit
+            } as any);
 
             total = await collection.countDocuments(filter);
         }

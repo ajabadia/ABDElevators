@@ -18,7 +18,14 @@ import { cn } from "@/lib/utils";
 export function EnvironmentSwitcher() {
     const { environment, setEnvironment } = useEnvironmentStore();
 
-    const envConfig = {
+    const envConfig: Record<string, {
+        label: string;
+        icon: any;
+        color: string;
+        bg: string;
+        border: string;
+        badge: string;
+    }> = {
         PRODUCTION: {
             label: "Production",
             icon: Globe,

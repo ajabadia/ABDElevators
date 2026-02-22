@@ -9,6 +9,7 @@ import { generateServerPDF } from '@/lib/server-pdf-utils';
 import { uploadLLMReport } from '@/lib/cloudinary';
 import { PromptService } from '@/lib/prompt-service';
 import { UsageService } from '@/lib/usage-service';
+import { AIMODELIDS } from '@/lib/ai-models';
 
 /**
  * POST /api/entities/[id]/generate-report
@@ -129,7 +130,7 @@ export async function POST(
             pdfUrl,
             cloudinaryPublicId: publicId,
             metadata: {
-                model: 'gemini-2.0-flash',
+                model: AIMODELIDS.REPORT_GENERATOR,
                 tokensUsed: reportText.length / 4, // Approx
                 temperature: 0.3,
             },

@@ -55,7 +55,7 @@ export default function GlobalDashboardPage() {
             toast({
                 title: "Auditoría Completada",
                 description: `Se han procesado ${data.processed} activos y actualizado ${data.updated}.`,
-                variant: "success"
+                variant: "default"
             });
             refreshAll();
         },
@@ -75,7 +75,7 @@ export default function GlobalDashboardPage() {
             toast({
                 title: "Predictive Audit Complete",
                 description: `Detected ${data.detectedCount} anomalies.`,
-                variant: "success"
+                variant: "default"
             });
             refreshAll();
         },
@@ -137,14 +137,12 @@ export default function GlobalDashboardPage() {
                         title="Clientes Activos"
                         value={metrics?.tenants?.active || 0}
                         icon={<Users className="w-5 h-5" />}
-                        color="blue"
                         description={`${metrics?.tenants?.total} registrados en el cluster AUTH`}
                     />
                     <MetricCard
                         title="Casos Procesados"
                         value={metrics?.cases?.total || 0}
                         icon={<Briefcase className="w-5 h-5" />}
-                        color="purple"
                         trend="+12%"
                         trendDirection="up"
                     />
@@ -152,14 +150,12 @@ export default function GlobalDashboardPage() {
                         title="Precisión de IA (HITL)"
                         value={`${metrics?.ai?.accuracy || 0}%`}
                         icon={<Brain className="w-5 h-5" />}
-                        color="teal"
                         description={`${metrics?.ai?.totalFeedbacks} validaciones humanas registradas`}
                     />
                     <MetricCard
                         title={t('metrics.storage')}
                         value={`${metrics?.knowledge?.totalGB || 0} GB`}
                         icon={<HardDrive className="w-5 h-5" />}
-                        color="amber"
                         description={t('metrics.storage_desc', { count: metrics?.knowledge?.totalAssets || 0 })}
                     />
                 </div>
