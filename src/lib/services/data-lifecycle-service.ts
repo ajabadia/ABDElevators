@@ -1,9 +1,9 @@
 
-import { LogLifecycleService } from './lifecycle/LogLifecycleService';
+import { LogLifecycleService } from '@/services/observability/LogLifecycleService';
 import { BlobLifecycleService } from './lifecycle/BlobLifecycleService';
 import { GdprService } from './lifecycle/GdprService';
 import { SoftDeleteService } from './lifecycle/SoftDeleteService';
-import { UsageAggregationService } from './lifecycle/UsageAggregationService';
+import { UsageAggregationService } from '@/services/observability/UsageAggregationService';
 import { Filter, Document } from 'mongodb';
 
 /**

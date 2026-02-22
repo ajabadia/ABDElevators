@@ -17,14 +17,17 @@ Contiene datos de identidad, tenants y configuraciones críticas.
 - **Conexión válida:** `connectAuthDB()` o `getTenantCollection(nombre, session, 'AUTH')`
 
 ### 2. Cluster: LOGS (MONGODB_LOGS_URI)
-Contiene trazas de auditoría, uso y notificaciones.
-- **Colecciones:** `application_logs`, `usage_logs`, `notifications`, `notification_templates`, `notification_configs`
+Contiene telemetría, auditoría forense y notificaciones.
+- **Colecciones de Log:** `application_logs`, `audit_config_changes`, `audit_admin_ops`, `audit_data_access`, `audit_trails`, `audit_security_events`, `audit_billing`
+- **Colecciones de Notificación:** `notifications`, `notification_templates`, `notification_configs`
 - **Conexión válida:** `connectLogsDB()` o `getTenantCollection(nombre, session, 'LOGS')`
+- **Gateway Recomendado:** `LoggingService` (para logs) o `AuditTrailService` (para auditoría).
 
 ### 3. Cluster: MAIN (MONGODB_URI)
-Contiene los datos de negocio y activos de conocimiento.
-- **Colecciones:** `document_types`, `taxonomies`, `knowledge_assets`, `user_documents`, `spaces`, `tickets`, `rag_audit`, `audit_ingestion`, `document_chunks`, `reports`, `rag_evaluations`
+Contiene los activos de conocimiento y datos operacionales de negocio.
+- **Colecciones:** `knowledge_assets`, `user_documents`, `spaces`, `tickets`, `document_chunks`, `reports`, `rag_evaluations`
 - **Conexión válida:** `connectDB()` o `getTenantCollection(nombre, session, 'MAIN')`
+- **Nota Era 6**: Las colecciones de tickets pertenecen al dominio de soporte pero residen en MAIN.
 
 ## 🚫 Red Flags (Errores Críticos)
 

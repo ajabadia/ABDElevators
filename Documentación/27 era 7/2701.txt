@@ -1,0 +1,505 @@
+Sí, hay dos o tres refactors “grandes” que serían muy beneficiosos si piensas en esto como base de una suite y no solo como un proyecto.
+
+1. Refactor de capas por dominio (Domain + Infra)
+Ahora tienes muy buen diseño, pero aún mezclado en algunos puntos:
+
+Servicios que hacen todo: reglas, queries Mongo, llamadas a LLM y logging en un mismo archivo (TechnicalEntityService, algunos de billing, partes de tenant/usage).
+​
+
+Infraestructura (Mongo, Redis, email, queues) accesible directamente desde muchos sitios.
+
+Refactor masivo útil:
+
+Introducir una división explícita:
+
+Dominio: servicios “puros” de negocio (Entities, Tickets, Workflows, Governance, Support, Observability).
+
+Infra: adaptadores a Mongo, Redis, Resend, Stripe, BullMQ, Neo4j.
+
+Ventaja:
+
+Extraer módulos a otros repos (por ejemplo, ticketing como producto separado) sería mecánico.
+
+Te permite testear parte del dominio sin levantar toda la plataforma.
+
+Si lo haces, hazlo por dominios (p.ej. primero “Technical/RAG”, luego “Tickets”, etc.), no todo a la vez.
+
+2. Refactor de la API hacia “módulos” más claros
+La API ya está bien, pero sigue siendo medio monolítica:
+
+Mezcla rutas technical/*, support/*, admin/*, auth/*, billing/* dentro de la misma app.
+​
+
+Refactor grande razonable:
+
+A nivel conceptual, separar la API en módulos:
+
+api/technical (RAG, entities, workflows técnicos).
+
+api/support (tickets, contact, knowledge para soporte).
+
+api/ops (logs, audit, reports, observability).
+
+api/billing, api/governance, etc.
+
+No hace falta microservicios, pero sí fronteras claras de módulo + tipos compartidos (contratos) entre ellos.
+
+Eso te permite, si algún día quieres, sacar por ejemplo support o ops a otra app (o a otro runtime) con menos dolor.
+
+3. Refactor del “núcleo LLM/RAG”
+Se nota que has ido evolucionando el núcleo de IA:
+
+Hay varias generaciones de patrones: prompts sueltos, servicios con PromptService, agentes LangGraph, JSON parsing manual y parsing “limpio”.
+​
+
+Refactor masivo interesante:
+
+Definir un LLM Core bien acotado:
+
+PromptRegistry + PromptRunner.
+
+LlmJsonParser unificado.
+
+ModelRouter / AiModelManager para elegir modelo según tipo de tarea.
+​
+
+Luego ir moviendo Extraction/Evaluation/Risk/AgenticRAG a ese núcleo, reduciendo código duplicado.
+
+El beneficio es alto si piensas reutilizar este “motor de IA” en otras apps de la suite (no solo la técnica actual).
+
+Resumiendo:
+
+No es que el código “lo pida a gritos” (no hay una deuda crítica), pero si quieres una base de suite reusable y a largo plazo, estos tres refactors grandes (dominio vs infra, módulos de API bien separados, y un LLM core unificado) sí valen la pena, aunque sean masivos y los tengas que abordar por fases.
+
+
+Te propongo una estrategia en fases, pensada para que puedas seguir desarrollando features mientras vas haciendo los refactors “grandes” sin romper nada.
+
+Fase 0 · Preparar el terreno (1–2 días)
+Objetivo: minimizar riesgo antes de tocar mucho.
+
+Asegura:
+
+Tests básicos en puntos críticos (ingestión PDF, análisis RAG, tickets, auth, billing, logging/auditoría).
+​
+
+Un entorno de staging donde puedas desplegar y probar la suite completa.
+
+Añade una regla personal:
+
+Todo código nuevo que escribas ya debe seguir la visión futura (service+repo, usar AuditService, PromptService, etc.), aunque el legacy no lo haga aún.
+
+Fase 1 · Núcleo LLM/RAG unificado (refactor interno, sin cambiar API)
+Objetivo: tener un “LLM Core” claro antes de mover dominios.
+
+Extraer LLM Core
+
+Carpeta nueva lib/llm-core/ con:
+
+PromptRegistry (registro tipado de prompts que hoy están dispersos).
+​
+
+PromptRunner con:
+
+runTextPrompt
+
+runJsonPrompt<T>
+
+métricas y logging integrados.
+
+LlmJsonParser (safeParseArray, extractJsonFromText, etc.) que sustituya parseos manuales.
+
+Migrar servicios clave
+
+En lugar de tocar todo, empieza por:
+
+ExtractionService (modelo/entidades).
+
+EvaluationService (graders).
+
+Algún servicio de riesgo/fact-check donde ya tengas prompts claros.
+​
+
+Objetivo: que TODO uso de LLM en estos servicios pase por PromptRunner + LlmJsonParser.
+
+Impacto:
+
+Cero cambios en rutas/API.
+
+Menos bugs en JSON y una base lista para ser reusada por otras apps de la suite.
+
+Fase 2 · Observabilidad/Auditoría como módulo oficial
+Objetivo: cerrar del todo el “módulo centralizado” de logs/auditoría.
+
+Organizar carpetas
+
+Crear services/observability/ y mover (o reexportar desde ahí):
+
+AuditService / AuditTrailService.
+​
+
+LogLifecycleService, DataLifecycleService (aunque sea deprecated), UsageAggregationService.
+​
+
+EntityTimelineService, PlatformOpsService, ObservabilityService.
+​
+
+Reglas claras de uso
+
+Decidir y documentar:
+
+“Cambios críticos” → siempre AuditService.record* + opcionalmente logEvento.
+
+“Logs técnicos/SLAs” → logEvento + ObservabilityService.trackSLA si aplica.
+
+Ajustar servicios que faltan
+
+Revisar:
+
+Tenant/billing/governance/mfa/auth para usar AuditService cuando cambian configuración, planes, permisos, MFA, etc.
+​
+
+Impacto:
+
+Tienes un módulo de observabilidad reutilizable.
+
+Cualquier app nueva de la suite lo puede consumir de forma estándar.
+
+Fase 3 · Dominios principales a “Service + Repository”
+Objetivo: separar dominio de infraestructura sin cambiar comportamiento.
+
+Hazlo por dominios, uno cada vez:
+
+RAG técnico / entities
+
+Crear technical-entity-repository.ts con todo lo que hoy hace getTenantCollectionentities + queries específicas.
+​
+
+Dejar TechnicalEntityService solo con:
+
+orquestación del análisis,
+
+llamadas a RAG/LLM core,
+
+llamadas a repositorios/servicios externos (Risk, FederatedKnowledge).
+​
+
+Tickets/support
+
+TicketRepository (Mongo queries) + TicketService (status, SLA, reasignación, etc.).
+​
+
+Así puedes, si quieres, usar otro backend para tickets en el futuro.
+
+Otros dominios que más tocas
+
+Workflow/tasks, Forms/Checklists, KnowledgeReview.
+
+Siempre mismo patrón: repo con acceso a DB, service con lógica.
+
+Impacto:
+
+Tests del dominio mucho más sencillos.
+
+Base lista para separar módulos en repos o en runtimes distintos si lo deseas.
+
+Fase 4 · Modularizar la API (sin microservicios)
+Objetivo: que la estructura de rutas represente claramente las “apps” de la suite.
+
+Agrupar rutas por módulo
+
+Estructura conceptual:
+
+api/technical/* (entities, ragchat, workflows técnicos).
+​
+
+api/support/* (tickets, contact requests).
+​
+
+api/ops/* (logs, audit, reports, platform health).
+​
+
+api/compliance/* (GDPR, lifecycle, exports legales).
+​
+
+api/billing/*, api/governance/*, etc.
+
+UI alineada
+
+Layouts de Next:
+
+/technical, /support, /ops, /compliance, etc., con sus propios sidebars/headers pero compartiendo componentes base.
+
+Puedes introducir un pequeño “app registry”:
+
+{ id: 'technical', name: 'Technical RAG', basePath: '/technical', minRole: 'TECHNICAL', ... }
+
+que use el sidebar para construir navegación.
+
+Impacto:
+
+La suite se percibe como conjunto de productos encima de un mismo núcleo.
+
+Preparado para separar módulos sin renombrar todo más tarde.
+
+Fase 5 · Refactor progresivo de infra
+Objetivo: desacoplar aún más la infraestructura sin parar el resto.
+
+Adaptadores infra claros
+
+Crear infra/ (o lib/infra/) con adaptadores:
+
+MongoClient, RedisClient, ResendClient, StripeClient, Neo4jClient, BullMQClient.
+​
+
+Todos los repositorios usan estos adaptadores, no directamente librerías externas.
+
+Feature toggles/flags para cambios críticos
+
+Donde vayas a cambiar comportamiento (nuevo motor de colas, nueva DB de logs, etc.), introducir FeatureFlags que ya tienes para habilitar por tenant o por entorno.
+​
+
+Impacto:
+
+Cambiar proveedores (Stripe → otro; Resend → otro) o mover un módulo a otra base de datos será mucho menos traumático.
+
+Fase 6 · Limpieza y consolidación
+Objetivo: reducir deuda visible y duplicaciones.
+
+Buscar duplicados de patrones:
+
+parseo LLM,
+
+generación de correlationId,
+
+patrones de logging.
+
+Eliminar código deprecated o bridges antiguos que ya no se usen (compat layers “FASE 182/200” cuando estén cubiertos por el nuevo core).
+​
+
+Documentar:
+
+un diagrama sencillo de módulos (RAG, Tickets, Observability, Compliance, Forms, Governance),
+
+puntos de integración entre ellos (qué servicios llaman a qué).
+
+Cómo priorizar en la práctica
+Si quieres una orden muy pragmática:
+
+Fase 1 (LLM core) → te quita bugs y te da reutilización inmediata.
+
+Fase 2 (observabilidad/audit) → cierra un módulo común clave para la suite.
+
+Fase 3 (Service+Repository en RAG técnico y tickets) → mejora DX donde más trabajas.
+
+Luego Fases 4–6 en paralelo con desarrollo de features, de forma incremental.
+
+Si quieres, en el siguiente paso puedo ayudarte a bajar esto a un checklist muy concreto (issue por issue) para tu repo.
+
+
+
+Te dejo un checklist accionable, pensado como si fueran issues en tu repo. Está ordenado por prioridad práctica.
+
+Bloque 1 · LLM Core unificado
+Crear carpeta lib/llm-core/
+
+ lib/llm-core/PromptRegistry.ts
+
+ lib/llm-core/PromptRunner.ts
+
+ lib/llm-core/LlmJsonParser.ts
+
+PromptRunner
+
+ Implementar runTextPrompt({ modelId, promptKey, variables, correlationId }).
+
+ Implementar runJsonPrompt<T>({ modelId, promptKey, variables, correlationId }): Promise<T>.
+
+ Integrar logging básico (logEvento con source: LLMCORE, duración, tokens si los tienes).
+​
+
+LlmJsonParser
+
+ extractJsonFromText(text: string): string (limpia explicaciones del modelo).
+
+ safeParseArray<T>(raw: string): T[] con errores tipados y logs.
+​
+
+Migrar servicios clave a LLM Core
+
+ Actualizar ExtractionService para:
+
+usar PromptRunner.runJsonPrompt en vez de JSON.parse manual.
+​
+
+ Actualizar EvaluationService (graders) a PromptRunner.
+
+ Actualizar 1 servicio más (p.ej. RiskService o fact-checker) como tercer ejemplo.
+
+Bloque 2 · Observabilidad/Auditoría
+Organizar servicios de observabilidad
+
+ Crear carpeta services/observability/.
+
+ Mover o reexportar:
+
+AuditService / AuditTrailService.
+​
+
+LogLifecycleService / DataLifecycleService.
+​
+
+EntityTimelineService.
+​
+
+PlatformOpsService.
+​
+
+ObservabilityService.
+​
+
+Políticas de uso de audit/log
+
+ Documentar en un OBSERVABILITY.md algo tipo:
+
+“Cambios de config, billing, permisos, GDPR, governance → AuditService.record* obligatorio”.
+
+“Performance, errores técnicos, SLAs → logEvento + ObservabilityService.trackSLAViolation si aplica”.
+​
+
+Revisar servicios críticos para usar AuditService
+
+ TenantService.updateConfig → ya usa AuditTrailService.logConfigChange, revisar que cubra todos los casos.
+​
+
+ Billing (cambio de plan, checkout, webhooks) → añadir AuditService.recordConfigChange / record donde falte.
+​
+
+ Governance/PolicyService/MFA/Auth (cambios de seguridad) → asegurar que todos los cambios se registran en audit.
+​
+
+Bloque 3 · Service + Repository por dominios
+Dominio TECHNICAL (entities/RAG)
+
+ Crear lib/repositories/technical-entity-repository.ts con:
+
+findById, findExistingByHash, insert, updateAnalysisResult, etc., usando getTenantCollectionentities.
+​
+
+ Refactorizar TechnicalEntityService para:
+
+depender del repositorio,
+
+no llamar directamente a Mongo,
+
+centrarse en orquestación RAG + riesgo + federated knowledge.
+​
+
+Dominio TICKETS/SUPPORT
+
+ Crear lib/repositories/ticket-repository.ts:
+
+create, findById, findWithFilters, updateStatus, addMessage, reassign, etc.
+​
+
+ Reducir TicketService a:
+
+reglas de SLA, transición de status, ACL, audit logging.
+
+Dominio WORKFLOWS (si lo usas activamente)
+
+ Crear workflow-definition-repository y workflow-task-repository.
+
+ Mantener lógica de negocio en WorkflowTaskService y/o WorkflowEngine.
+
+Bloque 4 · API modular y layouts
+Agrupar rutas por módulo
+
+ Revisar rutas api/technical/* y asegurarte de que todo lo técnico cae ahí (entities, ragchat, workflows técnicos).
+​
+
+ api/support/* → tickets, contact, posiblemente knowledge de soporte.
+​
+
+ api/ops/* → logs, export, reports, platform health.
+​
+
+ api/compliance/* → GDPR, lifecycle, certificados.
+​
+
+ api/billing/*, api/governance/* según lo que ya tienes.
+
+Layouts Next por app
+
+ Crear layout /technical con su sidebar/sección destacada.
+
+ Crear layout /support.
+
+ Crear layout /ops (observabilidad/reporting).
+
+ Reutilizar componentes de UI base (PageContainer, Sidebar, etc.) para mantener coherencia visual.
+​
+
+App registry
+
+ Añadir lib/app-registry.ts con algo como:
+
+ts
+export const APPS = [
+  { id: 'technical', name: 'Technical RAG', basePath: '/technical', minRole: 'TECHNICAL' },
+  { id: 'support', name: 'Support & Tickets', basePath: '/support', minRole: 'USER' },
+  { id: 'ops', name: 'Ops & Observability', basePath: '/ops', minRole: 'SUPERADMIN' },
+  // ...
+];
+ Usar APPS en el sidebar y en algún dashboard de “suite”.
+
+Bloque 5 · Infra y utilidades comunes
+CorrelationId unificado
+
+ Crear lib/observability/CorrelationIdService.ts:
+
+generate(source: string): string.
+
+ Ir cambiando progresivamente generadores ad‑hoc (exec-sched-*, loupe-*, etc.) a este servicio.
+​
+
+Adaptadores infra
+
+ Crear lib/infra/mongo.ts (devuelve client/conexiones, centraliza opciones).
+​
+
+ Crear lib/infra/redis.ts, lib/infra/resend.ts, lib/infra/stripe.ts, lib/infra/neo4j.ts como thin wrappers.
+​
+
+ Actualizar repositorios para usar estos adaptadores, no las libs directamente.
+
+Bloque 6 · Productización de reporting/export
+Panel de reporting
+
+ Crear una página /ops/reports que consuma:
+
+ReportScheduleService.listSchedules.
+​
+
+ExportService para descargas puntuales (logs, audit, usage).
+
+ UI mínima:
+
+lista de schedules,
+
+botón “Crear programación”,
+
+links de descarga rápida (“Export auditoría”, “Export uso tokens 30 días”, etc.).
+
+UX para informes generados
+
+ Añadir algún tipo de “últimos informes enviados” (aunque sea leyendo logs/audit y mostrando últimos EXECUTECOMPLETE del scheduler).
+​
+
+Sugerencia de orden semanal
+Semana 1: Bloque 1 completo + empezar Bloque 2 (organización observabilidad).
+
+Semana 2: Terminar Bloque 2 + Bloque 3 para TECHNICAL (entities) y Tickets.
+
+Semana 3: Bloque 4 (API modular + layouts) + CorrelationIdService.
+
+Semana 4+: Adaptadores infra + reporting UI (Bloques 5 y 6) según te vaya haciendo falta.

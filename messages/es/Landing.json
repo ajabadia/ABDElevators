@@ -26,7 +26,7 @@
     "badge": "GOBERNANZA DE IA",
     "title": "Control Industrial Total",
     "description": "Gestión centralizada de modelos y arquitectura monorepo de alto rendimiento para entornos críticos.",
-    "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Ingesta de Alta Integridad,Trazabilidad de Costes Persistente,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto,Arquitectura Desacoplada de Dominios,Confianza Humanizada (High/Medium/Low),Support Hub Independiente (FASE 200),Observability & Audit Hub (FASE 201)"
+    "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Ingesta de Alta Integridad,Trazabilidad de Costes Persistente,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto,Arquitectura Desacoplada de Dominios,Confianza Humanizada (High/Medium/Low),Support Hub Independiente (FASE 200),Observability & Audit Hub (FASE 201),Trazabilidad Estandarizada (Correlation Tags)"
   },
   "UX_REVOLUTION": {
     "badge": "EXPERIENCIA UNIFICADA",

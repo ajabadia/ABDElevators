@@ -334,10 +334,11 @@ CONFIGURACIÓN (Admin Hub):
 
 **Objetivo:** Centralizar la telemetría y auditoría de grado industrial en un módulo común.
 
-- [X] **Observability Core**: Creación de `src/services/observability/` manejando el cluster de `LOGS`.
+- [X] **Observability Core**: Centralización en `src/services/observability/` (Logs, Audit, Lifecycle, Ops).
+- [X] **Industrial Safety Base**: Implementación de `smoke-test.ts` y auditoría de integridad PDF.
 - [X] **Standardized Schemas**: Implementación de `EventSchema` y `AuditSchema` para trazabilidad total.
-- [X] **Logging Service**: Abstracción de `logEvento` sobre un servicio escalable con métricas de performance.
-- [X] **Audit Trail Bridge**: Redirección de auditoría de seguridad y administrativa al nuevo núcleo común.
+- [X] **Security Instrumentation**: `GuardianService` integrado con `AuditTrailService`.
+- [X] **Standardized Tracing**: `CorrelationIdService` con soporte para tagging por dominio (`source`).
 
 ---
 

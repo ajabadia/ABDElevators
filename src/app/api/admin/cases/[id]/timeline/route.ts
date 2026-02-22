@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, requireRole } from '@/lib/auth'; // Adjust if using different auth provider
 import { UserRole } from '@/types/roles';
-import { EntityTimelineService } from '@/lib/services/entity-timeline-service';
+import { EntityTimelineService } from '@/services/observability/EntityTimelineService';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';

@@ -16,7 +16,7 @@ Este skill asegura que todos los servicios de IA de la plataforma ABDElevators s
 1. **Prioridad Dinámica**: El prompt debe cargarse desde `PromptService.getRenderedPrompt` para permitir ajustes en caliente por el administrador.
 2. **Resiliencia Total**: Todo servicio DEBE tener una constante en `src/lib/prompts.ts` que actúe como "Master Fallback" si la BD falla o el prompt no existe.
 3. **Manejo de Errores Silencioso**: El sistema debe registrar un aviso (`console.warn` / `logEvento`) pero continuar operando usando el fallback.
-4. **Registro Único de Modelos**: Ningún componente o servicio debe usar strings hardcodeadas (ej: "gemini-1.5-pro"). Se debe usar EXCLUSIVAMENTE el registro en `src/lib/constants/ai-models.ts`.
+4. **Registro Único de Modelos**: Ningún componente o servicio debe usar strings hardcodeadas (ej: "gemini-1.5-pro"). Se debe usar EXCLUSIVAMENTE el registro centralizado de la plataforma en **`packages/platform-core/src/constants/ai-models.ts`** (exportado vía `@abd/platform-core`).
 
 ## Checklist de Auditoría
 - [ ] ¿El prompt tiene una entrada en `PromptService`? (Clave única)
@@ -26,14 +26,14 @@ Este skill asegura que todos los servicios de IA de la plataforma ABDElevators s
 - [ ] ¿Se realiza el reemplazo manual de variables en la rama del `catch`?
 - [ ] ¿Se loguea un aviso cuando ocurre el fallback?
 - [ ] ¿El payload de resultado usa los tipos de `src/types/ai.ts`? (Fase 130.5)
-- [ ] ¿El modelo utilizado está definido en `src/lib/constants/ai-models.ts`?
-- [ ] ¿Los dropdowns o selectores de modelos mapean sobre la constante `AI_MODELS`?
+- [ ] ¿El modelo utilizado está definido en `@abd/platform-core` (`AI_MODEL_IDS`)?
+- [ ] ¿Los dropdowns o selectores de modelos mapean sobre la constante `AI_MODELS` de la suite?
 
-## Flujo de Creación/Modificación
+## Flujo de Creación/Modificación (Era 6)
 Al crear una nueva parte de la aplicación que interactúe con IA:
-1. **Verificar**: Consultar `src/lib/constants/ai-models.ts` para ver qué modelos están habilitados.
+1. **Verificar**: Consultar `@abd/platform-core` para ver qué modelos están habilitados contractualmente.
 2. **Implementar**: Usar `AI_MODELS` para cualquier selector de UI.
-3. **Mapear**: Asegurar que `src/lib/gemini-client.ts` (`mapModelName`) reconozca el ID del modelo para evitar fallbacks inesperados.
+3. **Mapear**: Asegurar que los clientes agénticos reconozcan el ID del modelo para evitar fallos de orquestación.
 
 ## Output Esperado
 Al auditar, genera un informe con:

@@ -22,11 +22,11 @@ Esta skill audita **cualquier ruta o archivo nuevo o modificado** en la aplicaci
 Determina qué tipo de archivo estás auditando:
 
 - **API Route** (`app/api/.../route.ts`)
-- **Servicio de Dominio** (`lib/*-service.ts`, `services/*`, `workers/*`)
+- **Servicio de Dominio (Modular)** (`src/services/[dominio]/[Layer].ts`)
+- **Puentes de Compatibilidad** (`src/lib/[service]-bridge.ts`)
 - **Paquetes Core** (`packages/@abd/*`)
-- **Página/Componente React** (`app/.../page.tsx`, `components/*`)
-- **Autenticación/Seguridad** (`lib/auth.ts`, `middleware.ts`, `*-guard.ts`)
-- **Logging/Auditoría** (`lib/logger.ts`, `*-audit*.ts`)
+- **Página/Componente React** (`app/.../page.tsx`, `components/[dominio]/*`)
+- **Logging/Auditoría forense** (`src/services/observability/*`)
 
 ### 2. Aplicar Checklist Específica
 
@@ -100,28 +100,25 @@ try {
 }
 ```
 
-### ✅ Logging y Auditoría
-- [ ] Registra `logEvento` en operaciones importantes con:
-  - `source`: identificador del módulo (ej. `API_USER_DOCS`, `API_KEYS`)
-  - `action`: verbo claro (CREATE, UPDATE, DELETE, CALL_ERROR, PERFORMANCE_SLA_VIOLATION)
-  - `details`: IDs de recursos, tenantId, tamaños, parámetros clave
-- [ ] Para cambios de configuración, seguridad o administración, usa `AuditTrailService` (`src/lib/services/audit-trail-service`):
-  - `logConfigChange`: Para cambios en settings, planes, o governance.
-  - `logAdminOp`: Para operaciones manuales, scripts de mantenimiento o seeds.
-  - `logDataAccess`: Para acceso a datos sensibles (PII, Reports).
-- [ ] Incluye `actorType` ('USER' | 'IA' | 'SYSTEM'), `actorId`, `reason` (obligatorio en cambios críticos) y `correlationId`.
+### ✅ Logging y Auditoría (Era 6)
+- [ ] Registra `logEvento` (importado de `src/lib/logger` o `LoggingService`) en operaciones importantes.
+- [ ] Para cambios de configuración, seguridad o administración, usa el **Observability Hub**:
+  - `AuditTrailService.logConfigChange`: Para cambios en settings o gobernanza.
+  - `AuditTrailService.logAdminOp`: Acciones manuales o scripts.
+  - `AuditTrailService.logDataAccess`: Acceso a PII o informes sensibles.
+- [ ] Incluye `correlationId` (UUID) en toda la cadena de la request.
 
 ### ✅ Observabilidad y Uso
 - [ ] Para operaciones RAG/LLM/vector search:
   - Crea span con `trace.getTracer(...).startActiveSpan`
   - Registra duración, `tenant.id`, `correlation.id`, resultado clave
 
-### ✅ Multi-tenant y Entorno (Era 5)
-- [ ] Filtra **siempre** por `tenantId` y `environment` donde corresponda
-- [ ] Usa `getTenantCollection(collectionName, session)` para aislamiento automático
+### ✅ Multi-tenant y Dominios (Era 6)
+- [ ] Filtra **siempre** por `tenantId` y `environment` donde corresponda.
+- [ ] Usa `getTenantCollection(collectionName, session)` para aislamiento automático.
+- [ ] **Aislamiento de Dominio**: El código de un dominio (ej: `support`) no debe importar directamente del repositorio de otro dominio. Usar servicios o bridges.
 - [ ] **Prohibido hardcodear `'ELEVATORS'`**. El fallback debe ser `'GENERIC'`.
-- [ ] Mantiene `industry`, `scope` y `environment` coherentes con el pipeline
-- [ ] Prefiere utilidades de `@abd/platform-core/server` (ej: `connectDB`, `logEvento`)
+- [ ] Prefiere utilidades de `@abd/platform-core/server` (ej: `connectDB`).
 
 ### ✅ Seguridad
 - [ ] **Nunca** confía en `tenantId`, `role` ni IDs que vengan del cliente
@@ -137,7 +134,7 @@ try {
 
 ---
 
-## Checklist: Servicios de Dominio (`lib/*-service.ts`, `workers/*`)
+## Checklist: Servicios de Dominio (`src/services/[dominio]/*`)
 
 ### ✅ Diseño y Responsabilidad
 - [ ] Servicio tiene cohesión clara (ej. `MfaService`, `IngestPreparer`, `MultilingualService`)

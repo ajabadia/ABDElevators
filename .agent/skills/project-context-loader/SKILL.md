@@ -16,7 +16,7 @@ description: Carga el contexto crítico, reglas de arquitectura y patrones de de
 ## Workflow
 1. **Analizar la Misión:** Entender que este es un sistema Enterprise de misión crítica (RAG Platform para industrias reguladas), no un CRUD simple.
 2. **Cargar Reglas de Oro:** Internalizar las 4 reglas inquebrantables (Tenant Isolation, Zod First, Encryption, Audit).
-3. **Revisar Arquitectura (Era 5):** Recordar la estructura monorepo (`packages/@abd/*`) y los 3 pilares desacoplados: Entity Engine, Workflow Engine (Agnóstico), RAG System (Aislado).
+3. **Revisar Arquitectura (Era 6):** Recordar la transición de monorepo a **Suite Multi-producto modular**. Los servicios ahora residen en `src/services/[domain]/` (ej: `support`, `observability`) con repositorios y esquemas aislados.
 4. **Validar Agosticidad:** Asegurar que no hay dependencias hardcoded de industria (`ELEVATORS`). El fallback siempre es `GENERIC`.
 5. **Verificar Patrones:** Confirmar el uso de hooks (`useApiList`) y componentes base.
 6. **Output de Confirmación:** Listar el "Estado de Conocimiento" al usuario.
@@ -49,13 +49,13 @@ Antes de generar código, verifica:
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-## Contexto del Proyecto Cargado: ABD RAG Platform (Era 5) 🧠
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 6 - SUITE) 🧠
 
-He sincronizado las reglas críticas y la arquitectura de la Era 5:
-1.  **Arquitectura Monorepo:** Uso de paquetes desacoplados en `packages/@abd/*` (`platform-core`, `workflow-engine`, `rag-engine`).
-2.  **Agosticidad de Dominio:** El estándar base es `GENERIC`. Prohibido hardcodear `ELEVATORS`.
-3.  **Seguridad & Multi-tenancy:** Aislamiento estricto por Tenant (`getTenantCollection`) y Auditoría obligatoria (`logEvento`).
-4.  **Core Systems:** Entity Engine, RAG Service (aislado), y Workflow Engine (Agnóstico + Visual Logic).
+He sincronizado las reglas críticas y la arquitectura de la **Era 6**:
+1.  **Arquitectura de Dominios Modulares:** Los servicios de negocio residen en `src/services/[dominio]` (aislamiento de datos y lógica).
+2.  **Infraestructura de Observabilidad:** Telemetría y auditoría centralizada en el `Observability Hub`.
+3.  **Agosticidad de Dominio:** El estándar base es `GENERIC`. Prohibido hardcodear `ELEVATORS`.
+4.  **Seguridad & Multi-tenancy:** Aislamiento estricto por Tenant (`getTenantCollection`) y Auditoría obligatoria (`logEvento`).
 5.  **Frontend:** Uso de hooks estandarizados (`useApiList`) y componentes base de Shadcn + Custom Primitives.
 
-Estoy listo para desarrollar bajo el paradigma multi-producto de la Era 5. ¿Por dónde empezamos?
+Estoy listo para desarrollar bajo el paradigma de **Suite Multi-producto** de la Era 6. ¿Por dónde empezamos?

@@ -14,7 +14,7 @@ $includeExtensions = @(".ts", ".tsx", ".js", ".jsx", ".css", ".json", ".md", ".p
 $specificFiles = @("package.json", "tsconfig.json", "next.config.js", "README.md", "ROADMAP_MASTER.md", ".env.example")
 
 # Folders to explicitly INCLUDE (relative to root)
-$foldersToProcess = @("src", "scripts", "messages")
+$foldersToProcess = @("src", "scripts", "messages", "packages", "antigravity_skills")
 
 # Directories to exclude (always ignore these)
 $excludeDirs = @("node_modules", ".next", ".git", ".vscode", "tmp", "out", "bin", "obj", "public")

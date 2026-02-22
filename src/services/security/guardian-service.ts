@@ -5,6 +5,8 @@ import {
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
+import { AuditTrailService } from '../observability/AuditTrailService';
+import { CorrelationIdService } from '../observability/CorrelationIdService';
 
 /**
  * 🛡️ GuardianService: Gestión de políticas y grupos de permisos (Phase 120.2)
@@ -30,14 +32,27 @@ export class GuardianService {
             updatedAt: new Date()
         };
 
-        const result = await collection.insertOne(newPolicy);
+        const correlationId = CorrelationIdService.generate('GUARDIAN');
+        const result = await collection.insertOne(newGroup);
+
+        await AuditTrailService.logSecurityEvent({
+            actorType: 'USER',
+            actorId: userId,
+            tenantId,
+            action: 'CREATE_POLICY',
+            entityType: 'SECURITY_POLICY',
+            entityId: result.insertedId.toString(),
+            changes: { after: data },
+            reason: `Policy created: ${data.name}`,
+            correlationId
+        });
 
         await logEvento({
             level: 'INFO',
             source: 'GUARDIAN',
             action: 'CREATE_POLICY',
             message: `Policy '${data.name}' created by ${userId}`,
-            correlationId: result.insertedId.toString(),
+            correlationId,
             tenantId
         });
 
@@ -47,6 +62,7 @@ export class GuardianService {
     static async updatePolicy(tenantId: string, policyId: string, updates: Partial<PermissionPolicy>, userId: string): Promise<void> {
         const collection = await getTenantCollection('policies');
 
+        const correlationId = CorrelationIdService.generate('GUARDIAN');
         await collection.updateOne(
             { _id: new ObjectId(policyId), tenantId },
             {
@@ -57,12 +73,24 @@ export class GuardianService {
             }
         );
 
+        await AuditTrailService.logSecurityEvent({
+            actorType: 'USER',
+            actorId: userId,
+            tenantId,
+            action: 'UPDATE_POLICY',
+            entityType: 'SECURITY_POLICY',
+            entityId: policyId,
+            changes: { updates },
+            reason: `Policy updated: ${policyId}`,
+            correlationId
+        });
+
         await logEvento({
             level: 'INFO',
             source: 'GUARDIAN',
             action: 'UPDATE_POLICY',
             message: `Policy '${policyId}' updated by ${userId}`,
-            correlationId: policyId,
+            correlationId,
             tenantId
         });
     }
@@ -137,6 +165,7 @@ export class GuardianService {
     }
 
     static async addUserToGroup(tenantId: string, userId: string, groupId: string, actorId: string): Promise<void> {
+        const correlationId = CorrelationIdService.generate('GUARDIAN');
         const users = await getTenantCollection('users', undefined);
 
         await users.updateOne(
@@ -144,12 +173,24 @@ export class GuardianService {
             { $addToSet: { permissionGroups: groupId } }
         );
 
+        await AuditTrailService.logSecurityEvent({
+            actorType: 'USER',
+            actorId,
+            tenantId,
+            action: 'ASSIGN_GROUP',
+            entityType: 'USER_PERMISSION',
+            entityId: userId,
+            changes: { addedGroup: groupId },
+            reason: `User assigned to permission group: ${groupId}`,
+            correlationId
+        });
+
         await logEvento({
             level: 'INFO',
             source: 'GUARDIAN',
             action: 'ASSIGN_GROUP',
             message: `User ${userId} added to Group ${groupId} by ${actorId}`,
-            correlationId: userId,
+            correlationId,
             tenantId
         });
     }
