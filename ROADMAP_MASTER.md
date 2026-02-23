@@ -503,7 +503,9 @@ CONFIGURACIÓN (Admin Hub):
 
 > **Principio Rector**: Cero funcionalidades nuevas. Solo simplificar, deduplicar, alinear y dar coherencia.
 > **Motivación**: Tras 217 fases de construcción, la plataforma tiene deuda técnica acumulada: rutas duplicadas, datos fake, servicios solapados, permisos desconectados y conceptos confusos (Suite Apps vs Verticales vs Permisos). ERA 8 cura todo esto antes de expandir.
-> **Referencia**: [architecture_review.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/architecture_review.md)
+> **Referencia**: [architecture_review.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/architecture_review.md) | [route_registry.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/route_registry.md)
+>
+> **Estado auditoría (2026-02-23):** 101 rutas auditadas ruta a ruta. `map.md` reescrito con 100% cobertura. 12 fases definidas (218–225C), ~85 sub-tareas granulares.
 
 > [!IMPORTANT]
 > **POLÍTICA DE DEPRECACIÓN**: NUNCA borrar una funcionalidad directamente. Si una ruta, servicio o componente se identifica como candidato a eliminación, se le marca con un comentario visible `/* 🔴 PROPONER DEPRECAR: [motivo] — ERA 8, FASE X */` y se documenta en la sección DEPRECATED de `map.md`. Solo se elimina tras revisión explícita del equipo.
@@ -556,27 +558,24 @@ CONFIGURACIÓN (Admin Hub):
 - No refleja los route groups de Next.js (`(admin)`, `(technical)`, `(ops)`).
 
 **Tareas:**
-- [ ] **218.1: Inventario exhaustivo de rutas**: Listar las 101 `page.tsx` con su propósito, clasificar cada una como: CANÓNICA, REDIRECT, PROPONER DEPRECAR, o EVALUAR. Publicar como tabla en map.md.
-- [ ] **218.2: Resolver triple "mis documentos"**: `/admin/my-documents` vs `/admin/knowledge/my-docs` vs `/my-documents` (fuera de admin). Definir UNA canónica. Las otras → redirect o PROPONER DEPRECAR.
-- [ ] **218.3: Resolver cuádruple soporte**: `/support` vs `/admin/support` vs `/support-dashboard` vs `/support-ticket`. Definir recorrido por rol. Las redundantes → redirect o PROPONER DEPRECAR.
-- [ ] **218.4: Limpiar DEPRECATED zombis**: `/admin/billing/plan`, `/admin/ingest/jobs`, `/admin/knowledge-base` y `/admin/spaces` están declarados DEPRECATED pero siguen como archivos. Decidir: ¿son redirects funcionales o código muerto?
-- [ ] **218.5: Documentar `/admin/prompts`**: 486 líneas de funcionalidad completa, totalmente invisible en map.md. Añadirla a la sección AI & Workflows.
-- [ ] **218.6: Evaluar dualidad `/admin/audit` vs `/admin/security/audit`**: ¿Son el mismo concepto? ¿`/admin/audit/config-changes` tiene funcionalidad distinta?
-- [ ] **218.7: Evaluar dualidad `/admin/logs` vs `/admin/operations/logs`**: ¿Son el mismo concepto o vistas diferentes?
-- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. ¿Son conceptos distintos o duplicados?
-- [ ] **218.9: Documentar sub-rutas de Spaces**: `/spaces/collections`, `/spaces/personal`, `/spaces/playground`, `/spaces/quick-qa` — ninguna aparece en map.md.
-- [ ] **218.10: Documentar sub-rutas de Notifications**: `/admin/notifications/settings`, `/admin/notifications/templates`, `/admin/notifications/templates/[type]` — ninguna aparece en map.md.
-- [ ] **218.11: Documentar sub-rutas de Settings**: `/admin/settings/branding`, `/admin/settings/i18n` — ninguna aparece en map.md.
-- [ ] **218.12: Documentar sub-rutas faltantes**: `/admin/billing/usage`, `/admin/reports/schedules`, `/admin/organizations/billing`, `/admin/permissions/matrix`.
-- [ ] **218.13: Documentar rutas de usuario**: `/dashboard`, `/search`, `/profile`, `/settings` — rutas core de la experiencia de usuario, no documentadas.
-- [ ] **218.14: Evaluar `/admin/ai/governance`**: Funcionalidad desconocida, no documentada. Verificar si tiene contenido real.
-- [ ] **218.15: Evaluar `/real-estate` y `/ops/reports`**: Rutas fuera de admin, no documentadas. ¿Son funcionales o placeholder?
-- [ ] **218.16: Auditar API debug/test**: `/api/test-env` expone env vars, `/api/debug/env` expone configuración sin auth. RIESGO SEGURIDAD.
-- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — documentar cuál usa Vercel.
-- [ ] **218.18: Reescribir diagrama Mermaid**: El actual refleja ~30% de la app. Reescribir para cubrir el 100% de rutas canónicas, organizado por route groups y roles.
-- [ ] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: Cases solo tiene `[id]` sin hub. Workshop solo tiene `orders/new` sin hub. ¿Se acceden desde dónde?
+- [x] **218.1: Inventario exhaustivo de rutas**: ✅ 101 `page.tsx` clasificadas. Publicado en `map.md` y `route_registry.md`.
+- [ ] **218.2: Resolver triple "mis documentos"**: `/admin/my-documents` vs `/admin/knowledge/my-docs` vs `/my-documents` (fuera de admin). `/my-documents` usa API `/api/auth/knowledge-assets` (379 líneas, hooks estándar). Definir UNA canónica.
+- [ ] **218.3: Resolver cuádruple soporte**: `/support` (client) + `/support/[id]` + `/support/nuevo` | `/admin/support` (redirect) | `/support-dashboard` (100% FAKE) | `/support-ticket` (redirect → `/support/nuevo`). Definir recorrido por rol.
+- [x] **218.4: Limpiar DEPRECATED zombis**: ✅ Clasificados. `/admin/billing/plan` reclasificada como CANÓNICA (95 líneas funcionales, i18n OK). Restantes son redirects funcionales.
+- [x] **218.5: Documentar `/admin/prompts`**: ✅ Documentada en map.md sección AI & Automation Studio (486 líneas).
+- [x] **218.6: Evaluar dualidad audit**: ✅ SON DIFERENTES. `/admin/audit` = log explorer industrial (260 líneas, AuditMetrics). `/admin/security/audit` = trail inmutable de seguridad. `/admin/audit/config-changes` = SOC2 config tracking (Server Component). Documentado en map.md.
+- [x] **218.7: Evaluar dualidad logs**: ✅ `/admin/logs` = redirect puro (6 líneas) → `/admin/operations/logs`. No hay dualidad, solo legacy redirect.
+- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. Pendiente inspección profunda.
+- [x] **218.9-13: Documentar sub-rutas faltantes**: ✅ Todas documentadas en map.md: Spaces (4), Notifications (3), Settings (2), Billing (2), Reports (1), Permissions (1), User core (4), Ops (1).
+- [x] **218.14: Evaluar `/admin/ai/governance`**: ✅ FUNCIONAL. 361 líneas: selección LLM por tarea, cuotas, PII masking, fallback model. Estado: `any` en state, i18n 100% hardcoded.
+- [x] **218.15: Evaluar `/real-estate` y `/ops/reports`**: ✅ `/real-estate` = demo Fase 85 con mockFindings (FAKE DATA). `/ops/reports` = ruta funcional bajo route group `(ops)`.
+- [ ] **218.16: Auditar API debug/test**: `/api/test-env` expone env vars sin auth. RIESGO SEGURIDAD. Pendiente proteger o deprecar.
+- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — pendiente documentar cuál usa Vercel.
+- [x] **218.18: Reescribir diagrama Mermaid**: ✅ map.md reescrito con diagrama Mermaid completo (12 subgrupos, 100% cobertura).
+- [ ] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: Cases solo `[id]` sin hub. Workshop solo `orders/new`. Pendiente definir acceso.
 
 **Criterio de aceptación:** Las 101 rutas tienen un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). map.md refleja la realidad al 100%. Diagrama Mermaid cubre todas las rutas canónicas.
+**Progreso:** 8/19 tareas completadas durante la auditoría.
 
 
 ---
@@ -588,19 +587,20 @@ CONFIGURACIÓN (Admin Hub):
 **Contexto del problema:**
 - `/support-dashboard` = Dashboard de KPIs con **datos 100% fake** (hardcoded: 145 tickets, 98.4% SLA, 94.1% IA).
 - `/admin/workflow-tasks` = stats de tareas con **datos 100% fake** (hardcoded: 12 pending, 5 in review, 28 completed, 45m avg).
+- `/real-estate` = Demo Fase 85 con **mockFindings hardcoded** ("Fisura detectada en muro de carga", "Punto de inspección eléctrica").
 - `/support` = Portal de cliente con tickets + búsqueda IA. Conectado a API. ✅
 - `/admin/support` = Panel admin con lista/detalle de tickets. Conectado a API. ✅
-- Pueden existir más módulos con datos fake no detectados aún.
 
 **Tareas:**
-- [ ] **219.1: Scan de datos fake en TODA la app**: Buscar patterns de datos hardcoded (`value="12"`, `"98.4%"`, etc.) en archivos `.tsx` bajo `src/app`. Documentar cada hallazgo.
+- [ ] **219.1: Scan de datos fake en TODA la app**: Buscar patterns de datos hardcoded (`value="12"`, `"98.4%"`, `mockFindings`, etc.) en archivos `.tsx` bajo `src/app`. Documentar cada hallazgo.
 - [ ] **219.2: Conectar `/support-dashboard` a datos reales**: Crear endpoint `/api/support/stats` que devuelva KPIs reales desde MongoDB.
 - [ ] **219.3: Conectar `/admin/workflow-tasks` a datos reales**: Las stats (pending, in review, completed, avg time) deben venir del endpoint `/api/admin/workflow-tasks` con un `?stats=true` query.
-- [ ] **219.4: Definir estrategia de vistas por rol en Soporte**: El usuario final ve `/support` (crear ticket, buscar). El admin ve todo + KPIs.
-- [ ] **219.5: Integrar dashboard en `/support`**: Mover KPIs de `/support-dashboard` como tab/sección dentro de `/support`, visible solo para ADMIN/SUPPORT_STAFF.
-- [ ] **219.6: Evaluar `/admin/support`**: ¿Es redundante con la vista admin de `/support`? Si sí → redirect. Si no → documentar diferencia.
-- [ ] **219.7: Marcar `/support-dashboard` como PROPONER DEPRECAR**: Una vez integrado en `/support`, marcar ruta antigua.
-- [ ] **219.8: i18n Audit del módulo**: Verificar que "Centro de Soporte", "Tickets Activos", "Mis Tareas", "Nueva Tarea" usen `useTranslations`.
+- [ ] **219.4: Decidir destino de `/real-estate`**: Demo con mockFindings. ¿Debería usar datos reales del vertical real-estate? ¿O marcarse como demo/placeholder y documentarlo?
+- [ ] **219.5: Definir estrategia de vistas por rol en Soporte**: El usuario final ve `/support` (crear ticket, buscar). El admin ve todo + KPIs.
+- [ ] **219.6: Integrar dashboard en `/support`**: Mover KPIs de `/support-dashboard` como tab/sección dentro de `/support`, visible solo para ADMIN/SUPPORT_STAFF.
+- [ ] **219.7: Evaluar `/admin/support`**: ¿Es redundante con la vista admin de `/support`? Si sí → redirect. Si no → documentar diferencia.
+- [ ] **219.8: Marcar `/support-dashboard` como PROPONER DEPRECAR**: Una vez integrado en `/support`, marcar ruta antigua.
+- [ ] **219.9: i18n Audit del módulo**: Verificar que "Centro de Soporte", "Tickets Activos", "Mis Tareas", "Nueva Tarea" usen `useTranslations`.
 
 **Criterio de aceptación:** Zero datos fake en producción. Cada número visible viene de una API con datos reales de MongoDB.
 
@@ -621,6 +621,7 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **220.3: Fallback gradual**: Durante la migración, mantener el check por roles como fallback si Guardian no responde. Log de discrepancias.
 - [ ] **220.4: PROPONER DEPRECAR `roles[]` de MenuItem**: Una vez migrado y verificado, marcar el campo `roles` como deprecated en `navigation.ts`. No eliminar hasta confirmar estabilidad.
 - [ ] **220.5: Documentar la Matriz de Permisos**: Crear una tabla en `docs/permissions-matrix.md` con todos los recursos y acciones definidos.
+- [ ] **220.6: Auditar `enforcePermission` en Server Components**: Solo 2 de 101 páginas usan `enforcePermission` (`trace` y `config-changes`). Identificar todas las páginas Server Component que necesitan enforcement backend y añadirlo.
 
 **Criterio de aceptación:** Si Guardian dice NO, el sidebar no muestra el enlace. Si Guardian dice SÍ, el enlace aparece. Una sola fuente de verdad.
 
@@ -631,9 +632,9 @@ CONFIGURACIÓN (Admin Hub):
 **Objetivo:** Alinear el App Registry (5 apps con basePath) con los route groups reales de Next.js para que `getAppByPath()` funcione correctamente.
 
 **Contexto del problema:**
-- `OPERATIONS.basePath = '/ops/reports'` pero esa ruta no existe como page.
-- `CONFIG.basePath = '/admin/permissions'` que es solo un subpath, no una app.
-- `TECHNICAL.basePath = '/technical'` pero las rutas reales son `/entities` y `/graphs`.
+- `OPERATIONS.basePath = '/ops/reports'` — ruta SÍ existe (bajo route group `(ops)`) pero OpsHub real es `/admin/operations`. Desalineado.
+- `CONFIG.basePath = '/admin/permissions'` que es solo un subpath, no una app. Settings reales están en `/admin/settings` con sub-rutas `/branding` y `/i18n`.
+- `TECHNICAL.basePath = '/technical'` pero las rutas reales son `/entities` y `/graphs`. `/technical` SÍ existe como hub page.
 - `getAppByPath()` hace `startsWith` sobre estos basePaths, causando matches incorrectos.
 
 **Tareas:**
@@ -676,21 +677,27 @@ CONFIGURACIÓN (Admin Hub):
 **Contexto del problema:**
 - Billing, Operations y Security tienen el mismo patrón "Hub Page" (array de secciones → grid de Cards) reimplementado 3 veces con diferencias mínimas.
 - `StatSimple` (inline en workflow-tasks, 15 líneas con `: any`) hace lo mismo que `MetricCard` (componente estándar en `src/components/ui`).
+- `KPICard` (inline en `/technical/page.tsx`, props con `: any`) es OTRA reimplementación de MetricCard. **5ª instancia del patrón.**
 - `superadmin/page.tsx` es un monolito de 489 líneas con 5 widgets que podrían ser componentes independientes.
 - `notifications/page.tsx` no usa `<PageContainer>` ni `<PageHeader>` — layout inconsistente.
 - `intelligence/trends` usa `useEffect + fetch` manual en vez del hook estándar `useApiItem`.
 - `notifications/page.tsx` hace `connectDB()` directo sin service layer.
+- **Toast inconsistencia**: 3 páginas importan `toast` de `sonner` (layout, playground, governance), 10 páginas usan `useToast` de `@/hooks/use-toast`. El patrón debe estandarizarse.
 - **Referencia DRY detallada**: [implementation_plan.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/implementation_plan.md)
 
 **Tareas:**
 - [ ] **222B.1: Crear `<HubPage>`**: Componente genérico que recibe `sections[]` con `{title, description, href, icon, color, isActive}`. Migrar Billing, Operations y Security a usarlo. Cada página queda en ~15 líneas.
 - [ ] **222B.2: Eliminar `StatSimple` inline**: Reemplazar en `workflow-tasks/page.tsx` por `MetricCard` estándar de `@/components/ui`. Eliminar la función inline con `: any`.
-- [ ] **222B.3: Descomponer Superadmin**: Extraer `FinancialsCard`, `AnomaliesWidget`, `InfraCard`, `EvolutionDashboard` como componentes independientes bajo `src/components/admin/superadmin/`. La página queda en ~40 líneas.
-- [ ] **222B.4: Estandarizar layout de Notifications**: Migrar `notifications/page.tsx` a usar `<PageContainer>` + `<PageHeader>` en vez de `<h1>` + `<div>` manual.
-- [ ] **222B.5: Migrar intelligence/trends a `useApiItem`**: Reemplazar el patrón `useEffect + fetch + useState` por el hook estándar. Eliminar `console.error` residual.
-- [ ] **222B.6: Service layer para Notifications**: Crear `NotificationService.getStats()` y `NotificationService.getRecent()` para encapsular las queries directas a `connectDB()`.
+- [ ] **222B.3: Unificar MetricCard en `/admin/billing/usage`**: Tiene un `MetricCard` local (109 líneas) que reimplementa el estándar. Migrar a `@/components/ui/metric-card`. Total: **5 instancias** del mismo patrón → 1 componente.
+- [ ] **222B.4: Eliminar `KPICard` inline en `/technical/page.tsx`**: Reimplementación de MetricCard con `: any`. Migrar a componente estándar.
+- [ ] **222B.5: Descomponer Superadmin**: Extraer `FinancialsCard`, `AnomaliesWidget`, `InfraCard`, `EvolutionDashboard` como componentes independientes bajo `src/components/admin/superadmin/`. La página queda en ~40 líneas.
+- [ ] **222B.6: Estandarizar layout de Notifications**: Migrar `notifications/page.tsx` a usar `<PageContainer>` + `<PageHeader>` en vez de `<h1>` + `<div>` manual.
+- [ ] **222B.7: Migrar intelligence/trends a `useApiItem`**: Reemplazar el patrón `useEffect + fetch + useState` por el hook estándar. Eliminar `console.error` residual.
+- [ ] **222B.8: Migrar `/admin/ai/governance` a `useApiItem`**: Usa `useEffect + fetch + useState` manual con `any` en state. Migrar a hook estándar con tipos.
+- [ ] **222B.9: Service layer para Notifications**: Crear `NotificationService.getStats()` y `NotificationService.getRecent()` para encapsular las queries directas a `connectDB()`.
+- [ ] **222B.10: Estandarizar toast library**: Auditar uso dual de `sonner` (3 archivos) vs `@/hooks/use-toast` (10 archivos). Elegir UNO como canónico y migrar el resto. Documentar la decisión.
 
-**Criterio de aceptación:** Zero `StatSimple` inline. Las 3 Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`.
+**Criterio de aceptación:** Zero `StatSimple`/`KPICard` inline. Zero MetricCard reimplementado. Las 3+ Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`. Zero `: any` en state de pages. Una sola librería de toast.
 
 ---
 
@@ -708,6 +715,9 @@ CONFIGURACIÓN (Admin Hub):
 - `useOnboarding.ts` (API-based) tiene todos los steps en español: "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc.
 - `superadmin/page.tsx` tiene "PRODUCTION / VERCEL", "M10 / Dedicated Cluster", "Gemini 004 / Pro Advanced" hardcoded.
 - Total de `src/components/admin`: 41 componentes, muchos con mezcla de i18n y hardcode.
+- `/admin/ai/governance` (361 líneas) — **i18n 100% hardcoded**: "Gobernanza de IA", "Modelos Contractuales", "Modelo Principal", "Selecciona modelo", "Descartar", "Guardar Gobernanza", "Límites & Cuotas", "Anonimización PII", "Max Tokens por Request", etc.
+- `/admin/settings/i18n` (317 líneas) — parcialmente hardcoded: "Sincronización Global Completada", "Error Global", "TODOS".
+- `/admin/audit` (260 líneas) — hardcoded: "Registro de Auditoría", "Eventos de Auditoría", "Feed industrial", "Activa el monitor", "Cargar Todos", "Solo Errores".
 
 **Tareas:**
 - [ ] **223.1: Scan automático de hardcode**: Ejecutar un script/grep que busque strings en español dentro de archivos `.tsx` que NO estén en archivos de traducción.
@@ -718,8 +728,11 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **223.6: Usar skill `i18n-a11y-auditor`**: Ejecutar la auditoría completa sobre todas las páginas modificadas.
 - [ ] **223.7: Prompts page — mover diálogos**: "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora" y opciones de industria al JSON de traducciones.
 - [ ] **223.8: Compliance — mover párrafo inglés**: "Compliance Note: This RAG implementation..." al JSON en ambos idiomas.
-- [ ] **223.9: Onboarding steps**: Mover "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc. de `useOnboarding.ts` a traducciones. Usar `useTranslations` como hace `use-onboarding.ts`.
+- [ ] **223.9: Onboarding steps**: Mover "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc. de `useOnboarding.ts` a traducciones.
 - [ ] **223.10: Superadmin infra card**: Decidir si "PRODUCTION / VERCEL", "M10 / Dedicated Cluster" vienen de un config service o son i18n estático.
+- [ ] **223.11: AI Governance — i18n completo**: Migrar las 361 líneas de `/admin/ai/governance` a `useTranslations`. Es la página con PEOR cobertura i18n de toda la app.
+- [ ] **223.12: Audit page — i18n**: Migrar hardcodes de `/admin/audit` ("Registro de Auditoría", "Eventos", "Activa el monitor", etc.).
+- [ ] **223.13: Settings/i18n page — i18n meta**: Migrar los hardcodes residuales de la propia página de traducciones.
 
 **Criterio de aceptación:** Zero strings en español/inglés fuera de archivos JSON de traducción. Cambiar locale de ES a EN muestra la UI completa en inglés.
 
@@ -734,6 +747,7 @@ CONFIGURACIÓN (Admin Hub):
 - `banking/`, `insurance/`, `legal/`, `real-estate/` solo tienen `config.ts` + un template vacío.
 - El `DomainRouter` clasifica queries en 6 industrias pero solo Elevators tiene UI.
 - No hay documentación de cómo añadir una vertical.
+- `/real-estate` (120 líneas) es la ÚNICA vertical con página propia fuera de admin. Es un demo con datos mock. Usa `PropertyTwinViewer` de `src/verticals/real-estate/components/`.
 
 **Tareas:**
 - [ ] **224.1: Estandarizar estructura de vertical**: Definir el contrato mínimo: `config.ts` + `templates/` + `components/` (opcional). Documentar en `docs/vertical-guide.md`.
@@ -741,8 +755,9 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **224.3: Validar DomainRouter fallback**: Asegurar que si una query se clasifica como BANKING pero no hay componentes, el sistema usa el flujo GENERIC sin error.
 - [ ] **224.4: Unificar con EntityEngine**: Verificar que la ontología (`elevators.json`) y el `EntityEngine` son extensibles a otras industrias. Documentar el patrón.
 - [ ] **224.5: Mover `real-estate/CausalFlow` a shared si es genérico**: Si el componente CausalFlow no es específico de real-estate, moverlo a `src/components/shared`.
+- [ ] **224.6: Evaluar `/real-estate` demo page**: ¿Debería existir como ruta de usuario o solo como demo de admin? Si es demo → mover a `/admin/verticals/real-estate`. Si es funcionalidad real → conectar a datos reales y documentar en vertical-guide.md.
 
-**Criterio de aceptación:** Las carpetas de verticales vacías solo tienen `config.ts`. Existe `docs/vertical-guide.md` que explica cómo añadir una industria.
+**Criterio de aceptación:** Las carpetas de verticales vacías solo tienen `config.ts`. Existe `docs/vertical-guide.md` que explica cómo añadir una industria. `/real-estate` tiene estado definido (demo documentado o funcional con datos reales).
 
 ---
 
@@ -788,3 +803,55 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **225B.7: Documentar health checks**: Definir cuál endpoint usa Vercel (`/_health` o `/_ready`) y evaluar si `/health/db-check` es un duplicado.
 
 **Criterio de aceptación:** Zero `useLocalStorage`. Un solo hook de onboarding. Un solo language switcher por contexto (app vs marketing). APIs de debug protegidas con auth.
+
+---
+
+#### 🔒 FASE 225C: TYPESCRIPT STRICT ENFORCEMENT & TYPE HYGIENE
+
+**Objetivo:** Eliminar TODOS los `: any` de archivos de página (`page.tsx`). Reforzar Regla #1 (TypeScript Strict Mode) que prohíbe `any` en código de producción.
+
+**Contexto del problema (scan 2026-02-23):**
+
+> [!CAUTION]
+> **46 instancias de `: any` en 20+ archivos `page.tsx`**. Esto viola directamente la Regla #1:  "❌ const x: any = ..." → PR rechazado sin piedad.
+
+**Archivos con mayor densidad de `any`:**
+- `superadmin/page.tsx` — 7 instancias (tenant: any, anomaly: any, drift: any, proposal: any, etc.)
+- `prompts/page.tsx` — 6 instancias (tenantsList: any, categoryCounts: any, error: any)
+- `settings/i18n/page.tsx` — 4 instancias (data: any en callbacks)
+- `users/active/page.tsx` — 4 instancias (vars: any, res: any, c: any)
+- `document-types/page.tsx` — 3 instancias (data: any, row: any)
+- `operations/ingest/page.tsx` — 2 instancias (data: any, error: any)
+- `workshop/orders/new/page.tsx` — 3 instancias (val: any, part: any, m: any)
+- `technical/page.tsx` — 2 instancias (KPICard props: any, FileTextIcon props: any)
+- `ai/playground/page.tsx` — 2 instancias (error: any, chunk: any)
+- `notifications/templates/page.tsx` — 1 instancia (tpl: any)
+- `login/page.tsx` — 2 instancias (err: any catch blocks)
+- `entities/page.tsx` — 1 instancia (p: any en map)
+- `entities/[id]/validar/page.tsx` — 1 instancia (validacion: any)
+- `admin/page.tsx` — 1 instancia (transform s: any)
+- `support/page.tsx` — 1 instancia (ticket: any)
+- `operations/status/page.tsx` — 1 instancia (recentJobs: any[])
+- `operations/trace/page.tsx` — 1 instancia (logs: any[])
+- `my-documents/page.tsx` — 1 instancia oculta (documentTypes: any[])
+- `reports/schedules/page.tsx` — 1 instancia (error: any)
+- `upgrade/page.tsx` — 1 instancia (error: any)
+- `auth-pages/magic-link/verify/page.tsx` — 1 instancia (error: any)
+
+**Patrones recurrentes de `any`:**
+1. **`catch (error: any)`** → Usar `unknown` + type guard o `AppError`
+2. **callback params `(data: any)` en mutations** → Definir tipo de respuesta del endpoint
+3. **inline components `({ props }: any)`** → Crear interface explícita
+4. **`.map((item: any)` en renders** → Definir interface del item
+5. **state declarations `any[]`** → Definir interfaces para arrays
+
+**Tareas:**
+- [ ] **225C.1: Crear interfaces para API responses**: Para cada endpoint usado en las páginas, definir el tipo de respuesta en `src/lib/schemas/` o al lado de la página.
+- [ ] **225C.2: Purgar `catch (error: any)`**: Reemplazar en TODAS las páginas por `catch (error: unknown)` con type guard. Patrón: `if (error instanceof AppError)` o `String(error)`.
+- [ ] **225C.3: Tipar callbacks de mutations**: Los `onSuccess: (data: any)` en `useApiMutation` necesitan el tipo de respuesta genérico. Actualizar en superadmin, i18n, y otros.
+- [ ] **225C.4: Tipar inline components**: `StatSimple`, `KPICard`, `FileTextIcon` y similares necesitan props interfaces explícitas (se solapa con 222B.2/222B.4 — resolver primero los DRY y el typado se hereda).
+- [ ] **225C.5: Tipar arrays de estado**: `documentTypes: any[]` en my-documents, `logs: any[]` en trace, `recentJobs: any[]` en status → Crear interfaces.
+- [ ] **225C.6: Tipar renders con map**: `(tenant: any)`, `(anomaly: any)`, `(drift: any)`, `(tpl: any)`, etc. → Definir interfaces de domain objects.
+- [ ] **225C.7: Verificar con tsc --noEmit**: Ejecutar `npx tsc --noEmit --strict` y confirmar zero errores de tipo en archivos de página.
+
+**Criterio de aceptación:** Zero `: any` en archivos `page.tsx`. `tsc --noEmit` pasa limpio. Cada callback, render y state tiene tipos explícitos.
