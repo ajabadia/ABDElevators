@@ -8,8 +8,10 @@
 graph TD
     %% Entry Points
     User((User)) --> Login["/login"]
-    User --> Admin["/admin (Dashboard)"]
+    User --> Admin["/admin (Dashboard Hub)"]
     User --> Technical["/entities (Technical Hub)"]
+    User --> SupportHub["/support (Client Support)"]
+    User --> SpacesHub["/spaces (Spaces Hub)"]
 
     %% Admin Hubs
     subgraph Admin_Panel [Admin Panel /admin]
@@ -25,6 +27,8 @@ graph TD
         Admin --> ReportsHub["/reports (Reports)"]
         Admin --> BillingHub["/billing (Billing)"]
         Admin --> OrgHub["/organizations (Organization)"]
+        Admin --> Analytics["/analytics (Analytics Center)"]
+        Admin --> Notifications["/notifications (Communication)"]
         
         %% Security Details
         SecurityHub --> SecAudit["/security/audit"]
@@ -33,28 +37,29 @@ graph TD
         %% Knowledge Details
         KnowledgeHub --> KExplorer["/knowledge/explorer"]
         KnowledgeHub --> KAssets["/knowledge/assets"]
-        KnowledgeHub --> KSpaces["/knowledge/spaces"]
+        KnowledgeHub --> KSpaces["/knowledge/spaces (Management)"]
         KnowledgeHub --> KDocs["/knowledge/my-docs"]
-        
-        %% Users Details
-        UsersHub --> UActive["/users/active"]
-        UsersHub --> UPending["/users/pending"]
         
         %% AI Details
         AIHub --> AIPlayground["/ai/playground"]
         AIHub --> AIWorkflows["/ai/workflows"]
         AIHub --> AIRagQuality["/ai/rag-quality"]
+        AIHub --> AIPredictive["/ai/predictive"]
         
         %% Operations Details
         OpsHub --> OpsStatus["/operations/status"]
         OpsHub --> OpsMaintenance["/operations/maintenance"]
         OpsHub --> OpsLogs["/operations/logs"]
-        
-        %% Vertical Modules
-        Admin --> Compliance["/compliance"]
-        Admin --> Workshop["/workshop/orders/new"]
+        OpsHub --> OpsIngest["/operations/ingest (Status)"]
     end
     
+    %% Support Ecosystem
+    subgraph Support_Ecosystem [Support & Tickets]
+        SupportHub --> TicketNew["/support/nuevo"]
+        SupportHub --> TicketList["/support/list"]
+        Admin --> SupportDash["/support-dashboard (Staff)"]
+    end
+
     %% Technical Panel
     subgraph Technical_Panel [Technical Mode]
         Technical --> Entities["/entities"]
@@ -72,16 +77,21 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
 | `/admin` | **Dashboard Unificado (Hub)**: Punto de entrada por roles. | 2026-02-19 (Verified) |
-| `/admin/tasks` | **Tasks Hub**: Gestión de tareas. | 2026-02-19 (Verified) |
+| `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio. | 2026-02-23 (Updated) |
+| `/admin/workflow-tasks` | **Workflow Ops**: Tareas de orquestación técnica. | 2026-02-23 (New) |
 | `/admin/security` | **Security Hub**: Dashboard de seguridad. | 2026-02-19 (Verified) |
-| `/admin/security/audit` | **Audit Trail**: Registro inmutable. | 2026-02-19 (Verified) |
-| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones de usuario. | 2026-02-19 (New) |
+| `/admin/security/audit` | **Audit Trail**: Registro inmutable de seguridad. | 2026-02-19 (Verified) |
+| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones concurrentes. | 2026-02-19 (New) |
+| `/admin/analytics` | **Analytics Center**: Métricas de uso y adopción. | 2026-02-23 (New) |
+| `/admin/notifications` | **Communication Hub**: Plantillas y log de envíos. | 2026-02-23 (New) |
 | `/admin/operations/maintenance` | Mantenimiento y corrección de datos. | 2026-02-19 (Verified) |
 | `/admin/operations/status` | Estado de servicios e infraestructura. | 2026-02-19 (Verified) |
+| `/admin/operations/trace` | **Trace Viewer**: Auditoría forense de decisiones IA. | 2026-02-23 (New) |
 | `/admin/settings` | **Settings Hub**: Configuración centralizada. | 2026-02-19 (Verified) |
-| `/admin/profile` | Perfil de usuario. | 2026-02-16 |
-| `/admin/reports` | **Report Hub**: Dashboard de informes. | 2026-02-19 (Verified) |
-| `/admin/reports/schedules` | Gestión de programación de informes. | 2026-02-19 (Verified) |
+| `/admin/profile` | Perfil de usuario administrativo. | 2026-02-16 |
+| `/admin/reports` | **Report Hub**: Dashboard de informes de negocio. | 2026-02-19 (Verified) |
+| `/admin/api-docs` | **API Reference**: Swagger/Doc interna. | 2026-02-23 (New) |
+| `/admin/api-keys` | **Key Management**: Tokens de integración. | 2026-02-23 (New) |
 | `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin). | 2026-02-19 (Verified) |
 
 ### 🧠 Knowledge & RAG
@@ -89,10 +99,13 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 |------|---------------|-----------------|
 | `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento. | 2026-02-19 (Verified) |
 | `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG y búsqueda. | 2026-02-19 (Verified) |
-| `/admin/knowledge/assets` | **Asset Management**: Gestión de activos. | 2026-02-19 (Verified) |
-| `/admin/knowledge/my-docs` | **My Documents**: Gestión personal. | 2026-02-19 (Verified) |
-| `/admin/knowledge/spaces` | **Spaces**: Configuración de espacios. | 2026-02-19 (Verified) |
+| `/admin/knowledge/assets` | **Asset Management**: Gestión de activos de conocimiento. | 2026-02-19 (Verified) |
+| `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos asociados al hub. | 2026-02-19 (Verified) |
+| `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal. | 2026-02-23 (Updated) |
+| `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios. | 2026-02-19 (Verified) |
+| `/spaces` | **Spaces Hub**: Navegación por espacios de usuario. | 2026-02-23 (New) |
 | `/admin/knowledge-assets` | *Legacy Redirect (Active Route)* | 2026-02-19 (Verified) |
+| `/admin/intelligence/trends` | **Trend analysis**: Inteligencia competitiva/industrial. | 2026-02-23 (New) |
 
 ### 👮 Guardian & Users
 | Ruta | Funcionalidad | Ultima Revisión |
@@ -120,9 +133,14 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ### 💰 Billing & Organizations
 | Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/admin/billing` | **Billing Hub**. | 2026-02-19 (Verified) |
-| `/admin/organizations` | **Organization Hub**. | 2026-02-19 (Verified) |
-| `/admin/compliance` | Centro de Cumplimiento GDPR. | 2026-02-19 (Verified) |
+| `/admin/billing` | **Billing Hub**: Suscripciones y facturación. | 2026-02-19 (Verified) |
+| `/admin/billing/invoices` | Historial de facturas. | 2026-02-23 (New) |
+| `/admin/billing/contracts` | Gestión de contratos PDF. | 2026-02-23 (New) |
+| `/admin/organizations` | **Organization Hub**: Dashboard multitenant. | 2026-02-19 (Verified) |
+| `/admin/organizations/general` | Configuración básica del tenant. | 2026-02-23 (New) |
+| `/admin/organizations/branding` | Personalización visual (Logo/Colores). | 2026-02-23 (New) |
+| `/admin/organizations/features` | Control de módulos activos por tenant. | 2026-02-23 (New) |
+| `/admin/compliance` | Centro de Cumplimiento GDPR / Auditoría. | 2026-02-19 (Verified) |
 
 ### 🏭 Verticales & Taller
 | Ruta | Funcionalidad | Ultima Revisión |
@@ -135,12 +153,15 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 ## 🛠️ Herramientas Técnicas (Expert Mode)
 | Ruta | Funcionalidad | Ultima Revisión |
 |------|---------------|-----------------|
-| `/entities` | Dashboard de Entidades (Technical). | 2026-02-19 (Verified) |
-| `/entities/[id]/validar` | Validación de Entidad. | 2026-02-19 (Verified) |
-| `/graphs` | Visualizador de Grafo (Neo4j). | 2026-02-19 (Verified) |
+| `/entities` | Dashboard de Entidades (Technical Hub). | 2026-02-23 (Verified) |
+| `/entities/[id]/validar` | Validación Técnica de Entidad. | 2026-02-19 (Verified) |
+| `/graphs` | Visualizador de Grafo (Neo4j Explorer). | 2026-02-23 (Verified) |
+| `/support` | **Support Center (Client)**: Centro de ayuda y tickets. | 2026-02-23 (New) |
+| `/support-dashboard` | **Support Hub (Staff)**: Gestión de soporte interno. | 2026-02-23 (New) |
+| `/admin/support` | *Admin Support Redirect* | 2026-02-23 (New) |
 | `/api/technical/*` | **Modular API**: RAG, Entities, Workflows. | 2026-02-22 (Deployed) |
 | `/api/support/*` | **Modular API**: Tickets, Support Knowledge. | 2026-02-22 (Deployed) |
-| `/api/ops/*` | **Modular API**: Logs, Audit, Health. | 2026-02-22 (Deployed) |
+| `/api/ops/*` | **Modular API**: Logs, Audit, Health, ETA. | 2026-02-23 (Updated) |
 | `/api/admin/ingest/[id]/enrich` | **Enrichment API**: Post-ingesta premium triggers. | 2026-02-23 (New) |
 
 ---
@@ -153,4 +174,6 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 *   `/admin/knowledge-base` -> Reemplazado por `/admin/knowledge` (Hub).
 *   `/admin/security/logs` -> Movido a `/admin/operations/logs`.
 *   `/admin/ingest/jobs` -> Movido a `/admin/operations/ingest`.
-*   `/admin/spaces` -> Integrado en `/admin/knowledge/spaces`.
+*   `/admin/spaces` -> Integrado en `/admin/knowledge/spaces` (Admin) y `/spaces` (User).
+*   `/admin/billing/plan` -> Integrado en sub-secciones de `/admin/billing`.
+*   `/admin/intelligence` -> Reemplazado por `/admin/ai` y `/admin/intelligence/trends`.
