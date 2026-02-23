@@ -34,19 +34,19 @@ Este documento es tu **prompt de sistema** para pasar a Cursor, Antigrávity, o 
 
 Estas reglas NUNCA se rompen. Si IA las viola → PR rechazado.
 
-### 1. TypeScript Strict Mode
+### 1. TypeScript Strict Mode (ERA 8 Scoped)
 
 ```
-REGLA: tsconfig.json DEBE tener:
-- "strict": true
-- "noImplicitAny": true
-- "strictNullChecks": true
+REGLA: tsconfig.json DEBE tener "strict": true.
+
+PROHIBICIÓN ESTRICTA (ERA 8):
+❌ Prohibido `: any` en: core schemas, exported lib/services, API responses.
+⚠️ Permitido `: any` (DEUDA ERA 9) en: UI internals, inline components, demo code.
 
 VALIDACIÓN:
-❌ const x: any = ...
-❌ function f(x) { ... }
+❌ const x: any = ... (en lib/services)
 ✅ const x: string = ...
-✅ function f(x: string): void { ... }
+✅ catch (error: unknown) { ... }
 
 SI ROMPES: Rechazamos tu PR sin piedad.
 ```
@@ -280,6 +280,45 @@ PATRÓN:
 ✅ Estructura de "Compound Components" para UI compleja (Context-based).
 
 SI ROMPES: Deuda técnica por explosión de props.
+```
+
+### 15. Route Registry is Source of Truth (NEW ERA 8)
+
+```
+REGLA: Toda ruta debe existir en `map.md` y `route_registry.md`.
+
+PATRÓN:
+1. No crear una página sin antes categorizarla en el mapa.
+2. Definir si es CANÓNICA o REDIRECT.
+3. Respetar el cluster (Mis Documentos, Soporte, Audit, Tasks).
+
+SI ROMPES: Generas navegación fantasma.
+```
+
+### 16. UI & Notification Standards (NEW ERA 8)
+
+```
+REGLA: Usar componentes DRY y una única librería de notificaciones.
+
+ESTÁNDARES:
+✅ Notificaciones: `import { toast } from 'sonner'`.
+❌ Prohibido: `@/hooks/use-toast`.
+✅ Dashboards: Usar `<HubPage>` y `<MetricCard>`.
+
+SI ROMPES: Deuda visual inconsistente.
+```
+
+### 17. Fake Data Isolation (NEW ERA 8)
+
+```
+REGLA: Prohibido contaminar producción con datos fake.
+
+MECANISMO:
+1. Datos fake solo en `src/demo/`.
+2. Páginas de demo etiquetadas con badge `INTERNAL DEMO`.
+3. Lógica condicionada por `NEXT_PUBLIC_DEMO_MODE`.
+
+SI ROMPES: Riesgo de filtración de mocks en Real-Estate/Ascensores.
 ```
 
 ---
@@ -600,6 +639,6 @@ Si Humano: Copia esto en Cursor/Antigrávity y comienza.
 ---
 
 **Documento:** Instrucciones Master para IA  
-**Versión:** 1.0  
-**Vigente:** 21 de enero de 2026+  
+**Versión:** 1.1 (ERA 8 Alignment)  
+**Vigente:** 23 de febrero de 2026+  
 **Aplicabilidad:** 100% de código generado por IA

@@ -27,6 +27,7 @@ description: Evalúa si un archivo (API, Server Action o Componente) está corre
     -   Asegura el uso de `getTenantCollection(collectionName)` para aislamiento multi-tenant.
     -   ❌ **PROHIBIDO**: Acceso directo a base de datos sin contexto de tenant o sesión.
 4.  Si el archivo maneja `WorkflowTasks` y no verifica la propiedad o el rol asignado -> **RAISE ERROR (CRITICAL)**.
+5.  **Critical Enforcement (ERA 8)**: Verifica que módulos de Billing, Audit, Security, Governance y Settings usen `enforcePermission` en el backend.
 
 ### 2. Validación de Recursos V3
 Analiza los argumentos de las funciones de protección:

@@ -8,7 +8,7 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 ## Cuándo usar este skill
 - Cuando se cree una nueva página o componente UI.
 - Cuando el usuario pida revisar la accesibilidad de una vista.
-- Cuando se necesite asegurar que todos los textos están internacionalizados (usando `next-intl` y `TranslationService`).
+- [ ] **ERA 8 Scope**: Prioridad máxima a rutas de navegación principal y texto regulatorio/sensible. El texto profundo se registra en `docs/i18n-debt.md`.
 - Como paso previo a un PR para garantizar estándares de calidad frontend.
 
 ## Inputs necesarios

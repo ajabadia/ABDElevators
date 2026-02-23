@@ -49,13 +49,14 @@ Antes de generar código, verifica:
 ## Output (Formato al ejecutar)
 Al ejecutar este skill, responde al usuario con el siguiente resumen:
 
-## Contexto del Proyecto Cargado: ABD RAG Platform (Era 6 - SUITE) 🧠
+## Contexto del Proyecto Cargado: ABD RAG Platform (Era 8 - COHERENCIA) 🧠
 
-He sincronizado las reglas críticas y la arquitectura de la **Era 6**:
-1.  **Arquitectura de Dominios Modulares:** Los servicios de negocio residen en `src/services/[dominio]` (aislamiento de datos y lógica).
-2.  **Infraestructura de Observabilidad:** Telemetría y auditoría centralizada en el `Observability Hub`.
-3.  **Agosticidad de Dominio:** El estándar base es `GENERIC`. Prohibido hardcodear `ELEVATORS`.
-4.  **Seguridad & Multi-tenancy:** Aislamiento estricto por Tenant (`getTenantCollection`) y Auditoría obligatoria (`logEvento`).
-5.  **Frontend:** Uso de hooks estandarizados (`useApiList`) y componentes base de Shadcn + Custom Primitives.
+He sincronizado las reglas críticas y la arquitectura de la **Era 8**:
+1.  **Mapa de Rutas Canónico:** 101 rutas trazadas en `map.md`. Prohibido crear rutas fantasma.
+2.  **Aislamiento de Demos:** `/real-estate` es INTERNAL DEMO. Datos fake aislados en `src/demo/`.
+3.  **Seguridad Guardian:** `enforcePermission` obligatorio en módulos críticos (Billing, Audit, Security).
+4.  **Higiene de Tipos:** Prohibido `: any` en core logic y servicios exportados.
+5.  **UI DRY & Sonic:** `sonner` es la única librería de toast. Uso obligatorio de `HubPage` y `MetricCard`.
+6.  **Reglas de Oro #5-#11:** Respeto estricto a NO LocalStorage y uso de `SecureCollection`.
 
-Estoy listo para desarrollar bajo el paradigma de **Suite Multi-producto** de la Era 6. ¿Por dónde empezamos?
+Estoy listo para desarrollar bajo el paradigma de **Consolidación & Coherencia** de la Era 8. ¿Por dónde empezamos?

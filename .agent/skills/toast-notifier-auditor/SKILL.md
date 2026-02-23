@@ -8,8 +8,12 @@ description: Audita componentes de UI interactivos (páginas, formularios) para 
 ## 🎯 Objetivo
 Garantizar que **toda interacción del usuario** que implique un cambio de estado o una operación asíncrona (Guardar, Borrar, Subir, Actualizar) tenga una respuesta visual inmediata y clara mediante **Toasts**.
 
-## 🚦 Cuándo usar este skill
+## 🚦 Cuándo usar
 - Cuando el usuario pida "auditar feedback visual" o "revisar notificaciones".
+## Checklist de Notificaciones (ERA 8)
+- [ ] **Librería Canónica**: Uso exclusivo de `import { toast } from 'sonner'`.
+- [ ] **Deprecación**: ❌ Prohibido el uso de `@/hooks/use-toast`. Si se detecta, migrar a `sonner`.
+- [ ] **Internacionalización**: El mensaje enviado a `toast()` debe estar envuelto en `t('key')`.
 - Como parte del skill compuesto `app-full-reviewer`.
 - Al crear o refactorizar formularios y acciones de mutación.
 

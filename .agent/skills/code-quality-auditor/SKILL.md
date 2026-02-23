@@ -115,9 +115,11 @@ try {
 
 ### ✅ Multi-tenant y Dominios (Era 6)
 - [ ] Filtra **siempre** por `tenantId` y `environment` donde corresponda.
-- [ ] Usa `getTenantCollection(collectionName, session)` para aislamiento automático.
-- [ ] **Aislamiento de Dominio**: El código de un dominio (ej: `support`) no debe importar directamente del repositorio de otro dominio. Usar servicios o bridges.
+- [ ] Uso de `getTenantCollection(collectionName, session)` o `SecureCollection` para aislamiento automático (Regla de Oro #11).
+- [ ] **Aislamiento de Dominio**: El código de un dominio (ej: `support`) no debe importar directamente del repositorio de otro dominio.
 - [ ] **Prohibido hardcodear `'ELEVATORS'`**. El fallback debe ser `'GENERIC'`.
+- [ ] **Regla #5 (Storage)**: Prohibido el uso de `localStorage`/`sessionStorage` en el servidor o hooks generales.
+- [ ] **Regla #1 (Types)**: Prohibido `: any` en core schemas y funciones exportadas de `lib/` o `services/`.
 - [ ] Prefiere utilidades de `@abd/platform-core/server` (ej: `connectDB`).
 
 ### ✅ Seguridad

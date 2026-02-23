@@ -214,4 +214,5 @@ grep -rl --include="*.tsx" -E "bg-(teal|orange|emerald|purple|red|green|blue|amb
 - **UI**: "Estandarizados componentes visuales ([PageContainer/Header/Card])".
 - **Limpieza**: "Eliminados estilos hardcodeados (slate-X) y aplicadas variables semánticas (bg-card/border-border)".
 - **Modos**: "Verificada legibilidad y contraste en Modo Claro y Oscuro".
+- **ERA 8**: "Uso obligatorio de `HubPage` y `MetricCard`. `sonner` implementado como única vía de feedback visual."
 - **ERA 6**: "Auditoría masiva: X archivos limpiados, 0 colores hardcodeados restantes".

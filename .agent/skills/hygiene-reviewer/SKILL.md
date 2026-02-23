@@ -33,6 +33,9 @@ Este skill se encarga de identificar y resolver problemas de "higiene de código
 | HYG-005 | Uso de `db.collection(...)` directo en API | Migrar a `getTenantCollection` o `SecureCollection` | Vital para el aislamiento multi-tenant y Soft Delete (Regla de Oro #11). |
 | HYG-006 | API Catch block sin estandarización | Usar `handleApiError(error, source, correlationId)` | Garantiza respuestas de error coherentes y logueo centralizado (Fase 130.2). |
 | HYG-007 | Uso de `WorkflowEngine` (Legacy) | Migrar a `AIWorkflowEngine` o `CaseWorkflowEngine` | El motor monolítico está deprecado. Se debe usar el motor especializado (Fase 129.1). |
+| HYG-008 | `: any` en core logic / servicios | Definir interface o tipo explícito | Viola Regla #1 (ERA 8 Scoped). |
+| HYG-009 | Uso de `localStorage` / `sessionStorage` | Migrar a React Context o Cookies | Viola Regla #5 (Security/Vercel). |
+| HYG-010 | Uso de `@/hooks/use-toast` | Migrar a `import { toast } from 'sonner'` | Duplicación de librerías UI. DECISIÓN ERA 8. |
 
 ## Instrucciones Específicas: HYG-001 (Session Type Safety)
 Si detectas un cast a `any` en la sesión del usuario:
