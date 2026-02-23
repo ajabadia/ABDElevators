@@ -532,6 +532,10 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **218.5: Auditar rutas sin sidebar**: Verificar `/admin/analytics`, `/admin/api-docs`, `/admin/api-keys`, `/admin/cases` — ¿están en navegación? ¿tienen funcionalidad real? Documentar decisión.
 - [ ] **218.6: Evaluar dualidad de tareas**: `/admin/tasks` (tareas de negocio) vs `/admin/workflow-tasks` (orquestación técnica). ¿Son conceptos distintos o duplicados? Si distintos → documentar la frontera. Si solapados → unificar.
 - [ ] **218.7: Actualizar `map.md`** con el resultado final. Verificar que el diagrama Mermaid coincida 1:1 con las rutas reales.
+- [ ] **218.8: Auditar `/admin/cases`**: Solo tiene `[id]` pero no hub page. ¿Se accede desde dónde? Si no tiene entrada en sidebar → evaluar si necesita hub o si es ruta directa.
+- [ ] **218.9: Auditar `/admin/workshop`**: Carpeta vacía (sin `page.tsx`). Evaluar PROPONER DEPRECAR o documentar como placeholder.
+- [ ] **218.10: Auditar API debug/test**: `/api/test-env` expone env vars, `/api/debug/env` expone configuración. ¿Están protegidas por auth? Si no → RIESGO SEGURIDAD. Evaluar PROPONER DEPRECAR o proteger con SUPER_ADMIN.
+- [ ] **218.11: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — ¿se necesitan los tres? Documentar cuál usa Vercel y cuál es redundante.
 
 **Criterio de aceptación:** Cada ruta tiene un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). `map.md` refleja la realidad al 100%.
 
@@ -657,15 +661,25 @@ CONFIGURACIÓN (Admin Hub):
 **Contexto del problema:**
 - `RagQualityDashboard.tsx` tiene "Análisis Críticos", "Evolución de Calidad", "Atención Técnica Requerida" hardcoded.
 - `support-dashboard` tiene "Centro de Soporte", "Tickets Activos", "Cumplimiento SLA" hardcoded.
-- Múltiples componentes en `src/components/admin` tienen mezcla de i18n y hardcode.
+- `prompts/page.tsx` tiene "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora", opciones de industria ("Genérico","Ascensores","Banca","Seguros","Médico") y toast "Gobernanza Actualizada" hardcoded.
+- `compliance/page.tsx` tiene un párrafo entero en inglés: "Compliance Note: This RAG implementation is categorized as...".
+- `LanguageSelector.tsx` tiene "Seleccionar Idioma" hardcoded.
+- `LanguageSwitcher.tsx` y `LocaleSwitcher.tsx` tienen "Cambiar idioma" hardcoded.
+- `useOnboarding.ts` (API-based) tiene todos los steps en español: "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc.
+- `superadmin/page.tsx` tiene "PRODUCTION / VERCEL", "M10 / Dedicated Cluster", "Gemini 004 / Pro Advanced" hardcoded.
+- Total de `src/components/admin`: 41 componentes, muchos con mezcla de i18n y hardcode.
 
 **Tareas:**
 - [ ] **223.1: Scan automático de hardcode**: Ejecutar un script/grep que busque strings en español dentro de archivos `.tsx` que NO estén en archivos de traducción.
 - [ ] **223.2: Fase 1 — Componentes Admin**: Purgar hardcodes en `RagQualityDashboard`, `SupportDashboard`, y todos los componentes bajo `src/components/admin`.
 - [ ] **223.3: Fase 2 — Páginas Root**: Purgar hardcodes en páginas bajo `src/app/(authenticated)` que no sean admin.
-- [ ] **223.4: Fase 3 — Componentes Shared**: Auditar `src/components/shared` y `src/components/ui` para hardcodes.
+- [ ] **223.4: Fase 3 — Componentes Shared**: Auditar `src/components/shared` (30 componentes) y `src/components/ui` para hardcodes.
 - [ ] **223.5: Sync diccionarios ES/EN**: Verificar que para cada key en `messages/es/*.json` existe su equivalente en `messages/en/*.json` y viceversa.
 - [ ] **223.6: Usar skill `i18n-a11y-auditor`**: Ejecutar la auditoría completa sobre todas las páginas modificadas.
+- [ ] **223.7: Prompts page — mover diálogos**: "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora" y opciones de industria al JSON de traducciones.
+- [ ] **223.8: Compliance — mover párrafo inglés**: "Compliance Note: This RAG implementation..." al JSON en ambos idiomas.
+- [ ] **223.9: Onboarding steps**: Mover "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc. de `useOnboarding.ts` a traducciones. Usar `useTranslations` como hace `use-onboarding.ts`.
+- [ ] **223.10: Superadmin infra card**: Decidir si "PRODUCTION / VERCEL", "M10 / Dedicated Cluster" vienen de un config service o son i18n estático.
 
 **Criterio de aceptación:** Zero strings en español/inglés fuera de archivos JSON de traducción. Cambiar locale de ES a EN muestra la UI completa en inglés.
 
@@ -705,3 +719,32 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **225.6: Actualizar `hub-dashboard-architect`**: Reflejar las rutas canónicas post-deduplicación (FASE 218).
 - [ ] **225.7: Smoke test visual**: Navegar por TODAS las rutas del sidebar y verificar que no hay páginas rotas, redirects infinitos o datos fake.
 - [ ] **225.8: Actualizar `README.md` y `map.md`**: Reflejar ERA 8 como completada con la versión v6.0.0.
+
+**Criterio de aceptación:** Build limpio, test suites pasan, skills actualizadas, smoke test visual OK.
+
+---
+
+#### 🧹 FASE 225B: HOOKS, API HYGIENE & SECURITY CLEANUP
+
+**Objetivo:** Resolver violaciones de reglas del proyecto en hooks, eliminar duplicados de componentes compartidos, y auditar seguridad de APIs de debug.
+
+**Contexto del problema:**
+- `useLocalStorage` **VIOLA REGLA #5** (NO Browser Storage APIs). Lo usan `LogExplorer.tsx` y `ConsumptionDashboard.tsx`.
+- `use-onboarding.ts` usa `zustand/persist` (que internamente usa `localStorage`) — otra violación de la regla #5.
+- `useOnboarding.ts` (diferente archivo) usa `fetch('/api/user/preferences')` — diseño correcto pero incompatible con el otro hook.
+- Existen **3 language switchers**: `LanguageSelector` (Header.tsx), `LocaleSwitcher` (PublicNavbar.tsx), `LanguageSwitcher` (HUÉRFANO, no importado por nadie).
+- 6 hooks de workflow (`useWorkflowCRUD`, `useWorkflowState`, `useWorkflowHistory`, `useWorkflowValidation`, `useWorkflowAnalytics`, `useWorkflowShortcuts`) podrían exponerse como un solo hook compuesto.
+- `/api/test-env` expone env vars (SINGLE_TENANT_ID, presencia de MONGODB_URI y GEMINI_API_KEY) **sin ningún middleware de auth**.
+- `/api/debug/env` probablemente expone más configuración sin auth.
+- 3 health checks diferentes (`/_health`, `/_ready`, `/health/db-check`) sin documentar cuál usa Vercel.
+
+**Tareas:**
+- [ ] **225B.1: Eliminar `useLocalStorage`**: Migrar `LogExplorer` y `ConsumptionDashboard` a `zustand` (sin persist) o a React Context. Eliminar el hook.
+- [ ] **225B.2: Unificar onboarding hooks**: Elegir el patrón API-based (`useOnboarding.ts`) como canónico. Migrar `use-onboarding.ts` (zustand/persist) a usar la misma API. Un solo hook, un solo fichero.
+- [ ] **225B.3: Eliminar `LanguageSwitcher`**: Es huérfano (nadie lo importa). Marcar PROPONER DEPRECAR. Evaluar si `LanguageSelector` y `LocaleSwitcher` pueden unificarse con una prop de variante (`compact` vs `full`).
+- [ ] **225B.4: Consolidar workflow hooks**: Crear un `useWorkflow()` compuesto que exponga las sub-funcionalidades (CRUD, state, history, validation, analytics, shortcuts) de forma modular. Los hooks individuales siguen existiendo pero `useWorkflow()` es la fachada recomendada.
+- [ ] **225B.5: Proteger `/api/test-env` y `/api/debug/env`**: Añadir middleware de auth (SUPER_ADMIN only) o evaluar PROPONER DEPRECAR si solo se usan en desarrollo.
+- [ ] **225B.6: Auditar `zustand/persist`**: Buscar TODOS los stores que usen `persist` middleware. Si persisten en `localStorage`, migrar a `sessionStorage` o a API server-side.
+- [ ] **225B.7: Documentar health checks**: Definir cuál endpoint usa Vercel (`/_health` o `/_ready`) y evaluar si `/health/db-check` es un duplicado.
+
+**Criterio de aceptación:** Zero `useLocalStorage`. Un solo hook de onboarding. Un solo language switcher por contexto (app vs marketing). APIs de debug protegidas con auth.
