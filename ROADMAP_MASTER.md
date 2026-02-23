@@ -496,3 +496,187 @@ CONFIGURACIÓN (Admin Hub):
 - [X] **217.2: Platform Metrics Observability**: Tooltips técnicos explicativos para métricas RAG y salud de servicios. ✅
 - [X] **217.3: Mobile UI Accessibility Flush**: Refuerzo de responsividad en modales de previsualización y auditoría ARIA. ✅
 - [X] **217.4: Ingestion Time Prediction**: Cálculo de ETA dinámico basado en tamaño de archivo y carga de sistema. ✅
+
+---
+
+## 🏛️ ERA 8: PLATFORM CONSOLIDATION & COHERENCE
+
+> **Principio Rector**: Cero funcionalidades nuevas. Solo simplificar, deduplicar, alinear y dar coherencia.
+> **Motivación**: Tras 217 fases de construcción, la plataforma tiene deuda técnica acumulada: rutas duplicadas, datos fake, servicios solapados, permisos desconectados y conceptos confusos (Suite Apps vs Verticales vs Permisos). ERA 8 cura todo esto antes de expandir.
+> **Referencia**: [architecture_review.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/architecture_review.md)
+
+> [!IMPORTANT]
+> **POLÍTICA DE DEPRECACIÓN**: NUNCA borrar una funcionalidad directamente. Si una ruta, servicio o componente se identifica como candidato a eliminación, se le marca con un comentario visible `/* 🔴 PROPONER DEPRECAR: [motivo] — ERA 8, FASE X */` y se documenta en la sección DEPRECATED de `map.md`. Solo se elimina tras revisión explícita del equipo.
+
+---
+
+#### 🧹 FASE 218: ROUTE DEDUPLICATION & GHOST CLEANUP
+
+**Objetivo:** Auditar todas las rutas, identificar duplicados y fantasmas, y definir UNA ruta canónica por concepto. Las rutas candidatas a eliminación se marcan como PROPONER DEPRECAR — no se borran.
+
+**Contexto del problema:**
+- `/admin/knowledge-base` es un redirect pero `/admin/knowledge-base/graph` tiene código vivo.
+- `/admin/my-documents` y `/admin/knowledge/my-docs` son dos rutas para documentos personales.
+- `/admin/knowledge-assets` es un redirect legacy sin valor claro.
+- Existen rutas de administración que no aparecen en el sidebar (`/admin/analytics`, `/admin/api-docs`).
+- `/admin/tasks` y `/admin/workflow-tasks` son dos módulos de tareas con propósitos solapados.
+- `/admin/cases` solo tiene `[id]` pero no tiene page de hub.
+- `/admin/workshop` está vacío (sin `page.tsx`).
+- Total: 35 subdirectorios bajo `/admin`, varios con problemas de coherencia.
+
+**Tareas:**
+- [ ] **218.1: Inventario exhaustivo de rutas**: Listar TODAS las `page.tsx` del proyecto con su propósito. Clasificar cada una como: CANÓNICA, REDIRECT, PROPONER DEPRECAR, o EVALUAR.
+- [ ] **218.2: Evaluar `/admin/knowledge-base/graph`**: ¿Es idéntico a `/graphs`? Si sí → redirect. Si tiene funcionalidad única → documentar y mantener.
+- [ ] **218.3: Resolver dualidad de documentos personales**: Decidir si la ruta canónica es `/admin/my-documents` o `/admin/knowledge/my-docs`. La no-canónica se marca PROPONER DEPRECAR.
+- [ ] **218.4: Evaluar `/admin/knowledge-assets`**: Verificar si el redirect funciona y si hay links que apuntan a ella. Si es totalmente inerte → marcar PROPONER DEPRECAR.
+- [ ] **218.5: Auditar rutas sin sidebar**: Verificar `/admin/analytics`, `/admin/api-docs`, `/admin/api-keys`, `/admin/cases` — ¿están en navegación? ¿tienen funcionalidad real? Documentar decisión.
+- [ ] **218.6: Evaluar dualidad de tareas**: `/admin/tasks` (tareas de negocio) vs `/admin/workflow-tasks` (orquestación técnica). ¿Son conceptos distintos o duplicados? Si distintos → documentar la frontera. Si solapados → unificar.
+- [ ] **218.7: Actualizar `map.md`** con el resultado final. Verificar que el diagrama Mermaid coincida 1:1 con las rutas reales.
+
+**Criterio de aceptación:** Cada ruta tiene un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). `map.md` refleja la realidad al 100%.
+
+---
+
+#### 🚢 FASE 219: FAKE DATA PURGE & MODULE UNIFICATION
+
+**Objetivo:** Identificar TODOS los módulos con datos fake/hardcoded y conectarlos a APIs reales. Unificar las islas de soporte en un módulo coherente.
+
+**Contexto del problema:**
+- `/support-dashboard` = Dashboard de KPIs con **datos 100% fake** (hardcoded: 145 tickets, 98.4% SLA, 94.1% IA).
+- `/admin/workflow-tasks` = stats de tareas con **datos 100% fake** (hardcoded: 12 pending, 5 in review, 28 completed, 45m avg).
+- `/support` = Portal de cliente con tickets + búsqueda IA. Conectado a API. ✅
+- `/admin/support` = Panel admin con lista/detalle de tickets. Conectado a API. ✅
+- Pueden existir más módulos con datos fake no detectados aún.
+
+**Tareas:**
+- [ ] **219.1: Scan de datos fake en TODA la app**: Buscar patterns de datos hardcoded (`value="12"`, `"98.4%"`, etc.) en archivos `.tsx` bajo `src/app`. Documentar cada hallazgo.
+- [ ] **219.2: Conectar `/support-dashboard` a datos reales**: Crear endpoint `/api/support/stats` que devuelva KPIs reales desde MongoDB.
+- [ ] **219.3: Conectar `/admin/workflow-tasks` a datos reales**: Las stats (pending, in review, completed, avg time) deben venir del endpoint `/api/admin/workflow-tasks` con un `?stats=true` query.
+- [ ] **219.4: Definir estrategia de vistas por rol en Soporte**: El usuario final ve `/support` (crear ticket, buscar). El admin ve todo + KPIs.
+- [ ] **219.5: Integrar dashboard en `/support`**: Mover KPIs de `/support-dashboard` como tab/sección dentro de `/support`, visible solo para ADMIN/SUPPORT_STAFF.
+- [ ] **219.6: Evaluar `/admin/support`**: ¿Es redundante con la vista admin de `/support`? Si sí → redirect. Si no → documentar diferencia.
+- [ ] **219.7: Marcar `/support-dashboard` como PROPONER DEPRECAR**: Una vez integrado en `/support`, marcar ruta antigua.
+- [ ] **219.8: i18n Audit del módulo**: Verificar que "Centro de Soporte", "Tickets Activos", "Mis Tareas", "Nueva Tarea" usen `useTranslations`.
+
+**Criterio de aceptación:** Zero datos fake en producción. Cada número visible viene de una API con datos reales de MongoDB.
+
+---
+
+#### 🔐 FASE 220: PERMISSION SYSTEM ALIGNMENT
+
+**Objetivo:** Unificar el sistema de permisos para que Guardian V3 (ABAC) y el sidebar (roles simples) usen la misma fuente de verdad.
+
+**Contexto del problema:**
+- `navigation.ts` filtra elementos con `item.roles.includes(userRole)` — array estático.
+- `GuardianEngine` evalúa políticas ABAC con herencia de grupos y condiciones.
+- Un usuario puede ver un enlace pero ser rechazado por Guardian, o viceversa.
+
+**Tareas:**
+- [ ] **220.1: Crear hook `useGuardianAccess(resource, action)`**: Un hook React que consulte un endpoint ligero o un cache de políticas para determinar si el usuario tiene acceso.
+- [ ] **220.2: Migrar `navigation.ts` a Guardian**: Reemplazar `item.roles` por `item.resource` + `item.action`. El sidebar consulta `useGuardianAccess` para cada item.
+- [ ] **220.3: Fallback gradual**: Durante la migración, mantener el check por roles como fallback si Guardian no responde. Log de discrepancias.
+- [ ] **220.4: PROPONER DEPRECAR `roles[]` de MenuItem**: Una vez migrado y verificado, marcar el campo `roles` como deprecated en `navigation.ts`. No eliminar hasta confirmar estabilidad.
+- [ ] **220.5: Documentar la Matriz de Permisos**: Crear una tabla en `docs/permissions-matrix.md` con todos los recursos y acciones definidos.
+
+**Criterio de aceptación:** Si Guardian dice NO, el sidebar no muestra el enlace. Si Guardian dice SÍ, el enlace aparece. Una sola fuente de verdad.
+
+---
+
+#### 🗂️ FASE 221: APP REGISTRY & ROUTE GROUP REALIGNMENT
+
+**Objetivo:** Alinear el App Registry (5 apps con basePath) con los route groups reales de Next.js para que `getAppByPath()` funcione correctamente.
+
+**Contexto del problema:**
+- `OPERATIONS.basePath = '/ops/reports'` pero esa ruta no existe como page.
+- `CONFIG.basePath = '/admin/permissions'` que es solo un subpath, no una app.
+- `TECHNICAL.basePath = '/technical'` pero las rutas reales son `/entities` y `/graphs`.
+- `getAppByPath()` hace `startsWith` sobre estos basePaths, causando matches incorrectos.
+
+**Tareas:**
+- [ ] **221.1: Redefinir basePaths reales**: TECHNICAL → `/entities` | SUPPORT → `/support` | OPERATIONS → `/admin/operations` | CONFIG → `/admin/settings` | PERSONAL → `/spaces`.
+- [ ] **221.2: Multi-basePath support**: Modificar `AppDefinition` para soportar un array de `basePaths` en vez de un solo string. TECHNICAL matchea `/entities` y `/graphs`. CONFIG matchea `/admin/settings`, `/admin/permissions`, `/admin/billing`.
+- [ ] **221.3: Actualizar `getAppByPath()`**: Recorrer el array de basePaths para cada app.
+- [ ] **221.4: Verificar CommandMenu**: El menú de comandos usa el app activo para priorizar resultados. Verificar que funcione con los nuevos basePaths.
+- [ ] **221.5: Verificar sidebar filtering**: `useNavigation()` filtra secciones por `section.appId`. Verificar coherencia después del cambio.
+
+**Criterio de aceptación:** `getAppByPath('/admin/operations/logs')` devuelve OPERATIONS. `getAppByPath('/entities')` devuelve TECHNICAL. Sin falsos positivos.
+
+---
+
+#### 📦 FASE 222: SERVICE LAYER CONSOLIDATION
+
+**Objetivo:** Reducir el sprawl de `src/lib` (127+ archivos) y `src/services` (15 directorios) eliminando duplicados, moviendo deprecated y organizando por dominio.
+
+**Contexto del problema:**
+- `src/lib` tiene 127+ archivos planos sin organización por dominio.
+- `src/services/deprecated` y `src/services/pendientes` contienen código abandonado.
+- `src/core` tiene 8 subdirectorios que solapan con `src/services`.
+- Hay dos GuardianService: `src/lib/guardian-service.ts` (re-export) y `src/services/security/guardian-service.ts` (real).
+
+**Tareas:**
+- [ ] **222.1: EVALUAR `src/services/deprecated`**: Verificar que nada lo importa. Si tiene código reutilizable, moverlo. Si es inerte → marcar PROPONER DEPRECAR.
+- [ ] **222.2: EVALUAR `src/services/pendientes`**: Si `graph-rag` es código futuro, documentar y decidir si vive en un branch o se mantiene con marca de `PENDING`.
+- [ ] **222.3: Consolidar re-exports en `src/lib`**: Identificar archivos que son solo `export { X } from '...'`. Si no añaden valor como fachada, marcar como PROPONER DEPRECAR.
+- [ ] **222.4: Organizar `src/lib` por subdirectorios**: Agrupar los 127 archivos en carpetas lógicas: `lib/auth/`, `lib/billing/`, `lib/rag/`, `lib/support/`, etc.
+- [ ] **222.5: Resolver solapamiento `src/core` vs `src/services`**: Definir que `src/core` contiene engines y lógica pura, `src/services` contiene orquestación con IO. Documentar la frontera.
+- [ ] **222.6: Eliminar `console.log` de APIs**: Auditar las 7 rutas API con `console.log` residual. Reemplazar por `logEvento()`.
+
+**Criterio de aceptación:** `src/services/deprecated` y `pendientes` no existen. `src/lib` tiene subdirectorios lógicos. Zero `console.log` en `src/app/api`.
+
+---
+
+#### 🌐 FASE 223: i18n HARDCODE PURGE
+
+**Objetivo:** Eliminar TODOS los strings hardcodeados en español/inglés de componentes y páginas. Todo texto visible debe pasar por `useTranslations()`.
+
+**Contexto del problema:**
+- `RagQualityDashboard.tsx` tiene "Análisis Críticos", "Evolución de Calidad", "Atención Técnica Requerida" hardcoded.
+- `support-dashboard` tiene "Centro de Soporte", "Tickets Activos", "Cumplimiento SLA" hardcoded.
+- Múltiples componentes en `src/components/admin` tienen mezcla de i18n y hardcode.
+
+**Tareas:**
+- [ ] **223.1: Scan automático de hardcode**: Ejecutar un script/grep que busque strings en español dentro de archivos `.tsx` que NO estén en archivos de traducción.
+- [ ] **223.2: Fase 1 — Componentes Admin**: Purgar hardcodes en `RagQualityDashboard`, `SupportDashboard`, y todos los componentes bajo `src/components/admin`.
+- [ ] **223.3: Fase 2 — Páginas Root**: Purgar hardcodes en páginas bajo `src/app/(authenticated)` que no sean admin.
+- [ ] **223.4: Fase 3 — Componentes Shared**: Auditar `src/components/shared` y `src/components/ui` para hardcodes.
+- [ ] **223.5: Sync diccionarios ES/EN**: Verificar que para cada key en `messages/es/*.json` existe su equivalente en `messages/en/*.json` y viceversa.
+- [ ] **223.6: Usar skill `i18n-a11y-auditor`**: Ejecutar la auditoría completa sobre todas las páginas modificadas.
+
+**Criterio de aceptación:** Zero strings en español/inglés fuera de archivos JSON de traducción. Cambiar locale de ES a EN muestra la UI completa en inglés.
+
+---
+
+#### 🏗️ FASE 224: VERTICAL ARCHITECTURE CLEANUP
+
+**Objetivo:** Dar coherencia a la estructura de verticales (`src/verticals`) para que sea un sistema preparado pero no confuso. Las verticales vacías no deben fingir funcionalidad.
+
+**Contexto del problema:**
+- Solo `elevators/` tiene componentes funcionales (11 archivos).
+- `banking/`, `insurance/`, `legal/`, `real-estate/` solo tienen `config.ts` + un template vacío.
+- El `DomainRouter` clasifica queries en 6 industrias pero solo Elevators tiene UI.
+- No hay documentación de cómo añadir una vertical.
+
+**Tareas:**
+- [ ] **224.1: Estandarizar estructura de vertical**: Definir el contrato mínimo: `config.ts` + `templates/` + `components/` (opcional). Documentar en `docs/vertical-guide.md`.
+- [ ] **224.2: Evaluar verticales placeholder**: Si `banking/templates/` solo tiene un archivo esqueleto, documentar que es placeholder. No eliminar si `config.ts` define el contrato.
+- [ ] **224.3: Validar DomainRouter fallback**: Asegurar que si una query se clasifica como BANKING pero no hay componentes, el sistema usa el flujo GENERIC sin error.
+- [ ] **224.4: Unificar con EntityEngine**: Verificar que la ontología (`elevators.json`) y el `EntityEngine` son extensibles a otras industrias. Documentar el patrón.
+- [ ] **224.5: Mover `real-estate/CausalFlow` a shared si es genérico**: Si el componente CausalFlow no es específico de real-estate, moverlo a `src/components/shared`.
+
+**Criterio de aceptación:** Las carpetas de verticales vacías solo tienen `config.ts`. Existe `docs/vertical-guide.md` que explica cómo añadir una industria.
+
+---
+
+#### 🧪 FASE 225: COHERENCE VERIFICATION & SKILL ADAPTATION
+
+**Objetivo:** Verificar que toda la consolidación de ERA 8 funciona end-to-end. Actualizar las skills de desarrollo para que reflejen la nueva realidad arquitectónica y no causen regresiones.
+
+**Tareas:**
+- [ ] **225.1: Build + Test completo**: Ejecutar `npm run build` y verificar zero errores TypeScript. Ejecutar test suites existentes.
+- [ ] **225.2: Auditar skills existentes**: Revisar CADA skill en `.agent/skills/` para verificar que sus instrucciones no referencian rutas, patrones o servicios eliminados/movidos.
+- [ ] **225.3: Actualizar `project-context-loader`**: Reflejar la nueva organización de `src/lib`, `src/services` y `src/core`.
+- [ ] **225.4: Actualizar `guardian-auditor`**: Adaptar a la nueva integración sidebar-Guardian (FASE 220).
+- [ ] **225.5: Actualizar `code-quality-auditor`**: Añadir regla de "zero console.log en APIs" y "zero hardcode i18n".
+- [ ] **225.6: Actualizar `hub-dashboard-architect`**: Reflejar las rutas canónicas post-deduplicación (FASE 218).
+- [ ] **225.7: Smoke test visual**: Navegar por TODAS las rutas del sidebar y verificar que no hay páginas rotas, redirects infinitos o datos fake.
+- [ ] **225.8: Actualizar `README.md` y `map.md`**: Reflejar ERA 8 como completada con la versión v6.0.0.
