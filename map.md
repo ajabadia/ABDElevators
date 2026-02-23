@@ -6,65 +6,54 @@
 
 ```mermaid
 graph TD
-    %% Entry Points
-    User((User)) --> Login["/login"]
-    User --> Admin["/admin (Dashboard Hub)"]
-    User --> Technical["/entities (Technical Hub)"]
-    User --> SupportHub["/support (Client Support)"]
-    User --> SpacesHub["/spaces (Spaces Hub)"]
+    User((User)) --> Login[Login Page]
+    User --> Admin[Admin Dashboard Hub]
+    User --> Technical[Technical Hub - Entities]
+    User --> SupportHub[Support - Client]
+    User --> SpacesHub[Spaces Hub]
 
-    %% Admin Hubs
-    subgraph Admin_Panel ["Admin Panel /admin"]
-        direction TB
-        
-        %% Core Hubs
-        Admin --> UsersHub["/users (Users Hub)"]
-        Admin --> SecurityHub["/security (Security Hub)"]
-        Admin --> KnowledgeHub["/knowledge (Knowledge Hub)"]
-        Admin --> AIHub["/ai (AI & Workflows)"]
-        Admin --> OpsHub["/operations (Operations)"]
-        Admin --> SettingsHub["/settings (Settings)"]
-        Admin --> ReportsHub["/reports (Reports)"]
-        Admin --> BillingHub["/billing (Billing)"]
-        Admin --> OrgHub["/organizations (Organization)"]
-        Admin --> Analytics["/analytics (Analytics Center)"]
-        Admin --> Notifications["/notifications (Communication)"]
-        
-        %% Security Details
-        SecurityHub --> SecAudit["/security/audit"]
-        SecurityHub --> SecSessions["/security/sessions"]
-        
-        %% Knowledge Details
-        KnowledgeHub --> KExplorer["/knowledge/explorer"]
-        KnowledgeHub --> KAssets["/knowledge/assets"]
-        KnowledgeHub --> KSpaces["/knowledge/spaces (Management)"]
-        KnowledgeHub --> KDocs["/knowledge/my-docs"]
-        
-        %% AI Details
-        AIHub --> AIPlayground["/ai/playground"]
-        AIHub --> AIWorkflows["/ai/workflows"]
-        AIHub --> AIRagQuality["/ai/rag-quality"]
-        AIHub --> AIPredictive["/ai/predictive"]
-        
-        %% Operations Details
-        OpsHub --> OpsStatus["/operations/status"]
-        OpsHub --> OpsMaintenance["/operations/maintenance"]
-        OpsHub --> OpsLogs["/operations/logs"]
-        OpsHub --> OpsIngest["/operations/ingest (Status)"]
-    end
-    
-    %% Support Ecosystem
-    subgraph Support_Ecosystem ["Support & Tickets"]
-        SupportHub --> TicketNew["/support/nuevo"]
-        SupportHub --> TicketList["/support/list"]
-        Admin --> SupportDash["/support-dashboard (Staff)"]
+    subgraph Admin_Panel
+        Admin --> UsersHub[Users Hub]
+        Admin --> SecurityHub[Security Hub]
+        Admin --> KnowledgeHub[Knowledge Hub]
+        Admin --> AIHub[AI and Workflows]
+        Admin --> OpsHub[Operations]
+        Admin --> SettingsHub[Settings]
+        Admin --> ReportsHub[Reports]
+        Admin --> BillingHub[Billing]
+        Admin --> OrgHub[Organizations]
+        Admin --> AnalyticsPage[Analytics Center]
+        Admin --> NotificationsPage[Communications]
+
+        SecurityHub --> SecAudit[Audit Trail]
+        SecurityHub --> SecSessions[Active Sessions]
+
+        KnowledgeHub --> KExplorer[Neural Explorer]
+        KnowledgeHub --> KAssets[Asset Management]
+        KnowledgeHub --> KSpaces[Space Config]
+        KnowledgeHub --> KDocs[My Documents]
+
+        AIHub --> AIPlayground[AI Playground]
+        AIHub --> AIWorkflows[Workflow Editor]
+        AIHub --> AIRagQuality[RAG Quality]
+        AIHub --> AIPredictive[Predictive Maintenance]
+
+        OpsHub --> OpsStatus[Service Status]
+        OpsHub --> OpsMaintenance[Maintenance]
+        OpsHub --> OpsLogs[System Logs]
+        OpsHub --> OpsIngest[Ingest Jobs]
     end
 
-    %% Technical Panel
-    subgraph Technical_Panel ["Technical Mode"]
-        Technical --> Entities["/entities"]
-        Technical --> Graphs["/graphs (Neo4j)"]
-        Entities --> Validate["/entities/[id]/validar"]
+    subgraph Support_Ecosystem
+        SupportHub --> TicketNew[New Ticket]
+        SupportHub --> TicketList[Ticket List]
+        Admin --> SupportDash[Support Dashboard - Staff]
+    end
+
+    subgraph Technical_Panel
+        Technical --> Entities[Entity Explorer]
+        Technical --> Graphs[Neo4j Graph]
+        Entities --> Validate[Entity Validation]
     end
 ```
 
