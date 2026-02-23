@@ -39,6 +39,8 @@ interface ReportSchedule {
 
 export default function OpsReportsPage() {
     const t = useTranslations('admin.reports.schedules');
+    const tOps = useTranslations('operations_hub.reports');
+    const tCommon = useTranslations('common');
     const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
     const [loading, setLoading] = useState(true);
     const [isExporting, setIsExporting] = useState<string | null>(null);
@@ -99,8 +101,8 @@ export default function OpsReportsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Centro de Reportes y Exportaciones"
-                subtitle="Gestión de envíos programados y volcado de datos del sistema"
+                title={tOps('title')}
+                subtitle={tOps('subtitle')}
                 helpId="ops-reports"
                 icon={<Server className="w-6 h-6 text-primary" />}
             />
@@ -112,7 +114,7 @@ export default function OpsReportsPage() {
                     <CardHeader className="border-b border-border px-8 py-6">
                         <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
                             <Download className="w-5 h-5 text-primary" />
-                            Exportaciones Rápidas
+                            {tOps('quickExport.title')}
                         </CardTitle>
                         <CardDescription className="text-muted-foreground font-medium">
                             Descarga directa de datos críticos (Últimos 30 días)
@@ -144,8 +146,8 @@ export default function OpsReportsPage() {
 
                             <div className="flex justify-between items-center p-4 rounded-2xl bg-muted/50 border border-border">
                                 <div>
-                                    <p className="text-foreground font-bold">Uso (Knowledge Assets)</p>
-                                    <p className="text-muted-foreground text-xs">Corpus y datos indexados</p>
+                                    <p className="text-foreground font-bold">{tOps('quickExport.knowledge.title')}</p>
+                                    <p className="text-muted-foreground text-xs">{tOps('quickExport.knowledge.desc')}</p>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="outline" onClick={() => handleExport('knowledge_assets', 'csv')} disabled={isExporting === 'knowledge_assets'}>CSV</Button>
@@ -178,7 +180,7 @@ export default function OpsReportsPage() {
                         ) : schedules.length === 0 ? (
                             <div className="flex flex-col items-center justify-center p-10 text-center space-y-4 text-slate-500">
                                 <AlertCircle className="w-8 h-8 opacity-20" />
-                                <p>No hay informes programados configurados</p>
+                                <p>{tOps('noSchedules')}</p>
                             </div>
                         ) : (
                             <Table>

@@ -39,5 +39,26 @@
     "description": "Verifique el estado de las APIs de Gemini, MongoDB y Cloudinary.",
     "placeholder": "Status page integrada próximamente."
   },
-  "coming_soon": "Próximamente"
+  "coming_soon": "Próximamente",
+  "reports": {
+    "title": "Centro de Reportes y Exportaciones",
+    "subtitle": "Gestión de envíos programados y volcado de datos del sistema",
+    "noSchedules": "No hay informes programados configurados",
+    "quickExport": {
+      "title": "Exportaciones Rápidas",
+      "desc": "Descarga directa de datos críticos (Últimos 30 días)",
+      "logs": {
+        "title": "Logs de Sistema",
+        "desc": "Errores, avisos y traces"
+      },
+      "audit": {
+        "title": "Auditoría (Audit Trail)",
+        "desc": "Cambios de config y permisos"
+      },
+      "knowledge": {
+        "title": "Uso (Knowledge Assets)",
+        "desc": "Corpus y datos indexados"
+      }
+    }
+  }
 }

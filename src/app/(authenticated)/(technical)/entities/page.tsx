@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/ui/page-header";
 
 export default function EntitiesPage() {
     const t = useTranslations('technical.entities');
+    const tCommon = useTranslations('common');
     const tToast = useTranslations('technical.entities.toast');
     const { data: session } = useSession();
     const { toast } = useToast();
@@ -144,7 +145,7 @@ export default function EntitiesPage() {
                 actions={
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
                         <Zap size={14} className="text-amber-500" />
-                        Powered by AI Engine
+                        {t('poweredBy')}
                     </div>
                 }
             />
@@ -305,6 +306,7 @@ export default function EntitiesPage() {
                                                         editModal.openEdit(p);
                                                     }}
                                                     className="text-slate-300 hover:text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    aria-label={tCommon('actions.edit')}
                                                 >
                                                     <ArrowRight size={20} className="-rotate-45" />
                                                 </Button>
@@ -316,6 +318,7 @@ export default function EntitiesPage() {
                                                         setCurrentEntityId(p._id);
                                                         handleAnalysisComplete();
                                                     }}
+                                                    aria-label={tCommon('actions.view')}
                                                 >
                                                     <ArrowRight size={20} />
                                                 </Button>

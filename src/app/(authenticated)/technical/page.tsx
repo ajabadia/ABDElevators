@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TechnicalDashboardPage() {
-    const t = useTranslations('apps.technical');
+    const t = useTranslations('common.apps.technical');
     const tDash = useTranslations('technical.dashboard');
     const [loading, setLoading] = useState(true);
 

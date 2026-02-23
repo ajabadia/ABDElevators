@@ -1,7 +1,9 @@
 {
   "entities": {
-    "title": "Análisis",
-    "subtitle": "Procesamiento agentico y validación técnica de especificaciones (Motor del Sistema).",
+    "title": "Inteligencia Técnica",
+    "subtitle": "Análisis inteligente de especificaciones industriales (Motor del Sistema).",
+    "plural": "Entidades técnicas",
+    "poweredBy": "Impulsado por el Motor de IA",
     "backToNew": "← Volver a Nuevo Análisis",
     "newAnalysis": "Nuevo Análisis",
     "dropPdf": "Arrastra el PDF del pedido aquí",

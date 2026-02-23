@@ -26,7 +26,18 @@
   "actions": {
     "label": "Acciones",
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "view": "Ver detalles",
+    "delete": "Eliminar",
+    "refresh": "Actualizar",
+    "close": "Cerrar"
+  },
+  "status": {
+    "analyzing": "Analizando",
+    "ready": "Listo",
+    "error": "Error",
+    "processing": "Procesando"
   },
   "connectionError": "Error de conexión",
   "notifications": {
