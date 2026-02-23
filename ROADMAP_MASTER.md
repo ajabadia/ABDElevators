@@ -557,25 +557,35 @@ CONFIGURACIÓN (Admin Hub):
 - El diagrama incluye `SupportDash` pero lo muestra conectado a Admin, no como ruta independiente.
 - No refleja los route groups de Next.js (`(admin)`, `(technical)`, `(ops)`).
 
+**Resolución definitiva de clusters de duplicación:**
+
+| Cluster | Canónica | Redirects | Deprecar | Dominio |
+|---------|----------|-----------|----------|---------|
+| **Mis Documentos** | `/my-documents` (user) + `/admin/knowledge/my-docs` (admin) | `/admin/my-documents` → redirect a `/admin/knowledge/my-docs` | — | Knowledge (Admin) / Personal (User) |
+| **Soporte** | `/support` + sub-rutas (client) · `/admin/support` (admin redirect OK) | `/support-ticket` → `/support/nuevo` | `/support-dashboard` → integrar KPIs en `/support` (FASE 219) | Support |
+| **Audit / Logs** | `/admin/audit` (industrial) · `/admin/security/audit` (security trail) · `/admin/operations/logs` (ops) | `/admin/logs` → `/admin/operations/logs` | — | Security / Operations |
+| **Tasks** | `/admin/tasks` (negocio) · `/admin/workflow-tasks` (orquestación técnica) | — | Pendiente inspección si son realmente distintos (218.8) | Operations |
+
 **Tareas:**
 - [x] **218.1: Inventario exhaustivo de rutas**: ✅ 101 `page.tsx` clasificadas. Publicado en `map.md` y `route_registry.md`.
-- [ ] **218.2: Resolver triple "mis documentos"**: `/admin/my-documents` vs `/admin/knowledge/my-docs` vs `/my-documents` (fuera de admin). `/my-documents` usa API `/api/auth/knowledge-assets` (379 líneas, hooks estándar). Definir UNA canónica.
-- [ ] **218.3: Resolver cuádruple soporte**: `/support` (client) + `/support/[id]` + `/support/nuevo` | `/admin/support` (redirect) | `/support-dashboard` (100% FAKE) | `/support-ticket` (redirect → `/support/nuevo`). Definir recorrido por rol.
+- [ ] **218.2: Ejecutar resolución "mis documentos"**: Convertir `/admin/my-documents` en redirect a `/admin/knowledge/my-docs`. Actualizar navegación. `/my-documents` queda como ruta user-facing canónica.
+- [ ] **218.3: Ejecutar resolución soporte**: Eliminar `/support-ticket` (ya es redirect). Integrar KPIs de `/support-dashboard` en `/support` con tab staff-only (→ FASE 219).
 - [x] **218.4: Limpiar DEPRECATED zombis**: ✅ Clasificados. `/admin/billing/plan` reclasificada como CANÓNICA (95 líneas funcionales, i18n OK). Restantes son redirects funcionales.
 - [x] **218.5: Documentar `/admin/prompts`**: ✅ Documentada en map.md sección AI & Automation Studio (486 líneas).
-- [x] **218.6: Evaluar dualidad audit**: ✅ SON DIFERENTES. `/admin/audit` = log explorer industrial (260 líneas, AuditMetrics). `/admin/security/audit` = trail inmutable de seguridad. `/admin/audit/config-changes` = SOC2 config tracking (Server Component). Documentado en map.md.
-- [x] **218.7: Evaluar dualidad logs**: ✅ `/admin/logs` = redirect puro (6 líneas) → `/admin/operations/logs`. No hay dualidad, solo legacy redirect.
-- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. Pendiente inspección profunda.
+- [x] **218.6: Evaluar dualidad audit**: ✅ SON DIFERENTES. Documentado en map.md. Ver tabla de clusters arriba.
+- [x] **218.7: Evaluar dualidad logs**: ✅ `/admin/logs` = redirect puro → `/admin/operations/logs`. No hay dualidad.
+- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. Inspeccionar si comparten modelo de datos o son conceptos independientes. Cerrar cluster con decisión canónica.
 - [x] **218.9-13: Documentar sub-rutas faltantes**: ✅ Todas documentadas en map.md: Spaces (4), Notifications (3), Settings (2), Billing (2), Reports (1), Permissions (1), User core (4), Ops (1).
-- [x] **218.14: Evaluar `/admin/ai/governance`**: ✅ FUNCIONAL. 361 líneas: selección LLM por tarea, cuotas, PII masking, fallback model. Estado: `any` en state, i18n 100% hardcoded.
-- [x] **218.15: Evaluar `/real-estate` y `/ops/reports`**: ✅ `/real-estate` = demo Fase 85 con mockFindings (FAKE DATA). `/ops/reports` = ruta funcional bajo route group `(ops)`.
-- [ ] **218.16: Auditar API debug/test**: `/api/test-env` expone env vars sin auth. RIESGO SEGURIDAD. Pendiente proteger o deprecar.
-- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — pendiente documentar cuál usa Vercel.
+- [x] **218.14: Evaluar `/admin/ai/governance`**: ✅ FUNCIONAL. 361 líneas. Documentada.
+- [x] **218.15: Evaluar `/real-estate` y `/ops/reports`**: ✅ Clasificados. Ver FASE 224 para decisión de `/real-estate`.
+- [ ] **218.16: Auditar API debug/test**: `/api/test-env` y `/api/debug/env` exponen env vars sin auth. RIESGO SEGURIDAD.
+- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — documentar cuál usa Vercel.
 - [x] **218.18: Reescribir diagrama Mermaid**: ✅ map.md reescrito con diagrama Mermaid completo (12 subgrupos, 100% cobertura).
 - [ ] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: Cases solo `[id]` sin hub. Workshop solo `orders/new`. Pendiente definir acceso.
+- [ ] **218.20: Añadir columna "dominio responsable" en map.md**: Cada hub debe indicar su dominio (Admin, Technical, Ops, Knowledge, Support, Personal) para asignar ownership en eras posteriores.
 
-**Criterio de aceptación:** Las 101 rutas tienen un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). map.md refleja la realidad al 100%. Diagrama Mermaid cubre todas las rutas canónicas.
-**Progreso:** 8/19 tareas completadas durante la auditoría.
+**Criterio de aceptación:** Cada cluster cerrado con 1 ruta canónica + redirects documentados. Zero estados "TBD". map.md refleja la realidad al 100% con dominio responsable por hub.
+**Progreso:** 8/20 tareas completadas durante la auditoría.
 
 
 ---
@@ -591,18 +601,21 @@ CONFIGURACIÓN (Admin Hub):
 - `/support` = Portal de cliente con tickets + búsqueda IA. Conectado a API. ✅
 - `/admin/support` = Panel admin con lista/detalle de tickets. Conectado a API. ✅
 
+**Política de aislamiento de fake data:**
+> Toda fake data que se conserve (demos) debe vivir en un módulo aislado (`src/demo/`) o estar condicionada por un flag (`NEXT_PUBLIC_DEMO_MODE` o `NODE_ENV === 'demo'`). No puede llegar a producción real sin flag activo.
+
 **Tareas:**
 - [ ] **219.1: Scan de datos fake en TODA la app**: Buscar patterns de datos hardcoded (`value="12"`, `"98.4%"`, `mockFindings`, etc.) en archivos `.tsx` bajo `src/app`. Documentar cada hallazgo.
 - [ ] **219.2: Conectar `/support-dashboard` a datos reales**: Crear endpoint `/api/support/stats` que devuelva KPIs reales desde MongoDB.
 - [ ] **219.3: Conectar `/admin/workflow-tasks` a datos reales**: Las stats (pending, in review, completed, avg time) deben venir del endpoint `/api/admin/workflow-tasks` con un `?stats=true` query.
-- [ ] **219.4: Decidir destino de `/real-estate`**: Demo con mockFindings. ¿Debería usar datos reales del vertical real-estate? ¿O marcarse como demo/placeholder y documentarlo?
+- [ ] **219.4: Aislar fake data de `/real-estate`**: Clasificar como **🎭 INTERNAL DEMO**. Mover `mockFindings` a `src/demo/real-estate-fixtures.ts`. Condicionar con flag `NEXT_PUBLIC_DEMO_MODE`. Añadir badge `INTERNAL DEMO` visible en la página.
 - [ ] **219.5: Definir estrategia de vistas por rol en Soporte**: El usuario final ve `/support` (crear ticket, buscar). El admin ve todo + KPIs.
 - [ ] **219.6: Integrar dashboard en `/support`**: Mover KPIs de `/support-dashboard` como tab/sección dentro de `/support`, visible solo para ADMIN/SUPPORT_STAFF.
 - [ ] **219.7: Evaluar `/admin/support`**: ¿Es redundante con la vista admin de `/support`? Si sí → redirect. Si no → documentar diferencia.
 - [ ] **219.8: Marcar `/support-dashboard` como PROPONER DEPRECAR**: Una vez integrado en `/support`, marcar ruta antigua.
 - [ ] **219.9: i18n Audit del módulo**: Verificar que "Centro de Soporte", "Tickets Activos", "Mis Tareas", "Nueva Tarea" usen `useTranslations`.
 
-**Criterio de aceptación:** Zero datos fake en producción. Cada número visible viene de una API con datos reales de MongoDB.
+**Criterio de aceptación:** Zero datos fake en rutas de producción. Demos aislados en `src/demo/` con flag explícito. Cada número visible en rutas canónicas viene de una API real.
 
 ---
 
@@ -621,9 +634,18 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **220.3: Fallback gradual**: Durante la migración, mantener el check por roles como fallback si Guardian no responde. Log de discrepancias.
 - [ ] **220.4: PROPONER DEPRECAR `roles[]` de MenuItem**: Una vez migrado y verificado, marcar el campo `roles` como deprecated en `navigation.ts`. No eliminar hasta confirmar estabilidad.
 - [ ] **220.5: Documentar la Matriz de Permisos**: Crear una tabla en `docs/permissions-matrix.md` con todos los recursos y acciones definidos.
-- [ ] **220.6: Auditar `enforcePermission` en Server Components**: Solo 2 de 101 páginas usan `enforcePermission` (`trace` y `config-changes`). Identificar todas las páginas Server Component que necesitan enforcement backend y añadirlo.
+- [ ] **220.6: Añadir `enforcePermission` a páginas críticas**: ERA 8 objetivo mínimo — proteger las siguientes páginas con enforcement backend:
+  - `billing/*` (plan, usage, invoices, contracts)
+  - `audit/*` (audit, config-changes)
+  - `security/*` (sessions, audit trail)
+  - `settings/*` (branding, i18n)
+  - `ai/governance` (config LLM)
+  - `superadmin` (platform dashboard)
+  - `prompts` (prompt management)
+  - `organizations/*` (tenant config)
+- [ ] **220.7: Crear checklist de cobertura Guardian por módulo**: Tabla con: módulo, nº páginas, nº con `enforcePermission`, nº con `useGuardianAccess`, objetivo ERA 9. Publicar en `docs/permissions-matrix.md`.
 
-**Criterio de aceptación:** Si Guardian dice NO, el sidebar no muestra el enlace. Si Guardian dice SÍ, el enlace aparece. Una sola fuente de verdad.
+**Criterio de aceptación:** Si Guardian dice NO, el sidebar no muestra el enlace. Páginas críticas (billing, audit, security, governance, superadmin) protegidas con `enforcePermission`. Checklist por módulo publicado para ERA 9.
 
 ---
 
@@ -643,8 +665,9 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **221.3: Actualizar `getAppByPath()`**: Recorrer el array de basePaths para cada app.
 - [ ] **221.4: Verificar CommandMenu**: El menú de comandos usa el app activo para priorizar resultados. Verificar que funcione con los nuevos basePaths.
 - [ ] **221.5: Verificar sidebar filtering**: `useNavigation()` filtra secciones por `section.appId`. Verificar coherencia después del cambio.
+- [ ] **221.6: Añadir columna "API contract" en map.md**: Cada hub debe indicar su API principal para mantener alineamiento UI↔API. Ejemplo: `/technical` ↔ `api/technical`, `/ops` ↔ `api/ops`, `/admin/billing` ↔ `api/admin/billing`.
 
-**Criterio de aceptación:** `getAppByPath('/admin/operations/logs')` devuelve OPERATIONS. `getAppByPath('/entities')` devuelve TECHNICAL. Sin falsos positivos.
+**Criterio de aceptación:** `getAppByPath('/admin/operations/logs')` devuelve OPERATIONS. `getAppByPath('/entities')` devuelve TECHNICAL. Sin falsos positivos. map.md incluye columna API contract por hub.
 
 ---
 
@@ -695,46 +718,46 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **222B.7: Migrar intelligence/trends a `useApiItem`**: Reemplazar el patrón `useEffect + fetch + useState` por el hook estándar. Eliminar `console.error` residual.
 - [ ] **222B.8: Migrar `/admin/ai/governance` a `useApiItem`**: Usa `useEffect + fetch + useState` manual con `any` en state. Migrar a hook estándar con tipos.
 - [ ] **222B.9: Service layer para Notifications**: Crear `NotificationService.getStats()` y `NotificationService.getRecent()` para encapsular las queries directas a `connectDB()`.
-- [ ] **222B.10: Estandarizar toast library**: Auditar uso dual de `sonner` (3 archivos) vs `@/hooks/use-toast` (10 archivos). Elegir UNO como canónico y migrar el resto. Documentar la decisión.
+- [ ] **222B.10: Estandarizar toast library — DECISIÓN: `sonner` es canónico**: `sonner` es el estándar (más moderno, API más limpia, ya usado en `layout.tsx` como `<Toaster />`). Migrar los 10 archivos que usan `@/hooks/use-toast` a `import { toast } from 'sonner'`. Marcar `useToast` como PROPONER DEPRECAR.
 
-**Criterio de aceptación:** Zero `StatSimple`/`KPICard` inline. Zero MetricCard reimplementado. Las 3+ Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`. Zero `: any` en state de pages. Una sola librería de toast.
+**Criterio de aceptación:** Zero `StatSimple`/`KPICard` inline. Zero MetricCard reimplementado. Las 3+ Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`. Zero `: any` en state de pages. `sonner` es la única librería de toast.
 
 ---
 
 #### 🌐 FASE 223: i18n HARDCODE PURGE
 
-**Objetivo:** Eliminar TODOS los strings hardcodeados en español/inglés de componentes y páginas. Todo texto visible debe pasar por `useTranslations()`.
+**Objetivo ERA 8 (scope acotado):** Internacionalizar como mínimo:
+1. **Todos los paths visibles en navegación principal** (sidebar, header, breadcrumbs).
+2. **Todo texto regulatorio/sensible** (governance, audit, compliance) — zero strings hardcoded en inglés.
+3. **Sync diccionarios ES↔EN** para keys existentes.
+
+> El resto de texto "profundo" (tooltips internos, placeholders de formularios no críticos) queda como **deuda explícita documentada** para ERA 9.
 
 **Contexto del problema:**
 - `RagQualityDashboard.tsx` tiene "Análisis Críticos", "Evolución de Calidad", "Atención Técnica Requerida" hardcoded.
 - `support-dashboard` tiene "Centro de Soporte", "Tickets Activos", "Cumplimiento SLA" hardcoded.
-- `prompts/page.tsx` tiene "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora", opciones de industria ("Genérico","Ascensores","Banca","Seguros","Médico") y toast "Gobernanza Actualizada" hardcoded.
+- `prompts/page.tsx` tiene "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora", opciones de industria y toast hardcoded.
 - `compliance/page.tsx` tiene un párrafo entero en inglés: "Compliance Note: This RAG implementation is categorized as...".
-- `LanguageSelector.tsx` tiene "Seleccionar Idioma" hardcoded.
-- `LanguageSwitcher.tsx` y `LocaleSwitcher.tsx` tienen "Cambiar idioma" hardcoded.
-- `useOnboarding.ts` (API-based) tiene todos los steps en español: "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc.
-- `superadmin/page.tsx` tiene "PRODUCTION / VERCEL", "M10 / Dedicated Cluster", "Gemini 004 / Pro Advanced" hardcoded.
-- Total de `src/components/admin`: 41 componentes, muchos con mezcla de i18n y hardcode.
-- `/admin/ai/governance` (361 líneas) — **i18n 100% hardcoded**: "Gobernanza de IA", "Modelos Contractuales", "Modelo Principal", "Selecciona modelo", "Descartar", "Guardar Gobernanza", "Límites & Cuotas", "Anonimización PII", "Max Tokens por Request", etc.
-- `/admin/settings/i18n` (317 líneas) — parcialmente hardcoded: "Sincronización Global Completada", "Error Global", "TODOS".
-- `/admin/audit` (260 líneas) — hardcoded: "Registro de Auditoría", "Eventos de Auditoría", "Feed industrial", "Activa el monitor", "Cargar Todos", "Solo Errores".
+- `LanguageSelector.tsx`, `LanguageSwitcher.tsx` y `LocaleSwitcher.tsx` tienen strings hardcoded.
+- `useOnboarding.ts` (API-based) tiene todos los steps en español.
+- `superadmin/page.tsx` tiene "PRODUCTION / VERCEL", "M10 / Dedicated Cluster" hardcoded.
+- `/admin/ai/governance` (361 líneas) — **i18n 100% hardcoded**: es la peor página.
+- `/admin/settings/i18n` (317 líneas) — parcialmente hardcoded.
+- `/admin/audit` (260 líneas) — hardcoded.
 
-**Tareas:**
-- [ ] **223.1: Scan automático de hardcode**: Ejecutar un script/grep que busque strings en español dentro de archivos `.tsx` que NO estén en archivos de traducción.
-- [ ] **223.2: Fase 1 — Componentes Admin**: Purgar hardcodes en `RagQualityDashboard`, `SupportDashboard`, y todos los componentes bajo `src/components/admin`.
-- [ ] **223.3: Fase 2 — Páginas Root**: Purgar hardcodes en páginas bajo `src/app/(authenticated)` que no sean admin.
-- [ ] **223.4: Fase 3 — Componentes Shared**: Auditar `src/components/shared` (30 componentes) y `src/components/ui` para hardcodes.
-- [ ] **223.5: Sync diccionarios ES/EN**: Verificar que para cada key en `messages/es/*.json` existe su equivalente en `messages/en/*.json` y viceversa.
-- [ ] **223.6: Usar skill `i18n-a11y-auditor`**: Ejecutar la auditoría completa sobre todas las páginas modificadas.
-- [ ] **223.7: Prompts page — mover diálogos**: "¿Ejecutar Sincronización Global?", "Cancelar", "Sincronizar ahora" y opciones de industria al JSON de traducciones.
-- [ ] **223.8: Compliance — mover párrafo inglés**: "Compliance Note: This RAG implementation..." al JSON en ambos idiomas.
-- [ ] **223.9: Onboarding steps**: Mover "¡Bienvenido a ABD RAG Platform!", "Sube tu primer documento", etc. de `useOnboarding.ts` a traducciones.
-- [ ] **223.10: Superadmin infra card**: Decidir si "PRODUCTION / VERCEL", "M10 / Dedicated Cluster" vienen de un config service o son i18n estático.
-- [ ] **223.11: AI Governance — i18n completo**: Migrar las 361 líneas de `/admin/ai/governance` a `useTranslations`. Es la página con PEOR cobertura i18n de toda la app.
-- [ ] **223.12: Audit page — i18n**: Migrar hardcodes de `/admin/audit` ("Registro de Auditoría", "Eventos", "Activa el monitor", etc.).
-- [ ] **223.13: Settings/i18n page — i18n meta**: Migrar los hardcodes residuales de la propia página de traducciones.
+**Tareas ERA 8 (scope obligatorio):**
+- [ ] **223.1: Scan automático de hardcode**: Ejecutar script/grep. Documentar hallazgos clasificados por prioridad (regulatorio > navegación > profundo).
+- [ ] **223.2: CRÍTICO — AI Governance i18n**: Migrar las 361 líneas de `/admin/ai/governance` a `useTranslations`. Peor cobertura de toda la app + texto regulatorio (PII, cuotas).
+- [ ] **223.3: CRÍTICO — Compliance i18n**: Mover "Compliance Note: This RAG implementation..." al JSON en ambos idiomas. Texto regulatorio = prioridad máxima.
+- [ ] **223.4: CRÍTICO — Audit page i18n**: Migrar hardcodes de `/admin/audit` + `/admin/audit/config-changes`. Texto de auditoría = sensible.
+- [ ] **223.5: Navegación principal**: Purgar hardcodes en sidebar items, headers, breadcrumbs, y componentes de layout que aparecen en TODAS las páginas.
+- [ ] **223.6: Prompts page diálogos**: Mover opciones de industria y diálogos de confirmación al JSON.
+- [ ] **223.7: Onboarding steps**: Mover steps de `useOnboarding.ts` a traducciones.
+- [ ] **223.8: Sync diccionarios ES/EN**: Verificar paridad 1:1 de keys entre `messages/es/*.json` y `messages/en/*.json`.
+- [ ] **223.9: Usar skill `i18n-a11y-auditor`**: Ejecutar auditoría sobre todas las páginas modificadas.
+- [ ] **223.10: Documentar deuda i18n explícita**: Crear `docs/i18n-debt.md` con lista de strings profundos no migrados, clasificados por página y prioridad, para ERA 9.
 
-**Criterio de aceptación:** Zero strings en español/inglés fuera de archivos JSON de traducción. Cambiar locale de ES a EN muestra la UI completa en inglés.
+**Criterio de aceptación ERA 8:** Zero texto regulatorio/sensible hardcoded. Navegación principal 100% internacionalizada. Diccionarios ES/EN sincronizados. Deuda profunda documentada explícitamente para ERA 9.
 
 ---
 
@@ -755,9 +778,9 @@ CONFIGURACIÓN (Admin Hub):
 - [ ] **224.3: Validar DomainRouter fallback**: Asegurar que si una query se clasifica como BANKING pero no hay componentes, el sistema usa el flujo GENERIC sin error.
 - [ ] **224.4: Unificar con EntityEngine**: Verificar que la ontología (`elevators.json`) y el `EntityEngine` son extensibles a otras industrias. Documentar el patrón.
 - [ ] **224.5: Mover `real-estate/CausalFlow` a shared si es genérico**: Si el componente CausalFlow no es específico de real-estate, moverlo a `src/components/shared`.
-- [ ] **224.6: Evaluar `/real-estate` demo page**: ¿Debería existir como ruta de usuario o solo como demo de admin? Si es demo → mover a `/admin/verticals/real-estate`. Si es funcionalidad real → conectar a datos reales y documentar en vertical-guide.md.
+- [ ] **224.6: Clasificar `/real-estate` como 🎭 INTERNAL DEMO**: Decisión: es un sandbox interno de la vertical real-estate (Fase 85). Añadir badge `INTERNAL DEMO` visible en la página. Documentar en `vertical-guide.md` como ejemplo de integración vertical. Mantener ruta actual `/real-estate` pero con fake data aislada (→ FASE 219.4).
 
-**Criterio de aceptación:** Las carpetas de verticales vacías solo tienen `config.ts`. Existe `docs/vertical-guide.md` que explica cómo añadir una industria. `/real-estate` tiene estado definido (demo documentado o funcional con datos reales).
+**Criterio de aceptación:** Las carpetas de verticales vacías solo tienen `config.ts`. Existe `docs/vertical-guide.md` que explica cómo añadir una industria. `/real-estate` clasificada como INTERNAL DEMO con badge visible y fake data aislada.
 
 ---
 
@@ -808,50 +831,43 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🔒 FASE 225C: TYPESCRIPT STRICT ENFORCEMENT & TYPE HYGIENE
 
-**Objetivo:** Eliminar TODOS los `: any` de archivos de página (`page.tsx`). Reforzar Regla #1 (TypeScript Strict Mode) que prohíbe `any` en código de producción.
+**Objetivo ERA 8 (scope acotado):** Eliminar `: any` en dos perímetros prioritarios:
+1. **Tipos core** — schemas de entidades, RAG, billing, guardian en `src/lib/schemas/` y `src/lib/types/`.
+2. **Funciones exportadas de librerías** — `src/lib/*` y `src/services/*` (funciones públicas que otros módulos consumen).
+
+> Los `: any` en componentes de UI internos o código de demo quedan como **deuda explícita** para ERA 9.
 
 **Contexto del problema (scan 2026-02-23):**
 
 > [!CAUTION]
-> **46 instancias de `: any` en 20+ archivos `page.tsx`**. Esto viola directamente la Regla #1:  "❌ const x: any = ..." → PR rechazado sin piedad.
+> **46 instancias de `: any` en 20+ archivos `page.tsx`**. Esto viola directamente la Regla #1: "❌ const x: any = ..." → PR rechazado sin piedad.
 
 **Archivos con mayor densidad de `any`:**
-- `superadmin/page.tsx` — 7 instancias (tenant: any, anomaly: any, drift: any, proposal: any, etc.)
-- `prompts/page.tsx` — 6 instancias (tenantsList: any, categoryCounts: any, error: any)
-- `settings/i18n/page.tsx` — 4 instancias (data: any en callbacks)
-- `users/active/page.tsx` — 4 instancias (vars: any, res: any, c: any)
-- `document-types/page.tsx` — 3 instancias (data: any, row: any)
-- `operations/ingest/page.tsx` — 2 instancias (data: any, error: any)
-- `workshop/orders/new/page.tsx` — 3 instancias (val: any, part: any, m: any)
-- `technical/page.tsx` — 2 instancias (KPICard props: any, FileTextIcon props: any)
-- `ai/playground/page.tsx` — 2 instancias (error: any, chunk: any)
-- `notifications/templates/page.tsx` — 1 instancia (tpl: any)
-- `login/page.tsx` — 2 instancias (err: any catch blocks)
-- `entities/page.tsx` — 1 instancia (p: any en map)
-- `entities/[id]/validar/page.tsx` — 1 instancia (validacion: any)
-- `admin/page.tsx` — 1 instancia (transform s: any)
-- `support/page.tsx` — 1 instancia (ticket: any)
-- `operations/status/page.tsx` — 1 instancia (recentJobs: any[])
-- `operations/trace/page.tsx` — 1 instancia (logs: any[])
-- `my-documents/page.tsx` — 1 instancia oculta (documentTypes: any[])
-- `reports/schedules/page.tsx` — 1 instancia (error: any)
-- `upgrade/page.tsx` — 1 instancia (error: any)
-- `auth-pages/magic-link/verify/page.tsx` — 1 instancia (error: any)
+- `superadmin/page.tsx` — 7 instancias
+- `prompts/page.tsx` — 6 instancias
+- `settings/i18n/page.tsx` — 4 instancias
+- `users/active/page.tsx` — 4 instancias
+- `document-types/page.tsx` — 3 instancias
+- `workshop/orders/new/page.tsx` — 3 instancias
+- Otros 14 archivos con 1–2 instancias cada uno
 
-**Patrones recurrentes de `any`:**
-1. **`catch (error: any)`** → Usar `unknown` + type guard o `AppError`
-2. **callback params `(data: any)` en mutations** → Definir tipo de respuesta del endpoint
-3. **inline components `({ props }: any)`** → Crear interface explícita
-4. **`.map((item: any)` en renders** → Definir interface del item
-5. **state declarations `any[]`** → Definir interfaces para arrays
+**Patrones recurrentes:**
+1. `catch (error: any)` → `unknown` + type guard
+2. `onSuccess: (data: any)` → tipo de respuesta genérico
+3. `({ props }: any)` en inline components → interface explícita
+4. `.map((item: any)` → interface del domain object
+5. `any[]` en state → interfaces tipadas
 
-**Tareas:**
-- [ ] **225C.1: Crear interfaces para API responses**: Para cada endpoint usado en las páginas, definir el tipo de respuesta en `src/lib/schemas/` o al lado de la página.
-- [ ] **225C.2: Purgar `catch (error: any)`**: Reemplazar en TODAS las páginas por `catch (error: unknown)` con type guard. Patrón: `if (error instanceof AppError)` o `String(error)`.
-- [ ] **225C.3: Tipar callbacks de mutations**: Los `onSuccess: (data: any)` en `useApiMutation` necesitan el tipo de respuesta genérico. Actualizar en superadmin, i18n, y otros.
-- [ ] **225C.4: Tipar inline components**: `StatSimple`, `KPICard`, `FileTextIcon` y similares necesitan props interfaces explícitas (se solapa con 222B.2/222B.4 — resolver primero los DRY y el typado se hereda).
-- [ ] **225C.5: Tipar arrays de estado**: `documentTypes: any[]` en my-documents, `logs: any[]` en trace, `recentJobs: any[]` en status → Crear interfaces.
-- [ ] **225C.6: Tipar renders con map**: `(tenant: any)`, `(anomaly: any)`, `(drift: any)`, `(tpl: any)`, etc. → Definir interfaces de domain objects.
-- [ ] **225C.7: Verificar con tsc --noEmit**: Ejecutar `npx tsc --noEmit --strict` y confirmar zero errores de tipo en archivos de página.
+**Tareas ERA 8 (scope obligatorio — core & lib):**
+- [ ] **225C.1: Crear interfaces para domain objects core**: Definir tipos para Tenant, Anomaly, Drift, Proposal, Prompt, Template, WorkflowTask, AuditLog en `src/lib/schemas/`.
+- [ ] **225C.2: Purgar `catch (error: any)` en TODAS las páginas**: Mecánico — reemplazar por `catch (error: unknown)` con type guard. Patrón: `if (error instanceof AppError)` o `String(error)`. Esto aplica a las 21 páginas con catch any.
+- [ ] **225C.3: Tipar funciones exportadas en `lib/` y `services/`**: Audit de `: any` en APIs públicas de módulos. Cada función exportada debe tener tipos explícitos en params y return.
+- [ ] **225C.4: Tipar callbacks de mutations (pages críticas)**: Solo para pages de scope ERA 8 (superadmin, billing, audit, governance, prompts).
+- [ ] **225C.5: Verificar con tsc --noEmit**: Ejecutar `npx tsc --noEmit --strict` y confirmar zero errores en `lib/`, `services/`, y pages críticas.
 
-**Criterio de aceptación:** Zero `: any` en archivos `page.tsx`. `tsc --noEmit` pasa limpio. Cada callback, render y state tiene tipos explícitos.
+**Deuda explícita para ERA 9:**
+- `: any` en inline components de UI (se resolverá al unificar MetricCard en 222B)
+- `: any` en `.map()` renders de pages no críticas
+- `: any` en estado local de componentes de demo
+
+**Criterio de aceptación ERA 8:** Zero `: any` en `catch` blocks. Zero `: any` en funciones exportadas de `lib/` y `services/`. Domain objects core tipados. Deuda de UI documentada para ERA 9.
