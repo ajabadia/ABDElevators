@@ -14,7 +14,7 @@ graph TD
     User --> SpacesHub["/spaces (Spaces Hub)"]
 
     %% Admin Hubs
-    subgraph Admin_Panel [Admin Panel /admin]
+    subgraph Admin_Panel ["Admin Panel /admin"]
         direction TB
         
         %% Core Hubs
@@ -54,14 +54,14 @@ graph TD
     end
     
     %% Support Ecosystem
-    subgraph Support_Ecosystem [Support & Tickets]
+    subgraph Support_Ecosystem ["Support & Tickets"]
         SupportHub --> TicketNew["/support/nuevo"]
         SupportHub --> TicketList["/support/list"]
         Admin --> SupportDash["/support-dashboard (Staff)"]
     end
 
     %% Technical Panel
-    subgraph Technical_Panel [Technical Mode]
+    subgraph Technical_Panel ["Technical Mode"]
         Technical --> Entities["/entities"]
         Technical --> Graphs["/graphs (Neo4j)"]
         Entities --> Validate["/entities/[id]/validar"]
