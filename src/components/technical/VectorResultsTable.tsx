@@ -21,10 +21,17 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface VectorResultsTableProps {
     results: RagResult[];
     isLoading?: boolean;
+    onViewPDF?: (source: string, page?: number, cloudinaryUrl?: string) => void;
 }
 
 /**
@@ -35,7 +42,8 @@ interface VectorResultsTableProps {
  */
 export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
     results,
-    isLoading = false
+    isLoading = false,
+    onViewPDF
 }) => {
     const t = useTranslations('common');
 
@@ -77,7 +85,12 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                         {results.map((result, index) => (
-                            <ResultRow key={index} result={result} index={index} />
+                            <ResultRow
+                                key={index}
+                                result={result}
+                                index={index}
+                                onViewPDF={onViewPDF}
+                            />
                         ))}
                     </tbody>
                 </table>
@@ -93,7 +106,7 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
 };
 
 /** Row component to handle item expansion and expert mode */
-function ResultRow({ result, index }: { result: RagResult; index: number }) {
+function ResultRow({ result, index, onViewPDF }: { result: RagResult; index: number; onViewPDF?: (source: string, page?: number, cloudinaryUrl?: string) => void }) {
     const t = useTranslations('common');
     const [isTechnicalExpanded, setIsTechnicalExpanded] = useState(false);
     const [isTextExpanded, setIsTextExpanded] = useState(false);
@@ -169,13 +182,13 @@ function ResultRow({ result, index }: { result: RagResult; index: number }) {
                     <CollapsibleContent className="mt-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3 animate-in slide-in-from-top-2 duration-300">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Metadata</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">{t("actions.view")}</span>
                                 <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-1.5 rounded border border-slate-100 dark:border-slate-800">
                                     ID: {result.source.split('.')[0]}-{index}
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Chunk Type</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">{t("status.processing")}</span>
                                 <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-1.5 rounded border border-slate-100 dark:border-slate-800">
                                     {result.chunkType || 'TEXT_PASSAGE'}
                                 </div>
@@ -183,7 +196,31 @@ function ResultRow({ result, index }: { result: RagResult; index: number }) {
                         </div>
                         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <LayoutGrid size={10} className="text-slate-400" />
-                            <span className="text-[9px] text-slate-500 italic">Faithfulness score: 0.98 • Relevancy: {result.score?.toFixed(2)}</span>
+                            <TooltipProvider>
+                                <div className="flex items-center gap-3">
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="text-[9px] text-slate-500 italic cursor-help underline decoration-dotted underline-offset-2">
+                                                Faithfulness: 0.98
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[200px] text-[10px]">
+                                            <p><strong>Fidelidad:</strong> Indica si la respuesta proviene estrictamente de la fuente, sin alucinaciones.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <span className="text-[9px] text-slate-300">•</span>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="text-[9px] text-slate-500 italic cursor-help underline decoration-dotted underline-offset-2">
+                                                Relevancy: {result.score?.toFixed(2)}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[200px] text-[10px]">
+                                            <p><strong>Relevancia:</strong> Evalúa qué tan útil es este fragmento de texto para resolver la consulta planteada.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                            </TooltipProvider>
                         </div>
                     </CollapsibleContent>
                 </Collapsible>
@@ -191,15 +228,25 @@ function ResultRow({ result, index }: { result: RagResult; index: number }) {
 
             <td className="px-6 py-5 text-right vertical-top">
                 {result.cloudinaryUrl ? (
-                    <a
-                        href={result.cloudinaryUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
-                    >
-                        <ExternalLink className="mr-1.5 h-3 w-3" />
-                        Ver PDF
-                    </a>
+                    onViewPDF ? (
+                        <button
+                            onClick={() => onViewPDF(result.source, result.approxPage, result.cloudinaryUrl)}
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
+                        >
+                            <ExternalLink className="mr-1.5 h-3 w-3" />
+                            {t("actions.view")} PDF
+                        </button>
+                    ) : (
+                        <a
+                            href={result.cloudinaryUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
+                        >
+                            <ExternalLink className="mr-1.5 h-3 w-3" />
+                            Ver PDF
+                        </a>
+                    )
                 ) : (
                     <span className="text-[10px] text-slate-300 italic font-medium uppercase tracking-tight">Offline</span>
                 )}

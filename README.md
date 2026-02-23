@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.2.0 - ERA-7 PRO)
+# ABD Multi-Industry RAG Platform (Vision 5.3.0 - ERA-7 PRO)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.2.0** introduce la **Estandarización de Observabilidad, el LLM Core y Quality Shield (FASE 210-215)**, reforzando la independencia de módulos y la estabilidad industrial en la **Arquitectura Monorepo**.
+Esta versión **v5.3.0** introduce la **Excelencia en Interacción y Pulido Quirúrgico de UX (FASE 216-217)**, mejorando drásticamente la navegación por teclado, accesibilidad móvil y predictibilidad de ingesta.
 
 ## 🚀 Inicio Rápido
 
@@ -191,6 +191,7 @@ src/
 - ✅ **Centralized Observability Hub (Phase 201/213)**: Telemetría unificada, auditoría forense inmutable y monitoreo de performance SLA integrado.
 - ✅ **Quality Shield (Phase 215)**: Suite de tests unitarios e integración para LLM Core y Repositorios con aislamiento multi-tenant verificado.
 - ✅ **Domain-Specialized Dashboards (Phase 214)**: Experiencia diferenciada para perfiles Técnicos y de Soporte con KPIs específicos.
+- ✅ **UX Surgical Polish & Interaction Excellence (Phase 216-217)**: Navegación por teclado avanzada (CMD+K), resaltado multi-modal de fuentes, sugerencias dinámicas agénticas y predicción de tiempo de ingesta (ETA).
 
 ## 🔧 Scripts Disponibles
 

@@ -346,8 +346,28 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                 </TableRow>
                             ) : documents.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                        {t('table.empty')}
+                                    <TableCell colSpan={6} className="text-center py-20">
+                                        <div className="flex flex-col items-center justify-center max-w-[400px] mx-auto space-y-4">
+                                            <div className="p-4 bg-primary/5 rounded-full text-primary animate-pulse">
+                                                <Database size={32} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h3 className="text-lg font-bold text-foreground">
+                                                    {t('empty.title') || 'Tu Corpus está Vacío'}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                                    {t('empty.description') || 'Comienza subiendo especificaciones técnicas o manuales para que la IA pueda empezar a aprender de tu conocimiento.'}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                onClick={() => setModalState({ type: 'upload' })}
+                                                variant="outline"
+                                                className="mt-2 border-primary/20 hover:bg-primary/5 text-primary gap-2"
+                                            >
+                                                <Plus size={16} />
+                                                {t('actions.upload_first') || 'Subir mi Primer Documento'}
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : documents.map((doc) => (

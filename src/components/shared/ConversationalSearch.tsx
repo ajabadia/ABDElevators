@@ -22,6 +22,8 @@ import ReactMarkdown from "react-markdown"
 import { useTranslations } from "next-intl"
 import { humanizeConfidence, confidencePercent } from "@/lib/confidence-humanizer"
 import AnswerFeedback from "@/components/shared/AnswerFeedback"
+import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal"
+import { Badge } from "@/components/ui/badge"
 
 interface Message {
     id?: string
@@ -52,6 +54,7 @@ export function ConversationalSearch() {
     const [streamingContent, setStreamingContent] = useState("")
     const [currentDocs, setCurrentDocs] = useState<any[]>([])
     const [currentTrace, setCurrentTrace] = useState<string[]>([])
+    const [previewAsset, setPreviewAsset] = useState<{ id: string; filename: string; page?: number } | null>(null)
     const [retryCount, setRetryCount] = useState(0)
     const MAX_RETRIES = 2
 
@@ -301,7 +304,11 @@ export function ConversationalSearch() {
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {m.documents.map((doc, idx) => (
-                                                        <SourceChip key={idx} doc={doc} />
+                                                        <SourceChip
+                                                            key={idx}
+                                                            doc={doc}
+                                                            onPreview={(id, filename, page) => setPreviewAsset({ id, filename, page })}
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>
@@ -389,17 +396,36 @@ export function ConversationalSearch() {
                     </p>
                 </div>
             </div>
+            <PDFPreviewModal
+                isOpen={!!previewAsset}
+                onClose={() => setPreviewAsset(null)}
+                id={previewAsset?.id || ""}
+                filename={previewAsset?.filename || ""}
+                initialPage={previewAsset?.page}
+            />
         </div>
     )
 }
 
-function SourceChip({ doc }: { doc: any }) {
+function SourceChip({ doc, onPreview }: { doc: any; onPreview: (id: string, filename: string, page?: number) => void }) {
     const fileName = doc.source.split('/').pop().replace('.pdf', '').replace(/_/g, ' ')
     const conf = doc.score != null ? humanizeConfidence(doc.score) : null;
+
+    // We try to get the asset ID from metadata if available, otherwise we fallback to the source path
+    // In a real scenario, the RAG engine should return the mongo _id as metadata.assetId
+    const assetId = doc.metadata?.assetId || doc.id || doc._id;
+
+    const handlePreview = (e: React.MouseEvent) => {
+        if (assetId) {
+            e.preventDefault();
+            onPreview(assetId, fileName, doc.approxPage);
+        }
+    };
 
     return (
         <a
             href={doc.cloudinaryUrl || "#"}
+            onClick={handlePreview}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary transition-all group shadow-sm"

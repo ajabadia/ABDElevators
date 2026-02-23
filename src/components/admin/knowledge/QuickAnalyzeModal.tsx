@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { KnowledgeAsset } from "@/types/knowledge";
@@ -49,6 +50,7 @@ interface ChatMessage {
 export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalProps) {
     const t = useTranslations("knowledge_hub");
     const tCommon = useTranslations("common");
+    const { toast } = useToast();
 
     const [question, setQuestion] = useState("");
     const [isQuerying, setIsQuerying] = useState(false);
@@ -56,8 +58,41 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
     const [status, setStatus] = useState<string>("");
     const [traces, setTraces] = useState<string[]>([]);
     const [showTraces, setShowTraces] = useState(false);
+    const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([]);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const traceScrollRef = React.useRef<HTMLDivElement>(null);
+
+    // Load dynamic suggestions (Phase 216.3)
+    useEffect(() => {
+        if (!asset || !open) return;
+
+        const loadSuggestions = async () => {
+            setIsLoadingSuggestions(true);
+            try {
+                const res = await fetch(`/api/admin/knowledge-assets/${asset._id}/suggest-questions`);
+                const data = await res.json();
+                if (data.success && data.suggestions) {
+                    setDynamicSuggestions(data.suggestions);
+                    toast({
+                        title: t('analyze_modal.title'),
+                        description: "Sugerencias dinámicas cargadas.",
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load suggestions:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "No se pudieron cargar las sugerencias dinámicas.",
+                });
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
+        };
+
+        loadSuggestions();
+    }, [asset?._id, open]);
 
     // Auto-scroll to bottom on new messages
     React.useEffect(() => {
@@ -187,13 +222,18 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                     }
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error in quick analysis:", error);
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: "Error al analizar el documento. Por favor, inténtelo de nuevo.",
                 timestamp: new Date()
             }]);
+            toast({
+                variant: "destructive",
+                title: "Error de Análisis",
+                description: error.message || "La consulta falló inesperadamente.",
+            });
         } finally {
             setIsQuerying(false);
             setStatus("");
@@ -250,22 +290,29 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap justify-center gap-2 pt-4">
-                                    {[
-                                        "Resume los puntos clave",
-                                        "¿Hay requisitos técnicos específicos?",
-                                        "Identifica posibles riesgos",
-                                        "Extrae una tabla de especificaciones"
-                                    ].map((s, i) => (
-                                        <Button
-                                            key={i}
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-full text-xs hover:bg-primary/5 hover:text-primary transition-all"
-                                            onClick={() => setQuestion(s)}
-                                        >
-                                            {s}
-                                        </Button>
-                                    ))}
+                                    {isLoadingSuggestions ? (
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                            <Loader2 size={12} className="animate-spin" />
+                                            Generando sugerencias personalizadas...
+                                        </div>
+                                    ) : (
+                                        (dynamicSuggestions.length > 0 ? dynamicSuggestions : [
+                                            "Resume los puntos clave",
+                                            "¿Hay requisitos técnicos específicos?",
+                                            "Identifica posibles riesgos",
+                                            "Extrae una tabla de especificaciones"
+                                        ]).map((s, i) => (
+                                            <Button
+                                                key={i}
+                                                variant="outline"
+                                                size="sm"
+                                                className="rounded-full text-xs hover:bg-primary/5 hover:text-primary transition-all"
+                                                onClick={() => setQuestion(s)}
+                                            >
+                                                {s}
+                                            </Button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         ) : (

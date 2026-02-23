@@ -584,6 +584,17 @@
     "title": "Knowledge Search",
     "highlight": "Intelligence",
     "subtitle": "Inquiry and visualization of technical data linked in the document library.",
+    "analyzeFlow": {
+      "suggestionsLabel": "Smart Suggestions",
+      "generatingSuggestions": "Generating smart suggestions...",
+      "analyzing": "Analyzing...",
+      "analyzeWait": "This might take a few seconds.",
+      "sourcesLabel": "Technical Sources Used"
+    },
+    "expertMode": {
+      "generatingSuggestions": "Generating smart suggestions...",
+      "moreContext": "See more context"
+    },
     "explorer_h2": "Technical Documentation",
     "explorer_subtitle": "Explore the document library or perform queries to the Artificial Intelligence.",
     "tabs": {

@@ -708,6 +708,25 @@ CONTEXT:
 USER QUESTION:
 {{question}}`,
     version: 1.0
+  },
+
+  AGENTIC_QUESTION_SUGGESTIONS: {
+    template: `Eres un asistente de Inteligencia Técnica experto en la industria de ascensores.
+    Tu objetivo es sugerir 3-4 preguntas proactivas que un técnico podría querer hacer sobre un documento recién procesado.
+    
+    PERFIL DEL DOCUMENTO:
+    - Nombre: {{filename}}
+    - Tipo: {{componentType}}
+    - Modelo: {{model}}
+    
+    INSTRUCCIONES:
+    1. Las preguntas deben ser técnicas, útiles y directas.
+    2. Enfócate en mantenimiento, seguridad, parámetros de ajuste o resolución de errores.
+    3. Responde ÚNICAMENTE con un array JSON de strings.
+    
+    FORMATO DE SALIDA (JSON estrictamente):
+    ["Pregunta 1", "Pregunta 2", "Pregunta 3"]`,
+    version: 1.0
   }
 };
 

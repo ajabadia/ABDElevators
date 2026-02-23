@@ -14,7 +14,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 215: QUALITY SHIELD**, FASE 214: DOMAIN-SPECIALIZED DASHBOARDS, FASE 213: PLATFORM OBSERVABILITY HUB, FASE 210: LLM CORE.
+- **Recent Ship**: **FASE 217: INTERACTION EXCELLENCE**, FASE 216: UX SURGICAL POLISH, FASE 215: QUALITY SHIELD, FASE 214: DOMAIN-SPECIALIZED DASHBOARDS, FASE 213: PLATFORM OBSERVABILITY HUB.
 - **Project Status**: **ERA-7 Industrial Suite Transition (v5.2.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -474,3 +474,25 @@ CONFIGURACIÓN (Admin Hub):
 - [X] **LLM Core Tests**: Suite de tests para `PromptRunner` (utilizando mocks de Gemini) y `LlmJsonParser`. ✅
 - [X] **Repository Tests**: Cobertura de tests para `BaseRepository` y repositorios clave (`TechnicalEntity`, `Tickets`). ✅
 - [X] **Isolation Audit**: Tests automatizados para verificar el aislamiento estricto de `tenantId` en la capa de datos. ✅
+
+#### 🚀 FASE 216: UX SURGICAL POLISH (COMPLETADO ✅)
+
+**Objetivo:** Micro-cirugía de usabilidad para transformar una herramienta avanzada en una experiencia fluida de grado industrial.
+
+- [X] **216.1: Context-Aware Command Center**: Priorización de activos técnicos en rutas `/entities` y `/graphs`. ✅
+- [X] **216.2: Multi-modal Source Highlighting**: Sincronización de citas de chat con el visor PDF (Navegación por página). ✅
+- [X] **216.3: Agentic Quick-Analysis**: Inferencia automática de preguntas clave tras la ingesta de documentos (Gemini Flash). ✅
+- [X] **216.4: Proactive Empty States**: Rediseño de vistas vacías con CTAs de "Próximo Mejor Paso". ✅
+- [X] **216.5: Professional Error Mapping**: Conversión de excepciones de infraestructura en mensajes de negocio orientados a la solución. ✅
+
+> [!NOTE]
+> El sistema de coordenadas (bounding boxes) para resaltado preciso de texto dentro del PDF queda pendiente de la evolución del motor de extracción en futuras fases, integrándose la navegación por página como solución core de esta fase.
+
+#### 🚀 FASE 217: INTERACTION EXCELLENCE & PLATFORM RESILIENCE (COMPLETADO ✅)
+
+**Objetivo:** Elevar la calidad de la plataforma mediante interacciones de alta fidelidad, accesibilidad avanzada y transparencia en métricas técnicas.
+
+- [X] **217.1: Advanced Command Menu UX**: Soporte total para navegación por teclado (ArrowKeys/Enter) y foco visual. ✅
+- [X] **217.2: Platform Metrics Observability**: Tooltips técnicos explicativos para métricas RAG y salud de servicios. ✅
+- [X] **217.3: Mobile UI Accessibility Flush**: Refuerzo de responsividad en modales de previsualización y auditoría ARIA. ✅
+- [X] **217.4: Ingestion Time Prediction**: Cálculo de ETA dinámico basado en tamaño de archivo y carga de sistema. ✅

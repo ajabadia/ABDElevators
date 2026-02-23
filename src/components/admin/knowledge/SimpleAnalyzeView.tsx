@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
     Upload,
@@ -14,6 +14,8 @@ import {
     Settings2,
     ChevronRight,
     ExternalLink,
+    AlertTriangle,
+    AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +29,9 @@ import { SmartConfig } from "@/hooks/useSmartConfig";
 import { humanizeConfidence, confidencePercent } from "@/lib/confidence-humanizer";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { ErrorMapperService } from "@/services/core/ErrorMapperService";
 
 // ────────────────────────────────────────────────
 // Types
@@ -121,6 +125,64 @@ export function SimpleAnalyzeView({
     const [question, setQuestion] = useState('');
     const [isQuerying, setIsQuerying] = useState(false);
     const [result, setResult] = useState<AnalyzeResult | null>(null);
+    const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([]);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const { toast } = useToast();
+
+    // Load dynamic suggestions (Phase 216.3)
+    useEffect(() => {
+        if (!file) return;
+
+        const loadSuggestions = async () => {
+            setIsLoadingSuggestions(true);
+            try {
+                // We use the same endpoint as QuickAnalyzeModal but with filename search if needed
+                // For now, if we don't have an ID, we might need to skip or use a search endpoint
+                // Assuming we can find the asset by filename if it was already ingested
+                const res = await fetch(`/api/admin/knowledge-assets?search=${file.name}&limit=1`);
+                const data = await res.json();
+                if (data.success && data.assets?.[0]) {
+                    const assetId = data.assets[0]._id;
+                    const surgRes = await fetch(`/api/admin/knowledge-assets/${assetId}/suggest-questions`);
+                    const surgData = await surgRes.json();
+                    if (surgData.success && surgData.suggestions) {
+                        setDynamicSuggestions(surgData.suggestions);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load suggestions:", error);
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
+        };
+
+        loadSuggestions();
+    }, [file?.name]);
+    const [lastError, setLastError] = useState<{ message: string; details?: string } | null>(null);
+
+    // Calculate dynamic ETA (FASE 217.4)
+    const calculateETA = () => {
+        if (!file) return null;
+
+        const sizeMB = file.size / (1024 * 1024);
+        // Base speeds in MB/s
+        const speeds: Record<string, number> = {
+            bajo: 2.0,
+            medio: 1.0,
+            alto: 0.5
+        };
+
+        const speed = speeds[config.chunkingLevel] || 1.0;
+        const baseSeconds = 3; // Overhead/init
+        const estimatedSeconds = Math.round((sizeMB / speed) + baseSeconds);
+
+        if (estimatedSeconds < 60) return `${estimatedSeconds}s`;
+        const mins = Math.floor(estimatedSeconds / 60);
+        const secs = estimatedSeconds % 60;
+        return `${mins}m ${secs}s`;
+    };
+
+    const eta = calculateETA();
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: (accepted) => {
@@ -157,7 +219,9 @@ export function SimpleAnalyzeView({
         return 'generico';
     };
 
-    const suggestions = QUESTION_SUGGESTIONS[detectDocType()] || QUESTION_SUGGESTIONS.generico;
+    const suggestions = dynamicSuggestions.length > 0
+        ? dynamicSuggestions
+        : (QUESTION_SUGGESTIONS[detectDocType()] || QUESTION_SUGGESTIONS.generico);
 
     /** Submit question to RAG API */
     const handleAsk = async () => {
@@ -173,13 +237,16 @@ export function SimpleAnalyzeView({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    query: question,
-                    model: config.model,
-                    temperature: config.temperature,
+                    question: question,
+                    filename: file.name,
+                    context_only: true // For quick analysis
                 }),
             });
 
-            if (!res.ok) throw new Error('Query failed');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error?.message || 'Query failed');
+            }
 
             const data = await res.json();
 
@@ -198,8 +265,23 @@ export function SimpleAnalyzeView({
             setResult(analysisResult);
             setStep('result');
             onResult?.(analysisResult);
-        } catch {
-            // Error handling is done by the parent via toast
+
+            toast({
+                title: t('analyzeFlow.resultTitle'),
+                description: "Análisis completado con éxito.",
+            });
+        } catch (error: any) {
+            console.error('[ANALYZE_ERROR]', error);
+            const mapped = ErrorMapperService.fromError(error);
+            setLastError({
+                message: mapped.message,
+                details: mapped.action
+            });
+            toast({
+                variant: "destructive",
+                title: mapped.title,
+                description: mapped.message,
+            });
         } finally {
             setIsQuerying(false);
         }
@@ -297,18 +379,40 @@ export function SimpleAnalyzeView({
                             {t("analyzeFlow.suggestionsLabel")}
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            {suggestions.map((suggestion, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => setQuestion(suggestion)}
-                                    className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-primary/10 hover:text-primary border border-slate-200 rounded-full transition-all"
-                                >
-                                    {suggestion}
-                                </button>
-                            ))}
+                            {isLoadingSuggestions ? (
+                                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <Loader2 size={10} className="animate-spin" />
+                                    {t("expertMode.generatingSuggestions")}
+                                </div>
+                            ) : (
+                                suggestions.map((suggestion, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setQuestion(suggestion)}
+                                        className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-primary/10 hover:text-primary border border-slate-200 rounded-full transition-all"
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </div>
+
+                    {/* Error display */}
+                    {lastError && (
+                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl animate-in fade-in zoom-in duration-300">
+                            <div className="flex items-center gap-2 text-red-700 text-xs font-bold mb-1">
+                                <AlertTriangle size={14} />
+                                {lastError.message}
+                            </div>
+                            {lastError.details && (
+                                <p className="text-[10px] text-red-500 italic ml-6">
+                                    {lastError.details}
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Expert Mode Toggle */}
                     {expertModeContent && (
@@ -432,6 +536,11 @@ export function SimpleAnalyzeView({
                     <div className="text-center space-y-1">
                         <p className="text-sm font-bold text-slate-900">{t("analyzeFlow.analyzing")}</p>
                         <p className="text-xs text-slate-500">{t("analyzeFlow.analyzeWait")}</p>
+                        {eta && (
+                            <p className="text-[10px] text-primary font-black uppercase tracking-widest mt-2 animate-pulse">
+                                Tiempo estimado: {eta}
+                            </p>
+                        )}
                     </div>
                 </div>
             )}

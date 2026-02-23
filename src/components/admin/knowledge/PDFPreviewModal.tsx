@@ -15,21 +15,28 @@ interface PDFPreviewModalProps {
     onClose: () => void;
     id: string;
     filename: string;
+    initialPage?: number;
 }
 
-export function PDFPreviewModal({ isOpen, onClose, id, filename }: PDFPreviewModalProps) {
+export function PDFPreviewModal({ isOpen, onClose, id, filename, initialPage }: PDFPreviewModalProps) {
     const previewUrl = `/api/admin/knowledge-assets/${id}/preview`;
     const downloadUrl = `/api/admin/knowledge-assets/${id}/download`;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-5xl w-[90vw] h-[90vh] flex flex-col p-0 overflow-hidden border-slate-200">
+            <DialogContent
+                className="max-w-5xl w-full sm:w-[95vw] h-full sm:h-[90vh] flex flex-col p-0 overflow-hidden border-slate-200 sm:rounded-2xl"
+                aria-describedby="pdf-preview-description"
+            >
                 <DialogHeader className="p-4 border-b border-slate-100 flex-row items-center justify-between space-y-0">
                     <div>
                         <DialogTitle className="text-lg font-bold text-slate-900 truncate max-w-[60vw]">
                             {filename}
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-slate-500 uppercase font-semibold tracking-wider">
+                        <DialogDescription
+                            id="pdf-preview-description"
+                            className="text-[10px] text-slate-500 uppercase font-black tracking-widest"
+                        >
                             Previsualización Segura
                         </DialogDescription>
                     </div>
@@ -37,8 +44,9 @@ export function PDFPreviewModal({ isOpen, onClose, id, filename }: PDFPreviewMod
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 gap-2 border-slate-200 text-slate-600 hover:bg-slate-50"
+                            className="h-8 gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hidden sm:flex"
                             onClick={() => window.open(downloadUrl, '_blank')}
+                            aria-label="Descargar documento"
                         >
                             <Download size={14} />
                             Descargar
@@ -48,6 +56,7 @@ export function PDFPreviewModal({ isOpen, onClose, id, filename }: PDFPreviewMod
                             size="icon"
                             className="h-8 w-8 text-slate-400 hover:text-slate-600"
                             onClick={onClose}
+                            aria-label="Cerrar previsualización"
                         >
                             <X size={18} />
                         </Button>
@@ -56,7 +65,7 @@ export function PDFPreviewModal({ isOpen, onClose, id, filename }: PDFPreviewMod
 
                 <div className="flex-1 bg-slate-50 relative">
                     <iframe
-                        src={previewUrl}
+                        src={`${previewUrl}${initialPage ? `#page=${initialPage}` : ''}`}
                         className="w-full h-full border-0"
                         title={filename}
                     />

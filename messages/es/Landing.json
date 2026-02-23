@@ -32,6 +32,6 @@
     "badge": "EXPERIENCIA UNIFICADA",
     "title": "Diseño Agéntico de Vanguardia",
     "description": "Una interfaz repensada desde cero para la eficiencia técnica. Navegación simplificada, modo oscuro nativo y consistencia visual absoluta.",
-    "features": "Dashboard de Valor (ROI),Hub de Navegación,Modo Oscuro,Diseño Tokens Semánticos,Simple vs Expert Mode,Report Hub Visual,Onboarding Progresivo,WorkContext Engine,Ayuda Contextual Integrada"
+    "features": "Dashboard de Valor (ROI),Hub de Navegación,Modo Oscuro,Diseño Tokens Semánticos,Simple vs Expert Mode,Report Hub Visual,Onboarding Progresivo,WorkContext Engine,Ayuda Contextual Integrada,Navegación Teclado (CMD+K),ETA de Ingesta Predictivo,Tooltips Métricas RAG,Sugerencias Dinámicas IA"
   }
 }

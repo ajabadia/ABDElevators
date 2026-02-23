@@ -484,6 +484,17 @@
     "title": "Gestión del",
     "highlight": "Corpus Técnico",
     "subtitle": "Sube y gestiona los manuales que alimentan el sistema de Inteligencia Técnica.",
+    "analyzeFlow": {
+      "suggestionsLabel": "Sugerencias Inteligentes",
+      "generatingSuggestions": "Generando sugerencias inteligentes...",
+      "analyzing": "Analizando...",
+      "analyzeWait": "Esto podría tardar unos segundos.",
+      "sourcesLabel": "Fuentes Técnicas Utilizadas"
+    },
+    "expertMode": {
+      "generatingSuggestions": "Generando sugerencias inteligentes...",
+      "moreContext": "Ver más contexto"
+    },
     "tabs": {
       "assets": "Gestión de Activos",
       "explorer": "Explorador Semántico",
