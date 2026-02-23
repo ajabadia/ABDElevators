@@ -514,30 +514,70 @@ CONFIGURACIÓN (Admin Hub):
 
 **Objetivo:** Auditar todas las rutas, identificar duplicados y fantasmas, y definir UNA ruta canónica por concepto. Las rutas candidatas a eliminación se marcan como PROPONER DEPRECAR — no se borran.
 
-**Contexto del problema:**
-- `/admin/knowledge-base` es un redirect pero `/admin/knowledge-base/graph` tiene código vivo.
-- `/admin/my-documents` y `/admin/knowledge/my-docs` son dos rutas para documentos personales.
-- `/admin/knowledge-assets` es un redirect legacy sin valor claro.
-- Existen rutas de administración que no aparecen en el sidebar (`/admin/analytics`, `/admin/api-docs`).
-- `/admin/tasks` y `/admin/workflow-tasks` son dos módulos de tareas con propósitos solapados.
-- `/admin/cases` solo tiene `[id]` pero no tiene page de hub.
-- `/admin/workshop` está vacío (sin `page.tsx`).
-- Total: 35 subdirectorios bajo `/admin`, varios con problemas de coherencia.
+**Contexto del problema (auditoría map.md vs filesystem, 2026-02-23):**
+
+> [!CAUTION]
+> **map.md documenta ~50 rutas. El filesystem tiene 101 `page.tsx`.** Casi la mitad de la app es invisible para la documentación.
+
+**A) Rutas DEPRECATED en map.md que SIGUEN EXISTIENDO como archivos:**
+- `/admin/billing/plan` → map.md dice "Integrado en sub-secciones" pero el archivo existe.
+- `/admin/ingest/jobs` → map.md dice "Movido a /admin/operations/ingest" pero el archivo sigue ahí.
+- `/admin/knowledge-base` → map.md dice "Reemplazado por /admin/knowledge" pero el archivo existe (redirect funcional).
+- `/admin/knowledge-base/graph` → No documentada en absoluto, con código vivo.
+
+**B) Rutas que EXISTEN pero NO aparecen en map.md (~38):**
+- `/admin/ai/governance` — Funcionalidad desconocida.
+- `/admin/audit` + `/admin/audit/config-changes` — ¿Duplicado de `/admin/security/audit`?
+- `/admin/logs` — ¿Duplicado de `/admin/operations/logs`?
+- `/admin/prompts` — **486 líneas, funcionalidad completa de gestión de prompts. NO documentada.**
+- `/admin/permissions/matrix` — Subruta de permisos no documentada.
+- `/admin/rag-quality` — Redirect a `/admin/ai/rag-quality`, no documentado como tal.
+- `/admin/workflows` + `/admin/workflows/[id]` — Editor de workflows individual, no documentado.
+- `/admin/settings/branding` + `/admin/settings/i18n` — Sub-secciones de settings no documentadas.
+- `/admin/notifications/settings` + `/admin/notifications/templates` + `/admin/notifications/templates/[type]` — Subrutas de notificaciones no documentadas.
+- `/admin/organizations/billing` — Sub-ruta de organizaciones no documentada.
+- `/admin/billing/usage` — Sub-ruta de billing no documentada.
+- `/admin/reports/schedules` — Sub-ruta de reports no documentada.
+- `/admin/spaces` — map.md dice DEPRECATED pero archivo existe.
+- `/dashboard` — Página de dashboard fuera de admin, no documentada.
+- `/search` — Página de búsqueda, no documentada.
+- `/profile` + `/settings` — Páginas de usuario, no documentadas.
+- `/my-documents` — **TERCER punto de "mis documentos"** (además de `/admin/my-documents` y `/admin/knowledge/my-docs`).
+- `/real-estate` — Página de vertical real-estate, no documentada.
+- `/technical` — Hub técnico, no documentado.
+- `/ops/reports` — Portal de operaciones reportes, no documentado.
+- `/spaces/collections` + `/spaces/personal` + `/spaces/playground` + `/spaces/quick-qa` — 4 sub-rutas de spaces no documentadas.
+- `/support/[id]` + `/support/nuevo` — Sub-rutas de soporte no documentadas.
+- `/support-ticket` — **CUARTO punto de soporte** además de `/support`, `/admin/support`, `/support-dashboard`.
+
+**C) Diagrama Mermaid desalineado:**
+- El diagrama NO incluye: Prompts, Tasks, Workflow-Tasks, Compliance, API-Docs, API-Keys, Superadmin, Dashboard, Search, Profile, Settings, Spaces sub-rutas, /ops.
+- El diagrama incluye `SupportDash` pero lo muestra conectado a Admin, no como ruta independiente.
+- No refleja los route groups de Next.js (`(admin)`, `(technical)`, `(ops)`).
 
 **Tareas:**
-- [ ] **218.1: Inventario exhaustivo de rutas**: Listar TODAS las `page.tsx` del proyecto con su propósito. Clasificar cada una como: CANÓNICA, REDIRECT, PROPONER DEPRECAR, o EVALUAR.
-- [ ] **218.2: Evaluar `/admin/knowledge-base/graph`**: ¿Es idéntico a `/graphs`? Si sí → redirect. Si tiene funcionalidad única → documentar y mantener.
-- [ ] **218.3: Resolver dualidad de documentos personales**: Decidir si la ruta canónica es `/admin/my-documents` o `/admin/knowledge/my-docs`. La no-canónica se marca PROPONER DEPRECAR.
-- [ ] **218.4: Evaluar `/admin/knowledge-assets`**: Verificar si el redirect funciona y si hay links que apuntan a ella. Si es totalmente inerte → marcar PROPONER DEPRECAR.
-- [ ] **218.5: Auditar rutas sin sidebar**: Verificar `/admin/analytics`, `/admin/api-docs`, `/admin/api-keys`, `/admin/cases` — ¿están en navegación? ¿tienen funcionalidad real? Documentar decisión.
-- [ ] **218.6: Evaluar dualidad de tareas**: `/admin/tasks` (tareas de negocio) vs `/admin/workflow-tasks` (orquestación técnica). ¿Son conceptos distintos o duplicados? Si distintos → documentar la frontera. Si solapados → unificar.
-- [ ] **218.7: Actualizar `map.md`** con el resultado final. Verificar que el diagrama Mermaid coincida 1:1 con las rutas reales.
-- [ ] **218.8: Auditar `/admin/cases`**: Solo tiene `[id]` pero no hub page. ¿Se accede desde dónde? Si no tiene entrada en sidebar → evaluar si necesita hub o si es ruta directa.
-- [ ] **218.9: Auditar `/admin/workshop`**: Carpeta vacía (sin `page.tsx`). Evaluar PROPONER DEPRECAR o documentar como placeholder.
-- [ ] **218.10: Auditar API debug/test**: `/api/test-env` expone env vars, `/api/debug/env` expone configuración. ¿Están protegidas por auth? Si no → RIESGO SEGURIDAD. Evaluar PROPONER DEPRECAR o proteger con SUPER_ADMIN.
-- [ ] **218.11: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — ¿se necesitan los tres? Documentar cuál usa Vercel y cuál es redundante.
+- [ ] **218.1: Inventario exhaustivo de rutas**: Listar las 101 `page.tsx` con su propósito, clasificar cada una como: CANÓNICA, REDIRECT, PROPONER DEPRECAR, o EVALUAR. Publicar como tabla en map.md.
+- [ ] **218.2: Resolver triple "mis documentos"**: `/admin/my-documents` vs `/admin/knowledge/my-docs` vs `/my-documents` (fuera de admin). Definir UNA canónica. Las otras → redirect o PROPONER DEPRECAR.
+- [ ] **218.3: Resolver cuádruple soporte**: `/support` vs `/admin/support` vs `/support-dashboard` vs `/support-ticket`. Definir recorrido por rol. Las redundantes → redirect o PROPONER DEPRECAR.
+- [ ] **218.4: Limpiar DEPRECATED zombis**: `/admin/billing/plan`, `/admin/ingest/jobs`, `/admin/knowledge-base` y `/admin/spaces` están declarados DEPRECATED pero siguen como archivos. Decidir: ¿son redirects funcionales o código muerto?
+- [ ] **218.5: Documentar `/admin/prompts`**: 486 líneas de funcionalidad completa, totalmente invisible en map.md. Añadirla a la sección AI & Workflows.
+- [ ] **218.6: Evaluar dualidad `/admin/audit` vs `/admin/security/audit`**: ¿Son el mismo concepto? ¿`/admin/audit/config-changes` tiene funcionalidad distinta?
+- [ ] **218.7: Evaluar dualidad `/admin/logs` vs `/admin/operations/logs`**: ¿Son el mismo concepto o vistas diferentes?
+- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. ¿Son conceptos distintos o duplicados?
+- [ ] **218.9: Documentar sub-rutas de Spaces**: `/spaces/collections`, `/spaces/personal`, `/spaces/playground`, `/spaces/quick-qa` — ninguna aparece en map.md.
+- [ ] **218.10: Documentar sub-rutas de Notifications**: `/admin/notifications/settings`, `/admin/notifications/templates`, `/admin/notifications/templates/[type]` — ninguna aparece en map.md.
+- [ ] **218.11: Documentar sub-rutas de Settings**: `/admin/settings/branding`, `/admin/settings/i18n` — ninguna aparece en map.md.
+- [ ] **218.12: Documentar sub-rutas faltantes**: `/admin/billing/usage`, `/admin/reports/schedules`, `/admin/organizations/billing`, `/admin/permissions/matrix`.
+- [ ] **218.13: Documentar rutas de usuario**: `/dashboard`, `/search`, `/profile`, `/settings` — rutas core de la experiencia de usuario, no documentadas.
+- [ ] **218.14: Evaluar `/admin/ai/governance`**: Funcionalidad desconocida, no documentada. Verificar si tiene contenido real.
+- [ ] **218.15: Evaluar `/real-estate` y `/ops/reports`**: Rutas fuera de admin, no documentadas. ¿Son funcionales o placeholder?
+- [ ] **218.16: Auditar API debug/test**: `/api/test-env` expone env vars, `/api/debug/env` expone configuración sin auth. RIESGO SEGURIDAD.
+- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — documentar cuál usa Vercel.
+- [ ] **218.18: Reescribir diagrama Mermaid**: El actual refleja ~30% de la app. Reescribir para cubrir el 100% de rutas canónicas, organizado por route groups y roles.
+- [ ] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: Cases solo tiene `[id]` sin hub. Workshop solo tiene `orders/new` sin hub. ¿Se acceden desde dónde?
 
-**Criterio de aceptación:** Cada ruta tiene un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). `map.md` refleja la realidad al 100%.
+**Criterio de aceptación:** Las 101 rutas tienen un estado documentado (CANÓNICA/REDIRECT/PROPONER DEPRECAR). map.md refleja la realidad al 100%. Diagrama Mermaid cubre todas las rutas canónicas.
+
 
 ---
 
