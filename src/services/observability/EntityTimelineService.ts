@@ -1,4 +1,4 @@
-import { getTenantCollection } from '../db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { connectLogsDB } from '@/lib/db';
 import { AuditTrail } from '@/lib/schemas/system';
 import { z } from 'zod';

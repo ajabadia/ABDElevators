@@ -5,8 +5,8 @@ import {
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
-import { AuditTrailService } from '../observability/AuditTrailService';
-import { CorrelationIdService } from '../observability/CorrelationIdService';
+import { AuditTrailService } from '@/services/observability/AuditTrailService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 🛡️ GuardianService: Gestión de políticas y grupos de permisos (Phase 120.2)
@@ -33,16 +33,16 @@ export class GuardianService {
         };
 
         const correlationId = CorrelationIdService.generate('GUARDIAN');
-        const result = await collection.insertOne(newGroup);
+        const result = await collection.insertOne(newPolicy);
 
         await AuditTrailService.logSecurityEvent({
             actorType: 'USER',
             actorId: userId,
             tenantId,
             action: 'CREATE_POLICY',
-            entityType: 'SECURITY_POLICY',
+            entityType: 'SECURITY',
             entityId: result.insertedId.toString(),
-            changes: { after: data },
+            changes: { before: null, after: data },
             reason: `Policy created: ${data.name}`,
             correlationId
         });
@@ -78,9 +78,9 @@ export class GuardianService {
             actorId: userId,
             tenantId,
             action: 'UPDATE_POLICY',
-            entityType: 'SECURITY_POLICY',
+            entityType: 'SECURITY',
             entityId: policyId,
-            changes: { updates },
+            changes: { before: null, after: updates },
             reason: `Policy updated: ${policyId}`,
             correlationId
         });
@@ -178,9 +178,9 @@ export class GuardianService {
             actorId,
             tenantId,
             action: 'ASSIGN_GROUP',
-            entityType: 'USER_PERMISSION',
+            entityType: 'SECURITY',
             entityId: userId,
-            changes: { addedGroup: groupId },
+            changes: { before: null, after: { addedGroup: groupId } },
             reason: `User assigned to permission group: ${groupId}`,
             correlationId
         });

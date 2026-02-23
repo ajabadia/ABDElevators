@@ -3,13 +3,13 @@ import { DEFAULT_PROMPTS } from '@/lib/prompts/core-definitions';
 import { AIMODELIDS } from '@/lib/ai-models';
 import { LlmJsonUtils } from '@/services/llm/json-utils';
 import { logEvento } from '@/lib/logger';
-import { CorrelationIdService } from '../common/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
- * 🧠 Prompt Runner
- * Proposito: Motor unificado para la ejecución de prompts con fallback y parseo consistente.
+ * 🧠 Legacy Prompt Runner (Era 6)
+ * @deprecated Use PromptRunner from @/lib/llm-core instead.
  */
-export class PromptRunner {
+export class LegacyPromptRunner {
     /**
      * Ejecuta un prompt y devuelve el texto plano.
      */
@@ -41,10 +41,6 @@ export class PromptRunner {
             template = this.renderTemplate(fallback.template as string, params.variables);
             if (!params.modelOverride) model = fallback.model;
         }
-
-        // 2. Ejecutar LLM (Esto suele ir a un IngestAnalyzer o direct call)
-        // Por ahora simulamos/delegamos a un callLLM común que implementes después
-        // const result = await this.callLLM(model, template, cid);
 
         await logEvento({
             level: 'DEBUG',

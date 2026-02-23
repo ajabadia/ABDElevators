@@ -5,7 +5,7 @@ import { z } from "zod";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { connectDB, logEvento } from "@abd/platform-core/server";
 import { AppError, DatabaseError, AI_MODEL_IDS } from "@abd/platform-core";
-import { UsageService } from "@/lib/usage-service";
+import { UsageService } from "@/services/ops/usage-service";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 import { QueryExpansionService } from "./query-expansion";
@@ -264,7 +264,7 @@ export async function hybridSearch(
         let effectiveIndustry = industry;
         if (industry === 'ELEVATORS' || industry === 'GENERIC') {
             if (onTrace) onTrace("DETERMINACIÓN: Clasificando vertical de la consulta...");
-            const { DomainRouterService } = await import("@/services/domain-router-service");
+            const { DomainRouterService } = await import("@/services/core/domain-router-service");
             const detected = await DomainRouterService.classifyQuery(query, tenantId, correlationId);
             if (detected !== 'GENERIC') {
                 effectiveIndustry = detected;
@@ -272,7 +272,7 @@ export async function hybridSearch(
             }
         }
 
-        const { GraphRetrievalService } = await import('@/services/graph-retrieval-service');
+        const { GraphRetrievalService } = await import('@/services/core/graph-retrieval-service');
 
         let hydeQuery = query;
         try {

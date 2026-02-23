@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
-import { PDFIngestionPipeline } from '@/services/pdf/PDFIngestionPipeline';
+import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
 import { analyzeEntityWithGemini } from '@/lib/llm';
 import { performTechnicalSearch } from '@/lib/rag-service';
 import { AppError, ValidationError } from '@/lib/errors';
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
             tenantId,
             correlationId,
             industry: industry as any,
-            strategy: 'GEMINI_1.5_PRO_EXTREME',
+            strategy: 'ADVANCED',
             pii: { enabled: true }
         });
         const entityText = pipelineResult.maskedText || pipelineResult.cleanedText;

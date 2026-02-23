@@ -36,6 +36,7 @@ export type CausalImpactAnalysis = z.infer<typeof CausalImpactAnalysisSchema>;
 export const GraphNodeSchema = z.object({
     id: z.string(),
     label: z.string(),
+    name: z.string(),
     type: z.string(),
     properties: z.record(z.string(), z.any()).default({}),
     tenantId: z.string(),
@@ -44,21 +45,32 @@ export const GraphNodeSchema = z.object({
 
 export const GraphRelationSchema = z.object({
     id: z.string(),
-    source: z.string(),
-    target: z.string(),
+    sourceId: z.string(),
+    targetId: z.string(),
     type: z.string(),
     properties: z.record(z.string(), z.any()).default({}),
     tenantId: z.string(),
 });
 
-export const CreateGraphNodeSchema = GraphNodeSchema.omit({ id: true });
-export const UpdateGraphNodeSchema = GraphNodeSchema.partial().omit({ id: true });
-export const CreateGraphRelationSchema = GraphRelationSchema.omit({ id: true });
-export const DeleteGraphRelationSchema = z.object({ id: z.string() });
+export const CreateGraphNodeSchema = GraphNodeSchema.extend({ id: z.string().optional() });
+export const UpdateGraphNodeSchema = GraphNodeSchema.pick({ id: true }).merge(GraphNodeSchema.partial().omit({ id: true }));
+export const CreateGraphRelationSchema = GraphRelationSchema.extend({ id: z.string().optional() });
+export const UpdateGraphRelationSchema = z.object({
+    sourceId: z.string(),
+    targetId: z.string(),
+    type: z.string(),
+    properties: z.record(z.string(), z.any()).optional()
+});
+export const DeleteGraphRelationSchema = z.object({
+    sourceId: z.string(),
+    targetId: z.string(),
+    type: z.string()
+});
 
 export type GraphNode = z.infer<typeof GraphNodeSchema>;
 export type GraphRelation = z.infer<typeof GraphRelationSchema>;
 export type CreateGraphNode = z.infer<typeof CreateGraphNodeSchema>;
 export type UpdateGraphNode = z.infer<typeof UpdateGraphNodeSchema>;
 export type CreateGraphRelation = z.infer<typeof CreateGraphRelationSchema>;
+export type UpdateGraphRelation = z.infer<typeof UpdateGraphRelationSchema>;
 export type DeleteGraphRelation = z.infer<typeof DeleteGraphRelationSchema>;

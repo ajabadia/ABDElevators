@@ -77,7 +77,7 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                         {results.map((result, index) => (
-                            <ResultRow key={index} result={result} />
+                            <ResultRow key={index} result={result} index={index} />
                         ))}
                     </tbody>
                 </table>
@@ -93,7 +93,7 @@ export const VectorResultsTable: React.FC<VectorResultsTableProps> = ({
 };
 
 /** Row component to handle item expansion and expert mode */
-function ResultRow({ result }: { result: RagResult }) {
+function ResultRow({ result, index }: { result: RagResult; index: number }) {
     const t = useTranslations('common');
     const [isTechnicalExpanded, setIsTechnicalExpanded] = useState(false);
     const [isTextExpanded, setIsTextExpanded] = useState(false);

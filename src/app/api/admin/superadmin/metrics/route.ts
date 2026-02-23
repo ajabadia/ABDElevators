@@ -73,7 +73,11 @@ export async function GET(req: NextRequest) {
         const { total = 0, corrections = 0 } = feedbackSummary[0] || {};
         const accuracy = total > 0 ? ((total - corrections) / total) * 100 : 100;
 
-        // 5. Usage & Revenue Metrics (Cross-tenant)
+        // 5. Era 7: LLM Telemetry (Observability Hub)
+        const { ObservabilityService } = await import('@/services/observability/ObservabilityService');
+        const telemetry = await ObservabilityService.getAITelemetry(7);
+
+        // 6. Usage & Revenue Metrics (Cross-tenant)
         const usageCollection = await getTenantCollection('usage_logs', systemSession);
         const usageSummary = await usageCollection.unsecureRawCollection.aggregate([
             {
@@ -113,7 +117,9 @@ export async function GET(req: NextRequest) {
             ai: {
                 accuracy: Number(accuracy.toFixed(1)),
                 totalFeedbacks: total,
-                correctionsCount: corrections
+                correctionsCount: corrections,
+                telemetry: telemetry.summary,
+                health: telemetry.health
             },
             usage: {
                 topTenants: usageSummary.map((t: any) => ({

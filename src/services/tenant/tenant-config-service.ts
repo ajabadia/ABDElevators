@@ -54,7 +54,7 @@ export class TenantConfigService {
             this.cache.delete(tenantId);
 
             // Audit via internal dynamic import to avoid circular dependency
-            const { AuditTrailService } = await import('@/services/core/audit_trail_service').catch(() => ({ AuditTrailService: null as any }));
+            const { AuditTrailService } = await import('@/services/observability/AuditTrailService').catch(() => ({ AuditTrailService: null as any }));
             if (AuditTrailService) {
                 await AuditTrailService.logConfigChange({
                     actorId: metadata?.performedBy || 'SYSTEM',
@@ -74,6 +74,6 @@ export class TenantConfigService {
     static async getAllTenants() {
         const session = { user: { role: 'SUPER_ADMIN' } } as any;
         const collection = await getTenantCollection('tenants', session);
-        return await collection.find({}).toArray();
+        return await collection.find({});
     }
 }

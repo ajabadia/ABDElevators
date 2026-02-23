@@ -53,11 +53,12 @@ export async function GET(req: NextRequest) {
                 query,
                 session?.user?.tenantId || 'abd_global',
                 correlationId,
-                pagination.limit,
-                environment,
-                'ELEVATORS', // Default industry
-                undefined,   // spaceId
-                sourceDoc || undefined
+                'ELEVATORS', // Industry
+                {
+                    limit: pagination.limit,
+                    environment,
+                    filename: sourceDoc || undefined
+                }
             );
             total = chunks.length;
         } else {

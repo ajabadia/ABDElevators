@@ -43,6 +43,18 @@ const nextConfig: NextConfig = {
       }
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/entities/:path*',
+        destination: '/api/technical/entities/:path*',
+      },
+      {
+        source: '/api/rag/:path*',
+        destination: '/api/technical/rag/:path*',
+      }
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

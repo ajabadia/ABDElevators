@@ -22,6 +22,11 @@ export const EventSchema = z.object({
     details: z.any().optional(),
     stack: z.string().optional(),
     durationMs: z.number().optional(), // For performance logging
+    tokenUsage: z.object({
+        input: z.number(),
+        output: z.number(),
+        total: z.number(),
+    }).optional(),
 
     timestamp: z.date().default(() => new Date()),
 });

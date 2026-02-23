@@ -41,13 +41,15 @@ export class AuditService {
         const { userId, tenantId, action, entityType, entityId, before, after, correlationId } = params;
 
         await this.record({
-            userId,
+            actorId: userId,
+            actorType: 'USER',
             tenantId,
             action: `${action}_${entityType}`,
             entityType: entityType === 'LIMITS' ? 'SYSTEM' : entityType as any,
             entityId,
             changes: { before, after },
-            correlationId
+            correlationId,
+            source: 'CONFIG_CHANGE'
         });
 
         // 🛡️ Phase 2302: Specialized collection for quick config audit

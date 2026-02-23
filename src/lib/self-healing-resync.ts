@@ -1,4 +1,5 @@
-import { db } from "@/lib/db";
+// lib/self-healing-resync.ts
+
 import { getTenantCollection } from "@/lib/db-tenant";
 import { logEvento } from "@/lib/logger";
 
@@ -21,7 +22,7 @@ export class SelfHealingResyncService {
         const query: any = { tenantId };
         if (filename) query.filename = filename;
 
-        const assets = await knowledgeAssetsCollection.find(query).toArray();
+        const assets = await knowledgeAssetsCollection.find(query);
         let fixedCount = 0;
 
         for (const asset of assets) {

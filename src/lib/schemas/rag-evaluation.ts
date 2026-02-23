@@ -47,24 +47,5 @@ export const CreateRagEvaluationDatasetSchema = RagEvaluationDatasetSchema.omit(
     updatedAt: true
 });
 
-/**
- * 🧪 Esquema para Evaluación de Calidad RAG
- */
-export const RagEvaluationSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    correlationId: z.string().uuid(),
-    query: z.string(),
-    generation: z.string(),
-    context: z.array(z.string()),
-    metrics: z.object({
-        faithfulness: z.number().optional(),
-        answer_relevance: z.number().optional(),
-        context_precision: z.number().optional(),
-        context_recall: z.number().optional(),
-    }),
-    cost: z.number().optional(),
-    timestamp: z.date().default(() => new Date()),
-});
+// RagEvaluation removed - imported from knowledge.ts (bridge to rag-engine)
 
-export type RagEvaluation = z.infer<typeof RagEvaluationSchema>;

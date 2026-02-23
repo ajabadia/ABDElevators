@@ -3,8 +3,8 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { StateTransitionValidator, IngestState } from './StateTransitionValidator';
-import { LLMCostTracker } from '../observability/LLMCostTracker';
-import { IngestService } from '../IngestService';
+import { LLMCostTracker } from '@/services/ingest/observability/LLMCostTracker';
+import { IngestService } from '@/services/ingest/IngestService';
 
 /**
  * IngestOrchestrator: Centralized control for ingestion lifecycle.
@@ -21,6 +21,7 @@ export class IngestOrchestrator {
             userEmail: string;
             tenantId: string;
             isEnrichment?: boolean;
+            force?: boolean;
             [key: string]: any;
         }
     ) {
@@ -42,10 +43,11 @@ export class IngestOrchestrator {
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-        const isProcessingStuck = currentState === 'PROCESSING' && (asset.updatedAt < tenMinutesAgo);
-        const isQueuedStuck = currentState === 'QUEUED' && (asset.updatedAt < thirtyMinutesAgo);
+        const isProcessingStuck = currentState === 'PROCESSING' && ((asset.updatedAt || asset.createdAt) < tenMinutesAgo);
+        const isQueuedStuck = currentState === 'QUEUED' && ((asset.updatedAt || asset.createdAt) < thirtyMinutesAgo);
+        const isStuck = isProcessingStuck || isQueuedStuck;
 
-        if (isProcessingStuck || isQueuedStuck) {
+        if (isStuck) {
             const action = isProcessingStuck ? 'STUCK_PROCESSING_DETECTED' : 'STUCK_QUEUED_DETECTED';
             const targetState: IngestState = isProcessingStuck ? 'STUCK' : 'PENDING';
 
@@ -97,14 +99,13 @@ export class IngestOrchestrator {
             );
 
             // 3. Execute Analysis (Delegating to IngestService for now)
-            const result = await IngestService.executeAnalysis(docId, options);
+            const result = await IngestService.executeAnalysis(docId, {
+                ...options,
+                isEnrichment: options.isEnrichment ?? false
+            });
 
             // 4. Persistence of Costs & Final State
             await LLMCostTracker.persistSummary(correlationId, docId, options.tenantId);
-
-            // 5. Transition to final state (usually COMPLETED)
-            // Note: IngestService.executeAnalysis currently updates the asset to COMPLETED itself.
-            // In a future refactor, we would pull that logic here.
 
             const duration = Date.now() - start;
             await knowledgeAssetsCollection.updateOne(

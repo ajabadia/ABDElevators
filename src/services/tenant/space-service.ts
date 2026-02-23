@@ -160,7 +160,7 @@ export class SpaceService {
         // 2. Actualizar hijos recursivamente (Fase 125.2)
         if (oldPath) {
             const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } } as any);
-            for (const child of Array.isArray(children) ? children : await (children as any).toArray()) {
+            for (const child of children) {
                 const childSubPath = child.materializedPath?.replace(oldPath, '');
                 await collection.updateOne(
                     { _id: child._id },

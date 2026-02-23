@@ -13,7 +13,7 @@ export class TenantQuotaService {
         const usage = await collection.aggregate([
             { $match: { tipo: 'STORAGE_BYTES' } },
             { $group: { _id: null, total: { $sum: '$valor' } } }
-        ]).toArray();
+        ]);
 
         const currentUsage = usage[0]?.total || 0;
         return (currentUsage + bytesToUpload) <= config.storage.quota_bytes;

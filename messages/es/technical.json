@@ -54,5 +54,39 @@
     "noRagResults": "Sin Resultados RAG",
     "noRagDesc": "No se encontraron resultados del análisis previo. ¿Deseas iniciar el cerebro agéntico para analizar este pedido ahora?",
     "startAgent": "Iniciar Razonamiento Agéntico"
+  },
+  "dashboard": {
+    "entities": {
+      "title": "Salud de Entidades (Entities)",
+      "total": "Total Indexadas",
+      "synced": "Sincronizadas con Éxito",
+      "errors": "Entidades con Errores"
+    },
+    "rag": {
+      "title": "Rendimiento del Motor RAG",
+      "latency": "Latencia Media",
+      "docs": "Documentos por Consulta",
+      "cache": "Cache Hit Rate"
+    },
+    "graph": {
+      "title": "Grafos de Conocimiento",
+      "nodes": "Nodos Activos",
+      "edges": "Relaciones (Edges)",
+      "convergence": "Convergencia del Grafo"
+    },
+    "actions": {
+      "refresh": "Actualizar"
+    },
+    "trends": {
+      "up_this_week": "+{value} esta semana",
+      "optimal": "Óptimo",
+      "needs_review": "Requiere revisión",
+      "down_vs_yesterday": "-{value} vs ayer",
+      "average": "Promedio",
+      "new": "+{value} nuevos",
+      "normal_expansion": "Expansión normal",
+      "highly_connected": "Altamente Conectado"
+    },
+    "loading": "Cargando..."
   }
 }

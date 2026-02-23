@@ -67,4 +67,16 @@ export class IngestStorageService {
     static async saveToGridFS(buffer: Buffer, tenantId: string, correlationId: string) {
         return await GridFSUtils.saveForProcessing(buffer, tenantId, 'pending', correlationId);
     }
+
+    /**
+     * Elimina un archivo de GridFS.
+     */
+    static async deleteFile(storagePath: string, correlationId: string = 'SYSTEM') {
+        if (!storagePath) return;
+        try {
+            await GridFSUtils.deleteFile(storagePath, correlationId);
+        } catch (error) {
+            console.error(`[IngestStorageService] Error deleting file ${storagePath}:`, error);
+        }
+    }
 }

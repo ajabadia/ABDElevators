@@ -2209,5 +2209,91 @@
       "error_unexpected": "Respuesta inesperada del servidor"
     },
     "loading_label": "Cargando métricas de uso"
+  },
+  "superadmin": {
+    "title": "Consola de Plataforma",
+    "subtitle": "Observabilidad multi-tenant y salud del motor agentico.",
+    "actions": {
+      "predictive_audit": "Auditoría Predictiva",
+      "self_healing": "Ejecutar Auto-Curación"
+    },
+    "metrics": {
+      "tenants": "Clientes Activos",
+      "tenants_cluster": "{total} registrados en el cluster AUTH",
+      "cases": "Casos Procesados",
+      "ai_accuracy": "Precisión de IA (HITL)",
+      "ai_validations": "{count} validaciones humanas registradas",
+      "ai_health": "Salud del Motor IA",
+      "latency": "Latencia Media (LLM)",
+      "latency_desc": "Media global de respuesta de Gemini",
+      "consumption": "Consumo Proyectado",
+      "consumption_desc": "Estimación de coste a 30 días",
+      "health_stat": "{success} sucesos vs {failure} errores"
+    },
+    "financials": {
+      "title": "Finanzas de Plataforma",
+      "desc": "Economía de operación global y licenciamiento.",
+      "expenditure": "Gasto Operativo",
+      "prediction_title": "Proyección Predictiva",
+      "platform_value": "Valor Total de Plataforma",
+      "roi": "ROI 150%",
+      "confidence": "{percentage}% Conf.",
+      "projection_30d": "Proyección 30d"
+    },
+    "usage": {
+      "title": "Consumo por Tenant",
+      "desc": "Extracción de recursos y consumo de tokens por organización.",
+      "tokens": "Tokens",
+      "storage": "Almacenamiento",
+      "savings": "Ahorros",
+      "no_data": "No hay datos de consumo disponibles."
+    },
+    "knowledge": {
+      "title": "Estado del Motor Knowledge",
+      "desc": "Auditoría de activos y ciclo de vida de documentos.",
+      "obsolete": "Documentos Obsoletos",
+      "obsolete_desc": "Activos cuya fecha de revisión ha expirado y requieren curación.",
+      "pending": "{count} Pendientes",
+      "cluster_health": "Salud del Cluster",
+      "db_status": "Estado de conexión con MongoDB Atlas y Neo4j."
+    },
+    "anomalies": {
+      "title": "Anomalías Detectadas",
+      "desc": "Eventos estadísticamente inusuales (Z-score > 2.0).",
+      "no_anomalies": "No se han detectado anomalías en las últimas 48 horas.",
+      "alerts": "{count} ALERTAS"
+    },
+    "infra": {
+      "title": "Infraestructura Pro",
+      "desc": "Detalle de recursos asignados al cluster.",
+      "environment": "Entorno",
+      "db_tier": "Capa de Base de Datos",
+      "ai_engine": "Motor de IA"
+    },
+    "evolution": {
+      "title": "Sovereign Engine: Evolución de Ontología",
+      "subtitle": "Refinamiento autónomo de taxonomías basado en deriva de feedback humano.",
+      "improvements": "{count} MEJORAS",
+      "drift_label": "Deriva de Feedback Detectada",
+      "drift_target": "En categoría: {category}",
+      "drift_frequency": "{count} veces",
+      "drift_summary": "El sistema ha detectado {driftPoints} puntos de divergencia. Se han generado {proposals} propuestas de refinamiento.",
+      "stable": "Ontología estable. No se requiere refinamiento por el momento.",
+      "proposals_title": "Propuestas de Refinamiento LLM",
+      "proposals_desc": "Visualización de cambios propuestos por el modelo antes de su aplicación.",
+      "no_proposals": "Sin propuestas activas",
+      "view_more": "Ver {count} propuestas adicionales",
+      "confidence": "Confianza: {percentage}%"
+    },
+    "toasts": {
+      "audit_success_title": "Auditoría Completada",
+      "audit_success_desc": "Se han procesado {processed} activos y actualizado {updated}.",
+      "audit_error_title": "Error de Auditoría",
+      "audit_error_desc": "No se pudo ejecutar la auto-curación",
+      "predictive_success_title": "Auditoría Predictiva Completada",
+      "predictive_success_desc": "Se han detectado {count} anomalías.",
+      "predictive_error_title": "Error de Auditoría",
+      "predictive_error_desc": "La auditoría de inteligencia predictiva ha fallado"
+    }
   }
 }

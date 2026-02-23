@@ -7,7 +7,7 @@ import { PromptService } from "./prompt-service";
 import { PROMPTS } from './prompts';
 import { logEvento } from "./logger";
 import { DEFAULT_MODEL } from "./constants/ai-models";
-import { RagEvaluationService } from "@/services/rag-evaluation-service";
+import { RagEvaluationService } from "@/services/core/rag-evaluation-service";
 import { FactCheckerService } from "./rag/fact-checker-service";
 
 /**

@@ -20,10 +20,14 @@ export const POST = publicApiHandler(
 
         switch (strategy) {
             case 'hybrid':
-                results = await hybridSearch(query, tenantId, correlationId, limit, 'PRODUCTION', 'ELEVATORS', spaceId);
+                results = await hybridSearch(query, tenantId, correlationId, 'ELEVATORS', {
+                    limit,
+                    environment: 'PRODUCTION',
+                    spaceId
+                });
                 break;
             case 'multilingual':
-                results = await MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION'); // Still needs spaceId update if needed
+                results = await MultilingualSearchService.performMultilingualSearch(query, tenantId, correlationId, limit, 'ELEVATORS', 'PRODUCTION', spaceId);
                 break;
             case 'standard':
             default:

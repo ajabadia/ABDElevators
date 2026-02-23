@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UnifiedIngestModal } from "@/components/admin/knowledge/UnifiedIngestModal";
+import { EnrichmentModal } from "@/components/admin/knowledge/EnrichmentModal";
 import { PDFPreviewModal } from "@/components/admin/knowledge/PDFPreviewModal";
 import { RelationshipManagerModal } from "@/components/admin/knowledge/RelationshipManagerModal";
 import { IngestionDiagnosticModal } from "@/components/admin/knowledge/IngestionDiagnosticModal";
@@ -71,6 +72,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         | { type: 'diagnostic', id: string, filename: string }
         | { type: 'review', asset: KnowledgeAsset }
         | { type: 'analyze', asset: KnowledgeAsset }
+        | { type: 'enrich', asset: KnowledgeAsset }
         | { type: 'chunks', asset: KnowledgeAsset };
 
     const [modalState, setModalState] = useState<ModalState>({ type: 'closed' });
@@ -203,6 +205,16 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                 onClose={() => {
                     setModalState({ type: 'closed' });
                     refresh();
+                }}
+            />
+
+            <EnrichmentModal
+                isOpen={modalState.type === 'enrich'}
+                onClose={() => setModalState({ type: 'closed' })}
+                asset={modalState.type === 'enrich' ? modalState.asset : null}
+                onSuccess={() => {
+                    refresh();
+                    setModalState({ type: 'closed' });
                 }}
             />
 
@@ -493,6 +505,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
                                             onViewDiagnostics={() => setModalState({ type: 'diagnostic', id: doc._id, filename: doc.filename })}
                                             onScheduleReview={() => setModalState({ type: 'review', asset: doc })}
                                             onAnalyze={() => setModalState({ type: 'analyze', asset: doc })}
+                                            onEnrich={() => setModalState({ type: 'enrich', asset: doc })}
                                             onViewChunks={() => setModalState({ type: 'chunks', asset: doc })}
                                             refresh={refresh}
                                         />
@@ -552,7 +565,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
     );
 }
 
-function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onViewChunks, refresh }: any) {
+function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onEnrich, onViewChunks, refresh }: any) {
     const { toast } = useToast();
 
     return (
@@ -578,6 +591,14 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     disabled={doc.ingestionStatus !== 'COMPLETED'}
                 >
                     <Sparkles size={14} /> {t('actions.analyze') || 'Analizar/Consultar'}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className="rounded-lg gap-2 cursor-pointer text-amber-600 dark:text-amber-400 focus:text-amber-600 focus:bg-amber-50"
+                    onClick={onEnrich}
+                    disabled={doc.ingestionStatus !== 'COMPLETED'}
+                >
+                    <Zap size={14} /> Enriquecer Documento
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

@@ -27,11 +27,15 @@ export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorF
             // Re-init with defaults if it's new
             init({
                 _id: '',
+                id: '',
                 tenantId: '',
+                title: t('new_title'),
                 name: t('new_title'),
-                categories: [],
-                items: [],
-                workflowOrder: [],
+                categories: [] as any[],
+                items: [] as any[],
+                workflowOrder: [] as any[],
+                version: 1,
+                active: true,
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()

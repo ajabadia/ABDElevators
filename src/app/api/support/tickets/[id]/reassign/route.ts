@@ -25,11 +25,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             throw new AppError('VALIDATION_ERROR', 400, 'assignedTo es requerido');
         }
 
-        await TicketService.reassignTicket(id, {
-            assignedTo,
-            note,
-            authorId: session?.user?.id as string
-        });
+        await TicketService.reassignTicket(
+            id,
+            session?.user?.tenantId as string,
+            {
+                assignedTo,
+                note,
+                authorId: session?.user?.id as string
+            }
+        );
 
         return NextResponse.json({ success: true });
 

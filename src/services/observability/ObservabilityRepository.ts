@@ -28,4 +28,45 @@ export class ObservabilityRepository {
         const collection = await getTenantCollection<AuditEntry>(collectionName, null, this.LOGS_DB);
         await collection.insertOne(entry as any);
     }
+
+    /**
+     * Aggregates token usage per tenant.
+     */
+    static async getUsageMetrics(days: number = 7) {
+        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const since = new Date();
+        since.setDate(since.getDate() - days);
+
+        return await (collection as any).unsecureRawCollection.aggregate([
+            { $match: { action: 'PROMPT_RUNNER_SUCCESS', timestamp: { $gte: since } } },
+            {
+                $group: {
+                    _id: "$tenantId",
+                    totalTokens: { $sum: "$tokenUsage.total" },
+                    avgLatency: { $avg: "$durationMs" },
+                    requests: { $sum: 1 }
+                }
+            },
+            { $sort: { totalTokens: -1 } }
+        ]).toArray();
+    }
+
+    /**
+     * Aggregates LLM health (Success vs Error).
+     */
+    static async getLlmHealth(days: number = 7) {
+        const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
+        const since = new Date();
+        since.setDate(since.getDate() - days);
+
+        return await (collection as any).unsecureRawCollection.aggregate([
+            { $match: { source: 'LLM_CORE', timestamp: { $gte: since } } },
+            {
+                $group: {
+                    _id: "$action",
+                    count: { $sum: 1 }
+                }
+            }
+        ]).toArray();
+    }
 }

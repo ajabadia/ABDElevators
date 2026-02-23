@@ -57,14 +57,13 @@ export async function GET(
  */
 export async function PATCH(
     req: NextRequest,
-    props: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const params = await props.params;
     const correlationId = uuidv4();
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER]);
 
-        const { id } = params;
+        const { id } = await params;
         const tenantId = session.user.tenantId;
 
         // 1. Obtener caso y workflow
@@ -112,13 +111,13 @@ export async function PATCH(
  */
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const correlationId = uuidv4();
     try {
         const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER]);
 
-        const { id } = params;
+        const { id } = await params;
         const tenantId = session.user.tenantId;
         const { toState, comment, signature } = z.object({
             toState: z.string(),
@@ -142,3 +141,4 @@ export async function POST(
         return handleApiError(error, 'API_CASE_WORKFLOW_TRANSITION', correlationId);
     }
 }
+

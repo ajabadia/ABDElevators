@@ -28,7 +28,7 @@ export class IngestDataLifecycleService {
 
                 // 2. Eliminar Archivos (GridFS / Cloudinary)
                 if (asset.storagePath) {
-                    await IngestStorageService.deleteFile(asset.storagePath);
+                    await IngestStorageService.deleteFile(asset.storagePath, correlationId);
                 }
 
                 // 3. Eliminar Asset (Soft delete o físico según política)

@@ -7,8 +7,6 @@ import { PromptService } from '@/lib/prompt-service';
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
-export const runtime = 'edge'; // Use Edge for fast response
-
 export async function POST(req: NextRequest) {
     try {
         // 1. Rate Limiting (Strict by IP)

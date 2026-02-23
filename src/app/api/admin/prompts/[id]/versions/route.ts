@@ -58,8 +58,7 @@ export async function POST(
         await PromptService.rollbackToVersion(
             id,
             targetVersion,
-            session.user.email!,
-            isSuperAdmin ? undefined : tenantId
+            session.user.email!
         );
 
         return NextResponse.json({ success: true });

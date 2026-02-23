@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { PromptTesterService, PromptTestSchema } from '@/services/prompt-tester-service';
+import { PromptTesterService, PromptTestSchema } from '@/services/ops/prompt-tester-service';
 import { handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import crypto from 'crypto';

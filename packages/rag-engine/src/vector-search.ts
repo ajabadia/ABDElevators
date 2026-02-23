@@ -4,7 +4,7 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { connectDB, logEvento } from "@abd/platform-core/server";
 import { DatabaseError } from "@abd/platform-core";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { UsageService } from "@/lib/usage-service";
+import { UsageService } from "@/services/ops/usage-service";
 import { RagResult } from "./types";
 import { z } from "zod";
 

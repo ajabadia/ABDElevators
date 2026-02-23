@@ -1,8 +1,8 @@
 
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
-import { AuditTrailService } from '../audit-trail-service';
-import { CorrelationIdService } from '@/services/common/CorrelationIdService';
+import { AuditTrailService } from '@/services/observability/AuditTrailService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 🛡️ GDPR Service

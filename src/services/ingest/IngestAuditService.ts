@@ -24,6 +24,7 @@ export class IngestAuditService {
      */
     static async getLogsByAssetId(assetId: string) {
         const auditCollection = await getTenantCollection(this.COLLECTION);
-        return await auditCollection.find({ assetId }).sort({ createdAt: -1 }).toArray();
+        const docs = await auditCollection.find({ assetId });
+        return (docs as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 }

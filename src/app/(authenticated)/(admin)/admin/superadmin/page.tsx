@@ -53,16 +53,16 @@ export default function GlobalDashboardPage() {
         method: 'POST',
         onSuccess: (data: any) => {
             toast({
-                title: "Auditoría Completada",
-                description: `Se han procesado ${data.processed} activos y actualizado ${data.updated}.`,
+                title: t('toasts.audit_success_title'),
+                description: t('toasts.audit_success_desc', { processed: data.processed, updated: data.updated }),
                 variant: "default"
             });
             refreshAll();
         },
         onError: (err) => {
             toast({
-                title: "Error de Auditoría",
-                description: err || "No se pudo ejecutar la auto-curación",
+                title: t('toasts.audit_error_title'),
+                description: err || t('toasts.audit_error_desc'),
                 variant: "destructive"
             });
         }
@@ -73,16 +73,16 @@ export default function GlobalDashboardPage() {
         method: 'POST',
         onSuccess: (data: any) => {
             toast({
-                title: "Predictive Audit Complete",
-                description: `Detected ${data.detectedCount} anomalies.`,
+                title: t('toasts.predictive_success_title'),
+                description: t('toasts.predictive_success_desc', { count: data.detectedCount }),
                 variant: "default"
             });
             refreshAll();
         },
         onError: (err) => {
             toast({
-                title: "Audit Failed",
-                description: err || "Predictive intelligence audit failed",
+                title: t('toasts.predictive_error_title'),
+                description: err || t('toasts.predictive_error_desc'),
                 variant: "destructive"
             });
         }
@@ -104,8 +104,8 @@ export default function GlobalDashboardPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Consola del Plataforma"
-                subtitle="Observabilidad multi-tenant y salud del motor agentico."
+                title={t('title')}
+                subtitle={t('subtitle')}
                 actions={
                     <div className="flex gap-4">
                         <Button
@@ -115,7 +115,7 @@ export default function GlobalDashboardPage() {
                             className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
                         >
                             <Zap className={isAuditing ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
-                            Predictive Audit
+                            {t('actions.predictive_audit')}
                         </Button>
                         <Button
                             onClick={() => triggerSelfHealing({})}
@@ -124,7 +124,7 @@ export default function GlobalDashboardPage() {
                             className="bg-sidebar-primary/5 border-sidebar-primary/20 hover:bg-sidebar-primary/10 text-sidebar-primary font-bold gap-2"
                         >
                             <RefreshCw className={isHealing ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
-                            Ejecutar Auto-Curación
+                            {t('actions.self_healing')}
                         </Button>
                     </div>
                 }
@@ -134,29 +134,48 @@ export default function GlobalDashboardPage() {
                 {/* Real-time Health Indicators */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <MetricCard
-                        title="Clientes Activos"
+                        title={t('metrics.tenants')}
                         value={metrics?.tenants?.active || 0}
                         icon={<Users className="w-5 h-5" />}
-                        description={`${metrics?.tenants?.total} registrados en el cluster AUTH`}
+                        description={t('metrics.tenants_cluster', { total: metrics?.tenants?.total || 0 })}
                     />
                     <MetricCard
-                        title="Casos Procesados"
+                        title={t('metrics.cases')}
                         value={metrics?.cases?.total || 0}
                         icon={<Briefcase className="w-5 h-5" />}
                         trend="+12%"
                         trendDirection="up"
                     />
                     <MetricCard
-                        title="Precisión de IA (HITL)"
+                        title={t('metrics.ai_accuracy')}
                         value={`${metrics?.ai?.accuracy || 0}%`}
                         icon={<Brain className="w-5 h-5" />}
-                        description={`${metrics?.ai?.totalFeedbacks} validaciones humanas registradas`}
+                        description={t('metrics.ai_validations', { count: metrics?.ai?.totalFeedbacks || 0 })}
+                    />
+                </div>
+
+                {/* ERA 7: Platform Observability Hub */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <MetricCard
+                        title={t('metrics.ai_health')}
+                        value={`${metrics?.ai?.telemetry?.successRate || 100}%`}
+                        icon={<Activity className="w-5 h-5 text-emerald-500" />}
+                        description={t('metrics.health_stat', { success: metrics?.ai?.health?.success || 0, failure: metrics?.ai?.health?.failure || 0 })}
+                        className="bg-emerald-50/50 border-emerald-100"
                     />
                     <MetricCard
-                        title={t('metrics.storage')}
-                        value={`${metrics?.knowledge?.totalGB || 0} GB`}
-                        icon={<HardDrive className="w-5 h-5" />}
-                        description={t('metrics.storage_desc', { count: metrics?.knowledge?.totalAssets || 0 })}
+                        title={t('metrics.latency')}
+                        value={`${metrics?.ai?.telemetry?.avgLatency || 0}ms`}
+                        icon={<Clock className="w-5 h-5 text-indigo-500" />}
+                        description={t('metrics.latency_desc')}
+                        className="bg-indigo-50/50 border-indigo-100"
+                    />
+                    <MetricCard
+                        title={t('metrics.consumption')}
+                        value={metrics?.usage?.prediction?.projection?.estimatedSpend ? `$${metrics.usage.prediction.projection.estimatedSpend}` : "---"}
+                        icon={<Zap className="w-5 h-5 text-amber-500" />}
+                        description={t('metrics.consumption_desc')}
+                        className="bg-amber-50/50 border-amber-100"
                     />
                 </div>
 
@@ -187,12 +206,12 @@ export default function GlobalDashboardPage() {
                                     <div className="flex justify-between items-center text-[10px] uppercase font-bold text-emerald-300 tracking-widest">
                                         <span>{t('financials.prediction_title')}</span>
                                         <Badge variant="outline" className="text-[9px] border-emerald-500 text-emerald-200">
-                                            {Math.round(metrics.usage.prediction.confidenceScore * 100)}% Conf.
+                                            {t('financials.confidence', { percentage: Math.round(metrics.usage.prediction.confidenceScore * 100) })}
                                         </Badge>
                                     </div>
                                     <div className="flex justify-between items-end">
                                         <p className="text-xl font-black text-emerald-100">${metrics.usage.prediction.projection.estimatedSpend}</p>
-                                        <p className="text-[10px] text-emerald-400 font-medium">30d Project.</p>
+                                        <p className="text-[10px] text-emerald-400 font-medium">{t('financials.projection_30d')}</p>
                                     </div>
                                 </div>
                             )}
@@ -204,7 +223,7 @@ export default function GlobalDashboardPage() {
                                 </div>
                                 <div className="flex items-center gap-1 text-emerald-400 font-bold text-xs mb-1">
                                     <TrendingUp className="w-3 h-3" />
-                                    <span>ROI 150%</span>
+                                    <span>{t('financials.roi')}</span>
                                 </div>
                             </div>
                         </CardContent>
@@ -266,27 +285,27 @@ export default function GlobalDashboardPage() {
                         <CardHeader>
                             <CardTitle className="text-lg font-bold flex items-center gap-2">
                                 <Activity className="w-5 h-5 text-sidebar-primary" />
-                                Estado del Motor Knowledge
+                                {t('knowledge.title')}
                             </CardTitle>
-                            <CardDescription>Auditoría de activos y ciclo de vida de documentos.</CardDescription>
+                            <CardDescription>{t('knowledge.desc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="p-5 rounded-2xl bg-white border border-slate-100 flex items-center justify-between">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-bold text-slate-800">Documentos Obsoletos</p>
-                                    <p className="text-xs text-muted-foreground">Activos cuya fecha de revisión ha expirado y requieren curación.</p>
+                                    <p className="text-sm font-bold text-slate-800">{t('knowledge.obsolete')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('knowledge.obsolete_desc')}</p>
                                 </div>
                                 <div className="text-right">
                                     <Badge variant={metrics?.knowledge?.obsoleteAssets > 0 ? "destructive" : "outline"} className={metrics?.knowledge?.obsoleteAssets === 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold" : "font-bold"}>
-                                        {metrics?.knowledge?.obsoleteAssets || 0} Pendientes
+                                        {t('knowledge.pending', { count: metrics?.knowledge?.obsoleteAssets || 0 })}
                                     </Badge>
                                 </div>
                             </div>
 
                             <div className="p-5 rounded-2xl bg-white border border-slate-100 flex items-center justify-between">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-bold text-slate-800">Cluster Salud</p>
-                                    <p className="text-xs text-muted-foreground">Estado de conexión con MongoDB Atlas y Neo4j.</p>
+                                    <p className="text-sm font-bold text-slate-800">{t('knowledge.cluster_health')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('knowledge.db_status')}</p>
                                 </div>
                                 <div className="flex gap-2">
                                     <Badge className="bg-emerald-500 font-bold">AUTH: OK</Badge>
@@ -301,15 +320,15 @@ export default function GlobalDashboardPage() {
                             <CardTitle className="text-lg font-bold flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                    Anomalías Detectadas
+                                    {t('anomalies.title')}
                                 </div>
                                 {anomalyData?.anomalies?.total > 0 && (
                                     <Badge variant="destructive" className="animate-pulse">
-                                        {anomalyData.anomalies.total} ALERTAS
+                                        {t('anomalies.alerts', { count: anomalyData.anomalies.total })}
                                     </Badge>
                                 )}
                             </CardTitle>
-                            <CardDescription>Eventos estadísticamente inusuales (Z-score &gt; 2.0).</CardDescription>
+                            <CardDescription>{t('anomalies.desc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {isLoadingAnomalies ? (
@@ -317,7 +336,7 @@ export default function GlobalDashboardPage() {
                             ) : anomalyData?.anomalies?.total === 0 ? (
                                 <div className="text-center py-8 text-muted-foreground">
                                     <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                    <p className="text-sm">No se han detectado anomalías <br /> en las últimas 48 horas.</p>
+                                    <p className="text-sm">{t('anomalies.no_anomalies')}</p>
                                 </div>
                             ) : (
                                 <>
@@ -344,20 +363,20 @@ export default function GlobalDashboardPage() {
                             <Server className="w-32 h-32" />
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-lg font-black uppercase tracking-tighter">Infraestructura Pro</CardTitle>
-                            <CardDescription className="text-indigo-200">Detalle de recursos asignados al cluster.</CardDescription>
+                            <CardTitle className="text-lg font-black uppercase tracking-tighter">{t('infra.title')}</CardTitle>
+                            <CardDescription className="text-indigo-200">{t('infra.desc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4 pt-4">
                             <div className="space-y-1">
-                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">Environment</span>
+                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.environment')}</span>
                                 <p className="text-sm font-bold">PRODUCTION / VERCEL</p>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">Database Tier</span>
+                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.db_tier')}</span>
                                 <p className="text-sm font-bold">M10 / Dedicated Cluster</p>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">AI Engine</span>
+                                <span className="text-[10px] uppercase font-bold text-indigo-300 tracking-widest">{t('infra.ai_engine')}</span>
                                 <p className="text-sm font-bold">Gemini 004 / Pro Advanced</p>
                             </div>
                         </CardContent>
@@ -371,22 +390,22 @@ export default function GlobalDashboardPage() {
                             <CardTitle className="text-lg font-bold flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Brain className="w-5 h-5 text-indigo-600" />
-                                    Sovereign Engine: Evolución de Ontología
+                                    {t('evolution.title')}
                                 </div>
                                 {evolutionData?.evolution?.pendingProposals > 0 && (
                                     <Badge variant="outline" className="border-indigo-200 text-indigo-700 bg-indigo-50 font-bold">
-                                        {evolutionData.evolution.pendingProposals} MEJORAS
+                                        {t('evolution.improvements', { count: evolutionData.evolution.pendingProposals })}
                                     </Badge>
                                 )}
                             </CardTitle>
-                            <CardDescription>Refinamiento autónomo de taxonomías basado en deriva de feedback humano.</CardDescription>
+                            <CardDescription>{t('evolution.subtitle')}</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6">
                             {isLoadingEvolution ? (
                                 <Skeleton className="h-40 w-full" />
                             ) : evolutionData?.evolution?.driftSummary?.length > 0 ? (
                                 <div className="space-y-4">
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Deriva de Feedback Detectada</p>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('evolution.drift_label')}</p>
                                     <div className="grid grid-cols-1 gap-3">
                                         {evolutionData.evolution.driftSummary.slice(0, 3).map((drift: any, idx: number) => (
                                             <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
@@ -400,26 +419,28 @@ export default function GlobalDashboardPage() {
                                                             <TrendingUp className="w-3 h-3 text-slate-400" />
                                                             <span className="text-indigo-600">{drift.to}</span>
                                                         </div>
-                                                        <p className="text-[10px] text-muted-foreground">En categoría: {drift.target}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{t('evolution.drift_target', { category: drift.target })}</p>
                                                     </div>
                                                 </div>
                                                 <Badge variant="secondary" className="text-[10px] font-bold">
-                                                    {drift.frequency} veces
+                                                    {t('evolution.drift_frequency', { count: drift.frequency })}
                                                 </Badge>
                                             </div>
                                         ))}
                                     </div>
                                     <div className="mt-4 p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
                                         <p className="text-xs text-indigo-900 leading-relaxed font-medium">
-                                            El sistema ha detectado {evolutionData.evolution.totalDriftPoints} puntos de divergencia.
-                                            Se han generado {evolutionData.evolution.pendingProposals} propuestas de refinamiento.
+                                            {t('evolution.drift_summary', {
+                                                driftPoints: evolutionData.evolution.totalDriftPoints,
+                                                proposals: evolutionData.evolution.pendingProposals
+                                            })}
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="text-center py-12 text-muted-foreground">
                                     <Database className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                    <p className="text-sm font-medium">Ontología estable. <br /> No se requiere refinamiento por el momento.</p>
+                                    <p className="text-sm font-medium">{t('evolution.stable')}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -427,8 +448,8 @@ export default function GlobalDashboardPage() {
 
                     <Card className="rounded-3xl border-none shadow-sm bg-slate-50/50">
                         <CardHeader>
-                            <CardTitle className="text-lg font-bold">Propuestas de Refinamiento LLM</CardTitle>
-                            <CardDescription>Visualización de cambios propuestos por el modelo antes de su aplicación.</CardDescription>
+                            <CardTitle className="text-lg font-bold">{t('evolution.proposals_title')}</CardTitle>
+                            <CardDescription>{t('evolution.proposals_desc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {isLoadingEvolution ? (
@@ -441,7 +462,7 @@ export default function GlobalDashboardPage() {
                                                 <Badge className={proposal.action === 'UPDATE' ? 'bg-blue-500' : proposal.action === 'CREATE' ? 'bg-emerald-500' : 'bg-amber-500'}>
                                                     {proposal.action}
                                                 </Badge>
-                                                <span className="text-[10px] font-bold text-slate-400">Confianza: {(proposal.confidence * 100).toFixed(0)}%</span>
+                                                <span className="text-[10px] font-bold text-slate-400">{t('evolution.confidence', { percentage: (proposal.confidence * 100).toFixed(0) })}</span>
                                             </div>
                                             <p className="text-sm font-bold text-slate-800">{proposal.newName || proposal.targetKey}</p>
                                             <p className="text-xs text-muted-foreground italic">&quot;{proposal.reasoning}&quot;</p>
@@ -449,13 +470,13 @@ export default function GlobalDashboardPage() {
                                     ))}
                                     {evolutionData.evolution.proposals.length > 2 && (
                                         <p className="text-center text-[10px] font-bold text-indigo-600 cursor-pointer hover:underline">
-                                            Ver {evolutionData.evolution.proposals.length - 2} propuestas adicionales
+                                            {t('evolution.view_more', { count: evolutionData.evolution.proposals.length - 2 })}
                                         </p>
                                     )}
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-3xl text-sm text-slate-400 font-medium">
-                                    Sin propuestas activas
+                                    {t('evolution.no_proposals')}
                                 </div>
                             )}
                         </CardContent>

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const authorType = isSupport ? 'Support' : 'User';
         const authorName = session.user.name || session.user.email;
 
-        const message = await TicketService.addMessage(id, {
+        const message = await TicketService.addMessage(id, session.user.tenantId, {
             content,
             author: authorType as any,
             authorName: authorName as string,
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         // Update status automatically (Phase 173.1)
         if (!isInternal) {
-            await TicketService.updateStatusOnReply(id, authorType as any);
+            await TicketService.updateStatusOnReply(id, session.user.tenantId, authorType as any);
         }
 
         return NextResponse.json({ success: true, message });

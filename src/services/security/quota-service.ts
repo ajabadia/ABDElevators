@@ -168,7 +168,7 @@ export class QuotaService {
                     total: { $sum: '$value' }
                 }
             }
-        ]).toArray() as any[];
+        ]) as any[];
 
         return result[0]?.total || 0;
     }

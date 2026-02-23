@@ -6,7 +6,6 @@
 
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
-import { ObjectId } from 'mongodb';
 import { AI_MODEL_IDS, ModelName, MODEL_COSTS } from '@abd/platform-core';
 
 /**
@@ -101,6 +100,19 @@ export class LLMCostTracker {
         await this.logDocumentCostSummary(summary);
 
         return summary;
+    }
+
+    /**
+     * Persist cost summary to DB
+     */
+    static async persistSummary(correlationId: string, docId: string, tenantId: string): Promise<void> {
+        const summary = await this.getDocumentCost(correlationId, tenantId, docId);
+        const { getTenantCollection } = await import('@/lib/db-tenant');
+        const collection = await getTenantCollection('audit_llm_costs');
+        await collection.insertOne({
+            ...summary,
+            createdAt: new Date()
+        });
     }
 
     /**

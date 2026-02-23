@@ -13,6 +13,76 @@ import { z } from 'zod';
  * Proposito: Orquestar la ingestión desde la capa de API (Auth, Tracing, Logging, Core).
  */
 export class IngestApiService {
+    static async handleEnrichRequest(req: Request, docId: string, session: any) {
+        let correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
+        let rootSpan: any;
+        const tenantId = session.user.tenantId;
+
+        try {
+            const body = await req.json();
+            const { enableVision, enableTranslation, enableGraphRag, enableCognitive } = body;
+
+            // Guardian V3 Authorization
+            const ipAddress = req.headers.get('x-forwarded-for') || '0.0.0.0';
+            const userAgent = req.headers.get('user-agent') || 'Unknown';
+
+            await IngestGuardian.authorize(session, {
+                scope: 'TENANT', // Enriquecimiento opera a nivel de tenant por ahora
+                tenantId,
+                correlationId,
+                ipAddress,
+                userAgent,
+            });
+
+            rootSpan = IngestTracer.startIngestSpan({
+                correlationId,
+                tenantId,
+                userId: session.user.id,
+                fileName: `enrich_${docId}`
+            });
+
+            await logEvento({
+                level: 'INFO',
+                source: 'API_INGEST',
+                action: 'ENRICH_REQUEST_RECEIVED',
+                message: `Enriching document: ${docId}`,
+                correlationId,
+                tenantId,
+                details: { docId, flags: { enableVision, enableTranslation, enableGraphRag, enableCognitive }, user: session.user.email }
+            });
+
+            const options = {
+                metadata: {} as any,
+                tenantId,
+                environment: 'PRODUCTION',
+                userEmail: session.user.email,
+                ip: ipAddress,
+                userAgent,
+                correlationId,
+                maskPii: true, // Default
+                enableVision: !!enableVision,
+                enableTranslation: !!enableTranslation,
+                enableGraphRag: !!enableGraphRag,
+                enableCognitive: !!enableCognitive,
+                isEnrichment: true
+            };
+
+            const result = await IngestService.executeAnalysis(docId, options);
+
+            await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
+                syncExecution: true,
+                docId,
+                totalChunks: result?.chunks ?? 0,
+            });
+
+            return { success: true, message: 'Enrichment completed.', docId, totalChunks: result?.chunks ?? 0, correlationId };
+
+        } catch (error: any) {
+            if (rootSpan) await IngestTracer.endSpanError(rootSpan, { correlationId, tenantId: tenantId || 'unknown' }, error);
+            throw error;
+        }
+    }
+
     static async handleIngestRequest(req: Request, session: any) {
         let correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
         let rootSpan: any;
@@ -73,7 +143,8 @@ export class IngestApiService {
             // Sync Execution (Simple strategy for now as per original route)
             const result = await IngestService.executeAnalysis(prep.docId, {
                 ...options,
-                metadata: metadata as any
+                metadata: metadata as any,
+                isEnrichment: false
             });
 
             await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {

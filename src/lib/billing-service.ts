@@ -432,7 +432,7 @@ export class BillingService {
             correlationId
         });
 
-        const { AuditTrailService } = await import('./services/audit-trail-service');
+        const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
         await AuditTrailService.logConfigChange({
             actorType: 'SYSTEM',
             actorId: 'system-billing',
@@ -648,7 +648,7 @@ export class BillingService {
 
         const correlationId = `manual_${Date.now()}`;
 
-        const { AuditTrailService } = await import('./services/audit-trail-service');
+        const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
         await AuditTrailService.logConfigChange({
             actorType: 'USER',
             actorId: updatedBy,

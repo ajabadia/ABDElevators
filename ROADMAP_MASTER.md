@@ -14,7 +14,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 213: PLATFORM OBSERVABILITY HUB**, FASE 210: LLM CORE & PROMPT GOVERNANCE, FASE 201: OBSERVABILITY & AUDIT HUB.
+- **Recent Ship**: **FASE 198: POST-INGESTION ENRICHMENT**, FASE 213: PLATFORM OBSERVABILITY HUB, FASE 210: LLM CORE & PROMPT GOVERNANCE, FASE 201: OBSERVABILITY & AUDIT HUB.
 - **Project Status**: **Modular Industrial Suite Transition (v5.2.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -381,18 +381,18 @@ CONFIGURACIÓN (Admin Hub):
 
 
 #### 💎 FASE 198: POST-INGESTION ENRICHMENT & ACTIONS
-
-**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
-
+  
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
+  
 **Objetivo:** Permitir "enriquecer" documentos ya ingestados con funcionalidades Premium (Vision, Traducción, Cognitive) sin necesidad de volver a subirlos.
-
+  
 **Escenario:** Un usuario subió un manual en modo "Simple" (rápido, barato). Semanas después, es crítico para un caso y necesita análisis visual de los diagramas. Actualmente, tendría que borrar y resubir.
-
+  
 **Tareas:**
-- [ ] **Document Action Menu**: Añadir opción "Enriquecer Documento" en el menú de acciones (`...`) de la tabla de documentos.
-- [ ] **Enrichment Modal**: Modal similar a `UnifiedIngestModal` pero solo mostrando las opciones premium disponibles para activar.
-- [ ] **Backend Endpoint**: `POST /api/admin/ingest/[id]/enrich` que acepta flags (`enableVision`, `enableCognitive`, etc.).
-- [ ] **Partial Re-processing**: Lógica en `IngestService` para ejecutar solo los analyzers faltantes y actualizar los chunks/vectores existentes (o invalidarlos y regenerarlos selectivamente).
+- [X] **Document Action Menu**: Añadir opción "Enriquecer Documento" en el menú de acciones (`...`) de la tabla de documentos. ✅
+- [X] **Enrichment Modal**: Modal similar a `UnifiedIngestModal` pero solo mostrando las opciones premium disponibles para activar. ✅
+- [X] **Backend Endpoint**: `POST /api/admin/ingest/[id]/enrich` que acepta flags (`enableVision`, `enableCognitive`, etc.). ✅
+- [X] **Partial Re-processing**: Lógica en `IngestService` para ejecutar solo los analyzers faltantes y actualizar los chunks/vectores existentes de forma atómica. ✅
 
 #### 🛡️ FASE 199: INGESTION PIPELINE INTEGRITY & COMPREHENSIVE AUDIT
 
@@ -461,11 +461,11 @@ CONFIGURACIÓN (Admin Hub):
  
 #### 🏠 FASE 214: DOMAIN-SPECIALIZED DASHBOARDS
  
-**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 1 semana
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Estimación:** 1 semana
  
-- [ ] **Contextual Landing**: Implementación de Dashboards diferenciados según `AppId` (Técnico vs Soporte).
-- [ ] **Technical KPIs**: Widgets de salud de entidades, estado de indexación RAG y estadísticas de grafos.
-- [ ] **Support KPIs**: Dashboards de tickets activos, cumplimiento de SLA y métricas de resolución AI.
+- [X] **Contextual Landing**: Implementación de Dashboards diferenciados según `AppId` (Técnico vs Soporte).
+- [X] **Technical KPIs**: Widgets de salud de entidades, estado de indexación RAG y estadísticas de grafos.
+- [X] **Support KPIs**: Dashboards de tickets activos, cumplimiento de SLA y métricas de resolución AI.
  
 #### 🛡️ FASE 215: QUALITY SHIELD (UNIT TESTING)
  

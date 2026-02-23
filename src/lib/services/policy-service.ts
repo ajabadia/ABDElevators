@@ -1,4 +1,4 @@
-import { AuditTrailService } from './audit-trail-service';
+import { AuditTrailService } from '@/services/observability/AuditTrailService';
 import { logEvento } from '../logger';
 
 export type PolicyAction =

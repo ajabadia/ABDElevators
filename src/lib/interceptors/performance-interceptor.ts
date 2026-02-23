@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ObservabilityService } from '../observability-service';
+import { LoggingService as ObservabilityService } from '@/services/observability/LoggingService';
 import crypto from 'crypto';
 
 /**

@@ -34,7 +34,7 @@ export class RerankingService {
             if (results.length <= 1) return results;
 
             let renderedPrompt: string;
-            let modelName = DEFAULT_MODEL;
+            let modelName: string = DEFAULT_MODEL;
 
             try {
                 const fragments = results.map((r, i) => `[${i}] ${r.text.substring(0, 600)}`).join('\n\n---\n\n');

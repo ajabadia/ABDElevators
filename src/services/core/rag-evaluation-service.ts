@@ -2,7 +2,8 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { RagEvaluationSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { RagJudgeService } from './rag-judge-service';
-import { PromptRunner } from '../infra/llm/prompt-runner';
+import { PromptRunner } from '@/lib/llm-core';
+import { RagJudgeOutputSchema } from '@/lib/llm-core/schemas';
 
 export class RagEvaluationService {
     /**
@@ -20,9 +21,10 @@ export class RagEvaluationService {
             const contextText = contexts.join('\n\n');
 
             // 1. Run Judge Prompt via Pipeline
-            const metrics = await PromptRunner.runJsonPrompt<any>({
+            const metrics = await PromptRunner.runJson<any>({
                 key: 'RAG_JUDGE',
                 variables: { query, context: contextText, response, vertical: 'ELEVATORS' },
+                schema: RagJudgeOutputSchema,
                 tenantId,
                 correlationId
             });

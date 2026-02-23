@@ -309,9 +309,21 @@ export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, cor
 }
 
 /**
- * Llamada genérica a Gemini para generación de texto
+ * Estructura de respuesta extendida para IA
  */
-export async function callGemini(
+export interface GeminiResponse {
+    text: string;
+    usage?: {
+        input: number;
+        output: number;
+        total: number;
+    };
+}
+
+/**
+ * Llamada genérica a Gemini para generación de texto con metadata de uso.
+ */
+export async function callGeminiExtended(
     prompt: string,
     tenantId: string,
     correlationId: string,
@@ -320,7 +332,7 @@ export async function callGemini(
         maxTokens?: number;
         model?: string;
     }
-): Promise<string> {
+): Promise<GeminiResponse> {
     const start = Date.now();
     const modelName = mapModelName(options?.model || DEFAULT_MODEL);
 
@@ -354,14 +366,20 @@ export async function callGemini(
             const duration = Date.now() - start;
             span.setAttribute('genai.duration_ms', duration);
 
+            let usageData: GeminiResponse['usage'] = undefined;
             const usage = (result.response as any).usageMetadata;
             if (usage) {
                 span.setAttribute('genai.tokens', usage.totalTokenCount);
+                usageData = {
+                    input: usage.promptTokenCount,
+                    output: usage.candidatesTokenCount,
+                    total: usage.totalTokenCount
+                };
                 await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
             }
 
             span.setStatus({ code: SpanStatusCode.OK });
-            return text;
+            return { text, usage: usageData };
         } catch (error) {
             span.recordException(error as Error);
             span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
@@ -370,4 +388,21 @@ export async function callGemini(
             span.end();
         }
     });
+}
+
+/**
+ * Llamada genérica a Gemini (Backward compatible)
+ */
+export async function callGemini(
+    prompt: string,
+    tenantId: string,
+    correlationId: string,
+    options?: {
+        temperature?: number;
+        maxTokens?: number;
+        model?: string;
+    }
+): Promise<string> {
+    const response = await callGeminiExtended(prompt, tenantId, correlationId, options);
+    return response.text;
 }

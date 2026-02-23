@@ -35,11 +35,15 @@ interface ConfiguratorState {
 export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
     config: {
         _id: '',
+        id: '',
         tenantId: '',
+        title: 'Nueva Configuración',
         name: 'Nueva Configuración',
-        categories: [],
-        items: [],
-        workflowOrder: [],
+        categories: [] as ChecklistCategory[],
+        items: [] as ChecklistItem[],
+        workflowOrder: [] as string[],
+        version: 1,
+        active: true,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -74,7 +78,6 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
             color: '#0D9488',
             keywords: [],
             priority: config.categories.length + 1,
-            icon: 'Layout'
         };
 
         set((state) => ({
@@ -131,10 +134,13 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
 
         const newItem: ChecklistItem = {
             id: crypto.randomUUID(),
+            label: 'Nuevo punto de validación',
             description: 'Nuevo punto de validación',
+            category: get().getCurrentCategory()?.name || 'General',
             categoryId: selectedCategoryId,
             notes: '',
-            icon: 'CheckCircle2'
+            required: true,
+            type: 'BOOLEAN' as any
         };
 
         set((state) => ({

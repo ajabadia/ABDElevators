@@ -27,8 +27,13 @@ export default function PlaygroundPage() {
     const tLab = useTranslations("rag_eval");
 
     const [isLoading, setIsLoading] = useState(false);
-    const [config, setConfig] = useState({
-        model: DEFAULT_MODEL,
+    const [config, setConfig] = useState<{
+        model: string;
+        temperature: number;
+        chunkSize: number;
+        topK: number;
+    }>({
+        model: DEFAULT_MODEL as string,
         temperature: 0.7,
         chunkSize: 500,
         topK: 3

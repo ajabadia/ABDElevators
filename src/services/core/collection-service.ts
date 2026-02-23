@@ -3,7 +3,7 @@ import { UserCollection, UserCollectionSchema } from '@/lib/schemas/collections'
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { collectionRepository } from '@/repositories/CollectionRepository';
-import { CorrelationIdService } from './common/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 📁 Collection Service

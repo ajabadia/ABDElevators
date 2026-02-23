@@ -22,20 +22,20 @@ export const mockLLMCaller: LLMCaller = async (prompt: string, tenantId: string)
 
     if (isMaintenance) {
         items = [
-            { id: MOCK_UUID_1, description: "Verificar nivel de aceite en la central hidráulica." },
-            { id: MOCK_UUID_2, description: "Comprobar estado de las zapatas de freno." }
+            { id: MOCK_UUID_1, category: "Mantenimiento", label: "Nivel Aceite", description: "Verificar nivel de aceite en la central hidráulica.", required: true, type: 'BOOLEAN' },
+            { id: MOCK_UUID_2, category: "Mantenimiento", label: "Frenos", description: "Comprobar estado de las zapatas de freno.", required: true, type: 'BOOLEAN' }
         ];
     } else if (isModernization) {
         items = [
-            { id: MOCK_UUID_1, description: "Sustituir cuadro de maniobra por modelo compatible EN-81-20." },
-            { id: MOCK_UUID_2, description: "Instalar barrera fotoeléctrica en puertas de cabina." },
-            { id: "00000000-0000-0000-0000-000000000003", description: "Verificar paracaídas progresivo." }
+            { id: MOCK_UUID_1, category: "Modernizacion", label: "Cuadro", description: "Sustituir cuadro de maniobra por modelo compatible EN-81-20.", required: true, type: 'BOOLEAN' },
+            { id: MOCK_UUID_2, category: "Modernizacion", label: "Barrera", description: "Instalar barrera fotoeléctrica en puertas de cabina.", required: true, type: 'BOOLEAN' },
+            { id: "00000000-0000-0000-0000-000000000003", category: "Modernizacion", label: "Paracaidas", description: "Verificar paracaídas progresivo.", required: true, type: 'BOOLEAN' }
         ];
     } else {
         // Default generic checklist
         items = [
-            { id: MOCK_UUID_1, description: "Revisar documentación técnica del expediente." },
-            { id: MOCK_UUID_2, description: "Confirmar marcado CE de los componentes de seguridad." }
+            { id: MOCK_UUID_1, category: "Generic", label: "Documentacion", description: "Revisar documentación técnica del expediente.", required: true, type: 'BOOLEAN' },
+            { id: MOCK_UUID_2, category: "Generic", label: "Marcado CE", description: "Confirmar marcado CE de los componentes de seguridad.", required: true, type: 'BOOLEAN' }
         ];
     }
 

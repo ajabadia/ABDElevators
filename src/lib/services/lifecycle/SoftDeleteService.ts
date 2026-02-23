@@ -1,7 +1,7 @@
 
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
-import { CorrelationIdService } from '@/services/common/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * 🗑️ Soft Delete Service

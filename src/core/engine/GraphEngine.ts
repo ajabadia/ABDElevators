@@ -21,7 +21,9 @@ export class GraphEngine {
         const entityDef = EntityEngine.getInstance().getEntity(entitySlug);
         if (!entityDef) throw new Error(`Entidad ${entitySlug} no encontrada`);
 
-        const collection = await getTenantCollection(entityDef.slug, { user: { tenantId } });
+        const collection = await getTenantCollection(entityDef.slug, {
+            user: { id: 'system', tenantId, role: 'SYSTEM' }
+        } as any);
         const docs = await collection.find({});
 
         for (const doc of docs) {

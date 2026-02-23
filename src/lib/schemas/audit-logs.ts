@@ -45,53 +45,8 @@ export const AuditLogEntrySchema = z.object({
 
 export type AuditLogEntry = z.infer<typeof AuditLogEntrySchema>;
 
-/**
- * 🛡️ Esquema para Auditoría RAG (Trazabilidad)
- * Regla de Oro #4
- */
-export const RagAuditSchema = z.object({
-    _id: z.any().optional(),
-    correlationId: z.string().uuid(),
-    phase: z.string(),                    // 'EXTRACCION_MODELOS', 'VECTOR_SEARCH', 'REPORTE'
-    input: z.any(),                      // prompt o query
-    output: z.any(),                     // respuesta Gemini o resultados search
-    durationMs: z.number(),
-    token_usage: z.object({
-        prompt: z.number(),
-        completion: z.number(),
-    }).optional(),
-    timestamp: z.date().default(() => new Date()),
-});
+// RagAudit removed - imported from knowledge.ts (bridge to rag-engine)
 
-export type RagAudit = z.infer<typeof RagAuditSchema>;
 
-/**
- * 🏗️ Esquema para Auditoría de Ingesta
- */
-export const IngestAuditSchema = z.object({
-    _id: z.any().optional(),
-    tenantId: z.string(),
-    performedBy: z.string(), // Email o ID del usuario
-    ip: z.string().optional(),
-    userAgent: z.string().optional(),
+// IngestAudit removed - imported from knowledge.ts (bridge to rag-engine)
 
-    // Detalles del archivo
-    filename: z.string(),
-    fileSize: z.number(),
-    md5: z.string(),
-    docId: z.any().optional(), // ID en documentos_tecnicos
-
-    // Metadata
-    correlationId: z.string(),
-    status: z.enum(['SUCCESS', 'FAILED', 'DUPLICATE', 'PENDING', 'RESTORED']),
-    details: z.object({
-        chunks: z.number().default(0),
-        duration_ms: z.number(),
-        savings_tokens: z.number().optional(),
-        error: z.string().optional()
-    }).optional(),
-
-    timestamp: z.date().default(() => new Date()),
-});
-
-export type IngestAudit = z.infer<typeof IngestAuditSchema>;

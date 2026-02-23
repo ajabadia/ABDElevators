@@ -1,5 +1,27 @@
 {
   "error": "Error",
+  "apps": {
+    "technical": {
+      "name": "Technical Suite",
+      "description": "RAG, Entities & Analysis"
+    },
+    "support": {
+      "name": "Support Hub",
+      "description": "Tickets & Customer Help"
+    },
+    "operations": {
+      "name": "Operations",
+      "description": "Logs, Audit & Analytics"
+    },
+    "config": {
+      "name": "Platform Config",
+      "description": "Permissions & Settings"
+    },
+    "personal": {
+      "name": "My Workspace",
+      "description": "Personal documents & Spaces"
+    }
+  },
   "saving": "Saving...",
   "actions": {
     "label": "Actions",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { SpaceInvitationService } from '@/services/space-invitation-service';
+import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
 import { UserRole } from '@/types/roles';

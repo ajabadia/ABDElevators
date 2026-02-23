@@ -19,6 +19,7 @@ export type RiskFinding = z.infer<typeof RiskFindingSchema>;
 export const GenericCaseSchema = z.object({
     _id: z.any().optional(),
     tenantId: z.string(),
+    identifier: z.string().optional(),
     industry: IndustryTypeSchema,
     type: z.string(),
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
@@ -30,6 +31,9 @@ export const GenericCaseSchema = z.object({
         risks: z.array(RiskFindingSchema).optional(), // Hallazgos de inteligencia
         federatedInsights: z.array(z.any()).optional(), // Insights Federados
         checklist_status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING').optional(),
+        workflow: z.object({
+            llmOutputs: z.record(z.string(), z.any()).optional()
+        }).optional(),
     }),
     transitions_history: z.array(WorkflowLogSchema).default([]),
     createdAt: z.date().default(() => new Date()),

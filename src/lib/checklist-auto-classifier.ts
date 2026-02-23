@@ -41,7 +41,7 @@ export function autoClassify(
         throw new ValidationError("Invalid checklist config supplied to autoClassify", parsedConfig.error);
     }
 
-    const descriptionLower = item.description.toLowerCase();
+    const descriptionLower = (item.description || "").toLowerCase();
     // Simple keyword matching: first category whose any keyword appears in description.
     for (const category of config.categories) {
         for (const kw of category.keywords) {
@@ -82,7 +82,7 @@ export function smartSort(
             return aPri - bPri; // lower priority number first
         }
         // Fallback alphabetical by description
-        return a.description.localeCompare(b.description);
+        return (a.description || "").localeCompare(b.description || "");
     });
 
     const durationMs = Date.now() - start;

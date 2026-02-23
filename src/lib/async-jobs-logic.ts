@@ -1,4 +1,4 @@
-import { PDFIngestionPipeline } from '@/services/pdf/PDFIngestionPipeline';
+import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
 import { analyzeEntityWithGemini } from './llm';
 import { performTechnicalSearch } from './rag-service';
 import { RiskService } from './risk-service';
@@ -40,7 +40,7 @@ export class AsyncJobsLogic {
                 tenantId,
                 correlationId,
                 industry: industry as any,
-                strategy: 'GEMINI_1.5_PRO_EXTREME',
+                strategy: 'ADVANCED',
                 pii: { enabled: true }
             });
             const text = pipelineResult.maskedText || pipelineResult.cleanedText;

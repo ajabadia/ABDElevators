@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
             validated.query,
             tenantId,
             correlationId,
-            validated.limit
+            'GENERIC', // Industry
+            { limit: validated.limit }
         )
 
         if (ragResults.length === 0) {

@@ -1,6 +1,6 @@
 import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
 import { logEvento } from '@/lib/logger';
 import * as dotenv from 'dotenv';
 import * as path from 'path';

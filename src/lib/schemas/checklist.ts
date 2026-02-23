@@ -21,6 +21,7 @@ export const ChecklistItemConfigSchema = z.object({
     confidenceLevel: z.string().optional(),
     ragReference: z.string().optional(),
     notes: z.string().optional(),
+    icon: z.string().optional(),
 });
 
 export const ChecklistConfigSchema = z.object({
@@ -38,6 +39,7 @@ export const ChecklistConfigSchema = z.object({
         color: z.string().default('#64748b'),
         priority: z.number().default(0),
         keywords: z.array(z.string()).default([]),
+        icon: z.string().optional(),
     })).default([]),
     workflowOrder: z.array(z.string()).default([]),
     active: z.boolean().default(true),
@@ -97,5 +99,6 @@ export const ChecklistCategorySchema = z.object({
     color: z.string().default('#64748b'),
     priority: z.number().default(0),
     keywords: z.array(z.string()).default([]),
+    icon: z.string().optional(),
 });
 export type ChecklistCategory = z.infer<typeof ChecklistCategorySchema>;

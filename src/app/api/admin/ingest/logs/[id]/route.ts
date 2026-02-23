@@ -24,12 +24,10 @@ export async function GET(
             user: { id: 'system_monitor', tenantId: session.user.tenantId, role: 'SUPER_ADMIN' }
         });
 
-        const logs = await auditCollection.find({
-            correlationId
-        })
-            .sort({ timestamp: 1 })
-            .limit(50)
-            .toArray();
+        const logs = await auditCollection.find(
+            { correlationId },
+            { sort: { timestamp: 1 }, limit: 50 }
+        );
 
         return NextResponse.json({
             success: true,

@@ -152,6 +152,74 @@ export class TranslationService {
         return { success: true };
     }
 
+    /**
+     * Obtiene información detallada de una llave específica para debug.
+     */
+    static async getKeyDebugInfo(locale: string, key: string, tenantId: string = 'platform_master') {
+        const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
+        const flatLocal = I18nObjectUtils.flattenObject(localMessages);
+
+        let info: any = {
+            key,
+            locale,
+            localValue: flatLocal[key] || null,
+            sources: []
+        };
+
+        if (flatLocal[key]) {
+            info.sources.push({ type: 'FILE', value: flatLocal[key] });
+        }
+
+        const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
+        const masterDoc = masterDocs.find(d => d.key === key);
+        if (masterDoc) {
+            info.sources.push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
+            info.currentValue = masterDoc.value;
+        }
+
+        if (tenantId !== 'platform_master') {
+            const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
+            const tenantDoc = tenantDocs.find(d => d.key === key);
+            if (tenantDoc) {
+                info.sources.push({ type: 'DB_TENANT', value: tenantDoc.value });
+                info.currentValue = tenantDoc.value;
+            }
+        }
+
+        if (!info.currentValue) {
+            info.currentValue = info.localValue;
+        }
+
+        return info;
+    }
+
     static nestToFlat(obj: any) { return I18nObjectUtils.flattenObject(obj); }
     static flatToNested(docs: any[]) { return I18nObjectUtils.flatToNested(Object.fromEntries(docs.map(d => [d.key, d.value]))); }
+
+    /**
+     * Sincroniza desde el archivo local JSON a la base de datos (Legacy facade).
+     */
+    static async forceSyncFromLocal(locale: string, tenantId = 'platform_master') {
+        const messages = await TranslationSyncService.loadFromLocalFile(locale);
+        const { added, updated } = await TranslationSyncService.syncToDb(locale, messages, tenantId);
+        return { messages, added, updated };
+    }
+
+    /**
+     * Sincroniza todos los idiomas configurados (Legacy facade).
+     */
+    static async forceSyncAllLocales(tenantId = 'platform_master') {
+        const results: Record<string, any> = {};
+        for (const locale of SUPPORTED_LOCALES) {
+            results[locale] = await this.forceSyncFromLocal(locale, tenantId);
+        }
+        return results;
+    }
+
+    /**
+     * Exporta desde la base de datos a archivos locales JSON (Legacy facade).
+     */
+    static async exportToLocalFiles(locale: string, tenantId = 'platform_master') {
+        return await TranslationSyncService.exportToLocalFiles(locale, tenantId);
+    }
 }

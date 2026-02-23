@@ -35,7 +35,7 @@ const STATE_TRANSITIONS: Record<IngestState, IngestState[]> = {
     PENDING: ['QUEUED', 'PROCESSING', 'FAILED'],
     QUEUED: ['PROCESSING', 'FAILED', 'STUCK'],
     PROCESSING: ['COMPLETED', 'FAILED', 'STUCK', 'STORED_NO_INDEX', 'INDEXED_NO_STORAGE', 'PARTIAL'],
-    COMPLETED: ['QUEUED'], // Era 6: Allowed for Enrichment (FASE 198)
+    COMPLETED: ['QUEUED', 'PROCESSING'], // Era 6: Allowed for Enrichment (FASE 198)
     FAILED: ['QUEUED', 'PROCESSING', 'DEAD'], // Can retry or mark dead
     STORED_NO_INDEX: ['QUEUED', 'PROCESSING', 'COMPLETED'],
     INDEXED_NO_STORAGE: ['QUEUED', 'PROCESSING', 'COMPLETED'],

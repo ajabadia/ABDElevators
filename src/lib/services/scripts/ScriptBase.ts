@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
-import { CorrelationIdService } from '@/lib/services/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 
 /**
  * ScriptBase - Abstract base class for all operational scripts.

@@ -48,7 +48,7 @@ export function useSmartConfig(file: File | null): SmartConfig {
         const isLarge = file.size > 2 * 1024 * 1024; // 2MB threshold
 
         let derivedLevel: "bajo" | "medio" | "alto" = "bajo";
-        let derivedModel = DEFAULT_MODEL;
+        let derivedModel: string = DEFAULT_MODEL;
         let derivedTemp = 0.1;
 
         if (isPdf) {

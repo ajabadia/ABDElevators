@@ -33,7 +33,7 @@ export const VerticalConfigSchema = z.object({
     defaultWorkflowTemplate: z.string().optional(),
     defaultChecklistTemplate: z.string().optional(),
     promptPack: z.string(),                // Key for prompt grouping
-    features: z.record(z.boolean()).default({} as Record<string, boolean>),
+    features: z.record(z.string(), z.boolean()).default({} as Record<string, boolean>),
     fields: z.array(VerticalFieldSchema).default([]),
 });
 

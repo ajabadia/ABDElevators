@@ -54,5 +54,39 @@
     "noRagResults": "No RAG Results",
     "noRagDesc": "No results found from previous analysis. Do you want to start the agentic brain to analyze this order now?",
     "startAgent": "Start Agentic Reasoning"
+  },
+  "dashboard": {
+    "entities": {
+      "title": "Entity Health",
+      "total": "Total Indexed",
+      "synced": "Successfully Synchronized",
+      "errors": "Entities with Errors"
+    },
+    "rag": {
+      "title": "RAG Engine Performance",
+      "latency": "Average Latency",
+      "docs": "Documents per Query",
+      "cache": "Cache Hit Rate"
+    },
+    "graph": {
+      "title": "Knowledge Graphs",
+      "nodes": "Active Nodes",
+      "edges": "Relationships (Edges)",
+      "convergence": "Graph Convergence"
+    },
+    "actions": {
+      "refresh": "Refresh"
+    },
+    "trends": {
+      "up_this_week": "+{value} this week",
+      "optimal": "Optimal",
+      "needs_review": "Needs review",
+      "down_vs_yesterday": "-{value} vs yesterday",
+      "average": "Average",
+      "new": "+{value} new",
+      "normal_expansion": "Normal expansion",
+      "highly_connected": "Highly Connected"
+    },
+    "loading": "Loading..."
   }
 }

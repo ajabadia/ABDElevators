@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { UserRole } from '@/types/roles';
 
+import { AppId } from '@/lib/app-registry';
+
 export interface MenuItem {
     name: string;
     nameKey: string; // Key for next-intl
@@ -40,6 +42,7 @@ export interface MenuItem {
 export interface MenuSection {
     label: string;
     labelKey: string; // Key for next-intl
+    appId: AppId | 'ALL';
     items: MenuItem[];
 }
 
@@ -47,6 +50,7 @@ export const menuSections: MenuSection[] = [
     {
         label: 'AI Hub',
         labelKey: 'sections.ai_hub',
+        appId: AppId.TECHNICAL,
         items: [
             {
                 name: 'Búsqueda Inteligente',
@@ -80,6 +84,7 @@ export const menuSections: MenuSection[] = [
     {
         label: 'Operations',
         labelKey: 'sections.operations',
+        appId: AppId.OPERATIONS,
         items: [
             {
                 name: 'Dashboard',
@@ -121,6 +126,7 @@ export const menuSections: MenuSection[] = [
     {
         label: 'Organization',
         labelKey: 'sections.organization',
+        appId: AppId.CONFIG,
         items: [
             {
                 name: 'Organizations',
@@ -169,6 +175,7 @@ export const menuSections: MenuSection[] = [
     {
         label: 'My Space',
         labelKey: 'sections.personal',
+        appId: AppId.PERSONAL,
         items: [
             {
                 name: 'My Documents',
@@ -193,6 +200,7 @@ export const menuSections: MenuSection[] = [
     {
         label: 'System & Preferences',
         labelKey: 'sections.preference',
+        appId: AppId.CONFIG,
         items: [
             {
                 name: 'Guardian Console',

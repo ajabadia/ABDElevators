@@ -40,17 +40,26 @@
       "@abd/platform-core": [
         "./packages/platform-core/src/index.ts"
       ],
+      "@abd/platform-core/server": [
+        "./packages/platform-core/src/server/index.ts"
+      ],
       "@abd/platform-core/*": [
         "./packages/platform-core/src/*"
       ],
       "@abd/workflow-engine": [
         "./packages/workflow-engine/src/index.ts"
       ],
+      "@abd/workflow-engine/server": [
+        "./packages/workflow-engine/src/server.ts"
+      ],
       "@abd/workflow-engine/*": [
         "./packages/workflow-engine/src/*"
       ],
       "@abd/rag-engine": [
         "./packages/rag-engine/src/index.ts"
+      ],
+      "@abd/rag-engine/server": [
+        "./packages/rag-engine/src/server.ts"
       ],
       "@abd/rag-engine/*": [
         "./packages/rag-engine/src/*"

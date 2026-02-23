@@ -1,9 +1,8 @@
 import { PromptService } from '@/lib/prompt-service';
-import { DEFAULT_PROMPTS } from '@/lib/prompts/core-definitions';
 import { getGenAI, runShadowCall } from '@/lib/gemini-client';
 import { LlmJsonUtils } from '@/lib/llm/json-utils';
 import { logEvento } from '@/lib/logger';
-import { CorrelationIdService } from '../../common/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from '@/lib/resilience';
 import { UsageService } from '@/lib/usage-service';
@@ -11,31 +10,27 @@ import { UsageService } from '@/lib/usage-service';
 const tracer = trace.getTracer('abd-rag-platform');
 
 /**
- * 🧠 Prompt Runner
+ * 🧠 Infra Prompt Runner (Intermediate - Era 7)
  * Engine unificado para la ejecución de prompts con tracing, resiliencia y tracking de costes.
+ * @deprecated Favor specialized use cases or lib/llm-core version.
  */
-export class PromptRunner {
+export class InfraPromptRunner {
     /**
      * Ejecuta un prompt y devuelve el texto plano.
      */
-    static async runTextPrompt(params: {
-        key: string;
-        variables: Record<string, any>;
-        tenantId: string;
-        correlationId?: string;
-        modelOverride?: string;
-        session?: any;
-    }): Promise<string> {
-        const cid = params.correlationId || CorrelationIdService.generate();
-        const { tenantId, key, variables, session } = params;
-
-        return tracer.startActiveSpan(`llm.run.${key.toLowerCase()}`, {
-            attributes: { 'tenant.id': tenantId, 'correlation.id': cid, 'prompt.key': key }
+    static async runTextPrompt(
+        key: string,
+        variables: Record<string, any>,
+        tenantId: string,
+        correlationId: string,
+        session?: any,
+        options?: { modelOverride?: string; temperature?: number }
+    ): Promise<string> {
+        return tracer.startActiveSpan(`llm.run_text.${key.toLowerCase()}`, {
+            attributes: { 'tenant.id': tenantId, 'correlation.id': correlationId, 'prompt.key': key }
         }, async (span) => {
             try {
-                const startTime = Date.now();
-
-                // 1. Resolver Prompt (Producción + Sombra)
+                // 1. Resolve Prompt (DB -> Fallback)
                 const { production, shadow } = await PromptService.getPromptWithShadow(
                     key,
                     variables,
@@ -44,69 +39,47 @@ export class PromptRunner {
                     session
                 );
 
-                const modelName = params.modelOverride || production.model;
-                const renderedPrompt = production.text;
-                span.setAttribute('genai.model', modelName);
-
-                // 2. Ejecución Sombra (Async)
+                // 2. Async Shadow Execution (No bloqueante)
                 if (shadow) {
-                    runShadowCall(shadow.text, shadow.model, tenantId, cid, key, shadow.key).catch(e =>
+                    runShadowCall(shadow.text, shadow.model, tenantId, correlationId, key, shadow.key).catch(e =>
                         console.error("[SHADOW ERROR]", e)
                     );
                 }
 
-                // 3. Ejecución Principal con Resiliencia
-                const genAI = getGenAI();
-                const model = genAI.getGenerativeModel({ model: modelName });
+                const modelToUse = options?.modelOverride || production.model;
 
+                // 3. Main Execution with Resilience
                 const result = await executeWithResilience(
-                    'LLM_EXECUTION',
-                    key,
-                    () => model.generateContent(renderedPrompt),
-                    cid,
+                    'PROMPT_RUNNER',
+                    `RUN_TEXT_${key}`,
+                    async () => {
+                        const genAI = getGenAI();
+                        const model = genAI.getGenerativeModel({ model: modelToUse });
+                        return await model.generateContent(production.text);
+                    },
+                    correlationId,
                     tenantId
                 ) as any;
 
-                const responseText = result.response.text();
-                const duration = Date.now() - startTime;
-                span.setAttribute('genai.duration_ms', duration);
+                const text = result.response.text();
 
-                // 4. Tracking de Uso y Coste
-                const usage = result.response.usageMetadata;
-                if (usage) {
-                    span.setAttribute('genai.tokens', usage.totalTokenCount);
-                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, cid, session);
-
-                    // Tracking de coste específico
-                    const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker').catch(() => ({ LLMCostTracker: null }));
-                    if (LLMCostTracker) {
-                        await LLMCostTracker.trackOperation(
-                            cid,
-                            key,
-                            modelName,
-                            usage.promptTokenCount || 0,
-                            usage.candidatesTokenCount || 0,
-                            duration
-                        );
-                    }
+                // 4. Token Usage Tracking
+                if (result.response.usageMetadata) {
+                    await UsageService.trackUsage(tenantId, {
+                        type: 'LLM_TOKENS',
+                        value: result.response.usageMetadata.totalTokenCount,
+                        resource: modelToUse,
+                        description: `Execution of prompt: ${key}`,
+                        correlationId
+                    });
                 }
 
                 span.setStatus({ code: SpanStatusCode.OK });
-                return responseText;
+                return text;
 
             } catch (error: any) {
                 span.recordException(error);
                 span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-
-                await logEvento({
-                    level: 'ERROR',
-                    source: 'PROMPT_RUNNER',
-                    action: 'EXECUTION_ERROR',
-                    message: `Error ejecutando ${key}: ${error.message}`,
-                    correlationId: cid,
-                    tenantId,
-                    details: { key, variables }
-                });
                 throw error;
             } finally {
                 span.end();
@@ -117,15 +90,15 @@ export class PromptRunner {
     /**
      * Ejecuta un prompt y parsea el resultado como JSON.
      */
-    static async runJsonPrompt<T>(params: {
-        key: string;
-        variables: Record<string, any>;
-        tenantId: string;
-        correlationId?: string;
-        modelOverride?: string;
-        session?: any;
-    }): Promise<T> {
-        const text = await this.runTextPrompt(params);
-        return LlmJsonUtils.safeParseLLMJson<T>(text, params.correlationId) as T;
+    static async runJsonPrompt<T>(
+        key: string,
+        variables: Record<string, any>,
+        tenantId: string,
+        correlationId: string,
+        session?: any,
+        options?: { modelOverride?: string; temperature?: number }
+    ): Promise<T> {
+        const text = await this.runTextPrompt(key, variables, tenantId, correlationId, session, options);
+        return LlmJsonUtils.safeParseLLMJson<T>(text, correlationId) as T;
     }
 }

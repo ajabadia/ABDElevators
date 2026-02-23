@@ -67,6 +67,6 @@ export class FeedbackService {
                     count: { $sum: 1 }
                 }
             }
-        ]).toArray();
+        ]);
     }
 }

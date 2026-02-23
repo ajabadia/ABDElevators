@@ -1,0 +1,8 @@
+src/app/api/admin/knowledge-assets/[id]/retry/route.ts(179,44): error TS2345: Argument of type '{ correlationId: string; userEmail: any; tenantId: any; }' is not assignable to parameter of type 'EnrichmentOptions'.
+  Property 'isEnrichment' is missing in type '{ correlationId: string; userEmail: any; tenantId: any; }' but required in type 'EnrichmentOptions'.
+src/app/api/admin/knowledge-assets/[id]/retry/route.ts(321,44): error TS2345: Argument of type '{ correlationId: string; userEmail: any; tenantId: any; }' is not assignable to parameter of type 'EnrichmentOptions'.
+  Property 'isEnrichment' is missing in type '{ correlationId: string; userEmail: any; tenantId: any; }' but required in type 'EnrichmentOptions'.
+src/services/ingest/core/IngestOrchestrator.ts(102,71): error TS2345: Argument of type '{ [key: string]: any; userEmail: string; tenantId: string; isEnrichment?: boolean | undefined; force?: boolean | undefined; }' is not assignable to parameter of type 'EnrichmentOptions'.
+  Types of property 'isEnrichment' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.

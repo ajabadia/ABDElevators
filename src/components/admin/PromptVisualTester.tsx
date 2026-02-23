@@ -25,7 +25,7 @@ export function PromptVisualTester({ template, variables = [] }: PromptVisualTes
             2
         )
     );
-    const [model, setModel] = useState(DEFAULT_MODEL);
+    const [model, setModel] = useState<string>(DEFAULT_MODEL);
     const [compareMode, setCompareMode] = useState(false);
     const [modelB, setModelB] = useState(AI_MODELS.find(m => m.id !== DEFAULT_MODEL)?.id || DEFAULT_MODEL);
     const [templateB, setTemplateB] = useState(template);

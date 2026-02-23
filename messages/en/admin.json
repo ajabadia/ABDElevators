@@ -2221,5 +2221,91 @@
       "error_unexpected": "Unexpected server response"
     },
     "loading_label": "Loading usage metrics"
+  },
+  "superadmin": {
+    "title": "Platform Console",
+    "subtitle": "Multi-tenant observability and agentic engine health.",
+    "actions": {
+      "predictive_audit": "Predictive Audit",
+      "self_healing": "Execute Self-Healing"
+    },
+    "metrics": {
+      "tenants": "Active Clients",
+      "tenants_cluster": "{total} registered in the AUTH cluster",
+      "cases": "Cases Processed",
+      "ai_accuracy": "AI Accuracy (HITL)",
+      "ai_validations": "{count} human validations registered",
+      "ai_health": "AI Engine Health",
+      "latency": "Average Latency (LLM)",
+      "latency_desc": "Global average Gemini response time",
+      "consumption": "Projected Consumption",
+      "consumption_desc": "30-day cost estimation",
+      "health_stat": "{success} successes vs {failure} errors"
+    },
+    "financials": {
+      "title": "Platform Financials",
+      "desc": "Global operation and licensing economics.",
+      "expenditure": "Operational Expenditure",
+      "prediction_title": "Predictive Projection",
+      "platform_value": "Total Platform Value",
+      "roi": "ROI 150%",
+      "confidence": "{percentage}% Conf.",
+      "projection_30d": "30d Project."
+    },
+    "usage": {
+      "title": "Consumption by Tenant",
+      "desc": "Resource extraction and token consumption by organization.",
+      "tokens": "Tokens",
+      "storage": "Storage",
+      "savings": "Savings",
+      "no_data": "No usage data available."
+    },
+    "knowledge": {
+      "title": "Knowledge Engine Status",
+      "desc": "Asset audit and document lifecycle.",
+      "obsolete": "Obsolete Documents",
+      "obsolete_desc": "Assets whose review date has expired and require curation.",
+      "pending": "{count} Pending",
+      "cluster_health": "Cluster Health",
+      "db_status": "Status of connection with MongoDB Atlas and Neo4j."
+    },
+    "anomalies": {
+      "title": "Detected Anomalies",
+      "desc": "Statistically unusual events (Z-score > 2.0).",
+      "no_anomalies": "No anomalies detected in the last 48 hours.",
+      "alerts": "{count} ALERTS"
+    },
+    "infra": {
+      "title": "Pro Infrastructure",
+      "desc": "Detail of resources assigned to the cluster.",
+      "environment": "Environment",
+      "db_tier": "Database Tier",
+      "ai_engine": "AI Engine"
+    },
+    "evolution": {
+      "title": "Sovereign Engine: Ontology Evolution",
+      "subtitle": "Autonomous refinement of taxonomies based on human feedback drift.",
+      "improvements": "{count} IMPROVEMENTS",
+      "drift_label": "Detected Feedback Drift",
+      "drift_target": "In category: {category}",
+      "drift_frequency": "{count} times",
+      "drift_summary": "The system has detected {driftPoints} points of divergence. {proposals} refinement proposals have been generated.",
+      "stable": "Stable ontology. No refinement required at the moment.",
+      "proposals_title": "LLM Refinement Proposals",
+      "proposals_desc": "Visualization of changes proposed by the model before application.",
+      "no_proposals": "No active proposals",
+      "view_more": "View {count} more proposals",
+      "confidence": "Confidence: {percentage}%"
+    },
+    "toasts": {
+      "audit_success_title": "Audit Completed",
+      "audit_success_desc": "{processed} assets processed and {updated} updated.",
+      "audit_error_title": "Audit Error",
+      "audit_error_desc": "Self-healing could not be executed",
+      "predictive_success_title": "Predictive Audit Complete",
+      "predictive_success_desc": "Detected {count} anomalies.",
+      "predictive_error_title": "Audit Failed",
+      "predictive_error_desc": "Predictive intelligence audit failed"
+    }
   }
 }

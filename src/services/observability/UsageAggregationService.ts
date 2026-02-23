@@ -1,6 +1,6 @@
 
 import { getTenantCollection } from '@/lib/db-tenant';
-import { CorrelationIdService } from '@/services/common/CorrelationIdService';
+import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { LogLifecycleService } from './LogLifecycleService';
 
 /**

@@ -5,5 +5,6 @@ import { LoggingService } from '@/services/observability/LoggingService';
  * Platform-wide logging entry point.
  */
 export const logEvento = LoggingService.log.bind(LoggingService);
+export const withSla = LoggingService.withSla.bind(LoggingService);
 
 export type { AppEvent as LogEventoParams } from '@/services/observability/schemas/EventSchema';

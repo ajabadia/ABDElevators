@@ -21,7 +21,7 @@ export class IngestPreparer {
         const spaceId = metadata.spaceId;
 
         // 1. Validations
-        metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel);
+        metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel) as any;
         const sizeBytes = (file as any).size || 0;
         IngestValidator.validateFileSize(sizeBytes);
 
@@ -74,9 +74,18 @@ export class IngestPreparer {
                     }
                 }, options.session, { includeDeleted: true });
 
-                await IngestAuditService.log({
-                    tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
-                    md5: fileHash, docId: existingDoc._id, correlationId, status: 'RESTORED'
+                await IngestAuditService.logEvent({
+                    assetId: existingDoc._id.toString(),
+                    correlationId,
+                    tenantId,
+                    action: 'RESTORE',
+                    status: 'SUCCESS',
+                    details: {
+                        filename: file.name,
+                        sizeBytes,
+                        md5: fileHash,
+                        performedBy: options.userEmail
+                    }
                 }, options.session);
 
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
@@ -87,9 +96,18 @@ export class IngestPreparer {
             const isForce = (metadata as any).force === true || (metadata as any).force === 'true';
 
             if (existingDoc.ingestionStatus === 'COMPLETED' && hasChunks && !isForce) {
-                await IngestAuditService.log({
-                    tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
-                    md5: fileHash, docId: existingDoc._id, correlationId, status: 'DUPLICATE'
+                await IngestAuditService.logEvent({
+                    assetId: existingDoc._id.toString(),
+                    correlationId,
+                    tenantId,
+                    action: 'DUPLICATE_BLOCK',
+                    status: 'WARNING',
+                    details: {
+                        filename: file.name,
+                        sizeBytes,
+                        md5: fileHash,
+                        performedBy: options.userEmail
+                    }
                 }, options.session);
                 return { docId: existingDoc._id.toString(), status: 'DUPLICATE', correlationId, isDuplicate: true, savings: 0 };
             }
@@ -135,10 +153,21 @@ export class IngestPreparer {
 
         const result = await KnowledgeAssetRepository.create(docMetadata, options.session);
 
-        await IngestAuditService.log({
-            tenantId, performedBy: options.userEmail, filename: file.name, sizeBytes,
-            md5: fileHash, docId: result.insertedId, correlationId, status: 'PENDING',
-            details: { source: 'ADMIN_INGEST', pipelineV2: isV2, blobId: blobId || null }
+        await IngestAuditService.logEvent({
+            assetId: result.insertedId.toString(),
+            correlationId,
+            tenantId,
+            action: 'REGISTER',
+            status: 'SUCCESS',
+            details: {
+                filename: file.name,
+                sizeBytes,
+                md5: fileHash,
+                performedBy: options.userEmail,
+                source: 'ADMIN_INGEST',
+                pipelineV2: isV2,
+                blobId: blobId || null
+            }
         }, options.session);
 
         return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: 0 };

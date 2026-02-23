@@ -1,10 +1,7 @@
 import { z } from 'zod';
-import { PromptService } from '@/lib/prompt-service';
-import { PROMPTS } from '@/lib/prompts';
-import { callGeminiMini } from '@/lib/llm';
+import { PromptRunner } from '@/lib/llm-core';
 import { logEvento } from '@/lib/logger';
 import { runQuery } from '@/lib/neo4j';
-import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
 
 const GraphDataSchema = z.object({
     entities: z.array(z.object({
@@ -22,12 +19,9 @@ const GraphDataSchema = z.object({
 
 type GraphData = z.infer<typeof GraphDataSchema>;
 
-// ... inside class ...
-
-
 export class GraphExtractionService {
     /**
-     * Extracts entities and relations from text using LLM and persists them in Neo4j
+     * Extracts entities and relations from text using LLM Core unificado (Era 7).
      */
     static async extractAndPersist(
         text: string,
@@ -36,31 +30,17 @@ export class GraphExtractionService {
         metadata: { sourceDoc: string; chunkId?: string }
     ): Promise<void> {
         try {
-            // 1. Get Prompt with Fallback
-            let prompt: string;
-            let model: string = DEFAULT_MODEL;
+            // Ejecución via PromptRunner con parsing resiliente
+            const data = await PromptRunner.runJson({
+                key: 'GRAPH_EXTRACTOR',
+                variables: { text: text.substring(0, 10000) },
+                schema: GraphDataSchema,
+                tenantId,
+                correlationId,
+                temperature: 0.1
+            });
 
-            try {
-                const rendered = await PromptService.getRenderedPrompt(
-                    'GRAPH_EXTRACTOR',
-                    { text: text.substring(0, 10000) }, // Limit for extraction context
-                    tenantId
-                );
-                prompt = rendered.text;
-                model = rendered.model || DEFAULT_MODEL;
-            } catch (err) {
-                console.warn(`[GRAPH_EXTRACTOR] ⚠️ Fallback to master prompt:`, err);
-                prompt = (PROMPTS.GRAPH_EXTRACTOR?.template || '').replace('{{text}}', text.substring(0, 10000));
-            }
-
-            // 2. Call LLM
-            const response = await callGeminiMini(prompt, tenantId, { correlationId, model });
-
-            // Clean response (sometimes LLM adds markdown blocks)
-            const cleanJson = response.replace(/```json|```/g, '').trim();
-            const data = GraphDataSchema.parse(JSON.parse(cleanJson));
-
-            // 3. Persist in Neo4j
+            // 2. Persist in Neo4j
             await this.persistInNeo4j(data, tenantId, metadata);
 
             await logEvento({

@@ -43,14 +43,15 @@ export class PIIMasker {
      */
     static mask(text: string, tenantId: string, correlationId: string): {
         maskedText: string,
-        metadata: { count: number, types: string[] }
+        metadata: { count: number, types: string[], isClean: boolean }
     } {
         const result = this.process(text, { tenantId, correlationId, detectOnly: false });
         return {
             maskedText: result.processedText,
             metadata: {
                 count: result.metadata.count,
-                types: result.metadata.types
+                types: result.metadata.types,
+                isClean: result.metadata.isClean
             }
         };
     }

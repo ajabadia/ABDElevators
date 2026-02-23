@@ -21,11 +21,15 @@ export class KnowledgeReviewService {
         const thresholdDate = new Date();
         thresholdDate.setDate(now.getDate() + daysThreshold);
 
-        return await collection.find({
+        const docs = await collection.find({
             tenantId,
             nextReviewDate: { $lte: thresholdDate },
             reviewStatus: { $ne: 'reviewed' }
-        }).sort({ nextReviewDate: 1 }).toArray();
+        });
+
+        return (docs as any[]).sort((a, b) =>
+            new Date(a.nextReviewDate).getTime() - new Date(b.nextReviewDate).getTime()
+        );
     }
 
     /**
@@ -61,7 +65,7 @@ export class KnowledgeReviewService {
         );
 
         // Audit Trail
-        const { AuditTrailService } = await import('./audit-trail-service');
+        const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
         await AuditTrailService.logConfigChange({
             actorType: 'USER',
             actorId: performer,

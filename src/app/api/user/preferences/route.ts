@@ -101,8 +101,10 @@ export async function POST(req: Request) {
 
         // Record Audit Trail
         await AuditService.record({
-            userId: session.user.id as string,
+            actorType: 'USER',
+            actorId: session.user.id as string,
             tenantId: session.user.tenantId as string,
+            source: 'ADMIN_OP',
             action: validated.onboarding?.completed ? 'COMPLETE_ONBOARDING' : 'UPDATE_PREFERENCES',
             entityType: 'USER',
             entityId: session.user.id,

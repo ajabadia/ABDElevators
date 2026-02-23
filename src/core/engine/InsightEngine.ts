@@ -92,7 +92,7 @@ export class InsightEngine {
             // 3. Trigger Automated Workflows (Phase 10)
             const workflow = AIWorkflowEngine.getInstance();
             for (const insight of insights) {
-                await workflow.processEvent(WorkflowTriggerType.ON_INSIGHT, insight, tenantId, correlationId);
+                await workflow.processEvent(WorkflowTriggerType.on_insight, insight, tenantId, correlationId);
             }
 
             await logEvento({

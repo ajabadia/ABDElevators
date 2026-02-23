@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         });
 
         // 3. Get Prompt from Governance Service (Regla de Oro #4)
-        const { text: systemPromptText } = await PromptService.getRenderedPrompt(
+        const { text: systemPromptText, model } = await PromptService.getRenderedPrompt(
             'QUICK_QA_EPHEMERAL',
             {
                 snippet: validated.snippet,

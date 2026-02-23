@@ -10,7 +10,7 @@ import { ContentCard } from "@/components/ui/content-card";
 import { Key } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { SpaceService } from "@/services/space-service";
+import { SpaceService } from "@/services/tenant/space-service";
 import { auth } from "@/lib/auth";
 
 export default async function ApiKeysPage() {

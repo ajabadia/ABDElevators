@@ -179,7 +179,8 @@ async function retryIndexing(
     IngestService.executeAnalysis(assetId, {
         correlationId,
         userEmail: session?.user?.email || 'system',
-        tenantId: asset.tenantId
+        tenantId: asset.tenantId,
+        isEnrichment: false
     }).catch(err => {
         console.error(`[RETRY_INDEXING_ERROR] ${assetId}:`, err);
     });
@@ -321,7 +322,8 @@ async function retryFull(
     IngestService.executeAnalysis(assetId, {
         correlationId,
         userEmail: session?.user?.email || 'system',
-        tenantId: asset.tenantId
+        tenantId: asset.tenantId,
+        isEnrichment: false
     }).catch(err => {
         console.error(`[RETRY_FULL_ERROR] ${assetId}:`, err);
     });

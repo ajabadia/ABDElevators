@@ -1,100 +1,43 @@
-import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
-import { logEvento } from '@/lib/logger';
-import { NotificationService } from './notification-service';
+import { ObservabilityRepository } from './ObservabilityRepository';
 
 /**
- * Servicio de Observabilidad Avanzada (Fase 24)
- * Enfocado en detección de anomalías y monitoreo de salud proactivo.
+ * 📊 ObservabilityService
+ * Business logic for platform metrics and system health.
  */
 export class ObservabilityService {
 
     /**
-     * Monitorea violaciones de SLA en tiempo real.
-     * Se llama desde middlewares o interceptores de performance.
+     * Returns top consuming tenants and general AI usage.
      */
-    static async trackSLAViolation(tenantId: string, endpoint: string, duration: number, threshold: number, correlationId: string) {
-        if (duration > threshold) {
-            await logEvento({
-                level: 'WARN',
-                source: 'SLA_MONITOR',
-                action: 'SLA_VIOLATION',
-                message: `Exceso de latencia en ${endpoint}: ${duration}ms (límite ${threshold}ms)`, correlationId,
-                details: { duration, threshold, endpoint }
-            });
+    static async getAITelemetry(days: number = 7) {
+        const usage = await ObservabilityRepository.getUsageMetrics(days);
+        const health = await ObservabilityRepository.getLlmHealth(days);
 
-            // Si es una violación crítica (> 2x threshold), notificar a SuperAdmin
-            if (duration > threshold * 2) {
-                await NotificationService.notify({
-                    tenantId: 'SYSTEM', // Notificación global para SuperAdmins
-                    type: 'SYSTEM',
-                    level: 'ERROR',
-                    title: 'Degradación de Performance Detectada',
-                    message: `El endpoint ${endpoint} está respondiendo en ${duration}ms, superando críticamente el SLA de ${threshold}ms. Posible saturación de infraestructura o modelo LLM.`,
-                    link: '/admin/analytics'
-                });
-            }
-        }
-    }
+        const totalTokens = usage.reduce((acc: number, curr: any) => acc + (curr.totalTokens || 0), 0);
+        const avgLatency = usage.length > 0
+            ? usage.reduce((acc: number, curr: any) => acc + (curr.avgLatency || 0), 0) / usage.length
+            : 0;
 
-    /**
-     * Detecta "Silencio Inusual" (Posible churn o error de integración).
-     * Se debe ejecutar vía cron o tarea programada.
-     */
-    static async checkForActivityAnomalies() {
-        const db = await connectDB();
-        const fortyEightHoursAgo = new Date();
-        fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
-
-        const authDb = await connectAuthDB();
-        // Buscar tenants que tenían actividad pero llevan > 48h en silencio
-        const activeTenants = await authDb.collection('tenants').find({ status: 'active' }).toArray();
-
-        for (const tenant of activeTenants) {
-            const lastActivity = await db.collection('usage_logs')
-                .find({ tenantId: tenant._id.toString() })
-                .sort({ timestamp: -1 })
-                .limit(1)
-                .next();
-
-            if (lastActivity && lastActivity.timestamp < fortyEightHoursAgo) {
-                // Solo notificar si antes tenían actividad recurrente
-                await logEvento({
-                    level: 'INFO',
-                    source: 'ANOMALY_DETECTOR',
-                    action: 'INACTIVITY_DETECTED',
-                    message: `Tenant ${tenant.name} lleva >48h sin actividad operativa.`,
-                    correlationId: 'SYSTEM'
-                });
-
-                // Aquí se podría disparar una alerta comercial
-                console.log(`[ANOMALY] Tenant ${tenant.name} is possibly churning.`);
-            }
-        }
-    }
-
-    /**
-     * Reporte de Salud del Sistema (Snapshot)
-     */
-    static async getSystemHealth() {
-        const db = await connectLogsDB();
-        const oneHourAgo = new Date();
-        oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
-        const recentErrors = await db.collection('application_logs').countDocuments({
-            level: 'ERROR',
-            timestamp: { $gte: oneHourAgo }
-        });
-
-        const recentSLA = await db.collection('application_logs').countDocuments({
-            action: 'SLA_VIOLATION',
-            timestamp: { $gte: oneHourAgo }
-        });
+        const successCount = health.find((h: any) => h._id === 'PROMPT_RUNNER_SUCCESS')?.count || 0;
+        const failureCount = health.find((h: any) => h._id === 'PROMPT_RUNNER_FAILURE')?.count || 0;
+        const totalRequests = successCount + failureCount;
 
         return {
-            status: recentErrors > 50 ? 'CRITICAL' : recentErrors > 10 ? 'WARNING' : 'HEALTHY',
-            metrics: {
-                errors_last_hour: recentErrors,
-                sla_violations_last_hour: recentSLA
+            summary: {
+                totalTokens,
+                avgLatency: Math.round(avgLatency),
+                successRate: totalRequests > 0 ? (successCount / totalRequests) * 100 : 100,
+                totalRequests
+            },
+            tenants: usage.map((u: any) => ({
+                id: u._id,
+                tokens: u.totalTokens,
+                avgLatency: Math.round(u.avgLatency),
+                requests: u.requests
+            })),
+            health: {
+                success: successCount,
+                failure: failureCount
             }
         };
     }

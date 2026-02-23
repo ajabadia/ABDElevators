@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SpaceInvitationService } from '@/services/space-invitation-service';
+import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
 import { logEvento } from '@/lib/logger';

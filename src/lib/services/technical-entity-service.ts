@@ -1,11 +1,10 @@
 import { EntitySchema, IndustryType } from '../schemas';
-import { getTenantCollection } from '../db-tenant';
+import { technicalEntityRepository } from '../repositories/TechnicalEntityRepository';
 import { analyzeEntityWithGemini } from '../llm';
 import { performTechnicalSearch } from '../rag-service';
 import { RiskService } from '../risk-service';
 import { FederatedKnowledgeService } from '../federated-knowledge-service';
 import { logEvento } from '../logger';
-import crypto from 'crypto';
 
 /**
  * TechnicalEntityService: Orchestrates the analysis of technical entities (Phase 105 Hygiene)
@@ -73,10 +72,6 @@ export class TechnicalEntityService {
      * Checks if an entity already exists (Deduplication)
      */
     static async findExistingByHash(md5Hash: string, tenantId: string) {
-        const entitiesCollection = await getTenantCollection('entities');
-        return await entitiesCollection.findOne({
-            md5Hash,
-            tenantId
-        });
+        return await technicalEntityRepository.findByHash(md5Hash, tenantId);
     }
 }

@@ -1,4 +1,4 @@
-import { DomainRouterService } from '@/services/domain-router-service';
+import { DomainRouterService } from '@/services/core/domain-router-service';
 
 async function testDetection() {
     const samples = [

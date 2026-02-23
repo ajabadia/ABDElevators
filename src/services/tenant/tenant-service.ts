@@ -55,7 +55,7 @@ export class TenantService {
             this.cache.delete(tenantId);
 
             // Audit via internal dynamic import
-            const { AuditTrailService } = await import('@/services/security/audit-trail-service').catch(() => ({ AuditTrailService: null as any }));
+            const { AuditTrailService } = await import('@/services/observability/AuditTrailService').catch(() => ({ AuditTrailService: null as any }));
             if (AuditTrailService) {
                 await AuditTrailService.logConfigChange({
                     actorId: metadata?.performedBy || 'SYSTEM',

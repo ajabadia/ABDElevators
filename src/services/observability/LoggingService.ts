@@ -64,4 +64,49 @@ export class LoggingService {
             stack: error?.stack
         });
     }
+
+    /**
+     * Higher-order function to wrap an operation with SLA tracking and error logging.
+     */
+    static async withSla<T>(
+        source: string,
+        action: string,
+        thresholdMs: number,
+        correlationId: string,
+        fn: () => Promise<T>
+    ): Promise<T> {
+        const start = Date.now();
+        try {
+            return await fn();
+        } finally {
+            const durationMs = Date.now() - start;
+            await this.logPerformance({
+                source,
+                action,
+                durationMs,
+                thresholdMs,
+                correlationId
+            });
+        }
+    }
+
+    /**
+     * Bridge method for SLA tracking (legacy compat).
+     */
+    static async trackSLAViolation(
+        tenantId: string,
+        action: string,
+        durationMs: number,
+        thresholdMs: number,
+        correlationId: string
+    ) {
+        await this.logPerformance({
+            source: 'API_INTERCEPTOR',
+            action,
+            durationMs,
+            thresholdMs,
+            tenantId,
+            correlationId
+        });
+    }
 }

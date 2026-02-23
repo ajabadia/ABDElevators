@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-02-23 (Phase 213 / Platform Observability Hub)
-**Status:** Verified & Synchronized (Telemetry, Audit & LLM Core Standardized).
+**Last Audit:** 2026-02-23 (Phase 198 / Post-ingestion Enrichment)
+**Status:** Verified & Synchronized (Telemetry, Audit, LLM Core & Enrichment Pipeline Standardized).
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -141,6 +141,7 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/api/technical/*` | **Modular API**: RAG, Entities, Workflows. | 2026-02-22 (Deployed) |
 | `/api/support/*` | **Modular API**: Tickets, Support Knowledge. | 2026-02-22 (Deployed) |
 | `/api/ops/*` | **Modular API**: Logs, Audit, Health. | 2026-02-22 (Deployed) |
+| `/api/admin/ingest/[id]/enrich` | **Enrichment API**: Post-ingesta premium triggers. | 2026-02-23 (New) |
 
 ---
 

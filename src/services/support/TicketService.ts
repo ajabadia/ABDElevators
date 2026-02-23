@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Ticket, TicketSchema, TicketMessage } from "./schemas/TicketSchema";
-import { TicketRepository } from "./TicketRepository";
+import { ticketRepository } from "@/lib/repositories/TicketRepository";
 import { AppError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
 
@@ -15,7 +15,7 @@ export class TicketService {
      */
     static async createTicket(data: Partial<Ticket> & { tenantId: string, createdBy: string, userEmail: string }) {
         // Generar ID secuencial
-        const count = await TicketRepository.count({ tenantId: data.tenantId });
+        const count = await ticketRepository.count({ tenantId: data.tenantId });
         const year = new Date().getFullYear();
         const ticketNumber = `TKT-${year}-${(count + 1).toString().padStart(5, '0')}`;
 
@@ -39,7 +39,7 @@ export class TicketService {
         };
 
         const validated = TicketSchema.parse(newTicket);
-        const insertedId = await TicketRepository.create(validated as Ticket);
+        const insertedId = await ticketRepository.create(validated as Ticket);
 
         await logEvento({
             level: 'INFO',
@@ -70,7 +70,7 @@ export class TicketService {
         if (options.status) query.status = options.status;
         if (options.priority) query.priority = options.priority;
 
-        return await TicketRepository.list(query, {
+        return await ticketRepository.list(query, {
             sort: { updatedAt: -1, priority: -1 },
             limit: options.limit || 50
         });
@@ -80,11 +80,12 @@ export class TicketService {
      * Retrieves a single ticket ensuring ACL.
      */
     static async getTicketByIdWithAcl(id: string, session: any) {
-        const ticket = await TicketRepository.findById(id, session.user.tenantId);
+        const ticket = await ticketRepository.findById(id);
 
         if (!ticket) {
             throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
         }
+        // ...
 
         // ACL logic
         const canManage = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(session.user.role);
@@ -130,7 +131,7 @@ export class TicketService {
             $set: { updatedAt: new Date() }
         };
 
-        const success = await TicketRepository.update(ticketId, updateOp);
+        const success = await ticketRepository.update(ticketId, updateOp);
 
         if (!success) {
             throw new AppError('NOT_FOUND', 404, 'No se pudo añadir el mensaje');
@@ -152,7 +153,7 @@ export class TicketService {
      * Updates ticket status based on reply authorship.
      */
     static async updateStatusOnReply(ticketId: string, tenantId: string, authorType: 'User' | 'Support') {
-        const ticket = await TicketRepository.findById(ticketId, tenantId);
+        const ticket = await ticketRepository.findById(ticketId);
         if (!ticket) return;
 
         let newStatus = ticket.status;
@@ -163,7 +164,7 @@ export class TicketService {
         }
 
         if (newStatus !== ticket.status) {
-            await TicketRepository.update(ticketId, {
+            await ticketRepository.update(ticketId, {
                 $set: { status: newStatus as any, updatedAt: new Date() }
             });
         }
@@ -193,7 +194,7 @@ export class TicketService {
             };
         }
 
-        const success = await TicketRepository.update(ticketId, updateOp);
+        const success = await ticketRepository.update(ticketId, updateOp);
         if (!success) throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
 
         await logEvento({

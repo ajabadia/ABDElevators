@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { UsageService } from './usage-service';
-import { TenantService } from './tenant-service';
+import { TenantService, TenantQuotaService } from './tenant-service';
 import { AppError } from '@/lib/errors';
 
 // Configurar Cloudinary
@@ -78,14 +78,14 @@ export async function uploadRAGDocument(
 
     // We check quota if size is known or > 0
     if (size > 0) {
-        const hasQuota = await TenantService.hasStorageQuota(tenantId, size);
+        const hasQuota = await TenantQuotaService.hasStorageQuota(tenantId, size);
         if (!hasQuota) {
             throw new AppError('STORAGE_QUOTA_EXCEEDED', 403, 'El tenant ha excedido su cuota de almacenamiento');
         }
     }
 
     // 2. Obtener prefijo de carpeta según config del tenant
-    const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
+    const folderPrefix = await TenantQuotaService.getCloudinaryPrefix(tenantId);
 
     // Use MD5 if provided to allow overwriting, otherwise fallback to timestamp
     const uniqueId = fileHash || Date.now().toString();
@@ -104,7 +104,7 @@ export async function uploadLLMReport(
     filename: string,
     tenantId: string
 ): Promise<{ url: string; publicId: string; secureUrl: string }> {
-    const folderPrefix = await TenantService.getCloudinaryPrefix(tenantId);
+    const folderPrefix = await TenantQuotaService.getCloudinaryPrefix(tenantId);
 
     const result = await uploadToFolder(buffer, filename, `${folderPrefix}/informes`);
     // Trackeamos el uso de almacenamiento para informes específicamente

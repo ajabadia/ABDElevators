@@ -1,4 +1,4 @@
-import { PromptRunner } from "../infra/llm/prompt-runner";
+import { PromptRunner } from "@/lib/llm-core";
 import { z } from "zod";
 
 const ExtractedModelsArraySchema = z.array(z.object({
@@ -8,26 +8,16 @@ const ExtractedModelsArraySchema = z.array(z.object({
 
 export class ExtractionService {
     /**
-     * Extrae modelos y entidades de un texto de pedido usando PromptRunner.
+     * Extrae modelos y entidades de un texto de pedido usando el Core LLM unificado (Era 7).
      */
     static async extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
-        const modelos = await PromptRunner.runJsonPrompt<any[]>({
+        return await PromptRunner.runJson({
             key: 'EXTRAER_MODELOS',
             variables: { text },
+            schema: ExtractedModelsArraySchema,
             tenantId,
             correlationId,
             session
         });
-
-        // Validación de esquema post-extracción
-        try {
-            ExtractedModelsArraySchema.parse(modelos);
-            return modelos;
-        } catch (error) {
-            console.error("[EXTRACTION SCHEMA ERROR]", error);
-            // Si falla el esquema, intentamos devolverlo de todos modos si es un array, 
-            // o lanzamos si es crítico (aquí optamos por rigor)
-            throw error;
-        }
     }
 }
