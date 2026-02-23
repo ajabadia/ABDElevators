@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v5.0.0-alpha - SUITE ERA)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v5.1.1-beta - SUITE ERA)
 
 ## 📖 Overview
 
@@ -14,8 +14,8 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 201: OBSERVABILITY & AUDIT HUB**, FASE 200: SUPPORT HUB CONSOLIDATION, FASE 199: INGESTION PIPELINE INTEGRITY (Hardening), FASE 194: CODE-TO-DB PROMPT GOVERNANCE (v2.0).
-- **Project Status**: **Industrial Multi-product Suite (v5.1.0 - Production Ready).**
+- **Recent Ship**: **FASE 213: PLATFORM OBSERVABILITY HUB**, FASE 210: LLM CORE & PROMPT GOVERNANCE, FASE 201: OBSERVABILITY & AUDIT HUB.
+- **Project Status**: **Modular Industrial Suite Transition (v5.2.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -418,3 +418,59 @@ CONFIGURACIÓN (Admin Hub):
 - Suite de pruebas de integración (E2E) para cada escenario.
 - Reporte de "Ingestion Integrity" en `docs/audit/ingestion_integrity.md`.
 
+---
+
+### 📦 ERA 7: INDUSTRIAL SUITE & DOMAIN DECOUPLING (VISION 2026-2027)
+
+**Objetivo:** Evolucionar la plataforma de un proyecto monolítico a una suite de aplicaciones modulares desacopladas de la infraestructura.
+
+**Filosofía:** *"Cualquier módulo (Tickets, RAG, Ops) debe poder extraerse a un repositorio propio o escalar de forma independiente sin dolor."*
+
+#### 🏗️ FASE 210: LLM CORE & PROMPT GOVERNANCE (UNIFIED)
+
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 1 semana
+
+- [X] **Prompt Registry**: Consolidación de todos los prompts dispersos en `lib/llm-core/PromptRegistry.ts`. ✅
+- [X] **Prompt Runner**: Implementación de `PromptRunner` con métricas, logging y retry logic integrados. ✅
+- [X] **Safe JSON Parsing**: Implementación de `LlmJsonParser` para eliminar parseos manuales frágiles. ✅
+
+#### 🧩 FASE 211: DOMAIN DECOUPLING (SERVICE + REPOSITORY)
+ 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
+ 
+- [X] **Repository Layer**: Creación de repositorios para `TechnicalEntity`, `Tickets` y `Workflows`. ✅
+- [X] **Service Refactor**: Desacoplar la lógica de negocio de las queries de MongoDB en los servicios principales. ✅
+- [X] **Infra Adapters**: Wrappers para Mongo, Redis, Stripe y Resend en `lib/infra/`. ✅
+
+#### 🚦 FASE 212: API MODULARIZATION & SUITE UX
+ 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Estimación:** 2 semanas
+ 
+- [X] **API Restructuring**: Organización de `/api` por dominios (`/api/technical`, `/api/support`). ✅
+- [X] **App Registry**: Implementación de `lib/app-registry.ts` para gestionar los módulos de la suite. ✅
+- [X] **Modular Layouts**: Switcher de aplicaciones y navegación filtrada por contexto de dominio. ✅
+
+ 
+#### 📊 FASE 213: PLATFORM OBSERVABILITY HUB
+ 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 2 semanas
+ 
+- [X] **Multi-tenant Metrics**: Dashboard global para SuperAdmin con consumo de tokens y latencia por tenant. ✅
+- [X] **Prompts Health**: Visualización de tasas de éxito/error de `PromptRunner` por modelo y dominio. ✅
+- [X] **Audit Trail Revamp**: Filtros avanzados en UI para trazabilidad mediante `correlationId` y `trace_id`. ✅
+ 
+#### 🏠 FASE 214: DOMAIN-SPECIALIZED DASHBOARDS
+ 
+**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 1 semana
+ 
+- [ ] **Contextual Landing**: Implementación de Dashboards diferenciados según `AppId` (Técnico vs Soporte).
+- [ ] **Technical KPIs**: Widgets de salud de entidades, estado de indexación RAG y estadísticas de grafos.
+- [ ] **Support KPIs**: Dashboards de tickets activos, cumplimiento de SLA y métricas de resolución AI.
+ 
+#### 🛡️ FASE 215: QUALITY SHIELD (UNIT TESTING)
+ 
+**Status:** `[PLANNED 🚀]` | **Prioridad:** MEDIA | **Estimación:** 1 semana
+ 
+- [ ] **LLM Core Tests**: Suite de tests para `PromptRunner` (utilizando mocks de Gemini) y `LlmJsonParser`.
+- [ ] **Repository Tests**: Cobertura de tests para `BaseRepository` y repositorios clave (`TechnicalEntity`, `Tickets`).
+- [ ] **Isolation Audit**: Tests automatizados para verificar el aislamiento estricto de `tenantId` en la capa de datos.

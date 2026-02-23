@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-02-22 (Phase 201 / Observability & Audit Hub Modularization)
-**Status:** Verified & Synchronized (Support Hub Isolated & Observability Centralized).
+**Last Audit:** 2026-02-23 (Phase 213 / Platform Observability Hub)
+**Status:** Verified & Synchronized (Telemetry, Audit & LLM Core Standardized).
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -138,6 +138,9 @@ Ubicación base: `/admin` (Protegido por Guardian V2)
 | `/entities` | Dashboard de Entidades (Technical). | 2026-02-19 (Verified) |
 | `/entities/[id]/validar` | Validación de Entidad. | 2026-02-19 (Verified) |
 | `/graphs` | Visualizador de Grafo (Neo4j). | 2026-02-19 (Verified) |
+| `/api/technical/*` | **Modular API**: RAG, Entities, Workflows. | 2026-02-22 (Deployed) |
+| `/api/support/*` | **Modular API**: Tickets, Support Knowledge. | 2026-02-22 (Deployed) |
+| `/api/ops/*` | **Modular API**: Logs, Audit, Health. | 2026-02-22 (Deployed) |
 
 ---
 

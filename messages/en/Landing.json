@@ -41,7 +41,9 @@
       "Multi-product Suite Architecture",
       "Decoupled Domain Architecture",
       "Independent Support Hub (Ph 200)",
-      "Observability & Audit Hub (Ph 201)"
+      "Observability & Audit Hub (Ph 201)",
+      "Unified LLM Core (Ph 210)",
+      "Multi-tenant Observability (Ph 213)"
     ]
   },
   "UX_REVOLUTION": {
