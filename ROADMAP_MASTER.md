@@ -625,6 +625,31 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
+#### 🧩 FASE 222B: UI DRY COMPONENT EXTRACTION
+
+**Objetivo:** Eliminar código duplicado a nivel de componentes UI. Extraer piezas reutilizables y estandarizar patrones de data fetching.
+
+**Contexto del problema:**
+- Billing, Operations y Security tienen el mismo patrón "Hub Page" (array de secciones → grid de Cards) reimplementado 3 veces con diferencias mínimas.
+- `StatSimple` (inline en workflow-tasks, 15 líneas con `: any`) hace lo mismo que `MetricCard` (componente estándar en `src/components/ui`).
+- `superadmin/page.tsx` es un monolito de 489 líneas con 5 widgets que podrían ser componentes independientes.
+- `notifications/page.tsx` no usa `<PageContainer>` ni `<PageHeader>` — layout inconsistente.
+- `intelligence/trends` usa `useEffect + fetch` manual en vez del hook estándar `useApiItem`.
+- `notifications/page.tsx` hace `connectDB()` directo sin service layer.
+- **Referencia DRY detallada**: [implementation_plan.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/implementation_plan.md)
+
+**Tareas:**
+- [ ] **222B.1: Crear `<HubPage>`**: Componente genérico que recibe `sections[]` con `{title, description, href, icon, color, isActive}`. Migrar Billing, Operations y Security a usarlo. Cada página queda en ~15 líneas.
+- [ ] **222B.2: Eliminar `StatSimple` inline**: Reemplazar en `workflow-tasks/page.tsx` por `MetricCard` estándar de `@/components/ui`. Eliminar la función inline con `: any`.
+- [ ] **222B.3: Descomponer Superadmin**: Extraer `FinancialsCard`, `AnomaliesWidget`, `InfraCard`, `EvolutionDashboard` como componentes independientes bajo `src/components/admin/superadmin/`. La página queda en ~40 líneas.
+- [ ] **222B.4: Estandarizar layout de Notifications**: Migrar `notifications/page.tsx` a usar `<PageContainer>` + `<PageHeader>` en vez de `<h1>` + `<div>` manual.
+- [ ] **222B.5: Migrar intelligence/trends a `useApiItem`**: Reemplazar el patrón `useEffect + fetch + useState` por el hook estándar. Eliminar `console.error` residual.
+- [ ] **222B.6: Service layer para Notifications**: Crear `NotificationService.getStats()` y `NotificationService.getRecent()` para encapsular las queries directas a `connectDB()`.
+
+**Criterio de aceptación:** Zero `StatSimple` inline. Las 3 Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`.
+
+---
+
 #### 🌐 FASE 223: i18n HARDCODE PURGE
 
 **Objetivo:** Eliminar TODOS los strings hardcodeados en español/inglés de componentes y páginas. Todo texto visible debe pasar por `useTranslations()`.
