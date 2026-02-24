@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
+import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';

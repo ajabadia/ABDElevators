@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createApiKey } from '@/actions/api-keys';
 import { ApiKeyPermission, ApiKeyPermissionSchema } from '@/lib/schemas';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Copy, Key, AlertTriangle } from 'lucide-react';
 import {
     Alert,
@@ -40,26 +40,26 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
     const [spaceId, setSpaceId] = useState<string | null>(null);
     const [generatedKey, setGeneratedKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
+
 
     // Get all available permissions from schema enum
     const availablePermissions = ApiKeyPermissionSchema.options;
 
     const handleCreate = async () => {
-        if (!name) return toast({ title: "Error", description: t('error_name'), variant: "destructive" });
-        if (permissions.length === 0) return toast({ title: "Error", description: t('error_permissions'), variant: "destructive" });
+        if (!name) return toast.error("Error", { description: t('error_name') });
+        if (permissions.length === 0) return toast.error("Error", { description: t('error_permissions') });
 
         setLoading(true);
         try {
             const result = await createApiKey(name, permissions, undefined, spaceId || undefined);
             if (result.success && result.data) {
                 setGeneratedKey(result.data.plainTextKey);
-                toast({ title: t('copied'), description: t('create_success') });
+                toast.success(t('copied'), { description: t('create_success') });
             } else {
-                toast({ title: "Error", description: result.error || "Unknown error", variant: "destructive" });
+                toast.error("Error", { description: result.error || "Unknown error" });
             }
         } catch (e) {
-            toast({ title: "Error", description: "Error creating key", variant: "destructive" });
+            toast.error("Error", { description: "Error creating key" });
         } finally {
             setLoading(false);
         }
@@ -172,7 +172,7 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                                 className="absolute top-2 right-2 bg-slate-800 hover:bg-slate-700 text-slate-300"
                                 onClick={() => {
                                     navigator.clipboard.writeText(generatedKey);
-                                    toast({ title: t('copied'), description: t('copy_toast') });
+                                    toast.success(t('copied'), { description: t('copy_toast') });
                                 }}
                             >
                                 <Copy className="w-3 h-3" />

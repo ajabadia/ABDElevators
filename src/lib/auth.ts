@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { authorizeCredentials } from "./auth-utils";
-import { SessionService } from "./session-service";
+import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from "@/lib/errors";
 import { UserRole } from "@/types/roles";
 

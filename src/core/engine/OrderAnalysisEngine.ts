@@ -1,10 +1,10 @@
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
-import { RagResult, performTechnicalSearch } from "@/lib/rag-service";
-import { extractModelsWithGemini, callGeminiMini } from "@/lib/llm";
+import { RagService, RagResult } from "@/services/core/RagService";
+import { extractModelsWithGemini, callGeminiMini } from "@/services/llm/llm-service";
 import { logEvento } from "@/lib/logger";
-import { PromptService } from "@/lib/prompt-service";
+import { PromptService } from "@/services/llm/prompt-service";
 import { MongoDBSaver } from "@/lib/agent-persistence";
-import { FederatedKnowledgeService } from "@/lib/federated-knowledge-service";
+import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
 import { AIModelFinding, AIRiskFinding, AIFinding } from "@/types/ai";
 
 /**
@@ -121,7 +121,7 @@ async function extractionNode(state: AgentStateType) {
             confidence: m.confidence || 0.9,
             source: 'extraction' as const
         }) as AIModelFinding),
-        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')}` }]
+        messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')} ` }]
     };
 }
 
@@ -130,31 +130,30 @@ async function extractionNode(state: AgentStateType) {
  * Recupera contexto relevante del corpus técnico basado en los modelos detectados.
  */
 async function retrievalNode(state: AgentStateType) {
-    const { findings, tenantId, correlationId: correlacion_id, search_queries } = state;
+    const { findings, tenantId, correlationId: correlacion_id, search_queries, industry } = state;
 
     // Si tenemos queries específicas del crítico, las usamos. Si no, usamos las basadas en modelos.
     const queries = search_queries.length > 0
         ? [search_queries[search_queries.length - 1]]
         : (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
-            .map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model}`);
+            .map(m => `Especificaciones técnicas y normativa para ${m.type} modelo ${m.model} `);
 
     let allChunks: RagResult[] = [];
 
     for (const query of queries) {
-        const chunks = await performTechnicalSearch(
+        const ragDocs = await RagService.performTechnicalSearch(
             query,
             tenantId!,
             correlacion_id!,
-            search_queries.length > 0 ? 5 : 3, // Más profundidad si es una búsqueda de corrección
-            state.industry,
-            state.environment
+            4,
+            industry
         );
-        allChunks = [...allChunks, ...chunks];
+        allChunks = [...allChunks, ...ragDocs];
     }
 
     return {
         context_chunks: allChunks,
-        messages: [{ role: 'assistant', content: `Retriever: He recuperado ${allChunks.length} fragmentos técnicos relevantes para: ${queries.join(', ')}` }]
+        messages: [{ role: 'assistant', content: `Retriever: He recuperado ${allChunks.length} fragmentos técnicos relevantes para: ${queries.join(', ')} ` }]
     };
 }
 
@@ -166,7 +165,7 @@ async function riskAnalysisNode(state: AgentStateType) {
     const { context_chunks, findings, tenantId, correlationId: correlacion_id, federated_insights } = state;
 
     const context = context_chunks.map(c => c.text).join('\n---\n');
-    const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector}\n  SOLUTION: ${p.solutionVector}`).join('\n') || 'No global patterns found.';
+    const globalPatterns = federated_insights?.map(p => `- PROBLEM: ${p.problemVector} \n  SOLUTION: ${p.solutionVector} `).join('\n') || 'No global patterns found.';
     const models = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
         .map(f => f.model).join(', ');
 
@@ -191,7 +190,7 @@ async function riskAnalysisNode(state: AgentStateType) {
                 source: 'risk_analysis' as const
             }) as AIRiskFinding),
             confidence_score: parsed.confidence || 0.5,
-            messages: [{ role: 'assistant', content: `Análisis de riesgos completado. Confianza: ${parsed.confidence}` }]
+            messages: [{ role: 'assistant', content: `Análisis de riesgos completado.Confianza: ${parsed.confidence} ` }]
         };
     } catch (e) {
         return {
@@ -218,13 +217,13 @@ async function critiqueNode(state: AgentStateType) {
     const retryCount = messages.filter(m => m.content.includes("Refinando búsqueda")).length;
     if (retryCount >= 2) {
         return {
-            messages: [{ role: 'assistant', content: `Crítico: Límite de reintentos alcanzado. Se entrega con las dudas detectadas.` }]
+            messages: [{ role: 'assistant', content: `Crítico: Límite de reintentos alcanzado.Se entrega con las dudas detectadas.` }]
         };
     }
 
     // Generar nueva estrategia de búsqueda usando LLM para "Query Expansion"
     const lastRisks = findings.filter(f => f.source === 'risk_analysis').slice(-3);
-    const expansionPrompt = `Como experto técnico de ascensores, analiza por qué la confianza del análisis es baja (${confidence_score}) basándote en estos riesgos detectados: ${JSON.stringify(lastRisks)}. 
+    const expansionPrompt = `Como experto técnico de ascensores, analiza por qué la confianza del análisis es baja(${confidence_score}) basándote en estos riesgos detectados: ${JSON.stringify(lastRisks)}. 
     Genera una ÚNICA frase de búsqueda técnica para recuperar la normativa exacta que resolvería la duda.
     Responde solo con la frase de búsqueda.`;
 
@@ -232,7 +231,7 @@ async function critiqueNode(state: AgentStateType) {
 
     return {
         search_queries: [expandedQuery.trim()],
-        messages: [{ role: 'assistant', content: `Crítico: Baja confianza detectada. Refinando búsqueda con: "${expandedQuery.trim()}"` }],
+        messages: [{ role: 'assistant', content: `Crítico: Baja confianza detectada.Refinando búsqueda con: "${expandedQuery.trim()}"` }],
     };
 }
 
@@ -258,7 +257,7 @@ async function federatedDiscoveryNode(state: AgentStateType) {
 
     // Usamos los modelos detectados para buscar patrones globales
     const queries = (findings.filter(f => f.source === 'extraction') as AIModelFinding[])
-        .map(m => `${m.type} ${m.model}`);
+        .map(m => `${m.type} ${m.model} `);
 
     let allInsights: any[] = [];
 
@@ -266,7 +265,8 @@ async function federatedDiscoveryNode(state: AgentStateType) {
         const insights = await FederatedKnowledgeService.searchGlobalPatterns(
             query,
             tenantId!,
-            correlacion_id!
+            correlacion_id!,
+            3
         );
         allInsights = [...allInsights, ...insights];
     }

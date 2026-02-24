@@ -1,7 +1,7 @@
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 
 export class AnalyticsService {
     /**

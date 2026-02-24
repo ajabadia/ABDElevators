@@ -1,6 +1,6 @@
 
-import { generateEmbedding } from '@/lib/llm';
-import { withLLMRetry } from '@/lib/llm-retry';
+import { generateEmbedding } from '@/services/llm/llm-service';
+import { withLLMRetry } from '@/services/llm/llm-retry';
 import { logEvento } from '@/lib/logger';
 import { AI_MODEL_IDS } from '@abd/platform-core';
 import { LLMCostTracker } from '@/services/ingest/observability/LLMCostTracker';
@@ -46,7 +46,7 @@ export class IngestEmbeddingService {
      * Genera un embedding multilingüe (BGE).
      */
     static async generateBGEEmbedding(text: string): Promise<number[]> {
-        const { multilingualService } = await import('@/lib/multilingual-service');
+        const { multilingualService } = await import('@/services/core/multilingual-service');
         return await multilingualService.generateEmbedding(text);
     }
 }

@@ -1,4 +1,4 @@
-import { Zap, LifeBuoy, Activity, ShieldCheck, Box } from 'lucide-react';
+import { Zap, LifeBuoy, Activity, ShieldCheck, Box, Search, FileText, Building, Users } from 'lucide-react';
 
 /**
  * 📱 App Registry
@@ -10,7 +10,13 @@ export enum AppId {
     SUPPORT = 'SUPPORT',
     OPERATIONS = 'OPERATIONS',
     CONFIG = 'CONFIG',
-    PERSONAL = 'PERSONAL'
+    PERSONAL = 'PERSONAL',
+    KNOWLEDGE = 'KNOWLEDGE',
+    TASKS = 'TASKS',
+    SEARCH = 'SEARCH',
+    ORGANIZATIONS = 'ORGANIZATIONS',
+    USERS = 'USERS',
+    ADMIN = 'ADMIN'
 }
 
 export interface AppDefinition {
@@ -21,9 +27,18 @@ export interface AppDefinition {
     basePath: string;
     color: string;
     requiredModule?: string;
+    roles?: string[];
 }
 
 export const APP_REGISTRY: Record<AppId, AppDefinition> = {
+    [AppId.ADMIN]: {
+        id: AppId.ADMIN,
+        nameKey: 'apps.admin.name',
+        descriptionKey: 'apps.admin.description',
+        icon: Zap,
+        basePath: '/admin',
+        color: 'text-primary'
+    },
     [AppId.TECHNICAL]: {
         id: AppId.TECHNICAL,
         nameKey: 'apps.technical.name',
@@ -49,13 +64,29 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         basePath: '/ops/reports',
         color: 'text-emerald-500'
     },
-    [AppId.CONFIG]: {
-        id: AppId.CONFIG,
-        nameKey: 'apps.config.name',
-        descriptionKey: 'apps.config.description',
-        icon: ShieldCheck,
-        basePath: '/admin/permissions',
-        color: 'text-purple-500'
+    [AppId.TASKS]: {
+        id: AppId.TASKS,
+        nameKey: 'apps.tasks.name',
+        descriptionKey: 'apps.tasks.description',
+        icon: Activity,
+        basePath: '/tasks',
+        color: 'text-primary'
+    },
+    [AppId.KNOWLEDGE]: {
+        id: AppId.KNOWLEDGE,
+        nameKey: 'apps.knowledge.name',
+        descriptionKey: 'apps.knowledge.description',
+        icon: FileText,
+        basePath: '/admin/knowledge',
+        color: 'text-secondary'
+    },
+    [AppId.SEARCH]: {
+        id: AppId.SEARCH,
+        nameKey: 'apps.search.name',
+        descriptionKey: 'apps.search.description',
+        icon: Search,
+        basePath: '/search',
+        color: 'text-accent'
     },
     [AppId.PERSONAL]: {
         id: AppId.PERSONAL,
@@ -64,6 +95,30 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         icon: Box,
         basePath: '/spaces',
         color: 'text-slate-500'
+    },
+    [AppId.ORGANIZATIONS]: {
+        id: AppId.ORGANIZATIONS,
+        nameKey: 'apps.organizations.name',
+        descriptionKey: 'apps.organizations.description',
+        icon: Building,
+        basePath: '/admin/organizations',
+        color: 'text-primary'
+    },
+    [AppId.USERS]: {
+        id: AppId.USERS,
+        nameKey: 'apps.users.name',
+        descriptionKey: 'apps.users.description',
+        icon: Users,
+        basePath: '/admin/users',
+        color: 'text-secondary'
+    },
+    [AppId.CONFIG]: {
+        id: AppId.CONFIG,
+        nameKey: 'apps.config.name',
+        descriptionKey: 'apps.config.description',
+        icon: ShieldCheck,
+        basePath: '/admin/permissions',
+        color: 'text-purple-500'
     }
 };
 

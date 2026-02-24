@@ -1,9 +1,10 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
-import { connectDB, getMongoClient } from '../lib/db';
-import { UserRole } from '../types/roles';
-import { WorkflowEngine } from '../lib/workflow-engine';
-import { getTenantCollection } from '../lib/db-tenant';
+import { connectDB, getMongoClient } from '../../lib/db';
+import { UserRole } from '../../types/roles';
+import { WorkflowEngine } from '../../lib/workflow-engine';
+import { WorkflowTaskService } from '../../services/ops/WorkflowTaskService';
+import { getTenantCollection } from '../../lib/db-tenant';
 import { ObjectId } from 'mongodb';
 
 // Load env vars
@@ -76,7 +77,7 @@ async function verify() {
 
             // --- NEW: Test WorkflowTaskService ---
             console.log('\n🧪 Testing WorkflowTaskService...');
-            const { WorkflowTaskService } = await import('../lib/workflow-task-service');
+            const { WorkflowTaskService } = await import('../../services/ops/WorkflowTaskService');
 
             // List tasks
             const tasks = await WorkflowTaskService.listTasks(tenantId, { caseId: mockCaseId.toString() });

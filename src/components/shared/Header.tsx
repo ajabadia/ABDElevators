@@ -18,7 +18,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { FeatureFlags } from "@/lib/feature-flags";
+import { FeatureFlags } from '@/services/security/feature-flags';
 import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from './LanguageSelector';

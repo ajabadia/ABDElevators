@@ -1,6 +1,6 @@
-import { IngestService } from '@/services/ingest-service';
+import { IngestService } from '@/services/ingest/IngestService';
 import { connectDB } from '@/lib/db';
-import { performTechnicalSearch } from '@/lib/rag-service';
+import { RagService } from '@/services/core/RagService';
 import { ObjectId } from 'mongodb';
 
 async function testCognitiveRetrievalOptimized() {
@@ -49,7 +49,7 @@ async function testCognitiveRetrievalOptimized() {
 
         // 3. Verificar RAG (DEBE tener el header inyectado al vuelo)
         console.log('\n--- RAG VERIFICATION (RETRIEVAL) ---');
-        const searchResults = await performTechnicalSearch(
+        const searchResults = await RagService.performTechnicalSearch(
             'motor arca',
             'platform_master',
             'test-query-' + Date.now(),

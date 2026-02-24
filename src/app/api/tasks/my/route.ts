@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { WorkflowTaskService } from '@/lib/workflow-task-service';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(request: Request) {
     const correlationId = uuidv4();
     try {
-        const session = await auth();
-        if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        const session = await enforcePermission('workflow:task', 'read');
 
         const tenantId = session.user.tenantId;
         const userId = session.user.id;

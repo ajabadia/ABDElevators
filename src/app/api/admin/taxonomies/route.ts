@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { TaxonomyService } from '@/lib/taxonomy-service';
+import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
 

@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { FederatedKnowledgeService } from "@/lib/federated-knowledge-service";
+import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
 import { auth } from "@/lib/auth";
 import crypto from 'crypto';
 

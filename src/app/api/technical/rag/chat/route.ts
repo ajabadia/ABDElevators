@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch tenant config to get industry dynamically (Regla de Oro #11)
-        const { TenantService } = await import('@/lib/tenant-service');
+        const { TenantService } = await import('@/services/tenant/tenant-service');
         const tenantConfig = await TenantService.getConfig(tenantId);
 
         const {

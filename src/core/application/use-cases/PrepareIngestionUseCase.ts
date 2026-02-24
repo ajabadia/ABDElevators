@@ -4,7 +4,7 @@ import { IAuditRepository } from '../../domain/repositories/IAuditRepository';
 import { IngestPreparer } from '@/services/ingest/IngestPreparer';
 import crypto from 'crypto';
 import { IngestOptions } from '@/services/ingest/types';
-import { queueService } from '@/lib/queue-service';
+import { IngestService } from '@/services/ingest/IngestService';
 import { StateTransitionValidator } from '@/services/ingest/observability/StateTransitionValidator';
 
 /**
@@ -71,7 +71,7 @@ export class PrepareIngestionUseCase {
             await this.knowledgeRepo.updateStatus(docId, 'QUEUED', {});
 
             // Use simple queue instead of BullMQ
-            const { ingestionQueue } = await import('@/lib/simple-queue');
+            const { ingestionQueue } = await import('@/services/ops/simple-queue/simple-queue');
             ingestionQueue.add(docId, {
                 tenantId,
                 userId: userEmail || 'system',

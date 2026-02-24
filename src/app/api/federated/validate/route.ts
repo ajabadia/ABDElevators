@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { FederatedKnowledgeService } from '@/lib/federated-knowledge-service';
+import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useApiList } from '@/hooks/useApiList';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,6 @@ interface WorkflowDesignerProps {
 
 export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
     const t = useTranslations('workflows');
-    const { toast } = useToast();
     const [workflow, setWorkflow] = useState<WorkflowDefinition>(initialWorkflow);
     const [activeTab, setActiveTab] = useState('states');
 
@@ -53,10 +52,8 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
         endpoint: `/api/admin/workflow-definitions/${workflow._id}`,
         method: 'PATCH',
         onSuccess: () => {
-            toast({
-                title: t('saveSuccess'),
+            toast.success(t('saveSuccess'), {
                 description: t('saveSuccessDesc'),
-                variant: "default"
             });
         }
     });

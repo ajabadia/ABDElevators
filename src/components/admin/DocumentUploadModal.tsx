@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 interface DocumentUploadModalProps {
@@ -36,7 +36,6 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
     const [maskPii, setMaskPii] = useState(true);
     const [showPiiWarning, setShowPiiWarning] = useState(false);
     const [tiposDocs, setTiposDocs] = useState<{ name: string }[]>([]);
-    const { toast } = useToast();
     const t = useTranslations('ingest');
 
     useEffect(() => {
@@ -114,14 +113,15 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
             setUploadSuccess(true);
 
             // Toast más informativo
-            toast({
-                title: isDedup ? '¡Procesado Instantáneamente!' : 'Documento Procesado',
-                description: isDedup
-                    ? 'Se detectó una copia exacta. Metadatos clonados sin consumo de tokens.'
-                    : 'El documento ha sido indexado correctamente en el corpus.',
-                variant: 'default',
-                className: isDedup ? "bg-indigo-50 border-indigo-200 text-indigo-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"
-            });
+            if (isDedup) {
+                toast.info('¡Procesado Instantáneamente!', {
+                    description: 'Se detectó una copia exacta. Metadatos clonados sin consumo de tokens.',
+                });
+            } else {
+                toast.success('Documento Procesado', {
+                    description: 'El documento ha sido indexado correctamente en el corpus.',
+                });
+            }
 
             setTimeout(() => {
                 onClose();
@@ -133,10 +133,8 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
             }, 2500); // Un poco más de tiempo para leer el éxito
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast({
-                title: 'Error de Ingesta',
+            toast.error('Error de Ingesta', {
                 description: `${error.message}${errorDetails ? ' - Revise la consola para más detalles.' : ''}`,
-                variant: 'destructive',
             });
         } finally {
             setIsUploading(false);

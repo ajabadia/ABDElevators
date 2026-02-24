@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, Mail, Shield } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -38,7 +38,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
     const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 
     const [invited, setInvited] = useState(false);
-    const { toast } = useToast();
+
 
     const [formData, setFormData] = useState({
         email: "",
@@ -51,8 +51,7 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
         method: 'POST',
         onSuccess: () => {
             setInvited(true);
-            toast({
-                title: t('success_title'),
+            toast.success(t('success_title'), {
                 description: `${t('success_description')} ${formData.email}`,
             });
         }

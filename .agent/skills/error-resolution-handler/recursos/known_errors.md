@@ -27,3 +27,13 @@
     2. **Orquestador en index.ts**: El archivo `src/lib/schemas.ts` debe ELIMINARSE y sustituirse por `src/lib/schemas/index.ts`. Esto evita conflictos de resolución en Turbopack entre un archivo y un directorio con el mismo nombre base.
     3. **Re-exportación Explícita**: Para símbolos críticos como `DocumentTypeSchema`, usar `export { X } from './module'` en el `index.ts` además del `export *` para garantizar la descubribilidad estática.
     4. Limpiar cache de Next.js: `rm -rf .next` y reiniciar el servidor de desarrollo.
+
+### 3. Too many requests (Rate Limit)
+- **ID**: `rate_limit_exceeded`
+- **Patrón**: `Too many requests`
+- **Causa**:
+    1. Límite de conexiones Upstash Redis (50 peticiones por minuto en desarrollo en AUTH o CORE).
+    2. El componente del cliente, como Sidebar o Dashboards complejos, monta múltiples hooks que solicitan a APIs que disparan el firewall.
+- **Solución**:
+    1. Relaxar los límites en modo desarrollo desde `src/lib/rate-limit.ts`.
+    2. Usar SWR / React Query más eficientemente en el componente para prevenir fetch spam.

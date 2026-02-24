@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { CollaborationService } from "@/lib/collaboration-service";
+import { CollaborationService } from '@/services/core/CollaborationService';
 
 /**
  * POST /api/core/collaboration/presence

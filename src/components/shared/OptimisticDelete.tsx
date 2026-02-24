@@ -5,7 +5,7 @@ import { Trash2, Loader2, AlertTriangle, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface OptimisticDeleteProps {
     itemId: string;
@@ -30,7 +30,7 @@ export function OptimisticDelete({
     variant = "ghost",
     undoTimeout = 4000
 }: OptimisticDeleteProps) {
-    const { toast } = useToast();
+
     const [isDeleting, setIsDeleting] = useState(false);
     const [showUndo, setShowUndo] = useState(false);
     const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,16 +44,13 @@ export function OptimisticDelete({
             setIsDeleting(true);
             try {
                 await onDelete(itemId);
-                toast({
-                    title: "Eliminado con éxito",
+                toast.success("Eliminado con éxito", {
                     description: "El elemento ha sido removido permanentemente."
                 });
                 onSuccess?.();
             } catch (error) {
-                toast({
-                    title: "Error al eliminar",
+                toast.error("Error al eliminar", {
                     description: "No se pudo completar la operación.",
-                    variant: "destructive"
                 });
             } finally {
                 setIsDeleting(false);
@@ -67,8 +64,7 @@ export function OptimisticDelete({
             undoTimeoutRef.current = null;
         }
         setShowUndo(false);
-        toast({
-            title: "Acción cancelada",
+        toast("Acción cancelada", {
             description: "El elemento no ha sido eliminado."
         });
     };

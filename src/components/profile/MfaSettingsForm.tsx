@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, ShieldAlert, Key, QrCode, ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 
 export function MfaSettingsForm() {
     const t = useTranslations('profile.security.mfa');
     const tCommon = useTranslations('common');
-    const { toast } = useToast();
+
     const { update } = useSession();
     const [enabled, setEnabled] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ export function MfaSettingsForm() {
             setSetupData(data);
             setStep('SETUP');
         } catch (e) {
-            toast({ variant: "destructive", title: tCommon('error'), description: t('updateError') || "Error" });
+            toast.error(tCommon('error'), { description: t('updateError') || "Error" });
         } finally {
             setLoading(false);
         }
@@ -81,9 +81,9 @@ export function MfaSettingsForm() {
                 if (data.success) {
                     await update({ user: { mfaVerified: true, mfaPending: false } });
                     setStep('IDLE');
-                    toast({ title: t('verificationSuccess') || "Verificación exitosa" });
+                    toast.success(t('verificationSuccess') || "Verificación exitosa");
                 } else {
-                    toast({ variant: "destructive", title: t('invalidCode') || "Código inválido" });
+                    toast.error(t('invalidCode') || "Código inválido");
                 }
                 return;
             }
@@ -101,7 +101,7 @@ export function MfaSettingsForm() {
                 setEnabled(true);
                 setRecoveryCodes(data.recoveryCodes);
                 setStep('RECOVERY');
-                toast({ title: t('successTitle'), description: t('successDesc') });
+                toast.success(t('successTitle'), { description: t('successDesc') });
 
                 // Force session update so middleware sees mfaPending: false immediately
                 await update({
@@ -111,10 +111,10 @@ export function MfaSettingsForm() {
                     }
                 });
             } else {
-                toast({ variant: "destructive", title: t('invalidCode'), description: data.error });
+                toast.error(t('invalidCode'), { description: data.error });
             }
         } catch (e) {
-            toast({ variant: "destructive", title: tCommon('error') });
+            toast.error(tCommon('error'));
         } finally {
             setVerifying(false);
         }
@@ -132,10 +132,10 @@ export function MfaSettingsForm() {
             if (res.ok) {
                 setEnabled(false);
                 setStep('IDLE');
-                toast({ title: t('statusDisabled') });
+                toast.success(t('statusDisabled'));
             }
         } catch (e) {
-            toast({ variant: "destructive", title: tCommon('error') });
+            toast.error(tCommon('error'));
         } finally {
             setLoading(false);
         }
@@ -287,7 +287,7 @@ export function MfaSettingsForm() {
                             </div>
                             <Button variant="outline" className="w-full h-8 text-xs gap-2 border-amber-200 text-amber-800 hover:bg-amber-100" onClick={() => {
                                 navigator.clipboard.writeText(recoveryCodes.join('\n'));
-                                toast({ title: tCommon('notifications.success.title'), description: t('copyCodes') });
+                                toast.success(tCommon('notifications.success.title'), { description: t('copyCodes') });
                             }}>
                                 <ClipboardCheck size={14} />
                                 {t('copyCodes')}

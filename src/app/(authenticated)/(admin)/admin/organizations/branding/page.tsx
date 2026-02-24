@@ -8,7 +8,7 @@ import { BrandingTab } from "@/components/admin/organizations/BrandingTab";
 import { Palette, Save } from "lucide-react";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 /**
  * 🎨 Branding Module
@@ -17,17 +17,15 @@ import { useToast } from "@/hooks/use-toast";
  */
 export default function OrganizationsBrandingPage() {
     const t = useTranslations("admin.organizations.page");
-    const { toast } = useToast();
+
     const { config, setConfig, isSaving, setIsSaving } = useTenantConfigStore();
 
     const { mutate: saveConfig } = useApiMutation({
         endpoint: '/api/admin/tenants',
         successMessage: t('saveSuccess'),
         onError: (err) => {
-            toast({
-                title: t('error'),
+            toast.error(t('error'), {
                 description: typeof err === 'string' ? err : t('saveError'),
-                variant: 'destructive',
             });
         },
         onSettled: () => setIsSaving(false)

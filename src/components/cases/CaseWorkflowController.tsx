@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useApiMutation } from '@/hooks/useApiMutation';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -27,7 +27,6 @@ interface CaseWorkflowControllerProps {
 
 export function CaseWorkflowController({ caseId }: CaseWorkflowControllerProps) {
     const t = useTranslations('caseWorkflow');
-    const { toast } = useToast();
     const [data, setData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -51,10 +50,8 @@ export function CaseWorkflowController({ caseId }: CaseWorkflowControllerProps) 
         endpoint: `/api/admin/cases/${caseId}/workflow`,
         method: 'PATCH',
         onSuccess: (res: any) => {
-            toast({
-                title: t('analysisComplete'),
+            toast.success(t('analysisComplete'), {
                 description: t('riskDetected', { level: res.analysis?.riskLevel || 'BAJO' }),
-                variant: "default"
             });
             fetchStatus();
         }
@@ -64,10 +61,8 @@ export function CaseWorkflowController({ caseId }: CaseWorkflowControllerProps) 
         endpoint: `/api/admin/cases/${caseId}/workflow`,
         method: 'POST',
         onSuccess: (res: any) => {
-            toast({
-                title: t('statusUpdated'),
+            toast.success(t('statusUpdated'), {
                 description: t('statusUpdatedDesc', { to: res.to }),
-                variant: "default"
             });
             fetchStatus();
             // Optional: trigger a page refresh or parent update

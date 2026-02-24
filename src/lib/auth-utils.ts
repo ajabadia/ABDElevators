@@ -2,11 +2,11 @@ import { CredentialsSignin } from "next-auth";
 import { connectAuthDB, connectDB } from "./db";
 import bcrypt from "bcryptjs";
 import { logEvento } from "./logger";
-import { SessionService } from "./session-service";
-import { MfaService } from "./mfa-service";
+import { SessionService } from "@/services/auth/SessionService";
+import { MfaService } from "@/services/auth/MfaService";
 import { headers } from "next/headers";
 import { UserRole } from "@/types/roles";
-import { FeatureFlags } from "./feature-flags";
+import { FeatureFlags } from "@/services/security/feature-flags";
 import { IndustryType } from "@/lib/schemas";
 import crypto from "crypto";
 

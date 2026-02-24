@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { TenantService } from '@/lib/tenant-service'; // We'll update this import later when tenant-service moves
+import { TenantService } from '@/services/tenant/tenant-service'; // We'll update this import later when tenant-service moves
 import { logEvento } from '@/lib/logger';
 
 export interface BrandingData {

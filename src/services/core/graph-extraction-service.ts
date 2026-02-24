@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PromptRunner } from '@/lib/llm-core';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { logEvento } from '@/lib/logger';
 import { runQuery } from '@/lib/neo4j';
 

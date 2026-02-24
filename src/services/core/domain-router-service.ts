@@ -1,6 +1,6 @@
-import { callGeminiMini } from '@/lib/llm';
+import { callGeminiMini } from '@/services/llm/llm-service';
 import { IndustryType } from '@/lib/schemas';
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@/lib/logger';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
@@ -99,7 +99,7 @@ export class DomainRouterService {
 
         // Phase 2: Wrap LLM call with retry + tracing + cost tracking
         const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
-        const { withLLMRetry } = await import('@/lib/llm-retry');
+        const { withRetry: withLLMRetry } = await import('@/lib/retry');
         const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
 
         const span = IngestTracer.startIndustryDetectionSpan({
@@ -116,13 +116,7 @@ export class DomainRouterService {
                     model: modelName
                 }),
                 {
-                    operation: 'INDUSTRY_DETECTION',
-                    tenantId,
-                    correlationId: cid,
-                },
-                {
                     maxRetries: 3,
-                    timeoutMs: 10000, // 10s timeout (matches SLA)
                 }
             );
 

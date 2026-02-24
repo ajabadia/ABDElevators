@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import { Loader2, AlertTriangle } from "lucide-react";
 
@@ -45,7 +45,6 @@ interface EditContractSheetProps {
 
 export function EditContractSheet({ contract, isOpen, onClose }: EditContractSheetProps) {
     const t = useTranslations('admin.billing.contracts.edit');
-    const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form State
@@ -94,17 +93,14 @@ export function EditContractSheet({ contract, isOpen, onClose }: EditContractShe
                 throw new Error(error.message || t('error_updating'));
             }
 
-            toast({
-                title: t('success'),
+            toast.success(t('success'), {
                 description: t('success_desc', { name: contract.name }),
             });
 
             onClose(true); // Close and refresh
         } catch (error: any) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: error.message,
-                variant: "destructive"
             });
         } finally {
             setIsLoading(false);

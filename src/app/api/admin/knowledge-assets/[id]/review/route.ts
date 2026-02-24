@@ -3,7 +3,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { KnowledgeReviewService } from '@/lib/services/knowledge-review-service';
+import { KnowledgeReviewService } from '@/services/ingest/knowledge-review-service';
 import { z } from 'zod';
 
 const ReviewSchema = z.object({

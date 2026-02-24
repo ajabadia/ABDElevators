@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useToast } from './use-toast';
+import { toast } from 'sonner';
 
 interface MutationOptions<T, R> {
     endpoint: string | ((data: T) => string);
@@ -35,7 +35,7 @@ export function useApiMutation<T = unknown, R = unknown>({
     onSettled
 }: MutationOptions<T, R>) {
     const [isLoading, setIsLoading] = useState(false);
-    const { toast } = useToast();
+
 
     const mutate = useCallback(async (variables: T) => {
         // Manejo de confirmación
@@ -88,13 +88,11 @@ export function useApiMutation<T = unknown, R = unknown>({
             // Éxito
             const successMsg = typeof successMessage === 'function' ? (successMessage as any)(json) : successMessage;
             if (successMsg) {
-                toast({
-                    title: 'Operación Exitosa',
+                toast.success('Operación Exitosa', {
                     description: successMsg,
                 });
             } else if (method === 'DELETE') {
-                toast({
-                    title: 'Eliminado',
+                toast.success('Eliminado', {
                     description: 'El registro ha sido eliminado correctamente.',
                 });
             }
@@ -105,10 +103,8 @@ export function useApiMutation<T = unknown, R = unknown>({
             return json as R;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Error desconocido';
-            toast({
-                title: 'Error',
+            toast.error('Error', {
                 description: message,
-                variant: 'destructive',
             });
             onError?.(message);
             return null;

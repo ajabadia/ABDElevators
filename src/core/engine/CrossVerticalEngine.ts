@@ -1,6 +1,6 @@
-import { performTechnicalSearch, RagResult } from '@/lib/rag-service';
+import { RagService, RagResult } from '@/services/core/RagService';
 import { logEvento } from '@/lib/logger';
-import { callGeminiMini } from '@/lib/llm';
+import { callGeminiMini } from '@/services/llm/llm-service';
 
 /**
  * CrossVerticalEngine: Permite la búsqueda semántica horizontal entre diferentes tenantes.
@@ -34,7 +34,7 @@ export class CrossVerticalEngine {
             // que atraviesa múltiples tenants. Aquí usamos el proxy de 'tenantId: global' 
             // y simulamos el acceso horizontal.
 
-            const results = await performTechnicalSearch(query, 'global', correlationId, 3);
+            const results = await RagService.performTechnicalSearch(query, 'global', correlationId, 3);
 
             if (results.length === 0) {
                 return { results: [], aiSynthesis: "No shared knowledge found relevant to this query." };

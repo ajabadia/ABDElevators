@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ export function PasswordForm() {
     const t = useTranslations('profile.security.password');
     const tCommon = useTranslations('common');
     const [saving, setSaving] = useState(false);
-    const { toast } = useToast();
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -24,10 +24,8 @@ export function PasswordForm() {
         const confirmPassword = formData.get('confirmPassword');
 
         if (newPassword !== confirmPassword) {
-            toast({
-                title: tCommon('error'),
+            toast.error(tCommon('error'), {
                 description: t('matchError'),
-                variant: 'destructive',
             });
             setSaving(false);
             return;
@@ -41,8 +39,7 @@ export function PasswordForm() {
             });
 
             if (res.ok) {
-                toast({
-                    title: t('successTitle'),
+                toast.success(t('successTitle'), {
                     description: t('successDesc'),
                 });
                 (e.target as HTMLFormElement).reset();
@@ -51,10 +48,8 @@ export function PasswordForm() {
                 throw new Error(data.error || t('updateError'));
             }
         } catch (error: any) {
-            toast({
-                title: tCommon('error'),
+            toast.error(tCommon('error'), {
                 description: error.message,
-                variant: 'destructive',
             });
         } finally {
             setSaving(false);

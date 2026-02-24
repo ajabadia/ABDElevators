@@ -22,7 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 interface EnrichmentModalProps {
@@ -42,7 +42,7 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
     const [enableGraphRag, setEnableGraphRag] = useState(false);
     const [enableCognitive, setEnableCognitive] = useState(false); // Premium
 
-    const { toast } = useToast();
+
     const t = useTranslations('ingest');
 
     useEffect(() => {
@@ -79,19 +79,15 @@ export function EnrichmentModal({ isOpen, onClose, asset, onSuccess }: Enrichmen
             setIsUploading(false);
             setUploadSuccess(true);
 
-            toast({
-                title: t('status.success'),
+            toast.success(t('status.success'), {
                 description: 'El documento ha sido enviado a re-procesamiento parcial exitosamente.',
-                variant: 'default'
             });
 
             if (onSuccess) onSuccess();
         } catch (error: any) {
             console.error('Enrichment error:', error);
-            toast({
-                title: t('status.error'),
+            toast.error(t('status.error'), {
                 description: error.message,
-                variant: 'destructive',
             });
             setIsUploading(false);
         }

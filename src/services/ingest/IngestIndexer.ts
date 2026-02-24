@@ -1,5 +1,5 @@
 
-import { ChunkingOrchestrator } from '@/lib/chunking/ChunkingOrchestrator';
+import { ChunkingOrchestrator } from '@/services/infra/chunking/ChunkingOrchestrator';
 import { DocumentChunkRepository } from './DocumentChunkRepository';
 import { IngestEmbeddingService } from './IngestEmbeddingService';
 import { logEvento } from '@/lib/logger';

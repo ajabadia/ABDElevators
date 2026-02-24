@@ -42,6 +42,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { APP_REGISTRY, AppId } from "@/lib/app-registry";
+
 interface HubCardProps {
     id: string;
     title: string;
@@ -68,52 +70,61 @@ export default function HubDashboard() {
     };
 
     // 1. Core Modules (Visible to almost everyone active)
+
+    const TasksIcon = APP_REGISTRY[AppId.TASKS].icon;
+    const KnowledgeIcon = APP_REGISTRY[AppId.KNOWLEDGE].icon;
+    const SearchIcon = APP_REGISTRY[AppId.SEARCH].icon;
+    const PersonalIcon = APP_REGISTRY[AppId.PERSONAL].icon;
+
     const coreCards: HubCardProps[] = [
         {
             id: "tasks",
-            title: t("cards.tasks.title"), // "Mis Tareas"
-            description: t("cards.tasks.description"), // "Gestiona tus tareas pendientes y flujos de trabajo asignados."
-            href: "/admin/workflow-tasks",
-            icon: <CheckSquare className="w-6 h-6" />,
+            title: t("cards.tasks.title"),
+            description: t("cards.tasks.description"),
+            href: APP_REGISTRY[AppId.TASKS].basePath,
+            icon: <TasksIcon className="w-6 h-6" />,
             color: "border-l-primary",
             roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER, UserRole.TECHNICAL]
         },
         {
             id: "knowledge",
-            title: t("cards.knowledge.title"), // "Knowledge Hub"
-            description: t("cards.knowledge.description"), // "Accede a la base de conocimiento y documentación técnica."
-            href: "/admin/knowledge",
-            icon: <FileText className="w-6 h-6" />,
+            title: t("cards.knowledge.title"),
+            description: t("cards.knowledge.description"),
+            href: APP_REGISTRY[AppId.KNOWLEDGE].basePath,
+            icon: <KnowledgeIcon className="w-6 h-6" />,
             color: "border-l-secondary",
             roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN, UserRole.TECHNICAL]
         },
         {
             id: "search",
-            title: t("cards.search.title"), // "Búsqueda Inteligente"
-            description: t("cards.search.description"), // "Busca información en toda la plataforma con IA."
-            href: "/search",
-            icon: <Search className="w-6 h-6" />,
+            title: t("cards.search.title"),
+            description: t("cards.search.description"),
+            href: APP_REGISTRY[AppId.SEARCH].basePath,
+            icon: <SearchIcon className="w-6 h-6" />,
             color: "border-l-accent"
         },
         {
             id: "spaces",
-            title: t("cards.spaces.title"), // "Espacios de Trabajo"
-            description: t("cards.spaces.description"), // "Gestiona tus proyectos y espacios colaborativos."
-            href: "/spaces",
-            icon: <Box className="w-6 h-6" />,
+            title: t("cards.spaces.title"),
+            description: t("cards.spaces.description"),
+            href: APP_REGISTRY[AppId.PERSONAL].basePath,
+            icon: <PersonalIcon className="w-6 h-6" />,
             color: "border-l-muted",
             inactive: true
         }
     ];
 
     // 2. Administration Modules (Admin/SuperAdmin)
+    const OrgIcon = APP_REGISTRY[AppId.ORGANIZATIONS].icon;
+    const UsersIcon = APP_REGISTRY[AppId.USERS].icon;
+
     const adminCards: HubCardProps[] = [
         {
             id: "organizations",
             title: t("cards.organizations.title"),
             description: t("cards.organizations.description"),
-            href: "/admin/organizations",
-            icon: <Building className="w-6 h-6" />,
+            href: APP_REGISTRY[AppId.ORGANIZATIONS].basePath,
+            icon: <OrgIcon className="w-6 h-6" />,
             color: "border-l-primary",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
         },
@@ -121,8 +132,8 @@ export default function HubDashboard() {
             id: "users",
             title: t("cards.users.title"),
             description: t("cards.users.description"),
-            href: "/admin/users",
-            icon: <Users className="w-6 h-6" />,
+            href: APP_REGISTRY[AppId.USERS].basePath,
+            icon: <UsersIcon className="w-6 h-6" />,
             color: "border-l-secondary",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
         },
@@ -141,13 +152,15 @@ export default function HubDashboard() {
             title: t("cards.checklist_config.title"),
             description: t("cards.checklist_config.description"),
             href: "/admin/checklist-configs",
-            icon: <CheckSquare className="w-6 h-6" />, // Same icon as tasks, maybe different?
+            icon: <CheckSquare className="w-6 h-6" />,
             color: "border-l-muted",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
         }
     ];
 
     // 3. Advanced / System Modules (Collapsible)
+    const ConfigIcon = APP_REGISTRY[AppId.CONFIG].icon;
+
     const systemCards: HubCardProps[] = [
         {
             id: "audit",
@@ -163,8 +176,8 @@ export default function HubDashboard() {
             id: "guardian",
             title: t("cards.guardian.title"),
             description: t("cards.guardian.description"),
-            href: "/admin/permissions",
-            icon: <ShieldAlert className="w-6 h-6" />,
+            href: APP_REGISTRY[AppId.CONFIG].basePath,
+            icon: <ConfigIcon className="w-6 h-6" />,
             color: "border-l-destructive",
             roles: [UserRole.SUPER_ADMIN],
             inactive: true // Coming Soon

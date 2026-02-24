@@ -7,12 +7,12 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { auth } from "@/lib/auth";
 
-import { extractChecklist } from "@/lib/checklist-extractor";
-import { autoClassify, smartSort } from "@/lib/checklist-auto-classifier";
+import { extractChecklist } from "@/services/ingest/ChecklistExtractor";
+import { autoClassify, smartSort } from '@/services/core/checklist-classifier';
 import { ChecklistItem, ChecklistConfig, Entity } from "@/lib/schemas";
 import { logEvento } from "@/lib/logger";
 import { AppError, ValidationError, ExternalServiceError, DatabaseError, NotFoundError, handleApiError } from "@/lib/errors";
-import { getRelevantDocuments } from "@/lib/rag-service";
+import { RagService } from "@/services/core/RagService";
 import { getChecklistConfigById } from "@/lib/configs";
 
 // ----- Input validation schema -----
@@ -94,7 +94,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             });
         } else {
             // ----- 3️⃣ Retrieve relevant documents via vector search (top 15) -----
-            const docs = await getRelevantDocuments(entityId, tenantId, { topK: 15, correlationId });
+            const docs = await RagService.getRelevantDocuments(entityId, tenantId, correlationId, 15);
 
             // ----- 4️⃣ Extract checklist items using LLM mini‑prompt (top 5 docs) -----
             const checklistItemsRaw = await extractChecklist(docs.slice(0, 5), tenantId, correlationId);

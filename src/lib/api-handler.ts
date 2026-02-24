@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiKeyService } from '@/lib/api-key-service';
+import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import crypto from 'crypto';

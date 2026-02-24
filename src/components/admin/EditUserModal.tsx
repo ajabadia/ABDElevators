@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Shield, User as UserIcon, ShieldAlert, Key, Plus, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +40,7 @@ interface EditUserModalProps {
 export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModalProps) {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
-    const { toast } = useToast();
+
 
     const [roles, setRoles] = useState<PermissionGroup[]>([]);
     const [policies, setPolicies] = useState<PermissionPolicy[]>([]);
@@ -108,10 +108,8 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
                 });
             }
         } catch (error) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: "No se pudo cargar el usuario",
-                variant: "destructive",
             });
         } finally {
             setFetching(false);
@@ -136,24 +134,19 @@ export function EditUserModal({ userId, open, onClose, onSuccess }: EditUserModa
             });
 
             if (res.ok) {
-                toast({
-                    title: "Usuario actualizado",
+                toast.success("Usuario actualizado", {
                     description: "Los cambios se han guardado correctamente.",
                 });
                 onSuccess();
             } else {
                 const data = await res.json();
-                toast({
-                    title: "Error",
+                toast.error("Error", {
                     description: data.error || "No se pudo actualizar el usuario",
-                    variant: "destructive",
                 });
             }
         } catch (error) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: "Error al actualizar usuario",
-                variant: "destructive",
             });
         } finally {
             setLoading(false);

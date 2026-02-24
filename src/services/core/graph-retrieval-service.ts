@@ -1,6 +1,6 @@
-import { PromptService } from '@/lib/prompt-service';
-import { AiModelManager } from '@/lib/services/ai-model-manager';
-import { callGeminiMini } from '@/lib/llm';
+import { PromptService } from '@/services/llm/prompt-service';
+import { AiModelManager } from '@/services/core/ai-model-manager';
+import { callGeminiMini } from '@/services/llm/llm-service';
 import { runQuery } from '@/lib/neo4j';
 import { logEvento } from '@/lib/logger';
 import { PROMPTS } from '@/lib/prompts';

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Zap, Server, TrendingUp, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface AnalyticsData {
     tokens: { date: string; tokens: number }[];
@@ -13,7 +13,6 @@ interface AnalyticsData {
 }
 
 export function ObservabilityDashboard() {
-    const { toast } = useToast();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -25,9 +24,7 @@ export function ObservabilityDashboard() {
                 const json = await res.json();
                 if (json.success) setData(json.data);
             } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: "Error",
+                toast.error("Error", {
                     description: "No se pudieron cargar las métricas."
                 });
             } finally {
@@ -35,7 +32,7 @@ export function ObservabilityDashboard() {
             }
         };
         fetchData();
-    }, [toast]);
+    }, []);
 
     if (loading) return <div className="p-8 text-center text-muted-foreground">Cargando métricas...</div>;
     if (!data) return null;

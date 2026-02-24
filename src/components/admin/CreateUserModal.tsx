@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, Copy, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -39,7 +39,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
     const [loading, setLoading] = useState(false);
     const [activationLink, setActivationLink] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const { toast } = useToast();
+
 
     const [formData, setFormData] = useState({
         email: "",
@@ -66,22 +66,17 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
 
             if (res.ok) {
                 setActivationLink(data.activationLink);
-                toast({
-                    title: "Usuario creado",
+                toast.success("Usuario creado", {
                     description: `Usuario ${formData.email} creado exitosamente`,
                 });
             } else {
-                toast({
-                    title: "Error",
+                toast.error("Error", {
                     description: data.error || "No se pudo crear el usuario",
-                    variant: "destructive",
                 });
             }
         } catch (error) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: "Error al crear usuario",
-                variant: "destructive",
             });
         } finally {
             setLoading(false);
@@ -110,8 +105,7 @@ export function CreateUserModal({ open, onClose, onSuccess }: CreateUserModalPro
         if (activationLink) {
             navigator.clipboard.writeText(activationLink);
             setCopied(true);
-            toast({
-                title: "Enlace copiado",
+            toast.success("Enlace copiado", {
                 description: "El enlace de activación ha sido copiado al portapapeles",
             });
             setTimeout(() => setCopied(false), 2000);

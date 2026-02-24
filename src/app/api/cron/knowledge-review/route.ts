@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { KnowledgeReviewService } from '@/lib/services/knowledge-review-service';
-import { NotificationService } from '@/lib/notification-service';
-import { TenantService } from '@/lib/tenant-service';
+import { KnowledgeReviewService } from '@/services/ingest/knowledge-review-service';
+import { NotificationService } from '@/services/core/NotificationService';
+import { TenantService } from '@/services/tenant/tenant-service';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 

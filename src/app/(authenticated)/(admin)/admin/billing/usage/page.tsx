@@ -12,6 +12,9 @@ import { useTranslations } from 'next-intl';
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
+import { MetricCard } from "@/components/ui/metric-card";
+import { RoiStat } from "@/components/admin/billing/roi-stat";
+import { Database, Users, LayoutGrid, Activity } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -95,55 +98,7 @@ function formatNumber(n: number): string {
     return n.toLocaleString();
 }
 
-// ── Local Components ───────────────────────────────────────────────────────
-
-interface MetricCardProps {
-    title: string;
-    value: string;
-    subtext: string;
-    used: number;
-    limit: number;
-    unit?: string;
-}
-
-function MetricCard({ title, value, subtext, used, limit, unit }: MetricCardProps) {
-    return (
-        <Card className="animate-in fade-in zoom-in-95 duration-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <Info className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-                <p className="text-xs text-muted-foreground">{subtext}</p>
-                <QuotaProgress label="" used={used} limit={limit} unit={unit || ""} className="mt-3" />
-            </CardContent>
-        </Card>
-    );
-}
-
-interface RoiStatProps {
-    icon: LucideIcon;
-    value: string;
-    label: string;
-    variant: 'primary' | 'success' | 'info';
-}
-
-function RoiStat({ icon: Icon, value, label, variant }: RoiStatProps) {
-    const variants = {
-        primary: "bg-primary/5 border-primary/10 text-primary",
-        success: "bg-green-500/5 border-green-500/10 text-green-600 dark:text-green-400",
-        info: "bg-blue-500/5 border-blue-500/10 text-blue-600 dark:text-blue-400"
-    };
-
-    return (
-        <div className={cn("flex flex-col items-center p-4 rounded-lg border", variants[variant])}>
-            <Icon className="h-5 w-5 mb-2" aria-hidden="true" />
-            <span className="text-2xl font-bold">{value}</span>
-            <span className="text-xs text-muted-foreground text-center mt-1">{label}</span>
-        </div>
-    );
-}
+// RoiStat extracted to src/components/admin/billing/roi-stat.tsx
 
 // ── Main Page Component ────────────────────────────────────────────────────
 
@@ -248,35 +203,39 @@ export default function BillingUsagePage() {
             />
 
             {/* KPI Cards — Usage Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
                 <MetricCard
-                    title={t('tokens.title')}
+                    title={t('usage_overview.tokens')}
                     value={formatNumber(usage.tokens)}
-                    subtext={t('tokens.limit', { limit: formatNumber(usage.limits.tokens) })}
-                    used={usage.tokens}
-                    limit={usage.limits.tokens}
+                    description={t('usage_overview.tokens_desc')}
+                    icon={<DollarSign className="w-5 h-5" />}
+                    progress={{
+                        used: usage.tokens,
+                        limit: usage.limits.tokens,
+                        unit: "tokens"
+                    }}
                 />
                 <MetricCard
-                    title={t('storage.title')}
+                    title={t('usage_overview.storage')}
                     value={formatBytes(usage.storage)}
-                    subtext={t('storage.limit', { limit: formatBytesLimit(usage.limits.storage) })}
-                    used={storageUsedGB}
-                    limit={storageLimitGB === Infinity ? -1 : storageLimitGB}
-                    unit="GB"
+                    description={t('usage_overview.storage_desc')}
+                    icon={<Database className="w-5 h-5" />}
+                    progress={{
+                        used: usage.storage,
+                        limit: usage.limits.storage,
+                        unit: "bytes"
+                    }}
                 />
                 <MetricCard
-                    title={t('searches.title')}
+                    title={t('usage_overview.searches')}
                     value={formatNumber(usage.searches)}
-                    subtext={t('searches.limit', { limit: formatNumber(usage.limits.searches) })}
-                    used={usage.searches}
-                    limit={usage.limits.searches}
-                />
-                <MetricCard
-                    title={t('users.title')}
-                    value={formatNumber(usage.users)}
-                    subtext={t('users.limit', { limit: formatNumber(usage.limits.users) })}
-                    used={usage.users}
-                    limit={usage.limits.users}
+                    description={t('usage_overview.searches_desc')}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    progress={{
+                        used: usage.searches,
+                        limit: usage.limits.searches,
+                        unit: "searches"
+                    }}
                 />
             </div>
 
@@ -295,19 +254,19 @@ export default function BillingUsagePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <RoiStat
                                     icon={Clock}
-                                    value={`${roi.roi.totalSavedHours}h`}
+                                    value={roi.roi.totalSavedHours}
                                     label={t('roi.saved_hours')}
                                     variant="primary"
                                 />
                                 <RoiStat
                                     icon={DollarSign}
-                                    value={`$${roi.roi.estimatedCostSavings.toLocaleString()}`}
-                                    label={t('roi.estimated_savings')}
+                                    value={`${roi.roi.estimatedCostSavings} ${roi.roi.currency}`}
+                                    label={t('roi.cost_savings')}
                                     variant="success"
                                 />
                                 <RoiStat
                                     icon={TrendingUp}
-                                    value={`${(roi as any).efficiencyScore || 0}%`}
+                                    value={`${roi.efficiencyScore}%`}
                                     label={t('roi.efficiency')}
                                     variant="info"
                                 />

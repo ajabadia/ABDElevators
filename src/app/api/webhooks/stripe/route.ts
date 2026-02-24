@@ -5,7 +5,7 @@ import { stripe } from '@/lib/stripe';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { getMongoClient, connectDB } from '@/lib/db';
-import { BillingService } from '@/lib/billing-service';
+import { BillingService } from '@/services/admin/BillingService';
 
 /**
  * POST /api/webhooks/stripe

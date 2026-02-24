@@ -15,14 +15,26 @@ export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        console.error('📬 [MAGIC_LINK_TRACE] New request received at:', new Date().toISOString());
+        await logEvento({
+            level: 'INFO',
+            source: 'AUTH_MAGIC_LINK',
+            action: 'REQUEST_RECEIVED',
+            message: 'New request received',
+            correlationId
+        });
         // 1. Rate Limiting (Strict)
         const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
         // Using AUTH limit for now, maybe stricter? Let's use AUTH (10/5min)
         const { success, reset } = await checkRateLimit(ip, LIMITS.AUTH);
 
         if (!success) {
-            console.warn('🚫 [MAGIC_LINK] Rate limit exceeded for IP:', ip);
+            await logEvento({
+                level: 'WARN',
+                source: 'AUTH_MAGIC_LINK',
+                action: 'RATE_LIMIT',
+                message: `Rate limit exceeded for IP: ${ip}`,
+                correlationId
+            });
             return NextResponse.json(
                 { error: "Too many requests. Please try again later." },
                 { status: 429, headers: { "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString() } }
@@ -32,7 +44,13 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { email } = RequestMagicLinkSchema.parse(body);
         const normalizedEmail = email.toLowerCase().trim();
-        console.log('🔍 [MAGIC_LINK] Checking user:', normalizedEmail);
+        await logEvento({
+            level: 'INFO',
+            source: 'AUTH_MAGIC_LINK',
+            action: 'CHECK_USER',
+            message: `Checking user: ${normalizedEmail}`,
+            correlationId
+        });
 
         // 2. Validate User in AUTH DB
         const db = await connectAuthDB();
@@ -102,7 +120,6 @@ export async function POST(req: NextRequest) {
                     throw emailResult.error;
                 }
 
-                console.error('✅ [MAGIC_LINK_TRACE] Resend SUCCESS:', emailResult);
             } catch (error: any) {
                 emailErrorDetail = {
                     message: error.message,
@@ -110,14 +127,19 @@ export async function POST(req: NextRequest) {
                     name: error.name,
                     code: error.code
                 };
-                console.error('❌ [MAGIC_LINK_TRACE] Resend FAILURE:', emailErrorDetail);
             }
-        } else {
-            console.error("⚠️ [MAGIC_LINK_TRACE] RESEND_API_KEY missing.");
         }
 
-        // Always log the link to console for local dev/troubleshooting
-        console.error("🔑 [MAGIC_LINK_TRACE] TOKEN LINK:", link);
+        // In development, the link is still useful to have in logs
+        if (process.env.NODE_ENV === 'development') {
+            await logEvento({
+                level: 'DEBUG',
+                source: 'AUTH_MAGIC_LINK',
+                action: 'DEV_TOKEN_LINK',
+                message: link,
+                correlationId
+            });
+        }
 
         await logEvento({
             level: emailErrorDetail ? 'ERROR' : (emailResult ? 'INFO' : 'WARN'),
@@ -141,7 +163,6 @@ export async function POST(req: NextRequest) {
         );
 
     } catch (error: any) {
-        console.error('🔥 [MAGIC_LINK_FATAL]:', error);
         await logEvento({
             level: 'ERROR',
             source: 'AUTH_MAGIC_LINK',

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
-import { BillingService } from '@/lib/billing-service';
+import { BillingService } from '@/services/admin/BillingService';
 import { logEvento } from '@/lib/logger';
 
 /**

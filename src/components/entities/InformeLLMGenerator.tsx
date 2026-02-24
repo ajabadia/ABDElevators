@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 interface InformeLLMGeneratorProps {
@@ -29,7 +29,6 @@ export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMG
     const [report, setReport] = useState<string | null>(null);
     const [metadata, setMetadata] = useState<any>(null);
     const [showDebug, setShowDebug] = useState(false);
-    const { toast } = useToast();
     const t = useTranslations('common.reports');
 
     const generateReport = async () => {
@@ -46,15 +45,12 @@ export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMG
             setMetadata(data.metadata);
             if (onReportGenerated) onReportGenerated(data.report);
 
-            toast({
-                title: "Informe Generado",
+            toast.success("Informe Generado", {
                 description: "El análisis técnico ha sido redactado satisfactoriamente.",
             });
         } catch (error: any) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: error.message,
-                variant: "destructive"
             });
         } finally {
             setIsGenerating(false);
@@ -75,10 +71,8 @@ export function InformeLLMGenerator({ pedidoId, onReportGenerated }: InformeLLMG
             a.download = `Informe_Tecnico_${pedidoId}.pdf`;
             a.click();
         } catch (error) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: "No se pudo descargar el PDF.",
-                variant: "destructive"
             });
         }
     };

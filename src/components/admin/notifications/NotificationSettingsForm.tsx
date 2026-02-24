@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Mail, Bell, ShieldAlert, FileText, CreditCard, Save, Plus, Trash2, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
 interface EventConfig {
@@ -30,7 +30,6 @@ interface NotificationConfig {
 export function NotificationSettingsForm() {
     const t = useTranslations('admin.notifications.settings');
     const tEvents = useTranslations('admin.notifications.events');
-    const { toast } = useToast();
     const [config, setConfig] = useState<NotificationConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -125,22 +124,17 @@ export function NotificationSettingsForm() {
             });
 
             if (res.ok) {
-                toast({
-                    title: t('toast.success'),
+                toast.success(t('toast.success'), {
                     description: t('toast.successDesc'),
                 });
             } else {
-                toast({
-                    title: t('toast.error'),
+                toast.error(t('toast.error'), {
                     description: t('toast.errorDesc'),
-                    variant: "destructive"
                 });
             }
         } catch (e) {
-            toast({
-                title: t('toast.error'),
+            toast.error(t('toast.error'), {
                 description: t('toast.errorDesc'),
-                variant: "destructive"
             });
         } finally {
             setSaving(false);

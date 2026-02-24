@@ -7,13 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Loader2, Wrench, Search, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 export default function WorkshopOrderNewPage() {
-    const { toast } = useToast();
     const router = useRouter();
     const t = useTranslations('workshop.orders.new');
     const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -56,7 +55,9 @@ export default function WorkshopOrderNewPage() {
 
             if (!res.ok) throw new Error(result.error?.message || 'Failed to create order');
 
-            toast({ title: 'Order Created', description: `Order ${result.entityId} created successfully.` });
+            toast.success('Order Created', {
+                description: `Order ${result.entityId} created successfully.`
+            });
 
             if (result.analysis) {
                 setAnalysisResult(result.analysis);
@@ -64,7 +65,9 @@ export default function WorkshopOrderNewPage() {
                 router.push('/admin/workshop/orders');
             }
         } catch (err) {
-            toast({ variant: 'destructive', title: 'Error', description: err instanceof Error ? err.message : 'Unknown error' });
+            toast.error('Error', {
+                description: err instanceof Error ? err.message : 'Unknown error'
+            });
         } finally {
             setIsSubmitting(false);
         }

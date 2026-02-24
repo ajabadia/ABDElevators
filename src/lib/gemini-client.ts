@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ExternalServiceError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { UsageService } from './usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 
 let genAIInstance: GoogleGenerativeAI | null = null;
 

@@ -1,4 +1,4 @@
-# ABD Multi-Industry RAG Platform (Vision 5.4.0 - ERA-8 INFRA)
+# ABD Multi-Industry RAG Platform (Vision 5.5.0 - ERA-8 SECRE)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
@@ -193,6 +193,7 @@ src/
 - ✅ **Domain-Specialized Dashboards (Phase 214)**: Experiencia diferenciada para perfiles Técnicos y de Soporte con KPIs específicos.
 - ✅ **UX Surgical Polish & Interaction Excellence (Phase 216-217)**: Navegación por teclado avanzada (CMD+K), resaltado multi-modal de fuentes, sugerencias dinámicas agénticas y predicción de tiempo de ingesta (ETA).
 - ✅ **Infrastructure Consolidation (Phase 222-222B)**: Service layer clean-up, multi-tenant data isolation enforcement, structured API logging (`logEvento`), and UI DRY patterns with atomic `<HubPage>` and `<MetricCard>` components. Universal notification system with Sonner.
+- ✅ **Guardian Permission Alignment (Phase 220)**: Unified ABAC policy enforcement across Sidebar and Backend. Robust server-side protection for all critical administrative routes (Billing, Audit, Security, Organizations, AI Governance, Prompts, SuperAdmin). High-performance bulk permission checks.
 
 ## 🔧 Scripts Disponibles
 

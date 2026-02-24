@@ -5,7 +5,7 @@ import ForceGraph2D from 'react-force-graph-2d';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, ZoomIn, ZoomOut, Maximize2, Share2, Info } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface GraphData {
@@ -18,7 +18,7 @@ export function KnowledgeGraph() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const fgRef = useRef<any>(null);
-    const { toast } = useToast();
+
 
     const fetchGraph = async () => {
         setIsLoading(true);
@@ -31,10 +31,8 @@ export function KnowledgeGraph() {
                 throw new Error(data.message);
             }
         } catch (error: any) {
-            toast({
-                title: 'Error de Grafo',
+            toast.error('Error de Grafo', {
                 description: 'No se pudo conectar con el motor Neo4j. Asegúrate de que las credenciales son correctas.',
-                variant: 'destructive',
             });
             // Mock data fallback for demonstration if Neo4j fails
             setGraphData({
@@ -60,11 +58,11 @@ export function KnowledgeGraph() {
         try {
             const res = await fetch('/api/core/graph/sync', { method: 'POST' });
             if (res.ok) {
-                toast({ title: 'Sincronización', description: 'Grafo actualizado con datos de MongoDB.' });
+                toast.success('Sincronización', { description: 'Grafo actualizado con datos de MongoDB.' });
                 await fetchGraph();
             }
         } catch (error) {
-            toast({ title: 'Error', description: 'Error al sincronizar.', variant: 'destructive' });
+            toast.error('Error', { description: 'Error al sincronizar.' });
         } finally {
             setIsSyncing(false);
         }

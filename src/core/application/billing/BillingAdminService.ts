@@ -1,12 +1,12 @@
 import { connectAuthDB } from '@/lib/db';
-import { TenantService } from '@/lib/tenant-service';
-import { QuotaService } from '@/lib/quota-service';
+import { TenantService } from '@/services/tenant/tenant-service';
+import { QuotaService } from '@/services/security/quota-service';
 import { PLANS, PlanTier, PlanLimits } from '@/lib/plans';
 import { TenantConfigSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
-import { BillingEngine } from '@/lib/billing-engine';
-import { LimitsService } from '@/lib/limits-service';
+import { BillingEngine } from '@/services/admin/billing-engine';
+import { LimitsService } from '@/services/security/limits-service';
 
 export interface ContractSummary {
     tenantId: string;

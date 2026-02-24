@@ -11,7 +11,7 @@ import {
     Info,
     LayoutGrid
 } from 'lucide-react';
-import { RagResult } from '@/lib/rag-service';
+import { RagResult } from '@/services/core/RagService';
 import { humanizeConfidence, confidencePercent } from '@/lib/confidence-humanizer';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';

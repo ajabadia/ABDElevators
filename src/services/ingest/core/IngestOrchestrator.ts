@@ -101,7 +101,7 @@ export class IngestOrchestrator {
             // 3. Execute Analysis (Delegating to IngestService for now)
             const result = await IngestService.executeAnalysis(docId, {
                 ...options,
-                isEnrichment: options.isEnrichment ?? false
+                isEnrichment: !!options.isEnrichment
             });
 
             // 4. Persistence of Costs & Final State

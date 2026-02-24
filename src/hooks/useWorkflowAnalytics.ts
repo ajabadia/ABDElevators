@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Node } from "@xyflow/react";
 
@@ -20,7 +20,6 @@ export function useWorkflowAnalytics({
     setIsAnalyticsLoading,
     setNodes
 }: UseWorkflowAnalyticsProps) {
-    const { toast } = useToast();
     const t = useTranslations('admin.workflows.canvas');
 
     const toggleAnalysisMode = useCallback(async () => {
@@ -49,7 +48,7 @@ export function useWorkflowAnalytics({
                 setIsAnalysisMode(true);
             } catch (err) {
                 console.error("Error fetching analytics:", err);
-                toast({ title: "Analytics Error", description: "Failed to fetch node metrics.", variant: "destructive" });
+                toast.error("Analytics Error", { description: "Failed to fetch node metrics." });
             } finally {
                 setIsAnalyticsLoading(false);
             }
@@ -62,7 +61,7 @@ export function useWorkflowAnalytics({
             );
             setIsAnalysisMode(false);
         }
-    }, [activeWorkflowId, isAnalysisMode, setIsAnalysisMode, setIsAnalyticsLoading, setNodes, toast]);
+    }, [activeWorkflowId, isAnalysisMode, setIsAnalysisMode, setIsAnalyticsLoading, setNodes]);
 
     const exportReport = useCallback(async () => {
         if (!activeWorkflowId) return;
@@ -82,14 +81,14 @@ export function useWorkflowAnalytics({
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            toast({ title: t('report_export_title'), description: t('report_export_desc') });
+            toast.success(t('report_export_title'), { description: t('report_export_desc') });
         } catch (err) {
             console.error("Export error:", err);
-            toast({ title: t('report_export_failed'), description: t('report_export_failed_desc'), variant: "destructive" });
+            toast.error(t('report_export_failed'), { description: t('report_export_failed_desc') });
         } finally {
             setIsAnalyticsLoading(false);
         }
-    }, [activeWorkflowId, setIsAnalyticsLoading, toast, t]);
+    }, [activeWorkflowId, setIsAnalyticsLoading, t]);
 
     return {
         toggleAnalysisMode,

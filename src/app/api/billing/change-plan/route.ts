@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { BillingService } from '@/lib/billing-service';
+import { BillingService } from '@/services/admin/BillingService';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';

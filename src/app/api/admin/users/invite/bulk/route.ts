@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
             await authDb.collection('invitations').insertMany(invitationsToInsert);
 
             // 3. Batch Notifications (Async)
-            const { NotificationService } = await import('@/lib/notification-service');
+            const { NotificationService } = await import('@/services/core/NotificationService');
 
             // We process notifications in the background or parallel
             // For now, parallel with Promise.allSettled to not block main result if one fails

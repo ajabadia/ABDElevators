@@ -1,0 +1,30 @@
+{
+    "title": "Configuración",
+    "subtitle": "Centro de administración y configuración de la plataforma.",
+    "sections": {
+        "organization": {
+            "title": "Mi Organización",
+            "description": "Gestiona información de la empresa, logo y configuración regional."
+        },
+        "users": {
+            "title": "Usuarios y Equipos",
+            "description": "Administra usuarios, roles e invitaciones."
+        },
+        "prompts": {
+            "title": "Prompts e IA",
+            "description": "Gobierno de prompts, versionado y pruebas de IA."
+        },
+        "i18n": {
+            "title": "Idioma e Internacionalización",
+            "description": "Configura idiomas activos y gestiona traducciones."
+        },
+        "notifications": {
+            "title": "Notificaciones",
+            "description": "Preferencias de alertas y canales de comunicación."
+        },
+        "branding": {
+            "title": "Personalización (Branding)",
+            "description": "Ajusta la apariencia, colores y plantillas de informes."
+        }
+    }
+}

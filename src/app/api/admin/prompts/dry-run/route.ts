@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { callGeminiMini } from '@/lib/llm';
+import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';

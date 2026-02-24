@@ -21,14 +21,14 @@ import {
 import { ContentCard } from "@/components/ui/content-card";
 import { MetricCard } from "@/components/ui/metric-card";
 import { PermissionPolicy } from '@/lib/schemas';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { PermissionMatrixGrid } from '@/components/admin/permissions/PermissionMatrixGrid';
 
 export function PermissionMatrixClient() {
     const t = useTranslations('admin.guardian.matrix');
-    const { toast } = useToast();
+
     const [policies, setPolicies] = useState<PermissionPolicy[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -46,18 +46,14 @@ export function PermissionMatrixClient() {
             if (data.success) {
                 setPolicies(data.policies);
             } else {
-                toast({
-                    title: t('table.loading_error_title'),
+                toast.error(t('table.loading_error_title'), {
                     description: t('table.loading_error'),
-                    variant: "destructive"
                 });
             }
         } catch (error) {
             console.error('Fetch error:', error);
-            toast({
-                title: t('table.network_error_title'),
+            toast.error(t('table.network_error_title'), {
                 description: t('table.network_error'),
-                variant: "destructive"
             });
         } finally {
             setIsLoading(false);

@@ -5,7 +5,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
 import { AccessControlService } from '@/lib/access-control';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 
@@ -112,7 +112,7 @@ export async function GET(
 
                     // Alerta Proactiva (Fase 82)
                     if ((finalState.confidence_score || 0) < 0.70 || riesgos.some((r: any) => r.severity === 'HIGH' || r.severity === 'CRITICAL')) {
-                        const { NotificationService } = await import('@/lib/notification-service');
+                        const { NotificationService } = await import('@/services/core/NotificationService');
                         await NotificationService.notify({
                             tenantId: tenantId!,
                             type: 'RISK_ALERT',

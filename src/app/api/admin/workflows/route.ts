@@ -3,7 +3,7 @@ import { requireRole } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { z } from 'zod';
-import { WorkflowService } from '@/lib/workflow-service';
+import { WorkflowService } from '@/services/ops/WorkflowService';
 import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { useToast } from './use-toast';
+import { toast } from 'sonner';
 import { AppError } from '@/lib/errors';
 
 interface UseApiFileUploadOptions {
@@ -18,7 +18,7 @@ export function useApiFileUpload({
     const [isUploading, setIsUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
+
 
     // Refs para callbacks para evitar re-renderizados
     const onSuccessRef = useRef(onSuccess);
@@ -55,8 +55,7 @@ export function useApiFileUpload({
                     const response = JSON.parse(xhr.responseText);
 
                     if (xhr.status >= 200 && xhr.status < 300 && response.success) {
-                        toast({
-                            title: 'Éxito',
+                        toast.success('Éxito', {
                             description: successMessage,
                         });
                         onSuccessRef.current?.(response);
@@ -64,10 +63,8 @@ export function useApiFileUpload({
                     } else {
                         const errorMsg = response.message || response.error?.message || 'Error al subir el archivo';
                         setError(errorMsg);
-                        toast({
-                            title: 'Error de Subida',
+                        toast.error('Error de Subida', {
                             description: errorMsg,
-                            variant: 'destructive',
                         });
                         onErrorRef.current?.(errorMsg);
                         reject(new Error(errorMsg));
@@ -78,10 +75,8 @@ export function useApiFileUpload({
                     setIsUploading(false);
                     const errorMsg = 'Error de red o servidor al subir archivo';
                     setError(errorMsg);
-                    toast({
-                        title: 'Error de Conexión',
+                    toast.error('Error de Conexión', {
                         description: errorMsg,
-                        variant: 'destructive',
                     });
                     onErrorRef.current?.(errorMsg);
                     reject(new Error(errorMsg));
@@ -94,10 +89,8 @@ export function useApiFileUpload({
             setIsUploading(false);
             const message = err.message || 'Error desconocido';
             setError(message);
-            toast({
-                title: 'Error Crítico',
+            toast.error('Error Crítico', {
                 description: message,
-                variant: 'destructive',
             });
             onErrorRef.current?.(message);
             throw err;

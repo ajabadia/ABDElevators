@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useToast } from './use-toast';
+import { toast } from 'sonner';
 
 interface UseApiListOptions<T> {
     endpoint: string;
@@ -34,7 +34,7 @@ export function useApiList<T>({
     const [total, setTotal] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
+    // Standardized for ERA 8: toast is imported at the top
 
     // Estabilizar filtros para evitar bucles infinitos por objetos literales
     const filters = useMemo(() => rawFilters, [JSON.stringify(rawFilters)]);
@@ -115,11 +115,7 @@ export function useApiList<T>({
             }
             const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
-            toast({
-                title: 'Error de Carga',
-                description: message,
-                variant: 'destructive',
-            });
+            toast.error(message);
             onErrorRef.current?.(message);
         } finally {
             // Solo limpiar loading si este es el request activo

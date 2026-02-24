@@ -1,9 +1,9 @@
 
-import { callGemini } from '@/lib/llm';
-import { PromptService } from '@/lib/prompt-service';
+import { callGemini } from '@/services/llm/llm-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
-import { LlmJsonUtils } from '@/lib/llm/json-utils';
+import { LlmJsonUtils } from '@/services/llm/json-utils';
 import { TranslationRepository } from './TranslationRepository';
 import { TranslationCache } from './TranslationCache';
 

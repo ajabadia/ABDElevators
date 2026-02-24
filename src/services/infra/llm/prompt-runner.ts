@@ -1,11 +1,11 @@
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { getGenAI, runShadowCall } from '@/lib/gemini-client';
-import { LlmJsonUtils } from '@/lib/llm/json-utils';
+import { LlmJsonUtils } from '@/services/llm/llm-service/json-utils';
 import { logEvento } from '@/lib/logger';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from '@/lib/resilience';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 
 const tracer = trace.getTracer('abd-rag-platform');
 

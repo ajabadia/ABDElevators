@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AnalyticsService } from '@/core/services/AnalyticsService';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -1,4 +1,4 @@
-import { PromptRunner } from '@/lib/llm-core';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { RagJudgeOutputSchema } from '@/lib/llm-core/schemas';
 import { logEvento } from '@/lib/logger';
 import { AI_MODEL_IDS } from '@/lib/constants/ai-models';

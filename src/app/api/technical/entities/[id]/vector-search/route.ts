@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { auth } from '@/lib/auth';
-import { pureVectorSearch } from '@/lib/rag-service';
+import { VectorSearchService } from '@abd/rag-engine/server';
 import { withSla } from '@/lib/logger';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
@@ -41,7 +41,7 @@ export async function GET(
             let query = '';
             if (entity.detectedPatterns && entity.detectedPatterns.length > 0) {
                 query = entity.detectedPatterns
-                    .map((m: any) => `${m.type} ${m.model}`)
+                    .map((m: any) => `${m.type} ${m.model} `)
                     .join(' ');
             } else {
                 query = entity.originalText?.substring(0, 500) || '';
@@ -53,10 +53,16 @@ export async function GET(
 
             // 3. Execute pure vector search (Optimized < 200ms)
             // Note: pureVectorSearch already includes tenantId isolation internally
-            const results = await pureVectorSearch(query, session.user.tenantId, correlationId, {
-                limit: 15,
-                minScore: 0.5
-            });
+            // ⚡ FASE 182: Direct call to pure vector search
+            const results = await VectorSearchService.pureVectorSearch(
+                query,
+                session.user.tenantId,
+                correlationId,
+                {
+                    limit: 15,
+                    minScore: 0.5
+                }
+            );
 
             // 4. Return results with performance headers
             return NextResponse.json({

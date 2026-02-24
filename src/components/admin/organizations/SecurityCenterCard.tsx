@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ContentCard } from "@/components/ui/content-card";
 import { Shield, Badge } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { TenantConfig } from '@/lib/schemas';
 import { useTranslations } from "next-intl";
 
@@ -15,7 +15,6 @@ interface SecurityCenterCardProps {
 
 export function SecurityCenterCard({ config }: SecurityCenterCardProps) {
     const t = useTranslations('admin.organizations.security');
-    const { toast } = useToast();
 
     return (
         <ContentCard className="bg-muted flex items-center justify-between p-8" noPadding={true}>
@@ -76,7 +75,7 @@ export function SecurityCenterCard({ config }: SecurityCenterCardProps) {
                         </div>
 
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => toast({ title: t('downloadSuccess.title'), description: t('downloadSuccess.desc') })}>
+                            <Button variant="outline" onClick={() => toast.success(t('downloadSuccess.title'), { description: t('downloadSuccess.desc') })}>
                                 {t('downloadBtn')}
                             </Button>
                         </div>

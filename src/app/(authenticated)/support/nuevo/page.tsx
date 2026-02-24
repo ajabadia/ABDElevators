@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function NewTicketPage() {
@@ -35,7 +35,7 @@ export default function NewTicketPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.subject || !formData.description) {
-            toast({ title: t('error'), description: t('errorFields'), variant: "destructive" });
+            toast.error(t('error'), { description: t('errorFields') });
             return;
         }
 
@@ -49,8 +49,7 @@ export default function NewTicketPage() {
 
             if (res.ok) {
                 const data = await res.json();
-                toast({
-                    title: t('success'),
+                toast.success(t('success'), {
                     description: `${t('successDesc')} (${data.ticket.ticketNumber})`
                 });
                 router.push('/support');
@@ -58,7 +57,7 @@ export default function NewTicketPage() {
                 throw new Error('Error al crear');
             }
         } catch (error) {
-            toast({ title: t('error'), description: t('errorCreate'), variant: "destructive" });
+            toast.error(t('error'), { description: t('errorCreate') });
         } finally {
             setLoading(false);
         }

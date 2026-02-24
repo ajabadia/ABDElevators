@@ -1,6 +1,6 @@
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
-import { NotificationService } from '@/services/core/notification-service';
+import { NotificationService } from '@/services/core/NotificationService';
 
 export class ObservabilityAlertService {
     /**

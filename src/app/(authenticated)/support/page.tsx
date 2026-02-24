@@ -12,7 +12,8 @@ import {
     ArrowRight,
     Sparkles,
     RefreshCw,
-    Inbox
+    Inbox,
+    ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -23,6 +24,9 @@ import { AgenticSupportSearch } from '@/components/technical/AgenticSupportSearc
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApiList } from '@/hooks/useApiList';
 import { TicketListSkeleton } from '@/components/shared/LoadingSkeleton';
+import { useSession } from 'next-auth/react';
+import { StaffSupportDashboard } from '@/components/support/StaffSupportDashboard';
+import { UserRole } from '@/types/roles';
 
 interface Ticket {
     _id: string;
@@ -38,6 +42,9 @@ export default function ClientSupportPage() {
     const t = useTranslations('support.page');
     const tCat = useTranslations('support.category');
     const [search, setSearch] = useState('');
+    const { data: session } = useSession();
+
+    const isStaff = session?.user && [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT].includes(session.user.role as UserRole);
 
     const { data: tickets, isLoading, refresh } = useApiList<Ticket>({
         endpoint: '/api/support/tickets',
@@ -75,13 +82,18 @@ export default function ClientSupportPage() {
 
             <Tabs defaultValue="ai-search" className="space-y-8">
                 <div className="flex justify-center">
-                    <TabsList className="bg-slate-100 dark:bg-slate-800 p-1.5 h-16 rounded-[1.5rem] grid grid-cols-2 w-full max-w-md border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <TabsList className={`bg-slate-100 dark:bg-slate-800 p-1.5 h-16 rounded-[1.5rem] border border-slate-200 dark:border-slate-700 shadow-inner grid w-full max-w-2xl ${isStaff ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         <TabsTrigger value="ai-search" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
                             <Sparkles className="w-4 h-4 mr-2" aria-hidden="true" /> {t('aiSearch')}
                         </TabsTrigger>
                         <TabsTrigger value="tickets" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
                             <MessageSquare className="w-4 h-4 mr-2" aria-hidden="true" /> {t('myTickets')}
                         </TabsTrigger>
+                        {isStaff && (
+                            <TabsTrigger value="staff-management" className="rounded-2xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all">
+                                <ShieldCheck className="w-4 h-4 mr-2" aria-hidden="true" /> Gestión Support
+                            </TabsTrigger>
+                        )}
                     </TabsList>
                 </div>
 
@@ -91,6 +103,7 @@ export default function ClientSupportPage() {
 
                 <TabsContent value="tickets" className="animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
                     <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/50 overflow-hidden min-h-[500px]">
+                        {/* ... (rest of search and list logic remains same) ... */}
                         <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 flex flex-col sm:flex-row gap-6 justify-between items-center">
                             <div className="relative w-full sm:w-[400px]">
                                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
@@ -172,6 +185,12 @@ export default function ClientSupportPage() {
                         </div>
                     </div>
                 </TabsContent>
+
+                {isStaff && (
+                    <TabsContent value="staff-management" className="animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
+                        <StaffSupportDashboard />
+                    </TabsContent>
+                )}
             </Tabs>
         </div>
     );

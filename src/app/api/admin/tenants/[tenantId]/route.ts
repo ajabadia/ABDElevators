@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { TenantService } from '@/lib/tenant-service';
+import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
+import crypto from 'crypto';
 
 /**
  * GET /api/admin/tenants/[tenantId]
@@ -24,11 +26,19 @@ export async function GET(
             throw new AppError('FORBIDDEN', 403, 'No tienes permiso para acceder a este tenant');
         }
 
+        const correlationId = crypto.randomUUID();
         const config = await TenantService.getConfig(tenantId);
 
-        console.log(`[API GET] Tenant ${tenantId} config returned:`, {
-            hasBranding: !!config?.branding,
-            colors: config?.branding?.colors
+        await logEvento({
+            level: 'INFO',
+            source: 'API_TENANT_CONFIG',
+            action: 'GET_CONFIG',
+            message: `Tenant ${tenantId} config returned`,
+            correlationId,
+            details: {
+                hasBranding: !!config?.branding,
+                colors: config?.branding?.colors
+            }
         });
 
         return NextResponse.json(

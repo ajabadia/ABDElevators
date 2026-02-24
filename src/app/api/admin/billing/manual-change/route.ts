@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { BillingService } from '@/lib/billing-service';
+import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { TenantSubscriptionSchema } from '@/lib/schemas/billing';

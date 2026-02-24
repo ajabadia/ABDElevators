@@ -17,7 +17,7 @@ import { ContentCard } from '@/components/ui/content-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { RagResult } from '@/lib/rag-service';
+import { RagResult } from '@/services/core/RagService';
 import { useTranslations } from 'next-intl';
 import { humanizeConfidence, confidencePercent } from '@/lib/confidence-humanizer';
 import AnswerFeedback from '@/components/shared/AnswerFeedback';

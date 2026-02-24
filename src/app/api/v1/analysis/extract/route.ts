@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { publicApiHandler } from '@/lib/api-handler';
-import { extractModelsWithGemini, analyzeEntityWithGemini } from '@/lib/llm';
+import { extractModelsWithGemini, analyzeEntityWithGemini } from '@/services/llm/llm-service';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { z } from 'zod';
 

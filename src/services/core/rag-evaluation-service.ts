@@ -2,7 +2,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { RagEvaluationSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { RagJudgeService } from './rag-judge-service';
-import { PromptRunner } from '@/lib/llm-core';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { RagJudgeOutputSchema } from '@/lib/llm-core/schemas';
 
 export class RagEvaluationService {

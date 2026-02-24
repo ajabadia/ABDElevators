@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { PromptService } from '@/lib/prompt-service';
-import { callGeminiMini, callGeminiPro } from '@/lib/llm';
+import { PromptService } from '@/services/llm/prompt-service';
+import { callGeminiMini, callGeminiPro } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { AI_MODEL_IDS } from '@abd/platform-core';

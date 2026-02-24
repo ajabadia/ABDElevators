@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
-import { PromptService } from '@/lib/prompt-service';
-import { callGeminiMini } from '@/lib/llm';
+import { PromptService } from '@/services/llm/prompt-service';
+import { callGeminiMini } from '@/services/llm/llm-service';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';

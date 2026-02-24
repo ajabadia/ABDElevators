@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { EnvironmentService } from '@/lib/environment-service';
+import { EnvironmentService } from '@/services/core/environment-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 import { UserRole } from '@/types/roles';

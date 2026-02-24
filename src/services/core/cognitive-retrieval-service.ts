@@ -1,5 +1,5 @@
-import { callGeminiMini } from '@/lib/llm';
-import { PromptService } from '@/lib/prompt-service';
+import { callGeminiMini } from '@/services/llm/llm-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@/lib/logger';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
@@ -53,7 +53,7 @@ export class CognitiveRetrievalService {
 
         // Phase 2: Wrap LLM call with retry + tracing + cost tracking
         const { IngestTracer } = await import('@/services/ingest/observability/IngestTracer');
-        const { withLLMRetry } = await import('@/lib/llm-retry');
+        const { withRetry: withLLMRetry } = await import('@/lib/retry');
         const { LLMCostTracker } = await import('@/services/ingest/observability/LLMCostTracker');
 
         const span = IngestTracer.startCognitiveContextSpan({
@@ -70,13 +70,7 @@ export class CognitiveRetrievalService {
                     model: modelName
                 }),
                 {
-                    operation: 'COGNITIVE_CONTEXT',
-                    tenantId,
-                    correlationId: correlationId || 'cognitive-router',
-                },
-                {
                     maxRetries: 3,
-                    timeoutMs: 10000, // 10s timeout
                 }
             );
 

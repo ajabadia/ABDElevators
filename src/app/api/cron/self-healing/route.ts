@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SelfHealingService } from '@/lib/self-healing-service';
+import { SelfHealingService } from '@/services/ops/self-healing-service';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 

@@ -152,12 +152,17 @@ export async function POST(req: NextRequest) {
             }
         );
 
-        console.log(`[API_USER_DOCS] BlobStorageService result (deduplicated: ${deduplicated}):`, {
-            md5: blob._id,
-            providerId: blob.providerId,
-            url: blob.url,
-            secureUrl: blob.secureUrl,
-            fields: Object.keys(blob)
+        await logEvento({
+            level: 'INFO',
+            source: 'API_USER_DOCS',
+            action: 'STORAGE_RESULT',
+            message: `Deduplicated: ${deduplicated}`,
+            correlationId,
+            details: {
+                md5: blob._id,
+                providerId: blob.providerId,
+                url: blob.url
+            }
         });
 
         const uploadResult = {
@@ -224,7 +229,15 @@ export async function POST(req: NextRequest) {
             correlationId,
             timestamp: new Date().toISOString()
         };
-        console.error(`[API_USER_DOCS] Critical failure:`, errorDetails);
+
+        await logEvento({
+            level: 'ERROR',
+            source: 'API_USER_DOCS',
+            action: 'CRITICAL_FAILURE',
+            message: error.message,
+            correlationId,
+            details: errorDetails
+        });
 
         // 🚨 EMERGENCY DEBUG: Write to disk because logs are truncated
         try {
@@ -236,7 +249,14 @@ export async function POST(req: NextRequest) {
         }
 
         if (error.name === 'ZodError') {
-            console.error('[API_USER_DOCS] Zod Validation Error Details:', JSON.stringify(error.issues, null, 2));
+            await logEvento({
+                level: 'WARN',
+                source: 'API_USER_DOCS',
+                action: 'ZOD_VALIDATION_ERROR',
+                message: 'Invalid document metadata',
+                correlationId,
+                details: error.issues
+            });
             return NextResponse.json(
                 new ValidationError(`Invalid document metadata: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(', ')}`, error.issues).toJSON(),
                 { status: 400 }

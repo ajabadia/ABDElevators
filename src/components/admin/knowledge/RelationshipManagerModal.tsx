@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link2, Trash2, Search, Plus, AlertCircle } from "lucide-react";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { KnowledgeAsset } from "@/types/knowledge";
 
 interface RelationshipManagerModalProps {
@@ -34,7 +34,6 @@ const RELATIONSHIP_TYPES = [
 ];
 
 export function RelationshipManagerModal({ isOpen, onClose, asset }: RelationshipManagerModalProps) {
-    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedType, setSelectedType] = useState<string>('RELATED_TO');
     const [description, setDescription] = useState("");
@@ -50,7 +49,7 @@ export function RelationshipManagerModal({ isOpen, onClose, asset }: Relationshi
         endpoint: `/api/admin/knowledge-assets/${asset?._id}/relationships`,
         method: 'PATCH',
         onSuccess: () => {
-            toast({ title: "Vínculos actualizados", description: "Los cambios se han guardado correctamente." });
+            toast.success("Vínculos actualizados", { description: "Los cambios se han guardado correctamente." });
             onClose();
         }
     });

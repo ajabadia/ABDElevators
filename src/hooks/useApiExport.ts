@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useToast } from './use-toast';
+import { toast } from 'sonner';
 
 interface UseApiExportOptions {
     endpoint: string;
@@ -19,7 +19,7 @@ export function useApiExport({
 }: UseApiExportOptions) {
     const [isExporting, setIsExporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
+
 
     const exportData = useCallback(async (filters: Record<string, any> = {}, format: string = 'csv') => {
         setIsExporting(true);
@@ -37,8 +37,7 @@ export function useApiExport({
 
             const url = `${endpoint}?${queryParams.toString()}`;
 
-            toast({
-                title: 'Exportación Iniciada',
+            toast('Exportación Iniciada', {
                 description: `Generando archivo ${format.toUpperCase()}...`,
             });
 
@@ -73,8 +72,7 @@ export function useApiExport({
             link.remove();
             window.URL.revokeObjectURL(downloadUrl);
 
-            toast({
-                title: 'Exportación Completada',
+            toast.success('Exportación Completada', {
                 description: 'El archivo se ha descargado correctamente.',
             });
 
@@ -83,10 +81,8 @@ export function useApiExport({
         } catch (err: any) {
             const message = err.message || 'Error desconocido';
             setError(message);
-            toast({
-                title: 'Error de Exportación',
+            toast.error('Error de Exportación', {
                 description: message,
-                variant: 'destructive',
             });
             onError?.(message);
             return { success: false, error: message };

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { GlobalPatternsTable } from '@/components/admin/intelligence/GlobalPatternsTable';
 import { TrendsChart, ImpactScoreCard } from '@/components/admin/intelligence/TrendsChart';
 import { toast } from 'sonner';
@@ -13,55 +13,37 @@ import { PageHeader } from '@/components/ui/page-header';
 import { ContentCard } from '@/components/ui/content-card';
 import { MetricCard } from '@/components/ui/metric-card';
 import { useTranslations } from 'next-intl';
+import { useApiItem } from '@/hooks/useApiItem';
+import { useApiMutation } from '@/hooks/useApiMutation';
 
 export default function IntelligenceDashboard() {
     const t = useTranslations('admin.intelligence');
-    const [stats, setStats] = useState<IntelligenceStats | null>(null);
-    const [patterns, setPatterns] = useState<FederatedPattern[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // Unified Data Fetching (Rule 11/12 Alignment)
+    const { data: stats, isLoading: isLoadingStats, refresh: refreshStats } = useApiItem<IntelligenceStats>({
+        endpoint: '/api/admin/intelligence/stats',
+    });
 
-    const fetchData = async () => {
-        try {
-            const [statsRes, patternsRes] = await Promise.all([
-                fetch('/api/admin/intelligence/stats'),
-                fetch('/api/admin/intelligence/patterns?limit=20')
-            ]);
+    const { data: patternsData, isLoading: isLoadingPatterns, refresh: refreshPatterns } = useApiItem<{ patterns: FederatedPattern[] }>({
+        endpoint: '/api/admin/intelligence/patterns?limit=20',
+    });
 
-            if (statsRes.ok) setStats(await statsRes.json());
-            if (patternsRes.ok) {
-                const data = await patternsRes.json();
-                setPatterns(data.patterns);
-            }
-        } catch (error) {
-            console.error('Failed to load dashboard', error);
-            toast.error(t('table.fetch_error'));
-        } finally {
-            setLoading(false);
-        }
+    // Governance Action via useApiMutation
+    const { mutate: archivePattern, isLoading: isArchiving } = useApiMutation({
+        endpoint: '/api/admin/intelligence/patterns',
+        method: 'PATCH',
+        onSuccess: () => {
+            toast.success(t('table.archive_success'));
+            refreshPatterns();
+        },
+        onError: () => toast.error(t('table.archive_error'))
+    });
+
+    const handleArchive = (id: string) => {
+        archivePattern({ patternId: id, action: 'ARCHIVE' });
     };
 
-    const handleArchive = async (id: string) => {
-        try {
-            const res = await fetch('/api/admin/intelligence/patterns', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ patternId: id, action: 'ARCHIVE' })
-            });
-
-            if (res.ok) {
-                toast.success(t('table.archive_success'));
-                fetchData(); // Refresh
-            } else {
-                toast.error(t('table.archive_error'));
-            }
-        } catch (error) {
-            toast.error(t('table.archive_error'));
-        }
-    };
+    const loading = isLoadingStats || isLoadingPatterns;
 
     if (loading) {
         return (
@@ -136,10 +118,10 @@ export default function IntelligenceDashboard() {
                                         <p className="text-xs font-medium leading-none capitalize">{tag.tag}</p>
                                         <span className="font-bold text-xs">{tag.count}</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={tag.count} aria-valuemax={stats.topTags[0].count} aria-label={tag.tag}>
+                                    <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={tag.count} aria-valuemax={stats?.topTags?.[0]?.count} aria-label={tag.tag}>
                                         <div
                                             className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                                            style={{ width: `${(tag.count / (stats.topTags[0].count)) * 100}%` }}
+                                            style={{ width: `${(tag.count / (stats?.topTags?.[0]?.count || 1)) * 100}%` }}
                                         />
                                     </div>
                                 </div>
@@ -157,7 +139,7 @@ export default function IntelligenceDashboard() {
 
             {/* Pattern Governance Table */}
             <ContentCard title={t('table.title')} description={t('table.desc')}>
-                <GlobalPatternsTable patterns={patterns} onArchive={handleArchive} />
+                <GlobalPatternsTable patterns={patternsData?.patterns || []} onArchive={handleArchive} />
             </ContentCard>
         </PageContainer>
     );

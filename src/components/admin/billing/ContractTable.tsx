@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { EditContractSheet } from "./EditContractSheet";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface Contract {
     tenantId: string;
@@ -63,7 +63,6 @@ export function ContractTable() {
 
     const t = useTranslations('admin.billing.contracts');
     const format = useFormatter();
-    const { toast } = useToast();
 
     const { data: contracts, isLoading, refresh, error } = useApiList<Contract>({
         endpoint: '/api/admin/billing/contracts',
@@ -74,10 +73,8 @@ export function ContractTable() {
 
     useEffect(() => {
         if (error) {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: t('table.loading_error') || "Could not load contracts",
-                variant: "destructive"
             });
         }
     }, [error, toast, t]);
@@ -244,7 +241,7 @@ export function ContractTable() {
                                                 <Edit className="h-4 w-4 text-slate-500" aria-hidden="true" />
                                                 {t('actions.edit')}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => toast({ title: t('actions.upcoming_title'), description: t('actions.upcoming_desc') })} className="gap-2 cursor-pointer">
+                                            <DropdownMenuItem onClick={() => toast.info(t('actions.upcoming_title'), { description: t('actions.upcoming_desc') })} className="gap-2 cursor-pointer">
                                                 <FileText className="h-4 w-4 text-slate-500" aria-hidden="true" />
                                                 {t('actions.invoices')}
                                             </DropdownMenuItem>

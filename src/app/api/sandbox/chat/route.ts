@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { DEMO_DOCUMENTS } from '@/lib/demo-data';
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');

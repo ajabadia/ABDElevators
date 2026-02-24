@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ContactService } from '@/lib/contact-service';
+import { ContactService } from '@/services/support/ContactService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 import { requireRole } from '@/lib/auth';

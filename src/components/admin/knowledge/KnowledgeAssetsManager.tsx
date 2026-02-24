@@ -33,7 +33,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiOptimistic } from "@/hooks/useApiOptimistic";
@@ -56,7 +56,7 @@ interface KnowledgeAssetsManagerProps {
 }
 
 export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAssetsManagerProps) {
-    const { toast } = useToast();
+
     const t = useTranslations('knowledge_assets');
     const tCommon = useTranslations('common');
     const [searchTerm, setSearchTerm] = useState("");
@@ -114,11 +114,11 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
 
             if (!res.ok) throw new Error("Review update failed");
 
-            toast({ title: t('review.success'), variant: "default" });
+            toast.success(t('review.success'));
             setModalState({ type: 'closed' });
             refresh();
         } catch (error) {
-            toast({ title: t('review.error'), variant: "destructive" });
+            toast.error(t('review.error'));
         }
     };
 
@@ -586,7 +586,7 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
 }
 
 function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onManageRelationships, onViewDiagnostics, onScheduleReview, onAnalyze, onEnrich, onViewChunks, refresh }: any) {
-    const { toast } = useToast();
+
 
     return (
         <DropdownMenu>
@@ -671,10 +671,10 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                                 body: JSON.stringify({ action: 'snooze' })
                             });
                             if (!res.ok) throw new Error();
-                            toast({ title: t('snooze_success') || 'Snoozed' });
+                            toast.success(t('snooze_success') || 'Snoozed');
                             refresh();
                         } catch (err) {
-                            toast({ variant: 'destructive', title: 'Error' });
+                            toast.error('Error');
                         }
                     }}
                 >
@@ -688,10 +688,10 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                             try {
                                 const res = await fetch(`/api/admin/knowledge-assets/${doc._id}/retry`, { method: 'POST' });
                                 if (!res.ok) throw new Error('Retry failed');
-                                toast({ title: t('retry_success'), description: t('retry_desc') });
+                                toast.success(t('retry_success'), { description: t('retry_desc') });
                                 refresh();
                             } catch (err) {
-                                toast({ variant: "destructive", title: "Error", description: "Retry failed" });
+                                toast.error("Error", { description: "Retry failed" });
                             }
                         }}
                     >

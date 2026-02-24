@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PromptRunner } from '@/lib/llm-core';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { logEvento } from '@/lib/logger';
 import { CausalImpactAnalysisSchema, CausalImpactAnalysis } from '@/lib/schemas/intelligence';
 import { AppError } from '@/lib/errors';

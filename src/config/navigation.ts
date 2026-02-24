@@ -37,6 +37,8 @@ export interface MenuItem {
     icon: any;
     roles?: UserRole[];
     module?: string;
+    resource?: string; // Resource for Guardian ABAC
+    action?: string;   // Action for Guardian ABAC
 }
 
 export interface MenuSection {
@@ -63,21 +65,27 @@ export const menuSections: MenuSection[] = [
                 nameKey: 'items.aiHub',
                 href: '/admin/ai',
                 icon: BrainCircuit,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:ai',
+                action: 'read'
             },
             {
                 name: 'Semantic Map',
                 nameKey: 'items.graph',
                 href: '/admin/knowledge-base/graph',
                 icon: Share2,
-                roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.TECHNICAL, UserRole.SUPER_ADMIN],
+                resource: 'knowledge:graph',
+                action: 'read'
             },
             {
                 name: 'Prompt Engineering',
                 nameKey: 'items.prompts',
                 href: '/admin/prompts',
                 icon: Terminal,
-                roles: [UserRole.SUPER_ADMIN]
+                roles: [UserRole.SUPER_ADMIN],
+                resource: 'admin:prompts',
+                action: 'manage'
             }
         ]
     },
@@ -98,7 +106,9 @@ export const menuSections: MenuSection[] = [
                 href: '/entities',
                 icon: Zap,
                 roles: [UserRole.ADMIN, UserRole.TECHNICAL],
-                module: 'TECHNICAL'
+                module: 'TECHNICAL',
+                resource: 'entities',
+                action: 'read'
             },
             {
                 name: 'Knowledge Hub',
@@ -106,20 +116,26 @@ export const menuSections: MenuSection[] = [
                 href: '/admin/knowledge',
                 icon: FileText,
                 roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN],
+                resource: 'knowledge',
+                action: 'read'
             },
             {
                 name: 'Workflow Tasks',
                 nameKey: 'items.workflow_tasks',
                 href: '/admin/workflow-tasks',
                 icon: CheckSquare,
-                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER]
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER],
+                resource: 'workflows:tasks',
+                action: 'read'
             },
             {
                 name: 'Checklist Configs',
                 nameKey: 'items.checklists',
                 href: '/admin/checklist-configs',
                 icon: CheckSquare,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'checklists',
+                action: 'manage'
             }
         ]
     },
@@ -133,42 +149,54 @@ export const menuSections: MenuSection[] = [
                 nameKey: 'items.organizations',
                 href: '/admin/organizations',
                 icon: Building,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:organizations',
+                action: 'manage'
             },
             {
                 name: 'Users',
                 nameKey: 'items.users',
                 href: '/admin/users',
                 icon: Users,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:users',
+                action: 'manage'
             },
             {
                 name: 'Billing & Subscriptions',
                 nameKey: 'items.billing',
                 href: '/admin/billing',
                 icon: CreditCard,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:billing',
+                action: 'manage'
             },
             {
                 name: 'API Keys',
                 nameKey: 'items.apiKeys',
                 href: '/admin/api-keys',
                 icon: Key,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:api-keys',
+                action: 'manage'
             },
             {
                 name: 'Audit Trail',
                 nameKey: 'items.audit',
                 href: '/admin/audit',
                 icon: History,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:audit',
+                action: 'read'
             },
             {
                 name: 'Compliance',
                 nameKey: 'items.compliance',
                 href: '/admin/compliance',
                 icon: Scale,
-                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+                roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+                resource: 'admin:compliance',
+                action: 'read'
             }
         ]
     },
@@ -207,14 +235,18 @@ export const menuSections: MenuSection[] = [
                 nameKey: 'items.governance_console',
                 href: '/admin/permissions',
                 icon: ShieldAlert,
-                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+                roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
+                resource: 'admin:permissions',
+                action: 'manage'
             },
             {
                 name: 'i18n Governance',
                 nameKey: 'items.i18n',
                 href: '/admin/settings/i18n',
                 icon: Languages,
-                roles: [UserRole.SUPER_ADMIN]
+                roles: [UserRole.SUPER_ADMIN],
+                resource: 'admin:i18n',
+                action: 'manage'
             },
             {
                 name: 'Profile',

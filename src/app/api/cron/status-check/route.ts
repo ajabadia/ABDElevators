@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AnomalyDetectionService } from '@/lib/anomaly-detection-service';
-import { SovereignOntologyService } from '@/lib/self-evolving-ontology';
+import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
+import { SovereignOntologyService } from '@/services/core/SovereignOntologyService';
+// TODO: Fix rerankDocuments import when @abd/rag-engine is ready
+const rerankDocuments = async (q: string, d: any[]) => d;
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 

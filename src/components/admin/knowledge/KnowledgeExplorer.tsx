@@ -16,7 +16,7 @@ import { es } from 'date-fns/locale';
 import { useApiList } from '@/hooks/useApiList';
 import { useFilterState } from '@/hooks/useFilterState';
 import { useApiExport } from '@/hooks/useApiExport';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgenticSupportSearch } from '@/components/technical/AgenticSupportSearch';
 import { Sparkles, LayoutPanelLeft, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';

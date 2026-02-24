@@ -30,6 +30,11 @@ if (process.env.REDIS_URL) {
         console.log('🚀 [REDIS] Usando instancia LOCAL (Socket/IORedis)');
     }
     const io = new IORedis(process.env.REDIS_URL);
+    io.on('error', (err) => {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ [REDIS_MAIN] Connection error:', err.message);
+        }
+    });
     // Wrapper for compatibility with @upstash/redis API
     redisClient = {
         get: async (key: string) => {
@@ -84,6 +89,15 @@ export function getRedisConnection() {
 
         ioredisInstance = new IORedis(redisUrl, {
             maxRetriesPerRequest: null,
+            enableReadyCheck: false,
+            showFriendlyErrorStack: true
+        });
+
+        // Phase 120: Avoid process crash on connection failure (Auditoría 017)
+        ioredisInstance.on('error', (err) => {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ [REDIS_SOCKET] Connection error:', err.message);
+            }
         });
     }
     return ioredisInstance;

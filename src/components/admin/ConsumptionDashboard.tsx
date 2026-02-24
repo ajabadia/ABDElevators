@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Cpu, Database, Search, Activity, Zap, HardDrive, RefreshCcw, CreditCard, FileText, AlertTriangle, Download, Settings, Building2, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { PlanSelector } from './PlanSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
     BarChart,
     Bar,
@@ -75,7 +75,6 @@ interface InvoicePreview {
 
 export function ConsumptionDashboard() {
     const t = useTranslations('admin.consumption');
-    const { toast } = useToast();
     const [isMounted, setIsMounted] = useState(false);
 
     // 1. Carga de estadísticas con hook genérico
@@ -162,10 +161,10 @@ export function ConsumptionDashboard() {
             // Generar PDF en cliente
             generateInvoicePDF(data.invoice);
 
-            toast({ title: t('invoice.success'), description: t('invoice.success_desc') });
+            toast.success(t('invoice.success'), { description: t('invoice.success_desc') });
         } catch (error) {
             console.error(error);
-            toast({ title: t('invoice.error'), description: t('invoice.error_desc'), variant: 'destructive' });
+            toast.error(t('invoice.error'), { description: t('invoice.error_desc') });
         } finally {
             setDownloading(false);
         }

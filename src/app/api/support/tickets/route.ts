@@ -1,7 +1,7 @@
-
 import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { auth } from '@/lib/auth';
-import { TicketService } from '@/lib/ticket-service';
+import { TicketService } from '@/services/support/TicketService';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
@@ -12,10 +12,7 @@ import crypto from 'crypto';
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
-        }
+        const session = await enforcePermission('support:ticket', 'create');
 
         const body = await req.json();
 
@@ -42,8 +39,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) throw new AppError('UNAUTHORIZED', 401, 'api.errors.unauthorized');
+        const session = await enforcePermission('support:ticket', 'read');
 
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status') || undefined;
@@ -54,8 +50,13 @@ export async function GET(req: NextRequest) {
         let filterUserId: string | undefined = undefined;
 
         // If not admin/support, only sees their own tickets
-        if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN' && session.user.role !== 'SUPPORT') {
+        const isAdmin = session.user.role === 'SUPER_ADMIN' || session.user.role === 'ADMIN' || session.user.role === 'SUPPORT';
+
+        if (!isAdmin) {
             filterUserId = session.user.id;
+        } else {
+            // Admin list requires explicit permission
+            await enforcePermission('support:admin', 'read');
         }
 
         const tickets = await TicketService.getTickets({

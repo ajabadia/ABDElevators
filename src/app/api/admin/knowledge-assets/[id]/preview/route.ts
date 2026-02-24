@@ -47,7 +47,13 @@ export async function GET(
             return NextResponse.redirect(previewUrl);
         } else if (blobId) {
             // Serve directly from GridFS
-            console.log(`[PREVIEW] Serving from GridFS fallback for asset ${id}`);
+            await logEvento({
+                level: 'INFO',
+                source: 'API_ASSET_PREVIEW',
+                action: 'GRIDFS_FALLBACK',
+                message: `Serving from GridFS fallback for asset ${id}`,
+                correlationId
+            });
             const { GridFSUtils } = await import('@/lib/gridfs-utils');
             const buffer = await GridFSUtils.getForProcessing(blobId, correlationId);
 

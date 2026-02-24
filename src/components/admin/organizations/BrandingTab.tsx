@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Palette, Upload, Loader2, Building, Trash2, FileText, Info, ShieldCheck, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TenantConfig } from '@/lib/schemas';
@@ -30,7 +30,6 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
     const tFoot = useTranslations('admin.organizations.reports.footer');
     const tSources = useTranslations('admin.organizations.reports.includeSources');
 
-    const { toast } = useToast();
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingDocumentLogo, setIsUploadingDocumentLogo] = useState(false);
     const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
@@ -123,10 +122,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                                 logo: data.asset
                                                             }
                                                         });
-                                                        toast({ title: tLogo('success'), description: tLogo('successDesc') });
+                                                        toast.success(tLogo('success'), { description: tLogo('successDesc') });
                                                     }
                                                 } catch (err) {
-                                                    toast({ title: tLogo('error'), description: tLogo('errorDesc'), variant: "destructive" });
+                                                    toast.error(tLogo('error'), { description: tLogo('errorDesc') });
                                                 } finally {
                                                     setIsUploadingLogo(false);
                                                 }
@@ -204,10 +203,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                                 documentLogo: data.asset
                                                             }
                                                         });
-                                                        toast({ title: tDocumentLogo('success'), description: tDocumentLogo('successDesc') });
+                                                        toast.success(tDocumentLogo('success'), { description: tDocumentLogo('successDesc') });
                                                     }
                                                 } catch (err) {
-                                                    toast({ title: tDocumentLogo('error'), description: tDocumentLogo('errorDesc'), variant: "destructive" });
+                                                    toast.error(tDocumentLogo('error'), { description: tDocumentLogo('errorDesc') });
                                                 } finally {
                                                     setIsUploadingDocumentLogo(false);
                                                 }
@@ -284,10 +283,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                                 favicon: data.asset
                                                             }
                                                         });
-                                                        toast({ title: tFavicon('success'), description: tFavicon('successDesc') });
+                                                        toast.success(tFavicon('success'), { description: tFavicon('successDesc') });
                                                     }
                                                 } catch (err) {
-                                                    toast({ title: tFavicon('error'), description: tFavicon('errorDesc'), variant: "destructive" });
+                                                    toast.error(tFavicon('error'), { description: tFavicon('errorDesc') });
                                                 } finally {
                                                     setIsUploadingFavicon(false);
                                                 }

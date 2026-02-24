@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 import crypto from 'crypto';
 
 /**

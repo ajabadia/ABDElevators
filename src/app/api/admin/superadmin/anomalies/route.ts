@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
-import { AnomalyDetectionService } from '@/lib/anomaly-detection-service';
+import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
 import crypto from 'crypto';
 
 /**

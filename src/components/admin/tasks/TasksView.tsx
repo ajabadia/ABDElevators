@@ -9,16 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LayoutGrid, List, RefreshCw, Search, Filter } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useGuardian } from "@/hooks/use-guardian";
 
 export function TasksView() {
-    const { toast } = useToast();
+    const { can } = useGuardian();
+    const [canCreate, setCanCreate] = useState(false);
     const [tasks, setTasks] = useState<WorkflowTask[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
     const [activeTab, setActiveTab] = useState("my_tasks");
     const [search, setSearch] = useState("");
     const [priorityFilter, setPriorityFilter] = useState("ALL");
+
+    // Dynamic permission check for UI actions
+    useEffect(() => {
+        can('workflow:task', 'create').then(setCanCreate);
+    }, [can]);
 
     const fetchTasks = useCallback(async () => {
         setLoading(true);
@@ -35,16 +42,12 @@ export function TasksView() {
                 setTasks(data.data);
             }
         } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "No se pudieron cargar las tareas."
-            });
+            toast.error("No se pudieron cargar las tareas.");
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [activeTab, toast]);
+    }, [activeTab]);
 
     useEffect(() => {
         fetchTasks();

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { ReportScheduleService } from '@/lib/services/report-schedule-service';
+import { ReportScheduleService } from '@/services/ops/report-schedule-service';
 import { CreateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { z } from 'zod';
 

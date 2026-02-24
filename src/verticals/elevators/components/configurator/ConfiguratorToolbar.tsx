@@ -7,11 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useConfiguratorStore } from '@/store/configurator-store';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export function ConfiguratorToolbar() {
     const router = useRouter();
-    const { toast } = useToast();
     const t = useTranslations('admin.configurator.toolbar');
     const {
         config,
@@ -38,10 +37,8 @@ export function ConfiguratorToolbar() {
 
             if (!res.ok) throw new Error('Fallo al guardar');
 
-            toast({
-                title: t('save_success_title'),
+            toast.success(t('save_success_title'), {
                 description: t('save_success_desc'),
-                variant: 'default'
             });
 
             if (!isEdit) {
@@ -49,10 +46,8 @@ export function ConfiguratorToolbar() {
                 router.push(`/admin/checklist-configs/${data.config_id}`);
             }
         } catch (error) {
-            toast({
-                title: t('save_error_title'),
+            toast.error(t('save_error_title'), {
                 description: t('save_error_desc'),
-                variant: 'destructive'
             });
         } finally {
             setIsSaving(false);

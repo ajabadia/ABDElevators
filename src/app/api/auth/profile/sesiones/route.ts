@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SessionService } from '@/lib/session-service';
+import { SessionService } from "@/services/auth/SessionService";
 import { AppError } from '@/lib/errors';
 
 /**

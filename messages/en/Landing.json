@@ -47,6 +47,8 @@
       "Post-ingestion Enrichment (Ph 198)",
       "Dynamic AI Suggestions (Ph 216)",
       "Unified Service Layer (Ph 222)",
+      "Guardian Permission Alignment (Ph 220)",
+      "Server-Side ABAC Enforcement",
       "Structured API Logging (logEvento)"
     ]
   },

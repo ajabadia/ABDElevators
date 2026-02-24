@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
         const estimatedPlatformValue = (totalSavedTokens / 1_000_000) * (COST_PER_1M_TOKENS * ROI_MULTIPLIER);
 
         // 7. Predictive Analytics (Fase 110)
-        const { UsageService } = await import('@/lib/usage-service');
+        const { UsageService } = await import('@/services/ops/usage-service');
         const costPrediction = await UsageService.getGlobalCostPrediction();
 
         return NextResponse.json({

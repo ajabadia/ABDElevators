@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { AiModelManager } from '@/lib/services/ai-model-manager';
-import { auth } from '@/auth';
+import { AiModelManager } from '@/services/core/ai-model-manager';
+import { SecureLoupeInspector } from '@/services/security/secure-loupe-inspector';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 
@@ -37,6 +38,13 @@ export async function PATCH(req: Request) {
         const tenantId = body.tenantId || session.user?.tenantId || 'platform_master';
 
         await AiModelManager.updateTenantAiConfig(session as any, tenantId, body);
+
+        // Optional: Run security inspection after config change
+        await SecureLoupeInspector.inspectContext({
+            source: 'AI_GOVERNANCE_PATCH',
+            action: 'CONFIG_UPDATE',
+            tenantId
+        });
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

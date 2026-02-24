@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ReportScheduleService } from '@/lib/services/report-schedule-service';
+import { ReportScheduleService } from '@/services/ops/report-schedule-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 

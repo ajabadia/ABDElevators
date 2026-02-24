@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Save, History as HistoryIcon, RefreshCcw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +19,6 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
-    const { toast } = useToast();
     const router = useRouter();
     const t = useTranslations('admin.notifications.editor');
 
@@ -52,10 +51,8 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
 
     const handleSave = async () => {
         if (!formData.reason && initialData) {
-            toast({
-                title: t('audit.reasonRequired'),
+            toast.error(t('audit.reasonRequired'), {
                 description: t('audit.reasonRequiredDesc'),
-                variant: "destructive"
             });
             return;
         }
@@ -70,18 +67,15 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
 
             if (!res.ok) throw new Error('Error al guardar');
 
-            toast({
-                title: t('toast.success'),
+            toast.success(t('toast.success'), {
                 description: t('toast.successDesc'),
             });
 
             router.refresh();
 
         } catch (error) {
-            toast({
-                title: t('toast.error'),
+            toast.error(t('toast.error'), {
                 description: t('toast.errorDesc'),
-                variant: "destructive"
             });
         } finally {
             setIsSaving(false);
@@ -173,7 +167,7 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
                                 <Badge key={v} variant="secondary" className="font-mono cursor-pointer hover:bg-slate-200"
                                     onClick={() => {
                                         navigator.clipboard.writeText(`{{${v}}}`);
-                                        toast({ title: "Copiado", description: `Variable {{${v}}} copiada al portapapeles` });
+                                        toast.info("Copiado", { description: `Variable {{${v}}} copiada al portapapeles` });
                                     }}
                                 >
                                     {`{{${v}}}`}

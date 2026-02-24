@@ -1,5 +1,5 @@
 import { runCypher } from '@/lib/neo4j';
-import { callGeminiMini } from '@/lib/llm';
+import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { AIWorkflowEngine } from './AIWorkflowEngine';
 

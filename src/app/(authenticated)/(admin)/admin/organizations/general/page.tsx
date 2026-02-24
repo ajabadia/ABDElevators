@@ -11,7 +11,7 @@ import { Building2, Save } from "lucide-react";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { TenantConfig } from "@/lib/schemas";
 
 /**
@@ -21,7 +21,7 @@ import { TenantConfig } from "@/lib/schemas";
  */
 export default function OrganizationsGeneralPage() {
     const t = useTranslations("admin.organizations.page");
-    const { toast } = useToast();
+
     const { config, setConfig, isSaving, setIsSaving } = useTenantConfigStore();
 
     const { data: tenants, refresh: refreshTenants } = useApiList<TenantConfig>({
@@ -39,10 +39,8 @@ export default function OrganizationsGeneralPage() {
         successMessage: t('saveSuccess'),
         onSuccess: () => refreshTenants(),
         onError: (err) => {
-            toast({
-                title: t('error'),
+            toast.error(t('error'), {
                 description: typeof err === 'string' ? err : t('saveError'),
-                variant: 'destructive',
             });
         },
         onSettled: () => setIsSaving(false)
@@ -51,7 +49,7 @@ export default function OrganizationsGeneralPage() {
     const handleSave = () => {
         if (config) {
             if (!config.tenantId) {
-                toast({ title: t('error'), description: t('errorTenantId'), variant: 'destructive' });
+                toast.error(t('error'), { description: t('errorTenantId') });
                 return;
             }
             setIsSaving(true);

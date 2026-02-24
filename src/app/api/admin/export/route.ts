@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { ExportParamsSchema } from '@/lib/schemas/export';
-import { ExportService } from '@/lib/export-service';
+import { ExportService } from '@/services/ops/export-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
         // 3. Prepare Stream
         const encoder = new TextEncoder();
-        const dataStream = ExportService.exportDataStream(params, session);
+        const dataStream = ExportService.getExportStream(params, session);
 
         const stream = new ReadableStream({
             async start(controller) {

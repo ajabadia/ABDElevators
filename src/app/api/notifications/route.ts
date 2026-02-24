@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { NotificationService } from '@/lib/notification-service';
+import { NotificationService } from '@/services/core/NotificationService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/lib/auth';

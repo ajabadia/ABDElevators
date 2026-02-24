@@ -4,7 +4,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
-import { SecurityService } from '@/lib/security-service';
+import { SecurityService } from '@/services/security/security-service';
 import crypto from 'crypto';
 
 /**

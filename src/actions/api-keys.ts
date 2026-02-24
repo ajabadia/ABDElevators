@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth';
-import { ApiKeyService } from '@/lib/api-key-service';
+import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 import { getTenantCollection } from '@/lib/db-tenant';

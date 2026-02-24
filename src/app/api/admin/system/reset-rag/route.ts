@@ -15,7 +15,13 @@ export async function POST(req: Request) {
     const start = Date.now();
 
     try {
-        console.log("♻️  [ADMIN] Iniciando reset de emergencia del sistema RAG...");
+        await logEvento({
+            level: 'INFO',
+            source: 'ADMIN_SYSTEM',
+            action: 'RESET_RAG_START',
+            message: 'Iniciando reset de emergencia del sistema RAG...',
+            correlationId
+        });
 
         // 1. Reset Circuit Breaker (In-memory)
         resetGeminiCircuitBreaker();

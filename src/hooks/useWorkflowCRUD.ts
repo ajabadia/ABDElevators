@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { ReactFlowInstance } from "@xyflow/react";
 
@@ -40,7 +40,7 @@ export function useWorkflowCRUD({
     setCurrentIndustry,
     reactFlowInstance
 }: UseWorkflowCRUDProps) {
-    const { toast } = useToast();
+
     const t = useTranslations('admin.workflows.canvas');
 
     const refreshWorkflows = useCallback(async () => {
@@ -90,19 +90,19 @@ export function useWorkflowCRUD({
             setNodes([]);
             setEdges([]);
             setCurrentVersion(1);
-            toast({ title: t('create_title'), description: t('create_desc', { name }) });
+            toast.success(t('create_title'), { description: t('create_desc', { name }) });
         }
     }, [t, setActiveWorkflowId, setWorkflowName, setNodes, setEdges, setCurrentVersion, toast]);
 
     const handleDuplicate = useCallback(() => {
         if (nodes.length === 0) {
-            toast({ title: t('duplicate_alert'), variant: "default" });
+            toast.info(t('duplicate_alert'));
             return;
         }
         setWorkflowName(`${workflowName} (Copia)`);
         setActiveWorkflowId(null);
         setCurrentVersion(1);
-        toast({ title: t('duplicate_title'), description: t('duplicate_desc') });
+        toast.success(t('duplicate_title'), { description: t('duplicate_desc') });
     }, [nodes.length, workflowName, t, setWorkflowName, setActiveWorkflowId, setCurrentVersion, toast]);
 
     const onSave = useCallback(async () => {
@@ -124,10 +124,8 @@ export function useWorkflowCRUD({
             });
 
             if (response.status === 409) {
-                toast({
-                    title: t('save_conflict_title'),
+                toast.error(t('save_conflict_title'), {
                     description: t('save_conflict_desc'),
-                    variant: "destructive"
                 });
                 return;
             }
@@ -142,15 +140,12 @@ export function useWorkflowCRUD({
                 }
             }
 
-            toast({
-                title: t('save_success_title'),
+            toast.success(t('save_success_title'), {
                 description: t('save_success_desc', { count: flow.nodes.length }),
             });
         } catch (e) {
-            toast({
-                title: t('save_failed_title'),
+            toast.error(t('save_failed_title'), {
                 description: t('save_failed_desc'),
-                variant: "destructive"
             });
         }
     }, [reactFlowInstance, workflowName, environment, currentIndustry, currentVersion, activeWorkflowId, t, toast, setCurrentVersion, refreshWorkflows]);

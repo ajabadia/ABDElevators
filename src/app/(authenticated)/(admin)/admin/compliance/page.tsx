@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Download, ShieldAlert, FileCheck, Trash2, Database, Shield, Info, LayoutGrid } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from 'next-intl';
 import { AI_MODELS } from "@abd/platform-core";
 
 export default function CompliancePage() {
-    const { toast } = useToast();
+
     const t = useTranslations('admin.compliance');
     const tButtons = useTranslations('admin.compliance.buttons');
     const tToasts = useTranslations('admin.compliance.toasts');
@@ -48,13 +48,11 @@ export default function CompliancePage() {
             a.click();
             window.URL.revokeObjectURL(url);
 
-            toast({
-                title: tToasts('backupDownloaded'),
+            toast.success(tToasts('backupDownloaded'), {
                 description: tToasts('backupSuccess'),
-                variant: "default"
             });
         } catch (error) {
-            toast({ title: tToasts('error'), description: tToasts('backupError'), variant: "destructive" });
+            toast.error(tToasts('error'), { description: tToasts('backupError') });
         } finally {
             setDownloading(false);
         }
@@ -79,13 +77,11 @@ export default function CompliancePage() {
             a.click();
             window.URL.revokeObjectURL(url);
 
-            toast({
-                title: tToasts('certificateGenerated'),
+            toast.success(tToasts('certificateGenerated'), {
                 description: tToasts('certificateSuccess'),
-                variant: "default"
             });
         } catch (error) {
-            toast({ title: tToasts('error'), description: tToasts('certificateError'), variant: "destructive" });
+            toast.error(tToasts('error'), { description: tToasts('certificateError') });
         } finally {
             setGeneratingCert(false);
         }

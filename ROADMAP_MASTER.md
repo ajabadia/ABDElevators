@@ -14,7 +14,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 222B: UI STABILIZATION & OBSERVABILITY**, FASE 222: SERVICE LAYER CONSOLIDATION, FASE 217: INTERACTION EXCELLENCE, FASE 216: UX SURGICAL POLISH.
+- **Recent Ship**: **FASE 220: PERMISSION SYSTEM ALIGNMENT**, **FASE 222B: UI STABILIZATION & OBSERVABILITY**, FASE 222: SERVICE LAYER CONSOLIDATION, FASE 217: INTERACTION EXCELLENCE, FASE 216: UX SURGICAL POLISH.
 - **Project Status**: **ERA-8 Infrastructure Consolidation (v5.4.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -568,24 +568,24 @@ CONFIGURACIÓN (Admin Hub):
 
 **Tareas:**
 - [x] **218.1: Inventario exhaustivo de rutas**: ✅ 101 `page.tsx` clasificadas. Publicado en `map.md` y `route_registry.md`.
-- [ ] **218.2: Ejecutar resolución "mis documentos"**: Convertir `/admin/my-documents` en redirect a `/admin/knowledge/my-docs`. Actualizar navegación. `/my-documents` queda como ruta user-facing canónica.
-- [ ] **218.3: Ejecutar resolución soporte**: Eliminar `/support-ticket` (ya es redirect). Integrar KPIs de `/support-dashboard` en `/support` con tab staff-only (→ FASE 219).
-- [x] **218.4: Limpiar DEPRECATED zombis**: ✅ Clasificados. `/admin/billing/plan` reclasificada como CANÓNICA (95 líneas funcionales, i18n OK). Restantes son redirects funcionales.
-- [x] **218.5: Documentar `/admin/prompts`**: ✅ Documentada en map.md sección AI & Automation Studio (486 líneas).
-- [x] **218.6: Evaluar dualidad audit**: ✅ SON DIFERENTES. Documentado en map.md. Ver tabla de clusters arriba.
-- [x] **218.7: Evaluar dualidad logs**: ✅ `/admin/logs` = redirect puro → `/admin/operations/logs`. No hay dualidad.
-- [ ] **218.8: Evaluar dualidad de tareas**: `/admin/tasks` vs `/admin/workflow-tasks`. Inspeccionar si comparten modelo de datos o son conceptos independientes. Cerrar cluster con decisión canónica.
-- [x] **218.9-13: Documentar sub-rutas faltantes**: ✅ Todas documentadas en map.md: Spaces (4), Notifications (3), Settings (2), Billing (2), Reports (1), Permissions (1), User core (4), Ops (1).
-- [x] **218.14: Evaluar `/admin/ai/governance`**: ✅ FUNCIONAL. 361 líneas. Documentada.
-- [x] **218.15: Evaluar `/real-estate` y `/ops/reports`**: ✅ Clasificados. Ver FASE 224 para decisión de `/real-estate`.
-- [ ] **218.16: Auditar API debug/test**: `/api/test-env` y `/api/debug/env` exponen env vars sin auth. RIESGO SEGURIDAD.
-- [ ] **218.17: Auditar health checks duplicados**: `/_health`, `/_ready`, `/health/db-check` — documentar cuál usa Vercel.
-- [x] **218.18: Reescribir diagrama Mermaid**: ✅ map.md reescrito con diagrama Mermaid completo (12 subgrupos, 100% cobertura).
-- [ ] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: Cases solo `[id]` sin hub. Workshop solo `orders/new`. Pendiente definir acceso.
-- [ ] **218.20: Añadir columna "dominio responsable" en map.md**: Cada hub debe indicar su dominio (Admin, Technical, Ops, Knowledge, Support, Personal) para asignar ownership en eras posteriores.
+- [x] **218.2: Ejecutar resolución "mis documentos"**: ✅ `/admin/my-documents` redirige a `/admin/knowledge/my-docs`.
+- [ ] **218.3: Ejecutar resolución soporte**: `/support-ticket` es redirect. Pendiente integrar KPIs.
+- [x] **218.4: Limpiar DEPRECATED zombis**: ✅ Redirecciones funcionales implementadas.
+- [x] **218.5: Documentar `/admin/prompts`**: ✅ Documentada en map.md.
+- [x] **218.6: Evaluar dualidad audit**: ✅ SON DIFERENTES. Documentado.
+- [x] **218.7: Evaluar dualidad logs**: ✅ `/admin/logs` es redirect.
+- [x] **218.8: Evaluar dualidad de tareas**: ✅ `/admin/tasks` redirige a `/admin/workflow-tasks`.
+- [x] **218.9-13: Documentar sub-rutas faltantes**: ✅ Todas documentadas en map.md.
+- [x] **218.14: Evaluar `/admin/ai/governance`**: ✅ Documentada.
+- [x] **218.15: Evaluar `/real-estate` y `/ops/reports`**: ✅ Documentadas.
+- [ ] **218.16: Auditar API debug/test**: Pendiente verificar `api/admin/environments`.
+- [x] **218.17: Auditoría health checks**: ✅ `/api/health` unificado, zero archivos fantasma.
+- [x] **218.18: Reescribir diagrama Mermaid**: ✅ Publicado en map.md.
+- [x] **218.19: Auditar `/admin/cases` y `/admin/workshop`**: ✅ Cases solo tiene `[id]`. Workshop limitado.
+- [ ] **218.20: Añadir columna "dominio responsable" en map.md**: Pendiente.
 
 **Criterio de aceptación:** Cada cluster cerrado con 1 ruta canónica + redirects documentados. Zero estados "TBD". map.md refleja la realidad al 100% con dominio responsable por hub.
-**Progreso:** 8/20 tareas completadas durante la auditoría.
+**Progreso:** 15/20 tareas completadas.
 
 
 ---
@@ -623,27 +623,29 @@ CONFIGURACIÓN (Admin Hub):
 
 **Objetivo:** Unificar el sistema de permisos para que Guardian V3 (ABAC) y el sidebar (roles simples) usen la misma fuente de verdad.
 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 1 semana
+
 **Contexto del problema:**
 - `navigation.ts` filtra elementos con `item.roles.includes(userRole)` — array estático.
 - `GuardianEngine` evalúa políticas ABAC con herencia de grupos y condiciones.
 - Un usuario puede ver un enlace pero ser rechazado por Guardian, o viceversa.
 
 **Tareas:**
-- [ ] **220.1: Crear hook `useGuardianAccess(resource, action)`**: Un hook React que consulte un endpoint ligero o un cache de políticas para determinar si el usuario tiene acceso.
-- [ ] **220.2: Migrar `navigation.ts` a Guardian**: Reemplazar `item.roles` por `item.resource` + `item.action`. El sidebar consulta `useGuardianAccess` para cada item.
-- [ ] **220.3: Fallback gradual**: Durante la migración, mantener el check por roles como fallback si Guardian no responde. Log de discrepancias.
-- [ ] **220.4: PROPONER DEPRECAR `roles[]` de MenuItem**: Una vez migrado y verificado, marcar el campo `roles` como deprecated en `navigation.ts`. No eliminar hasta confirmar estabilidad.
-- [ ] **220.5: Documentar la Matriz de Permisos**: Crear una tabla en `docs/permissions-matrix.md` con todos los recursos y acciones definidos.
-- [ ] **220.6: Añadir `enforcePermission` a páginas críticas**: ERA 8 objetivo mínimo — proteger las siguientes páginas con enforcement backend:
-  - `billing/*` (plan, usage, invoices, contracts)
-  - `audit/*` (audit, config-changes)
-  - `security/*` (sessions, audit trail)
-  - `settings/*` (branding, i18n)
-  - `ai/governance` (config LLM)
-  - `superadmin` (platform dashboard)
-  - `prompts` (prompt management)
-  - `organizations/*` (tenant config)
-- [ ] **220.7: Crear checklist de cobertura Guardian por módulo**: Tabla con: módulo, nº páginas, nº con `enforcePermission`, nº con `useGuardianAccess`, objetivo ERA 9. Publicar en `docs/permissions-matrix.md`.
+- [x] **220.1: Crear hook `useGuardianAccess(resource, action)`**: Un hook React que consulte un endpoint ligero o un cache de políticas para determinar si el usuario tiene acceso (implementado como canBulk). ✅
+- [x] **220.2: Migrar `navigation.ts` a Guardian**: Reemplazar `item.roles` por `item.resource` + `item.action`. El sidebar consulta `useGuardianAccess` para cada item. ✅
+- [x] **220.3: Fallback gradual**: Durante la migración, mantener el check por roles como fallback si Guardian no responde. Log de discrepancias. ✅
+- [x] **220.4: PROPONER DEPRECAR `roles[]` de MenuItem**: Marcado como propensa a deprecación en `navigation.ts`. ✅
+- [X] **220.5: Documentar la Matriz de Permisos**: Definido en `docs/permissions-matrix.md`. ✅
+- [x] **220.6: Añadir `enforcePermission` a páginas críticas**: ERA 8 objetivo mínimo — proteger las siguientes páginas con enforcement backend:
+  - `billing/*` (plan, usage, invoices, contracts) ✅
+  - `audit/*` (audit, config-changes) ✅
+  - `security/*` (sessions, audit trail) ✅
+  - `settings/*` (branding, i18n) ✅
+  - `ai/governance` (config LLM) ✅
+  - `superadmin` (platform dashboard) ✅
+  - `prompts` (prompt management) ✅
+  - `organizations/*` (tenant config) ✅
+- [x] **220.7: Crear checklist de cobertura Guardian por módulo**: Tabla con: módulo, nº páginas, nº con `enforcePermission`, nº con `useGuardianAccess`, objetivo ERA 9. Publicar en `docs/permissions-matrix.md`. ✅
 
 **Criterio de aceptación:** Si Guardian dice NO, el sidebar no muestra el enlace. Páginas críticas (billing, audit, security, governance, superadmin) protegidas con `enforcePermission`. Checklist por módulo publicado para ERA 9.
 

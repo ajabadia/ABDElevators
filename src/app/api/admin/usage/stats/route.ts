@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
-import { QuotaService } from '@/lib/quota-service';
+import { QuotaService } from '@/services/security/quota-service';
 
 /**
  * GET /api/admin/usage/stats

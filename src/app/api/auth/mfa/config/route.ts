@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { MfaService } from '@/lib/mfa-service';
+import { MfaService } from '@/services/auth/MfaService';
 import { AppError } from '@/lib/errors';
-import { sendMfaEnabledEmail } from '@/lib/email-service';
+import { logEvento } from '@/lib/logger';
+import { EmailService } from '@/services/infra/EmailService';
+import crypto from 'crypto';
 import { z } from 'zod';
 
 /**
@@ -14,8 +16,15 @@ export async function GET() {
         const session = await auth();
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
 
+        const correlationId = crypto.randomUUID();
         const enabled = await MfaService.isEnabled(session.user.id);
-        console.log(`🔍 [API] GET /mfa/config - User: ${session.user.id}, Enabled: ${enabled}`);
+        await logEvento({
+            level: 'INFO',
+            source: 'API_AUTH_MFA_CONFIG',
+            action: 'GET_STATE',
+            message: `User: ${session.user.id}, Enabled: ${enabled}`,
+            correlationId
+        });
         return NextResponse.json({ enabled });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });
@@ -76,10 +85,16 @@ export async function PUT(req: NextRequest) {
         }
 
         // Enviar email de confirmación (background)
-        sendMfaEnabledEmail({
+        EmailService.sendMfaEnabledEmail({
             to: session.user.email || '',
             userName: session.user.name || session.user.email || 'User'
-        }).catch(err => console.error('Error enviando email MFA:', err));
+        }).catch(err => logEvento({
+            level: 'ERROR',
+            source: 'API_AUTH_MFA_CONFIG',
+            action: 'EMAIL_ERROR',
+            message: err.message,
+            stack: err.stack
+        }));
 
         return NextResponse.json({
             success: true,

@@ -1,6 +1,6 @@
 import { IUsageRepository } from '../../domain/repositories/IUsageRepository';
 import { AccessControlService } from '@/lib/access-control';
-import { UsageService } from '@/lib/usage-service';
+import { UsageService } from '@/services/ops/usage-service';
 
 export class MongoUsageRepository implements IUsageRepository {
     async checkLimits(tenantId: string, feature: string): Promise<void> {

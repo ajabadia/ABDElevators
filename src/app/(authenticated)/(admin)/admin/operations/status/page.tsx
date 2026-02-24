@@ -11,51 +11,101 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface QueueStatus {
-    type: string;
-    recentJobs: any[];
-    metrics: {
-        active: number;
-        failed: number;
-        completed: number;
-    };
+interface SystemStatus {
+    mongo: boolean;
+    gemini: boolean;
+    cloudinary: boolean;
+    lastChecked: string;
+}
+
+interface MaintenanceTask {
+    _id: string;
+    action: string;
+    description: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+    impact: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
 export default function StatusPage() {
-    const t = useTranslations("admin.jobs");
-    const { toast } = useToast();
-    const [queues, setQueues] = useState<QueueStatus[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const t = useTranslations("operations");
+    const [status, setStatus] = useState<SystemStatus | null>(null);
+    const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
+    const [queues, setQueues] = useState<any[]>([]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const fetchStatus = async () => {
+    const fetchData = async () => {
+        setIsRefreshing(true);
         setIsLoading(true);
         try {
-            const res = await fetch('/api/admin/operations/queues');
-            const data = await res.json();
-            if (data.success) {
-                setQueues(data.queues);
-                setLastUpdated(new Date());
+            const [statusRes, tasksRes, queuesRes] = await Promise.all([
+                fetch("/api/admin/operations/status"),
+                fetch("/api/admin/operations/maintenance"),
+                fetch("/api/admin/operations/queues")
+            ]);
+
+            if (statusRes.ok) setStatus(await statusRes.json());
+            if (tasksRes.ok) {
+                const data = await tasksRes.json();
+                setTasks(data.tasks || []);
+            }
+            if (queuesRes.ok) {
+                const data = await queuesRes.json();
+                setQueues(data.queues || []);
             }
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudieron cargar los estados de las colas.",
-                variant: "destructive"
+            toast.error("Error", {
+                description: "No se pudo obtener el estado del sistema."
             });
         } finally {
+            setIsRefreshing(false);
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchStatus();
-        const interval = setInterval(fetchStatus, 30000); // 30s auto-refresh
-        return () => clearInterval(interval);
+        fetchData();
     }, []);
+
+    const runMaintenance = async (action: string) => {
+        try {
+            const res = await fetch("/api/admin/operations/maintenance", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action })
+            });
+
+            if (res.ok) {
+                toast.success("Tarea Iniciada", {
+                    description: `La acción ${action} se está ejecutando en segundo plano.`
+                });
+                fetchData();
+            }
+        } catch (error) {
+            toast.error("Error", {
+                description: "No se pudo iniciar la tarea de mantenimiento."
+            });
+        }
+    };
+
+    const cleanupLogs = async () => {
+        try {
+            const res = await fetch("/api/admin/operations/maintenance/cleanup", { method: "DELETE" });
+            if (res.ok) {
+                toast.success("Limpieza Completada", {
+                    description: "Los logs antiguos han sido eliminados."
+                });
+                fetchData();
+            }
+        } catch (error) {
+            toast.error("Error", {
+                description: "No se pudo limpiar los logs."
+            });
+        }
+    };
 
     const getStatusIcon = (state: string) => {
         switch (state) {
@@ -75,10 +125,10 @@ export default function StatusPage() {
                 actions={
                     <div className="flex items-center gap-4">
                         <span className="text-xs text-muted-foreground hidden md:block">
-                            Última actualización: {lastUpdated.toLocaleTimeString()}
+                            Última actualización: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
                         </span>
-                        <Button variant="outline" size="sm" onClick={fetchStatus} disabled={isLoading} className="gap-2 rounded-xl">
-                            <RefreshCcw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                        <Button variant="outline" size="sm" onClick={fetchData} disabled={isRefreshing} className="gap-2 rounded-xl">
+                            <RefreshCcw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
                             Refrescar
                         </Button>
                     </div>
@@ -86,7 +136,7 @@ export default function StatusPage() {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                {queues.map((queue) => (
+                {queues.map((queue: any) => (
                     <Card key={queue.type} className="border-slate-200 shadow-sm overflow-hidden group hover:border-teal-200 transition-colors">
                         <CardHeader className="pb-2 bg-slate-50/50">
                             <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest flex items-center justify-between">
@@ -145,7 +195,7 @@ export default function StatusPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {queues.flatMap(q => q.recentJobs).sort((a, b) => b.timestamp - a.timestamp).map((job) => (
+                                {queues.flatMap((q: any) => q.recentJobs).sort((a: any, b: any) => b.timestamp - a.timestamp).map((job: any) => (
                                     <tr key={job.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-6 py-4 font-mono text-xs text-slate-500">
                                             {job.id}

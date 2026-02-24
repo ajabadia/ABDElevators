@@ -72,7 +72,7 @@ echo.
 
 REM 3. Iniciar Worker en ventana separada
 echo [INFO] Iniciando Background Worker en ventana independiente...
-start "ABD Worker" cmd /c "npx tsx src/lib/workers/ingest-worker.ts"
+start "ABD Worker" cmd /c "npx tsx src/services/ingest/workers/ingest-worker.ts"
 
 echo.
 echo [OK] Todo listo. Iniciando frontend...

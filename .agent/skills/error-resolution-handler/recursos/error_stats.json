@@ -1,3 +1,4 @@
 {
-    "i18n_missing_key": 10
+    "i18n_missing_key": 12,
+    "rate_limit_exceeded": 1
 }

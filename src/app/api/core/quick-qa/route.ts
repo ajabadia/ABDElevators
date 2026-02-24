@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { callGeminiStream } from '@/lib/llm';
+import { callGeminiStream } from '@/services/llm/llm-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 

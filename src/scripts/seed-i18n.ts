@@ -1,4 +1,4 @@
-import { TranslationService } from '@/lib/translation-service';
+import { TranslationService } from '@/services/core/translation-service';
 import * as dotenv from 'dotenv';
 import path from 'path';
 

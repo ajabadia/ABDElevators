@@ -20,6 +20,30 @@
     "personal": {
       "name": "Mi Espacio",
       "description": "Documentos personales y Spaces"
+    },
+    "admin": {
+      "name": "Administración",
+      "description": "Gestión unificada de la plataforma"
+    },
+    "tasks": {
+      "name": "Tareas",
+      "description": "Gestión de tareas y flujos de trabajo"
+    },
+    "knowledge": {
+      "name": "Conocimiento",
+      "description": "Base documental y activos de conocimiento"
+    },
+    "search": {
+      "name": "Búsqueda",
+      "description": "Buscador semántico global"
+    },
+    "organizations": {
+      "name": "Organizaciones",
+      "description": "Gestión de organizaciones y tenants"
+    },
+    "users": {
+      "name": "Usuarios",
+      "description": "Gestión de usuarios y perfiles"
     }
   },
   "saving": "Guardando...",

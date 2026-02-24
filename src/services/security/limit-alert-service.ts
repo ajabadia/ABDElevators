@@ -1,6 +1,6 @@
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
-import { sendLimitAlert } from '@/lib/email-service';
+import { EmailService } from '@/services/infra/EmailService';
 
 /**
  * 🚨 LimitAlertService: Gestiona las alertas de consumo y cuotas (Phase 120.2)
@@ -58,7 +58,7 @@ export class LimitAlertService {
             }
 
             // 3. Enviar alerta via Email Service
-            await sendLimitAlert({
+            await EmailService.sendLimitAlert({
                 to: admin.email,
                 tenantName: tenant?.name || 'Tu Organización',
                 resourceType,

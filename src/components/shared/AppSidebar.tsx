@@ -40,7 +40,8 @@ import { useBranding } from '@/context/BrandingContext';
 import { useNavigation } from '@/hooks/use-navigation';
 import { useTranslations } from 'next-intl';
 import { getAppByPath, APP_REGISTRY, AppId } from '@/lib/app-registry';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useGuardian } from '@/hooks/use-guardian';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -61,7 +62,40 @@ export function AppSidebar() {
     const userRole = session?.user?.role;
     const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
 
+    const { canBulk } = useGuardian();
+    const [allowedKeys, setAllowedKeys] = useState<Set<string>>(new Set());
+
     const filteredSections = useNavigation();
+
+    // Dynamically filter sections by ABAC Policy
+    useEffect(() => {
+        const checks = filteredSections
+            .flatMap(s => s.items)
+            .filter(i => i.resource && i.action)
+            .map(i => ({ resource: i.resource!, action: i.action! }));
+
+        if (checks.length > 0) {
+            canBulk(checks).then(results => {
+                const allowed = new Set<string>();
+                Object.entries(results).forEach(([key, isAllowed]) => {
+                    if (isAllowed) allowed.add(key);
+                });
+                setAllowedKeys(allowed);
+            });
+        }
+    }, [filteredSections, canBulk]);
+
+    // Apply the ABAC filter on top of the role/app filter
+    const finalSections = useMemo(() => {
+        return filteredSections.map(section => ({
+            ...section,
+            items: section.items.filter(item => {
+                if (!item.resource || !item.action) return true;
+                return allowedKeys.has(`${item.resource}:${item.action}`);
+            })
+        })).filter(section => section.items.length > 0);
+    }, [filteredSections, allowedKeys]);
+
     const activeApp = useMemo(() => getAppByPath(pathname || '/'), [pathname]);
 
     const handleLogout = () => {
@@ -166,7 +200,7 @@ export function AppSidebar() {
             </div>
 
             <nav className="flex-1 p-4 py-4 space-y-6 overflow-y-auto custom-scrollbar">
-                {filteredSections.map((section) => (
+                {finalSections.map((section) => (
                     <div key={section.labelKey} className="space-y-2">
                         {!isCollapsed && (
                             <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3 flex items-center justify-between">

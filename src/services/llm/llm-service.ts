@@ -8,7 +8,7 @@ import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from '@/lib/resilience';
 import { getGenAI, mapModelName, runShadowCall } from "@/lib/gemini-client";
 import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
-import { AiModelManager } from "@/lib/services/ai-model-manager";
+import { AiModelManager } from '@/services/core/ai-model-manager';
 
 // Re-export core utilities for backward compatibility where needed
 export { getGenAI, mapModelName, runShadowCall };
@@ -294,18 +294,18 @@ export async function callGeminiStream(
  * Proxies para servicios especializados (Mantener compatibilidad)
  */
 export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
-    const { ExtractionService } = await import("@/lib/extraction-service");
-    return ExtractionService.extractModelsWithGemini(text, tenantId, correlationId, session);
+    const { ExtractionService } = await import('@/services/core/ExtractionService');
+    return await ExtractionService.extractModelsWithGemini(text, tenantId, correlationId, session);
 }
 
 export async function analyzeEntityWithGemini(entitySlug: string, text: string, tenantId: string, correlationId: string) {
-    const { AdaptiveAnalysisService } = await import("@/lib/adaptive-analysis-service");
-    return AdaptiveAnalysisService.analyzeEntityWithGemini(entitySlug, text, tenantId, correlationId);
+    const { AdaptiveAnalysisService } = await import('@/services/core/AdaptiveAnalysisService');
+    return await AdaptiveAnalysisService.analyzeEntityWithGemini(entitySlug, text, tenantId, correlationId);
 }
 
 export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string, session?: any) {
-    const { VisionService } = await import("@/lib/vision-service");
-    return VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId, session);
+    const { VisionService } = await import('@/services/core/VisionService');
+    return await VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId, session);
 }
 
 /**

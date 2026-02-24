@@ -20,6 +20,30 @@
     "personal": {
       "name": "My Workspace",
       "description": "Personal documents & Spaces"
+    },
+    "admin": {
+      "name": "Administration",
+      "description": "Unified platform management"
+    },
+    "tasks": {
+      "name": "Tasks",
+      "description": "Task and workflow management"
+    },
+    "knowledge": {
+      "name": "Knowledge",
+      "description": "Document base and knowledge assets"
+    },
+    "search": {
+      "name": "Search",
+      "description": "Global semantic search"
+    },
+    "organizations": {
+      "name": "Organizations",
+      "description": "Organizations and tenants management"
+    },
+    "users": {
+      "name": "Users",
+      "description": "Users and profiles management"
     }
   },
   "saving": "Saving...",

@@ -1,6 +1,7 @@
 
 import jsPDF from 'jspdf';
-import { InvoiceData } from '@/lib/billing-service';
+import { InvoiceData } from '@/services/admin/BillingService';
+import { BillingService } from '@/services/admin/BillingService';
 import { PdfLayout } from './pdf/PdfLayout';
 import { PdfTheme } from './pdf/PdfTheme';
 

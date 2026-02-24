@@ -1,6 +1,8 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { PLANS, PlanTier } from '@/lib/plans';
-import { BillingEngine } from '@/lib/billing-engine';
+import { BillingEngine } from '@/services/admin/billing-engine';
+import { checkLLMLimit, checkVectorSearchLimit, checkAPIRequestLimit } from '@/services/security/usage-limiter';
+import { PIIMasker } from '@/services/security/pii-masker';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { LimitsService } from './limits-service';

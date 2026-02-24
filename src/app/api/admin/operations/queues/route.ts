@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { queueService, JobType } from '@/lib/queue-service';
+import { queueService, JobType } from '@/services/ops/queue-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';

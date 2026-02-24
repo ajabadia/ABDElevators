@@ -1,7 +1,8 @@
 import { IAIWorkflowRepository } from '../../domain/repositories/IAIWorkflowRepository';
 import { ActionHandlerRegistry } from '../services/ActionHandlerRegistry';
 import { WorkflowTrigger, AIWorkflow } from '@/types/workflow';
-import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
+import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
+import { IntelligenceWorker } from '@/services/ops/intelligence-worker';
 import { logEvento } from '@/lib/logger';
 
 export class ProcessWorkflowEventUseCase {

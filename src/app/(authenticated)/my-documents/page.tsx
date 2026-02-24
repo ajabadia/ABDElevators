@@ -33,17 +33,12 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
+import { toast } from "sonner";
 
 import { useApiList } from "@/hooks/useApiList";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -65,7 +60,6 @@ export default function MyDocumentsPage() {
     const tUpload = useTranslations('myDocuments.upload');
     const tTable = useTranslations('myDocuments.table');
     const tStorage = useTranslations('myDocuments.storage');
-    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [description, setDescription] = useState("");
     const [documentTypeId, setDocumentTypeId] = useState("");
@@ -99,18 +93,15 @@ export default function MyDocumentsPage() {
     const { upload, isUploading, progress } = useApiFileUpload({
         endpoint: '/api/auth/knowledge-assets',
         onSuccess: () => {
-            toast({
-                title: tUpload('successTitle'),
+            toast.success(tUpload('successTitle'), {
                 description: tUpload('successDesc'),
             });
             uploadModal.close();
             refresh();
         },
         onError: (err) => {
-            toast({
-                title: t('error') || 'Error',
+            toast.error(t('error') || 'Error', {
                 description: err,
-                variant: "destructive",
             });
         }
     });
@@ -120,17 +111,14 @@ export default function MyDocumentsPage() {
         method: 'DELETE',
         confirmMessage: t('confirmDelete'),
         onSuccess: () => {
-            toast({
-                title: t('deleteSuccessTitle'),
+            toast.success(t('deleteSuccessTitle'), {
                 description: t('deleteSuccess'),
             });
             refresh();
         },
         onError: (err) => {
-            toast({
-                title: t('error') || 'Error',
+            toast.error(t('error') || 'Error', {
                 description: err,
-                variant: "destructive",
             });
         }
     });

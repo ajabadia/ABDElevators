@@ -149,7 +149,7 @@ export class UsageService {
             await collection.insertOne(validated);
 
             if (validated.type === 'LLM_TOKENS' && validated.value > 10000) {
-                const { NotificationService } = await import('@/services/core/notification-service');
+                const { NotificationService } = await import('@/services/core/NotificationService');
                 await NotificationService.notify({
                     tenantId: validated.tenantId,
                     type: 'BILLING_EVENT',

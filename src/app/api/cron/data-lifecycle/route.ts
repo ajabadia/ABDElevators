@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DataLifecycleService } from '@/lib/services/data-lifecycle-service';
+import { DataLifecycleService } from '@/services/ops/data-lifecycle-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 

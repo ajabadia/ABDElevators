@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { PromptSchema } from '@/lib/schemas';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
         // Enriquecer con info del tenant (solo si es SuperAdmin)
         if (isSuperAdmin) {
-            const { TenantService } = await import('@/lib/tenant-service');
+            const { TenantService } = await import('@/services/tenant/tenant-service');
             const tenants = await TenantService.getAllTenants();
             const tenantMap = new Map(tenants.map(t => [t.tenantId, t]));
 
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
             environment: validated.environment
         });
         if (existing) {
-            throw new AppError('CONFLICT', 409, `Prompt key '${validated.key}' already exists in ${validated.environment}`);
+            throw new AppError('CONFLICT', 409, `Prompt key '${validated.key}' already exists in ${validated.environment} `);
         }
 
         await collection.insertOne(validated);
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
             level: 'INFO',
             source: 'API_PROMPTS',
             action: 'CREATE_PROMPT',
-            message: `Nuevo prompt creado: ${validated.key}`,
+            message: `Nuevo prompt creado: ${validated.key} `,
             correlationId: correlacion_id,
             details: { promptKey: validated.key, category: validated.category },
             userEmail: session.user.email || 'system'

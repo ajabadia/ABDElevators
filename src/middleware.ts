@@ -104,7 +104,7 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         // Redirect to dashboard if logged in and trying to access login page
         const isMfaPending = session?.user?.mfaPending === true;
         if (session && pathname === '/login' && !isMfaPending) {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/admin', request.url));
         }
 
         // 🛡️ [PHASE 120.1] MFA ENFORCEMENT
@@ -152,17 +152,16 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         const cspHeader = `
             default-src 'self';
             script-src ${scriptSrc};
-            script-src-elem 'self' 'unsafe-inline' https: http: blob:;
-            style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
-            style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
-            img-src 'self' data: https://res.cloudinary.com blob:;
-            font-src 'self' data:;
-            connect-src 'self' https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com https://cdn.jsdelivr.net;
+            script-src-attr 'unsafe-inline';
+            style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com;
+            img-src 'self' data: https://res.cloudinary.com https://www.transparenttextures.com blob:;
+            font-src 'self' data: https://fonts.gstatic.com;
+            connect-src 'self' ${isDev ? 'ws: wss:' : ''} https://*.upstash.io https://*.googleapis.com https://*.google-analytics.com https://cdn.jsdelivr.net;
             frame-ancestors 'none';
             object-src 'none';
             base-uri 'self';
             worker-src 'self' blob:;
-            upgrade-insecure-requests;
+            ${isDev ? '' : 'upgrade-insecure-requests;'}
         `.replace(/\s{2,}/g, ' ').trim();
 
         response.headers.set("Content-Security-Policy", cspHeader);

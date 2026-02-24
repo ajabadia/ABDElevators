@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from 'zod';
 import { Prompt, PromptSchema } from '@/lib/schemas';
@@ -153,17 +153,17 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                 throw new Error(data.message || t('messages.error_saving'));
             }
 
-            toast({ title: t('messages.save_success') });
+            toast.success(t('messages.save_success'));
             onSaved();
         } catch (e: any) {
             console.error('Save Error:', e);
             if (e instanceof z.ZodError) {
                 const msg = `Validación: ${e.issues.map((err: any) => (err.path || []).join('.') + ': ' + err.message).join(', ')}`;
                 setError(msg);
-                toast({ title: "Error de Validación", description: msg, variant: "destructive" });
+                toast.error("Error de Validación", { description: msg });
             } else {
                 setError(e.message || t('messages.error_saving'));
-                toast({ title: "Error", description: e.message || t('messages.error_saving'), variant: "destructive" });
+                toast.error("Error", { description: e.message || t('messages.error_saving') });
             }
         } finally {
             setLoading(false);
@@ -183,12 +183,12 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
                 const data = await res.json();
                 throw new Error(data.message || "Rollback fallido");
             }
-            toast({ title: "Versión Restaurada", description: `Se ha vuelto a la versión ${targetVersion} correctamente.` });
+            toast.success("Versión Restaurada", { description: `Se ha vuelto a la versión ${targetVersion} correctamente.` });
             onSaved();
         } catch (err: any) {
             console.error('Rollback Error:', err);
             setError(err.message);
-            toast({ title: "Error en Restauración", description: err.message, variant: "destructive" });
+            toast.error("Error en Restauración", { description: err.message });
         } finally {
             setLoading(false);
         }

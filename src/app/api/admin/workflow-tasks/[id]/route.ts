@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { WorkflowTaskService } from '@/lib/workflow-task-service';
+import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
 import { CaseWorkflowEngine } from '@/core/engine/CaseWorkflowEngine';
 import { AppError, handleApiError } from '@/lib/errors';
+import { FeedbackService } from '@/services/support/FeedbackService';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -54,7 +55,6 @@ export async function PATCH(
             const humanDecision = validated.decision || (validated.status === 'COMPLETED' ? 'ACCEPT' : 'REJECT');
 
             // Record feedback only if it's a significant decision task or explicitly overridden
-            const FeedbackService = (await import('@/lib/feedback-service')).FeedbackService;
             await FeedbackService.recordFeedback({
                 taskId: id,
                 workflowId: result.task.metadata.workflowId,

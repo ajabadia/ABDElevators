@@ -1,0 +1,30 @@
+{
+    "title": "Settings",
+    "subtitle": "Platform administration and configuration center.",
+    "sections": {
+        "organization": {
+            "title": "My Organization",
+            "description": "Manage company information, logo and regional settings."
+        },
+        "users": {
+            "title": "Users & Teams",
+            "description": "Manage users, roles and invitations."
+        },
+        "prompts": {
+            "title": "Prompts & AI",
+            "description": "Prompt governance, versioning and AI testing."
+        },
+        "i18n": {
+            "title": "Language & Localization",
+            "description": "Configure active languages and manage translations."
+        },
+        "notifications": {
+            "title": "Notifications",
+            "description": "Alert preferences and communication channels."
+        },
+        "branding": {
+            "title": "Branding & Customization",
+            "description": "Adjust appearance, colors and report templates."
+        }
+    }
+}

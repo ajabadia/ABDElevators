@@ -38,7 +38,7 @@ import {
     RotateCcw
 } from 'lucide-react';
 import { useApiMutation } from '@/hooks/useApiMutation';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -54,7 +54,6 @@ interface WorkflowTaskDetailDialogProps {
 
 export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }: WorkflowTaskDetailDialogProps) {
     const t = useTranslations('workshop');
-    const { toast } = useToast();
     const { data: session } = useSession();
     const [status, setStatus] = useState<WorkflowTask['status']>(task.status);
     const [notes, setNotes] = useState('');
@@ -71,19 +70,15 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
         endpoint: `/api/admin/workflow-tasks/${task._id}`,
         method: 'PATCH',
         onSuccess: () => {
-            toast({
-                title: "Tarea actualizada",
+            toast.success("Tarea actualizada", {
                 description: `La tarea ha sido marcada como ${status}`,
-                variant: "default"
             });
             onUpdate?.();
             onOpenChange(false);
         },
         onError: (errorMsg) => {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: errorMsg || "No se pudo actualizar la tarea",
-                variant: "destructive"
             });
         }
     });

@@ -37,11 +37,19 @@ export async function register() {
         const enableWorker = process.env.ENABLE_WORKER === 'true';
 
         if (!isVercel || enableWorker) {
+            // Isolation Stage: Each worker starts in its own block to prevent cascade failure.
             try {
-                await import('./lib/workers/ingest-worker');
-                console.log('[INSTRUMENTATION] Ingest Worker started');
-            } catch (err) {
-                console.error('[INSTRUMENTATION] Ingest Worker failed to start:', err);
+                await import('./services/ingest/workers/ingest-worker');
+                console.log('[INSTRUMENTATION] Ingest Worker (BullMQ) started');
+            } catch (err: any) {
+                console.warn('[INSTRUMENTATION] Ingest Worker failed (Redis might be down):', err.message);
+            }
+
+            try {
+                await import('./services/ops/simple-queue/simple-worker');
+                console.log('[INSTRUMENTATION] Simple Worker (In-memory) started');
+            } catch (err: any) {
+                console.error('[INSTRUMENTATION] Simple Worker failed to start:', err.message);
             }
         } else {
             console.warn('[INSTRUMENTATION] Ingest Worker skipped (Vercel Environment)');

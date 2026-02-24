@@ -9,7 +9,7 @@ import { StorageTab } from "@/components/admin/organizations/StorageTab";
 import { Database, Save } from "lucide-react";
 import { useTenantConfigStore } from "@/store/tenant-config-store";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 /**
  * 💾 Storage Module
@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function OrganizationsStoragePage() {
     const t = useTranslations("admin.organizations.page");
     const tQuota = useTranslations("admin.organizations.storageUsage");
-    const { toast } = useToast();
+
     const { config, setConfig, usageStats, setUsageStats, isSaving, setIsSaving } = useTenantConfigStore();
 
     useEffect(() => {
@@ -41,10 +41,8 @@ export default function OrganizationsStoragePage() {
         endpoint: '/api/admin/tenants',
         successMessage: t('saveSuccess'),
         onError: (err) => {
-            toast({
-                title: t('error'),
+            toast.error(t('error'), {
                 description: typeof err === 'string' ? err : t('saveError'),
-                variant: 'destructive',
             });
         },
         onSettled: () => setIsSaving(false)

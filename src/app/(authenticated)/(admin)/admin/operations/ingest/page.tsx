@@ -22,7 +22,7 @@ import { ContentCard } from "@/components/ui/content-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApiList } from '@/hooks/useApiList';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -63,16 +63,13 @@ export default function IngestPage() {
             });
             const result = await res.json();
             if (result.success) {
-                toast({
-                    title: action === 'RETRY' ? (t('messages.retry_success') || "Retrying...") : (t('messages.delete_success') || "Deleted"),
-                    variant: 'default'
-                });
+                toast.success(action === 'RETRY' ? (t('messages.retry_success') || "Retrying...") : (t('messages.delete_success') || "Deleted"));
                 refresh();
             } else {
                 throw new Error(result.error?.message || 'Action failed');
             }
         } catch (error: any) {
-            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+            toast.error('Error', { description: error.message });
         }
     };
 

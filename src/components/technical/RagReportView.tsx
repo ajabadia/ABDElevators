@@ -9,7 +9,7 @@ import { RiskAlerter, RiskFinding } from "../shared/RiskAlerter";
 import { CollaborationPanel } from "./CollaborationPanel";
 import { FederatedPatternCard } from "../federated/FederatedPatternCard";
 import { FederatedPattern } from "@/lib/schemas";
-import { FeatureFlags } from "@/lib/feature-flags";
+import { FeatureFlags } from '@/services/security/feature-flags';
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 

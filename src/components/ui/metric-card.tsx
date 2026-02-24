@@ -11,9 +11,15 @@ interface MetricCardProps {
     icon?: React.ReactNode;
     trend?: string;
     trendDirection?: "up" | "down" | "neutral";
-    variant?: "primary" | "secondary" | "muted";
+    variant?: "primary" | "secondary" | "muted" | "warning";
     className?: string;
     description?: string;
+    progress?: {
+        used: number;
+        limit: number;
+        unit?: string;
+        label?: string;
+    };
 }
 
 export function MetricCard({
@@ -24,12 +30,14 @@ export function MetricCard({
     trendDirection = "neutral",
     className,
     description,
+    progress,
     variant = "muted"
-}: MetricCardProps & { variant?: "primary" | "secondary" | "muted" }) {
+}: MetricCardProps & { variant?: "primary" | "secondary" | "muted" | "warning" }) {
     const colors = {
         primary: "bg-primary/10 text-primary",
         secondary: "bg-secondary/10 text-secondary",
         muted: "bg-muted text-muted-foreground",
+        warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400"
     };
 
     const TrendIcon = trendDirection === "up" ? TrendingUp : trendDirection === "down" ? TrendingDown : Minus;
@@ -69,6 +77,31 @@ export function MetricCard({
                         <p className="text-xs text-muted-foreground mt-2 font-medium">
                             {description}
                         </p>
+                    )}
+
+                    {progress && (
+                        <div className="mt-4 space-y-1.5 focus-within:ring-2 ring-primary/20 rounded-lg transition-all">
+                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                                <span>{progress.label || "Uso"}</span>
+                                <span>
+                                    {progress.used.toLocaleString()} / {progress.limit === -1 ? '∞' : progress.limit.toLocaleString()} {progress.unit || ""}
+                                </span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className={cn(
+                                        "h-full transition-all duration-500 rounded-full",
+                                        (progress.used / progress.limit) > 0.9 ? "bg-rose-500" : (progress.used / progress.limit) > 0.7 ? "bg-amber-500" : "bg-primary"
+                                    )}
+                                    style={{ width: `${Math.min(100, (progress.used / (progress.limit === -1 ? 1 : progress.limit)) * 100)}%` }}
+                                />
+                            </div>
+                            {progress.limit !== -1 && (
+                                <p className="text-[9px] text-right font-bold text-muted-foreground/50">
+                                    {((progress.used / progress.limit) * 100).toFixed(1)}%
+                                </p>
+                            )}
+                        </div>
                     )}
                 </div>
             </CardContent>

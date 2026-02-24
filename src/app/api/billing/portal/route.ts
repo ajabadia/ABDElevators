@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createPortalSession } from '@/lib/stripe';
-import { TenantService } from '@/lib/tenant-service';
+import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError } from '@/lib/errors';
 
 /**

@@ -29,7 +29,7 @@ import { SmartConfig } from "@/hooks/useSmartConfig";
 import { humanizeConfidence, confidencePercent } from "@/lib/confidence-humanizer";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { ErrorMapperService } from "@/services/core/ErrorMapperService";
 
@@ -127,7 +127,6 @@ export function SimpleAnalyzeView({
     const [result, setResult] = useState<AnalyzeResult | null>(null);
     const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([]);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-    const { toast } = useToast();
 
     // Load dynamic suggestions (Phase 216.3)
     useEffect(() => {
@@ -266,8 +265,7 @@ export function SimpleAnalyzeView({
             setStep('result');
             onResult?.(analysisResult);
 
-            toast({
-                title: t('analyzeFlow.resultTitle'),
+            toast.success(t('analyzeFlow.resultTitle'), {
                 description: "Análisis completado con éxito.",
             });
         } catch (error: any) {
@@ -277,9 +275,7 @@ export function SimpleAnalyzeView({
                 message: mapped.message,
                 details: mapped.action
             });
-            toast({
-                variant: "destructive",
-                title: mapped.title,
+            toast.error(mapped.title, {
                 description: mapped.message,
             });
         } finally {

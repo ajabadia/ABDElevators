@@ -4,11 +4,11 @@ import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { callGemini } from '@/lib/llm';
+import { callGemini } from '@/services/llm/llm-service';
 import { generateServerPDF } from '@/lib/server-pdf-utils';
 import { uploadLLMReport } from '@/lib/cloudinary';
-import { PromptService } from '@/lib/prompt-service';
-import { UsageService } from '@/lib/usage-service';
+import { PromptService } from '@/services/llm/prompt-service';
+import { UsageService } from '@/services/ops/usage-service';
 import { AIMODELIDS } from '@/lib/ai-models';
 
 /**

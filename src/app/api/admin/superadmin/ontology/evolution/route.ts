@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SovereignOntologyService } from '@/lib/self-evolving-ontology';
+import { SovereignOntologyService } from '@/services/core/SovereignOntologyService';
 import { requireSuperAdmin } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';

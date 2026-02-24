@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { TenantConfig } from '@/lib/schemas';
 import { Progress } from "@/components/ui/progress";
 import { PLANS, PlanTier } from '@/lib/plans';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import { useTranslations } from 'next-intl';
 
@@ -28,7 +28,6 @@ interface BillingTabProps {
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
     const t = useTranslations('admin.organizations.billing');
-    const { toast } = useToast();
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
     // Estados para la simulación de precio
@@ -55,10 +54,8 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
             setSimulation(data.simulation);
         } catch (error: any) {
-            toast({
-                title: 'Error de Simulación',
+            toast.error('Error de Simulación', {
                 description: error.message,
-                variant: 'destructive'
             });
         } finally {
             setIsSimulating(false);
@@ -79,10 +76,8 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
             window.location.href = data.url;
         } catch (error: any) {
-            toast({
-                title: 'Error',
+            toast.error('Error', {
                 description: error.message,
-                variant: 'destructive'
             });
             setIsCheckingOut(false);
         }

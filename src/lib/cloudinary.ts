@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { UsageService } from './usage-service';
-import { TenantService, TenantQuotaService } from './tenant-service';
+import { UsageService } from "@/services/ops/usage-service";
+import { TenantService } from "@/services/tenant/tenant-service";
+import { TenantQuotaService } from "@/services/tenant/tenant-quota-service";
 import { AppError } from '@/lib/errors';
 
 // Configurar Cloudinary

@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { TenantService } from "@/lib/tenant-service";
+import { TenantService } from '@/services/tenant/tenant-service';
 
 interface BrandingProviderProps {
     children: React.ReactNode;

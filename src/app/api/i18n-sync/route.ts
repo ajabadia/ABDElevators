@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TranslationService } from '@/lib/translation-service';
+import { TranslationService } from '@/services/core/translation-service';
 import { requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { handleApiError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    console.log('--- 🌐 i18n Sync API ---');
-    console.log('Iniciando sincronización forzada de todas las traducciones locales...');
+    await logEvento({
+        level: 'INFO',
+        source: 'API_I18N_SYNC',
+        action: 'INIT',
+        message: 'Iniciando sincronización forzada de todas las traducciones locales...',
+        correlationId
+    });
 
     try {
         await requireRole([UserRole.SUPER_ADMIN]);
         const result = await TranslationService.forceSyncAllLocales('platform_master');
 
-        console.log('\n--- ✅ Resultados de Sincronización ---');
-        console.log(result);
+        await logEvento({
+            level: 'INFO',
+            source: 'API_I18N_SYNC',
+            action: 'SYNC_COMPLETE',
+            message: 'Sincronización completada con éxito.',
+            correlationId,
+            details: { stats: result }
+        });
 
         return NextResponse.json({
             success: true,

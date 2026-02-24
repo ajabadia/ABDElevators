@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { Space, SpaceSchema } from '@/lib/schemas/spaces';
-import { LimitsService } from '@/lib/limits-service';
+import { LimitsService } from '@/services/security/limits-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';

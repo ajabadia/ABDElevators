@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useToast } from './use-toast';
+import { toast } from 'sonner';
 
 interface UseApiItemOptions<T, R = any> {
     endpoint: string | (() => string);
@@ -26,7 +26,7 @@ export function useApiItem<T, R = any>({
     const [data, setData] = useState<T | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
+
 
     // Estabilizar callbacks
     const onSuccessRef = useRef(onSuccess);
@@ -80,10 +80,8 @@ export function useApiItem<T, R = any>({
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Error desconocido';
             setError(message);
-            toast({
-                title: 'Error de Carga',
+            toast.error('Error de Carga', {
                 description: message,
-                variant: 'destructive',
             });
             onErrorRef.current?.(message);
         } finally {

@@ -10,7 +10,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
     Loader2, Mail, Upload, FileType, CheckCircle2,
     AlertCircle, X, Download, HelpCircle, ChevronDown,
@@ -39,7 +39,7 @@ interface ParsedInvite {
 export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalProps) {
     const t = useTranslations("admin.users.bulk");
     const tCommon = useTranslations("common");
-    const { toast } = useToast();
+
     const [file, setFile] = useState<File | null>(null);
     const [invites, setInvites] = useState<ParsedInvite[]>([]);
     const [isParsing, setIsParsing] = useState(false);
@@ -78,8 +78,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
         endpoint: '/api/admin/users/invite/bulk',
         method: 'POST',
         onSuccess: (data: any) => {
-            toast({
-                title: t("success_title"),
+            toast.success(t("success_title"), {
                 description: t("success_desc", { success: data.results.success, failed: data.results.failed }),
             });
             if (data.results.success > 0) {
@@ -119,7 +118,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
                     setIsParsing(false);
                 },
                 error: (err) => {
-                    toast({ variant: "destructive", title: t("csv_read_error"), description: err.message });
+                    toast.error(t("csv_read_error"), { description: err.message });
                     setIsParsing(false);
                 }
             });
@@ -135,7 +134,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
                 setIsParsing(false);
             };
             reader.onerror = () => {
-                toast({ variant: "destructive", title: t("excel_read_error") });
+                toast.error(t("excel_read_error"));
                 setIsParsing(false);
             };
             reader.readAsArrayBuffer(file);
@@ -173,7 +172,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
         }));
 
         if (validInvites.length === 0) {
-            toast({ variant: "destructive", title: tCommon("error"), description: t("error_no_valid") });
+            toast.error(tCommon("error"), { description: t("error_no_valid") });
             return;
         }
 

@@ -1,6 +1,6 @@
 import { getTenantCollection } from "@/lib/db-tenant";
 import { ObjectId } from 'mongodb';
-import { NotificationPayload } from '../notification-service';
+import { NotificationPayload } from '../NotificationService';
 
 /**
  * NotificationRepository

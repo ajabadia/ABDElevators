@@ -17,7 +17,7 @@
     "seed-plans": "tsx scripts/seed-plans.ts",
     "create-super-admin": "tsx scripts/create-super-admin.ts",
     "migrate-auth": "tsx scripts/migrate-to-auth-db.ts",
-    "worker": "tsx src/lib/workers/ingest-worker.ts",
+    "worker": "tsx src/services/ingest/workers/ingest-worker.ts",
     "test": "jest",
     "test:watch": "jest --watch"
   },

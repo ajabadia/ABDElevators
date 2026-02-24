@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RagReportView } from "@/components/technical/RagReportView";
 import { AgentTraceViewer } from "@/components/agent/AgentTraceViewer";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -29,7 +29,6 @@ export default function EntitiesPage() {
     const tCommon = useTranslations('common');
     const tToast = useTranslations('technical.entities.toast');
     const { data: session } = useSession();
-    const { toast } = useToast();
 
     // 0. Get entity definition from "Cerebro" (Entity Vision)
     const entity = EntityEngine.getInstance().getEntity('pedido');
@@ -87,21 +86,20 @@ export default function EntitiesPage() {
             if (data.success && (data.entity_id || data.pedido_id)) {
                 setCurrentEntityId(data.entity_id || data.pedido_id);
                 setShowTrace(true);
-                toast({
-                    title: `${entity.name} ${tToast('processed')}`,
+                toast.success(`${entity.name} ${tToast('processed')}`, {
                     description: tToast('startingBrain')
                 });
                 refresh();
             } else {
-                toast({
-                    title: tToast('error'),
-                    description: data.message || tToast('couldNotProcess'),
-                    variant: "destructive"
+                toast.error(tToast('error'), {
+                    description: data.message || tToast('couldNotProcess')
                 });
             }
         } catch (err) {
             console.error(err);
-            toast({ title: tToast('fatalError'), description: tToast('connectionFailure'), variant: "destructive" });
+            toast.error(tToast('fatalError'), {
+                description: tToast('connectionFailure')
+            });
         } finally {
             setIsUploading(false);
         }
@@ -132,7 +130,9 @@ export default function EntitiesPage() {
                 refresh();
             }
         } catch (err) {
-            toast({ title: tToast('error'), description: tToast('retrievalError'), variant: "destructive" });
+            toast.error(tToast('error'), {
+                description: tToast('retrievalError')
+            });
         }
     };
 

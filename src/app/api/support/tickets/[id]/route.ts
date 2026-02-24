@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, requireRole } from '@/lib/auth';
-import { TicketService } from '@/lib/ticket-service';
+import { TicketService } from '@/services/support/TicketService';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';

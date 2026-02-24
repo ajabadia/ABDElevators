@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { handleApiError } from '@/lib/errors';
-import { QuotaService } from '@/lib/quota-service';
-import { UsageService } from '@/lib/usage-service';
+import { QuotaService } from '@/services/security/quota-service';
+import { UsageService } from '@/services/ops/usage-service';
 import { logEvento } from '@/lib/logger';
 import { UserRole } from '@/types/roles';
 import crypto from 'crypto';

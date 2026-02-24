@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { addEdge, Connection, Node, Edge, ReactFlowInstance } from "@xyflow/react";
 import dagre from 'dagre';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 interface UseNodeOperationsProps {
@@ -23,7 +23,7 @@ export function useNodeOperations({
     reactFlowWrapper,
     edges
 }: UseNodeOperationsProps) {
-    const { toast } = useToast();
+
     const t = useTranslations('admin.workflows.canvas');
 
     const onConnect = useCallback(
@@ -45,7 +45,7 @@ export function useNodeOperations({
             })
         );
         setSelectedNode(null);
-        toast({ title: t('save_success_title'), description: t('save_success_desc', { count: 1 }) });
+        toast.success(t('save_success_title'), { description: t('save_success_desc', { count: 1 }) });
     }, [setNodes, setSelectedNode, toast, t]);
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -90,14 +90,14 @@ export function useNodeOperations({
         const selectedEdges = edges.filter(e => e.selected);
 
         if (selectedNodes.length === 0 && selectedEdges.length === 0) {
-            toast({ title: t('delete_alert'), variant: "default" });
+            toast.info(t('delete_alert'));
             return;
         }
 
         setNodes(nds => nds.filter(n => !n.selected));
         setEdges(eds => eds.filter(e => !e.selected));
         setSelectedNode(null);
-        toast({ title: t('delete_title'), description: t('delete_desc') });
+        toast.success(t('delete_title'), { description: t('delete_desc') });
     }, [setNodes, setEdges, setSelectedNode, toast, t]);
 
     const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
@@ -113,7 +113,7 @@ export function useNodeOperations({
                 return nds.map(n => n.selected ? { ...n, position: { ...n.position, x: avgX } } : n);
             }
         });
-        toast({ title: t('align_success' as any, { defaultValue: 'Nodes Aligned' }) });
+        toast.success(t('align_success' as any, { defaultValue: 'Nodes Aligned' }));
     }, [setNodes, toast, t]);
 
     const detectCycles = useCallback((nodes: Node[], edges: Edge[]) => {
@@ -185,7 +185,7 @@ export function useNodeOperations({
                 };
             });
         });
-        toast({ title: t('align_success' as any), description: "Auto-layout complete" });
+        toast.success(t('align_success' as any), { description: "Auto-layout complete" });
     }, [setNodes, edges, toast, t]);
 
     return {

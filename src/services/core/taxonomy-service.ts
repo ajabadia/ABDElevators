@@ -68,4 +68,39 @@ export class TaxonomyService {
 
         return { success: true };
     }
+
+    /**
+     * Actualiza múltiples taxonomías en lote (Sovereign Engine).
+     */
+    static async batchUpdateTaxonomies(updates: any[], tenantId: string, correlationId: string) {
+        const collection = await getTenantCollection('taxonomias');
+
+        const operations = updates.map(update => ({
+            updateOne: {
+                filter: { key: update.targetKey, tenantId },
+                update: {
+                    $set: {
+                        name: update.newName,
+                        description: update.newDescription,
+                        updatedAt: new Date(),
+                        source: 'SOVEREIGN_ENGINE'
+                    }
+                },
+                upsert: update.action === 'CREATE'
+            }
+        }));
+
+        const result = await collection.bulkWrite(operations);
+
+        await logEvento({
+            level: 'INFO',
+            source: 'TAXONOMY_SERVICE',
+            action: 'BATCH_UPDATE',
+            message: `Actualización por lote completada: ${result.modifiedCount} modificados, ${result.upsertedCount} creados`,
+            correlationId,
+            details: { tenantId, modified: result.modifiedCount, upserted: result.upsertedCount }
+        });
+
+        return result;
+    }
 }

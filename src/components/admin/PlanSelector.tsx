@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface Plan {
@@ -25,7 +25,6 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [changingPlan, setChangingPlan] = useState<string | null>(null);
-    const { toast } = useToast();
 
     useEffect(() => {
         async function fetchPlans() {
@@ -62,8 +61,7 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
             const data = await res.json();
 
             if (data.success) {
-                toast({
-                    title: '¡Plan Actualizado!',
+                toast.success('¡Plan Actualizado!', {
                     description: `Plan cambiado a ${slug.toUpperCase()} correctamente.`,
                 });
                 if (onPlanChanged) onPlanChanged(slug);
@@ -71,10 +69,8 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
                 throw new Error(data.message || 'Error al cambiar plan');
             }
         } catch (err: unknown) {
-            toast({
-                title: 'Error al cambiar plan',
+            toast.error('Error al cambiar plan', {
                 description: err instanceof Error ? err.message : 'Ocurrió un error inesperado al procesar el cambio manual.',
-                variant: 'destructive'
             });
         } finally {
             setChangingPlan(null);

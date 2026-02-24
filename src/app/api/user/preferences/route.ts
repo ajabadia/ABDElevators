@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { User, AuditTrail } from '@/lib/schemas';
-import { AuditService } from '@/lib/audit-service';
+import { AuditService } from '@/services/admin/AuditService';
+import { UserService } from '@/services/auth/UserService';
 import { AppError } from '@/lib/errors';
 import { z } from 'zod';
 

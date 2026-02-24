@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { publicApiHandler } from '@/lib/api-handler';
 import { connectDB } from '@/lib/db';
 import { DocumentChunkSchema, KnowledgeAssetSchema, IngestAuditSchema } from '@/lib/schemas';
-import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/lib/llm';
+import { generateEmbedding, extractModelsWithGemini, callGeminiMini } from '@/services/llm/llm-service';
 import { chunkText } from '@/lib/chunk-utils';
-import { PromptService } from '@/lib/prompt-service';
-import { validateLanguageCode } from '@/lib/language-validator';
-import { UsageService } from '@/lib/usage-service';
+import { PromptService } from '@/services/llm/prompt-service';
+import { UsageService } from '@/services/ops/usage-service';
+import { validateLanguageCode } from '@/services/core/LanguageValidator';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -85,7 +85,7 @@ export const POST = publicApiHandler(
         const docId = insertResult.insertedId;
 
         // 4. Save Chunks (with Embeddings)
-        const { multilingualService } = await import('@/lib/multilingual-service');
+        const { multilingualService } = await import('@/services/core/multilingual-service');
 
         await Promise.all(chunks.map(async (chunkText) => {
             const [embeddingGemini, embeddingBGE] = await Promise.all([

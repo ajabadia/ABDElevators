@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { connectDB, connectLogsDB } from "@/lib/db"
-import { TicketService } from "@/lib/ticket-service"
+import { TicketService } from "@/services/support/TicketService"
+import { UserService } from '@/services/auth/UserService';
 import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
 

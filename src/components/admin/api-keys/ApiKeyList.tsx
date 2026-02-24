@@ -4,7 +4,7 @@ import { ApiKey } from "@/lib/schemas";
 import { Trash2, Key, Calendar, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { revokeApiKey } from "@/actions/api-keys";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations, useFormatter } from 'next-intl';
 
@@ -13,7 +13,7 @@ interface ApiKeyListProps {
 }
 
 export function ApiKeyList({ keys }: ApiKeyListProps) {
-    const { toast } = useToast();
+
     const t = useTranslations('admin.api_keys');
     const format = useFormatter();
     const now = new Date();
@@ -37,15 +37,12 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
 
         const res = await revokeApiKey(id);
         if (res.success) {
-            toast({
-                title: t('revoke_success'),
+            toast.success(t('revoke_success'), {
                 description: `${name} has been deactivated.`
             });
         } else {
-            toast({
-                title: "Error",
+            toast.error("Error", {
                 description: res.error || "Failed to revoke",
-                variant: "destructive"
             });
         }
     };

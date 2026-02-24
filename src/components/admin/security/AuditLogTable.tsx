@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useTranslations, useFormatter } from "next-intl";
 import { Download, RefreshCw, Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+
 
 interface LogEntry {
     _id: string;
@@ -35,7 +36,6 @@ const LEVEL_COLORS: Record<string, string> = {
 export function AuditLogTable() {
     const t = useTranslations("security_hub");
     const format = useFormatter();
-    const { toast } = useToast();
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
@@ -56,9 +56,7 @@ export function AuditLogTable() {
                 setLogs(data.data);
             }
         } catch (error) {
-            toast({
-                variant: "destructive",
-                title: t("audit.table.error_title") || "Error",
+            toast.error(t("audit.table.error_title") || "Error", {
                 description: t("audit.table.error_fetch") || "No se pudieron cargar los logs de auditoría."
             });
         } finally {

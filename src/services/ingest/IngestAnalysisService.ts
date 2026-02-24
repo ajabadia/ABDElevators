@@ -1,6 +1,6 @@
 
-import { extractModelsWithGemini } from '@/lib/llm';
-import { PromptRunner } from '@/lib/llm-core';
+import { extractModelsWithGemini, callGeminiMini } from '@/services/llm/llm-service';
+import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 
 /**
  * 🔍 Ingest Analysis Service

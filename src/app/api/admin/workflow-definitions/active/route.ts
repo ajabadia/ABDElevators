@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { WorkflowService } from '@/lib/workflow-service';
+import { WorkflowService } from '@/services/ops/WorkflowService';
 import { requireRole } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';

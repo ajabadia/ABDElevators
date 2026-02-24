@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-02-24 (ERA 8 — Deep Route-by-Route Inspection + UI Stabilization)
-**Status:** Full 101-route audit complete. All routes classified. FASE 222B (HubPage/DRY) implemented.
-**Routes:** 101 `page.tsx` | 43 Canónicas | 30 No Documentadas (ahora sí) | 7 Redirects | 1 Placeholder | 1 DEPRECATED zombi
+**Last Audit:** 2026-02-24 (ERA 8 — Deep Route-by-Route Inspection + Security Alignment)
+**Status:** Full 101-route audit complete. FASE 222B (HubPage/DRY) and FASE 220 (Guardian Server-Side Enforcement) implemented.
+**Routes:** 101 `page.tsx` | 43 Canónicas | 30 No Documentadas | 7 Redirects | 1 Placeholder | 1 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
 

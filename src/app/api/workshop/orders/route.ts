@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { CreateWorkshopOrderSchema } from '@/lib/schemas';
-import { WorkshopService } from '@/lib/services/workshop-service';
+import { WorkshopService } from '@/services/ops/workshop-service';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { NextResponse } from 'next/server';
 import { AppError } from '@/lib/errors';

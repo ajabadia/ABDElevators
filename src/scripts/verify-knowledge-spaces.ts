@@ -4,7 +4,7 @@ import { SpaceService } from '@/services/tenant/space-service';
 import { IngestService } from '@/services/ingest-service';
 import { Space } from '@/lib/schemas/spaces';
 import { KnowledgeAsset } from '@/lib/schemas/knowledge';
-import { TenantService } from '@/lib/tenant-service';
+import { TenantService } from '@/services/tenant/tenant-service';
 import dotenv from 'dotenv';
 import path from 'path';
 

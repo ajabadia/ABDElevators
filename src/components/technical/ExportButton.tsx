@@ -2,33 +2,38 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2 } from "lucide-react";
-import { generatePDFReport, downloadPDF } from "@/lib/pdf-export";
+import { FileDown, Loader2 } from 'lucide-react';
+import { ClientReportGenerator } from '@/lib/pdf/client-generator';
+import { toast } from 'sonner';
 
 interface ExportButtonProps {
-    reportData: {
+    data: {
         identifier: string;
+        analysisDate: Date;
         models: any[];
         correlationId: string;
     };
+    locale?: string;
 }
 
-export function ExportButton({ reportData }: ExportButtonProps) {
+export function ExportButton({ data, locale = 'es' }: ExportButtonProps) {
     const [isExporting, setIsExporting] = useState(false);
 
     const handleExport = async () => {
         setIsExporting(true);
+        const t = toast.loading(locale === 'es' ? 'Generando PDF...' : 'Generating PDF...');
+
         try {
-            const pdfBlob = await generatePDFReport({
-                ...reportData,
-                analysisDate: new Date(),
+            const blob = await ClientReportGenerator.generateRAGReport({
+                ...data,
+                locale
             });
 
-            const filename = `Informe_${reportData.identifier}_${new Date().toISOString().split('T')[0]}.pdf`;
-            downloadPDF(pdfBlob, filename);
+            ClientReportGenerator.download(blob, `ABD_Report_${data.identifier}.pdf`);
+            toast.success(locale === 'es' ? 'PDF generado' : 'PDF generated', { id: t });
         } catch (error) {
-            console.error('Error exportando PDF:', error);
-            alert('Error al generar el PDF');
+            console.error('Export error:', error);
+            toast.error(locale === 'es' ? 'Error al generar PDF' : 'Error generating PDF', { id: t });
         } finally {
             setIsExporting(false);
         }

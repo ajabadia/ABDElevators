@@ -4,10 +4,10 @@ import path from 'path';
 // Cargar variables de entorno
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-import { WorkflowTaskService } from '../lib/workflow-task-service';
-import { connectDB } from '../lib/db';
-import { getTenantCollection } from '../lib/db-tenant';
-import { UserRole } from '../../src/types/roles';
+import { WorkflowTaskService } from '../../services/ops/WorkflowTaskService';
+import { connectDB } from '../../lib/db';
+import { getTenantCollection } from '../../lib/db-tenant';
+import { UserRole } from '../../types/roles';
 import { ObjectId } from 'mongodb';
 
 const TEST_TENANT = process.env.SINGLE_TENANT_ID || 'tenant_test_123';

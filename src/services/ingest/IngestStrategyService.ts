@@ -1,5 +1,5 @@
 
-import { FeatureFlags } from '@/lib/feature-flags';
+import { FeatureFlags } from '@/services/security/feature-flags';
 
 /**
  * 🎯 Ingest Strategy Service

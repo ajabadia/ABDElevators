@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslations } from "next-intl";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { KnowledgeAsset } from "@/types/knowledge";
@@ -50,7 +50,6 @@ interface ChatMessage {
 export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalProps) {
     const t = useTranslations("knowledge_hub");
     const tCommon = useTranslations("common");
-    const { toast } = useToast();
 
     const [question, setQuestion] = useState("");
     const [isQuerying, setIsQuerying] = useState(false);
@@ -74,16 +73,13 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                 const data = await res.json();
                 if (data.success && data.suggestions) {
                     setDynamicSuggestions(data.suggestions);
-                    toast({
-                        title: t('analyze_modal.title'),
+                    toast.success(t('analyze_modal.title'), {
                         description: "Sugerencias dinámicas cargadas.",
                     });
                 }
             } catch (error) {
                 console.error("Failed to load suggestions:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
+                toast.error("Error", {
                     description: "No se pudieron cargar las sugerencias dinámicas.",
                 });
             } finally {
@@ -229,9 +225,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                 content: "Error al analizar el documento. Por favor, inténtelo de nuevo.",
                 timestamp: new Date()
             }]);
-            toast({
-                variant: "destructive",
-                title: "Error de Análisis",
+            toast.error("Error de Análisis", {
                 description: error.message || "La consulta falló inesperadamente.",
             });
         } finally {

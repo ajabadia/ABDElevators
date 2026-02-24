@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { requireRole } from '@/lib/auth';
-import { BackupService } from '@/lib/services/backup-compliance-service';
+import { BackupService } from '@/services/ops/backup-service';
 import { UserRole } from '@/types/roles';
 
 /**

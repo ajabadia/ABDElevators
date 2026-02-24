@@ -42,7 +42,7 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { logClientEvent } from "@/lib/logger-client";
@@ -88,7 +88,7 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
 
     const smartConfig = useSmartConfig(file);
 
-    const { toast } = useToast();
+
     const t = useTranslations('ingest');
 
     const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
@@ -139,10 +139,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         if (acceptedFiles[0] && acceptedFiles[0].type === "application/pdf") {
             setFile(acceptedFiles[0]);
         } else {
-            toast({
-                title: "Formato no válido",
+            toast.error("Formato no válido", {
                 description: "Solo se permiten archivos PDF.",
-                variant: "destructive"
             });
         }
     }, [toast]);
@@ -211,10 +209,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
             setUploadSuccess(true);
             setDeduplicated(data.isDuplicate || false);
 
-            toast({
-                title: data.isDuplicate ? t('status.duplicate') : t('status.success'),
+            toast.success(data.isDuplicate ? t('status.duplicate') : t('status.success'), {
                 description: data.isDuplicate ? t('status.duplicate_desc') : t('status.success_desc'),
-                variant: 'default'
             });
 
             logClientEvent({
@@ -226,10 +222,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
             });
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast({
-                title: t('status.error'),
+            toast.error(t('status.error'), {
                 description: error.message,
-                variant: 'destructive',
             });
         } finally {
             setIsUploading(false);

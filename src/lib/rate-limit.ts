@@ -24,11 +24,11 @@ export interface RateLimitResult {
  * Standardized Rate Limits
  */
 export const LIMITS = {
-    AUTH: { limit: 50, window: "5 m" as const },      // 50 attempts per 5 minutes (Relaxed from 10)
-    ADMIN: { limit: 100, window: "1 m" as const },    // 100 req/min (Admin actions)
-    PUBLIC: { limit: 60, window: "1 m" as const },    // 60 req/min (Public endpoints)
-    SANDBOX: { limit: 5, window: "1 m" as const },    // 5 req/min (Strict Public Demo)
-    CORE: { limit: 300, window: "1 m" as const },     // 300 req/min (Authorized App usage)
+    AUTH: { limit: 500, window: "5 m" as const },      // 500 attempts per 5 minutes (Relaxed for dev)
+    ADMIN: { limit: 1000, window: "1 m" as const },    // 1000 req/min (Admin actions)
+    PUBLIC: { limit: 600, window: "1 m" as const },    // 600 req/min (Public endpoints)
+    SANDBOX: { limit: 50, window: "1 m" as const },    // 50 req/min (Strict Public Demo)
+    CORE: { limit: 3000, window: "1 m" as const },     // 3000 req/min (Authorized App usage)
 };
 
 /**

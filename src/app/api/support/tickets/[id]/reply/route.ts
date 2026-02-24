@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { TicketService } from '@/lib/ticket-service';
+import { TicketService } from '@/services/support/TicketService';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import crypto from 'crypto';
 import { connectDB } from '@/lib/db';

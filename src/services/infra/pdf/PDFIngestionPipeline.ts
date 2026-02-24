@@ -1,7 +1,6 @@
-
 import { PDFExtractionEngine } from './PDFExtractionEngine';
-import { PIIMasker, PIIResult } from '../../../lib/pii-masker';
-import { logEvento } from '../../../lib/logger';
+import { PIIMasker, PIIResult } from '@/services/security/pii-masker';
+import { logEvento } from '@/lib/logger';
 
 export interface PdfPipelineOptions {
     tenantId: string;

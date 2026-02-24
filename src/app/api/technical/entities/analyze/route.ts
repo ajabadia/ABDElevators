@@ -3,13 +3,13 @@ import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
-import { analyzeEntityWithGemini } from '@/lib/llm';
-import { performTechnicalSearch } from '@/lib/rag-service';
+import { extractModelsWithGemini } from '@/services/llm/llm-service';
+import { RagService, RagResult } from '@/services/core/RagService';
 import { AppError, ValidationError } from '@/lib/errors';
 import { EntitySchema, GenericCaseSchema } from '@/lib/schemas';
 import { mapEntityToCase } from '@/lib/mappers';
-import { RiskService } from '@/lib/risk-service';
-import { FederatedKnowledgeService } from '@/lib/federated-knowledge-service';
+import { RiskService } from '@/services/security/RiskService';
+import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
 import crypto from 'crypto';
 
 /**
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
             level: 'INFO',
             source: 'TECHNICAL_ENTITIES_ANALYZE_API',
             action: 'START',
-            message: `Starting entity analysis: ${file.name}`,
+            message: `Starting entity analysis: ${file.name} `,
             correlationId
         });
 
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
         // 0. MD5 De-duplication (Token Savings)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
-        const { TechnicalEntityService } = await import('@/lib/services/technical-entity-service');
+        const { TechnicalEntityService } = await import('@/services/core/TechnicalEntityService');
         const entitiesCollection = await getTenantCollection('entities');
         const existingEntity = await TechnicalEntityService.findExistingByHash(fileHash, tenantId);
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
                 level: 'INFO',
                 source: 'TECHNICAL_ENTITIES_ANALYZE_API',
                 action: 'DEDUPLICATION',
-                message: `Identical entity detected for tenant ${tenantId}. Returning previous analysis.`,
+                message: `Identical entity detected for tenant ${tenantId}.Returning previous analysis.`,
                 correlationId,
                 details: { entityId: existingEntity._id, filename: file.name }
             });
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
                 correlationId
             });
 
-            const { queueService } = await import('@/lib/queue-service');
+            const { queueService } = await import('@/services/ops/queue-service');
             const job = await queueService.addJob('PDF_ANALYSIS', {
                 tenantId: tenantId!,
                 userId: user.id || 'unknown',
@@ -125,7 +125,6 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // 2. Full Analysis via Service (Phase 105 Hygiene)
         const {
             resultsWithContext,
             detectedRisks,
@@ -215,7 +214,7 @@ export async function POST(req: NextRequest) {
                 level: 'WARN',
                 source: 'TECHNICAL_ENTITIES_ANALYZE_API',
                 action: 'SLA_VIOLATION',
-                message: `Slow RAG analysis: ${durationMs}ms`,
+                message: `Slow RAG analysis: ${durationMs} ms`,
                 correlationId,
                 details: { durationMs }
             });

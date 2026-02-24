@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { enforcePermission } from "@/lib/guardian-guard"
 import { hybridSearch } from '@abd/rag-engine/server';
-import { UsageService } from "@/lib/usage-service"
+import { UsageService } from "@/services/ops/usage-service"
 import { AppError, handleApiError } from "@/lib/errors"
 import { logEvento } from "@/lib/logger"
 import { z } from "zod"

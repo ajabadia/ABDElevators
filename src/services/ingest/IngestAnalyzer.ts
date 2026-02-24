@@ -1,5 +1,5 @@
 
-import { analyzePDFVisuals } from '@/lib/llm';
+import { analyzePDFVisuals } from '@/services/llm/llm-service';
 import { IngestAnalysisService } from './IngestAnalysisService';
 import { logEvento } from '@/lib/logger';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';

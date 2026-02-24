@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { uploadBrandingAsset, deleteFromCloudinary } from '@/lib/cloudinary';
-import { TenantService } from '@/lib/tenant-service';
+import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 import { UserRole } from '@/types/roles';

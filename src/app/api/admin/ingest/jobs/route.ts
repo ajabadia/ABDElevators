@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { queueService, JobType } from '@/lib/queue-service';
+import { queueService, JobType } from '@/services/ops/queue-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import * as crypto from 'crypto';
 
