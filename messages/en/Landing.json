@@ -45,7 +45,9 @@
       "Unified LLM Core (Ph 210)",
       "Multi-tenant Observability (Ph 213)",
       "Post-ingestion Enrichment (Ph 198)",
-      "Dynamic AI Suggestions (Ph 216)"
+      "Dynamic AI Suggestions (Ph 216)",
+      "Unified Service Layer (Ph 222)",
+      "Structured API Logging (logEvento)"
     ]
   },
   "UX_REVOLUTION": {
@@ -62,7 +64,9 @@
       "Integrated Contextual Help",
       "Advanced Key-Nav (CMD+K)",
       "Predictive Ingestion ETA",
-      "RAG Metrics Tooltips"
+      "RAG Metrics Tooltips",
+      "Unified Sonner Notifications",
+      "Atomic Admin Hubs"
     ]
   }
 }

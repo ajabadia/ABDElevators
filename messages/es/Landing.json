@@ -26,12 +26,12 @@
     "badge": "GOBERNANZA DE IA",
     "title": "Control Industrial Total",
     "description": "Gestión centralizada de modelos y arquitectura monorepo de alto rendimiento para entornos críticos.",
-    "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Ingesta de Alta Integridad,Trazabilidad de Costes Persistente,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto,Arquitectura Desacoplada de Dominios,Confianza Humanizada (High/Medium/Low),Support Hub Independiente (FASE 200),Observability & Audit Hub (FASE 201),Gobernanza de Prompts (FASE 210),Observabilidad Multi-tenant (FASE 213),Trazabilidad Estandarizada (Correlation Tags),Enriquecimiento Post-ingesta (FASE 198),Quality Shield (FASE 215)"
+    "features": "Registro Único de Modelos,RAG Playground,Prompt Governance,HITL Feedback Loop,Ingesta de Alta Integridad,Trazabilidad de Costes Persistente,Estabilidad Grado Industrial,Arquitectura Suite Multi-producto,Arquitectura Desacoplada de Dominios,Confianza Humanizada (High/Medium/Low),Support Hub Independiente (FASE 200),Observability & Audit Hub (FASE 201),Gobernanza de Prompts (FASE 210),Observabilidad Multi-tenant (FASE 213),Trazabilidad Estandarizada (Correlation Tags),Enriquecimiento Post-ingesta (FASE 198),Quality Shield (FASE 215),Capa de Servicios Consolidada (FASE 222),Logging Estructurado logEvento()"
   },
   "UX_REVOLUTION": {
     "badge": "EXPERIENCIA UNIFICADA",
     "title": "Diseño Agéntico de Vanguardia",
     "description": "Una interfaz repensada desde cero para la eficiencia técnica. Navegación simplificada, modo oscuro nativo y consistencia visual absoluta.",
-    "features": "Dashboard de Valor (ROI),Hub de Navegación,Modo Oscuro,Diseño Tokens Semánticos,Simple vs Expert Mode,Report Hub Visual,Onboarding Progresivo,WorkContext Engine,Ayuda Contextual Integrada,Navegación Teclado (CMD+K),ETA de Ingesta Predictivo,Tooltips Métricas RAG,Sugerencias Dinámicas IA"
+    "features": "Dashboard de Valor (ROI),Hub de Navegación,Modo Oscuro,Diseño Tokens Semánticos,Simple vs Expert Mode,Report Hub Visual,Onboarding Progresivo,WorkContext Engine,Ayuda Contextual Integrada,Navegación Teclado (CMD+K),ETA de Ingesta Predictivo,Tooltips Métricas RAG,Sugerencias Dinámicas IA,Notificaciones Sonner Unificadas,Hubs Administrativos Atómicos"
   }
 }

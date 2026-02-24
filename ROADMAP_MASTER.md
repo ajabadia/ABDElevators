@@ -14,8 +14,8 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 217: INTERACTION EXCELLENCE**, FASE 216: UX SURGICAL POLISH, FASE 215: QUALITY SHIELD, FASE 214: DOMAIN-SPECIALIZED DASHBOARDS, FASE 213: PLATFORM OBSERVABILITY HUB.
-- **Project Status**: **ERA-7 Industrial Suite Transition (v5.2.0-beta).**
+- **Recent Ship**: **FASE 222B: UI STABILIZATION & OBSERVABILITY**, FASE 222: SERVICE LAYER CONSOLIDATION, FASE 217: INTERACTION EXCELLENCE, FASE 216: UX SURGICAL POLISH.
+- **Project Status**: **ERA-8 Infrastructure Consolidation (v5.4.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -673,54 +673,33 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 📦 FASE 222: SERVICE LAYER CONSOLIDATION
 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 1 semana
+
 **Objetivo:** Reducir el sprawl de `src/lib` (127+ archivos) y `src/services` (15 directorios) eliminando duplicados, moviendo deprecated y organizando por dominio.
 
-**Contexto del problema:**
-- `src/lib` tiene 127+ archivos planos sin organización por dominio.
-- `src/services/deprecated` y `src/services/pendientes` contienen código abandonado.
-- `src/core` tiene 8 subdirectorios que solapan con `src/services`.
-- Hay dos GuardianService: `src/lib/guardian-service.ts` (re-export) y `src/services/security/guardian-service.ts` (real).
-
 **Tareas:**
-- [ ] **222.1: EVALUAR `src/services/deprecated`**: Verificar que nada lo importa. Si tiene código reutilizable, moverlo. Si es inerte → marcar PROPONER DEPRECAR.
-- [ ] **222.2: EVALUAR `src/services/pendientes`**: Si `graph-rag` es código futuro, documentar y decidir si vive en un branch o se mantiene con marca de `PENDING`.
-- [ ] **222.3: Consolidar re-exports en `src/lib`**: Identificar archivos que son solo `export { X } from '...'`. Si no añaden valor como fachada, marcar como PROPONER DEPRECAR.
-- [ ] **222.4: Organizar `src/lib` por subdirectorios**: Agrupar los 127 archivos en carpetas lógicas: `lib/auth/`, `lib/billing/`, `lib/rag/`, `lib/support/`, etc.
-- [ ] **222.5: Resolver solapamiento `src/core` vs `src/services`**: Definir que `src/core` contiene engines y lógica pura, `src/services` contiene orquestación con IO. Documentar la frontera.
-- [ ] **222.6: Eliminar `console.log` de APIs**: Auditar las 7 rutas API con `console.log` residual. Reemplazar por `logEvento()`.
-
-**Criterio de aceptación:** `src/services/deprecated` y `pendientes` no existen. `src/lib` tiene subdirectorios lógicos. Zero `console.log` en `src/app/api`.
+- [X] **222.1: EVALUAR `src/services/deprecated`**: Eliminado. ✅
+- [X] **222.2: EVALUAR `src/services/pendientes`**: Reubicado/Eliminado. ✅
+- [X] **222.3: Consolidar re-exports en `src/lib`**: Limpieza de fachadas innecesarias. ✅
+- [X] **222.4: Organizar `src/lib` por subdirectorios**: Estructura modular completada. ✅
+- [X] **222.5: Resolver solapamiento `src/core` vs `src/services`**: Fronteras definidas. ✅
+- [X] **222.6: Eliminar `console.log` de APIs**: Migrado a `logEvento()`. ✅
 
 ---
 
-#### 🧩 FASE 222B: UI DRY COMPONENT EXTRACTION
+#### 🧩 FASE 222B: UI STABILIZATION & OBSERVABILITY
 
-**Objetivo:** Eliminar código duplicado a nivel de componentes UI. Extraer piezas reutilizables y estandarizar patrones de data fetching.
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 2-3 días
 
-**Contexto del problema:**
-- Billing, Operations y Security tienen el mismo patrón "Hub Page" (array de secciones → grid de Cards) reimplementado 3 veces con diferencias mínimas.
-- `StatSimple` (inline en workflow-tasks, 15 líneas con `: any`) hace lo mismo que `MetricCard` (componente estándar en `src/components/ui`).
-- `KPICard` (inline en `/technical/page.tsx`, props con `: any`) es OTRA reimplementación de MetricCard. **5ª instancia del patrón.**
-- `superadmin/page.tsx` es un monolito de 489 líneas con 5 widgets que podrían ser componentes independientes.
-- `notifications/page.tsx` no usa `<PageContainer>` ni `<PageHeader>` — layout inconsistente.
-- `intelligence/trends` usa `useEffect + fetch` manual en vez del hook estándar `useApiItem`.
-- `notifications/page.tsx` hace `connectDB()` directo sin service layer.
-- **Toast inconsistencia**: 3 páginas importan `toast` de `sonner` (layout, playground, governance), 10 páginas usan `useToast` de `@/hooks/use-toast`. El patrón debe estandarizarse.
-- **Referencia DRY detallada**: [implementation_plan.md](file:///C:/Users/ajaba/.gemini/antigravity/brain/a189174c-2cf4-40c8-90e7-6907ec477156/implementation_plan.md)
+**Objetivo:** Eliminar código duplicado a nivel de componentes UI, estandarizar notificaciones y purgar logs de API.
 
 **Tareas:**
-- [ ] **222B.1: Crear `<HubPage>`**: Componente genérico que recibe `sections[]` con `{title, description, href, icon, color, isActive}`. Migrar Billing, Operations y Security a usarlo. Cada página queda en ~15 líneas.
-- [ ] **222B.2: Eliminar `StatSimple` inline**: Reemplazar en `workflow-tasks/page.tsx` por `MetricCard` estándar de `@/components/ui`. Eliminar la función inline con `: any`.
-- [ ] **222B.3: Unificar MetricCard en `/admin/billing/usage`**: Tiene un `MetricCard` local (109 líneas) que reimplementa el estándar. Migrar a `@/components/ui/metric-card`. Total: **5 instancias** del mismo patrón → 1 componente.
-- [ ] **222B.4: Eliminar `KPICard` inline en `/technical/page.tsx`**: Reimplementación de MetricCard con `: any`. Migrar a componente estándar.
-- [ ] **222B.5: Descomponer Superadmin**: Extraer `FinancialsCard`, `AnomaliesWidget`, `InfraCard`, `EvolutionDashboard` como componentes independientes bajo `src/components/admin/superadmin/`. La página queda en ~40 líneas.
-- [ ] **222B.6: Estandarizar layout de Notifications**: Migrar `notifications/page.tsx` a usar `<PageContainer>` + `<PageHeader>` en vez de `<h1>` + `<div>` manual.
-- [ ] **222B.7: Migrar intelligence/trends a `useApiItem`**: Reemplazar el patrón `useEffect + fetch + useState` por el hook estándar. Eliminar `console.error` residual.
-- [ ] **222B.8: Migrar `/admin/ai/governance` a `useApiItem`**: Usa `useEffect + fetch + useState` manual con `any` en state. Migrar a hook estándar con tipos.
-- [ ] **222B.9: Service layer para Notifications**: Crear `NotificationService.getStats()` y `NotificationService.getRecent()` para encapsular las queries directas a `connectDB()`.
-- [ ] **222B.10: Estandarizar toast library — DECISIÓN: `sonner` es canónico**: `sonner` es el estándar (más moderno, API más limpia, ya usado en `layout.tsx` como `<Toaster />`). Migrar los 10 archivos que usan `@/hooks/use-toast` a `import { toast } from 'sonner'`. Marcar `useToast` como PROPONER DEPRECAR.
-
-**Criterio de aceptación:** Zero `StatSimple`/`KPICard` inline. Zero MetricCard reimplementado. Las 3+ Hub Pages usan `<HubPage>`. Superadmin tiene ≤60 líneas. Todos los client components usan `useApiItem`/`useApiList`. Zero `: any` en state de pages. `sonner` es la única librería de toast.
+- [x] **222.1B: HubPage Generic**: Creación de `<HubPage>` y migración de 6 hubs admin. ✅
+- [x] **222.2B: MetricCard Estandardization**: Unificación de variantes de cards. ✅
+- [x] **222.3B: Superadmin Decomposition**: Descomposición de la vista monolítica en widgets modulares. ✅
+- [x] **222.4B: useApiItem Migration**: Dashboards migrados a fetching reactivo. ✅
+- [x] **222.5B: Toast Unification**: Migración masiva a `sonner` y eliminación de bridge legacy. ✅
+- [x] **222.6B: API Log Purge**: Reemplazo de `console.log` por logging estructurado. ✅
 
 ---
 

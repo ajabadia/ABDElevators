@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.3.0 - ERA-7 PRO)
+# ABD Multi-Industry RAG Platform (Vision 5.4.0 - ERA-8 INFRA)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.3.0** introduce la **Excelencia en Interacción y Pulido Quirúrgico de UX (FASE 216-217)**, mejorando drásticamente la navegación por teclado, accesibilidad móvil y predictibilidad de ingesta.
+Esta versión **v5.4.0** introduce la **Consolidación de Infraestructura y Estabilización UI (FASE 222-222B)**, con una arquitectura de servicios limpia, telemetría estructurada y unificación total de notificaciones con Sonner.
 
 ## 🚀 Inicio Rápido
 
@@ -192,6 +192,7 @@ src/
 - ✅ **Quality Shield (Phase 215)**: Suite de tests unitarios e integración para LLM Core y Repositorios con aislamiento multi-tenant verificado.
 - ✅ **Domain-Specialized Dashboards (Phase 214)**: Experiencia diferenciada para perfiles Técnicos y de Soporte con KPIs específicos.
 - ✅ **UX Surgical Polish & Interaction Excellence (Phase 216-217)**: Navegación por teclado avanzada (CMD+K), resaltado multi-modal de fuentes, sugerencias dinámicas agénticas y predicción de tiempo de ingesta (ETA).
+- ✅ **Infrastructure Consolidation (Phase 222-222B)**: Service layer clean-up, multi-tenant data isolation enforcement, structured API logging (`logEvento`), and UI DRY patterns with atomic `<HubPage>` and `<MetricCard>` components. Universal notification system with Sonner.
 
 ## 🔧 Scripts Disponibles
 
