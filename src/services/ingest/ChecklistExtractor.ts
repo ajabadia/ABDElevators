@@ -6,10 +6,10 @@ import { z } from "zod";
 import { logEvento } from "@/lib/logger";
 import { AppError, ValidationError, ExternalServiceError } from "@/lib/errors";
 import { callGeminiMini } from "@/services/llm/llm-service"; // assumed utility for Gemini mini‑prompt
-import { ChecklistItem } from "./types";
+import { ChecklistItem } from "@/lib/types";
 
 
-import { PromptService } from "./prompt-service";
+import { PromptService } from "@/services/llm/prompt-service";
 
 /**
  * Zod schema for the function input. All inputs are validated before any processing.

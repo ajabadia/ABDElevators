@@ -1,0 +1,461 @@
+﻿
+> project_init@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+node.exe : ÔÜá The 
+"middleware" file 
+convention is 
+deprecated. Please use 
+"proxy" instead. Learn 
+more: https://nextjs.or
+g/docs/messages/middlew
+are-to-proxy
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Users\ajaba\AppData
+\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (ÔÜá The "midd   
+ le...leware-to-pro    
+xy:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  Creating an optimized production build ...
+Turbopack build 
+encountered 1 warnings:
+./src/app/api/billing/w
+ebhook/route.ts:56:14
+Next.js can't 
+recognize the exported 
+`config` field in 
+route. Page config in 
+`config` is deprecated 
+and ignored, use 
+individual exports 
+instead.
+[0m [90m 54 |[39m
+ [90m 55 |[39m 
+[90m// Ensure raw 
+body is preserved 
+(though in App Router 
+we use req.text() 
+above)[39m
+[31m[1m>[22m[39m[9
+0m 56 |[39m 
+[36mexport[39m 
+[36mconst[39m config 
+[33m=[39m {
+ [90m    |[39m       
+       [31m[1m^[22m
+[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m
+ [90m 57 |[39m     
+api[33m:[39m {
+ [90m 58 |[39m       
+  
+bodyParser[33m:[39m 
+[36mfalse[39m[33m,[3
+9m
+ [90m 59 |[39m     
+}[33m,[39m[0m
+
+The exported 
+configuration object 
+in a source file needs 
+to have a very 
+specific format from 
+which some properties 
+can be statically 
+parsed at 
+compiled-time.
+
+https://nextjs.org/docs
+/app/api-reference/file
+-conventions/route-segm
+ent-config
+
+
+Ô£ô Compiled successfully in 44s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+ÔÜá´©Å [STRIPE] Secret 
+Key no configurado. 
+Las funcionalidades de 
+pago estar├ín 
+desactivadas.
+  Generating static pages using 7 workers (0/249) ...
+  Generating static pages using 7 workers (62/249) 
+  Generating static pages using 7 workers (124/249) 
+  Generating static pages using 7 workers (186/249) 
+Ô£ô Generating static pages using 7 workers (249/249) in 1532.0ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî ãÆ /
+Ôö£ ãÆ /_not-found
+Ôö£ ãÆ /about
+Ôö£ ãÆ /accessibility
+Ôö£ ãÆ /admin
+Ôö£ ãÆ /admin/ai
+Ôö£ ãÆ /admin/ai/governance
+Ôö£ ãÆ /admin/ai/playground
+Ôö£ ãÆ /admin/ai/predictive
+Ôö£ ãÆ /admin/ai/rag-quality
+Ôö£ ãÆ /admin/ai/workflows
+Ôö£ ãÆ /admin/analytics
+Ôö£ ãÆ /admin/api-docs
+Ôö£ ãÆ /admin/api-keys
+Ôö£ ãÆ /admin/audit
+Ôö£ ãÆ /admin/audit/config-changes
+Ôö£ ãÆ /admin/billing
+Ôö£ ãÆ /admin/billing/contracts
+Ôö£ ãÆ /admin/billing/invoices
+Ôö£ ãÆ /admin/billing/plan
+Ôö£ ãÆ /admin/billing/usage
+Ôö£ ãÆ /admin/cases/[id]
+Ôö£ ãÆ /admin/checklist-configs
+Ôö£ ãÆ /admin/checklist-configs/[id]
+Ôö£ ãÆ /admin/checklist-configs/new
+Ôö£ ãÆ /admin/compliance
+Ôö£ ãÆ /admin/document-types
+Ôö£ ãÆ /admin/ingest/jobs
+Ôö£ ãÆ /admin/intelligence/trends
+Ôö£ ãÆ /admin/knowledge
+Ôö£ ãÆ /admin/knowledge-assets
+Ôö£ ãÆ /admin/knowledge-base
+Ôö£ ãÆ /admin/knowledge-base/graph
+Ôö£ ãÆ /admin/knowledge/assets
+Ôö£ ãÆ /admin/knowledge/explorer
+Ôö£ ãÆ /admin/knowledge/my-docs
+Ôö£ ãÆ /admin/knowledge/spaces
+Ôö£ ãÆ /admin/logs
+Ôö£ ãÆ /admin/my-documents
+Ôö£ ãÆ /admin/notifications
+Ôö£ ãÆ /admin/notifications/settings
+Ôö£ ãÆ /admin/notifications/templates
+Ôö£ ãÆ /admin/notifications/templates/[type]
+Ôö£ ãÆ /admin/operations
+Ôö£ ãÆ /admin/operations/ingest
+Ôö£ ãÆ /admin/operations/logs
+Ôö£ ãÆ /admin/operations/maintenance
+Ôö£ ãÆ /admin/operations/observability
+Ôö£ ãÆ /admin/operations/status
+Ôö£ ãÆ /admin/operations/trace
+Ôö£ ãÆ /admin/organizations
+Ôö£ ãÆ /admin/organizations/billing
+Ôö£ ãÆ /admin/organizations/branding
+Ôö£ ãÆ /admin/organizations/features
+Ôö£ ãÆ /admin/organizations/general
+Ôö£ ãÆ /admin/organizations/storage
+Ôö£ ãÆ /admin/permissions
+Ôö£ ãÆ /admin/permissions/audit
+Ôö£ ãÆ /admin/permissions/groups
+Ôö£ ãÆ /admin/permissions/matrix
+Ôö£ ãÆ /admin/permissions/simulator
+Ôö£ ãÆ /admin/profile
+Ôö£ ãÆ /admin/prompts
+Ôö£ ãÆ /admin/rag-quality
+Ôö£ ãÆ /admin/reports
+Ôö£ ãÆ /admin/reports/schedules
+Ôö£ ãÆ /admin/security
+Ôö£ ãÆ /admin/security/audit
+Ôö£ ãÆ /admin/security/sessions
+Ôö£ ãÆ /admin/settings
+Ôö£ ãÆ /admin/settings/branding
+Ôö£ ãÆ /admin/settings/i18n
+Ôö£ ãÆ /admin/settings/notifications
+Ôö£ ãÆ /admin/spaces
+Ôö£ ãÆ /admin/superadmin
+Ôö£ ãÆ /admin/support
+Ôö£ ãÆ /admin/tasks
+Ôö£ ãÆ /admin/users
+Ôö£ ãÆ /admin/users/active
+Ôö£ ãÆ /admin/users/pending
+Ôö£ ãÆ /admin/workflow-tasks
+Ôö£ ãÆ /admin/workflows
+Ôö£ ãÆ /admin/workflows/%5Bid%5D
+Ôö£ ãÆ /admin/workshop/orders/new
+Ôö£ ãÆ /api/admin/ai-trace/[id]
+Ôö£ ãÆ /api/admin/ai/governance
+Ôö£ ãÆ /api/admin/audit/config
+Ôö£ ãÆ /api/admin/audit/ingest
+Ôö£ ãÆ /api/admin/audit/stats
+Ôö£ ãÆ /api/admin/billing/contracts
+Ôö£ ãÆ /api/admin/billing/invoice-preview
+Ôö£ ãÆ /api/admin/billing/manual-change
+Ôö£ ãÆ /api/admin/billing/prediction
+Ôö£ ãÆ /api/admin/billing/seed-plans
+Ôö£ ãÆ /api/admin/billing/usage
+Ôö£ ãÆ /api/admin/cases/[id]
+Ôö£ ãÆ /api/admin/cases/[id]/timeline
+Ôö£ ãÆ /api/admin/cases/[id]/workflow
+Ôö£ ãÆ /api/admin/checklist-configs
+Ôö£ ãÆ /api/admin/checklist-configs/[id]
+Ôö£ ãÆ /api/admin/compliance/backup
+Ôö£ ãÆ /api/admin/compliance/certificate
+Ôö£ ãÆ /api/admin/contacts
+Ôö£ ãÆ /api/admin/document-types
+Ôö£ ãÆ /api/admin/environments/promote
+Ôö£ ãÆ /api/admin/export
+Ôö£ ãÆ /api/admin/global-stats
+Ôö£ ãÆ /api/admin/graph/explore
+Ôö£ ãÆ /api/admin/graph/nodes
+Ôö£ ãÆ /api/admin/graph/nodes/bulk
+Ôö£ ãÆ /api/admin/graph/nodes/merge
+Ôö£ ãÆ /api/admin/graph/relations
+Ôö£ ãÆ /api/admin/i18n
+Ôö£ ãÆ /api/admin/i18n/[locale]
+Ôö£ ãÆ /api/admin/i18n/[locale]/debug
+Ôö£ ãÆ /api/admin/i18n/auto-translate
+Ôö£ ãÆ /api/admin/i18n/stats
+Ôö£ ãÆ /api/admin/i18n/sync
+Ôö£ ãÆ /api/admin/ingest
+Ôö£ ãÆ /api/admin/ingest/[id]/enrich
+Ôö£ ãÆ /api/admin/ingest/jobs
+Ôö£ ãÆ /api/admin/ingest/logs/[id]
+Ôö£ ãÆ /api/admin/ingest/metrics
+Ôö£ ãÆ /api/admin/ingest/status/[docId]
+Ôö£ ãÆ /api/admin/intelligence/patterns
+Ôö£ ãÆ /api/admin/intelligence/stats
+Ôö£ ãÆ /api/admin/knowledge-assets
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/download
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/preview
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/relationships
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/retry
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/review
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/suggest-questions
+Ôö£ ãÆ /api/admin/knowledge-assets/[id]/trace
+Ôö£ ãÆ /api/admin/knowledge-assets/status
+Ôö£ ãÆ /api/admin/knowledge-base/chunks
+Ôö£ ãÆ /api/admin/logs
+Ôö£ ãÆ /api/admin/logs/export
+Ôö£ ãÆ /api/admin/logs/stats
+Ôö£ ãÆ /api/admin/notifications/config
+Ôö£ ãÆ /api/admin/notifications/templates
+Ôö£ ãÆ /api/admin/notifications/templates/[type]
+Ôö£ ãÆ /api/admin/observability/slis
+Ôö£ ãÆ /api/admin/operations/queues
+Ôö£ ãÆ /api/admin/permissions/check
+Ôö£ ãÆ /api/admin/permissions/policies
+Ôö£ ãÆ /api/admin/permissions/roles
+Ôö£ ãÆ /api/admin/prompts
+Ôö£ ãÆ /api/admin/prompts/[id]
+Ôö£ ãÆ /api/admin/prompts/[id]/versions
+Ôö£ ãÆ /api/admin/prompts/dry-run
+Ôö£ ãÆ /api/admin/prompts/history
+Ôö£ ãÆ /api/admin/prompts/sync
+Ôö£ ãÆ /api/admin/rag/evaluations
+Ôö£ ãÆ /api/admin/rag/experiment
+Ôö£ ãÆ /api/admin/reports
+Ôö£ ãÆ /api/admin/reports/generate
+Ôö£ ãÆ /api/admin/reports/schedules
+Ôö£ ãÆ /api/admin/reports/schedules/[id]
+Ôö£ ãÆ /api/admin/spaces
+Ôö£ ãÆ /api/admin/superadmin/anomalies
+Ôö£ ãÆ /api/admin/superadmin/metrics
+Ôö£ ãÆ /api/admin/superadmin/ontology/evolution
+Ôö£ ãÆ /api/admin/system/reset-rag
+Ôö£ ãÆ /api/admin/taxonomies
+Ôö£ ãÆ /api/admin/tenants
+Ôö£ ãÆ /api/admin/tenants/[tenantId]
+Ôö£ ãÆ /api/admin/tenants/[tenantId]/branding/upload
+Ôö£ ãÆ /api/admin/usage/roi
+Ôö£ ãÆ /api/admin/usage/stats
+Ôö£ ãÆ /api/admin/users
+Ôö£ ãÆ /api/admin/users/[id]
+Ôö£ ãÆ /api/admin/users/[id]/reset-password
+Ôö£ ãÆ /api/admin/users/[id]/upload-photo
+Ôö£ ãÆ /api/admin/users/invite
+Ôö£ ãÆ /api/admin/users/invite/bulk
+Ôö£ ãÆ /api/admin/users/invite/revoke
+Ôö£ ãÆ /api/admin/workflow-definitions
+Ôö£ ãÆ /api/admin/workflow-definitions/[id]
+Ôö£ ãÆ /api/admin/workflow-definitions/active
+Ôö£ ãÆ /api/admin/workflow-tasks
+Ôö£ ãÆ /api/admin/workflow-tasks/[id]
+Ôö£ ãÆ /api/admin/workflows
+Ôö£ ãÆ /api/admin/workflows/analytics/[id]
+Ôö£ ãÆ /api/admin/workflows/analytics/[id]/logs
+Ôö£ ãÆ /api/admin/workflows/analytics/[id]/report
+Ôö£ ãÆ /api/analytics/summary
+Ôö£ ãÆ /api/audit/logs
+Ôö£ ãÆ /api/auth/[...nextauth]
+Ôö£ ãÆ /api/auth/change-password
+Ôö£ ãÆ /api/auth/invite/accept
+Ôö£ ãÆ /api/auth/invite/verify
+Ôö£ ãÆ /api/auth/knowledge-assets
+Ôö£ ãÆ /api/auth/knowledge-assets/[id]
+Ôö£ ãÆ /api/auth/magic-link/request
+Ôö£ ãÆ /api/auth/mfa/config
+Ôö£ ãÆ /api/auth/profile
+Ôö£ ãÆ /api/auth/profile/notificaciones
+Ôö£ ãÆ /api/auth/profile/sesiones
+Ôö£ ãÆ /api/auth/profile/upload-photo
+Ôö£ ãÆ /api/billing/change-plan
+Ôö£ ãÆ /api/billing/create-checkout
+Ôö£ ãÆ /api/billing/portal
+Ôö£ ãÆ /api/billing/simulate-change
+Ôö£ ãÆ /api/billing/webhook
+Ôö£ ãÆ /api/cases
+Ôö£ ãÆ /api/cases/[id]/transicion
+Ôö£ ãÆ /api/collections
+Ôö£ ãÆ /api/collections/[id]/assets
+Ôö£ ãÆ /api/contact
+Ôö£ ãÆ /api/core/agents/correct
+Ôö£ ãÆ /api/core/automation/workflows
+Ôö£ ãÆ /api/core/collaboration/presence
+Ôö£ ãÆ /api/core/dashboard/intelligence
+Ôö£ ãÆ /api/core/entities/[type]
+Ôö£ ãÆ /api/core/entities/[type]/[id]
+Ôö£ ãÆ /api/core/governance/audit
+Ôö£ ãÆ /api/core/graph
+Ôö£ ãÆ /api/core/insights
+Ôö£ ãÆ /api/core/predictive/maintenance
+Ôö£ ãÆ /api/core/quick-qa
+Ôö£ ãÆ /api/core/quick-qa/promote
+Ôö£ ãÆ /api/core/search/cross-vertical
+Ôö£ ãÆ /api/cron/data-lifecycle
+Ôö£ ãÆ /api/cron/knowledge-review
+Ôö£ ãÆ /api/cron/scheduled-reports
+Ôö£ ãÆ /api/cron/self-healing
+Ôö£ ãÆ /api/cron/status-check
+Ôö£ ãÆ /api/cron/stuck-jobs
+Ôö£ ãÆ /api/dashboard/value-metrics
+Ôö£ ãÆ /api/federated/validate
+Ôö£ ãÆ /api/feedback/answer
+Ôö£ ãÆ /api/health
+Ôö£ ãÆ /api/health/db-check
+Ôö£ ãÆ /api/i18n-sync
+Ôö£ ãÆ /api/intelligence/causal-analysis
+Ôö£ ãÆ /api/logs
+Ôö£ ãÆ /api/notifications
+Ôö£ ãÆ /api/ops/export
+Ôö£ ãÆ /api/pricing/plans
+Ôö£ ãÆ /api/sandbox/chat
+Ôö£ ãÆ /api/spaces
+Ôö£ ãÆ /api/spaces/invite
+Ôö£ ãÆ /api/spaces/invite/accept
+Ôö£ ãÆ /api/spaces/invite/verify/[token]
+Ôö£ ãÆ /api/support/stats
+Ôö£ ãÆ /api/support/tickets
+Ôö£ ãÆ /api/support/tickets/[id]
+Ôö£ ãÆ /api/support/tickets/[id]/reassign
+Ôö£ ãÆ /api/support/tickets/[id]/reply
+Ôö£ ãÆ /api/swagger/spec
+Ôö£ ãÆ /api/tasks/created
+Ôö£ ãÆ /api/tasks/my
+Ôö£ ãÆ /api/technical/entities
+Ôö£ ãÆ /api/technical/entities/[id]/analyze
+Ôö£ ãÆ /api/technical/entities/[id]/checklist
+Ôö£ ãÆ /api/technical/entities/[id]/checklist/validate
+Ôö£ ãÆ /api/technical/entities/[id]/comments
+Ôö£ ãÆ /api/technical/entities/[id]/generate-report
+Ôö£ ãÆ /api/technical/entities/[id]/transition
+Ôö£ ãÆ /api/technical/entities/[id]/validate
+Ôö£ ãÆ /api/technical/entities/[id]/vector-search
+Ôö£ ãÆ /api/technical/entities/analyze
+Ôö£ ãÆ /api/technical/entities/analyze/[id]
+Ôö£ ãÆ /api/technical/rag/chat
+Ôö£ ãÆ /api/technical/stats
+Ôö£ ãÆ /api/tenant/branding
+Ôö£ ãÆ /api/user/dashboard
+Ôö£ ãÆ /api/user/preferences
+Ôö£ ãÆ /api/user/search
+Ôö£ ãÆ /api/user/stats
+Ôö£ ãÆ /api/v1/analysis/extract
+Ôö£ ãÆ /api/v1/documents/ingest
+Ôö£ ãÆ /api/v1/federated/search
+Ôö£ ãÆ /api/v1/rag/judge
+Ôö£ ãÆ /api/v1/rag/query
+Ôö£ ãÆ /api/webhooks/stripe
+Ôö£ ãÆ /api/workshop/orders
+Ôö£ ãÆ /architecture
+Ôö£ ãÆ /auth
+Ôö£ ãÆ /auth/magic-link/verify
+Ôö£ ãÆ /auth/signup-invite/[token]
+Ôö£ ãÆ /contact
+Ôö£ ãÆ /dashboard
+Ôö£ ãÆ /entities
+Ôö£ ãÆ /entities/[id]/validar
+Ôö£ ãÆ /error
+Ôö£ ãÆ /error/rate-limit
+Ôö£ ãÆ /features/audit-trail
+Ôö£ ãÆ /features/compliance
+Ôö£ ãÆ /features/dual-engine
+Ôö£ ãÆ /features/federated
+Ôö£ ãÆ /features/pdf-bridge
+Ôö£ ãÆ /features/vector-search
+Ôö£ ãÆ /graphs
+Ôö£ ãÆ /login
+Ôö£ ãÆ /my-documents
+Ôö£ ãÆ /ops/reports
+Ôö£ ãÆ /pricing
+Ôö£ ãÆ /privacy
+Ôö£ ãÆ /profile
+Ôö£ ãÆ /real-estate
+Ôö£ ãÆ /sandbox
+Ôö£ ãÆ /search
+Ôö£ ãÆ /settings
+Ôö£ ãÆ /spaces
+Ôö£ ãÆ /spaces/collections
+Ôö£ ãÆ /spaces/personal
+Ôö£ ãÆ /spaces/playground
+Ôö£ ãÆ /spaces/quick-qa
+Ôö£ ãÆ /support
+Ôö£ ãÆ /support-dashboard
+Ôö£ ãÆ /support-ticket
+Ôö£ ãÆ /support/[id]
+Ôö£ ãÆ /support/nuevo
+Ôö£ ãÆ /tasks
+Ôö£ ãÆ /technical
+Ôö£ ãÆ /terms
+Ôöö ãÆ /upgrade
+
+Route (pages)
+ÔöÇ ãÆ /api/openapi-spec
+
+ãÆ Proxy (Middleware)
+
+ãÆ  (Dynamic)  server-rendered on demand
+

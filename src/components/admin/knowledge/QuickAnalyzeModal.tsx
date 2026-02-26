@@ -74,13 +74,13 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                 if (data.success && data.suggestions) {
                     setDynamicSuggestions(data.suggestions);
                     toast.success(t('analyze_modal.title'), {
-                        description: "Sugerencias dinámicas cargadas.",
+                        description: t('analyze_modal.toasts.suggestions_loaded'),
                     });
                 }
             } catch (error) {
                 console.error("Failed to load suggestions:", error);
-                toast.error("Error", {
-                    description: "No se pudieron cargar las sugerencias dinámicas.",
+                toast.error(tCommon("error"), {
+                    description: t('analyze_modal.errors.suggestions_failed'),
                 });
             } finally {
                 setIsLoadingSuggestions(false);
@@ -119,8 +119,8 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
         const currentQuestion = question;
         setQuestion("");
         setIsQuerying(true);
-        setStatus("Iniciando consulta...");
-        setTraces(["Solicitud enviada al motor RAG..."]);
+        setStatus(t('analyze_modal.status.starting'));
+        setTraces([t('analyze_modal.traces.request_sent')]);
         setShowTraces(true);
         try {
             const res = await fetch('/api/technical/rag/chat', {
@@ -166,7 +166,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                             const data = JSON.parse(trimmedLine.substring(6));
 
                             if (data.type === 'connected') {
-                                setStatus("Conexión establecida. El agente está pensando...");
+                                setStatus(t('analyze_modal.status.connected'));
                             } else if (data.type === 'token') {
                                 setStatus(""); // Clear status when generation starts
                                 assistantText += data.data;
@@ -179,7 +179,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                     return newMsgs;
                                 });
                             } else if (data.type === 'docs') {
-                                setStatus(`Analizando ${data.data.length} fragmentos de información...`);
+                                setStatus(t('analyze_modal.status.analyzing_chunks', { count: data.data.length }));
                                 sources = data.data;
                                 setMessages(prev => {
                                     const newMsgs = [...prev];
@@ -194,11 +194,11 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                 // Update status based on trace contents
                                 const lastTrace = data.data?.[data.data.length - 1];
                                 if (lastTrace) {
-                                    if (lastTrace.includes('RETRIEVAL') || lastTrace.includes('NODO_ACTIVO: Procesando RETRIEVE')) setStatus("Recuperando documentos técnicos...");
-                                    if (lastTrace.includes('GRADING')) setStatus("Validando relevancia de la información...");
-                                    if (lastTrace.includes('VERIFICATION')) setStatus("Verificando hechos para evitar alucinaciones...");
-                                    if (lastTrace.includes('RE-WRITE')) setStatus("Optimizando consulta para mejor precisión...");
-                                    if (lastTrace.includes('GENERACIÓN')) setStatus("Redactando respuesta final...");
+                                    if (lastTrace.includes('RETRIEVAL') || lastTrace.includes('NODO_ACTIVO: Procesando RETRIEVE')) setStatus(t('analyze_modal.status.retrieving'));
+                                    if (lastTrace.includes('GRADING')) setStatus(t('analyze_modal.status.grading'));
+                                    if (lastTrace.includes('VERIFICATION')) setStatus(t('analyze_modal.status.verifying'));
+                                    if (lastTrace.includes('RE-WRITE')) setStatus(t('analyze_modal.status.rewriting'));
+                                    if (lastTrace.includes('GENERACIÓN')) setStatus(t('analyze_modal.status.generating'));
                                 }
                             } else if (data.type === 'error') {
                                 throw new Error(data.data.message || "Error en el agente");
@@ -222,11 +222,11 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
             console.error("Error in quick analysis:", error);
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: "Error al analizar el documento. Por favor, inténtelo de nuevo.",
+                content: t('analyze_modal.errors.generic'),
                 timestamp: new Date()
             }]);
-            toast.error("Error de Análisis", {
-                description: error.message || "La consulta falló inesperadamente.",
+            toast.error(t('analyze_modal.errors.title'), {
+                description: error.message || t('analyze_modal.errors.unexpected'),
             });
         } finally {
             setIsQuerying(false);
@@ -260,7 +260,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setMessages([])}
-                                title="Reiniciar conversación"
+                                title={t('analyze_modal.actions.reset')}
                                 className="text-slate-400 hover:text-primary transition-colors"
                             >
                                 <History size={18} />
@@ -278,23 +278,23 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                     <MessageSquare size={32} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-lg font-bold text-slate-800">¿Qué quieres saber sobre este documento?</p>
+                                    <p className="text-lg font-bold text-slate-800">{t('analyze_modal.chat.welcome_title')}</p>
                                     <p className="text-sm text-slate-500 max-w-sm">
-                                        Pregunta lo que sea. La IA analizará exclusivamente el contenido de este archivo para responderte con precisión.
+                                        {t('analyze_modal.chat.welcome_desc')}
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap justify-center gap-2 pt-4">
                                     {isLoadingSuggestions ? (
                                         <div className="flex items-center gap-2 text-xs text-slate-400">
                                             <Loader2 size={12} className="animate-spin" />
-                                            Generando sugerencias personalizadas...
+                                            {t('analyze_modal.status.generating_suggestions')}
                                         </div>
                                     ) : (
                                         (dynamicSuggestions.length > 0 ? dynamicSuggestions : [
-                                            "Resume los puntos clave",
-                                            "¿Hay requisitos técnicos específicos?",
-                                            "Identifica posibles riesgos",
-                                            "Extrae una tabla de especificaciones"
+                                            t('analyze_modal.suggestions.default_1'),
+                                            t('analyze_modal.suggestions.default_2'),
+                                            t('analyze_modal.suggestions.default_3'),
+                                            t('analyze_modal.suggestions.default_4')
                                         ]).map((s, i) => (
                                             <Button
                                                 key={i}
@@ -344,7 +344,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                                     "text-[10px] font-bold uppercase",
                                                     humanizeConfidence(msg.confidence).colorClass
                                                 )}>
-                                                    Confianza: {confidencePercent(msg.confidence)}%
+                                                    {t('analyze_modal.chat.confidence')}: {confidencePercent(msg.confidence)}%
                                                 </span>
                                             </div>
                                         )}
@@ -352,7 +352,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                         {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
                                             <div className="flex flex-wrap gap-2 mt-1">
                                                 <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-100 flex gap-1">
-                                                    <ShieldCheck size={10} /> {msg.sources.length} Fuentes verificadas
+                                                    <ShieldCheck size={10} /> {t('analyze_modal.chat.verified_sources', { count: msg.sources.length })}
                                                 </Badge>
                                             </div>
                                         )}
@@ -367,7 +367,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
                                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                                         <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                                        <span className="ml-2 italic font-medium">{status || "El agente está pensando..."}</span>
+                                        <span className="ml-2 italic font-medium">{status || t('analyze_modal.status.thinking')}</span>
                                     </div>
 
                                     <div className="flex gap-3">
@@ -388,13 +388,13 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                                                 <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-lg animate-in fade-in zoom-in-95 duration-300">
                                                     <div className="flex items-center justify-between px-3 py-1.5 bg-slate-800/50 border-b border-white/5">
                                                         <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                            <Loader2 size={10} className="animate-spin" /> PROCESO DE PENSAMIENTO
+                                                            <Loader2 size={10} className="animate-spin" /> {t('analyze_modal.traces.title')}
                                                         </span>
                                                         <button
                                                             onClick={() => setShowTraces(!showTraces)}
                                                             className="text-[10px] text-slate-500 hover:text-white transition-colors"
                                                         >
-                                                            {showTraces ? "[ OCULTAR ]" : "[ MOSTRAR ]"}
+                                                            {showTraces ? t('analyze_modal.traces.hide') : t('analyze_modal.traces.show')}
                                                         </button>
                                                     </div>
                                                     <div
@@ -427,7 +427,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                             <Textarea
                                 value={question}
                                 onChange={(e) => setQuestion(e.target.value)}
-                                placeholder="Escribe tu pregunta aquí..."
+                                placeholder={t('analyze_modal.chat.input_placeholder')}
                                 className="min-h-[50px] max-h-[150px] pr-12 py-3 rounded-xl border-slate-200 focus:ring-primary shadow-sm resize-none"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -448,7 +448,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                     </div>
                     <p className="text-[10px] text-center text-slate-400 mt-4 uppercase tracking-widest font-semibold flex items-center justify-center gap-2">
                         <ShieldCheck size={12} className="text-emerald-500" />
-                        Análisis asistido por IA - Verificado exclusivamente en el documento fuente
+                        {t('analyze_modal.chat.footer_note')}
                     </p>
                 </div>
             </DialogContent>

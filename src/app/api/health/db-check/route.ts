@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
+import { requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,19 +10,28 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const secret = searchParams.get('secret');
 
+        // 🛡️ [SECURITY] Require SUPER_ADMIN role for diagnostic tools (Phase 232)
+        try {
+            await requireRole([UserRole.SUPER_ADMIN]);
+        } catch (error) {
+            return NextResponse.json({ error: 'Access restricted to SUPER_ADMIN.' }, { status: 403 });
+        }
+
         // Hardening (Phase 105): Restrict debug tools in production and remove hardcoded secrets
         const debugToken = process.env.HEALTH_CHECK_SECRET;
 
-        if (!debugToken || secret !== debugToken || process.env.NODE_ENV === 'production') {
+        // If secret is provided, it must match debugToken. 
+        // Note: Even with secret, requireRole above ensures only SUPER_ADMIN can reach this.
+        if (secret && (!debugToken || secret !== debugToken)) {
             const { logEvento } = await import('@/lib/logger');
             await logEvento({
                 level: 'WARN',
                 source: 'SECURITY_HARDENING',
-                action: 'UNAUTHORIZED_HEALTH_CHECK',
-                message: `Intento de acceso a health check denegado (ENV: ${process.env.NODE_ENV})`,
+                action: 'INVALID_SECRET_HEALTH_CHECK',
+                message: `Intento de acceso a health check con secreto inválido (ENV: ${process.env.NODE_ENV})`,
                 correlationId: 'security-event'
             });
-            return NextResponse.json({ error: 'Access restricted. Diagnostic tools are disabled in this environment or missing secure token.' }, { status: 403 });
+            return NextResponse.json({ error: 'Invalid secure token.' }, { status: 403 });
         }
 
         const db = await connectAuthDB();

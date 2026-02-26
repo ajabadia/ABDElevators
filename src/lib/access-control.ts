@@ -1,7 +1,7 @@
-import { connectDB } from "./db";
-import { AppError } from "./errors";
-import { BillingService } from "./billing-service";
-import { logEvento } from "./logger";
+import { connectDB } from "@/lib/db";
+import { AppError } from "@/lib/errors";
+import { BillingService } from "@/services/admin/BillingService";
+import { logEvento } from "@/lib/logger";
 
 /**
  * Access Control Service (Fase 9.1 - Enforcement)

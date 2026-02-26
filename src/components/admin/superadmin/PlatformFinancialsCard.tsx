@@ -26,10 +26,10 @@ export function PlatformFinancialsCard({ metrics }: PlatformFinancialsCardProps)
                 <div className="flex justify-between items-end border-b border-emerald-800/50 pb-3">
                     <div className="space-y-1">
                         <span className="text-[10px] uppercase font-bold text-emerald-300 tracking-widest">{t('financials.expenditure')}</span>
-                        <p className="text-2xl font-black">${metrics?.usage?.global?.estimatedCost || 0}</p>
+                        <p className="text-2xl font-black">{t('financials.currency')}{metrics?.usage?.global?.estimatedCost || 0}</p>
                     </div>
                     <Badge className="bg-emerald-500/20 text-emerald-300 border-none mb-1">
-                        {metrics?.usage?.global?.totalTokens?.toLocaleString()} tokens
+                        {metrics?.usage?.global?.totalTokens?.toLocaleString()} {t('financials.tokens')}
                     </Badge>
                 </div>
 
@@ -43,7 +43,7 @@ export function PlatformFinancialsCard({ metrics }: PlatformFinancialsCardProps)
                             </Badge>
                         </div>
                         <div className="flex justify-between items-end">
-                            <p className="text-xl font-black text-emerald-100">${metrics.usage.prediction.projection.estimatedSpend}</p>
+                            <p className="text-xl font-black text-emerald-100">{t('financials.currency')}{metrics.usage.prediction.projection.estimatedSpend}</p>
                             <p className="text-[10px] text-emerald-400 font-medium">{t('financials.projection_30d')}</p>
                         </div>
                     </div>
@@ -52,7 +52,7 @@ export function PlatformFinancialsCard({ metrics }: PlatformFinancialsCardProps)
                 <div className="flex justify-between items-end pt-2">
                     <div className="space-y-1">
                         <span className="text-[10px] uppercase font-bold text-emerald-300 tracking-widest">{t('financials.platform_value')}</span>
-                        <p className="text-2xl font-black text-emerald-400">${metrics?.usage?.global?.estimatedValue || 0}</p>
+                        <p className="text-2xl font-black text-emerald-400">{t('financials.currency')}{metrics?.usage?.global?.estimatedValue || 0}</p>
                     </div>
                     <div className="flex items-center gap-1 text-emerald-400 font-bold text-xs mb-1">
                         <TrendingUp className="w-3 h-3" />

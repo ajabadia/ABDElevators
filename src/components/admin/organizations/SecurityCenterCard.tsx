@@ -45,7 +45,7 @@ export function SecurityCenterCard({ config }: SecurityCenterCardProps) {
                                 {t('certTitle')}
                             </DialogTitle>
                             <DialogDescription>
-                                {t('certDesc', { organization: config?.name || 'the organization' })}
+                                {t('certDesc', { organization: config?.name || t('orgDefault') })}
                             </DialogDescription>
                         </DialogHeader>
 

@@ -64,7 +64,7 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                             <p className="text-xs text-muted-foreground">{tQuota('desc')}</p>
                         </div>
                         <span className="text-3xl font-bold font-outfit text-primary">
-                            {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
+                            {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
                         </span>
                     </div>
                     <Input
@@ -87,7 +87,7 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                         <div className="flex justify-between items-end text-xs">
                             <span className="text-muted-foreground font-medium">{tQuota('currentUsage')}</span>
                             <span className="font-bold text-foreground">
-                                {usageStats?.storage ? Math.round(usageStats.storage / (1024 * 1024)) : 0} MB / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} MB
+                                {usageStats?.storage ? Math.round(usageStats.storage / (1024 * 1024)) : 0} {tUsage('mb')} / {config?.storage?.quota_bytes ? Math.round(config.storage.quota_bytes / (1024 * 1024)) : 0} {tUsage('mb')}
                             </span>
                         </div>
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-border">

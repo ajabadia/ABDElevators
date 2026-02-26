@@ -27,7 +27,7 @@ export default function CompliancePage() {
     const models = AI_MODELS.filter(m => m.isEnabled).map(m => ({
         name: m.name,
         provider: m.provider.charAt(0).toUpperCase() + m.provider.slice(1),
-        status: "Gobernado",
+        status: tAi('governed'),
         risk: "Minimal" // Default for RAG technical assistance
     }));
 
@@ -63,7 +63,7 @@ export default function CompliancePage() {
             setGeneratingCert(true);
             const response = await fetch('/api/admin/compliance/certificate', {
                 method: 'POST',
-                body: JSON.stringify({ reason: "Manual Admin Request" })
+                body: JSON.stringify({ reason: tButtons('manualAdminRequest') })
             });
 
             if (!response.ok) throw new Error('Generation failed');
@@ -113,7 +113,7 @@ export default function CompliancePage() {
                                             <td className="py-2">{tAi('model')}</td>
                                             <td className="py-2">{tAi('provider')}</td>
                                             <td className="py-2">{tAi('status')}</td>
-                                            <td className="py-2 text-right">EU Risk</td>
+                                            <td className="py-2 text-right">{tAi('euRisk')}</td>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-teal-50">
@@ -159,8 +159,7 @@ export default function CompliancePage() {
                             </div>
                             <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3">
                                 <Info className="w-5 h-5 text-amber-600 shrink-0" />
-                                <div className="text-xs text-amber-800 leading-relaxed">
-                                    <strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{tAi('riskLevels.minimal')} risk</strong> as it provides technical assistance and information retrieval without automated decision-making.
+                                <div className="text-xs text-amber-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: tAi('complianceNoteHtml', { risk: tAi('riskLevels.minimal') }) }}>
                                 </div>
                             </div>
                         </CardContent>

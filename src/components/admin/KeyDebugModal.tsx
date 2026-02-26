@@ -13,6 +13,7 @@ import { useApiItem } from '@/hooks/useApiItem';
 import { Loader2, Database, FileJson, AlertCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 
 interface KeyDebugModalProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ interface KeyDebugModalProps {
 }
 
 export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDebugModalProps) {
+    const t = useTranslations('admin.key_debug');
     const { data: debugInfo, isLoading, error } = useApiItem<any>({
         endpoint: isOpen ? `/api/admin/i18n/${locale}/debug?key=${translationKey}` : null!,
     });
@@ -37,19 +39,19 @@ export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDe
                         <span className="truncate">{translationKey}</span>
                     </DialogTitle>
                     <DialogDescription>
-                        Estado técnico y overrides en base de datos.
+                        {t('dialog_desc')}
                     </DialogDescription>
                 </DialogHeader>
 
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-12 gap-4">
                         <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-                        <p className="text-sm text-muted-foreground font-medium">Consultando capas de traducción...</p>
+                        <p className="text-sm text-muted-foreground font-medium">{t('loading')}</p>
                     </div>
                 ) : error ? (
                     <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3 text-destructive">
                         <AlertCircle className="w-5 h-5" />
-                        <p className="text-sm font-medium">Error al cargar info de debug</p>
+                        <p className="text-sm font-medium">{t('error')}</p>
                     </div>
                 ) : debugInfo ? (
                     <div className="space-y-6 py-4">
@@ -62,7 +64,7 @@ export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDe
                             <div className="p-4 bg-muted/30 rounded-xl border border-border">
                                 {(() => {
                                     const rawVal = debugInfo.values?.json || debugInfo.jsonValue;
-                                    if (!rawVal) return <span className="text-xs text-muted-foreground italic">Llave no encontrada en archivos locales</span>;
+                                    if (!rawVal) return <span className="text-xs text-muted-foreground italic">{t('key_not_found')}</span>;
 
                                     let parsedVal = rawVal;
                                     try {
@@ -90,7 +92,7 @@ export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDe
                         <section className="space-y-3">
                             <div className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wider">
                                 <Database className="w-4 h-4" />
-                                Overrides en Base de Datos (MongoDB)
+                                {t('db_section')}
                             </div>
 
                             {(debugInfo.values?.db?.length || debugInfo.dbEntries?.length) > 0 ? (
@@ -108,7 +110,7 @@ export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDe
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     {entry.isObsolete && (
-                                                        <Badge variant="outline" className="text-destructive border-destructive text-[8px] font-bold">OBSOLETO</Badge>
+                                                        <Badge variant="outline" className="text-destructive border-destructive text-[8px] font-bold">{t('obsolete')}</Badge>
                                                     )}
                                                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                                         <Clock className="w-3 h-3" />
@@ -132,16 +134,16 @@ export function KeyDebugModal({ isOpen, onClose, locale, translationKey }: KeyDe
                             ) : (
                                 <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-2">
                                     <Database className="w-8 h-8 mx-auto text-muted-foreground/30" />
-                                    <p className="text-xs text-muted-foreground font-medium">No hay overrides para esta llave en la DB</p>
+                                    <p className="text-xs text-muted-foreground font-medium">{t('no_overrides')}</p>
                                 </div>
                             )}
                         </section>
 
                         {/* Estado de Caché */}
                         <section className="flex items-center justify-between p-4 bg-teal-50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/50 rounded-xl">
-                            <span className="text-sm font-bold text-teal-800 dark:text-teal-400">Master Cache Existe</span>
+                            <span className="text-sm font-bold text-teal-800 dark:text-teal-400">{t('cache_label')}</span>
                             <Badge variant={debugInfo.masterCacheExists ? 'default' : 'outline'} className={debugInfo.masterCacheExists ? 'bg-teal-600' : ''}>
-                                {debugInfo.masterCacheExists ? 'ACTIVA' : 'INACTIVA'}
+                                {debugInfo.masterCacheExists ? t('cache_active') : t('cache_inactive')}
                             </Badge>
                         </section>
                     </div>

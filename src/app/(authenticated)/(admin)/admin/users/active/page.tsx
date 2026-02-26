@@ -58,8 +58,8 @@ export default function UsersActivePage() {
     const { mutate: resetPassword } = useApiMutation<{ id: string, email: string }>({
         endpoint: (vars: any) => `/api/admin/users/${vars.id}/reset-password`,
         method: 'POST',
-        confirmMessage: (vars: any) => `¿Resetear contraseña para ${vars.email}?`,
-        successMessage: (res: any) => `Nueva contraseña temporal: ${res.tempPassword}`,
+        confirmMessage: (vars: any) => t("active.reset_password_confirm", { email: vars.email }),
+        successMessage: (res: any) => t("active.reset_password_success", { password: res.tempPassword }),
     });
 
     // 2. Modales con hook genérico

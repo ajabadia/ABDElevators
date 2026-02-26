@@ -41,7 +41,7 @@ export function KnowledgeHealthCard({ knowledge }: KnowledgeHealthCardProps) {
                         <p className="text-xs text-muted-foreground">{t('knowledge.db_status')}</p>
                     </div>
                     <div className="flex gap-2">
-                        <Badge className="bg-emerald-500 font-bold">AUTH: OK</Badge>
+                        <Badge className="bg-emerald-500 font-bold">{t('knowledge_health.auth_ok')}</Badge>
                     </div>
                 </div>
             </CardContent>

@@ -60,7 +60,7 @@ export function PermissionMatrixGrid({ policies, isLoading }: PermissionMatrixGr
                 <AlertCircle className="w-12 h-12 text-slate-200" />
                 <div>
                     <h3 className="text-lg font-bold text-slate-400">{t('table.empty')}</h3>
-                    <p className="text-sm text-slate-300 max-w-xs mx-auto">No se han detectado políticas de seguridad activas en este entorno.</p>
+                    <p className="text-sm text-slate-300 max-w-xs mx-auto">{t('grid.empty')}</p>
                 </div>
             </div>
         );
@@ -74,7 +74,7 @@ export function PermissionMatrixGrid({ policies, isLoading }: PermissionMatrixGr
                         <TableHeader>
                             <TableRow className="bg-slate-50/50 border-b border-slate-100 hover:bg-transparent">
                                 <TableHead className="w-[200px] font-black text-[10px] uppercase tracking-widest text-slate-400 py-6 px-6 sticky left-0 bg-slate-50/80 backdrop-blur-sm z-20">
-                                    Recursos \ Acciones
+                                    {t('grid.resources_actions')}
                                 </TableHead>
                                 {actions.map(action => (
                                     <TableHead key={action} className="text-center font-black text-[10px] uppercase tracking-tighter text-slate-600 min-w-[100px] py-6">
@@ -128,7 +128,7 @@ export function PermissionMatrixGrid({ policies, isLoading }: PermissionMatrixGr
                                                             <div className="bg-slate-900 text-white rounded-xl p-3 shadow-2xl border border-slate-800 animate-in zoom-in-95 duration-200">
                                                                 <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
                                                                     <Shield size={14} className="text-teal-400" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest">{matchingPolicies.length} Políticas</span>
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('grid.policies_count', { count: matchingPolicies.length })}</span>
                                                                 </div>
                                                                 <div className="space-y-1.5">
                                                                     {matchingPolicies.map((p, idx) => (
@@ -146,7 +146,7 @@ export function PermissionMatrixGrid({ policies, isLoading }: PermissionMatrixGr
                                                             </div>
                                                         ) : (
                                                             <div className="bg-slate-800 text-slate-400 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-700">
-                                                                Acceso no definido (Inherited DENY)
+                                                                {t('grid.inherited_deny')}
                                                             </div>
                                                         )}
                                                     </TooltipContent>
@@ -164,15 +164,15 @@ export function PermissionMatrixGrid({ policies, isLoading }: PermissionMatrixGr
             <div className="mt-8 flex items-center justify-end gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Allow Access</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('grid.allow_access')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-rose-500" />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Deny Access</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('grid.deny_access')}</span>
                 </div>
                 <div className="flex items-center gap-2 border-l border-slate-200 pl-6 ml-2">
                     <Unlock size={14} className="text-slate-300" />
-                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Inherited Def.</span>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{t('grid.inherited_def')}</span>
                 </div>
             </div>
         </TooltipProvider>

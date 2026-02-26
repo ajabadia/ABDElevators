@@ -4,28 +4,30 @@ import React from 'react'
 import { ContentCard } from '@/components/ui/content-card'
 import { Zap, ShieldCheck, BrainCircuit, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export function QuickNavConnector() {
+    const t = useTranslations('admin.quick_nav');
     const connectors = [
         {
-            title: "Workflows",
-            subtitle: "Automatización",
+            title: t('workflows.title'),
+            subtitle: t('workflows.subtitle'),
             href: "/admin/workflows",
             icon: <Zap className="text-orange-500" />,
             color: "from-orange-500/20 to-orange-500/5",
             borderColor: "group-hover:border-orange-500/50"
         },
         {
-            title: "Checklists",
-            subtitle: "Cumplimiento",
+            title: t('checklists.title'),
+            subtitle: t('checklists.subtitle'),
             href: "/admin/checklist-configs",
             icon: <ShieldCheck className="text-teal-500" />,
             color: "from-teal-500/20 to-teal-500/5",
             borderColor: "group-hover:border-teal-500/50"
         },
         {
-            title: "Intelligence",
-            subtitle: "IA Hub",
+            title: t('intelligence.title'),
+            subtitle: t('intelligence.subtitle'),
             href: "/admin/intelligence",
             icon: <BrainCircuit className="text-purple-500" />,
             color: "from-purple-500/20 to-purple-500/5",

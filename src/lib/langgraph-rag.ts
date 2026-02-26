@@ -2,13 +2,13 @@ import { StateGraph, END } from "@langchain/langgraph";
 import { Annotation } from "@langchain/langgraph";
 import { hybridSearch, performTechnicalSearch } from '@abd/rag-engine/server';
 import { RagResult } from '@abd/rag-engine';
-import { callGeminiMini, callGeminiStream } from "./llm";
-import { PromptService } from "./prompt-service";
+import { callGeminiMini, callGeminiStream } from "@/services/llm/llm-service";
+import { PromptService } from "@/services/llm/prompt-service";
 import { PROMPTS } from './prompts';
 import { logEvento } from "./logger";
 import { DEFAULT_MODEL } from "./constants/ai-models";
 import { RagEvaluationService } from "@/services/core/rag-evaluation-service";
-import { FactCheckerService } from "./rag/fact-checker-service";
+import { FactCheckerService } from "@/services/core/rag/fact-checker-service";
 
 /**
  * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)

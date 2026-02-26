@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -89,7 +88,7 @@ export function ConsumptionDashboard() {
     });
 
     const [downloading, setDownloading] = useState(false);
-    const [autoRefresh, setAutoRefresh] = useLocalStorage('admin-billing-autorefresh', false);
+    const [autoRefresh, setAutoRefresh] = useState(false);
 
     // Auto-refresh logic
     useEffect(() => {
@@ -155,7 +154,7 @@ export function ConsumptionDashboard() {
         setDownloading(true);
         try {
             const res = await fetch('/api/admin/billing/invoice-preview');
-            if (!res.ok) throw new Error('Error al generar preview');
+            if (!res.ok) throw new Error(t('invoice.error_desc'));
             const data = await res.json();
 
             // Generar PDF en cliente
@@ -193,11 +192,11 @@ export function ConsumptionDashboard() {
         return (
             <div className="p-6 rounded-lg border border-red-200 bg-red-50 text-red-800">
                 <h3 className="font-bold flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" /> Error cargando métricas
+                    <AlertTriangle className="h-5 w-5" /> {t('error_loading')}
                 </h3>
-                <p className="text-sm mt-1">{error || "Error desconocido"}</p>
+                <p className="text-sm mt-1">{error || t('unknown_error')}</p>
                 <Button variant="outline" size="sm" onClick={fetchStats} className="mt-4 bg-white hover:bg-red-50 border-red-200">
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Reintentar
+                    <RefreshCcw className="mr-2 h-4 w-4" /> {t('retry')}
                 </Button>
             </div>
         );
@@ -216,16 +215,7 @@ export function ConsumptionDashboard() {
     if (!stats) {
         return (
             <div className="p-6 text-center text-muted-foreground">
-                No hay datos de consumo disponibles.
-            </div>
-        );
-    }
-
-    // Defensive: If ready but no stats, show empty state or error
-    if (!stats) {
-        return (
-            <div className="p-6 text-center text-muted-foreground">
-                No hay datos de consumo disponibles.
+                {t('empty_state')}
             </div>
         );
     }
@@ -605,7 +595,7 @@ export function ConsumptionDashboard() {
                                 </Badge>
                                 {invoiceData?.isManual && (
                                     <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">
-                                        Modo Facturación Manual
+                                        {t('invoice.manual_mode')}
                                     </p>
                                 )}
                             </CardContent>

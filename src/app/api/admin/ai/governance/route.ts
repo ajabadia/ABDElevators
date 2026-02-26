@@ -40,11 +40,7 @@ export async function PATCH(req: Request) {
         await AiModelManager.updateTenantAiConfig(session as any, tenantId, body);
 
         // Optional: Run security inspection after config change
-        await SecureLoupeInspector.inspectContext({
-            source: 'AI_GOVERNANCE_PATCH',
-            action: 'CONFIG_UPDATE',
-            tenantId
-        });
+        // Removed `SecureLoupeInspector.inspectContext` because it does not exist.
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

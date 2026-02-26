@@ -24,7 +24,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
     return (
         <OnboardingContext.Provider value={{
-            currentStep: onboarding.currentStep,
+            currentStep: onboarding.currentStepIndex,
             userContext: onboarding.userContext,
             isCompleted: onboarding.isCompleted,
             isVisible: onboarding.isVisible,

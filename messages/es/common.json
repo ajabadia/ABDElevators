@@ -172,8 +172,22 @@
         "ask_title": "Haz tu primera pregunta",
         "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
         "explore_title": "Explora tu entorno",
-        "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!"
+        "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
+        "actions_title": "Acciones Rápidas",
+        "search_title": "Asistente Técnico",
+        "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+        "input_title": "Búsqueda Inteligente",
+        "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+        "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
+        "business_stats_title": "Métricas de Valor",
+        "business_stats_content": "Visualiza el ahorro de tiempo y la eficiencia ganada gracias a la automatización de la IA."
       }
+    },
+    "actions": {
+      "selectApp": "Seleccionar App",
+      "switchApp": "Cambiar Aplicación",
+      "loading": "Cargando...",
+      "signOut": "Cerrar Sesión"
     }
   },
   "help": {
@@ -184,12 +198,7 @@
         "title": "Subir Documentos Técnicos",
         "content": "Puedes subir PDFs, imágenes y documentos Word. El sistema analizará automáticamente el contenido y lo indexará para búsquedas futuras.",
         "example": "Ej: Manual ARCA II, esquemas de conexionado, procedimientos de mantenimiento",
-        "tips": [
-          "Usa archivos en buen estado (legibles, bien escaneados)",
-          "Nombres descriptivos ayudan a la búsqueda (ej: 'Manual_ARCA2_v3.pdf')",
-          "Máximo 50MB por archivo",
-          "PDFs con texto OCR se indexan mejor"
-        ],
+        "tips": "Usa archivos en buen estado (legibles, bien escaneados),Nombres descriptivos ayudan a la búsqueda (ej: 'Manual_ARCA2_v3.pdf'),Máximo 50MB por archivo,PDFs con texto OCR se indexan mejor",
         "learnMore": {
           "label": "Ver guía de formatos",
           "href": "/ayuda/formatos-soportados"
@@ -199,12 +208,7 @@
         "title": "Cómo Hacer Mejores Búsquedas",
         "content": "Escribe preguntas en lenguaje natural, como si hablaras con un técnico. El sistema buscará en todos tus documentos automáticamente.",
         "example": "✅ Buenos ejemplos:\n• ¿Cuál es el torque del motor principal?\n• Procedimiento de calibración de puertas\n• ¿Qué significa código E07?",
-        "tips": [
-          "Sé específico: incluye el modelo si es importante",
-          "Usa términos técnicos exactos",
-          "Puedes hacer seguimiento: '¿Y el tiempo de espera?'",
-          "Si no encuentras respuesta, intenta reformular"
-        ],
+        "tips": "Sé específico: incluye el modelo si es importante,Usa términos técnicos exactos,Puedes hacer seguimiento: '¿Y el tiempo de espera?',Si no encuentras respuesta, intenta reformular",
         "learnMore": {
           "label": "Tips avanzados de búsqueda",
           "href": "/ayuda/busquedas-avanzadas"
@@ -213,36 +217,22 @@
       "report-hub": {
         "title": "Generación de Informes",
         "content": "Crea documentos técnicos PDF basados en el análisis de tus activos de conocimiento.",
-        "tips": [
-          "Elige una plantilla según el tipo de análisis que necesites",
-          "Filtra por fecha para analizar periodos específicos",
-          "Los informes incluyen citas directas a los manuales"
-        ]
+        "tips": "Elige una plantilla según el tipo de análisis que necesites,Filtra por fecha para analizar periodos específicos,Los informes incluyen citas directas a los manuales"
       },
       "upload-dropzone": {
         "title": "Bóveda de Documentos",
         "content": "Arrastra archivos aquí para que el RAG los procese y puedas consultarlos.",
-        "tips": [
-          "Soportamos PDFs técnicos, planos y manuales",
-          "El procesado suele tardar entre 30 y 90 segundos"
-        ]
+        "tips": "Soportamos PDFs técnicos, planos y manuales,El procesado suele tardar entre 30 y 90 segundos"
       },
       "confidence-scores": {
         "title": "Niveles de Confianza",
         "content": "Indica qué tan seguro está el sistema de que la respuesta es exacta según los documentos.",
-        "tips": [
-          "Alta: Encontrado literalmente en el texto",
-          "Media: Inferido de múltiples fragmentos",
-          "Baja: Información vaga o ausente"
-        ]
+        "tips": "Alta: Encontrado literalmente en el texto,Media: Inferido de múltiples fragmentos,Baja: Información vaga o ausente"
       },
       "audit-logs": {
         "title": "Registro de Auditoría",
         "content": "Trazabilidad total de cada acción realizada en la plataforma para cumplimiento normativo.",
-        "tips": [
-          "Filtra por 'ERROR' para problemas críticos",
-          "Usa el correlationId para rastrear acciones de extremo a extremo"
-        ]
+        "tips": "Filtra por 'ERROR' para problemas críticos,Usa el correlationId para rastrear acciones de extremo a extremo"
       }
     }
   },
@@ -533,5 +523,24 @@
     "analyzeWait": "Esto puede tardar hasta 60 segundos dependiendo del tamaño.",
     "resultTitle": "Resultado del Análisis",
     "sourcesLabel": "Fuentes consultadas"
+  },
+  "verticals": {
+    "elevators": "Inteligencia de Ascensores",
+    "legal": "Mente Legal",
+    "clinical": "Córtex Clínico"
+  },
+  "breadcrumbs": {
+    "admin": "Administración",
+    "users": "Usuarios",
+    "prompts": "Prompts",
+    "dashboard": "Dashboard",
+    "inventory": "Inventario",
+    "studio": "Automation Studio",
+    "knowledge": "Conocimiento",
+    "logs": "Logs",
+    "intelligence": "Inteligencia",
+    "trends": "Tendencias",
+    "configurator": "Configurador",
+    "detail": "Detalle"
   }
 }

@@ -156,8 +156,22 @@
         "ask_title": "Ask your first question",
         "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
         "explore_title": "Explore your environment",
-        "explore_content": "We've customized your dashboard based on your role. You're all set to go!"
+        "explore_content": "We've customized your dashboard based on your role. You're all set to go!",
+        "actions_title": "Quick Actions",
+        "search_title": "Technical Assistant",
+        "search_content": "Here you can perform natural language queries on technical manuals.",
+        "input_title": "Smart Search",
+        "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
+        "actions_content": "Quickly access the most used functions: Search, File Upload, and Tickets.",
+        "business_stats_title": "Value Metrics",
+        "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
       }
+    },
+    "actions": {
+      "selectApp": "Select App",
+      "switchApp": "Switch Application",
+      "loading": "Loading...",
+      "signOut": "Sign Out"
     }
   },
   "help": {
@@ -508,5 +522,19 @@
     "analyzeWait": "This may take up to 60 seconds depending on the size.",
     "resultTitle": "Analysis Result",
     "sourcesLabel": "Consulted sources"
+  },
+  "breadcrumbs": {
+    "admin": "Administration",
+    "users": "Users",
+    "prompts": "Prompts",
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "studio": "Automation Studio",
+    "knowledge": "Knowledge",
+    "logs": "Logs",
+    "intelligence": "Intelligence",
+    "trends": "Trends",
+    "configurator": "Configurator",
+    "detail": "Detail"
   }
 }

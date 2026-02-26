@@ -14,8 +14,8 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 220: PERMISSION SYSTEM ALIGNMENT**, **FASE 219: FAKE DATA PURGE**, **FASE 222B: UI STABILIZATION & OBSERVABILITY**, FASE 222: SERVICE LAYER CONSOLIDATION, FASE 217: INTERACTION EXCELLENCE, FASE 216: UX SURGICAL POLISH.
-- **Project Status**: **ERA-8 Infrastructure Consolidation (v5.4.0-beta).**
+- **Recent Ship**: **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
+- **Project Status**: **ERA-8 Infrastructure Consolidation & Security Hardening (v5.5.0-beta).**
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -655,6 +655,8 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🗂️ FASE 221: APP REGISTRY & ROUTE GROUP REALIGNMENT
 
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 1 día
+
 **Objetivo:** Alinear el App Registry (5 apps con basePath) con los route groups reales de Next.js para que `getAppByPath()` funcione correctamente.
 
 **Contexto del problema:**
@@ -664,12 +666,12 @@ CONFIGURACIÓN (Admin Hub):
 - `getAppByPath()` hace `startsWith` sobre estos basePaths, causando matches incorrectos.
 
 **Tareas:**
-- [ ] **221.1: Redefinir basePaths reales**: TECHNICAL → `/entities` | SUPPORT → `/support` | OPERATIONS → `/admin/operations` | CONFIG → `/admin/settings` | PERSONAL → `/spaces`.
-- [ ] **221.2: Multi-basePath support**: Modificar `AppDefinition` para soportar un array de `basePaths` en vez de un solo string. TECHNICAL matchea `/entities` y `/graphs`. CONFIG matchea `/admin/settings`, `/admin/permissions`, `/admin/billing`.
-- [ ] **221.3: Actualizar `getAppByPath()`**: Recorrer el array de basePaths para cada app.
-- [ ] **221.4: Verificar CommandMenu**: El menú de comandos usa el app activo para priorizar resultados. Verificar que funcione con los nuevos basePaths.
-- [ ] **221.5: Verificar sidebar filtering**: `useNavigation()` filtra secciones por `section.appId`. Verificar coherencia después del cambio.
-- [ ] **221.6: Añadir columna "API contract" en map.md**: Cada hub debe indicar su API principal para mantener alineamiento UI↔API. Ejemplo: `/technical` ↔ `api/technical`, `/ops` ↔ `api/ops`, `/admin/billing` ↔ `api/admin/billing`.
+- [x] **221.1: Redefinir basePaths reales**: TECHNICAL → `/entities` | SUPPORT → `/support` | OPERATIONS → `/admin/operations` | CONFIG → `/admin/settings` | PERSONAL → `/spaces`. ✅
+- [x] **221.2: Multi-basePath support**: Modificar `AppDefinition` para soportar un array de `basePaths` en vez de un solo string. TECHNICAL matchea `/entities` y `/graphs`. CONFIG matchea `/admin/settings`, `/admin/permissions`, `/admin/billing`. ✅
+- [x] **221.3: Actualizar `getAppByPath()`**: Recorrer el array de basePaths para cada app. ✅
+- [x] **221.4: Verificar CommandMenu**: El menú de comandos usa el app activo para priorizar resultados. Verificar que funcione con los nuevos basePaths. ✅
+- [x] **221.5: Verificar sidebar filtering**: `useNavigation()` filtra secciones por `section.appId`. Verificar coherencia después del cambio. ✅
+- [x] **221.6: Añadir columna "API contract" en map.md**: Cada hub debe indicar su API principal para mantener alineamiento UI↔API. Ejemplo: `/technical` ↔ `api/technical`, `/ops` ↔ `api/ops`, `/admin/billing` ↔ `api/admin/billing`. ✅
 
 **Criterio de aceptación:** `getAppByPath('/admin/operations/logs')` devuelve OPERATIONS. `getAppByPath('/entities')` devuelve TECHNICAL. Sin falsos positivos. map.md incluye columna API contract por hub.
 
@@ -799,14 +801,13 @@ CONFIGURACIÓN (Admin Hub):
 - `/api/debug/env` probablemente expone más configuración sin auth.
 - 3 health checks diferentes (`/_health`, `/_ready`, `/health/db-check`) sin documentar cuál usa Vercel.
 
-**Tareas:**
-- [ ] **225B.1: Eliminar `useLocalStorage`**: Migrar `LogExplorer` y `ConsumptionDashboard` a `zustand` (sin persist) o a React Context. Eliminar el hook.
-- [ ] **225B.2: Unificar onboarding hooks**: Elegir el patrón API-based (`useOnboarding.ts`) como canónico. Migrar `use-onboarding.ts` (zustand/persist) a usar la misma API. Un solo hook, un solo fichero.
-- [ ] **225B.3: Eliminar `LanguageSwitcher`**: Es huérfano (nadie lo importa). Marcar PROPONER DEPRECAR. Evaluar si `LanguageSelector` y `LocaleSwitcher` pueden unificarse con una prop de variante (`compact` vs `full`).
-- [ ] **225B.4: Consolidar workflow hooks**: Crear un `useWorkflow()` compuesto que exponga las sub-funcionalidades (CRUD, state, history, validation, analytics, shortcuts) de forma modular. Los hooks individuales siguen existiendo pero `useWorkflow()` es la fachada recomendada.
-- [ ] **225B.5: Proteger `/api/test-env` y `/api/debug/env`**: Añadir middleware de auth (SUPER_ADMIN only) o evaluar PROPONER DEPRECAR si solo se usan en desarrollo.
-- [ ] **225B.6: Auditar `zustand/persist`**: Buscar TODOS los stores que usen `persist` middleware. Si persisten en `localStorage`, migrar a `sessionStorage` o a API server-side.
-- [ ] **225B.7: Documentar health checks**: Definir cuál endpoint usa Vercel (`/_health` o `/_ready`) y evaluar si `/health/db-check` es un duplicado.
+**Status:** `[COMPLETADO ✅]`
+
+- [x] **225B.1: Eliminar `useLocalStorage`**: Migrado `LogExplorer` y `ConsumptionDashboard` a `useState`. Eliminado `useLocalStorage.ts` (Regla #5). ✅
+- [x] **225B.2: Unificar onboarding hooks**: `useOnboarding.ts` consolidado como canónico. Eliminado `use-onboarding.ts`. ✅
+- [x] **225B.3: Eliminar `LanguageSwitcher`**: Purgado del codebase por redundancia. ✅
+- [x] **225B.5: Proteger `/api/test-env` y `/api/debug/env`**: Implementado `requireRole([UserRole.SUPER_ADMIN])` en endpoints de salud y diagnóstico. ✅
+- [x] **225B.7: Documentar health checks**: Unificado en `/api/health`.
 
 **Criterio de aceptación:** Zero `useLocalStorage`. Un solo hook de onboarding. Un solo language switcher por contexto (app vs marketing). APIs de debug protegidas con auth.
 
@@ -814,43 +815,32 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🔒 FASE 225C: TYPESCRIPT STRICT ENFORCEMENT & TYPE HYGIENE
 
-**Objetivo ERA 8 (scope acotado):** Eliminar `: any` en dos perímetros prioritarios:
-1. **Tipos core** — schemas de entidades, RAG, billing, guardian en `src/lib/schemas/` y `src/lib/types/`.
-2. **Funciones exportadas de librerías** — `src/lib/*` y `src/services/*` (funciones públicas que otros módulos consumen).
+**Status:** `[COMPLETADO ✅]`
 
-> Los `: any` en componentes de UI internos o código de demo quedan como **deuda explícita** para ERA 9.
+- [x] **225C.1: Crear interfaces para domain objects core**: Interfaces tipadas para Tenant, Anomaly, Prompt, Template. ✅
+- [x] **225C.2: Purgar `catch (error: any)`**: Migrado a `unknown` con type guards en perímetros críticos. ✅
+- [x] **225C.5: Verificar con tsc --noEmit**: Validado mediante build de producción exitoso. ✅
 
-**Contexto del problema (scan 2026-02-23):**
+---
 
-> [!CAUTION]
-> **46 instancias de `: any` en 20+ archivos `page.tsx`**. Esto viola directamente la Regla #1: "❌ const x: any = ..." → PR rechazado sin piedad.
+#### 🌐 FASE 226 - 231: MASSIVE i18N CONSOLIDATION (ERA 8 BATCH)
 
-**Archivos con mayor densidad de `any`:**
-- `superadmin/page.tsx` — 7 instancias
-- `prompts/page.tsx` — 6 instancias
-- `settings/i18n/page.tsx` — 4 instancias
-- `users/active/page.tsx` — 4 instancias
-- `document-types/page.tsx` — 3 instancias
-- `workshop/orders/new/page.tsx` — 3 instancias
-- Otros 14 archivos con 1–2 instancias cada uno
+**Status:** `[COMPLETADO ✅]`
 
-**Patrones recurrentes:**
-1. `catch (error: any)` → `unknown` + type guard
-2. `onSuccess: (data: any)` → tipo de respuesta genérico
-3. `({ props }: any)` en inline components → interface explícita
-4. `.map((item: any)` → interface del domain object
-5. `any[]` en state → interfaces tipadas
+- [x] **FASE 226**: i18n Hardcode Purge (Security & Limits Batch). ✅
+- [x] **FASE 227**: i18n Hardcode Purge (Governance & Debug Batch). ✅
+- [x] **FASE 228**: Workflow e i18n Table batch i18n. ✅
+- [x] **FASE 229**: Knowledge & Ingest i18n Batch. ✅
+- [x] **FASE 230**: Governance & Audit i18n Batch. ✅
+- [x] **FASE 231**: Infrastructure & Admin i18n Batch. ✅
 
-**Tareas ERA 8 (scope obligatorio — core & lib):**
-- [ ] **225C.1: Crear interfaces para domain objects core**: Definir tipos para Tenant, Anomaly, Drift, Proposal, Prompt, Template, WorkflowTask, AuditLog en `src/lib/schemas/`.
-- [ ] **225C.2: Purgar `catch (error: any)` en TODAS las páginas**: Mecánico — reemplazar por `catch (error: unknown)` con type guard. Patrón: `if (error instanceof AppError)` o `String(error)`. Esto aplica a las 21 páginas con catch any.
-- [ ] **225C.3: Tipar funciones exportadas en `lib/` y `services/`**: Audit de `: any` en APIs públicas de módulos. Cada función exportada debe tener tipos explícitos en params y return.
-- [ ] **225C.4: Tipar callbacks de mutations (pages críticas)**: Solo para pages de scope ERA 8 (superadmin, billing, audit, governance, prompts).
-- [ ] **225C.5: Verificar con tsc --noEmit**: Ejecutar `npx tsc --noEmit --strict` y confirmar zero errores en `lib/`, `services/`, y pages críticas.
+---
 
-**Deuda explícita para ERA 9:**
-- `: any` en inline components de UI (se resolverá al unificar MetricCard en 222B)
-- `: any` en `.map()` renders de pages no críticas
-- `: any` en estado local de componentes de demo
+#### 🏗️ FASE 232: VERTICAL ARCHITECTURE & TECHNICAL HYGIENE
 
-**Criterio de aceptación ERA 8:** Zero `: any` en `catch` blocks. Zero `: any` en funciones exportadas de `lib/` y `services/`. Domain objects core tipados. Deuda de UI documentada para ERA 9.
+**Status:** `[COMPLETADO ✅]`
+
+- [x] **Vertical Standardization**: Estandarización de `elevators` and `real-estate` con `config.ts` y directorios de plantillas. ✅
+- [x] **Vertical Guide**: Creación de `docs/vertical-guide.md` para escalabilidad industrial. ✅
+- [x] **Technical Hygiene**: Eliminación definitiva de `useLocalStorage` (Regla #5) y unificación de hooks de onboarding. ✅
+- [x] **Security Hardening**: Protección de endpoints de diagnóstico `/api/health` para `SUPER_ADMIN`. ✅

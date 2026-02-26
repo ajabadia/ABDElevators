@@ -15,7 +15,7 @@ import { VectorSearchService } from "./vector-search";
 import { KeywordSearchService } from "./keyword-search";
 import { MultilingualSearchService } from "./multilingual-search";
 import { withSpan } from "@/lib/tracing";
-import { PromptService } from "@/lib/prompt-service";
+import { PromptService } from "@/services/llm/prompt-service";
 import { RagResult } from "./types";
 
 const tracer = trace.getTracer('abd-rag-platform');
@@ -277,7 +277,7 @@ export async function hybridSearch(
         let hydeQuery = query;
         try {
             if (onTrace) onTrace("HYDE: Generando respuesta hipotética para mejorar búsqueda semántica...");
-            const { callGeminiMini } = await import('@/lib/llm');
+            const { callGeminiMini } = await import('@/services/llm/llm-service');
             const { text: hydePrompt } = await PromptService.getRenderedPrompt('RAG_HYDE_GENERATOR', { query }, tenantId);
             const hypotheticalAnswer = await callGeminiMini(hydePrompt, tenantId, { correlationId, temperature: 0.1 });
             hydeQuery = `${query}\n\n[HYDE]: ${hypotheticalAnswer}`;

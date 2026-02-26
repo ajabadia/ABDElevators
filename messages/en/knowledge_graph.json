@@ -62,5 +62,11 @@
       "connect_nodes": "Click 2 nodes to connect",
       "delete_sidebar": "Use sidebar to delete"
     }
+  },
+  "bulk": {
+    "selected": "{count} selected",
+    "delete": "Delete",
+    "merge": "Merge",
+    "merge_error": "Selection error: exactly 2 nodes required for merge"
   }
 }

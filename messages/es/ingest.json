@@ -16,7 +16,14 @@
     "version": "Versión Doc.",
     "placeholder": "Seleccionar...",
     "scope": "Alcance del Conocimiento",
-    "industry": "Industria / Sector"
+    "industry": "Industria / Sector",
+    "types": {
+      "manual": "Manual Técnico",
+      "drawing": "Plano / Esquema",
+      "certificate": "Certificado / Normativa",
+      "circular": "Circular Técnica",
+      "other": "Otros Documentos"
+    }
   },
   "status": {
     "error": "Error de Ingesta",
@@ -25,7 +32,12 @@
     "duplicate_desc": "Procesado instantáneamente (Smart Ingest).",
     "success_desc": "Procesando e indexando fragmentos...",
     "uploading": "IA Procesando...",
-    "processing_note": "Este proceso puede tardar 1-2 min."
+    "processing_note": "Este proceso puede tardar 1-2 min.",
+    "duplicate_toast": {
+      "title": "Documento Duplicado",
+      "description": "El documento ya existe y ha sido clonado para tu organización."
+    },
+    "unknown_type": "Tipo Desconocido"
   },
   "title": "Subir Documentación Técnica",
   "description": "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente.",

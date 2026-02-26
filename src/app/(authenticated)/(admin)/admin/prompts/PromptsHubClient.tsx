@@ -206,21 +206,21 @@ export function PromptsHubClient() {
                                         <ShieldCheck className="w-6 h-6 text-teal-600" />
                                     </div>
                                     <AlertDialogTitle className="text-2xl font-black tracking-tight">
-                                        ¿Ejecutar Sincronización Global?
+                                        {t('sync_modal.title')}
                                     </AlertDialogTitle>
                                     <AlertDialogDescription className="text-base text-muted-foreground">
-                                        Esta acción escarpeará todos los prompts maestros en <code className="bg-muted px-1 rounded text-primary">src/lib/prompts.ts</code> y los cargará en la base de datos para este tenant.
+                                        {t('sync_modal.description', { codePath: 'src/lib/prompts.ts' })}
                                         <br /><br />
-                                        <span className="font-bold text-foreground">Gobernanza:</span> Si un prompt en la DB tiene una versión mayor que el código, no será sobrescrito. Los prompts nuevos serán creados automáticamente.
+                                        <span className="font-bold text-foreground">{t('sync_modal.governance')}</span> {t('sync_modal.governance_desc')}
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="gap-2">
-                                    <AlertDialogCancel className="rounded-xl h-12 font-bold">Cancelar</AlertDialogCancel>
+                                    <AlertDialogCancel className="rounded-xl h-12 font-bold">{t('sync_modal.cancel')}</AlertDialogCancel>
                                     <AlertDialogAction
                                         onClick={handleSyncFromCode}
                                         className="rounded-xl h-12 font-bold bg-teal-600 hover:bg-teal-700 text-white"
                                     >
-                                        Sincronizar ahora
+                                        {t('sync_modal.confirm')}
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
@@ -328,14 +328,14 @@ export function PromptsHubClient() {
                                     onChange={e => setIndustryFilter(e.target.value)}
                                     className="w-full bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800 rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 px-3 focus:border-teal-500 outline-none text-teal-700 dark:text-teal-400"
                                 >
-                                    <option value="all">{t('filters.industry')}</option>
-                                    <option value="GENERIC">Genérico</option>
-                                    <option value="ELEVATORS">Ascensores</option>
-                                    <option value="LEGAL">Legal</option>
-                                    <option value="BANKING">Banca</option>
-                                    <option value="INSURANCE">Seguros</option>
-                                    <option value="IT">IT</option>
-                                    <option value="MEDICAL">Médico</option>
+                                    <option value="all">{t('industries.all')}</option>
+                                    <option value="GENERIC">{t('industries.GENERIC')}</option>
+                                    <option value="ELEVATORS">{t('industries.ELEVATORS')}</option>
+                                    <option value="LEGAL">{t('industries.LEGAL')}</option>
+                                    <option value="BANKING">{t('industries.BANKING')}</option>
+                                    <option value="INSURANCE">{t('industries.INSURANCE')}</option>
+                                    <option value="IT">{t('industries.IT')}</option>
+                                    <option value="MEDICAL">{t('industries.MEDICAL')}</option>
                                 </select>
                             </div>
                         </div>

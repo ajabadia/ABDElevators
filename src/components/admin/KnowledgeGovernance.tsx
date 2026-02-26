@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIDecisionAudit } from '@/types/governance';
+import { useTranslations } from 'next-intl';
 
 export function KnowledgeGovernance() {
+    const t = useTranslations('admin.knowledge_governance');
     const [logs, setLogs] = useState<AIDecisionAudit[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -55,9 +57,9 @@ export function KnowledgeGovernance() {
                 <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
                         <ShieldCheck className="text-teal-600" size={24} />
-                        Gobierno de Conocimiento & IA
+                        {t('title')}
                     </h3>
-                    <p className="text-slate-500 text-sm">Auditoría y control de políticas sobre decisiones autónomas.</p>
+                    <p className="text-slate-500 text-sm">{t('desc')}</p>
                 </div>
             </div>
 
@@ -65,8 +67,8 @@ export function KnowledgeGovernance() {
                 {logs.length === 0 ? (
                     <ContentCard className="p-12 text-center border-dashed border-2 bg-slate-50/50 shadow-none">
                         <History className="mx-auto text-slate-300 mb-4" size={40} />
-                        <h4 className="font-bold text-slate-900">Sin actividad reciente</h4>
-                        <p className="text-sm text-slate-500">No se han registrado acciones de IA bajo supervisión de gobierno.</p>
+                        <h4 className="font-bold text-slate-900">{t('empty_title')}</h4>
+                        <p className="text-sm text-slate-500">{t('empty_desc')}</p>
                     </ContentCard>
                 ) : (
                     logs.map((log) => (
@@ -95,11 +97,11 @@ export function KnowledgeGovernance() {
                                         </div>
                                         <h4 className="font-extrabold text-slate-900 dark:text-white capitalize leading-tight">
                                             {log.actionType.replace('_', ' ')}
-                                            <span className="text-slate-400 font-medium ml-2">en {log.entitySlug}</span>
+                                            <span className="text-slate-400 font-medium ml-2">{t('in_entity')} {log.entitySlug}</span>
                                         </h4>
                                         <div className="text-xs text-slate-500 flex items-center gap-4">
                                             <span className="flex items-center gap-1 font-semibold">
-                                                Confianza: {(log.confidence * 100).toFixed(1)}%
+                                                {t('confidence')}: {(log.confidence * 100).toFixed(1)}%
                                             </span>
                                             <span className="text-slate-300">|</span>
                                             <span className="bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded font-mono text-[9px]">

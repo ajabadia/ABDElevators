@@ -167,7 +167,7 @@ export function AppSidebar() {
                             {!isCollapsed && (
                                 <div className="flex flex-1 items-center justify-between overflow-hidden">
                                     <span className="text-xs font-bold truncate">
-                                        {activeApp ? tApps(`${activeApp.id.toLowerCase()}.name`) : 'Select App'}
+                                        {activeApp ? tApps(`${activeApp.id.toLowerCase()}.name`) : t("actions.selectApp")}
                                     </span>
                                     <ChevronDown size={14} className="text-muted-foreground opacity-50 transition-transform group-data-[state=open]:rotate-180" />
                                 </div>
@@ -176,13 +176,13 @@ export function AppSidebar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56 bg-sidebar border-sidebar-border text-sidebar-foreground">
                         <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 px-2 py-1.5">
-                            Switch Application
+                            {t("actions.switchApp")}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-sidebar-border" />
                         {Object.values(APP_REGISTRY).map((app) => (
                             <DropdownMenuItem
                                 key={app.id}
-                                onClick={() => handleAppSwitch(app.basePath)}
+                                onClick={() => handleAppSwitch(app.basePaths[0])}
                                 className={cn(
                                     "gap-3 cursor-pointer focus:bg-sidebar-accent focus:text-sidebar-accent-foreground",
                                     activeApp?.id === app.id && "bg-sidebar-accent/50 font-bold"
@@ -261,7 +261,7 @@ export function AppSidebar() {
                                 activeApp ? activeApp.color.replace('text-', 'bg-') : "bg-sidebar-primary"
                             )}></div>
                             <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter truncate opacity-70">
-                                {userRole || 'Loading...'}
+                                {userRole || t("actions.loading")}
                             </div>
                         </div>
                     )}
@@ -273,7 +273,7 @@ export function AppSidebar() {
                         )}
                     >
                         <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-                        {!isCollapsed && <span className="text-sm font-semibold">Sign Out</span>}
+                        {!isCollapsed && <span className="text-sm font-semibold">{t("actions.signOut")}</span>}
                     </button>
                 </div>
             </div>

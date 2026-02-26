@@ -2,7 +2,7 @@
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.4.0** introduce la **Consolidación de Infraestructura y Estabilización UI (FASE 222-222B)**, con una arquitectura de servicios limpia, telemetría estructurada y unificación total de notificaciones con Sonner.
+Esta versión **v5.5.0** introduce el **Alineamiento de Arquitectura Vertical e Higiene Técnica (FASE 232)**, estandarizando la expansión industrial, unificando el motor de onboarding y blindando endpoints críticos de diagnóstico.
 
 ## 🚀 Inicio Rápido
 
@@ -194,6 +194,7 @@ src/
 - ✅ **UX Surgical Polish & Interaction Excellence (Phase 216-217)**: Navegación por teclado avanzada (CMD+K), resaltado multi-modal de fuentes, sugerencias dinámicas agénticas y predicción de tiempo de ingesta (ETA).
 - ✅ **Infrastructure Consolidation (Phase 222-222B)**: Service layer clean-up, multi-tenant data isolation enforcement, structured API logging (`logEvento`), and UI DRY patterns with atomic `<HubPage>` and `<MetricCard>` components. Universal notification system with Sonner.
 - ✅ **Guardian Permission Alignment (Phase 220)**: Unified ABAC policy enforcement across Sidebar and Backend. Robust server-side protection for all critical administrative routes (Billing, Audit, Security, Organizations, AI Governance, Prompts, SuperAdmin). High-performance bulk permission checks.
+- ✅ **Vertical Architecture & Tech Hygiene (Phase 232)**: Standardized industry extensions (`elevators`, `real-estate`), unified canonical onboarding hooks, and total eradication of `localStorage` (Regla #5 compliance). Hardened diagnostic APIs for `SUPER_ADMIN`.
 
 ## 🔧 Scripts Disponibles
 

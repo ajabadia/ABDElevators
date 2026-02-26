@@ -1,0 +1,473 @@
+
+> project_init@0.1.0 build
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Turbopack build encountered 1 warnings:
+./src/app/api/billing/webhook/route.ts:56:14
+Next.js can't recognize the exported `config` field in route. Page config in `config` is deprecated and ignored, use individual exports instead.
+[0m [90m 54 |[39m
+ [90m 55 |[39m [90m// Ensure raw body is preserved (though in App Router we use req.text() above)[39m
+[31m[1m>[22m[39m[90m 56 |[39m [36mexport[39m [36mconst[39m config [33m=[39m {
+ [90m    |[39m              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 57 |[39m     api[33m:[39m {
+ [90m 58 |[39m         bodyParser[33m:[39m [36mfalse[39m[33m,[39m
+ [90m 59 |[39m     }[33m,[39m[0m
+
+The exported configuration object in a source file needs to have a very specific format from which some properties can be statically parsed at compiled-time.
+
+https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+
+
+
+> Build error occurred
+Error: Turbopack build failed with 20 errors:
+./src/services/ingest/knowledge-review-service.ts:1:1
+Module not found: Can't resolve '../db-tenant'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { getTenantCollection } [36mfrom[39m [32m'../db-tenant'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mKnowledgeAsset[39m[33m,[39m [33mKnowledgeAssetSchema[39m } [36mfrom[39m [32m'../schemas/knowledge'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mAppError[39m } [36mfrom[39m [32m'../errors'[39m[33m;[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/ingest/knowledge-review-service.ts
+    ./src/app/api/admin/knowledge-assets/[id]/review/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/ingest/knowledge-review-service.ts:4:1
+Module not found: Can't resolve '../errors'
+[0m [90m 2 |[39m [36mimport[39m { [33mKnowledgeAsset[39m[33m,[39m [33mKnowledgeAssetSchema[39m } [36mfrom[39m [32m'../schemas/knowledge'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mAppError[39m } [36mfrom[39m [32m'../errors'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m'../logger'[39m[33m;[39m
+ [90m 6 |[39m [36mimport[39m crypto [36mfrom[39m [32m'crypto'[39m[33m;[39m
+ [90m 7 |[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/ingest/knowledge-review-service.ts
+    ./src/app/api/admin/knowledge-assets/[id]/review/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/ingest/knowledge-review-service.ts:5:1
+Module not found: Can't resolve '../logger'
+[0m [90m 3 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mAppError[39m } [36mfrom[39m [32m'../errors'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m'../logger'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m crypto [36mfrom[39m [32m'crypto'[39m[33m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [90m/**[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/ingest/knowledge-review-service.ts
+    ./src/app/api/admin/knowledge-assets/[id]/review/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/lib/access-control.ts:3:1
+Module not found: Can't resolve './billing-service'
+[0m [90m 1 |[39m [36mimport[39m { connectDB } [36mfrom[39m [32m"./db"[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m { [33mAppError[39m } [36mfrom[39m [32m"./errors"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { [33mBillingService[39m } [36mfrom[39m [32m"./billing-service"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 4 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m"./logger"[39m[33m;[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [90m/**[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/access-control.ts
+    ./src/app/api/technical/entities/[id]/analyze/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/admin/billing-engine.ts:7:1
+Module not found: Can't resolve './billing/BillingPolicy'
+[0m [90m  5 |[39m     [33mTenantCredit[39m
+ [90m  6 |[39m } [36mfrom[39m [32m'@/lib/schemas'[39m[33m;[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { [33mBillingPolicy[39m } [36mfrom[39m [32m'./billing/BillingPolicy'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m
+ [90m  9 |[39m [36mexport[39m [36minterface[39m [33mBillingResult[39m {
+ [90m 10 |[39m     totalCost[33m:[39m number[33m;[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/admin/billing-engine.ts
+    ./src/core/application/billing/BillingAdminService.ts
+    ./src/app/api/admin/billing/contracts/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/auth/UserService.ts:1:1
+Module not found: Can't resolve './db'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { connectAuthDB } [36mfrom[39m [32m'./db'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { [33mNotFoundError[39m } [36mfrom[39m [32m'./errors'[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/auth/UserService.ts
+    ./src/app/api/admin/users/[id]/upload-photo/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/support/ContactService.ts:1:1
+Module not found: Can't resolve './db-tenant'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { getTenantCollection } [36mfrom[39m [32m'./db-tenant'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mContactRequestSchema[39m[33m,[39m [33mContactRequest[39m } [36mfrom[39m [32m'@/lib/schemas'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m'@/lib/logger'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/support/ContactService.ts
+    ./src/app/api/admin/contacts/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/auth/UserService.ts:3:1
+Module not found: Can't resolve './errors'
+[0m [90m 1 |[39m [36mimport[39m { connectAuthDB } [36mfrom[39m [32m'./db'[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m { [33mObjectId[39m } [36mfrom[39m [32m'mongodb'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { [33mNotFoundError[39m } [36mfrom[39m [32m'./errors'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 4 |[39m
+ [90m 5 |[39m [90m/**[39m
+ [90m 6 |[39m [90m * Servicio para la gestión de usuarios y perfiles.[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/auth/UserService.ts
+    ./src/app/api/admin/users/[id]/upload-photo/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/security/security-service.ts:2:1
+Module not found: Can't resolve './errors'
+[0m [90m 1 |[39m [36mimport[39m crypto [36mfrom[39m [32m'crypto'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { [33mAppError[39m } [36mfrom[39m [32m'./errors'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mconst[39m [33mALGORITHM[39m [33m=[39m [32m'aes-256-gcm'[39m[33m;[39m
+ [90m 5 |[39m [36mconst[39m [33mIV_LENGTH[39m [33m=[39m [35m12[39m[33m;[39m [90m// Standard for GCM[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/security/security-service.ts
+    ./src/app/api/core/entities/[type]/[id]/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/lib/langgraph-rag.ts:6:1
+Module not found: Can't resolve './prompt-service'
+[0m [90m 4 |[39m [36mimport[39m { [33mRagResult[39m } [36mfrom[39m [32m'@abd/rag-engine'[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { callGeminiMini[33m,[39m callGeminiStream } [36mfrom[39m [32m"@/services/llm/llm-service"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m"./prompt-service"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mPROMPTS[39m } [36mfrom[39m [32m'./prompts'[39m[33m;[39m
+ [90m 8 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m"./logger"[39m[33m;[39m
+ [90m 9 |[39m [36mimport[39m { [33mDEFAULT_MODEL[39m } [36mfrom[39m [32m"./constants/ai-models"[39m[33m;[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/langgraph-rag.ts
+    ./src/app/api/technical/rag/chat/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/services/ingest/ChecklistExtractor.ts:12:1
+Module not found: Can't resolve './prompt-service'
+[0m [90m 10 |[39m
+ [90m 11 |[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m"./prompt-service"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m
+ [90m 14 |[39m [90m/**[39m
+ [90m 15 |[39m [90m * Zod schema for the function input. All inputs are validated before any processing.[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/services/ingest/ChecklistExtractor.ts
+    ./src/app/api/technical/entities/[id]/checklist/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/lib/langgraph-rag.ts:11:1
+Module not found: Can't resolve './rag/fact-checker-service'
+[0m [90m  9 |[39m [36mimport[39m { [33mDEFAULT_MODEL[39m } [36mfrom[39m [32m"./constants/ai-models"[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { [33mRagEvaluationService[39m } [36mfrom[39m [32m"@/services/core/rag-evaluation-service"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mFactCheckerService[39m } [36mfrom[39m [32m"./rag/fact-checker-service"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m
+ [90m 13 |[39m [90m/**[39m
+ [90m 14 |[39m [90m * Estado del Grafo RAG Agéntico (Visión 2.0 - Fase 26)[39m[0m
+
+
+
+Import trace:
+  App Route:
+    ./src/lib/langgraph-rag.ts
+    ./src/app/api/technical/rag/chat/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/rag-engine/src/query-expansion.ts:2:1
+Module not found: Can't resolve '@/lib/prompt-service'
+[0m [90m 1 |[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m"@/lib/prompt-service"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { callGeminiMini } [36mfrom[39m [32m"@/services/llm/llm-service"[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m"@abd/platform-core/server"[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { trace } [36mfrom[39m [32m'@opentelemetry/api'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/prompt-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/rag-engine/src/query-expansion.ts
+    ./packages/rag-engine/src/rag-service.ts
+    ./src/app/api/user/search/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/rag-engine/src/rag-service.ts:18:1
+Module not found: Can't resolve '@/lib/prompt-service'
+[0m [90m 16 |[39m [36mimport[39m { [33mMultilingualSearchService[39m } [36mfrom[39m [32m"./multilingual-search"[39m[33m;[39m
+ [90m 17 |[39m [36mimport[39m { withSpan } [36mfrom[39m [32m"@/lib/tracing"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 18 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m"@/lib/prompt-service"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 19 |[39m [36mimport[39m { [33mRagResult[39m } [36mfrom[39m [32m"./types"[39m[33m;[39m
+ [90m 20 |[39m
+ [90m 21 |[39m [36mconst[39m tracer [33m=[39m trace[33m.[39mgetTracer([32m'abd-rag-platform'[39m)[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/prompt-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/rag-engine/src/rag-service.ts
+    ./src/app/api/user/search/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/rag-engine/src/reranking.ts:2:1
+Module not found: Can't resolve '@/lib/prompt-service'
+[0m [90m 1 |[39m
+[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m"@/lib/prompt-service"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { callGeminiMini } [36mfrom[39m [32m"@/services/llm/llm-service"[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m"@abd/platform-core/server"[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { trace } [36mfrom[39m [32m'@opentelemetry/api'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/prompt-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/rag-engine/src/reranking.ts
+    ./packages/rag-engine/src/rag-service.ts
+    ./src/app/api/user/search/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/workflow-engine/src/orchestrator.ts:3:1
+Module not found: Can't resolve '@/lib/prompt-service'
+[0m [90m 1 |[39m [36mimport[39m { z } [36mfrom[39m [32m'zod'[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m { [33mWorkflowDefinition[39m[33m,[39m [33mWorkflowDefinitionSchema[39m } [36mfrom[39m [32m'@/lib/schemas/workflow'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m'@/lib/prompt-service'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 4 |[39m [36mimport[39m { [33mPROMPTS[39m } [36mfrom[39m [32m'@/lib/prompts'[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m'@abd/platform-core/server'[39m[33m;[39m
+ [90m 6 |[39m [36mimport[39m { safeParseLlmJson } [36mfrom[39m [32m'@/lib/safe-llm-json'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/prompt-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/workflow-engine/src/orchestrator.ts
+    ./packages/workflow-engine/src/server.ts
+    ./src/app/api/admin/cases/[id]/workflow/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/rag-engine/src/multilingual-search.ts:4:1
+Module not found: Can't resolve '@/lib/usage-service'
+[0m [90m 2 |[39m [36mimport[39m { connectDB[33m,[39m logEvento } [36mfrom[39m [32m"@abd/platform-core/server"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { trace[33m,[39m [33mSpanStatusCode[39m } [36mfrom[39m [32m'@opentelemetry/api'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mUsageService[39m } [36mfrom[39m [32m"@/lib/usage-service"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mRagResult[39m } [36mfrom[39m [32m"./types"[39m[33m;[39m
+ [90m 6 |[39m
+ [90m 7 |[39m [36mconst[39m tracer [33m=[39m trace[33m.[39mgetTracer([32m'abd-rag-platform'[39m)[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/usage-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/rag-engine/src/multilingual-search.ts
+    ./src/app/api/v1/rag/query/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/workflow-engine/src/execution-engine.ts:5:1
+Module not found: Can't resolve '@/lib/workflow-analytics-service'
+[0m [90m 3 |[39m [36mimport[39m { [33mGovernanceEngine[39m } [36mfrom[39m [32m'@/core/engine/GovernanceEngine'[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { [33mAIWorkflow[39m[33m,[39m [33mWorkflowAction[39m[33m,[39m [33mWorkflowActionType[39m[33m,[39m [33mWorkflowTrigger[39m[33m,[39m [33mWorkflowTriggerType[39m } [36mfrom[39m [32m'./types'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mWorkflowAnalyticsService[39m } [36mfrom[39m [32m'@/lib/workflow-analytics-service'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { [33mMongoAIWorkflowRepository[39m } [36mfrom[39m [32m'@/core/adapters/persistence/MongoAIWorkflowRepository'[39m[33m;[39m
+ [90m 7 |[39m [36mimport[39m { [33mMongoCaseWorkflowRepository[39m } [36mfrom[39m [32m'@/core/adapters/persistence/MongoCaseWorkflowRepository'[39m[33m;[39m
+ [90m 8 |[39m [36mimport[39m { [33mWorkflowTask[39m[33m,[39m [33mWorkflowTaskStatus[39m } [36mfrom[39m [32m'./schemas'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/lib/workflow-analytics-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/workflow-engine/src/execution-engine.ts
+    ./packages/workflow-engine/src/server.ts
+    ./src/app/api/cases/[id]/transicion/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/workflow-engine/src/orchestrator.ts:9:1
+Module not found: Can't resolve '@/lib/workflow-definition-validator'
+[0m [90m  7 |[39m [36mimport[39m { [33mValidationError[39m } [36mfrom[39m [32m'@abd/platform-core'[39m[33m;[39m
+ [90m  8 |[39m [36mimport[39m { callGeminiMini } [36mfrom[39m [32m'@/services/llm/llm-service'[39m[33m;[39m
+[31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m { validateWorkflowDefinition } [36mfrom[39m [32m'@/lib/workflow-definition-validator'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 10 |[39m [36mimport[39m {
+ [90m 11 |[39m     [33mWorkflowSuggestionSchema[39m[33m,[39m
+ [90m 12 |[39m     [33mWorkflowProposalSchema[39m[33m,[39m[0m
+
+Import map: aliased to relative './src/lib/workflow-definition-validator' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/workflow-engine/src/orchestrator.ts
+    ./packages/workflow-engine/src/server.ts
+    ./src/app/api/admin/cases/[id]/workflow/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./packages/workflow-engine/src/case-engine.ts:7:1
+Module not found: Can't resolve '@/lib/workflow-llm-node-service'
+[0m [90m  5 |[39m [36mimport[39m { [33mMongoAIWorkflowRepository[39m } [36mfrom[39m [32m'@/core/adapters/persistence/MongoAIWorkflowRepository'[39m[33m;[39m
+ [90m  6 |[39m [36mimport[39m { [33mMongoCaseWorkflowRepository[39m } [36mfrom[39m [32m'@/core/adapters/persistence/MongoCaseWorkflowRepository'[39m[33m;[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { [33mWorkflowLLMNodeService[39m } [36mfrom[39m [32m'@/lib/workflow-llm-node-service'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m [36mimport[39m { [33mWorkflowTaskService[39m } [36mfrom[39m [32m'@/services/ops/WorkflowTaskService'[39m[33m;[39m
+ [90m  9 |[39m
+ [90m 10 |[39m [90m/**[39m[0m
+
+Import map: aliased to relative './src/lib/workflow-llm-node-service' inside of [project]/
+
+
+Import trace:
+  App Route:
+    ./packages/workflow-engine/src/case-engine.ts
+    ./src/app/api/admin/workflow-tasks/[id]/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./src/services/ingest/knowledge-review-service.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/ingest/knowledge-review-service.ts:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/ingest/knowledge-review-service.ts:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/access-control.ts:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/admin/billing-engine.ts:7:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/auth/UserService.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/support/ContactService.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/auth/UserService.ts:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/security/security-service.ts:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/langgraph-rag.ts:6:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/services/ingest/ChecklistExtractor.ts:12:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/langgraph-rag.ts:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/rag-engine/src/query-expansion.ts:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/rag-engine/src/rag-service.ts:18:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/rag-engine/src/reranking.ts:2:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/workflow-engine/src/orchestrator.ts:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/rag-engine/src/multilingual-search.ts:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/workflow-engine/src/execution-engine.ts:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/workflow-engine/src/orchestrator.ts:9:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./packages/workflow-engine/src/case-engine.ts:7:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

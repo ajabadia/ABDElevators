@@ -81,7 +81,7 @@ export default function HubDashboard() {
             id: "tasks",
             title: t("cards.tasks.title"),
             description: t("cards.tasks.description"),
-            href: APP_REGISTRY[AppId.TASKS].basePath,
+            href: APP_REGISTRY[AppId.TASKS].basePaths[0],
             icon: <TasksIcon className="w-6 h-6" />,
             color: "border-l-primary",
             roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPLIANCE, UserRole.REVIEWER, UserRole.TECHNICAL]
@@ -90,7 +90,7 @@ export default function HubDashboard() {
             id: "knowledge",
             title: t("cards.knowledge.title"),
             description: t("cards.knowledge.description"),
-            href: APP_REGISTRY[AppId.KNOWLEDGE].basePath,
+            href: APP_REGISTRY[AppId.KNOWLEDGE].basePaths[0],
             icon: <KnowledgeIcon className="w-6 h-6" />,
             color: "border-l-secondary",
             roles: [UserRole.ADMIN, UserRole.ENGINEERING, UserRole.SUPER_ADMIN, UserRole.TECHNICAL]
@@ -99,7 +99,7 @@ export default function HubDashboard() {
             id: "search",
             title: t("cards.search.title"),
             description: t("cards.search.description"),
-            href: APP_REGISTRY[AppId.SEARCH].basePath,
+            href: APP_REGISTRY[AppId.SEARCH].basePaths[0],
             icon: <SearchIcon className="w-6 h-6" />,
             color: "border-l-accent"
         },
@@ -107,7 +107,7 @@ export default function HubDashboard() {
             id: "spaces",
             title: t("cards.spaces.title"),
             description: t("cards.spaces.description"),
-            href: APP_REGISTRY[AppId.PERSONAL].basePath,
+            href: APP_REGISTRY[AppId.PERSONAL].basePaths[0],
             icon: <PersonalIcon className="w-6 h-6" />,
             color: "border-l-muted",
             inactive: true
@@ -123,7 +123,7 @@ export default function HubDashboard() {
             id: "organizations",
             title: t("cards.organizations.title"),
             description: t("cards.organizations.description"),
-            href: APP_REGISTRY[AppId.ORGANIZATIONS].basePath,
+            href: APP_REGISTRY[AppId.ORGANIZATIONS].basePaths[0],
             icon: <OrgIcon className="w-6 h-6" />,
             color: "border-l-primary",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
@@ -132,7 +132,7 @@ export default function HubDashboard() {
             id: "users",
             title: t("cards.users.title"),
             description: t("cards.users.description"),
-            href: APP_REGISTRY[AppId.USERS].basePath,
+            href: APP_REGISTRY[AppId.USERS].basePaths[0],
             icon: <UsersIcon className="w-6 h-6" />,
             color: "border-l-secondary",
             roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
@@ -176,7 +176,7 @@ export default function HubDashboard() {
             id: "guardian",
             title: t("cards.guardian.title"),
             description: t("cards.guardian.description"),
-            href: APP_REGISTRY[AppId.CONFIG].basePath,
+            href: APP_REGISTRY[AppId.CONFIG].basePaths[0],
             icon: <ConfigIcon className="w-6 h-6" />,
             color: "border-l-destructive",
             roles: [UserRole.SUPER_ADMIN],

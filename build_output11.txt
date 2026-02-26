@@ -1,0 +1,40 @@
+
+> project_init@0.1.0 build
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Turbopack build encountered 1 warnings:
+./src/app/api/billing/webhook/route.ts:56:14
+Next.js can't recognize the exported `config` field in route. Page config in `config` is deprecated and ignored, use individual exports instead.
+[0m [90m 54 |[39m
+ [90m 55 |[39m [90m// Ensure raw body is preserved (though in App Router we use req.text() above)[39m
+[31m[1m>[22m[39m[90m 56 |[39m [36mexport[39m [36mconst[39m config [33m=[39m {
+ [90m    |[39m              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 57 |[39m     api[33m:[39m {
+ [90m 58 |[39m         bodyParser[33m:[39m [36mfalse[39m[33m,[39m
+ [90m 59 |[39m     }[33m,[39m[0m
+
+The exported configuration object in a source file needs to have a very specific format from which some properties can be statically parsed at compiled-time.
+
+https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+
+
+✓ Compiled successfully in 66s
+  Running TypeScript ...
+Failed to compile.
+
+./src/services/infra/llm/prompt-runner.ts:3:30
+Type error: Cannot find module '@/services/llm/llm-service/json-utils' or its corresponding type declarations.
+
+[0m [90m 1 |[39m [36mimport[39m { [33mPromptService[39m } [36mfrom[39m [32m'@/services/llm/prompt-service'[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m { getGenAI[33m,[39m runShadowCall } [36mfrom[39m [32m'@/lib/gemini-client'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { [33mLlmJsonUtils[39m } [36mfrom[39m [32m'@/services/llm/llm-service/json-utils'[39m[33m;[39m
+ [90m   |[39m                              [31m[1m^[22m[39m
+ [90m 4 |[39m [36mimport[39m { logEvento } [36mfrom[39m [32m'@/lib/logger'[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { [33mCorrelationIdService[39m } [36mfrom[39m [32m'@/services/observability/CorrelationIdService'[39m[33m;[39m
+ [90m 6 |[39m [36mimport[39m { trace[33m,[39m [33mSpanStatusCode[39m } [36mfrom[39m [32m'@opentelemetry/api'[39m[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

@@ -20,6 +20,55 @@
     }
   },
   "analyze_modal": {
-    "title": "Smart Consult"
+    "title": "Smart Consult",
+    "description": "Perform advanced technical queries on the knowledge corpus. The AI will search for evidence in the indexed manuals.",
+    "placeholder": "Eg: What is the tightening torque for the Otis VF motor?",
+    "thinking": "AI is analyzing the manuals...",
+    "success": "Response successfully generated.",
+    "error": "Error processing technical query.",
+    "toasts": {
+      "suggestions_loaded": "Dynamic suggestions loaded."
+    },
+    "status": {
+      "starting": "Starting query...",
+      "connected": "Connection established. The agent is thinking...",
+      "analyzing_chunks": "Analyzing {count} search results...",
+      "retrieving": "Retrieving technical documents...",
+      "grading": "Grading information relevance...",
+      "verifying": "Verifying facts to avoid hallucinations...",
+      "rewriting": "Optimizing query for better precision...",
+      "generating": "Drafting final response...",
+      "generating_suggestions": "Generating personalized suggestions...",
+      "thinking": "The agent is thinking..."
+    },
+    "traces": {
+      "request_sent": "Request sent to RAG engine...",
+      "title": "THOUGHT PROCESS",
+      "hide": "[ HIDE ]",
+      "show": "[ SHOW ]"
+    },
+    "errors": {
+      "title": "Analysis Error",
+      "generic": "Error analyzing the document. Please try again.",
+      "unexpected": "Query failed unexpectedly.",
+      "suggestions_failed": "Could not load dynamic suggestions."
+    },
+    "actions": {
+      "reset": "Reset conversation"
+    },
+    "chat": {
+      "welcome_title": "What do you want to know about this document?",
+      "welcome_desc": "Ask anything. The AI will exclusively analyze the content of this file to respond with precision.",
+      "confidence": "Confidence",
+      "verified_sources": "{count} Verified sources",
+      "input_placeholder": "Write your question here...",
+      "footer_note": "AI-assisted analysis - Verified exclusively in the source document"
+    },
+    "suggestions": {
+      "default_1": "Summarize key points",
+      "default_2": "Are there specific technical requirements?",
+      "default_3": "Identify potential risks",
+      "default_4": "Extract a specifications table"
+    }
   }
 }

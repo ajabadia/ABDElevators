@@ -4,6 +4,7 @@ import React from "react";
 import { Search, Activity } from "lucide-react";
 import { ContentCard } from "@/components/ui/content-card";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 
 interface AuditFiltersProps {
     searchQuery: string;
@@ -28,13 +29,15 @@ export function AuditFilters({
     levels,
     sources
 }: AuditFiltersProps) {
+    const t = useTranslations("admin.audit.filters");
+
     return (
         <div className="space-y-4 mb-6">
             <ContentCard className="p-2 border-slate-200 dark:border-slate-800 shadow-sm" noPadding>
                 <div className="flex items-center px-4 py-2 gap-4">
                     <Search className="w-5 h-5 text-slate-300" />
                     <Input
-                        placeholder="Busca por mensaje, acción, correlationId o email de usuario..."
+                        placeholder={t("search_placeholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="border-none shadow-none focus-visible:ring-0 text-sm font-medium p-0 h-10 placeholder:text-slate-400"
@@ -54,7 +57,7 @@ export function AuditFilters({
                         }`}
                 >
                     <Activity className="w-3 h-3" />
-                    TODOS ({logStats?.total || 0})
+                    {t("all")} ({logStats?.total || 0})
                 </button>
 
                 <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />

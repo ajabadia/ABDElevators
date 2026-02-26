@@ -1,8 +1,8 @@
-import { getTenantCollection } from '../db-tenant';
-import { KnowledgeAsset, KnowledgeAssetSchema } from '../schemas/knowledge';
+import { getTenantCollection } from '@/lib/db-tenant';
+import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas/knowledge';
 import { ObjectId } from 'mongodb';
-import { AppError } from '../errors';
-import { logEvento } from '../logger';
+import { AppError } from '@/lib/errors';
+import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
 
 /**

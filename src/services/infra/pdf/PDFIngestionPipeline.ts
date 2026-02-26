@@ -45,12 +45,12 @@ export class PDFIngestionPipeline {
         // 2. PII Stage
         if (pii?.enabled) {
             if (pii.detectOnly) {
-                const detection = PIIMasker.detect(extraction.text, tenantId, correlationId);
+                const detection = await PIIMasker.detect(extraction.text, tenantId, correlationId);
                 piiMetadata = detection.metadata;
                 // We keep original text for RAG, but have maskedText available if needed for UI
                 maskedText = detection.processedText;
             } else {
-                const masking = PIIMasker.mask(extraction.text, tenantId, correlationId);
+                const masking = await PIIMasker.mask(extraction.text, tenantId, correlationId);
                 finalText = masking.maskedText;
                 maskedText = masking.maskedText;
                 piiMetadata = masking.metadata;

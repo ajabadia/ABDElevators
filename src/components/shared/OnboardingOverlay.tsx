@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useOnboarding } from '@/hooks/use-onboarding'
+import { useOnboarding } from '@/hooks/useOnboarding'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'

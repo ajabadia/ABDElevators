@@ -4,7 +4,7 @@ import {
     PricingType,
     TenantCredit
 } from '@/lib/schemas';
-import { BillingPolicy } from './billing/BillingPolicy';
+import { BillingPolicy } from '@/lib/billing/BillingPolicy';
 
 export interface BillingResult {
     totalCost: number;

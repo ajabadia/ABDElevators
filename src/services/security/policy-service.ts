@@ -1,5 +1,5 @@
 import { AuditTrailService } from '@/services/observability/AuditTrailService';
-import { logEvento } from '../logger';
+import { logEvento } from '@/lib/logger';
 
 export type PolicyAction =
     | 'AGENT_UPDATE_ENTITY'

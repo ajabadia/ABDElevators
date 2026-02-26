@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApiList } from '@/hooks/useApiList';
 import { useFilterState } from '@/hooks/useFilterState';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTranslations } from 'next-intl';
 import { resolveI18nKey, ACTIVITY_TYPE_MAP } from '@/lib/i18n-key-map';
 
@@ -82,7 +81,7 @@ export default function LogExplorer() {
         }
     });
 
-    const [autoRefresh, setAutoRefresh] = useLocalStorage('logexplorer_autorefresh', false);
+    const [autoRefresh, setAutoRefresh] = useState(false);
 
     // Selección para detalle
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);

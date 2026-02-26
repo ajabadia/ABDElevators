@@ -99,10 +99,10 @@ export default function PriceSimulator() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Current State */}
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Suscripción Actual</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">{t('simulator.current_subscription')}</h4>
 
                         <div className="space-y-2">
-                            <Label>Plan Actual</Label>
+                            <Label>{t('simulator.current_plan')}</Label>
                             <Select value={currentPlan} onValueChange={(v) => setCurrentPlan(v as PlanTier)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -116,7 +116,7 @@ export default function PriceSimulator() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Días consumidos en el ciclo</Label>
+                            <Label>{t('simulator.days_used')}</Label>
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="number"
@@ -125,17 +125,17 @@ export default function PriceSimulator() {
                                     value={daysUsed}
                                     onChange={(e) => setDaysUsed(parseInt(e.target.value) || 0)}
                                 />
-                                <span className="text-sm text-muted-foreground">de {daysInCycle} días</span>
+                                <span className="text-sm text-muted-foreground">{t('simulator.of_days', { total: daysInCycle })}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* New State */}
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Nueva Suscripción</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">{t('simulator.new_subscription')}</h4>
 
                         <div className="space-y-2">
-                            <Label>Nuevo Plan</Label>
+                            <Label>{t('simulator.new_plan')}</Label>
                             <Select value={newPlan} onValueChange={(v) => setNewPlan(v as PlanTier)}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -149,7 +149,7 @@ export default function PriceSimulator() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Ciclo de Facturación</Label>
+                            <Label>{t('simulator.billing_cycle')}</Label>
                             <Select value={cycle} onValueChange={(v: 'monthly' | 'yearly') => {
                                 setCycle(v);
                                 setDaysInCycle(v === 'monthly' ? 30 : 365);
@@ -158,8 +158,8 @@ export default function PriceSimulator() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="monthly">Mensual</SelectItem>
-                                    <SelectItem value="yearly">Anual (-17%)</SelectItem>
+                                    <SelectItem value="monthly">{t('simulator.monthly')}</SelectItem>
+                                    <SelectItem value="yearly">{t('simulator.yearly')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -170,11 +170,11 @@ export default function PriceSimulator() {
                 {simulation && (
                     <div className="mt-6 p-6 border rounded-xl bg-card shadow-sm space-y-4">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Crédito por tiempo no usado ({PLANS[currentPlan].name}):</span>
+                            <span className="text-muted-foreground">{t('simulator.credit_unused', { plan: PLANS[currentPlan].name })}</span>
                             <span className="text-green-600 font-medium">-{formatCurrency(simulation.unusedValue)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Coste del Nuevo Plan ({PLANS[newPlan].name}):</span>
+                            <span className="text-muted-foreground">{t('simulator.new_plan_cost', { plan: PLANS[newPlan].name })}</span>
                             <span className="font-medium">{formatCurrency(simulation.newPlanCost)}</span>
                         </div>
 
@@ -186,13 +186,13 @@ export default function PriceSimulator() {
                                         <Sparkles className="h-4 w-4 text-indigo-500 animate-pulse" />
                                     </div>
                                     <div>
-                                        <div className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">Proyección de Uso Real</div>
-                                        <div className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70">Basado en tu consumo mensual de {predictionData.usage.tokens.toLocaleString()} tokens</div>
+                                        <div className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">{t('simulator.usage_projection')}</div>
+                                        <div className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70">{t('simulator.based_on_tokens', { tokens: predictionData.usage.tokens.toLocaleString() })}</div>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">+{formatCurrency(simulation.projectedOverage)}</div>
-                                    <div className="text-[9px] text-indigo-600/50 uppercase font-black">Gastos de IA Est.</div>
+                                    <div className="text-[9px] text-indigo-600/50 uppercase font-black">{t('simulator.estimated_ai')}</div>
                                 </div>
                             </div>
                         )}
@@ -201,10 +201,10 @@ export default function PriceSimulator() {
 
                         <div className="flex items-center justify-between pt-2">
                             <div>
-                                <span className="font-bold text-lg">Total a pagar ahora:</span>
+                                <span className="font-bold text-lg">{t('simulator.total_now')}</span>
                                 {simulation.projectedOverage > 0 && (
                                     <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight max-w-[220px]">
-                                        * El total NO incluye los gastos variables por consumo de IA proyectados ({formatCurrency(simulation.projectedOverage)})
+                                        {t('simulator.variable_note', { amount: formatCurrency(simulation.projectedOverage) })}
                                     </div>
                                 )}
                             </div>
@@ -213,7 +213,7 @@ export default function PriceSimulator() {
                                     {formatCurrency(simulation.totalDue)}
                                 </span>
                                 <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-                                    {simulation.action === 'CHARGE' ? 'Cargo inmediato' : 'Crédito en cuenta'}
+                                    {simulation.action === 'CHARGE' ? t('simulator.charge_immediate') : t('simulator.credit_account')}
                                 </div>
                             </div>
                         </div>
@@ -223,7 +223,7 @@ export default function PriceSimulator() {
                 {isLoadingUsage && (
                     <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        Analizando consumo histórico para sincronizar el simulador...
+                        {t('simulator.loading_usage')}
                     </div>
                 )}
             </CardContent>

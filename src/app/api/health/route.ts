@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
+import { requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +24,17 @@ export async function GET(request: Request) {
 
     if (!isFull) {
         return NextResponse.json(health, { status: 200 });
+    }
+
+    // 🛡️ [SECURITY] Restrict full diagnostic to SUPER_ADMIN
+    try {
+        await requireRole([UserRole.SUPER_ADMIN]);
+    } catch (error) {
+        return NextResponse.json({
+            ...health,
+            status: 'UP',
+            message: 'Full diagnostics restricted to SUPER_ADMIN'
+        }, { status: 200 });
     }
 
     try {

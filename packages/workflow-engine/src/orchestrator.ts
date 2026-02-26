@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { WorkflowDefinition, WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
-import { PromptService } from '@/lib/prompt-service';
+import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@abd/platform-core/server';
 import { safeParseLlmJson } from '@/lib/safe-llm-json';
 import { ValidationError } from '@abd/platform-core';
-import { callGeminiMini } from '@/lib/llm';
-import { validateWorkflowDefinition } from '@/lib/workflow-definition-validator';
+import { callGeminiMini } from '@/services/llm/llm-service';
+import { validateWorkflowDefinition } from '@/services/ops/WorkflowDefinitionValidator';
 import {
     WorkflowSuggestionSchema,
     WorkflowProposalSchema,

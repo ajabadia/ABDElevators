@@ -1,0 +1,371 @@
+
+> project_init@0.1.0 build
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Turbopack build encountered 1 warnings:
+./src/app/api/billing/webhook/route.ts:56:14
+Next.js can't recognize the exported `config` field in route. Page config in `config` is deprecated and ignored, use individual exports instead.
+[0m [90m 54 |[39m
+ [90m 55 |[39m [90m// Ensure raw body is preserved (though in App Router we use req.text() above)[39m
+[31m[1m>[22m[39m[90m 56 |[39m [36mexport[39m [36mconst[39m config [33m=[39m {
+ [90m    |[39m              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 57 |[39m     api[33m:[39m {
+ [90m 58 |[39m         bodyParser[33m:[39m [36mfalse[39m[33m,[39m
+ [90m 59 |[39m     }[33m,[39m[0m
+
+The exported configuration object in a source file needs to have a very specific format from which some properties can be statically parsed at compiled-time.
+
+https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+
+
+✓ Compiled successfully in 39.0s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+  Generating static pages using 7 workers (0/249) ...
+⚠️ [STRIPE] Secret Key no configurado. Las funcionalidades de pago estarán desactivadas.
+  Generating static pages using 7 workers (62/249) 
+  Generating static pages using 7 workers (124/249) 
+  Generating static pages using 7 workers (186/249) 
+✓ Generating static pages using 7 workers (249/249) in 1732.5ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
+├ ƒ /accessibility
+├ ƒ /admin
+├ ƒ /admin/ai
+├ ƒ /admin/ai/governance
+├ ƒ /admin/ai/playground
+├ ƒ /admin/ai/predictive
+├ ƒ /admin/ai/rag-quality
+├ ƒ /admin/ai/workflows
+├ ƒ /admin/analytics
+├ ƒ /admin/api-docs
+├ ƒ /admin/api-keys
+├ ƒ /admin/audit
+├ ƒ /admin/audit/config-changes
+├ ƒ /admin/billing
+├ ƒ /admin/billing/contracts
+├ ƒ /admin/billing/invoices
+├ ƒ /admin/billing/plan
+├ ƒ /admin/billing/usage
+├ ƒ /admin/cases/[id]
+├ ƒ /admin/checklist-configs
+├ ƒ /admin/checklist-configs/[id]
+├ ƒ /admin/checklist-configs/new
+├ ƒ /admin/compliance
+├ ƒ /admin/document-types
+├ ƒ /admin/ingest/jobs
+├ ƒ /admin/intelligence/trends
+├ ƒ /admin/knowledge
+├ ƒ /admin/knowledge-assets
+├ ƒ /admin/knowledge-base
+├ ƒ /admin/knowledge-base/graph
+├ ƒ /admin/knowledge/assets
+├ ƒ /admin/knowledge/explorer
+├ ƒ /admin/knowledge/my-docs
+├ ƒ /admin/knowledge/spaces
+├ ƒ /admin/logs
+├ ƒ /admin/my-documents
+├ ƒ /admin/notifications
+├ ƒ /admin/notifications/settings
+├ ƒ /admin/notifications/templates
+├ ƒ /admin/notifications/templates/[type]
+├ ƒ /admin/operations
+├ ƒ /admin/operations/ingest
+├ ƒ /admin/operations/logs
+├ ƒ /admin/operations/maintenance
+├ ƒ /admin/operations/observability
+├ ƒ /admin/operations/status
+├ ƒ /admin/operations/trace
+├ ƒ /admin/organizations
+├ ƒ /admin/organizations/billing
+├ ƒ /admin/organizations/branding
+├ ƒ /admin/organizations/features
+├ ƒ /admin/organizations/general
+├ ƒ /admin/organizations/storage
+├ ƒ /admin/permissions
+├ ƒ /admin/permissions/audit
+├ ƒ /admin/permissions/groups
+├ ƒ /admin/permissions/matrix
+├ ƒ /admin/permissions/simulator
+├ ƒ /admin/profile
+├ ƒ /admin/prompts
+├ ƒ /admin/rag-quality
+├ ƒ /admin/reports
+├ ƒ /admin/reports/schedules
+├ ƒ /admin/security
+├ ƒ /admin/security/audit
+├ ƒ /admin/security/sessions
+├ ƒ /admin/settings
+├ ƒ /admin/settings/branding
+├ ƒ /admin/settings/i18n
+├ ƒ /admin/settings/notifications
+├ ƒ /admin/spaces
+├ ƒ /admin/superadmin
+├ ƒ /admin/support
+├ ƒ /admin/tasks
+├ ƒ /admin/users
+├ ƒ /admin/users/active
+├ ƒ /admin/users/pending
+├ ƒ /admin/workflow-tasks
+├ ƒ /admin/workflows
+├ ƒ /admin/workflows/%5Bid%5D
+├ ƒ /admin/workshop/orders/new
+├ ƒ /api/admin/ai-trace/[id]
+├ ƒ /api/admin/ai/governance
+├ ƒ /api/admin/audit/config
+├ ƒ /api/admin/audit/ingest
+├ ƒ /api/admin/audit/stats
+├ ƒ /api/admin/billing/contracts
+├ ƒ /api/admin/billing/invoice-preview
+├ ƒ /api/admin/billing/manual-change
+├ ƒ /api/admin/billing/prediction
+├ ƒ /api/admin/billing/seed-plans
+├ ƒ /api/admin/billing/usage
+├ ƒ /api/admin/cases/[id]
+├ ƒ /api/admin/cases/[id]/timeline
+├ ƒ /api/admin/cases/[id]/workflow
+├ ƒ /api/admin/checklist-configs
+├ ƒ /api/admin/checklist-configs/[id]
+├ ƒ /api/admin/compliance/backup
+├ ƒ /api/admin/compliance/certificate
+├ ƒ /api/admin/contacts
+├ ƒ /api/admin/document-types
+├ ƒ /api/admin/environments/promote
+├ ƒ /api/admin/export
+├ ƒ /api/admin/global-stats
+├ ƒ /api/admin/graph/explore
+├ ƒ /api/admin/graph/nodes
+├ ƒ /api/admin/graph/nodes/bulk
+├ ƒ /api/admin/graph/nodes/merge
+├ ƒ /api/admin/graph/relations
+├ ƒ /api/admin/i18n
+├ ƒ /api/admin/i18n/[locale]
+├ ƒ /api/admin/i18n/[locale]/debug
+├ ƒ /api/admin/i18n/auto-translate
+├ ƒ /api/admin/i18n/stats
+├ ƒ /api/admin/i18n/sync
+├ ƒ /api/admin/ingest
+├ ƒ /api/admin/ingest/[id]/enrich
+├ ƒ /api/admin/ingest/jobs
+├ ƒ /api/admin/ingest/logs/[id]
+├ ƒ /api/admin/ingest/metrics
+├ ƒ /api/admin/ingest/status/[docId]
+├ ƒ /api/admin/intelligence/patterns
+├ ƒ /api/admin/intelligence/stats
+├ ƒ /api/admin/knowledge-assets
+├ ƒ /api/admin/knowledge-assets/[id]
+├ ƒ /api/admin/knowledge-assets/[id]/download
+├ ƒ /api/admin/knowledge-assets/[id]/preview
+├ ƒ /api/admin/knowledge-assets/[id]/relationships
+├ ƒ /api/admin/knowledge-assets/[id]/retry
+├ ƒ /api/admin/knowledge-assets/[id]/review
+├ ƒ /api/admin/knowledge-assets/[id]/suggest-questions
+├ ƒ /api/admin/knowledge-assets/[id]/trace
+├ ƒ /api/admin/knowledge-assets/status
+├ ƒ /api/admin/knowledge-base/chunks
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/logs/export
+├ ƒ /api/admin/logs/stats
+├ ƒ /api/admin/notifications/config
+├ ƒ /api/admin/notifications/templates
+├ ƒ /api/admin/notifications/templates/[type]
+├ ƒ /api/admin/observability/slis
+├ ƒ /api/admin/operations/queues
+├ ƒ /api/admin/permissions/check
+├ ƒ /api/admin/permissions/policies
+├ ƒ /api/admin/permissions/roles
+├ ƒ /api/admin/prompts
+├ ƒ /api/admin/prompts/[id]
+├ ƒ /api/admin/prompts/[id]/versions
+├ ƒ /api/admin/prompts/dry-run
+├ ƒ /api/admin/prompts/history
+├ ƒ /api/admin/prompts/sync
+├ ƒ /api/admin/rag/evaluations
+├ ƒ /api/admin/rag/experiment
+├ ƒ /api/admin/reports
+├ ƒ /api/admin/reports/generate
+├ ƒ /api/admin/reports/schedules
+├ ƒ /api/admin/reports/schedules/[id]
+├ ƒ /api/admin/spaces
+├ ƒ /api/admin/superadmin/anomalies
+├ ƒ /api/admin/superadmin/metrics
+├ ƒ /api/admin/superadmin/ontology/evolution
+├ ƒ /api/admin/system/reset-rag
+├ ƒ /api/admin/taxonomies
+├ ƒ /api/admin/tenants
+├ ƒ /api/admin/tenants/[tenantId]
+├ ƒ /api/admin/tenants/[tenantId]/branding/upload
+├ ƒ /api/admin/usage/roi
+├ ƒ /api/admin/usage/stats
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]
+├ ƒ /api/admin/users/[id]/reset-password
+├ ƒ /api/admin/users/[id]/upload-photo
+├ ƒ /api/admin/users/invite
+├ ƒ /api/admin/users/invite/bulk
+├ ƒ /api/admin/users/invite/revoke
+├ ƒ /api/admin/workflow-definitions
+├ ƒ /api/admin/workflow-definitions/[id]
+├ ƒ /api/admin/workflow-definitions/active
+├ ƒ /api/admin/workflow-tasks
+├ ƒ /api/admin/workflow-tasks/[id]
+├ ƒ /api/admin/workflows
+├ ƒ /api/admin/workflows/analytics/[id]
+├ ƒ /api/admin/workflows/analytics/[id]/logs
+├ ƒ /api/admin/workflows/analytics/[id]/report
+├ ƒ /api/analytics/summary
+├ ƒ /api/audit/logs
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/invite/accept
+├ ƒ /api/auth/invite/verify
+├ ƒ /api/auth/knowledge-assets
+├ ƒ /api/auth/knowledge-assets/[id]
+├ ƒ /api/auth/magic-link/request
+├ ƒ /api/auth/mfa/config
+├ ƒ /api/auth/profile
+├ ƒ /api/auth/profile/notificaciones
+├ ƒ /api/auth/profile/sesiones
+├ ƒ /api/auth/profile/upload-photo
+├ ƒ /api/billing/change-plan
+├ ƒ /api/billing/create-checkout
+├ ƒ /api/billing/portal
+├ ƒ /api/billing/simulate-change
+├ ƒ /api/billing/webhook
+├ ƒ /api/cases
+├ ƒ /api/cases/[id]/transicion
+├ ƒ /api/collections
+├ ƒ /api/collections/[id]/assets
+├ ƒ /api/contact
+├ ƒ /api/core/agents/correct
+├ ƒ /api/core/automation/workflows
+├ ƒ /api/core/collaboration/presence
+├ ƒ /api/core/dashboard/intelligence
+├ ƒ /api/core/entities/[type]
+├ ƒ /api/core/entities/[type]/[id]
+├ ƒ /api/core/governance/audit
+├ ƒ /api/core/graph
+├ ƒ /api/core/insights
+├ ƒ /api/core/predictive/maintenance
+├ ƒ /api/core/quick-qa
+├ ƒ /api/core/quick-qa/promote
+├ ƒ /api/core/search/cross-vertical
+├ ƒ /api/cron/data-lifecycle
+├ ƒ /api/cron/knowledge-review
+├ ƒ /api/cron/scheduled-reports
+├ ƒ /api/cron/self-healing
+├ ƒ /api/cron/status-check
+├ ƒ /api/cron/stuck-jobs
+├ ƒ /api/dashboard/value-metrics
+├ ƒ /api/federated/validate
+├ ƒ /api/feedback/answer
+├ ƒ /api/health
+├ ƒ /api/health/db-check
+├ ƒ /api/i18n-sync
+├ ƒ /api/intelligence/causal-analysis
+├ ƒ /api/logs
+├ ƒ /api/notifications
+├ ƒ /api/ops/export
+├ ƒ /api/pricing/plans
+├ ƒ /api/sandbox/chat
+├ ƒ /api/spaces
+├ ƒ /api/spaces/invite
+├ ƒ /api/spaces/invite/accept
+├ ƒ /api/spaces/invite/verify/[token]
+├ ƒ /api/support/stats
+├ ƒ /api/support/tickets
+├ ƒ /api/support/tickets/[id]
+├ ƒ /api/support/tickets/[id]/reassign
+├ ƒ /api/support/tickets/[id]/reply
+├ ƒ /api/swagger/spec
+├ ƒ /api/tasks/created
+├ ƒ /api/tasks/my
+├ ƒ /api/technical/entities
+├ ƒ /api/technical/entities/[id]/analyze
+├ ƒ /api/technical/entities/[id]/checklist
+├ ƒ /api/technical/entities/[id]/checklist/validate
+├ ƒ /api/technical/entities/[id]/comments
+├ ƒ /api/technical/entities/[id]/generate-report
+├ ƒ /api/technical/entities/[id]/transition
+├ ƒ /api/technical/entities/[id]/validate
+├ ƒ /api/technical/entities/[id]/vector-search
+├ ƒ /api/technical/entities/analyze
+├ ƒ /api/technical/entities/analyze/[id]
+├ ƒ /api/technical/rag/chat
+├ ƒ /api/technical/stats
+├ ƒ /api/tenant/branding
+├ ƒ /api/user/dashboard
+├ ƒ /api/user/preferences
+├ ƒ /api/user/search
+├ ƒ /api/user/stats
+├ ƒ /api/v1/analysis/extract
+├ ƒ /api/v1/documents/ingest
+├ ƒ /api/v1/federated/search
+├ ƒ /api/v1/rag/judge
+├ ƒ /api/v1/rag/query
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/workshop/orders
+├ ƒ /architecture
+├ ƒ /auth
+├ ƒ /auth/magic-link/verify
+├ ƒ /auth/signup-invite/[token]
+├ ƒ /contact
+├ ƒ /dashboard
+├ ƒ /entities
+├ ƒ /entities/[id]/validar
+├ ƒ /error
+├ ƒ /error/rate-limit
+├ ƒ /features/audit-trail
+├ ƒ /features/compliance
+├ ƒ /features/dual-engine
+├ ƒ /features/federated
+├ ƒ /features/pdf-bridge
+├ ƒ /features/vector-search
+├ ƒ /graphs
+├ ƒ /login
+├ ƒ /my-documents
+├ ƒ /ops/reports
+├ ƒ /pricing
+├ ƒ /privacy
+├ ƒ /profile
+├ ƒ /real-estate
+├ ƒ /sandbox
+├ ƒ /search
+├ ƒ /settings
+├ ƒ /spaces
+├ ƒ /spaces/collections
+├ ƒ /spaces/personal
+├ ƒ /spaces/playground
+├ ƒ /spaces/quick-qa
+├ ƒ /support
+├ ƒ /support-dashboard
+├ ƒ /support-ticket
+├ ƒ /support/[id]
+├ ƒ /support/nuevo
+├ ƒ /tasks
+├ ƒ /technical
+├ ƒ /terms
+└ ƒ /upgrade
+
+Route (pages)
+─ ƒ /api/openapi-spec
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+

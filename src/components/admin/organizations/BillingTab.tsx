@@ -27,7 +27,7 @@ interface BillingTabProps {
 }
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
-    const t = useTranslations('admin.organizations.billing');
+    const t = useTranslations('admin.billing');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
     // Estados para la simulación de precio
@@ -50,11 +50,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Error en la simulación');
+            if (!res.ok) throw new Error(data.error || t('tab.simulation_error'));
 
             setSimulation(data.simulation);
         } catch (error: any) {
-            toast.error('Error de Simulación', {
+            toast.error(t('tab.error_sim_title'), {
                 description: error.message,
             });
         } finally {
@@ -72,11 +72,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Error iniciando checkout');
+            if (!res.ok) throw new Error(data.error || t('tab.checkout_error'));
 
             window.location.href = data.url;
         } catch (error: any) {
-            toast.error('Error', {
+            toast.error(t('tab.error'), {
                 description: error.message,
             });
             setIsCheckingOut(false);
@@ -88,9 +88,15 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
     // Helper para formatear bytes
     const formatBytes = (bytes: number) => {
-        if (bytes === 0) return '0 B';
+        if (bytes === 0) return `0 ${t('tab.units.bytes')}`;
         const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const sizes = [
+            t('tab.units.bytes'),
+            t('tab.units.kb'),
+            t('tab.units.mb'),
+            t('tab.units.gb'),
+            t('tab.units.tb')
+        ];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
@@ -105,30 +111,30 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                     <div className="col-span-1 bg-slate-900 text-white rounded-3xl p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
                         <div className="relative z-10">
-                            <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider mb-1">Plan Actual</h3>
+                            <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider mb-1">{t('tab.plan_current')}</h3>
                             <div className="flex items-baseline gap-2 mb-4">
                                 <h1 className="text-4xl font-bold">{currentPlan.name}</h1>
-                                {currentTier !== 'FREE' && <span className="text-sm bg-primary px-2 py-1 rounded-full">Activo</span>}
+                                {currentTier !== 'FREE' && <span className="text-sm bg-primary px-2 py-1 rounded-full">{t('tab.plan_active')}</span>}
                             </div>
 
                             <div className="space-y-4 mb-8">
                                 <p className="text-sm opacity-70">
                                     {currentTier === 'FREE'
-                                        ? 'Estás disfrutando del periodo de prueba gratuito.'
-                                        : `Suscripción renovada mensualmente.`}
+                                        ? t('tab.free_trial_desc')
+                                        : t('tab.subscription_renewed')}
                                 </p>
                             </div>
 
                             <Dialog>
                                 <DialogTrigger asChild>
                                     <Button className="w-full bg-white text-slate-900 hover:bg-slate-100">
-                                        Cambiar Plan
+                                        {t('tab.change_plan')}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-4xl">
                                     <DialogHeader>
-                                        <DialogTitle>Planes y Precios</DialogTitle>
-                                        <DialogDescription>Selecciona el plan que mejor se adapte a tus necesidades.</DialogDescription>
+                                        <DialogTitle>{t('tab.plans_and_prices')}</DialogTitle>
+                                        <DialogDescription>{t('tab.plans_select_desc')}</DialogDescription>
                                     </DialogHeader>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                                         {(Object.keys(PLANS) as PlanTier[]).map((tier) => {
@@ -182,7 +188,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                             {isSimulating ? (
                                                 <div className="flex flex-col items-center justify-center py-8 space-y-4">
                                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                                    <p className="text-sm text-slate-500 italic">Calculando prorrateo exacto con Stripe...</p>
+                                                    <p className="text-sm text-slate-500 italic">{t('tab.calculating_stripe')}</p>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-6">
@@ -217,9 +223,9 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                                             {isCheckingOut ? (
                                                                 <span className="flex items-center gap-2">
                                                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                                    Procesando...
+                                                                    {t('tab.processing')}
                                                                 </span>
-                                                            ) : "Confirmar y Suscribirse"}
+                                                            ) : t('tab.confirm_subscribe')}
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -236,7 +242,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                         {usageStats && (
                             <>
                                 <UsageCard
-                                    title="Tokens IA (Generativo)"
+                                    title={t('tab.tokens_ia')}
                                     icon={<Zap size={18} className="text-yellow-500" />}
                                     current={usageStats.usage.tokens}
                                     limit={usageStats.limits.llm_tokens_per_month}
@@ -244,7 +250,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     status={usageStats.status.tokens}
                                 />
                                 <UsageCard
-                                    title="Almacenamiento (RAG)"
+                                    title={t('tab.storage_rag')}
                                     icon={<Shield size={18} className="text-blue-500" />}
                                     current={usageStats.usage.storage}
                                     limit={usageStats.limits.storage_bytes}
@@ -252,7 +258,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     status={usageStats.status.storage}
                                 />
                                 <UsageCard
-                                    title="Búsquedas Vectoriales"
+                                    title={t('tab.vector_searches')}
                                     icon={<Receipt size={18} className="text-purple-500" />}
                                     current={usageStats.usage.searches}
                                     limit={usageStats.limits.vector_searches_per_month}
@@ -260,7 +266,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     status={usageStats.status.searches}
                                 />
                                 <UsageCard
-                                    title="Llamadas API"
+                                    title={t('tab.api_calls')}
                                     icon={<Building size={18} className="text-slate-500" />}
                                     current={usageStats.usage.apiRequests}
                                     limit={usageStats.limits.api_requests_per_month}
@@ -280,14 +286,14 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                 <div className="space-y-4">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
                         <Receipt className="text-primary" size={20} />
-                        Identidad Fiscal
+                        {t('tab.fiscal_identity')}
                     </h3>
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="fiscalName">Razón Social / Nombre Fiscal</Label>
+                            <Label htmlFor="fiscalName">{t('tab.fiscal_name_label')}</Label>
                             <Input
                                 id="fiscalName"
-                                placeholder="Ej: ABD Elevadores S.L."
+                                placeholder={t('tab.fiscal_name_placeholder')}
                                 value={config?.billing?.fiscalName || ''}
                                 onChange={(e) => setConfig(prev => prev ? {
                                     ...prev,
@@ -296,10 +302,10 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="taxId">CIF / NIF / VAT ID</Label>
+                            <Label htmlFor="taxId">{t('tab.tax_id_label')}</Label>
                             <Input
                                 id="taxId"
-                                placeholder="Ej: B12345678"
+                                placeholder={t('tab.tax_id_placeholder')}
                                 value={config?.billing?.taxId || ''}
                                 onChange={(e) => setConfig(prev => prev ? {
                                     ...prev,
@@ -313,11 +319,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
                         <Mail className="text-primary" size={20} />
-                        Recepción de Facturas
+                        {t('tab.invoice_reception')}
                     </h3>
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Canal Preferente</Label>
+                            <Label>{t('tab.channel_label')}</Label>
                             <Select
                                 value={config?.billing?.recepcion?.canal || 'EMAIL'}
                                 onValueChange={(val: any) => setConfig(prev => prev ? {
@@ -332,21 +338,21 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="EMAIL">Correo Electrónico</SelectItem>
-                                    <SelectItem value="POSTAL">Correo Postal</SelectItem>
-                                    <SelectItem value="IN_APP">Sólo descarga en App</SelectItem>
-                                    <SelectItem value="XML_EDI">Intercambio XML / EDI</SelectItem>
+                                    <SelectItem value="EMAIL">{t('tab.channel_email')}</SelectItem>
+                                    <SelectItem value="POSTAL">{t('tab.channel_postal')}</SelectItem>
+                                    <SelectItem value="IN_APP">{t('tab.channel_in_app')}</SelectItem>
+                                    <SelectItem value="XML_EDI">{t('tab.channel_xml_edi')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         {config?.billing?.recepcion?.canal === 'EMAIL' && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label htmlFor="billingEmail">Email de Facturación</Label>
+                                <Label htmlFor="billingEmail">{t('tab.billing_email_label')}</Label>
                                 <Input
                                     id="billingEmail"
                                     type="email"
-                                    placeholder="facturacion@empresa.com"
+                                    placeholder={t('tab.billing_email_placeholder')}
                                     value={config?.billing?.recepcion?.email || ''}
                                     onChange={(e) => setConfig(prev => prev ? {
                                         ...prev,
@@ -360,7 +366,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                         )}
 
                         <div className="space-y-2">
-                            <Label>Formato de Archivo</Label>
+                            <Label>{t('tab.file_format_label')}</Label>
                             <Select
                                 value={config?.billing?.recepcion?.modo || 'PDF'}
                                 onValueChange={(val: any) => setConfig(prev => prev ? {
@@ -375,10 +381,10 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="PDF">PDF (Firmado Digitalmente)</SelectItem>
-                                    <SelectItem value="XML">XML Facturae</SelectItem>
-                                    <SelectItem value="CSV">CSV / Excel</SelectItem>
-                                    <SelectItem value="PAPER">Papel (Físico)</SelectItem>
+                                    <SelectItem value="PDF">{t('tab.format_pdf')}</SelectItem>
+                                    <SelectItem value="XML">{t('tab.format_xml')}</SelectItem>
+                                    <SelectItem value="CSV">{t('tab.format_csv')}</SelectItem>
+                                    <SelectItem value="PAPER">{t('tab.format_paper')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -392,11 +398,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
                         <h3 className="font-bold flex items-center gap-2 text-slate-800">
                             <MapPin className="text-blue-600" size={18} />
-                            Dirección de Envío
+                            {t('tab.shipping_address')}
                         </h3>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Calle y Número</Label>
+                                <Label>{t('tab.street_label')}</Label>
                                 <Input
                                     value={config?.billing?.shippingAddress?.line1 || ''}
                                     onChange={(e) => setConfig(prev => prev ? {
@@ -410,7 +416,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Ciudad</Label>
+                                    <Label>{t('tab.city_label')}</Label>
                                     <Input
                                         value={config?.billing?.shippingAddress?.city || ''}
                                         onChange={(e) => setConfig(prev => prev ? {
@@ -423,7 +429,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Cód. Postal</Label>
+                                    <Label>{t('tab.postal_code_label')}</Label>
                                     <Input
                                         value={config?.billing?.shippingAddress?.postalCode || ''}
                                         onChange={(e) => setConfig(prev => prev ? {
@@ -437,9 +443,9 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label>País</Label>
+                                <Label>{t('tab.country_label')}</Label>
                                 <Input
-                                    value={config?.billing?.shippingAddress?.country || 'España'}
+                                    value={config?.billing?.shippingAddress?.country || t('tab.default_country')}
                                     onChange={(e) => setConfig(prev => prev ? {
                                         ...prev,
                                         billing: {
@@ -461,7 +467,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                         <div className="flex justify-between items-center">
                             <h3 className="font-bold flex items-center gap-2 text-slate-800">
                                 <Building className="text-primary" size={18} />
-                                Dirección de Facturación
+                                {t('tab.billing_address')}
                             </h3>
                             <Switch
                                 checked={config?.billing?.billingAddress?.differentFromShipping || false}
@@ -478,12 +484,12 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                         {!config?.billing?.billingAddress?.differentFromShipping ? (
                             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50 text-center p-4">
                                 <Info size={24} className="text-slate-300 mb-2" />
-                                <span className="text-xs text-slate-400">Igual que la dirección de envío activo.</span>
+                                <span className="text-xs text-slate-400">{t('tab.billing_address_same')}</span>
                             </div>
                         ) : (
                             <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
                                 <div className="space-y-2">
-                                    <Label>Calle y Número (Fact.)</Label>
+                                    <Label>{t('tab.billing_street_label')}</Label>
                                     <Input
                                         value={config?.billing?.billingAddress?.line1 || ''}
                                         onChange={(e) => setConfig(prev => prev ? {
@@ -497,7 +503,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Ciudad</Label>
+                                        <Label>{t('tab.city_label')}</Label>
                                         <Input
                                             value={config?.billing?.billingAddress?.city || ''}
                                             onChange={(e) => setConfig(prev => prev ? {
@@ -510,7 +516,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Cód. Postal</Label>
+                                        <Label>{t('tab.postal_code_label')}</Label>
                                         <Input
                                             value={config?.billing?.billingAddress?.postalCode || ''}
                                             onChange={(e) => setConfig(prev => prev ? {
@@ -524,9 +530,9 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>País</Label>
+                                    <Label>{t('tab.country_label')}</Label>
                                     <Input
-                                        value={config?.billing?.billingAddress?.country || 'España'}
+                                        value={config?.billing?.billingAddress?.country || t('tab.default_country')}
                                         onChange={(e) => setConfig(prev => prev ? {
                                             ...prev,
                                             billing: {
@@ -545,12 +551,12 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                     <div className="space-y-1">
                         <h4 className="font-bold flex items-center gap-2">
                             <Shield size={18} />
-                            Certificación de Factura Electrónica
+                            {t('tab.e_invoice_cert')}
                         </h4>
-                        <p className="text-xs opacity-90">Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.</p>
+                        <p className="text-xs opacity-90">{t('tab.e_invoice_compliance')}</p>
                     </div>
                     <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                        Información EDI
+                        {t('tab.edi_info')}
                     </Button>
                 </div>
             </div>
@@ -560,6 +566,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
 // Sub-componente para tarjetas de uso
 function UsageCard({ title, icon, current, limit, format, status }: any) {
+    const t = useTranslations('admin.billing');
     const isInfinity = limit === Infinity || limit === null;
     const percentage = isInfinity ? 0 : Math.min(100, (current / limit) * 100);
 
@@ -579,7 +586,7 @@ function UsageCard({ title, icon, current, limit, format, status }: any) {
                         status?.status === 'BLOCKED' ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
                     )}>
                         <AlertTriangle size={12} />
-                        {status?.status === 'BLOCKED' ? 'Límite' : 'Exceso'}
+                        {status?.status === 'BLOCKED' ? t('tab.limit_badge') : t('tab.overage_badge')}
                     </div>
                 )}
             </div>

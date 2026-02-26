@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, AlertTriangle, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface LimitAlertProps {
     resourceType: 'tokens' | 'storage' | 'searches' | 'api_requests';
@@ -11,6 +12,7 @@ interface LimitAlertProps {
 }
 
 export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) {
+    const t = useTranslations('admin.limit_alert');
     const [dismissed, setDismissed] = useState(false);
     const router = useRouter();
 
@@ -35,11 +37,11 @@ export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) 
 
     if (dismissed || percentage < 80) return null;
 
-    const resourceNames = {
-        tokens: 'Tokens de IA',
-        storage: 'Almacenamiento',
-        searches: 'Búsquedas Vectoriales',
-        api_requests: 'Llamadas API',
+    const resourceNames: Record<string, string> = {
+        tokens: t('resources.tokens'),
+        storage: t('resources.storage'),
+        searches: t('resources.searches'),
+        api_requests: t('resources.api_requests'),
     };
 
     const isBlocked = percentage >= 100;
@@ -56,18 +58,18 @@ export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) 
 
                 <div className="flex-1">
                     <h3 className={`font-bold text-sm ${isBlocked ? 'text-red-900 dark:text-red-100' : 'text-amber-900 dark:text-amber-100'}`}>
-                        {isBlocked ? '⚠️ Límite Excedido' : '⚠️ Alerta de Consumo'}
+                        {isBlocked ? `⚠️ ${t('exceeded_title')}` : `⚠️ ${t('warning_title')}`}
                     </h3>
                     <p className={`text-xs mt-1 ${isBlocked ? 'text-red-700 dark:text-red-200' : 'text-amber-700 dark:text-amber-200'}`}>
                         {isBlocked
-                            ? `Has alcanzado el 100% de tu límite de ${resourceNames[resourceType]}.`
-                            : `Has consumido el ${percentage.toFixed(0)}% de tu límite de ${resourceNames[resourceType]}.`
+                            ? t('exceeded_msg', { resource: resourceNames[resourceType] })
+                            : t('warning_msg', { resource: resourceNames[resourceType], percentage: percentage.toFixed(0) })
                         }
                     </p>
 
                     {isBlocked && (
                         <p className="text-xs mt-2 font-semibold text-red-800 dark:text-red-100">
-                            Tu cuenta ha sido suspendida. Por favor, actualiza tu plan.
+                            {t('suspended')}
                         </p>
                     )}
 
@@ -75,19 +77,19 @@ export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) 
                         <button
                             onClick={handleUpgrade}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${isBlocked
-                                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-amber-600 hover:bg-amber-700 text-white'
                                 }`}
                         >
                             <Zap size={14} />
-                            Actualizar Plan
+                            {t('upgrade')}
                         </button>
                         {!isBlocked && (
                             <button
                                 onClick={handleDismiss}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all"
                             >
-                                Entendido
+                                {t('dismiss')}
                             </button>
                         )}
                     </div>
@@ -110,6 +112,7 @@ export function LimitAlert({ resourceType, percentage, tier }: LimitAlertProps) 
  * Modal de upgrade cuando se excede el límite
  */
 export function LimitExceededModal({ onClose }: { onClose: () => void }) {
+    const t = useTranslations('admin.limit_alert');
     const router = useRouter();
 
     return (
@@ -121,12 +124,11 @@ export function LimitExceededModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                        Límite Excedido
+                        {t('modal.title')}
                     </h2>
 
                     <p className="text-slate-600 dark:text-slate-400 mb-6">
-                        Has alcanzado el límite de tu plan actual. Para continuar usando la plataforma,
-                        por favor actualiza a un plan superior.
+                        {t('modal.desc')}
                     </p>
 
                     <div className="flex gap-3">
@@ -135,13 +137,13 @@ export function LimitExceededModal({ onClose }: { onClose: () => void }) {
                             className="flex-1 bg-gradient-to-r from-teal-600 to-teal-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/50 transition-all flex items-center justify-center gap-2"
                         >
                             <Zap size={18} />
-                            Ver Planes
+                            {t('modal.view_plans')}
                         </button>
                         <button
                             onClick={onClose}
                             className="px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                         >
-                            Cerrar
+                            {t('modal.close')}
                         </button>
                     </div>
                 </div>

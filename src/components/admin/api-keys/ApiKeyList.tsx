@@ -38,11 +38,11 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
         const res = await revokeApiKey(id);
         if (res.success) {
             toast.success(t('revoke_success'), {
-                description: `${name} has been deactivated.`
+                description: t('status.deactivated_msg', { name })
             });
         } else {
-            toast.error("Error", {
-                description: res.error || "Failed to revoke",
+            toast.error(t('error_title'), {
+                description: res.error || t('status.revoke_error'),
             });
         }
     };
@@ -54,7 +54,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
                             <h4 className="font-semibold text-white">{key.name}</h4>
-                            {!key.isActive && <Badge variant="destructive" className="text-[10px]">REVOKED</Badge>}
+                            {!key.isActive && <Badge variant="destructive" className="text-[10px]">{t('status.revoked')}</Badge>}
                         </div>
                         <div className="flex items-center gap-2 font-mono text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded w-fit">
                             <span>{key.keyPrefix}</span>
@@ -62,9 +62,9 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
                             {key.spaceId && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/30 text-indigo-300 border border-indigo-800 flex items-center gap-1 font-bold">
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/30 text-indigo-300 border border-indigo-800 flex items-center gap-1 font-bold uppercase">
                                     <LayoutGrid size={10} />
-                                    SPACE: {key.spaceId}
+                                    {t('space_label')}: {key.spaceId}
                                 </span>
                             )}
                             {key.permissions.map(p => (

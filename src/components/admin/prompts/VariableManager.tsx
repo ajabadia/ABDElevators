@@ -3,6 +3,7 @@ import { Plus, Trash2, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from 'next-intl';
 
 interface Variable {
     name: string;
@@ -24,14 +25,15 @@ export const VariableManager: React.FC<VariableManagerProps> = ({
     onUpdate,
     onRemove
 }) => {
+    const t = useTranslations('admin.prompts.variables');
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Type size={12} /> Variables Dinámicas
+                    <Type size={12} /> {t('title')}
                 </h3>
                 <Button onClick={onAdd} variant="outline" size="sm" className="h-7 border-slate-800 bg-slate-800/50 text-teal-400 hover:bg-teal-400/10 rounded-lg text-[10px]">
-                    <Plus size={12} className="mr-1" /> Añadir Variable
+                    <Plus size={12} className="mr-1" /> {t('add_btn')}
                 </Button>
             </div>
 
@@ -43,7 +45,7 @@ export const VariableManager: React.FC<VariableManagerProps> = ({
                                 <Input
                                     value={v.name}
                                     onChange={e => onUpdate(i, { name: e.target.value })}
-                                    placeholder="Nombre var"
+                                    placeholder={t('name_placeholder')}
                                     className="bg-slate-900 border-slate-800 h-8 text-xs font-mono text-teal-400"
                                 />
                                 <select
@@ -51,15 +53,16 @@ export const VariableManager: React.FC<VariableManagerProps> = ({
                                     onChange={e => onUpdate(i, { type: e.target.value as 'string' | 'number' | 'boolean' | 'json' })}
                                     className="bg-slate-900 border-slate-800 rounded-lg text-[10px] px-2 outline-none text-slate-300"
                                 >
-                                    <option value="string">String</option>
-                                    <option value="number">Number</option>
-                                    <option value="boolean">Boolean</option>
+                                    <option value="string">{t('types.string')}</option>
+                                    <option value="number">{t('types.number')}</option>
+                                    <option value="boolean">{t('types.boolean')}</option>
+                                    <option value="json">{t('types.json')}</option>
                                 </select>
                             </div>
                             <Input
                                 value={v.description}
                                 onChange={e => onUpdate(i, { description: e.target.value })}
-                                placeholder="Descripción de la variable..."
+                                placeholder={t('desc_placeholder')}
                                 className="bg-slate-900/50 border-none h-6 text-[10px] text-slate-500"
                             />
                         </div>
@@ -69,7 +72,7 @@ export const VariableManager: React.FC<VariableManagerProps> = ({
                     </div>
                 ))}
                 {variables.length === 0 && (
-                    <p className="text-center text-xs text-slate-600 italic py-4">Sin variables configuradas</p>
+                    <p className="text-center text-xs text-slate-600 italic py-4">{t('empty')}</p>
                 )}
             </div>
         </div>

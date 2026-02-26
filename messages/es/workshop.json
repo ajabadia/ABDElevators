@@ -40,5 +40,51 @@
     "technical_spec": "Especificación Técnica (IA)",
     "title": "Validación de Taller",
     "manuals_title": "MANUALES SUGERIDOS (RAG)"
+  },
+  "detail_dialog": {
+    "context_title": "Contexto del Caso",
+    "case_id": "ID Caso",
+    "reference": "Referencia",
+    "ai_proposal_title": "Propuesta de Inteligencia Artificial",
+    "ai_proposal_action_approve": "APROBAR",
+    "ai_proposal_action_reject": "RECHAZAR",
+    "ai_proposal_action_escalate": "ESCALAR",
+    "ai_confidence": "Confianza",
+    "ai_accept_btn": "Aceptar Recomendación de la IA",
+    "fallback_title": "Fallo en Análisis de IA (Fallback)",
+    "fallback_desc": "El motor de IA no pudo completar la decisión automática. Se requiere intervención humana para validar este paso.",
+    "fallback_error": "Error original",
+    "notes_label": "Notas de Resolución",
+    "notes_audit": "Requerido para auditoría",
+    "notes_placeholder": "Indica el resultado de la validación o motivos del cambio de estado...",
+    "status_management": "Gestión de Estado",
+    "status_pending": "Pendiente",
+    "status_in_progress": "En Progreso",
+    "status_complete": "Completar",
+    "assigned_to": "Asignado a",
+    "view_file_btn": "Ver Expediente",
+    "close_btn": "Cerrar",
+    "confirm_btn": "Confirmar Cambios",
+    "updating_btn": "Actualizando..."
+  },
+  "toast": {
+    "update_success_title": "Tarea actualizada",
+    "update_success_desc": "La tarea ha sido marcada como {status}",
+    "error_title": "Error",
+    "error_desc": "No se pudo actualizar la tarea"
+  },
+  "feedback": {
+    "correction_title": "Retroalimentación de IA Requerida",
+    "correction_desc": "Has modificado la decisión sugerida por la IA. Por favor, indica el motivo para ayudar a entrenar el modelo.",
+    "category_label": "Categoría del Error",
+    "rejection_reason_label": "Comentario de Ajuste",
+    "rejection_reason_placeholder": "Describe por qué la IA se equivocó...",
+    "categories": {
+      "hallucination": "Alucinación / Dato Incorrecto",
+      "missing_context": "Contexto Insuficiente",
+      "policy_violation": "Violación de Política",
+      "technical_error": "Error Técnico",
+      "other": "Otro motivo"
+    }
   }
 }

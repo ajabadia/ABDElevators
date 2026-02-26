@@ -56,7 +56,7 @@ export default function PermissionAuditPage() {
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="h-11 gap-2 rounded-xl border-slate-200 dark:border-slate-800 px-4 font-bold">
                             <Clock className="w-4 h-4" />
-                            {t('table.last_24h') || 'Last 24h'}
+                            {t('table.last_24h')}
                         </Button>
                     </div>
                 </div>
@@ -129,14 +129,16 @@ export default function PermissionAuditPage() {
                                     <TableCell>
                                         <div className={`flex items-center gap-1.5 ${log.decision === 'ALLOW' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                             {log.decision === 'ALLOW' ? <ShieldCheck className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                                            <span className="text-xs font-black uppercase tracking-widest">{log.decision}</span>
+                                            <span className="text-xs font-black uppercase tracking-widest">
+                                                {log.decision === 'ALLOW' ? t('results.allow') : t('results.deny')}
+                                            </span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <span className="text-xs text-muted-foreground italic font-medium">"{log.policy}"</span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Log Details">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" aria-label={t('results.details_aria')}>
                                             <ArrowUpRight className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
@@ -151,7 +153,7 @@ export default function PermissionAuditPage() {
                 <div className="flex flex-col items-center gap-2">
                     <div className="w-1 h-6 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     <p className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em] font-black">
-                        {t('table.end_of_trail') || 'End of audit trail'}
+                        {t('table.end_of_trail')}
                     </p>
                 </div>
             </div>

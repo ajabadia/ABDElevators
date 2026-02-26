@@ -1,5 +1,5 @@
 import { EntityEngine } from '@/core/engine/EntityEngine';
-import { SecurityService } from './security-service';
+import { SecurityService } from '@/services/security/security-service';
 import { GovernanceEngine } from '@/core/engine/GovernanceEngine';
 import { logEvento } from '@/lib/logger';
 

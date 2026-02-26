@@ -1,6 +1,6 @@
 
-import { PromptService } from "@/lib/prompt-service";
-import { callGeminiMini } from "@/lib/llm";
+import { PromptService } from "@/services/llm/prompt-service";
+import { callGeminiMini } from "@/services/llm/llm-service";
 import { logEvento } from "@abd/platform-core/server";
 import { trace } from '@opentelemetry/api';
 // Using original prompts for now until fully migrated

@@ -19,8 +19,10 @@ import {
 import { cn } from '@/lib/utils';
 import { IntelligenceMetrics } from '@/types/intelligence';
 import { ProactiveInsightsSection } from './intelligence/ProactiveInsightsSection';
+import { useTranslations } from 'next-intl';
 
 export function CollectiveIntelligenceDashboard() {
+    const t = useTranslations('admin.intelligence');
     const [metrics, setMetrics] = useState<IntelligenceMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -60,11 +62,11 @@ export function CollectiveIntelligenceDashboard() {
                     <BrainCircuit size={32} />
                 </div>
                 <div className="text-center space-y-1">
-                    <h4 className="font-bold text-foreground">Datos de Inteligencia no disponibles</h4>
-                    <p className="text-sm text-muted-foreground">Parece que aún no hay suficientes interacciones para generar métricas colectivas o hay un problema de conexión.</p>
+                    <h4 className="font-bold text-foreground">{t('dashboard.no_data_title')}</h4>
+                    <p className="text-sm text-muted-foreground">{t('dashboard.no_data_desc')}</p>
                 </div>
                 <Button onClick={fetchMetrics} variant="outline" className="gap-2">
-                    <RefreshCw size={14} /> Reintentar Conexión
+                    <RefreshCw size={14} /> {t('dashboard.retry')}
                 </Button>
             </div>
         );
@@ -72,8 +74,8 @@ export function CollectiveIntelligenceDashboard() {
 
     const statCards = [
         {
-            title: "Densidad Semántica",
-            subtitle: "Nodos + Relaciones",
+            title: t('dashboard.semantic_density'),
+            subtitle: t('dashboard.nodes_relations'),
             value: metrics.semanticNodes + metrics.semanticRelationships,
             icon: <Share2 />,
             trend: "+12%",
@@ -81,29 +83,29 @@ export function CollectiveIntelligenceDashboard() {
             color: "blue"
         },
         {
-            title: "Aprendizajes",
-            subtitle: "Correcciones",
+            title: t('dashboard.learnings'),
+            subtitle: t('dashboard.corrections'),
             value: metrics.learnedCorrections,
             icon: <BrainCircuit />,
-            trend: "94% Precisión",
+            trend: t('dashboard.precision', { val: 94 }),
             trendDirection: "up",
             color: "teal"
         },
         {
-            title: "Tareas Auto",
-            subtitle: "Sin intervención",
+            title: t('dashboard.automated_tasks'),
+            subtitle: t('dashboard.no_intervention'),
             value: metrics.tasksAutomated,
             icon: <Zap />,
-            trend: "15min/ped",
+            trend: t('dashboard.mins_per_order', { val: 15 }),
             trendDirection: "up",
             color: "amber"
         },
         {
-            title: "ROI Estimado",
-            subtitle: "Ahorro acumulado",
+            title: t('dashboard.estimated_roi'),
+            subtitle: t('dashboard.accumulated_savings'),
             value: `${Math.round(metrics.estimatedCostSaving)}€`,
             icon: <Euro />,
-            trend: "Optimización",
+            trend: t('dashboard.optimization'),
             trendDirection: "up",
             color: "emerald"
         }
@@ -129,8 +131,8 @@ export function CollectiveIntelligenceDashboard() {
             {/* Gráficos y Top Entities */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <ContentCard
-                    title="Evolución de Precisión (System Agent)"
-                    description="Aprendizaje continuo basado en feedback humano."
+                    title={t('dashboard.accuracy_evolution_title')}
+                    description={t('dashboard.accuracy_evolution_desc')}
                     className="lg:col-span-2"
                 >
                     <div className="h-[200px] flex items-end gap-2 pb-8">
@@ -151,9 +153,9 @@ export function CollectiveIntelligenceDashboard() {
                 </ContentCard>
 
                 <ContentCard
-                    title="Focos de Aprendizaje"
+                    title={t('dashboard.learning_focus_title')}
                     icon={<BarChart3 className="text-teal-500" size={20} />}
-                    description="Entidades con más correcciones."
+                    description={t('dashboard.learning_focus_desc')}
                     className="bg-card border-border"
                 >
                     <div className="space-y-4">

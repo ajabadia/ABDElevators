@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Switch } from "@/components/ui/switch";
 import { AI_MODELS } from "@abd/platform-core";
+import { useTranslations } from "next-intl";
 
 /**
  * 🛠️ Helper Component for Model Selectors
@@ -36,15 +37,17 @@ function ModelSelector({ label, value, onChange, description }: {
     onChange: (v: string) => void,
     description?: string
 }) {
+    const t = useTranslations("admin.governance");
+
     return (
         <div className="space-y-2">
             <Label className="text-xs font-semibold">{label}</Label>
             <Select value={value || "default"} onValueChange={onChange}>
                 <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Selecciona modelo" />
+                    <SelectValue placeholder={t("models.select_placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="default">Default (Gobernanza)</SelectItem>
+                    <SelectItem value="default">{t("models.default_option")}</SelectItem>
                     {AI_MODELS.filter(m => m.isEnabled).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                             {m.name}
@@ -61,6 +64,8 @@ function ModelSelector({ label, value, onChange, description }: {
  * 🏛️ AI Governance Hub Client Component
  */
 export function AiGovernanceClient() {
+    const t = useTranslations("admin.governance");
+
     // 📡 Data Fetching (Phase 222B Alignment)
     const { data: configData, isLoading: loading, refresh } = useApiItem<any>({
         endpoint: "/api/admin/ai/governance",
@@ -77,10 +82,10 @@ export function AiGovernanceClient() {
         endpoint: "/api/admin/ai/governance",
         method: "PATCH",
         onSuccess: () => {
-            toast.success("Gobernanza de IA actualizada correctamente");
+            toast.success(t("success"));
             refresh();
         },
-        onError: () => toast.error("Error guardando cambios")
+        onError: () => toast.error(t("error"))
     });
 
     const handleSave = () => {
@@ -98,8 +103,8 @@ export function AiGovernanceClient() {
     return (
         <PageContainer>
             <PageHeader
-                title="Gobernanza de IA"
-                subtitle="Gestión centralizada de modelos, límites y políticas de seguridad."
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon={<Shield className="w-6 h-6 text-primary" />}
             />
 
@@ -109,10 +114,10 @@ export function AiGovernanceClient() {
                     <CardHeader className="bg-primary/5 border-b border-primary/10">
                         <div className="flex items-center gap-2">
                             <BrainCircuit className="w-5 h-5 text-primary" />
-                            <CardTitle>Modelos Contractuales</CardTitle>
+                            <CardTitle>{t("models.title")}</CardTitle>
                         </div>
                         <CardDescription>
-                            Configura los modelos por defecto y fallback para toda la plataforma.
+                            {t("models.description")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
@@ -120,14 +125,14 @@ export function AiGovernanceClient() {
                             <div className="space-y-2">
                                 <Label className="text-sm font-bold flex items-center gap-2">
                                     <Zap className="w-4 h-4 text-amber-500" />
-                                    Modelo Principal (Default)
+                                    {t("models.default.label")}
                                 </Label>
                                 <Select
                                     value={localConfig.defaultModel}
                                     onValueChange={(v) => setLocalConfig({ ...localConfig, defaultModel: v })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Selecciona modelo" />
+                                        <SelectValue placeholder={t("models.select_placeholder")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {AI_MODELS.filter(m => m.isEnabled).map((m) => (
@@ -138,21 +143,21 @@ export function AiGovernanceClient() {
                                     </SelectContent>
                                 </Select>
                                 <p className="text-[11px] text-muted-foreground italic">
-                                    Usado para el 90% de las operaciones de RAG y análisis.
+                                    {t("models.default.desc")}
                                 </p>
                             </div>
 
                             <div className="space-y-2">
                                 <Label className="text-sm font-bold flex items-center gap-2">
                                     <Shield className="w-4 h-4 text-emerald-500" />
-                                    Modelo de Embeddings (Vectores)
+                                    {t("models.embeddings.label")}
                                 </Label>
                                 <Select
                                     value={localConfig?.embeddingModel || "gemini-embedding-001"}
                                     onValueChange={(v) => setLocalConfig({ ...localConfig, embeddingModel: v })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Selecciona modelo" />
+                                        <SelectValue placeholder={t("models.select_placeholder")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {AI_MODELS.filter(m => m.isEnabled).map((m) => (
@@ -163,21 +168,21 @@ export function AiGovernanceClient() {
                                     </SelectContent>
                                 </Select>
                                 <p className="text-[11px] text-muted-foreground italic">
-                                    Determina la calidad de la búsqueda vectorial.
+                                    {t("models.embeddings.desc")}
                                 </p>
                             </div>
 
                             <div className="space-y-2">
                                 <Label className="text-sm font-bold flex items-center gap-2 text-muted-foreground">
                                     <RefreshCw className="w-4 h-4" />
-                                    Modelo de Respaldo (Fallback)
+                                    {t("models.fallback.label")}
                                 </Label>
                                 <Select
                                     value={localConfig?.fallbackModel || "gemini-2.5-flash"}
                                     onValueChange={(v) => setLocalConfig({ ...localConfig, fallbackModel: v })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Selecciona modelo" />
+                                        <SelectValue placeholder={t("models.select_placeholder")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {AI_MODELS.filter(m => m.isEnabled).map((m) => (
@@ -197,10 +202,10 @@ export function AiGovernanceClient() {
                     <CardHeader className="bg-primary/5 border-b border-primary/10">
                         <div className="flex items-center gap-2">
                             <LayoutGrid className="w-5 h-5 text-primary" />
-                            <CardTitle>Mapeo Funcional por Tarea</CardTitle>
+                            <CardTitle>{t("mapping.title")}</CardTitle>
                         </div>
                         <CardDescription>
-                            Define qué modelo específico debe realizar cada tarea crítica del sistema.
+                            {t("mapping.description")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
@@ -209,18 +214,18 @@ export function AiGovernanceClient() {
                                 <AccordionTrigger className="hover:no-underline">
                                     <div className="flex items-center gap-2 font-bold">
                                         <BrainCircuit className="w-4 h-4" />
-                                        RAG & Búsqueda de Documentos
+                                        {t("mapping.rag.title")}
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <ModelSelector
-                                            label="Generador de Respuestas (RAG)"
+                                            label={t("mapping.rag.generator")}
                                             value={localConfig.ragGeneratorModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, ragGeneratorModel: v })}
                                         />
                                         <ModelSelector
-                                            label="Re-escritor de Consultas"
+                                            label={t("mapping.rag.rewriter")}
                                             value={localConfig.ragQueryRewriterModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, ragQueryRewriterModel: v })}
                                         />
@@ -232,18 +237,18 @@ export function AiGovernanceClient() {
                                 <AccordionTrigger className="hover:no-underline">
                                     <div className="flex items-center gap-2 font-bold">
                                         <Share2 className="w-4 h-4" />
-                                        Orquestación & Workflows
+                                        {t("mapping.workflows.title")}
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <ModelSelector
-                                            label="Enrutador de Workflows"
+                                            label={t("mapping.workflows.router")}
                                             value={localConfig.workflowRouterModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, workflowRouterModel: v })}
                                         />
                                         <ModelSelector
-                                            label="Analista de Nodos"
+                                            label={t("mapping.workflows.analyzer")}
                                             value={localConfig.workflowNodeAnalyzerModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, workflowNodeAnalyzerModel: v })}
                                         />
@@ -255,23 +260,23 @@ export function AiGovernanceClient() {
                                 <AccordionTrigger className="hover:no-underline">
                                     <div className="flex items-center gap-2 font-bold">
                                         <FileText className="w-4 h-4" />
-                                        Extracción & Análisis Técnico
+                                        {t("mapping.extraction.title")}
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <ModelSelector
-                                            label="Extractor de Grafos"
+                                            label={t("mapping.extraction.graph")}
                                             value={localConfig.ontologyRefinerModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, ontologyRefinerModel: v })}
                                         />
                                         <ModelSelector
-                                            label="Generador de Informes"
+                                            label={t("mapping.extraction.report")}
                                             value={localConfig.reportGeneratorModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, reportGeneratorModel: v })}
                                         />
                                         <ModelSelector
-                                            label="Extractor de Consultas"
+                                            label={t("mapping.extraction.query")}
                                             value={localConfig.queryEntityExtractorModel}
                                             onChange={(v) => setLocalConfig({ ...localConfig, queryEntityExtractorModel: v })}
                                         />
@@ -287,12 +292,12 @@ export function AiGovernanceClient() {
                     <CardHeader>
                         <div className="flex items-center gap-2 text-accent">
                             <Scale className="w-5 h-5" />
-                            <CardTitle>Límites & Cuotas</CardTitle>
+                            <CardTitle>{t("limits.title")}</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Max Tokens por Request</Label>
+                            <Label>{t("limits.max_tokens")}</Label>
                             <Input
                                 type="number"
                                 value={localConfig?.maxTokensPerRequest || 4096}
@@ -300,7 +305,7 @@ export function AiGovernanceClient() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Límite Diario de Tokens</Label>
+                            <Label>{t("limits.daily_tokens")}</Label>
                             <Input
                                 type="number"
                                 value={localConfig?.dailyTokenLimit || 500000}
@@ -308,7 +313,7 @@ export function AiGovernanceClient() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Límite Diario ($ USD)</Label>
+                            <Label>{t("limits.daily_budget")}</Label>
                             <Input
                                 type="number"
                                 value={localConfig?.dailyBudgetLimit || 10}
@@ -317,8 +322,8 @@ export function AiGovernanceClient() {
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="space-y-0.5">
-                                <Label className="text-sm font-medium">Anonimización PII</Label>
-                                <p className="text-[10px] text-muted-foreground italic">Masking automático</p>
+                                <Label className="text-sm font-medium">{t("limits.pii.label")}</Label>
+                                <p className="text-[10px] text-muted-foreground italic">{t("limits.pii.desc")}</p>
                             </div>
                             <Switch
                                 checked={!!localConfig?.piiMaskingEnabled}
@@ -327,8 +332,8 @@ export function AiGovernanceClient() {
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="space-y-0.5">
-                                <Label className="text-sm font-medium">Explicabilidad</Label>
-                                <p className="text-[10px] text-muted-foreground italic">Incluir "Thought Process"</p>
+                                <Label className="text-sm font-medium">{t("limits.explain.label")}</Label>
+                                <p className="text-[10px] text-muted-foreground italic">{t("limits.explain.desc")}</p>
                             </div>
                             <Switch
                                 checked={!!localConfig?.explainabilityEnabled}
@@ -339,7 +344,7 @@ export function AiGovernanceClient() {
                     <CardFooter className="bg-muted/30 pt-4">
                         <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 w-full justify-center">
                             <AlertCircle className="w-3 h-3" />
-                            Prevención de desbordamiento de costos activo.
+                            {t("limits.warning")}
                         </div>
                     </CardFooter>
                 </Card>
@@ -347,11 +352,11 @@ export function AiGovernanceClient() {
                 {/* 3. Acción de Guardado (Mobile Floating or Bottom) */}
                 <div className="lg:col-span-3 flex justify-end gap-3 pt-4">
                     <Button variant="outline" onClick={() => setLocalConfig(configData)} disabled={saving}>
-                        Descartar
+                        {t("actions.discard")}
                     </Button>
                     <Button onClick={handleSave} disabled={saving} className="gap-2 px-8">
                         {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        Guardar Gobernanza
+                        {t("actions.save")}
                     </Button>
                 </div>
             </div>

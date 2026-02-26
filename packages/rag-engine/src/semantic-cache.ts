@@ -86,7 +86,7 @@ export class SemanticCache {
     ): Promise<RagResult[] | null> {
         return tracer.startActiveSpan('semantic_cache.similarity_lookup', async (span: Span) => {
             try {
-                const { generateEmbedding } = await import('@/lib/llm');
+                const { generateEmbedding } = await import('@/services/llm/llm-service');
                 const embedding = await generateEmbedding(query, tenantId, correlationId);
 
                 const db = await connectDB();
@@ -149,7 +149,7 @@ export class SemanticCache {
 
             await redis.set(key, results, { ex: ttlL2 });
 
-            const { generateEmbedding } = await import('@/lib/llm');
+            const { generateEmbedding } = await import('@/services/llm/llm-service');
             const [embedding, db] = await Promise.all([
                 generateEmbedding(query, tenantId, correlationId),
                 connectDB()

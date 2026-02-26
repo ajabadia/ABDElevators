@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
     ShieldCheck,
     ArrowUpCircle,
@@ -18,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { AuditReport } from '@/types/security';
 
 export function SecurityAutoscaleMonitor() {
+    const t = useTranslations('admin.security_autoscale');
     const [audit, setAudit] = useState<AuditReport | null>(null);
     const [infraStatus, setInfraStatus] = useState({
         tier: 'STANDARD',
@@ -34,9 +36,9 @@ export function SecurityAutoscaleMonitor() {
             governancePoliciesActive: 4,
             securityScore: 100,
             findings: [
-                "Cifrado AES-256-GCM validado en todos los campos sensibles.",
-                "Motor de Gobierno operando bajo política 'Strict Compliance'.",
-                "Trazabilidad de auditoría inmutable activa."
+                t('audit.findings.encryption'),
+                t('audit.findings.governance'),
+                t('audit.findings.traceability')
             ]
         });
 
@@ -62,28 +64,28 @@ export function SecurityAutoscaleMonitor() {
                         <div>
                             <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                                 <ArrowUpCircle className="text-teal-400" />
-                                AI Infrastructure Scaling
+                                {t('scaling.title')}
                             </CardTitle>
-                            <CardDescription className="text-slate-400 font-medium">Auto-optimización de recursos dirigida por el Sistema.</CardDescription>
+                            <CardDescription className="text-slate-400 font-medium">{t('scaling.desc')}</CardDescription>
                         </div>
-                        <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30 font-black">AI-MANAGED</Badge>
+                        <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30 font-black">{t('scaling.badge')}</Badge>
                     </div>
                 </CardHeader>
                 <CardContent className="p-8 space-y-8 relative z-10">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Estado Actual de Infraestructura</p>
+                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">{t('scaling.infra_label')}</p>
                             <p className="text-3xl font-black text-white">{infraStatus.tier}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Optimización</p>
+                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">{t('scaling.optimization')}</p>
                             <p className="text-xl font-black text-emerald-400">99.9%</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tight">
-                            <span className="flex items-center gap-2"><Zap size={14} className="text-amber-400" /> Carga de Computación</span>
+                            <span className="flex items-center gap-2"><Zap size={14} className="text-amber-400" /> {t('scaling.compute_load')}</span>
                             <span>{infraStatus.cpu.toFixed(1)}%</span>
                         </div>
                         <Progress value={infraStatus.cpu} className="h-3 bg-white/10" />
@@ -92,8 +94,8 @@ export function SecurityAutoscaleMonitor() {
                     <div className="p-5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-4">
                         <Server className="text-teal-400" size={24} />
                         <div>
-                            <p className="text-xs font-bold">Reserva Dinámica Activa</p>
-                            <p className="text-[10px] text-slate-400 leading-relaxed">El sistema está ajustando los nodos de red basándose en el tráfico semántico global.</p>
+                            <p className="text-xs font-bold">{t('scaling.dynamic_reserve')}</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed">{t('scaling.dynamic_reserve_desc')}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -106,14 +108,14 @@ export function SecurityAutoscaleMonitor() {
                         <div>
                             <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3 text-slate-900 dark:text-white">
                                 <ShieldCheck className="text-emerald-600" />
-                                Universal Security Audit
+                                {t('audit.title')}
                             </CardTitle>
-                            <CardDescription className="text-slate-500 font-medium">Verificación inmutable de blindaje y gobierno.</CardDescription>
+                            <CardDescription className="text-slate-500 font-medium">{t('audit.desc')}</CardDescription>
                         </div>
                         {audit && (
                             <div className="text-right">
                                 <p className="text-4xl leading-none font-black text-emerald-600">{audit.securityScore}%</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Health Score</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('audit.health_score')}</p>
                             </div>
                         )}
                     </div>
@@ -123,12 +125,12 @@ export function SecurityAutoscaleMonitor() {
                         <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 text-center">
                             <Lock size={20} className="mx-auto mb-2 text-indigo-500" />
                             <p className="text-xl font-black text-slate-900 dark:text-white">{audit?.encryptedFieldsFound}</p>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Campos Cifrados</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('audit.encrypted_fields')}</p>
                         </div>
                         <div className="p-5 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 text-center">
                             <Activity size={20} className="mx-auto mb-2 text-rose-500" />
                             <p className="text-xl font-black text-slate-900 dark:text-white">{audit?.governancePoliciesActive}</p>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Políticas Activas</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('audit.active_policies')}</p>
                         </div>
                     </div>
 
@@ -144,7 +146,7 @@ export function SecurityAutoscaleMonitor() {
                     <div className="flex items-center gap-2 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10">
                         <AlertTriangle className="text-amber-600" size={14} />
                         <p className="text-[10px] font-bold text-amber-700">
-                            Próxima auditoría completa programada en 24 horas.
+                            {t('audit.next_audit')}
                         </p>
                     </div>
                 </CardContent>

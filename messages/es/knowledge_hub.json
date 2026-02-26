@@ -20,6 +20,55 @@
     }
   },
   "analyze_modal": {
-    "title": "Consulta Inteligente"
+    "title": "Consulta Inteligente",
+    "description": "Realiza consultas técnicas avanzadas sobre el corpus de conocimiento. LA IA buscará evidencias en los manuales indexados.",
+    "placeholder": "Ej: ¿Cuál es el par de apriete para el motor Otis VF?",
+    "thinking": "La IA está analizando los manuales...",
+    "success": "Respuesta generada con éxito.",
+    "error": "Error al procesar la consulta técnica.",
+    "toasts": {
+      "suggestions_loaded": "Sugerencias dinámicas cargadas."
+    },
+    "status": {
+      "starting": "Iniciando consulta...",
+      "connected": "Conexión establecida. El agente está pensando...",
+      "analyzing_chunks": "Analizando {count} fragmentos de información...",
+      "retrieving": "Recuperando documentos técnicos...",
+      "grading": "Validando relevancia de la información...",
+      "verifying": "Verificando hechos para evitar alucinaciones...",
+      "rewriting": "Optimizando consulta para mejor precisión...",
+      "generating": "Redactando respuesta final...",
+      "generating_suggestions": "Generando sugerencias personalizadas...",
+      "thinking": "El agente está pensando..."
+    },
+    "traces": {
+      "request_sent": "Solicitud enviada al motor RAG...",
+      "title": "PROCESO DE PENSAMIENTO",
+      "hide": "[ OCULTAR ]",
+      "show": "[ MOSTRAR ]"
+    },
+    "errors": {
+      "title": "Error de Análisis",
+      "generic": "Error al analizar el documento. Por favor, inténtelo de nuevo.",
+      "unexpected": "La consulta falló inesperadamente.",
+      "suggestions_failed": "No se pudieron cargar las sugerencias dinámicas."
+    },
+    "actions": {
+      "reset": "Reiniciar conversación"
+    },
+    "chat": {
+      "welcome_title": "¿Qué quieres saber sobre este documento?",
+      "welcome_desc": "Pregunta lo que sea. La IA analizará exclusivamente el contenido de este archivo para responderte con precisión.",
+      "confidence": "Confianza",
+      "verified_sources": "{count} Fuentes verificadas",
+      "input_placeholder": "Escribe tu pregunta aquí...",
+      "footer_note": "Análisis asistido por IA - Verificado exclusivamente en el documento fuente"
+    },
+    "suggestions": {
+      "default_1": "Resume los puntos clave",
+      "default_2": "¿Hay requisitos técnicos específicos?",
+      "default_3": "Identifica posibles riesgos",
+      "default_4": "Extrae una tabla de especificaciones"
+    }
   }
 }

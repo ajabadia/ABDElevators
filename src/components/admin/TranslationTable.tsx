@@ -78,15 +78,15 @@ export function TranslationTable({
             // Si estamos en modo batch, no mostrar toast individual por cada chunk
             if (!isBatchingRef.current) {
                 const count = data?.count || 0;
-                toast.success(tNotif('aiSuccessTitle'), {
-                    description: `${tNotif('aiSuccessDesc')} (${count} llaves procesadas)`
+                toast.success(tNotif('batch_success_title'), {
+                    description: tNotif('batch_success_desc', { count })
                 });
             }
         },
         onError: (err) => {
             console.error('[i18n-ai] ❌ Error en autotraducción:', err);
-            toast.error('Error de IA', {
-                description: typeof err === 'string' ? err : 'No se pudo completar la traducción automática'
+            toast.error(tNotif('batch_error_title'), {
+                description: typeof err === 'string' ? err : tNotif('batch_error_generic')
             });
         }
     });
@@ -151,7 +151,7 @@ export function TranslationTable({
 
         const CHUNK_SIZE = 40;
         const totalChunks = Math.ceil(missingKeys.length / CHUNK_SIZE);
-        const toastId = toast.loading(`Iniciando IA: 0/${missingKeys.length}...`, {
+        const toastId = toast.loading(tNotif('batch_translate_progress', { current: 0, total: missingKeys.length }), {
             style: { minWidth: '300px' }
         });
 
@@ -164,7 +164,7 @@ export function TranslationTable({
                 const currentBatchNumber = Math.floor(i / CHUNK_SIZE) + 1;
 
                 toast.loading(
-                    `Traduciendo lote ${currentBatchNumber}/${totalChunks} (${chunk.length} llaves)...`,
+                    tNotif('batch_translate_chunk', { current: currentBatchNumber, total: totalChunks, count: chunk.length }),
                     { id: toastId }
                 );
 
@@ -179,7 +179,7 @@ export function TranslationTable({
                     successfulCount += (result.count || 0);
                 } else {
                     console.warn(`Lote ${currentBatchNumber} falló. Deteniendo proceso.`);
-                    toast.error(`Proceso interrumpido: El lote ${currentBatchNumber} falló.`, { id: toastId });
+                    toast.error(tNotif('batch_error_interrupted', { batch: currentBatchNumber }), { id: toastId });
                     break;
                 }
 
@@ -188,13 +188,13 @@ export function TranslationTable({
                 }
             }
 
-            toast.success(`Traducción completada`, {
+            toast.success(tNotif('batch_success_title'), {
                 id: toastId,
-                description: `Se tradujeron ${successfulCount} llaves correctamente.`
+                description: tNotif('batch_success_desc', { count: successfulCount })
             });
         } catch (error) {
             console.error('Error en batch:', error);
-            toast.error('Error durante la traducción masiva', { id: toastId });
+            toast.error(tNotif('batch_error_generic'), { id: toastId });
         } finally {
             isBatchingRef.current = false;
         }
@@ -248,7 +248,7 @@ export function TranslationTable({
                                                 <button
                                                     onClick={() => setDebugKey({ key, locale: primaryLocale })}
                                                     className="opacity-0 group-hover/key:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-teal-600"
-                                                    title="Ver detalles técnicos y origen de la llave"
+                                                    title={tTable('info_tooltip')}
                                                 >
                                                     <Info className="w-3.5 h-3.5" />
                                                 </button>

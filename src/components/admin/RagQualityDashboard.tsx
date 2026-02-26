@@ -117,7 +117,7 @@ export default function RagQualityDashboard() {
                     {criticalEntities.length > 0 && (
                         <Badge variant="destructive" className="animate-pulse px-3 py-1">
                             <AlertCircle className="w-4 h-4 mr-2" />
-                            {criticalEntities.length} Análisis Críticos
+                            {t('critical_count', { count: criticalEntities.length })}
                         </Badge>
                     )}
                     <Badge variant="outline" className="px-3 py-1 text-sm font-medium border-indigo-200 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:border-indigo-900 dark:text-indigo-300">
@@ -133,10 +133,10 @@ export default function RagQualityDashboard() {
                     <CardHeader className="pb-3">
                         <CardTitle className="text-rose-700 dark:text-rose-400 flex items-center gap-2">
                             <Zap className="w-5 h-5 text-rose-500 fill-rose-500" />
-                            Atención Técnica Requerida (Confianza Baja)
+                            {t('critical_warning.title')}
                         </CardTitle>
                         <CardDescription className="text-rose-600/70 dark:text-rose-400/60 font-medium">
-                            Los siguientes pedidos han sido marcados por el sistema con una confianza inferior al 70%. Requieren validación humana inmediata.
+                            {t('critical_warning.desc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -156,9 +156,9 @@ export default function RagQualityDashboard() {
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-black tracking-widest">
-                                        <span>{p.filename || 'Análisis PDF'}</span>
+                                        <span>{p.filename || t('default_filename')}</span>
                                         <span className="flex items-center gap-1">
-                                            Revisar <ChevronRight className="w-3 h-3" />
+                                            {t('review')} <ChevronRight className="w-3 h-3" />
                                         </span>
                                     </div>
                                 </a>
@@ -231,9 +231,9 @@ export default function RagQualityDashboard() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <BarChart3 className="w-5 h-5 text-slate-500" />
-                            Evolución de Calidad
+                            {t('charts.evolution_title')}
                         </CardTitle>
-                        <CardDescription>Tendencia histórica de métricas RAG en los últimos análisis.</CardDescription>
+                        <CardDescription>{t('charts.evolution_desc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">

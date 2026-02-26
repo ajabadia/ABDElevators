@@ -90,7 +90,17 @@
       "empty": "No recent activity recorded."
     },
     "timeline": {
-      "actor": "Actor"
+      "actor": "Actor",
+      "loading": "Cargando historial...",
+      "error": "Error al cargar historial: {message}",
+      "empty": "No hay eventos registrados.",
+      "title": "Historial del Caso",
+      "types": {
+        "IA": "Inteligencia Artificial",
+        "HUMAN": "Operador Humano",
+        "INGEST": "Motor de Ingesta",
+        "SYSTEM": "Sistema"
+      }
     },
     "workflows_dashboard": {
       "title": "Workflow Designer",
@@ -110,6 +120,62 @@
       "riskDetected": "Risk detected: {level}",
       "statusUpdated": "Phase Updated",
       "statusUpdatedDesc": "The case has advanced to: {to}"
+    },
+    "workflows": {
+      "syncing": "Sincronizando Motor de Workflows...",
+      "title": "Diseñador de Workflows",
+      "loadError": "Error de Carga",
+      "backToHub": "Volver al Hub de IA",
+      "loadErrorDesc": "No se pudo recuperar la definición del workflow: {error}",
+      "saveSuccess": "Configuración Guardada",
+      "back": "Volver",
+      "publish": "Publicar Workflow",
+      "tabs": {
+        "transitions": "Transiciones",
+        "states": "Estados",
+        "config": "Master Config"
+      },
+      "saveSuccessDesc": "El workflow ha sido actualizado con éxito.",
+      "states": {
+        "title": "Estados de Proceso",
+        "id": "ID del Estado",
+        "label": "Etiqueta",
+        "color": "Color (Hex)",
+        "newState": "Nuevo Estado",
+        "iaLayer": "Capa de Inteligencia (LLM)",
+        "promptKey": "Prompt Key",
+        "schemaKey": "Output Schema"
+      },
+      "transitions": {
+        "title": "Configuración de Transiciones",
+        "to": "Hacia",
+        "from": "Desde",
+        "strategy": "Estrategia de Decisión",
+        "add": "Añadir Transición",
+        "label": "Acción / Etiqueta",
+        "strategies": {
+          "human": "🛡️ Solo Humana",
+          "llm_suggest": "🧠 IA + HITL (Sugerida)",
+          "user": "👤 Usuario (Manual)",
+          "llm_direct": "🤖 LLM Directa (Auto)"
+        },
+        "routing": {
+          "branches": "{count} Ramas Configuradas",
+          "promptKey": "Routing Prompt Key"
+        }
+      },
+      "config": {
+        "global": "Estrategia Global",
+        "identity": "Identidad del Workflow",
+        "active": "Estado Activo",
+        "activeDesc": "Disponible para nuevos casos",
+        "publication": "Parámetros de Publicación",
+        "environment": "Entorno",
+        "defaultDesc": "Asignado automáticamente",
+        "version": "Versión",
+        "default": "Workflow por Defecto",
+        "name": "Nombre Interno"
+      }
     }
   },
   "roi": {
@@ -203,6 +269,10 @@
     "subtitle": "Monitoring of industrial resources and billing.",
     "plan_label": "{tier} Plan",
     "loading": "Synchronizing metrics...",
+    "error_loading": "Error loading metrics",
+    "unknown_error": "Unknown error",
+    "retry": "Retry",
+    "empty_state": "No consumption data available.",
     "auto_on": "Auto ON",
     "auto_off": "Auto OFF",
     "tabs": {
@@ -271,6 +341,7 @@
       "title": "Next Invoice",
       "closing": "Estimated closing: {date}",
       "tier_estimate": "Pro Tier Estimate",
+      "manual_mode": "Manual Billing Mode",
       "download_preview": "Download Preview PDF",
       "generating": "Generating PDF...",
       "success": "Invoice Downloaded",
@@ -288,11 +359,49 @@
       "zero_bytes": "0 Bytes"
     },
     "charts": {
-      "tokens_title": "AI Consumption Trends"
+      "tokens_title": "AI Consumption Trends",
+      "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
     },
     "contracts": {
       "edit": {
-        "warning_title": "Atention"
+        "warning_title": "Atention",
+        "title": "Editar Contrato",
+        "plan_label": "Plan Base",
+        "overrides_title": "Overrides (Límites Personalizados)",
+        "description": "Configuración personalizada para {name} ({id})",
+        "plan_desc": "El plan define las tarifas base y funcionalidades.",
+        "storage_desc": "1 GB = 1073741824 Bytes.",
+        "save": "Guardar Cambios",
+        "success_desc": "Se han aplicado los cambios para {name}",
+        "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
+        "cancel": "cancelar",
+        "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
+        "storage_label": "Límite Almacenamiento (Bytes)",
+        "tokens_label": "Límite Tokens Mensuales",
+        "success": "Contrato actualizado"
+      },
+      "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
+      "title": "Gestión de Contratos ('Casos')",
+      "table": {
+        "override": "Override",
+        "plan": "Plan Base",
+        "tenant": "Tenant",
+        "usage": "Uso (Tokens / Storage)",
+        "mrr": "MRR (Est.)",
+        "status": "Estado",
+        "actions": "Acciones",
+        "loading": "Cargando contratos...",
+        "empty": "No se encontraron resultados",
+        "search_placeholder": "Buscar tenant..."
+      },
+      "status": {
+        "blocked": "BLOQUEADO",
+        "past_due": "VENCIDO",
+        "active": "ACTIVO"
+      },
+      "actions": {
+        "invoices": "Ver Facturas",
+        "edit": "Editar Contrato"
       }
     }
   },
@@ -516,7 +625,12 @@
         "subflow": "Sub-workflow",
         "human_validation": "Human Validation (HITL)",
         "rag_check": "RAG Verification",
-        "sovereign_tool": "Sovereign Tool"
+        "sovereign_tool": "Sovereign Tool",
+        "simple_if": "IF Simple",
+        "switch": "Switch / Case",
+        "multi_path": "Ruta de Múltiples Caminos",
+        "wait": "Espera / Delay",
+        "wait_5s": "Esperar 5s"
       },
       "industrial": "Industrial Operations"
     },
@@ -712,58 +826,47 @@
     }
   },
   "rag_quality": {
-    "title": "Quality Control",
-    "subtitle": "IA engine evaluation and continuous improvement center.",
-    "dashboard_title": "Analysis Quality Dashboard",
-    "dashboard_desc": "Supervision of the reliability, relevance, and precision of generated responses.",
-    "latest_sessions": "Based on last {count} sessions",
+    "dashboard_title": "RAG Quality Governance",
+    "dashboard_desc": "Monitor faithfulness, relevance, and precision of agentic engine responses.",
     "loading": "Loading quality metrics...",
+    "latest_sessions": "Based on last {count} sessions",
+    "critical_count": "{count} Critical Analyses",
+    "critical_warning": {
+      "title": "Technical Attention Required (Low Confidence)",
+      "desc": "The following orders have been flagged with confidence below 70%. Human validation required."
+    },
+    "default_filename": "PDF Analysis",
+    "review": "Review",
     "metrics": {
       "faithfulness": {
         "label": "Faithfulness",
-        "desc": "Is the response based on documents? (Anti-Hallucination)"
+        "desc": "Is the response based on the documents?"
       },
       "relevance": {
         "label": "Answer Relevance",
-        "desc": "Does the response really solve the technical doubt?"
+        "desc": "Does the response actually resolve the doubt?"
       },
       "precision": {
         "label": "Context Precision",
-        "desc": "Quality of the chunks retrieved by the vector engine."
+        "desc": "Quality of the retrieved fragments."
       }
     },
+    "charts": {
+      "evolution_title": "Quality Evolution",
+      "evolution_desc": "Historical trend of RAG metrics in recent analyses."
+    },
     "history": {
-      "title": "Evaluated Query History",
-      "desc": "Quality audit and AI thought (Trace) tracking.",
-      "empty": "No evaluations registered yet.",
-      "empty_desc": "Use the RAG search to generate quality data.",
-      "show_trace": "See Agent Thought (Trace) ↓",
-      "hide_trace": "Hide Trace ↑",
+      "title": "Evaluation History",
+      "desc": "Detailed record of generation quality.",
+      "show_trace": "View Trace",
+      "hide_trace": "Hide Trace",
       "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
-      "trace_end": "--- END OF TRACE ---"
+      "trace_end": "--- END OF TRACE ---",
+      "empty": "No evaluations recorded yet.",
+      "empty_desc": "Use the RAG search to generate data."
     },
     "trace": {
-      "title": "AI Decision Diagnostic",
-      "sections": {
-        "quality": "Quality Metrics",
-        "causal": "Causal Analysis & Self-Correction",
-        "trace": "Reasoning Trace (Thought Process)",
-        "query": "Original Query",
-        "response": "Engine Generation",
-        "context": "Manual Context (Chunks)"
-      },
-      "metrics": {
-        "faithfulness": "Faithfulness",
-        "relevance": "Relevance",
-        "precision": "Precision"
-      },
-      "causal": {
-        "cause": "Detected Root Cause",
-        "fix": "Correction Strategy",
-        "reasoning": "Judge Reasoning"
-      },
       "actions": {
-        "close": "Close Diagnostic",
         "audit": "Audit Decision"
       }
     }
@@ -825,6 +928,15 @@
         "network_error": "Network error connecting to Guardian service",
         "network_error_title": "Network Error",
         "details_aria": "Policy details"
+      },
+      "grid": {
+        "empty": "No active security policies have been detected in this environment.",
+        "resources_actions": "Resources \\ Actions",
+        "policies_count": "{count} Policies",
+        "inherited_deny": "Access not defined (Inherited DENY)",
+        "allow_access": "Allow Access",
+        "deny_access": "Deny Access",
+        "inherited_def": "Inherited Def."
       },
       "filter": "Filter",
       "metadata": {
@@ -921,6 +1033,26 @@
     "highlight": "Intelligence",
     "subtitle": "Monitor the autonomous discovery of patterns and govern the federated knowledge network.",
     "loading": "Initializing Sovereign Engine...",
+    "dashboard": {
+      "no_data_title": "Intelligence Data Unavailable",
+      "no_data_desc": "It seems there are not enough interactions yet to generate collective metrics or there is a connection issue.",
+      "retry": "Retry Connection",
+      "semantic_density": "Semantic Density",
+      "nodes_relations": "Nodes + Relations",
+      "learnings": "Learnings",
+      "corrections": "Corrections",
+      "precision": "{val}% Precision",
+      "automated_tasks": "Auto Tasks",
+      "no_intervention": "No intervention",
+      "mins_per_order": "{val}min/req",
+      "estimated_roi": "Estimated ROI",
+      "accumulated_savings": "Accumulated savings",
+      "optimization": "Optimization",
+      "accuracy_evolution_title": "Accuracy Evolution (System Agent)",
+      "accuracy_evolution_desc": "Continuous learning based on human feedback.",
+      "learning_focus_title": "Learning Focus",
+      "learning_focus_desc": "Entities with the most corrections."
+    },
     "metrics": {
       "total_patterns": "Total Patterns",
       "total_patterns_trend": "+5 (simulado)",
@@ -985,6 +1117,7 @@
       "drop_idle": "Drag a file or click to upload",
       "file_hint": "CSV, XLSX up to 5MB",
       "detected_rows": "{count} rows detected",
+      "more_rows": "And {count} more rows...",
       "valid_to_send": "Valid to send",
       "with_errors": "With errors (will be skipped)",
       "invite_button": "Invite {count}",
@@ -1051,7 +1184,12 @@
       "searchPlaceholder": "Search by key or text...",
       "syncAllBtn": "Sync all languages",
       "allFilter": "ALL",
-      "filterMissing": "Show only missing"
+      "filterMissing": "Show only missing",
+      "exportBtn": "Exportar a JSON",
+      "exportSuccessTitle": "Exportación Exitosa",
+      "exportSuccessDesc": "Las traducciones se han persistido en los archivos locales.",
+      "syncToDbBtn": "Sincronización hacia BD",
+      "syncToFileBtn": "Sincronización hacia archivos JSON"
     },
     "languages": {
       "es": "Spanish",
@@ -1068,12 +1206,49 @@
       "missing": "Missing",
       "noResults": "No translation keys found",
       "searchEmptyTitle": "Search or filter to begin",
-      "searchEmptyDesc": "Use namespace filters or search bar to load translations",
+      "searchEmptyDesc": "Use namespace filters or the search bar to load translations",
+      "info_tooltip": "View technical details and key origin",
       "noMatch": "No match",
       "aiSuccessDesc": "All missing translations have been generated",
       "aiSuccessTitle": "Auto-translation completed",
       "upToDateDesc": "No missing translations",
-      "upToDateTitle": "Translations up to date"
+      "upToDateTitle": "Translations up to date",
+      "notifications": {
+        "aiSuccessTitle": "IA: Traducción completada",
+        "aiSuccessDesc": "Se han generado las traducciones faltantes.",
+        "upToDateTitle": "Todo al día",
+        "upToDateDesc": "No hay llaves faltantes en este idioma.",
+        "autoTranslateBtn": "Auto-traducir faltantes",
+        "cancel": "Cancelar",
+        "empty": "Sin resultados",
+        "keyHeader": "Clave",
+        "noMatch": "Sin coincidencias",
+        "missing": "Faltante",
+        "noResults": "Sin resultados",
+        "primaryLabel": "Idioma primario",
+        "save": "Guardar",
+        "secondaryLabel": "Idioma secundario",
+        "syncCompletedTitle": "Sincronización completada",
+        "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
+        "syncSuccessTitle": "Sincronización Exitosa",
+        "syncSuccessDetail": "{added} nuevas, {updated} actualizadas.",
+        "syncErrorTitle": "Error de sincronización",
+        "syncErrorDesc": "Error al sincronizar con la base de datos",
+        "exportCompletedTitle": "Exportación completada",
+        "exportNoChanges": "Los archivos JSON ya están sincronizados con la BD.",
+        "exportSuccessDetail": "{added} nuevas, {updated} actualizadas en JSON.",
+        "exportErrorTitle": "Error de exportación",
+        "exportErrorDesc": "Error al exportar a archivos locales",
+        "saveSuccess": "Traducción actualizada correctamente.",
+        "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+        "batch_translate_progress": "Iniciando IA: {current}/{total}...",
+        "batch_translate_chunk": "Traduciendo lote {current}/{total} ({count} llaves)...",
+        "batch_success_title": "Traducción completada",
+        "batch_success_desc": "Se tradujeron {count} llaves correctamente.",
+        "batch_error_title": "Error de traducción masiva",
+        "batch_error_interrupted": "Proceso interrumpido: El lote {batch} falló.",
+        "batch_error_generic": "Error durante la traducción masiva"
+      }
     },
     "notifications": {
       "aiSuccessTitle": "AI: Translation completed",
@@ -1101,7 +1276,61 @@
       "exportErrorTitle": "Export error",
       "exportErrorDesc": "Error exporting to local files",
       "syncSuccessDesc": "Local files have been dumped to the database.",
-      "saveSuccess": "Translation updated successfully."
+      "saveSuccess": "Translation updated successfully.",
+      "batch_translate_progress": "Starting AI: {current}/{total}...",
+      "batch_translate_chunk": "Translating batch {current}/{total} ({count} keys)...",
+      "batch_success_title": "Translation completed",
+      "batch_success_desc": "{count} keys were successfully translated.",
+      "batch_error_title": "Bulk translation error",
+      "batch_error_interrupted": "Process interrupted: Batch {batch} failed.",
+      "batch_error_generic": "Error during bulk translation"
+    },
+    "api_docs": {
+      "loading": "Iniciando Portal Técnico...",
+      "title": "Portal de Documentación API",
+      "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
+      "card_title": "Especificación de Plataforma RAG ABD",
+      "error_loading": "No se pudo cargar la definición de la API."
+    },
+    "buttons": {
+      "downloadBackup": "Descargar Backup Completo (.zip)",
+      "generatingZip": "Generando ZIP...",
+      "generateCertificate": "Generar Certificado de Eliminación (PDF)",
+      "signingPdf": "Firmando PDF...",
+      "requestDeletion": "Solicitar Eliminación Permanente de Tenant",
+      "manualAdminRequest": "Petición manual de Administrador"
+    },
+    "toasts": {
+      "backupDownloaded": "Backup Descargado",
+      "certificateGenerated": "Certificado Generado",
+      "backupSuccess": "Tu paquete de conocimiento ha sido exportado exitosamente.",
+      "backupError": "No se pudo generar el backup.",
+      "certificateSuccess": "El certificado legal PDF ha sido descargado.",
+      "error": "Error",
+      "certificateError": "No se pudo generar el certificado."
+    },
+    "aiGovernance": {
+      "title": "Gobernanza de IA (EU AI Act)",
+      "description": "Supervisión de modelos, categorización de riesgos y transparencia según la normativa europea.",
+      "registryTitle": "Registro de Modelos",
+      "registryDesc": "Listado de LLMs y servicios de embeddings autorizados.",
+      "riskTitle": "Categorización de Riesgo",
+      "riskDesc": "Nivel de criticidad de las implementaciones de IA.",
+      "auditTitle": "Métricas de Transparencia",
+      "auditDesc": "Evidencia de calidad y fidelidad de las respuestas.",
+      "model": "Modelo",
+      "provider": "Proveedor",
+      "status": "Estado de Auditoría",
+      "lastUpdate": "Última Validación",
+      "riskLevels": {
+        "unacceptable": "Inaceptable",
+        "high": "Alto",
+        "limited": "Limitado",
+        "minimal": "Mínimo"
+      },
+      "euRisk": "Riesgo EU",
+      "governed": "Gobernado",
+      "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación RAG se clasifica como <strong>riesgo {risk}</strong> ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
     }
   },
   "api_docs": {
@@ -1135,7 +1364,8 @@
       "generatingZip": "Generating ZIP...",
       "generateCertificate": "Generate Deletion Certificate (PDF)",
       "signingPdf": "Signing PDF...",
-      "requestDeletion": "Request Permanent Tenant Deletion"
+      "requestDeletion": "Request Permanent Tenant Deletion",
+      "manualAdminRequest": "Manual Admin Request"
     },
     "toasts": {
       "backupDownloaded": "Backup Downloaded",
@@ -1164,7 +1394,10 @@
         "high": "High",
         "limited": "Limited",
         "minimal": "Minimal"
-      }
+      },
+      "euRisk": "EU Risk",
+      "governed": "Governed",
+      "complianceNoteHtml": "<strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{risk} risk</strong> as it provides technical assistance and information retrieval without automated decision-making."
     }
   },
   "documentTypes": {
@@ -1288,6 +1521,24 @@
     "info": {
       "multi_vertical": "Prompts marked as 'ELEVATORS' only affect that industry."
     },
+    "sync_modal": {
+      "title": "Run Global Sync?",
+      "description": "This action will scrape all master prompts in {codePath} and load them into the database for this tenant.",
+      "governance": "Governance:",
+      "governance_desc": "If a prompt in the DB has a higher version than the code, it will not be overwritten. New prompts will be created automatically.",
+      "cancel": "Cancel",
+      "confirm": "Sync Now"
+    },
+    "industries": {
+      "all": "Filter by Industry",
+      "GENERIC": "Generic",
+      "ELEVATORS": "Elevators",
+      "LEGAL": "Legal",
+      "BANKING": "Banking",
+      "INSURANCE": "Insurance",
+      "IT": "IT",
+      "MEDICAL": "Medical"
+    },
     "editor_placeholder_title": "Master Prompt Editor",
     "editor_placeholder_desc": "Select a prompt from the list or create a new one to start editing.",
     "editor": {
@@ -1307,7 +1558,14 @@
       "category": "Category",
       "template": "Template",
       "variables": "System Variables",
-      "change_reason": "Reason for change"
+      "change_reason": "Reason for change",
+      "template_title": "Plantilla de Ingeniería",
+      "load_example": "Cargar Ejemplo",
+      "chars": "chars",
+      "tips_title": "Consejos de Prompting:",
+      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
+      "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
+      "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
     },
     "history": {
       "title": "Global Audit Log",
@@ -1320,6 +1578,19 @@
       "by": "By",
       "reason": "Reason",
       "date": "Date"
+    },
+    "variables": {
+      "title": "Dynamic Variables",
+      "add_btn": "Add Variable",
+      "name_placeholder": "Var Name",
+      "desc_placeholder": "Variable description...",
+      "empty": "No variables configured",
+      "types": {
+        "string": "String",
+        "number": "Number",
+        "boolean": "Boolean",
+        "json": "JSON"
+      }
     },
     "tabs": {
       "active": "Active Prompts",
@@ -1338,7 +1609,12 @@
       "version": "Version",
       "last_modified": "Last Modified",
       "status": "Current Status"
-    }
+    },
+    "system": "Sistema",
+    "no_records": "No se encontraron registros en el historial",
+    "by": "Por",
+    "reason": "Motivo",
+    "date": "Fecha"
   },
   "support": {
     "title": "Industrial Support Console",
@@ -1364,8 +1640,10 @@
       "assign": "Assign to...",
       "reply": "Reply to Client",
       "resolve": "Mark as Resolved",
-      "close": "Close Permanently"
-    }
+      "close": "Close Permanently",
+      "refresh": "Refrescar"
+    },
+    "placeholder_desc": "--xxx---xxx--"
   },
   "workflow_tasks": {
     "title": "Task Collaboration Hub",
@@ -1456,13 +1734,42 @@
       "status": {
         "active": "ACTIVE",
         "past_due": "PAST DUE",
-        "blocked": "BLOCKED"
+        "blocked": "BLOCKED",
+        "trial": "PRUEBA"
       },
       "actions": {
         "edit": "Edit Contract",
         "invoices": "View Invoices",
         "upcoming_title": "Upcoming Feature",
         "upcoming_desc": "This feature will be available soon."
+      },
+      "edit": {
+        "title": "Editar Configuración de Contrato",
+        "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
+        "plan_label": "Plan de Suscripción",
+        "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+        "plans": {
+          "basic": "Básico Business",
+          "free": "Prueba Gratuita",
+          "enterprise": "Corporativo",
+          "pro": "Profesional"
+        },
+        "tokens_desc": "0 para usar el valor por defecto del plan.",
+        "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+        "warning_title": "Cambio Crítico de Cuotas",
+        "overrides_title": "Límites Personalizados (Overrides)",
+        "tokens_label": "Límite de Tokens (Mes)",
+        "storage_label": "Límite de Almacenamiento (Bytes)",
+        "success_desc": "Se ha guardado la configuración para {name}",
+        "success": "Contrato Actualizado",
+        "cancel": "Cancelar",
+        "save": "Guardar Cambios",
+        "error_updating": "Error al actualizar el contrato",
+        "spaces_tenant_label": "Límite Espacios (Tenant)",
+        "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
+        "spaces_user_label": "Límite Espacios (Usuario)",
+        "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)"
       }
     },
     "title": "Billing Data",
@@ -1543,6 +1850,106 @@
         "sso": "SSO & Audit Logs",
         "on_premise": "On-premise option"
       }
+    },
+    "plan_selector": {
+      "current_badge": "Current Plan",
+      "active": "Active",
+      "select": "Select",
+      "per_month": "/mo",
+      "plan_updated": "Plan Updated!",
+      "plan_changed_to": "Plan changed to {plan} successfully.",
+      "change_error": "Error changing plan",
+      "change_error_desc": "An unexpected error occurred while processing the manual change.",
+      "proration_title": "Proration Notice:",
+      "proration_desc": "When changing plans, the unused time on your current plan is automatically converted to credit that will be applied to your next invoice. The new plan is activated immediately."
+    },
+    "simulator": {
+      "title": "Cost Simulator",
+      "description": "Simulate the financial impact of a plan change on your billing.",
+      "current_subscription": "Current Subscription",
+      "current_plan": "Current Plan",
+      "days_used": "Days used in cycle",
+      "of_days": "of {total} days",
+      "new_subscription": "New Subscription",
+      "new_plan": "New Plan",
+      "billing_cycle": "Billing Cycle",
+      "monthly": "Monthly",
+      "yearly": "Yearly (-17%)",
+      "credit_unused": "Credit for unused time ({plan}):",
+      "new_plan_cost": "New Plan Cost ({plan}):",
+      "usage_projection": "Real Usage Projection",
+      "based_on_tokens": "Based on your monthly usage of {tokens} tokens",
+      "estimated_ai": "Est. AI Costs",
+      "total_now": "Total due now:",
+      "variable_note": "* Total does NOT include variable projected AI consumption costs ({amount})",
+      "charge_immediate": "Immediate charge",
+      "credit_account": "Account credit",
+      "loading_usage": "Analyzing historical consumption to sync simulator..."
+    },
+    "tab": {
+      "plan_current": "Current Plan",
+      "plan_active": "Active",
+      "free_trial_desc": "You are enjoying the free trial period.",
+      "subscription_renewed": "Subscription renewed monthly.",
+      "change_plan": "Change Plan",
+      "plans_and_prices": "Plans & Pricing",
+      "plans_select_desc": "Select the plan that best fits your needs.",
+      "calculating_stripe": "Calculating exact proration with Stripe...",
+      "processing": "Processing...",
+      "confirm_subscribe": "Confirm & Subscribe",
+      "tokens_ia": "AI Tokens (Generative)",
+      "storage_rag": "Storage (RAG)",
+      "vector_searches": "Vector Searches",
+      "api_calls": "API Calls",
+      "limit_badge": "Limit",
+      "overage_badge": "Overage",
+      "fiscal_identity": "Fiscal Identity",
+      "fiscal_name_label": "Company / Fiscal Name",
+      "fiscal_name_placeholder": "Ex: ABD Elevators Ltd.",
+      "tax_id_label": "Tax ID / VAT ID",
+      "tax_id_placeholder": "Ex: GB123456789",
+      "invoice_reception": "Invoice Reception",
+      "channel_label": "Preferred Channel",
+      "channel_email": "Email",
+      "channel_postal": "Postal Mail",
+      "channel_in_app": "In-App download only",
+      "channel_xml_edi": "XML / EDI Exchange",
+      "billing_email_label": "Billing Email",
+      "billing_email_placeholder": "billing@company.com",
+      "file_format_label": "File Format",
+      "format_pdf": "PDF (Digitally Signed)",
+      "format_xml": "XML Invoice",
+      "format_csv": "CSV / Excel",
+      "format_paper": "Paper (Physical)",
+      "shipping_address": "Shipping Address",
+      "street_label": "Street & Number",
+      "city_label": "City",
+      "postal_code_label": "Postal Code",
+      "country_label": "Country",
+      "billing_address": "Billing Address",
+      "billing_address_same": "Same as shipping address.",
+      "billing_street_label": "Street & Number (Billing)",
+      "e_invoice_cert": "Electronic Invoice Certification",
+      "e_invoice_compliance": "We comply with electronic invoicing standards for secure XML invoice exchange.",
+      "edi_info": "EDI Information"
+    },
+    "planActive": "Your Current Plan",
+    "planCurrent": "Your Current Plan",
+    "perMonth": "/month",
+    "contactSupport": "Contact Sales",
+    "selectPlan": "Select Plan",
+    "simulation": {
+      "title": "Simulation Summary",
+      "creditApplied": "Credit Applied",
+      "newPlanCost": "New Plan Cost",
+      "totalDueNow": "Total Due Now",
+      "nextBillingDate": "Next billing date"
+    },
+    "page": {
+      "title": "Facturación & Consumo",
+      "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
+      "metadata_title": "Facturación y Consumo | ABD RAG Platform",
+      "metadata_desc": "Gestión de recursos y facturación SaaS."
     }
   },
   "billing_hub": {
@@ -1725,6 +2132,7 @@
     "general": {
       "tenantId": "Organization ID",
       "name": "Commercial Name",
+      "defaultName": "My Organization",
       "industry": "Industry / Domain",
       "industryPlaceholder": "Select industry",
       "compliance": {
@@ -1982,6 +2390,8 @@
       "title": "Industrial Reports Configuration",
       "subtitle": "Personalize legal disclaimers, signatures, and appearance of generated reports.",
       "preview": "REPORT PREVIEW",
+      "printColor": "PDF Print Color",
+      "pageCount": "Page {current} of {total}",
       "includeSources": {
         "title": "Include Technical Sources",
         "desc": "Automatically attach knowledge base references at the end of the PDF."
@@ -2318,5 +2728,221 @@
       "predictive_error_title": "Audit Failed",
       "predictive_error_desc": "Predictive intelligence audit failed"
     }
+  },
+  "governance": {
+    "title": "AI Governance",
+    "subtitle": "Centralized management of models, limits, and security policies.",
+    "success": "AI Governance updated successfully",
+    "error": "Error saving changes",
+    "models": {
+      "title": "Contractual Models",
+      "description": "Configure default and fallback models for the entire platform.",
+      "default": {
+        "label": "Primary Model (Default)",
+        "desc": "Used for 90% of Technical Intelligence and analysis operations."
+      },
+      "embeddings": {
+        "label": "Embeddings Model (Vectors)",
+        "desc": "Determines the quality of technical search."
+      },
+      "fallback": {
+        "label": "Fallback Model"
+      },
+      "select_placeholder": "Select a model",
+      "default_option": "Default (Governance)"
+    },
+    "mapping": {
+      "title": "Task-Based Functional Mapping",
+      "description": "Define which specific model should perform each critical system task.",
+      "rag": {
+        "title": "Technical Intelligence & Document Search",
+        "generator": "Response Generator",
+        "rewriter": "Query Rewriter"
+      },
+      "workflows": {
+        "title": "Orchestration & Workflows",
+        "router": "Workflow Router",
+        "analyzer": "Node Analyzer"
+      },
+      "extraction": {
+        "title": "Technical Extraction & Analysis",
+        "graph": "Graph Extractor",
+        "report": "Report Generator",
+        "query": "Query Extractor"
+      }
+    },
+    "limits": {
+      "title": "Limits & Quotas",
+      "max_tokens": "Max Tokens per Request",
+      "daily_tokens": "Daily Token Limit",
+      "daily_budget": "Daily Budget Limit ($ USD)",
+      "pii": {
+        "label": "PII Anonymization",
+        "desc": "Automatic masking"
+      },
+      "explain": {
+        "label": "Explainability",
+        "desc": "Include \"Thought Process\""
+      },
+      "warning": "Cost overrun prevention active."
+    },
+    "actions": {
+      "discard": "Discard",
+      "save": "Save Governance"
+    }
+  },
+  "audit": {
+    "title": "Audit Log",
+    "highlight": "Audit",
+    "subtitle": "Real-time activity monitoring, security, and business rule validation.",
+    "config_button": "Config Audit",
+    "export_button": "Export Logs",
+    "table": {
+      "title": "Audit Events",
+      "subtitle": "Industrial feed of operations and security",
+      "timestamp": "Timestamp",
+      "source": "Source",
+      "action": "Action",
+      "level": "Level",
+      "duration": "Duration",
+      "correlation": "Correlation ID",
+      "empty": "No events recorded matching the filters."
+    },
+    "metrics": {
+      "total_cases": "Requests (Total)",
+      "accumulated": "Accumulated on platform",
+      "sla_violations": "SLA Incidents",
+      "last_30d": "Last 30 days",
+      "tokens_consumed": "Tokens Consumed",
+      "llm_inference": "Active LLM Inference",
+      "rag_faithfulness": "Technical Intelligence Reliability",
+      "hallucination_score": "Hallucination Score"
+    },
+    "filters": {
+      "search_placeholder": "Search by message, action, correlationId or user email...",
+      "all": "ALL",
+      "errors_only": "Errors Only"
+    },
+    "empty_state": {
+      "title": "Activate the audit monitor",
+      "description": "Use the level or source filters or the search bar to load the logs. Choose \"ALL\" to see recent general activity.",
+      "load_all": "Load All"
+    }
+  },
+  "observability": {
+    "loading": "Loading metrics...",
+    "error": "Error",
+    "error_desc": "Could not load metrics.",
+    "health": {
+      "title": "System Health",
+      "errors_24h": "{count} errors (24h)"
+    },
+    "rag": {
+      "title": "Technical Intelligence Precision",
+      "samples": "Sampling of {count} queries"
+    },
+    "tokens": {
+      "title": "Tokens (30d)",
+      "total": "Total accumulated consumption"
+    },
+    "savings": {
+      "title": "Estimated Savings",
+      "hours": "{count} hours saved"
+    }
+  },
+  "reliability": {
+    "title": "Resilience & Global Delivery Monitor",
+    "subtitle": "Extreme load monitoring and geographic replication of the Graph.",
+    "run_test": "Run Stress Test (500% Load)",
+    "cdn_title": "Global Knowledge CDN",
+    "latency": "Latency",
+    "status": "Status",
+    "last_test": "Last Stress Test",
+    "success_rate": "Success Rate",
+    "cpu_peak": "CPU Peak",
+    "reqs_sec": "Reqs/Sec",
+    "validation_success": "ReliabilityEngine validated under peak load.",
+    "no_data": "No stress data."
+  },
+  "security_autoscale": {
+    "scaling": {
+      "title": "AI Infrastructure Scaling",
+      "desc": "System-driven resource auto-optimization.",
+      "badge": "AI-MANAGED",
+      "infra_label": "Current Infrastructure Status",
+      "optimization": "Optimization",
+      "compute_load": "Compute Load",
+      "dynamic_reserve": "Dynamic Reserve Active",
+      "dynamic_reserve_desc": "The system is adjusting network nodes based on global semantic traffic."
+    },
+    "audit": {
+      "title": "Universal Security Audit",
+      "desc": "Immutable shielding and governance verification.",
+      "health_score": "Health Score",
+      "encrypted_fields": "Encrypted Fields",
+      "active_policies": "Active Policies",
+      "findings": {
+        "encryption": "AES-256-GCM encryption validated on all sensitive fields.",
+        "governance": "Governance engine operating under 'Strict Compliance' policy.",
+        "traceability": "Immutable audit traceability active."
+      },
+      "next_audit": "Next complete audit scheduled in 24 hours."
+    }
+  },
+  "limit_alert": {
+    "resources": {
+      "tokens": "AI Tokens",
+      "storage": "Storage",
+      "searches": "Vector Searches",
+      "api_requests": "API Calls"
+    },
+    "exceeded_title": "Limit Exceeded",
+    "warning_title": "Consumption Alert",
+    "exceeded_msg": "You have reached 100% of your {resource} limit.",
+    "warning_msg": "You have consumed {percentage}% of your {resource} limit.",
+    "suspended": "Your account has been suspended. Please upgrade your plan.",
+    "upgrade": "Upgrade Plan",
+    "dismiss": "Understood",
+    "modal": {
+      "title": "Limit Exceeded",
+      "desc": "You have reached the limit of your current plan. To continue using the platform, please upgrade to a higher plan.",
+      "view_plans": "View Plans",
+      "close": "Close"
+    }
+  },
+  "quick_nav": {
+    "workflows": {
+      "title": "Workflows",
+      "subtitle": "Automation"
+    },
+    "checklists": {
+      "title": "Checklists",
+      "subtitle": "Compliance"
+    },
+    "intelligence": {
+      "title": "Intelligence",
+      "subtitle": "AI Hub"
+    }
+  },
+  "knowledge_governance": {
+    "title": "Knowledge & AI Governance",
+    "desc": "Audit and policy control over autonomous decisions.",
+    "empty_title": "No recent activity",
+    "empty_desc": "No AI actions under governance supervision have been recorded.",
+    "confidence": "Confidence",
+    "in_entity": "on"
+  },
+  "key_debug": {
+    "dialog_desc": "Technical status and database overrides.",
+    "loading": "Querying translation layers...",
+    "error": "Error loading debug info",
+    "json_section": "Local JSON File (messages/{locale}/...)",
+    "key_not_found": "Key not found in local files",
+    "db_section": "Database Overrides (MongoDB)",
+    "no_overrides": "No overrides for this key in the DB",
+    "obsolete": "OBSOLETE",
+    "cache_label": "Master Cache Exists",
+    "cache_active": "ACTIVE",
+    "cache_inactive": "INACTIVE"
   }
 }

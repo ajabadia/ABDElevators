@@ -46,8 +46,8 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
     const availablePermissions = ApiKeyPermissionSchema.options;
 
     const handleCreate = async () => {
-        if (!name) return toast.error("Error", { description: t('error_name') });
-        if (permissions.length === 0) return toast.error("Error", { description: t('error_permissions') });
+        if (!name) return toast.error(t('error_title'), { description: t('error_name') });
+        if (permissions.length === 0) return toast.error(t('error_title'), { description: t('error_permissions') });
 
         setLoading(true);
         try {
@@ -56,10 +56,10 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                 setGeneratedKey(result.data.plainTextKey);
                 toast.success(t('copied'), { description: t('create_success') });
             } else {
-                toast.error("Error", { description: result.error || "Unknown error" });
+                toast.error(t('error_title'), { description: result.error || t('unknown_error') });
             }
         } catch (e) {
-            toast.error("Error", { description: "Error creating key" });
+            toast.error(t('error_title'), { description: t('error_creating') });
         } finally {
             setLoading(false);
         }
@@ -100,12 +100,12 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                 {!generatedKey ? (
                     <div className="grid gap-6 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name">Key Name</Label>
+                            <Label htmlFor="name">{t('key_name_label')}</Label>
                             <Input
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g. ERP Integration Prod"
+                                placeholder={t('key_name_placeholder')}
                                 className="bg-slate-950 border-white/10"
                             />
                         </div>
@@ -188,7 +188,7 @@ export function CreateApiKeyModal({ spaces = [] }: { spaces?: any[] }) {
                         </Button>
                     ) : (
                         <Button onClick={handleClose} variant="outline" className="border-white/10 hover:bg-white/5 text-white">
-                            Close
+                            {t('close_btn')}
                         </Button>
                     )}
                 </DialogFooter>

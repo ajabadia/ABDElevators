@@ -5,6 +5,7 @@ import { Check, Loader2, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface Plan {
     id: string;
@@ -22,6 +23,7 @@ interface PlanSelectorProps {
 }
 
 export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorProps) {
+    const t = useTranslations('admin.billing.plan_selector');
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [changingPlan, setChangingPlan] = useState<string | null>(null);
@@ -61,16 +63,16 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
             const data = await res.json();
 
             if (data.success) {
-                toast.success('¡Plan Actualizado!', {
-                    description: `Plan cambiado a ${slug.toUpperCase()} correctamente.`,
+                toast.success(t('plan_updated'), {
+                    description: t('plan_changed_to', { plan: slug.toUpperCase() }),
                 });
                 if (onPlanChanged) onPlanChanged(slug);
             } else {
-                throw new Error(data.message || 'Error al cambiar plan');
+                throw new Error(data.message || t('change_error'));
             }
         } catch (err: unknown) {
-            toast.error('Error al cambiar plan', {
-                description: err instanceof Error ? err.message : 'Ocurrió un error inesperado al procesar el cambio manual.',
+            toast.error(t('change_error'), {
+                description: err instanceof Error ? err.message : t('change_error_desc'),
             });
         } finally {
             setChangingPlan(null);
@@ -100,7 +102,7 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
                     >
                         {plan.slug === currentPlanSlug && (
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                                Plan Actual
+                                {t('current_badge')}
                             </div>
                         )}
 
@@ -115,7 +117,7 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
 
                         <div className="mb-6">
                             <span className="text-3xl font-black text-slate-900 dark:text-white">{plan.priceMonthly}€</span>
-                            <span className="text-slate-500 text-xs font-bold">/mes</span>
+                            <span className="text-slate-500 text-xs font-bold">{t('per_month')}</span>
                         </div>
 
                         <ul className="space-y-3 mb-8">
@@ -140,9 +142,9 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
                             {changingPlan === plan.slug ? (
                                 <Loader2 size={16} className="animate-spin" />
                             ) : plan.slug === currentPlanSlug ? (
-                                "Activo"
+                                t('active')
                             ) : (
-                                "Seleccionar"
+                                t('select')
                             )}
                         </Button>
                     </div>
@@ -152,7 +154,7 @@ export function PlanSelector({ currentPlanSlug, onPlanChanged }: PlanSelectorPro
             <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-start gap-3">
                 <Sparkles className="text-blue-400 flex-shrink-0 mt-1" size={18} />
                 <p className="text-xs text-slate-400 leading-relaxed">
-                    <strong>Nota sobre Prorrateo:</strong> Al cambiar de plan, el tiempo no disfrutado de tu plan actual se convierte automáticamente en crédito que se aplicará a tu próxima factura. El nuevo plan se activa de forma inmediata.
+                    <strong>{t('proration_title')}</strong> {t('proration_desc')}
                 </p>
             </div>
         </div>

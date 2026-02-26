@@ -346,7 +346,7 @@ export default function GraphExplorer() {
     const handleMergeNodes = async () => {
         const ids = Array.from(selectedNodeIds);
         if (ids.length !== 2) {
-            toast.error("Selection error: exactly 2 nodes required for merge");
+            toast.error(t("bulk.merge_error"));
             return;
         }
 
@@ -498,16 +498,16 @@ export default function GraphExplorer() {
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 animate-in fade-in slide-in-from-top-4">
                         <Card className="flex items-center gap-2 p-1.5 px-3 bg-background/95 backdrop-blur shadow-2xl border-primary/20">
                             <span className="text-xs font-bold px-2 border-r pr-3">
-                                {selectedNodeIds.size} selected
+                                {t("bulk.selected", { count: selectedNodeIds.size })}
                             </span>
                             <Button variant="ghost" size="sm" className="h-8 gap-2 text-destructive hover:bg-destructive/10" onClick={handleDeleteNodesBulk} disabled={isSaving}>
                                 <Trash2 className="h-4 w-4" />
-                                <span className="hidden sm:inline">Delete</span>
+                                <span className="hidden sm:inline">{t("bulk.delete")}</span>
                             </Button>
                             {selectedNodeIds.size === 2 && (
                                 <Button variant="ghost" size="sm" className="h-8 gap-2 text-primary hover:bg-primary/10" onClick={handleMergeNodes} disabled={isSaving}>
                                     <Link2 className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Merge</span>
+                                    <span className="hidden sm:inline">{t("bulk.merge")}</span>
                                 </Button>
                             )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedNodeIds(new Set())}>

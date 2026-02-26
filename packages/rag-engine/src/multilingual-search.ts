@@ -1,7 +1,7 @@
 
 import { connectDB, logEvento } from "@abd/platform-core/server";
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { UsageService } from "@/lib/usage-service";
+import { UsageService } from "@/services/ops/usage-service";
 import { RagResult } from "./types";
 
 const tracer = trace.getTracer('abd-rag-platform');
@@ -34,7 +34,7 @@ export class MultilingualSearchService {
         }, async (span) => {
             const inicio = Date.now();
             try {
-                const { multilingualService } = await import('@/lib/multilingual-service');
+                const { multilingualService } = await import('@/services/core/multilingual-service');
                 const db = await connectDB();
                 const collection = db.collection('document_chunks');
 

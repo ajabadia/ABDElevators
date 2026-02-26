@@ -2,7 +2,7 @@
 import { logEvento } from '@abd/platform-core/server';
 import { GovernanceEngine } from '@/core/engine/GovernanceEngine';
 import { AIWorkflow, WorkflowAction, WorkflowActionType, WorkflowTrigger, WorkflowTriggerType } from './types';
-import { WorkflowAnalyticsService } from '@/lib/workflow-analytics-service';
+import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
 import { WorkflowTask, WorkflowTaskStatus } from './schemas';

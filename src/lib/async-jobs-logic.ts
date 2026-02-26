@@ -1,13 +1,13 @@
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
-import { analyzeEntityWithGemini } from './llm';
-import { performTechnicalSearch } from './rag-service';
-import { RiskService } from './risk-service';
-import { getTenantCollection } from './db-tenant';
+import { analyzeEntityWithGemini } from '@/services/llm/llm-service';
+import { performTechnicalSearch } from '@abd/rag-engine/server';
+import { RiskService } from '@/services/security/RiskService';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { EntitySchema, GenericCaseSchema } from './schemas';
 import { mapEntityToCase } from './mappers';
 import { logEvento } from './logger';
 import { ObjectId } from 'mongodb';
-import { FederatedKnowledgeService } from './federated-knowledge-service';
+import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
 
 /**
  * Lógica de procesamiento para trabajos asíncronos (Fase 31: BullMQ).

@@ -35,5 +35,51 @@
         "technical_spec": "Technical Specification (AI)",
         "title": "Workshop Validation",
         "manuals_title": "SUGGESTED MANUALS (RAG)"
+    },
+    "detail_dialog": {
+        "context_title": "Case Context",
+        "case_id": "Case ID",
+        "reference": "Reference",
+        "ai_proposal_title": "AI Proposal",
+        "ai_proposal_action_approve": "APPROVE",
+        "ai_proposal_action_reject": "REJECT",
+        "ai_proposal_action_escalate": "ESCALATE",
+        "ai_confidence": "Confidence",
+        "ai_accept_btn": "Accept AI Recommendation",
+        "fallback_title": "AI Analysis Failure (Fallback)",
+        "fallback_desc": "The AI engine could not complete the automatic decision. Human intervention is required to validate this step.",
+        "fallback_error": "Original Error",
+        "notes_label": "Resolution Notes",
+        "notes_audit": "Required for auditing",
+        "notes_placeholder": "Indicate the result of the validation or reasons for the state change...",
+        "status_management": "Status Management",
+        "status_pending": "Pending",
+        "status_in_progress": "In Progress",
+        "status_complete": "Complete",
+        "assigned_to": "Assigned to",
+        "view_file_btn": "View File",
+        "close_btn": "Close",
+        "confirm_btn": "Confirm Changes",
+        "updating_btn": "Updating..."
+    },
+    "toast": {
+        "update_success_title": "Task updated",
+        "update_success_desc": "Task has been marked as {status}",
+        "error_title": "Error",
+        "error_desc": "Could not update task"
+    },
+    "feedback": {
+        "correction_title": "AI Feedback Required",
+        "correction_desc": "You have modified the decision suggested by the AI. Please indicate the reason to help train the model.",
+        "category_label": "Error Category",
+        "rejection_reason_label": "Adjustment Comment",
+        "rejection_reason_placeholder": "Describe why the AI was wrong...",
+        "categories": {
+            "hallucination": "Hallucination / Incorrect Data",
+            "missing_context": "Insufficient Context",
+            "policy_violation": "Policy Violation",
+            "technical_error": "Technical Error",
+            "other": "Other reason"
+        }
     }
 }

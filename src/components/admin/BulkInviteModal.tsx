@@ -332,7 +332,7 @@ export function BulkInviteModal({ open, onClose, onSuccess }: BulkInviteModalPro
                                 </table>
                                 {invites.length > 10 && (
                                     <div className="px-4 py-2 bg-slate-50 text-xs text-center text-slate-500 border-t">
-                                        Y {invites.length - 10} filas más...
+                                        {t("more_rows", { count: invites.length - 10 })}
                                     </div>
                                 )}
                             </div>

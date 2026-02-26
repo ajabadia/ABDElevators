@@ -1,4 +1,4 @@
-import { getTenantCollection } from './db-tenant';
+import { getTenantCollection } from '@/lib/db-tenant';
 import { ContactRequestSchema, ContactRequest } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';

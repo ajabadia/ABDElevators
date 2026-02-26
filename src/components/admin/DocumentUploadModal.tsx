@@ -96,7 +96,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                 const errorData = await response.json();
                 console.error('SERVER ERROR DATA:', errorData);
 
-                const errorMessage = errorData.error?.message || errorData.message || 'Error al subir el archivo';
+                const errorMessage = errorData.error?.message || errorData.message || t('status.error');
                 errorDetails = errorData.error?.details || errorData.details;
 
                 if (errorDetails) {
@@ -114,12 +114,12 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
             // Toast más informativo
             if (isDedup) {
-                toast.info('¡Procesado Instantáneamente!', {
-                    description: 'Se detectó una copia exacta. Metadatos clonados sin consumo de tokens.',
+                toast.info(t('status.duplicate'), {
+                    description: t('status.duplicate_toast.description'),
                 });
             } else {
-                toast.success('Documento Procesado', {
-                    description: 'El documento ha sido indexado correctamente en el corpus.',
+                toast.success(t('status.success'), {
+                    description: t('status.success_desc'),
                 });
             }
 
@@ -133,7 +133,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
             }, 2500); // Un poco más de tiempo para leer el éxito
         } catch (error: any) {
             console.error('Upload error:', error);
-            toast.error('Error de Ingesta', {
+            toast.error(t('status.error'), {
                 description: `${error.message}${errorDetails ? ' - Revise la consola para más detalles.' : ''}`,
             });
         } finally {
@@ -148,15 +148,15 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold font-outfit text-slate-900">
                             {uploadSuccess
-                                ? (deduplicated ? "¡Procesado Instantáneamente!" : "¡Documento Recibido!")
-                                : "Subir Documentación Técnica"}
+                                ? (deduplicated ? t('status.duplicate') : t('status.success'))
+                                : t('title')}
                         </DialogTitle>
                         <DialogDescription className="text-slate-500">
                             {uploadSuccess
                                 ? (deduplicated
-                                    ? "Documento duplicado detectado. Se ha reutilizado el contenido existente."
-                                    : "Procesando e indexando fragmentos con IA...")
-                                : "Los documentos serán procesados automáticamente mediante IA para alimentar el corpus RAG e indexados vectorialmente."}
+                                    ? t('status.duplicate_desc')
+                                    : t('status.success_desc'))
+                                : t('description')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -194,15 +194,15 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                         <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 group-hover:text-teal-500 transition-colors">
                                             <Upload size={24} />
                                         </div>
-                                        <p className="text-sm font-medium text-slate-900">Arrastra un manual PDF aquí o haz clic para seleccionar</p>
-                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">Solo archivos PDF (Max 50MB)</p>
+                                        <p className="text-sm font-medium text-slate-900">{t('dropzone.idle')}</p>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">{t('dropzone.format')}</p>
                                     </div>
                                 )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="tipo" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Componente</Label>
+                                    <Label htmlFor="tipo" className="text-xs font-bold uppercase tracking-widest text-slate-500">{t('fields.type')}</Label>
                                     <Select onValueChange={setTipo} value={tipo}>
                                         <SelectTrigger className="border-slate-200">
                                             <SelectValue placeholder="Seleccionar..." />
@@ -215,23 +215,20 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                             ))}
                                             {tiposDocs.length === 0 && (
                                                 <>
-                                                    <SelectItem value="botonera">Botonera</SelectItem>
-                                                    <SelectItem value="motor">Motor</SelectItem>
-                                                    <SelectItem value="cuadro">Cuadro de Control</SelectItem>
-                                                    <SelectItem value="puerta">Operador de Puerta</SelectItem>
-                                                    <SelectItem value="variador">Variador de Frecuencia</SelectItem>
+                                                    <SelectItem value="botonera">{t('fields.types.other')}</SelectItem>
+                                                    <SelectItem value="motor">{t('fields.types.manual')}</SelectItem>
                                                 </>
                                             )}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="version" className="text-xs font-bold uppercase tracking-widest text-slate-500">Versión Doc.</Label>
+                                    <Label htmlFor="version" className="text-xs font-bold uppercase tracking-widest text-slate-500">{t('fields.version')}</Label>
                                     <Input
                                         id="version"
                                         value={version}
                                         onChange={(e) => setVersion(e.target.value)}
-                                        placeholder="Ej: 1.0"
+                                        placeholder={t('fields.placeholder')}
                                         className="border-slate-200"
                                     />
                                 </div>
@@ -282,12 +279,12 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                             </div>
                             <div className="text-center">
                                 <p className="text-lg font-bold text-slate-900">
-                                    {deduplicated ? "¡Ya Existía!" : "¡Documento Recibido!"}
+                                    {deduplicated ? t('status.duplicate') : t('status.success')}
                                 </p>
                                 <p className="text-sm text-slate-500">
                                     {deduplicated
-                                        ? "Procesado instantáneamente (Smart Ingest)."
-                                        : "Procesando e indexando fragmentos..."}
+                                        ? t('status.duplicate_desc')
+                                        : t('status.success_desc')}
                                 </p>
                             </div>
                         </div>
@@ -295,7 +292,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
 
                     <DialogFooter>
                         <Button variant="ghost" onClick={onClose} disabled={isUploading}>
-                            Cancelar
+                            {t('actions.cancel')}
                         </Button>
                         <Button
                             className="bg-teal-600 hover:bg-teal-700 text-white min-w-[140px]"
@@ -306,11 +303,11 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                 <div className="flex flex-col items-center">
                                     <div className="flex items-center">
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        <span>Asistente IA Procesando...</span>
+                                        <span>{t('status.uploading')}</span>
                                     </div>
-                                    <span className="text-[10px] font-normal opacity-70 mt-1">Este proceso puede tardar 1-2 min.</span>
+                                    <span className="text-[10px] font-normal opacity-70 mt-1">{t('status.processing_note')}</span>
                                 </div>
-                            ) : "Subir e Indexar"}
+                            ) : t('actions.submit')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

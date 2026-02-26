@@ -24,7 +24,7 @@ export interface AppDefinition {
     nameKey: string;
     descriptionKey: string;
     icon: any;
-    basePath: string;
+    basePaths: string[]; // Modificado en FASE 221: Soporta múltiples rutas base por App
     color: string;
     requiredModule?: string;
     roles?: string[];
@@ -36,7 +36,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.admin.name',
         descriptionKey: 'apps.admin.description',
         icon: Zap,
-        basePath: '/admin',
+        basePaths: ['/admin'],
         color: 'text-primary'
     },
     [AppId.TECHNICAL]: {
@@ -44,7 +44,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.technical.name',
         descriptionKey: 'apps.technical.description',
         icon: Zap,
-        basePath: '/technical',
+        basePaths: ['/entities', '/graphs', '/technical'],
         color: 'text-blue-500',
         requiredModule: 'TECHNICAL'
     },
@@ -53,7 +53,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.support.name',
         descriptionKey: 'apps.support.description',
         icon: LifeBuoy,
-        basePath: '/support',
+        basePaths: ['/support', '/support-ticket', '/support-dashboard'],
         color: 'text-orange-500'
     },
     [AppId.OPERATIONS]: {
@@ -61,7 +61,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.operations.name',
         descriptionKey: 'apps.operations.description',
         icon: Activity,
-        basePath: '/ops/reports',
+        basePaths: ['/admin/operations', '/ops'],
         color: 'text-emerald-500'
     },
     [AppId.TASKS]: {
@@ -69,7 +69,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.tasks.name',
         descriptionKey: 'apps.tasks.description',
         icon: Activity,
-        basePath: '/tasks',
+        basePaths: ['/tasks'],
         color: 'text-primary'
     },
     [AppId.KNOWLEDGE]: {
@@ -77,7 +77,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.knowledge.name',
         descriptionKey: 'apps.knowledge.description',
         icon: FileText,
-        basePath: '/admin/knowledge',
+        basePaths: ['/admin/knowledge'],
         color: 'text-secondary'
     },
     [AppId.SEARCH]: {
@@ -85,7 +85,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.search.name',
         descriptionKey: 'apps.search.description',
         icon: Search,
-        basePath: '/search',
+        basePaths: ['/search'],
         color: 'text-accent'
     },
     [AppId.PERSONAL]: {
@@ -93,7 +93,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.personal.name',
         descriptionKey: 'apps.personal.description',
         icon: Box,
-        basePath: '/spaces',
+        basePaths: ['/spaces', '/my-documents'],
         color: 'text-slate-500'
     },
     [AppId.ORGANIZATIONS]: {
@@ -101,7 +101,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.organizations.name',
         descriptionKey: 'apps.organizations.description',
         icon: Building,
-        basePath: '/admin/organizations',
+        basePaths: ['/admin/organizations'],
         color: 'text-primary'
     },
     [AppId.USERS]: {
@@ -109,7 +109,7 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.users.name',
         descriptionKey: 'apps.users.description',
         icon: Users,
-        basePath: '/admin/users',
+        basePaths: ['/admin/users'],
         color: 'text-secondary'
     },
     [AppId.CONFIG]: {
@@ -117,13 +117,21 @@ export const APP_REGISTRY: Record<AppId, AppDefinition> = {
         nameKey: 'apps.config.name',
         descriptionKey: 'apps.config.description',
         icon: ShieldCheck,
-        basePath: '/admin/permissions',
+        basePaths: ['/admin/settings', '/admin/permissions', '/admin/billing'],
         color: 'text-purple-500'
     }
 };
 
 export const getAppByPath = (path: string): AppDefinition | undefined => {
+    // Aplanar todas las rutas base con sus apps correspondientes
+    const pathMappings = Object.values(APP_REGISTRY).flatMap(app =>
+        app.basePaths.map(basePath => ({ app, basePath }))
+    );
+
     // Ordenar por longitud de basePath descendente para matchear lo más específico primero
-    const apps = Object.values(APP_REGISTRY).sort((a, b) => b.basePath.length - a.basePath.length);
-    return apps.find(app => path.startsWith(app.basePath));
+    pathMappings.sort((a, b) => b.basePath.length - a.basePath.length);
+
+    // Buscar la primera ruta que coincida
+    const match = pathMappings.find(mapping => path.startsWith(mapping.basePath));
+    return match?.app;
 };

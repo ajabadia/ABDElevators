@@ -16,7 +16,14 @@
     "version": "Doc. Version",
     "placeholder": "Select...",
     "scope": "Knowledge Scope",
-    "industry": "Industry / Sector"
+    "industry": "Industry / Sector",
+    "types": {
+      "manual": "Technical Manual",
+      "drawing": "Drawing / Schematic",
+      "certificate": "Certificate / Regulation",
+      "circular": "Technical Circular",
+      "other": "Other Documents"
+    }
   },
   "status": {
     "error": "Ingest Error",
@@ -25,7 +32,12 @@
     "duplicate_desc": "Processed instantly (Smart Ingest).",
     "success_desc": "Processing and indexing chunks...",
     "uploading": "AI Processing...",
-    "processing_note": "This process may take 1-2 min."
+    "processing_note": "This process may take 1-2 min.",
+    "duplicate_toast": {
+      "title": "Duplicate Document",
+      "description": "The document already exists and has been cloned for your organization."
+    },
+    "unknown_type": "Unknown Type"
   },
   "title": "Upload Technical Documentation",
   "description": "Documents will be automatically processed by AI to feed the RAG corpus and vector-indexed.",

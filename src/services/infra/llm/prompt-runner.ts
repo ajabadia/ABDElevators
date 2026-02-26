@@ -1,6 +1,6 @@
 import { PromptService } from '@/services/llm/prompt-service';
 import { getGenAI, runShadowCall } from '@/lib/gemini-client';
-import { LlmJsonUtils } from '@/services/llm/llm-service/json-utils';
+import { LlmJsonUtils } from '@/services/llm/json-utils';
 import { logEvento } from '@/lib/logger';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { trace, SpanStatusCode } from '@opentelemetry/api';

@@ -62,5 +62,11 @@
       "connect_nodes": "Clic en 2 nodos para conectar",
       "delete_sidebar": "Usa el panel para eliminar"
     }
+  },
+  "bulk": {
+    "selected": "{count} seleccionados",
+    "delete": "Eliminar",
+    "merge": "Fusionar",
+    "merge_error": "Error de selección: se requieren exactamente 2 nodos para fusionar"
   }
 }

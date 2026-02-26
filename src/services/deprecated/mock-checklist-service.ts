@@ -1,5 +1,5 @@
 
-import { LLMCaller } from "@/lib/checklist-extractor";
+import { LLMCaller } from "@/services/ingest/ChecklistExtractor";
 import { ChecklistItem } from "@/lib/types";
 
 // deterministic UUIDs for consistent testing

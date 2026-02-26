@@ -22,6 +22,7 @@ import { InlineHelpPanel } from "@/components/ui/inline-help-panel";
 import { AuditMetrics } from "@/components/admin/AuditMetrics";
 import { AuditFilters } from "@/components/admin/AuditFilters";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface GlobalStats {
     totalTenants: number;
@@ -64,6 +65,8 @@ interface LogEntry {
 }
 
 export function AuditClient() {
+    const t = useTranslations("admin.audit");
+
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
@@ -92,7 +95,7 @@ export function AuditClient() {
 
     const columns: Column<LogEntry>[] = [
         {
-            header: "Timestamp",
+            header: t("table.timestamp"),
             cell: (row) => (
                 <span className="font-mono text-[10px] text-slate-500">
                     {format(new Date(row.timestamp), "dd/MM HH:mm:ss", { locale: es })}
@@ -100,7 +103,7 @@ export function AuditClient() {
             )
         },
         {
-            header: "Origen",
+            header: t("table.source"),
             cell: (row) => (
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] font-bold">
                     {row.source}
@@ -108,12 +111,12 @@ export function AuditClient() {
             )
         },
         {
-            header: "Acción",
+            header: t("table.action"),
             accessorKey: "action",
             cell: (row) => <span className="font-black text-[10px] uppercase tracking-tighter">{row.action}</span>
         },
         {
-            header: "Nivel",
+            header: t("table.level"),
             cell: (row) => {
                 const colors = {
                     'ERROR': 'bg-rose-100 text-rose-700 border-rose-200',
@@ -129,11 +132,11 @@ export function AuditClient() {
             }
         },
         {
-            header: "Duración",
+            header: t("table.duration"),
             cell: (row) => row.durationMs ? <span className="font-mono text-[10px] text-slate-500">{row.durationMs}ms</span> : '-'
         },
         {
-            header: "Correlación ID",
+            header: t("table.correlation"),
             cell: (row) => (
                 <span className="font-mono text-[9px] text-slate-400 truncate max-w-[100px] block">
                     {row.correlationId || '-'}
@@ -152,15 +155,15 @@ export function AuditClient() {
     return (
         <PageContainer>
             <PageHeader
-                title="Registro de Auditoría"
-                highlight="Auditoría"
-                subtitle="Monitoreo de actividad, seguridad y validación de reglas de negocio en tiempo real."
+                title={t("title")}
+                highlight={t("highlight")}
+                subtitle={t("subtitle")}
                 helpId="audit-logs"
                 actions={
                     <div className="flex items-center gap-2">
                         <Link href="/admin/audit/config-changes">
                             <Button variant="secondary" className="bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-100 border border-amber-200 dark:border-amber-800">
-                                <ShieldAlert className="mr-2 h-4 w-4" /> Auditoría Config
+                                <ShieldAlert className="mr-2 h-4 w-4" /> {t("config_button")}
                             </Button>
                         </Link>
                         <Button
@@ -172,7 +175,7 @@ export function AuditClient() {
                             <HelpCircle className="h-5 w-5" />
                         </Button>
                         <Button variant="outline" className="border-slate-200 dark:border-slate-800">
-                            <Download className="mr-2 h-4 w-4" /> Exportar Logs
+                            <Download className="mr-2 h-4 w-4" /> {t("export_button")}
                         </Button>
                     </div>
                 }
@@ -208,9 +211,9 @@ export function AuditClient() {
                     <div>
                         <h3 className="font-black text-lg flex items-center gap-2 tracking-tight">
                             <Filter className="w-5 h-5 text-teal-500" />
-                            Eventos de Auditoría
+                            {t("table.title")}
                         </h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feed industrial de operaciones y seguridad</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t("table.subtitle")}</p>
                     </div>
                 </div>
 
@@ -220,24 +223,24 @@ export function AuditClient() {
                             <Activity size={32} className="text-slate-300" />
                         </div>
                         <h3 className="text-lg font-black text-slate-700 dark:text-slate-300 mb-2 font-outfit">
-                            Activa el monitor de auditoría
+                            {t("empty_state.title")}
                         </h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-8 font-medium">
-                            Usa los filtros de nivel, origen o la barra de búsqueda para cargar los registros. Elige "TODOS" para ver la actividad general reciente.
+                            {t("empty_state.description")}
                         </p>
                         <div className="flex justify-center gap-3">
                             <Button
                                 onClick={() => setLevelFilter('__ALL__')}
                                 className="bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl"
                             >
-                                <Activity className="w-4 h-4 mr-2" /> Cargar Todos
+                                <Activity className="w-4 h-4 mr-2" /> {t("empty_state.load_all")}
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={() => setLevelFilter('ERROR')}
                                 className="border-slate-200 dark:border-slate-800 font-bold rounded-xl"
                             >
-                                <ShieldAlert className="w-4 h-4 mr-2 text-rose-500" /> Solo Errores
+                                <ShieldAlert className="w-4 h-4 mr-2 text-rose-500" /> {t("filters.errors_only")}
                             </Button>
                         </div>
                     </div>
@@ -246,7 +249,7 @@ export function AuditClient() {
                         columns={columns}
                         data={logs || []}
                         isLoading={loadingLogs}
-                        emptyMessage="No se han registrado eventos que coincidan con los filtros."
+                        emptyMessage={t("table.empty")}
                     />
                 )}
             </ContentCard>

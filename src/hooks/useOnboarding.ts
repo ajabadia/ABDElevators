@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { WorkContext } from '@/lib/work-context';
+import { useTranslations } from 'next-intl';
 
 export interface OnboardingStep {
     id: string;
@@ -12,6 +13,7 @@ export interface OnboardingStep {
 }
 
 export function useOnboarding() {
+    const t = useTranslations('admin.onboarding');
     const [currentStep, setCurrentStepState] = useState(0);
     const [isCompleted, setIsCompletedState] = useState(true);
     const [isVisible, setIsVisible] = useState(false);
@@ -21,28 +23,28 @@ export function useOnboarding() {
     const steps: OnboardingStep[] = [
         {
             id: 'welcome',
-            title: '¡Bienvenido a ABD RAG Platform!',
-            content: 'La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?',
+            title: t('steps.welcome.title'),
+            content: t('steps.welcome.content'),
             placement: 'bottom',
         },
         {
             id: 'upload',
-            title: 'Sube tu primer documento',
-            content: 'Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.',
+            title: t('steps.upload.title'),
+            content: t('steps.upload.content'),
             target: '[data-tour="upload-zone"]',
             placement: 'bottom',
         },
         {
             id: 'ask',
-            title: 'Haz tu primera pregunta',
-            content: 'Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.',
+            title: t('steps.ask.title'),
+            content: t('steps.ask.content'),
             target: '[data-tour="global-search"]',
             placement: 'bottom',
         },
         {
             id: 'explore',
-            title: 'Explora tu entorno',
-            content: 'Hemos personalizado tu tablero basándonos en tu rol. ¡Todo listo para empezar!',
+            title: t('steps.explore.title'),
+            content: t('steps.explore.content'),
             placement: 'bottom',
         }
     ];
@@ -102,7 +104,7 @@ export function useOnboarding() {
             setIsCompletedState(true);
             setIsVisible(false);
             await syncWithServer({ completed: true });
-            toast.success('¡Onboarding completado!');
+            toast.success(t('toasts.completed'));
         }
     }, [currentStep, steps.length]);
 
@@ -125,14 +127,18 @@ export function useOnboarding() {
         setCurrentStepState(0);
         setIsVisible(true);
         await syncWithServer({ completed: false, currentStep: 0 });
-        toast.info('Onboarding reiniciado');
+        toast.info(t('toasts.reset'));
     }, []);
 
     const progress = Math.round(((currentStep + 1) / steps.length) * 100);
 
     return {
         steps,
-        currentStep,
+        currentStep: steps[currentStep], // Object (for backward compatibility)
+        currentStepIndex: currentStep, // Index
+        totalSteps: steps.length,
+        currentStepData: steps[currentStep], // Modern naming
+        isActive: isVisible,
         isVisible,
         isCompleted,
         isLoading,
@@ -143,7 +149,6 @@ export function useOnboarding() {
         skipOnboarding,
         resetOnboarding,
         progress,
-        currentStepData: steps[currentStep]
     };
 }
 

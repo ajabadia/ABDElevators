@@ -269,6 +269,10 @@
     "subtitle": "Monitorización de recursos industriales y facturación.",
     "plan_label": "Plan {tier}",
     "loading": "Sincronizando métricas...",
+    "error_loading": "Error cargando métricas",
+    "unknown_error": "Error desconocido",
+    "retry": "Reintentar",
+    "empty_state": "No hay datos de consumo disponibles.",
     "auto_on": "Auto ON",
     "auto_off": "Auto OFF",
     "tabs": {
@@ -337,6 +341,7 @@
       "title": "Próxima Factura",
       "closing": "Cierre estimado: {date}",
       "tier_estimate": "Estimación Pro Tier",
+      "manual_mode": "Modo Facturación Manual",
       "download_preview": "Descargar Preview PDF",
       "generating": "Generando PDF...",
       "success": "Factura Descargada",
@@ -793,207 +798,70 @@
     "title": "Editor de Workflows"
   },
   "rag_quality": {
-    "title": "Control de Calidad",
-    "subtitle": "Centro de evaluación y mejora continua del motor de IA.",
-    "dashboard_title": "Panel de Calidad del Análisis",
-    "dashboard_desc": "Supervisión de la fiabilidad, relevancia y precisión de las respuestas generadas.",
-    "latest_sessions": "Basado en {count} últimas sesiones",
+    "dashboard_title": "Gobernanza de Calidad RAG",
+    "dashboard_desc": "Monitorea la fidelidad, relevancia y precisión de las respuestas del motor agentico.",
     "loading": "Cargando métricas de calidad...",
+    "latest_sessions": "Basado en {count} últimas sesiones",
+    "critical_count": "{count} Análisis Críticos",
+    "critical_warning": {
+      "title": "Atención Técnica Requerida (Confianza Baja)",
+      "desc": "Los siguientes pedidos han sido marcados con una confianza inferior al 70%. Requieren validación humana."
+    },
+    "default_filename": "Análisis PDF",
+    "review": "Revisar",
     "metrics": {
       "faithfulness": {
         "label": "Faithfulness (Fidelidad)",
-        "desc": "¿La respuesta está basada en los documentos? (Anti-Alucinación)"
+        "desc": "¿La respuesta está basada en los documentos?"
       },
       "relevance": {
         "label": "Answer Relevance",
-        "desc": "¿La respuesta resuelve realmente la duda del técnico?"
+        "desc": "¿La respuesta resuelve realmente la duda?"
       },
       "precision": {
         "label": "Context Precision",
-        "desc": "Calidad de los fragmentos recuperados por el motor vectorial."
+        "desc": "Calidad de los fragmentos recuperados."
       }
     },
+    "charts": {
+      "evolution_title": "Evolución de Calidad",
+      "evolution_desc": "Tendencia histórica de métricas RAG en los últimos análisis."
+    },
     "history": {
-      "title": "Historial de Consultas Evaluadas",
-      "desc": "Auditoría de calidad y seguimiento del pensamiento (Trace) de la IA.",
-      "empty": "No hay evaluaciones registradas aún.",
-      "empty_desc": "Usa el buscador RAG para generar datos de calidad.",
-      "show_trace": "Ver Pensamiento Agente (Trace) ↓",
-      "hide_trace": "Ocultar Trace ↑",
+      "title": "Historial de Evaluaciones",
+      "desc": "Registro detallado de la calidad de generación.",
+      "show_trace": "Ver Trace",
+      "hide_trace": "Ocultar Trace",
       "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
-      "trace_end": "--- FIN DEL TRACE ---"
+      "trace_end": "--- FIN DEL TRACE ---",
+      "empty": "No hay evaluaciones registradas aún.",
+      "empty_desc": "Usa el buscador RAG para generar datos."
     },
     "trace": {
-      "title": "Diagnóstico de Decisión IA",
-      "sections": {
-        "quality": "Métricas de Calidad",
-        "causal": "Análisis Causal y Autocorrección",
-        "trace": "Traza de Razonamiento (Pensamiento)",
-        "query": "Consulta Original",
-        "response": "Generación del Motor",
-        "context": "Contexto de Manuales (Chunks)"
-      },
-      "metrics": {
-        "faithfulness": "Fidelidad",
-        "relevance": "Relevancia",
-        "precision": "Precisión"
-      },
-      "causal": {
-        "cause": "Causa Raíz Detectada",
-        "fix": "Estrategia de Corrección",
-        "reasoning": "Razonamiento del Juez"
-      },
       "actions": {
-        "close": "Cerrar Diagnóstico",
         "audit": "Auditar Decisión"
       }
     }
   },
   "guardian": {
-    "console": "Consola Guardian",
-    "governance_desc": "Gobernanza Enterprise: Gestiona políticas ABAC, jerarquía de grupos y simulaciones de seguridad.",
-    "tabs": {
-      "matrix": "Matriz de Permisos",
-      "groups": "Grupos y Jerarquía",
-      "simulator": "Simulador",
-      "audit": "Logs de Acceso"
-    },
-    "cards": {
-      "matrix": {
-        "title": "Matriz de Permisos",
-        "description": "Gestiona políticas ABAC y reglas de acceso granular."
-      },
-      "groups": {
-        "title": "Grupos y Jerarquía",
-        "description": "Organiza usuarios y gestiona la herencia de permisos."
-      },
-      "simulator": {
-        "title": "Simulador de Seguridad",
-        "description": "Prueba y valida políticas en tiempo real sin riesgo."
-      },
-      "audit": {
-        "title": "Pista de Auditoría",
-        "description": "Registros detallados de accesos y cambios de seguridad."
-      }
-    },
-    "matrix": {
-      "title": "Matriz de Permisos",
-      "highlight": "Guardian V3",
-      "subtitle": "Gestión centralizada de políticas de acceso y control de seguridad.",
-      "new_policy": "Nueva Política",
-      "stats": {
-        "total": "Total Políticas",
-        "total_desc": "Políticas activas en el sistema",
-        "active": "Activas",
-        "deny": "Denegaciones",
-        "global": "Acceso Global"
-      },
-      "search_placeholder": "Buscar políticas por nombre o recurso...",
-      "table": {
-        "title": "Políticas de Seguridad",
-        "desc": "Listado detallado de reglas de acceso definidas.",
-        "name": "Nombre / ID",
-        "resources": "Recursos",
-        "actions": "Acciones",
-        "effect": "Efecto",
-        "status": "Estado",
-        "loading": "Cargando matriz de seguridad...",
-        "empty": "No se encontraron políticas.",
-        "active": "ACTIVA",
-        "inactive": "INACTIVA",
-        "loading_error": "Error al cargar la matriz de permisos",
-        "loading_error_title": "Error de Carga",
-        "network_error": "Error de red al conectar con el servicio Guardian",
-        "network_error_title": "Error de Red",
-        "details_aria": "Detalles de la política"
-      },
-      "filter": "Filtrar",
-      "metadata": {
-        "description": "Gestión centralizada de políticas de acceso y control de seguridad industrial.",
-        "title": "Matriz de Permisos | Guardian V3"
-      }
-    },
-    "groups": {
-      "title": "Jerarquía de Grupos",
-      "highlight": "Estructura Org.",
-      "subtitle": "Organiza usuarios en roles y grupos con herencia de permisos.",
-      "new_root": "Nuevo Grupo Raíz",
-      "stats": {
-        "total": "Total Grupos",
-        "depth": "Profundidad Máxima",
-        "depth_desc": "Niveles de herencia activos",
-        "orphan": "Grupos Huérfanos",
-        "orphan_desc": "Sin conexión a la raíz"
-      },
-      "tree": {
-        "title": "Árbol de Herencia",
-        "loading": "Cargando estructura de grupos...",
-        "empty": "No hay grupos definidos.",
-        "policies": "{count} políticas asociadas",
-        "loading_error": "Error al cargar la jerarquía de grupos",
-        "network_error": "Error de red al conectar con el servicio de Identidad",
-        "details_aria": "Detalles del grupo"
-      },
-      "sidebar": {
-        "engine_title": "Motor de Herencia",
-        "effective_title": "Permisos Efectivos",
-        "effective_desc": "Calcula los permisos finales sumando todos los grupos del usuario.",
-        "bulk_assign": "Asignación Masiva",
-        "health_title": "Salud de la Estructura",
-        "circular_title": "Detección Circular",
-        "circular_desc": "No se han detectado ciclos infinitos en la herencia."
-      }
-    },
-    "simulator": {
-      "title": "Simulador",
-      "highlight": "ABAC",
-      "subtitle": "Prueba políticas en tiempo real. Selecciona un usuario y define un contexto dinámico.",
-      "form": {
-        "title": "Parámetros de Simulación",
-        "desc": "Define el escenario de acceso para evaluar.",
-        "user_id": "Usuario a Simular",
-        "action": "Acción",
-        "resource": "Recurso Objetivo",
-        "context_title": "Contexto Dinámico (Atributos ABAC)",
-        "ip_address": "IP de Origen",
-        "time": "Hora Simulada",
-        "run_button": "Ejecutar Evaluación"
-      },
-      "results": {
-        "title": "Decisión del Guardian",
-        "waiting_title": "Esperando ejecución",
-        "waiting_desc": "Configura los parámetros a la izquierda para ver el resultado.",
-        "allowed_status": "Acceso PERMITIDO",
-        "denied_status": "Acceso DENEGADO",
-        "allow": "Permiso Concedido",
-        "deny": "Acceso Denegado",
-        "error": "Error en simulación",
-        "network_error": "Error de red",
-        "details_title": "Detalles del Diagnóstico",
-        "matched_policy": "Política Coincidente",
-        "no_policy": "Ninguna (Denegación Implícita)",
-        "latency": "Latencia del Motor"
-      }
-    },
     "audit": {
-      "title": "Audit",
-      "highlight": "Logs",
-      "subtitle": "Registro histórico de todas las decisiones de acceso tomadas por el Guardian.",
-      "search_placeholder": "Filtrar logs por usuario, recurso o política...",
-      "last_24h": "Últimas 24h",
-      "export": "Exportar Logs",
+      "title": "Auditoría de Guardian",
+      "highlight": "Seguridad",
+      "subtitle": "Pista de auditoría inmutable de decisiones de acceso y cambios de política.",
+      "export": "Exportar Audit",
+      "search_placeholder": "Buscar por usuario, recurso o política...",
       "table": {
-        "title": "Actividad de Guardian",
-        "desc": "Decisiones de acceso en tiempo real.",
-        "timestamp": "Timestamp",
+        "title": "Registro de Decisiones",
+        "desc": "Historial de evaluaciones de políticas ABAC en tiempo real.",
+        "timestamp": "Fecha/Hora",
         "user": "Usuario",
-        "action_resource": "Acción y Recurso",
+        "action_resource": "Acción > Recurso",
         "decision": "Decisión",
-        "policy": "Política Coincidente",
-        "loading": "Cargando registros...",
-        "empty": "No hay logs disponibles.",
-        "end_of_trail": "Fin del historial de auditoría",
-        "last_24h": "Últimas 24 horas"
+        "policy": "Política Aplicada",
+        "loading": "Cargando auditoría de seguridad...",
+        "empty": "No hay intentos de acceso registrados.",
+        "last_24h": "Últimas 24h",
+        "end_of_trail": "FIN DE LA PISTA DE AUDITORÍA"
       }
     }
   },
@@ -1002,6 +870,26 @@
     "highlight": "Soberana",
     "subtitle": "Monitoriza el descubrimiento autónomo de patrones y gobierna la red de conocimiento federado.",
     "loading": "Iniciando Motor Soberano...",
+    "dashboard": {
+      "no_data_title": "Datos de Inteligencia no disponibles",
+      "no_data_desc": "Parece que aún no hay suficientes interacciones para generar métricas colectivas o hay un problema de conexión.",
+      "retry": "Reintentar Conexión",
+      "semantic_density": "Densidad Semántica",
+      "nodes_relations": "Nodos + Relaciones",
+      "learnings": "Aprendizajes",
+      "corrections": "Correcciones",
+      "precision": "{val}% Precisión",
+      "automated_tasks": "Tareas Auto",
+      "no_intervention": "Sin intervención",
+      "mins_per_order": "{val}min/ped",
+      "estimated_roi": "ROI Estimado",
+      "accumulated_savings": "Ahorro acumulado",
+      "optimization": "Optimización",
+      "accuracy_evolution_title": "Evolución de Precisión (System Agent)",
+      "accuracy_evolution_desc": "Aprendizaje continuo basado en feedback humano.",
+      "learning_focus_title": "Focos de Aprendizaje",
+      "learning_focus_desc": "Entidades con más correcciones."
+    },
     "metrics": {
       "total_patterns": "Total Patrones",
       "total_patterns_trend": "+5 (simulado)",
@@ -1066,6 +954,7 @@
       "drop_idle": "Arrastra un archivo o haz clic para subir",
       "file_hint": "CSV, XLSX hasta 5MB",
       "detected_rows": "{count} filas detectadas",
+      "more_rows": "Y {count} filas más...",
       "valid_to_send": "Válidos para enviar",
       "with_errors": "Con errores (se omitirán)",
       "invite_button": "Invitar {count}",
@@ -1117,6 +1006,10 @@
       "sending": "Enviando...",
       "submit": "Enviar Invitación"
     },
+    "active": {
+      "reset_password_success": "Nueva contraseña temporal: {password}",
+      "reset_password_confirm": "¿Resetear contraseña para {email}?"
+    },
     "reset_password": {
       "confirm": "¿Resetear contraseña para {email}?",
       "success": "Nueva contraseña temporal: {password}"
@@ -1150,79 +1043,57 @@
       "autoTranslateBtn": "AUTOTRADUCIR FALTANTES",
       "save": "Guardar",
       "cancel": "Cancelar",
-      "empty": "Vacío",
-      "missing": "Faltante",
-      "noResults": "No se encontraron llaves de traducción",
-      "searchEmptyTitle": "Busca o filtra para comenzar",
-      "searchEmptyDesc": "Usa los filtros de namespace o la barra de búsqueda para cargar traducciones",
-      "aiSuccessDesc": "Todas las traducciones faltantes han sido generadas",
-      "aiSuccessTitle": "Traducción automática completada",
-      "upToDateDesc": "No hay traducciones faltantes",
-      "upToDateTitle": "Traducciones al día",
-      "noMatch": "Sin coincidencias"
+      "notifications": {
+        "aiSuccessTitle": "IA: Traducción completada",
+        "aiSuccessDesc": "Se han generado las traducciones faltantes.",
+        "upToDateTitle": "Todo al día",
+        "upToDateDesc": "No hay llaves faltantes en este idioma.",
+        "autoTranslateBtn": "Auto-traducir faltantes",
+        "cancel": "Cancelar",
+        "empty": "Sin resultados",
+        "keyHeader": "Clave",
+        "noMatch": "Sin coincidencias",
+        "missing": "Faltante",
+        "noResults": "Sin resultados",
+        "primaryLabel": "Idioma primario",
+        "save": "Guardar",
+        "secondaryLabel": "Idioma secundario",
+        "syncCompletedTitle": "Sincronización completada",
+        "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
+        "syncSuccessTitle": "Sincronización Exitosa",
+        "syncSuccessDetail": "{added} nuevas, {updated} actualizadas.",
+        "syncErrorTitle": "Error de sincronización",
+        "syncErrorDesc": "Error al sincronizar con la base de datos",
+        "exportCompletedTitle": "Exportación completada",
+        "exportNoChanges": "Los archivos JSON ya están sincronizados con la BD.",
+        "exportSuccessDetail": "{added} nuevas, {updated} actualizadas en JSON.",
+        "exportErrorTitle": "Error de exportación",
+        "exportErrorDesc": "Error al exportar a archivos locales",
+        "saveSuccess": "Traducción actualizada correctamente.",
+        "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+        "batch_translate_progress": "Iniciando IA: {current}/{total}...",
+        "batch_translate_chunk": "Traduciendo lote {current}/{total} ({count} llaves)...",
+        "batch_success_title": "Traducción completada",
+        "batch_success_desc": "Se tradujeron {count} llaves correctamente.",
+        "batch_error_title": "Error de traducción masiva",
+        "batch_error_interrupted": "Proceso interrumpido: El lote {batch} falló.",
+        "batch_error_generic": "Error durante la traducción masiva"
+      }
     },
-    "notifications": {
-      "aiSuccessTitle": "IA: Traducción completada",
-      "aiSuccessDesc": "Se han generado las traducciones faltantes.",
-      "upToDateTitle": "Todo al día",
-      "upToDateDesc": "No hay llaves faltantes en este idioma.",
-      "autoTranslateBtn": "Auto-traducir faltantes",
-      "cancel": "Cancelar",
-      "empty": "Sin resultados",
-      "keyHeader": "Clave",
-      "noMatch": "Sin coincidencias",
-      "missing": "Faltante",
-      "noResults": "Sin resultados",
-      "primaryLabel": "Idioma primario",
-      "save": "Guardar",
-      "secondaryLabel": "Idioma secundario",
-      "syncCompletedTitle": "Sincronización completada",
-      "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
-      "syncSuccessTitle": "Sincronización Exitosa",
-      "syncSuccessDetail": "{added} nuevas, {updated} actualizadas.",
-      "syncErrorTitle": "Error de sincronización",
-      "syncErrorDesc": "Error al sincronizar con la base de datos",
-      "exportCompletedTitle": "Exportación completada",
-      "exportNoChanges": "Los archivos JSON ya están sincronizados con la BD.",
-      "exportSuccessDetail": "{added} nuevas, {updated} actualizadas en JSON.",
-      "exportErrorTitle": "Error de exportación",
-      "exportErrorDesc": "Error al exportar a archivos locales",
-      "saveSuccess": "Traducción actualizada correctamente.",
-      "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos."
-    }
-  },
-  "api_docs": {
-    "loading": "Iniciando Portal Técnico...",
-    "title": "Portal de Documentación API",
-    "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
-    "card_title": "Especificación de Plataforma RAG ABD",
-    "error_loading": "No se pudo cargar la definición de la API."
-  },
-  "compliance": {
-    "title": "Centro de Cumplimiento",
-    "highlight": "GDPR y Datos",
-    "subtitle": "Gestiona la portabilidad de datos, copias de seguridad y evidencia legal de destrucción.",
-    "dataPortability": {
-      "title": "Portabilidad de Datos (Backup)",
-      "item4": "Logs de Auditoría",
-      "description": "Descarga una copia completa de los activos de conocimiento de tu organización, incluyendo metadatos y logs, en formato portable.",
-      "whatsIncluded": "¿Qué se incluye?",
-      "item1": "Usuarios y Perfiles",
-      "item2": "Metadatos de Activos",
-      "item3": "Configuraciones de Ingesta y RAG"
-    },
-    "rightToBeForgotten": {
-      "title": "Derecho al Olvido",
-      "description": "Herramientas para cumplimiento GDPR y evidencia de destrucción permanente de datos.",
-      "alertTitle": "Destrucción Permanente",
-      "alertDescription": "Eliminar un tenant es irreversible. Usa el script de limpieza efímera para eliminaciones masivas. Esta herramienta genera el certificado legal requerido para auditorías GDPR."
+    "api_docs": {
+      "loading": "Iniciando Portal Técnico...",
+      "title": "Portal de Documentación API",
+      "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
+      "card_title": "Especificación de Plataforma RAG ABD",
+      "error_loading": "No se pudo cargar la definición de la API."
     },
     "buttons": {
       "downloadBackup": "Descargar Backup Completo (.zip)",
       "generatingZip": "Generando ZIP...",
       "generateCertificate": "Generar Certificado de Eliminación (PDF)",
       "signingPdf": "Firmando PDF...",
-      "requestDeletion": "Solicitar Eliminación Permanente de Tenant"
+      "requestDeletion": "Solicitar Eliminación Permanente de Tenant",
+      "manualAdminRequest": "Petición manual de Administrador"
     },
     "toasts": {
       "backupDownloaded": "Backup Descargado",
@@ -1251,7 +1122,10 @@
         "high": "Alto",
         "limited": "Limitado",
         "minimal": "Mínimo"
-      }
+      },
+      "euRisk": "Riesgo EU",
+      "governed": "Gobernado",
+      "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación RAG se clasifica como <strong>riesgo {risk}</strong> ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
     }
   },
   "jobs": {
@@ -1323,6 +1197,24 @@
     "info": {
       "multi_vertical": "Los prompts marcados como 'ELEVATORS' solo afectan a esa industria."
     },
+    "sync_modal": {
+      "title": "¿Ejecutar Sincronización Global?",
+      "description": "Esta acción escarpeará todos los prompts maestros en {codePath} y los cargará en la base de datos para este tenant.",
+      "governance": "Gobernanza:",
+      "governance_desc": "Si un prompt en la DB tiene una versión mayor que el código, no será sobrescrito. Los prompts nuevos serán creados automáticamente.",
+      "cancel": "Cancelar",
+      "confirm": "Sincronizar ahora"
+    },
+    "industries": {
+      "all": "Filtro por Industria",
+      "GENERIC": "Genérico",
+      "ELEVATORS": "Ascensores",
+      "LEGAL": "Legal",
+      "BANKING": "Banca",
+      "INSURANCE": "Seguros",
+      "IT": "IT",
+      "MEDICAL": "Médico"
+    },
     "editor_placeholder_title": "Editor de Prompts Maestros",
     "editor_placeholder_desc": "Selecciona un prompt de la lista o crea uno nuevo para empezar a editar.",
     "editor": {
@@ -1342,20 +1234,40 @@
       "category": "Categoría",
       "template": "Plantilla",
       "variables": "Variables del Sistema",
-      "change_reason": "Motivo del cambio"
+      "change_reason": "Motivo del cambio",
+      "template_title": "Plantilla de Ingeniería",
+      "load_example": "Cargar Ejemplo",
+      "chars": "chars",
+      "tips_title": "Consejos de Prompting:",
+      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
+      "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
+      "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
     },
     "history": {
       "title": "Audit Log Global",
       "subtitle": "Seguimiento maestro de cambios en directivas de IA",
       "search": "Buscar por prompt, clave o motivo...",
       "records": "Registros",
-      "version": "V",
-      "system": "Sistema",
-      "no_records": "No se encontraron registros en el historial",
-      "by": "Por",
-      "reason": "Motivo",
-      "date": "Fecha"
+      "version": "V"
     },
+    "variables": {
+      "title": "Variables Dinámicas",
+      "add_btn": "Añadir Variable",
+      "name_placeholder": "Nombre var",
+      "desc_placeholder": "Descripción de la variable...",
+      "empty": "Sin variables configuradas",
+      "types": {
+        "string": "Texto",
+        "number": "Número",
+        "boolean": "Booleano",
+        "json": "JSON"
+      }
+    },
+    "system": "Sistema",
+    "no_records": "No se encontraron registros en el historial",
+    "by": "Por",
+    "reason": "Motivo",
+    "date": "Fecha",
     "tabs": {
       "active": "Prompts Activos",
       "testing": "Testing / Borradores"
@@ -1464,7 +1376,20 @@
     "save_warning": "¡Guarde esta llave ahora!",
     "save_warning_desc": "Esta es la única vez que le mostraremos la llave de API completa. Si la pierde, deberá generar una nueva.",
     "copy_toast": "Copiado al portapapeles",
-    "active_keys": "Llaves Activas"
+    "active_keys": "Llaves Activas",
+    "status": {
+      "active": "ACTIVA",
+      "revoked": "REVOCADA",
+      "deactivated_msg": "{name} ha sido desactivada.",
+      "revoke_error": "Error al revocar la llave"
+    },
+    "error_title": "Error",
+    "unknown_error": "Error desconocido",
+    "error_creating": "Error al crear la llave",
+    "key_name_label": "Nombre de la Llave",
+    "key_name_placeholder": "Ej: Integración ERP Prod",
+    "close_btn": "Cerrar",
+    "space_label": "ESPACIO"
   },
   "billing": {
     "contracts": {
@@ -1615,6 +1540,100 @@
       "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
       "metadata_title": "Facturación y Consumo | ABD RAG Platform",
       "metadata_desc": "Gestión de recursos y facturación SaaS."
+    },
+    "plan_selector": {
+      "current_badge": "Plan Actual",
+      "active": "Activo",
+      "select": "Seleccionar",
+      "per_month": "/mes",
+      "plan_updated": "¡Plan Actualizado!",
+      "plan_changed_to": "Plan cambiado a {plan} correctamente.",
+      "change_error": "Error al cambiar plan",
+      "change_error_desc": "Ocurrió un error inesperado al procesar el cambio manual.",
+      "proration_title": "Nota sobre Prorrateo:",
+      "proration_desc": "Al cambiar de plan, el tiempo no disfrutado de tu plan actual se convierte automáticamente en crédito que se aplicará a tu próxima factura. El nuevo plan se activa de forma inmediata."
+    },
+    "simulator": {
+      "title": "Simulador de Costes",
+      "description": "Simula el impacto financiero de un cambio de plan en tu facturación.",
+      "current_subscription": "Suscripción Actual",
+      "current_plan": "Plan Actual",
+      "days_used": "Días consumidos en el ciclo",
+      "of_days": "de {total} días",
+      "new_subscription": "Nueva Suscripción",
+      "new_plan": "Nuevo Plan",
+      "billing_cycle": "Ciclo de Facturación",
+      "monthly": "Mensual",
+      "yearly": "Anual (-17%)",
+      "credit_unused": "Crédito por tiempo no usado ({plan}):",
+      "new_plan_cost": "Coste del Nuevo Plan ({plan}):",
+      "usage_projection": "Proyección de Uso Real",
+      "based_on_tokens": "Basado en tu consumo mensual de {tokens} tokens",
+      "estimated_ai": "Gastos de IA Est.",
+      "total_now": "Total a pagar ahora:",
+      "variable_note": "* El total NO incluye los gastos variables por consumo de IA proyectados ({amount})",
+      "charge_immediate": "Cargo inmediato",
+      "credit_account": "Crédito en cuenta",
+      "loading_usage": "Analizando consumo histórico para sincronizar el simulador..."
+    },
+    "tab": {
+      "plan_current": "Plan Actual",
+      "plan_active": "Activo",
+      "free_trial_desc": "Estás disfrutando del periodo de prueba gratuito.",
+      "subscription_renewed": "Suscripción renovada mensualmente.",
+      "change_plan": "Cambiar Plan",
+      "plans_and_prices": "Planes y Precios",
+      "plans_select_desc": "Selecciona el plan que mejor se adapte a tus necesidades.",
+      "calculating_stripe": "Calculando prorrateo exacto con Stripe...",
+      "processing": "Procesando...",
+      "confirm_subscribe": "Confirmar y Suscribirse",
+      "tokens_ia": "Tokens IA (Generativo)",
+      "storage_rag": "Almacenamiento (RAG)",
+      "vector_searches": "Búsquedas Vectoriales",
+      "api_calls": "Llamadas API",
+      "limit_badge": "Límite",
+      "overage_badge": "Exceso",
+      "fiscal_identity": "Identidad Fiscal",
+      "fiscal_name_label": "Razón Social / Nombre Fiscal",
+      "fiscal_name_placeholder": "Ej: ABD Elevadores S.L.",
+      "tax_id_label": "CIF / NIF / VAT ID",
+      "tax_id_placeholder": "Ej: B12345678",
+      "invoice_reception": "Recepción de Facturas",
+      "channel_label": "Canal Preferente",
+      "channel_email": "Correo Electrónico",
+      "channel_postal": "Correo Postal",
+      "channel_in_app": "Sólo descarga en App",
+      "channel_xml_edi": "Intercambio XML / EDI",
+      "billing_email_label": "Email de Facturación",
+      "billing_email_placeholder": "facturacion@empresa.com",
+      "file_format_label": "Formato de Archivo",
+      "format_pdf": "PDF (Firmado Digitalmente)",
+      "format_xml": "XML Facturae",
+      "format_csv": "CSV / Excel",
+      "format_paper": "Papel (Físico)",
+      "shipping_address": "Dirección de Envío",
+      "street_label": "Calle y Número",
+      "city_label": "Ciudad",
+      "postal_code_label": "Cód. Postal",
+      "country_label": "País",
+      "billing_address": "Dirección de Facturación",
+      "billing_address_same": "Igual que la dirección de envío activo.",
+      "billing_street_label": "Calle y Número (Fact.)",
+      "e_invoice_cert": "Certificación de Factura Electrónica",
+      "e_invoice_compliance": "Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.",
+      "edi_info": "Información EDI"
+    },
+    "planActive": "Tu Plan Actual",
+    "planCurrent": "Tu Plan Actual",
+    "perMonth": "/mes",
+    "contactSupport": "Contactar Ventas",
+    "selectPlan": "Seleccionar Plan",
+    "simulation": {
+      "title": "Resumen de la Simulación",
+      "creditApplied": "Crédito Aplicado",
+      "newPlanCost": "Coste del Nuevo Plan",
+      "totalDueNow": "Total a Pagar Ahora",
+      "nextBillingDate": "Próxima fecha de facturación"
     }
   },
   "billing_hub": {
@@ -1713,6 +1732,7 @@
     "general": {
       "tenantId": "ID de Organización",
       "name": "Nombre Comercial",
+      "defaultName": "Mi Organización",
       "industry": "Industria / Dominio",
       "industryPlaceholder": "Selecciona industria",
       "compliance": {
@@ -1745,6 +1765,11 @@
         "desc": "Límite de documentos procesados.",
         "currentUsage": "Uso Actual (Cloudinary / Storage)",
         "warning": "Al superar la cuota, se bloqueará el acceso a nuevas peticiones de análisis."
+      },
+      "storageUsage": {
+        "metric": "Métrica calculada s/ cuota total",
+        "used": "usado",
+        "mb": "MB"
       }
     },
     "features": {
@@ -1883,6 +1908,64 @@
       "contactSupport": "Contactar Soporte",
       "selectPlan": "Seleccionar",
       "perMonth": "/mes",
+      "tab": {
+        "plan_current": "Plan Actual",
+        "plan_active": "Activo",
+        "free_trial_desc": "Estás disfrutando del periodo de prueba gratuito.",
+        "subscription_renewed": "Suscripción renovada mensualmente.",
+        "change_plan": "Cambiar Plan",
+        "plans_and_prices": "Planes y Precios",
+        "plans_select_desc": "Selecciona el plan que se adapte a tus necesidades.",
+        "calculating_stripe": "Calculando prorrateo en Stripe...",
+        "processing": "Procesando...",
+        "confirm_subscribe": "Confirmar Suscripción",
+        "tokens_ia": "Tokens IA (Generativo)",
+        "storage_rag": "Almacenamiento (RAG)",
+        "vector_searches": "Búsquedas Vectoriales",
+        "api_calls": "Llamadas API",
+        "fiscal_identity": "Identidad Fiscal",
+        "fiscal_name_label": "Razón Social / Nombre Fiscal",
+        "fiscal_name_placeholder": "Ej: ABD Elevadores S.L.",
+        "tax_id_label": "CIF / NIF / VAT ID",
+        "tax_id_placeholder": "Ej: B12345678",
+        "invoice_reception": "Recepción de Facturas",
+        "channel_label": "Canal Preferente",
+        "channel_email": "Correo Electrónico",
+        "channel_postal": "Correo Postal",
+        "channel_in_app": "Sóla descarga en App",
+        "channel_xml_edi": "Intercambio XML / EDI",
+        "billing_email_label": "Email de Facturación",
+        "billing_email_placeholder": "facturacion@empresa.com",
+        "file_format_label": "Formato de Archivo",
+        "format_pdf": "PDF (Firmado Digitalmente)",
+        "format_xml": "XML Facturae",
+        "format_csv": "CSV / Excel",
+        "format_paper": "Papel (Físico)",
+        "shipping_address": "Dirección de Envío",
+        "street_label": "Calle y Número",
+        "city_label": "Ciudad",
+        "postal_code_label": "Cód. Postal",
+        "country_label": "País",
+        "billing_address": "Dirección de Facturación",
+        "billing_address_same": "Igual que la dirección de envío activo.",
+        "billing_street_label": "Calle y Número (Facturación)",
+        "e_invoice_cert": "Certificación de Factura Electrónica",
+        "e_invoice_compliance": "Cumplimos con la Ley Crea y Crece.",
+        "edi_info": "Información EDI",
+        "limit_badge": "LÍMITE ALCANZADO",
+        "overage_badge": "EXCESO",
+        "simulation_error": "Error en la simulación",
+        "checkout_error": "Error iniciando checkout",
+        "error_sim_title": "Error de Simulación",
+        "default_country": "España",
+        "units": {
+          "bytes": "B",
+          "kb": "KB",
+          "mb": "MB",
+          "gb": "GB",
+          "tb": "TB"
+        }
+      },
       "usage": {
         "tokens": "Tokens IA (Generativo)",
         "storage": "Almacenamiento (RAG)",
@@ -1964,12 +2047,19 @@
         "value": "90 Días (Anonimizado)"
       },
       "gdprNote": "Este tenant cumple con los requisitos del Reglamento General de Protección de Datos (RGPD) UE 2016/679.",
-      "downloadBtn": "Descargar Informe PDF"
+      "downloadBtn": "Descargar Informe PDF",
+      "orgDefault": "la organización",
+      "downloadSuccess": {
+        "title": "Informe Generado",
+        "desc": "El certificado de cumplimiento se ha descargado correctamente."
+      }
     },
     "reports": {
       "title": "Configuración de Reportes Industriales",
       "subtitle": "Personaliza los avisos legales, firmas y apariencia de los reportes generados.",
       "preview": "VISTA PREVIA DE REPORTE",
+      "printColor": "Color Impresión PDF",
+      "pageCount": "Página {current} de {total}",
       "includeSources": {
         "title": "Incluir Fuentes Técnicas",
         "desc": "Adjunta automáticamente las referencias de la base de conocimientos al final del PDF."
@@ -2247,9 +2337,11 @@
       "expenditure": "Gasto Operativo",
       "prediction_title": "Proyección Predictiva",
       "platform_value": "Valor Total de Plataforma",
-      "roi": "ROI 150%",
+      "roi": "ROI",
       "confidence": "{percentage}% Conf.",
-      "projection_30d": "Proyección 30d"
+      "projection_30d": "Proyección 30d",
+      "currency": "$",
+      "tokens": "tokens"
     },
     "usage": {
       "title": "Consumo por Tenant",
@@ -2281,6 +2373,9 @@
       "db_tier": "Capa de Base de Datos",
       "ai_engine": "Motor de IA"
     },
+    "knowledge_health": {
+      "auth_ok": "AUTH: OK"
+    },
     "evolution": {
       "title": "Sovereign Engine: Evolución de Ontología",
       "subtitle": "Refinamiento autónomo de taxonomías basado en deriva de feedback humano.",
@@ -2305,6 +2400,309 @@
       "predictive_success_desc": "Se han detectado {count} anomalías.",
       "predictive_error_title": "Error de Auditoría",
       "predictive_error_desc": "La auditoría de inteligencia predictiva ha fallado"
+    }
+  },
+  "governance": {
+    "title": "Gobernanza de IA",
+    "subtitle": "Gestión centralizada de modelos, límites y políticas de seguridad.",
+    "success": "Gobernanza de IA actualizada correctamente",
+    "error": "Error guardando cambios",
+    "models": {
+      "title": "Modelos Contractuales",
+      "description": "Configura los modelos por defecto y fallback para toda la plataforma.",
+      "default": {
+        "label": "Modelo Principal (Default)",
+        "desc": "Usado para el 90% de las operaciones de Inteligencia Técnica y análisis."
+      },
+      "embeddings": {
+        "label": "Modelo de Embeddings (Vectores)",
+        "desc": "Determina la calidad de la búsqueda vectorial."
+      },
+      "fallback": {
+        "label": "Modelo de Respaldo (Fallback)"
+      },
+      "select_placeholder": "Selecciona modelo",
+      "default_option": "Default (Gobernanza)"
+    },
+    "mapping": {
+      "title": "Mapeo Funcional por Tarea",
+      "description": "Define qué modelo específico debe realizar cada tarea crítica del sistema.",
+      "rag": {
+        "title": "Inteligencia Técnica & Búsqueda de Documentos",
+        "generator": "Generador de Respuestas",
+        "rewriter": "Re-escritor de Consultas"
+      },
+      "workflows": {
+        "title": "Orquestación & Workflows",
+        "router": "Enrutador de Workflows",
+        "analyzer": "Analista de Nodos"
+      },
+      "extraction": {
+        "title": "Extracción & Análisis Técnico",
+        "graph": "Extractor de Grafos",
+        "report": "Generador de Informes",
+        "query": "Extractor de Consultas"
+      }
+    },
+    "limits": {
+      "title": "Límites & Cuotas",
+      "max_tokens": "Max Tokens por Request",
+      "daily_tokens": "Límite Diario de Tokens",
+      "daily_budget": "Límite Diario ($ USD)",
+      "pii": {
+        "label": "Anonimización PII",
+        "desc": "Masking automático"
+      },
+      "explain": {
+        "label": "Explicabilidad",
+        "desc": "Incluir \"Thought Process\""
+      },
+      "warning": "Prevención de desbordamiento de costos activo."
+    },
+    "actions": {
+      "discard": "Descartar",
+      "save": "Guardar Gobernanza"
+    }
+  },
+  "audit": {
+    "title": "Registro de Auditoría",
+    "highlight": "Auditoría",
+    "subtitle": "Monitoreo de actividad, seguridad y validación de reglas de negocio en tiempo real.",
+    "config_button": "Auditoría Config",
+    "export_button": "Exportar Logs",
+    "table": {
+      "title": "Eventos de Auditoría",
+      "subtitle": "Feed industrial de operaciones y seguridad",
+      "timestamp": "Timestamp",
+      "source": "Origen",
+      "action": "Acción",
+      "level": "Nivel",
+      "duration": "Duración",
+      "correlation": "Correlación ID",
+      "empty": "No se han registrado eventos que coincidan con los filtros."
+    },
+    "metrics": {
+      "total_cases": "Pedidos (Total)",
+      "accumulated": "Acumulados en plataforma",
+      "sla_violations": "Incidencias SLA",
+      "last_30d": "Últimos 30 días",
+      "tokens_consumed": "Tokens Consumidos",
+      "llm_inference": "Inferencia LLM Activa",
+      "rag_faithfulness": "Inteligencia Técnica Fiabilidad",
+      "hallucination_score": "Score de Alucinaciones"
+    },
+    "filters": {
+      "search_placeholder": "Busca por mensaje, acción, correlationId o email de usuario...",
+      "all": "TODOS",
+      "errors_only": "Solo Errores"
+    },
+    "empty_state": {
+      "title": "Activa el monitor de auditoría",
+      "description": "Usa los filtros de nivel, origen o la barra de búsqueda para cargar los registros. Elige \"TODOS\" para ver la actividad general reciente.",
+      "load_all": "Cargar Todos"
+    }
+  },
+  "compliance": {
+    "title": "Cumplimiento & Normativa",
+    "highlight": "Compliance",
+    "subtitle": "Gestión del registro de modelos (EU AI Act), portabilidad y derechos GDPR.",
+    "aiGovernance": {
+      "registryTitle": "Registro de Modelos IA (EU AI Act)",
+      "registryDesc": "Inventario oficial de modelos de IA utilizados por la organización y su nivel de riesgo.",
+      "model": "Modelo",
+      "provider": "Proveedor",
+      "status": "Estado",
+      "euRisk": "Riesgo EU",
+      "governed": "Gobernado",
+      "riskTitle": "Resumen de Riesgo Operativo",
+      "riskDesc": "Distribución del corpus técnico según categorías de la EU AI Act.",
+      "riskLevels": {
+        "minimal": "Riesgo Mínimo",
+        "high": "Alto Riesgo",
+        "unacceptable": "Inaceptable"
+      },
+      "complianceNoteHtml": "Todos los modelos operan bajo la categoría de <b>{risk}</b> al ser herramientas de asistencia técnica RAG sin toma de decisiones autónoma sobre personas."
+    },
+    "dataPortability": {
+      "title": "Portabilidad de Datos",
+      "description": "Descarga una copia completa de tus activos de conocimiento en un formato estándar.",
+      "whatsIncluded": "¿Qué incluye el backup?",
+      "item1": "Manuales originales (PDF/Planos)",
+      "item2": "Fragmentos (Chunks) e índices vectoriales",
+      "item3": "Grafos de ontología personalizados",
+      "item4": "Metadatos y logs de ingesta"
+    },
+    "rightToBeForgotten": {
+      "title": "Derecho al Olvido (GDPR)",
+      "description": "Solicita la eliminación permanente de datos PII o la destrucción total del tenant.",
+      "alertTitle": "Zona de Peligro",
+      "alertDescription": "Esta acción es irreversible. Se eliminarán permanentemente todos los vectores, documentos y copias de seguridad."
+    },
+    "buttons": {
+      "downloadBackup": "Descargar Backup Completo",
+      "generatingZip": "Generando ZIP...",
+      "generateCertificate": "Generar Certificado de Destrucción",
+      "signingPdf": "Firmando PDF...",
+      "requestDeletion": "Solicitar borrado total de datos",
+      "manualAdminRequest": "Solicitud Manual de Administrador"
+    },
+    "toasts": {
+      "backupDownloaded": "Backup iniciado",
+      "backupSuccess": "El archivo se ha generado con éxito.",
+      "backupError": "No se pudo generar el backup.",
+      "certificateGenerated": "Certificado generado",
+      "certificateSuccess": "El documento legal ha sido firmado y descargado.",
+      "certificateError": "Error al generar el certificado legal.",
+      "error": "Error de Compliance"
+    }
+  },
+  "observability": {
+    "loading": "Cargando métricas...",
+    "error": "Error",
+    "error_desc": "No se pudieron cargar las métricas.",
+    "health": {
+      "title": "Salud del Sistema",
+      "errors_24h": "{count} errores (24h)"
+    },
+    "rag": {
+      "title": "Precisión Inteligencia Técnica",
+      "samples": "Sondeo de {count} consultas"
+    },
+    "tokens": {
+      "title": "Tokens (30d)",
+      "total": "Consumo total acumulado"
+    },
+    "savings": {
+      "title": "Ahorro Estimado",
+      "hours": "{count} horas ahorradas"
+    }
+  },
+  "reliability": {
+    "title": "Resilience & Global Delivery Monitor",
+    "subtitle": "Monitorización de carga extrema y replicación geográfica del Grafo.",
+    "run_test": "Ejecutar Stress Test (500% Load)",
+    "cdn_title": "CDN de Conocimiento Global",
+    "latency": "Latencia",
+    "status": "Estado",
+    "last_test": "Último Stress Test",
+    "success_rate": "Tasa de Éxito",
+    "cpu_peak": "CPU Peak",
+    "reqs_sec": "Reqs/Sec",
+    "validation_success": "ReliabilityEngine validado bajo carga pico.",
+    "no_data": "Sin datos de estrés."
+  },
+  "security_autoscale": {
+    "scaling": {
+      "title": "AI Infrastructure Scaling",
+      "desc": "Auto-optimización de recursos dirigida por el Sistema.",
+      "badge": "AI-MANAGED",
+      "infra_label": "Estado Actual de Infraestructura",
+      "optimization": "Optimización",
+      "compute_load": "Carga de Computación",
+      "dynamic_reserve": "Reserva Dinámica Activa",
+      "dynamic_reserve_desc": "El sistema está ajustando los nodos de red basándose en el tráfico semántico global."
+    },
+    "audit": {
+      "title": "Universal Security Audit",
+      "desc": "Verificación inmutable de blindaje y gobierno.",
+      "health_score": "Health Score",
+      "encrypted_fields": "Campos Cifrados",
+      "active_policies": "Políticas Activas",
+      "findings": {
+        "encryption": "Cifrado AES-256-GCM validado en todos los campos sensibles.",
+        "governance": "Motor de Gobierno operando bajo política 'Strict Compliance'.",
+        "traceability": "Trazabilidad de auditoría inmutable activa."
+      },
+      "next_audit": "Próxima auditoría completa programada en 24 horas."
+    }
+  },
+  "limit_alert": {
+    "resources": {
+      "tokens": "Tokens de IA",
+      "storage": "Almacenamiento",
+      "searches": "Búsquedas Vectoriales",
+      "api_requests": "Llamadas API"
+    },
+    "exceeded_title": "Límite Excedido",
+    "warning_title": "Alerta de Consumo",
+    "exceeded_msg": "Has alcanzado el 100% de tu límite de {resource}.",
+    "warning_msg": "Has consumido el {percentage}% de tu límite de {resource}.",
+    "suspended": "Tu cuenta ha sido suspendida. Por favor, actualiza tu plan.",
+    "upgrade": "Actualizar Plan",
+    "dismiss": "Entendido",
+    "modal": {
+      "title": "Límite Excedido",
+      "desc": "Has alcanzado el límite de tu plan actual. Para continuar usando la plataforma, por favor actualiza a un plan superior.",
+      "view_plans": "Ver Planes",
+      "close": "Cerrar"
+    }
+  },
+  "quick_nav": {
+    "workflows": {
+      "title": "Workflows",
+      "subtitle": "Automatización"
+    },
+    "checklists": {
+      "title": "Checklists",
+      "subtitle": "Cumplimiento"
+    },
+    "intelligence": {
+      "title": "Intelligence",
+      "subtitle": "IA Hub"
+    }
+  },
+  "knowledge_governance": {
+    "title": "Gobierno de Conocimiento & IA",
+    "desc": "Auditoría y control de políticas sobre decisiones autónomas.",
+    "empty_title": "Sin actividad reciente",
+    "empty_desc": "No se han registrado acciones de IA bajo supervisión de gobierno.",
+    "confidence": "Confianza",
+    "in_entity": "en"
+  },
+  "key_debug": {
+    "dialog_desc": "Estado técnico y overrides en base de datos.",
+    "loading": "Consultando capas de traducción...",
+    "error": "Error al cargar info de debug",
+    "json_section": "Archivo JSON Local (mensajes/{locale}/...)",
+    "key_not_found": "Llave no encontrada en archivos locales",
+    "db_section": "Overrides en Base de Datos (MongoDB)",
+    "no_overrides": "No hay overrides para esta llave en la DB",
+    "obsolete": "OBSOLETO",
+    "cache_label": "Master Cache Existe",
+    "cache_active": "ACTIVA",
+    "cache_inactive": "INACTIVA"
+  },
+  "onboarding": {
+    "welcome_title": "¡Bienvenido a ABD RAG Platform!",
+    "welcome_content": "Estamos listos para potenciar tu organización con inteligencia artificial soberana. ¿Comenzamos el tour?",
+    "steps": {
+      "welcome": {
+        "title": "¡Bienvenido a ABD RAG Platform!",
+        "content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?"
+      },
+      "upload": {
+        "title": "Sube tu primer documento",
+        "content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo."
+      },
+      "ask": {
+        "title": "Haz tu primera pregunta",
+        "content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico."
+      },
+      "explore": {
+        "title": "Explora tu entorno",
+        "content": "Hemos personalizado tu tablero basándonos en tu rol. ¡Todo listo para empezar!"
+      }
+    },
+    "buttons": {
+      "next": "Siguiente",
+      "back": "Anterior",
+      "skip": "Saltar Tour",
+      "finish": "Finalizar"
+    },
+    "toasts": {
+      "completed": "¡Tour completado!",
+      "skipped": "Tour omitido. Puedes reiniciarlo desde tu perfil.",
+      "reset": "Onboarding reiniciado"
     }
   }
 }

@@ -1,6 +1,6 @@
-import { connectAuthDB } from './db';
+import { connectAuthDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
-import { NotFoundError } from './errors';
+import { NotFoundError } from '@/lib/errors';
 
 /**
  * Servicio para la gestión de usuarios y perfiles.

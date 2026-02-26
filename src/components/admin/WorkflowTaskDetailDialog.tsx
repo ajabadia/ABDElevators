@@ -70,15 +70,15 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
         endpoint: `/api/admin/workflow-tasks/${task._id}`,
         method: 'PATCH',
         onSuccess: () => {
-            toast.success("Tarea actualizada", {
-                description: `La tarea ha sido marcada como ${status}`,
+            toast.success(t('toast.update_success_title'), {
+                description: t('toast.update_success_desc', { status }),
             });
             onUpdate?.();
             onOpenChange(false);
         },
         onError: (errorMsg) => {
-            toast.error("Error", {
-                description: errorMsg || "No se pudo actualizar la tarea",
+            toast.error(t('toast.error_title'), {
+                description: errorMsg || t('toast.error_desc'),
             });
         }
     });
@@ -152,15 +152,15 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold flex items-center gap-2 text-slate-800">
                                 <Hash className="w-4 h-4 text-sidebar-primary" />
-                                Contexto del Caso
+                                {t('detail_dialog.context_title')}
                             </h4>
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">ID Caso</span>
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">{t('detail_dialog.case_id')}</span>
                                     <p className="text-sm font-semibold">{task.caseId}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Referencia</span>
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">{t('detail_dialog.reference')}</span>
                                     <p className="text-sm font-semibold flex items-center gap-1.5 text-sidebar-primary">
                                         <Paperclip className="w-3.5 h-3.5" />
                                         Manual_V-120.pdf
@@ -174,7 +174,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold flex items-center gap-2 text-teal-800">
                                     <Brain className="w-4 h-4 text-teal-500" />
-                                    Propuesta de Inteligencia Artificial
+                                    {t('detail_dialog.ai_proposal_title')}
                                 </h4>
                                 <div className="bg-teal-50/40 p-5 rounded-2xl border-2 border-teal-100/50 shadow-sm relative overflow-hidden">
                                     <div className="absolute top-0 right-0 p-3 opacity-10">
@@ -183,11 +183,11 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
 
                                     <div className="flex items-center justify-between mb-4">
                                         <Badge className="bg-teal-600 text-white font-black px-3 py-1">
-                                            {task.metadata.llmProposal.suggestedAction === 'APPROVE' ? 'APROBAR' :
-                                                task.metadata.llmProposal.suggestedAction === 'REJECT' ? 'RECHAZAR' : 'ESCALAR'}
+                                            {task.metadata.llmProposal.suggestedAction === 'APPROVE' ? t('detail_dialog.ai_proposal_action_approve') :
+                                                task.metadata.llmProposal.suggestedAction === 'REJECT' ? t('detail_dialog.ai_proposal_action_reject') : t('detail_dialog.ai_proposal_action_escalate')}
                                         </Badge>
                                         <div className="text-right">
-                                            <span className="text-[10px] uppercase font-bold text-teal-700 block tracking-widest">Confianza</span>
+                                            <span className="text-[10px] uppercase font-bold text-teal-700 block tracking-widest">{t('detail_dialog.ai_confidence')}</span>
                                             <span className="text-lg font-black text-teal-900 leading-none">
                                                 {Math.round((task.metadata.llmProposal.score || 0) * 100)}%
                                             </span>
@@ -205,7 +205,7 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                                             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold gap-2 shadow-lg shadow-teal-600/20"
                                         >
                                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                            Aceptar Recomendación de la IA
+                                            {t('detail_dialog.ai_accept_btn')}
                                         </Button>
                                     )}
                                 </div>
@@ -261,14 +261,14 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold flex items-center gap-2 text-red-800">
                                     <AlertTriangle className="w-4 h-4 text-red-500" />
-                                    Fallo en Análisis de IA (Fallback)
+                                    {t('detail_dialog.fallback_title')}
                                 </h4>
                                 <div className="bg-red-50/40 p-5 rounded-2xl border-2 border-red-100/50 shadow-sm">
                                     <p className="text-xs text-red-700 font-medium mb-2">
-                                        El motor de IA no pudo completar la decisión automática. Se requiere intervención humana para validar este paso.
+                                        {t('detail_dialog.fallback_desc')}
                                     </p>
                                     <div className="bg-white/80 p-3 rounded-lg border border-red-100 font-mono text-[10px] text-red-600">
-                                        <strong>Error original:</strong> {task.metadata.error || 'Desconocido'}
+                                        <strong>{t('detail_dialog.fallback_error')}:</strong> {task.metadata.error || 'Desconocido'}
                                     </div>
                                 </div>
                             </div>
@@ -276,12 +276,12 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
 
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <Label htmlFor="notes" className="text-sm font-bold text-slate-800">Notas de Resolución</Label>
-                                <span className="text-[10px] text-muted-foreground italic">Requerido para auditoría</span>
+                                <Label htmlFor="notes" className="text-sm font-bold text-slate-800">{t('detail_dialog.notes_label')}</Label>
+                                <span className="text-[10px] text-muted-foreground italic">{t('detail_dialog.notes_audit')}</span>
                             </div>
                             <Textarea
                                 id="notes"
-                                placeholder="Indica el resultado de la validación o motivos del cambio de estado..."
+                                placeholder={t('detail_dialog.notes_placeholder')}
                                 className="min-h-[100px] bg-white border-slate-200 focus:ring-sidebar-primary/20 text-sm"
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
@@ -349,13 +349,13 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
 
                     <div className="space-y-4">
                         <div className="p-4 rounded-xl bg-sidebar-primary/5 border border-sidebar-primary/10 space-y-4">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-sidebar-primary">Gestión de Estado</h4>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-sidebar-primary">{t('detail_dialog.status_management')}</h4>
 
                             <div className="space-y-2">
                                 {[
-                                    { value: 'PENDING', label: 'Pendiente', color: 'bg-amber-100 text-amber-800 hover:bg-amber-200', icon: Clock },
-                                    { value: 'IN_PROGRESS', label: 'En Progreso', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200', icon: AlertTriangle },
-                                    { value: 'COMPLETED', label: 'Completar', color: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200', icon: CheckCircle2 },
+                                    { value: 'PENDING', label: t('detail_dialog.status_pending'), color: 'bg-amber-100 text-amber-800 hover:bg-amber-200', icon: Clock },
+                                    { value: 'IN_PROGRESS', label: t('detail_dialog.status_in_progress'), color: 'bg-blue-100 text-blue-800 hover:bg-blue-200', icon: AlertTriangle },
+                                    { value: 'COMPLETED', label: t('detail_dialog.status_complete'), color: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200', icon: CheckCircle2 },
                                 ].map((opt) => (
                                     <button
                                         key={opt.value}
@@ -380,11 +380,11 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
                         <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
                                 <User className="w-3.5 h-3.5" />
-                                Asignado a: {task.assignedRole}
+                                {t('detail_dialog.assigned_to')}: {task.assignedRole}
                             </div>
                             <Button variant="outline" size="sm" className="w-full text-[10px] h-7 font-bold uppercase tracking-wider" asChild>
                                 <Link href={`/admin/cases/${task.caseId}`}>
-                                    <ExternalLink className="w-3 h-3 mr-1.5" /> Ver Expediente
+                                    <ExternalLink className="w-3 h-3 mr-1.5" /> {t('detail_dialog.view_file_btn')}
                                 </Link>
                             </Button>
                         </div>
@@ -393,14 +393,14 @@ export function WorkflowTaskDetailDialog({ open, onOpenChange, task, onUpdate }:
 
                 <DialogFooter className="gap-2 sm:gap-0">
                     <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isLoading} className="text-xs font-bold">
-                        Cerrar
+                        {t('detail_dialog.close_btn')}
                     </Button>
                     <Button
                         onClick={() => handleUpdate()}
                         disabled={isLoading || (status === task.status && !notes)}
                         className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-white text-xs font-bold px-8"
                     >
-                        {isLoading ? "Actualizando..." : "Confirmar Cambios"}
+                        {isLoading ? t('detail_dialog.updating_btn') : t('detail_dialog.confirm_btn')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -4,8 +4,8 @@ import { UserRole } from '@abd/platform-core';
 import { MongoCaseRepository } from '@/core/adapters/persistence/MongoCaseRepository';
 import { MongoAIWorkflowRepository } from '@/core/adapters/persistence/MongoAIWorkflowRepository';
 import { MongoCaseWorkflowRepository } from '@/core/adapters/persistence/MongoCaseWorkflowRepository';
-import { WorkflowLLMNodeService } from '@/lib/workflow-llm-node-service';
-import { WorkflowTaskService } from '@/lib/workflow-task-service';
+import { WorkflowLLMNodeService } from '@/services/ops/WorkflowLLMNodeService';
+import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
 
 /**
  * CaseWorkflowEngine: Gestiona el ciclo de vida (Estados y Transiciones) de un Caso.

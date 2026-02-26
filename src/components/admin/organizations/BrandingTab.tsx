@@ -561,7 +561,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                             <div className="space-y-3">
                                 <Label className="text-slate-700 font-semibold flex items-center gap-2">
                                     <Palette size={16} className="text-teal-600" />
-                                    Color Impresión PDF
+                                    {tReports('printColor')}
                                 </Label>
                                 <div className="flex gap-3">
                                     <div
@@ -630,7 +630,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                         {config?.branding?.logo?.url ? <img src={config.branding.logo.url} className="object-contain" /> : <Building size={14} className={isPreviewDark ? "text-slate-600" : "text-slate-400"} />}
                                     </div>
                                     <span className="font-bold text-xs" style={{ color: isPreviewDark ? (config?.branding?.colors?.primary ? adjustColor(config.branding.colors.primary, 20) : '#fff') : config?.branding?.colors?.primary }}>
-                                        {config?.name || 'Mi Organización'}
+                                        {config?.name || t('general.defaultName')}
                                     </span>
                                 </div>
                                 <div className="h-4 w-4 rounded-full" style={{ backgroundColor: isPreviewDark ? (config?.branding?.colors?.accent ? adjustColor(config.branding.colors.accent, 15) : '#3b82f6') : config?.branding?.colors?.accent }} />
@@ -667,7 +667,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                             <div className="pt-8 space-y-2">
                                 <div className="h-2 w-40 bg-teal-500/30 rounded" style={{ backgroundColor: (config?.reportConfig?.primaryColor || config?.branding?.colors?.primary || '#0d9488') + '4D' }} />
                                 <p className="text-[10px] text-teal-300 font-mono italic">
-                                    {config?.reportConfig?.signatureText || 'Línea de firma...'}
+                                    {config?.reportConfig?.signatureText || tSig('placeholder')}
                                 </p>
                                 <div className="h-[1px] w-24 bg-teal-500/50" style={{ backgroundColor: (config?.reportConfig?.primaryColor || config?.branding?.colors?.primary || '#0d9488') + '80' }} />
                             </div>
@@ -675,13 +675,13 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                             <div className="pt-4 space-y-2">
                                 <div className="h-2 w-20 bg-slate-700 rounded" />
                                 <p className="text-[9px] text-slate-400 leading-relaxed italic line-clamp-2">
-                                    {config?.reportConfig?.disclaimer || 'Aviso legal del reporte...'}
+                                    {config?.reportConfig?.disclaimer || tDisc('placeholder')}
                                 </p>
                             </div>
 
                             <div className="pt-4 border-t border-white/5 flex justify-between items-center text-[8px] text-white/30 uppercase tracking-widest">
-                                <span>{config?.reportConfig?.footerText || 'ABD Engine v1.0'}</span>
-                                <span>Página 1 de 1</span>
+                                <span>{config?.reportConfig?.footerText || tFoot('placeholder')}</span>
+                                <span>{tReports('pageCount', { current: 1, total: 1 })}</span>
                             </div>
                         </div>
                     </div>
