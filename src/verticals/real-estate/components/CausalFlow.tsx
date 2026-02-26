@@ -22,14 +22,14 @@ interface CausalFlowProps {
     findingLabel: string;
 }
 
-const CausalNode = ({ data }: { data: any }) => {
+const CausalNode = ({ data }: { data: Record<string, unknown> }) => {
     const isMitigation = data.type === 'mitigation';
     const isRoot = data.type === 'root';
 
     return (
         <div className={`px-4 py-3 rounded-xl border shadow-lg min-w-[200px] max-w-[250px] ${isRoot ? 'bg-blue-600 border-blue-400 text-white' :
-                isMitigation ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-100' :
-                    'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+            isMitigation ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-100' :
+                'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
             }`}>
             <div className="flex items-start gap-2">
                 {isRoot && <Zap size={14} className="mt-1" />}
@@ -38,20 +38,20 @@ const CausalNode = ({ data }: { data: any }) => {
 
                 <div className="flex-1">
                     <p className="text-[10px] uppercase font-black opacity-60 tracking-wider">
-                        {data.category}
+                        {String(data.category || '')}
                     </p>
                     <p className="text-xs font-bold leading-tight mt-0.5">
-                        {data.label}
+                        {String(data.label || '')}
                     </p>
-                    {data.description && (
+                    {Boolean(data.description) && (
                         <p className="text-[10px] opacity-70 mt-1 italic line-clamp-2">
-                            {data.description}
+                            {String(data.description)}
                         </p>
                     )}
-                    {data.footer && (
+                    {Boolean(data.footer) && (
                         <div className="mt-2 flex gap-1">
                             <Badge variant="outline" className="text-[8px] h-4 px-1 border-current">
-                                {data.footer}
+                                {String(data.footer)}
                             </Badge>
                         </div>
                     )}

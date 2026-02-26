@@ -20,16 +20,19 @@ async function main() {
 
         console.log(`✅ Success: ${result.insertedCount} plans inserted.`);
         process.exit(0);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('❌ Error seeding plans:', error);
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
 
         await logEvento({
             level: 'ERROR',
             source: 'CLI_SEED_PLANS',
             action: 'SEED_PLANS_ERROR',
-            message: error.message,
+            message: errorMessage,
             correlationId: correlacion_id,
-            details: { stack: error.stack }
+            details: { stack: errorStack }
         });
 
         process.exit(1);

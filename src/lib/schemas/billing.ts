@@ -12,7 +12,7 @@ export const UsageLogSchema = z.object({
     resource: z.string(),                // 'gemini-2.5-pro', 'cloudinary', etc
     description: z.string().optional(),
     correlationId: z.string().optional(),
-    metadata: z.record(z.string(), z.any()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
     timestamp: z.date().default(() => new Date()),
 });
 export type UsageLog = z.infer<typeof UsageLogSchema>;

@@ -12,7 +12,7 @@ export const ApplicationLogSchema = z.object({
     action: z.string(),
     message: z.string(),
     correlationId: z.string(),
-    details: z.any().optional(),
+    details: z.unknown().optional(),
     stack: z.string().optional(),
     timestamp: z.date(),
 });
@@ -57,7 +57,7 @@ export type SystemEmailTemplate = z.infer<typeof SystemEmailTemplateSchema>;
 
 export const SystemEmailTemplateHistorySchema = z.object({
     _id: z.any().optional(),
-    originalTemplateId: z.any(),
+    originalTemplateId: z.unknown(),
     type: z.string(),
     version: z.number(),
     subjectTemplates: z.record(z.string(), z.string()),
@@ -96,8 +96,8 @@ export const AuditTrailSchema = z.object({
     entityId: z.string(),
     source: z.enum(['CONFIG_CHANGE', 'ADMIN_OP', 'DATA_ACCESS', 'SECURITY_EVENT', 'WORKFLOW']).default('CONFIG_CHANGE'),
     changes: z.object({
-        before: z.any().nullable(),
-        after: z.any().nullable()
+        before: z.unknown().nullable(),
+        after: z.unknown().nullable()
     }).optional(),
     reason: z.string().optional(), // Requerido para cambios críticos en servicios
     correlationId: z.string(),
@@ -114,7 +114,7 @@ export const UsageSummarySchema = z.object({
     startDate: z.date(),
     endDate: z.date(),
     metrics: z.record(z.string(), z.number()), // e.g. { LLM_TOKENS: 50000, STORAGE_BYTES: 1024560 }
-    metadata: z.record(z.string(), z.any()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
     createdAt: z.date().default(() => new Date()),
 });
 export type UsageSummary = z.infer<typeof UsageSummarySchema>;

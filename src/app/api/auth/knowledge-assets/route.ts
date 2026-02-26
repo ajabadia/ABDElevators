@@ -5,6 +5,7 @@ import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
+import { ZodError } from 'zod';
 
 /**
  * GET /api/auth/knowledge-assets (users)
@@ -66,7 +67,7 @@ export async function GET() {
         );
 
         return NextResponse.json({ success: true, items: documents });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
@@ -74,9 +75,9 @@ export async function GET() {
             level: 'ERROR',
             source: 'API_USER_DOCS',
             action: 'GET_DOCS_ERROR',
-            message: error.message,
+            message: error instanceof Error ? error.message : String(error),
             correlationId,
-            stack: error.stack
+            stack: error instanceof Error ? error.stack : undefined
         });
         return NextResponse.json(
             new AppError('INTERNAL_ERROR', 500, 'Failed to fetch documents').toJSON(),
@@ -221,11 +222,15 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ success: true, url: uploadResult.secureUrl });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorName = error instanceof Error ? error.name : 'UnknownError';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
         const errorDetails = {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
+            message: errorMessage,
+            name: errorName,
+            stack: errorStack,
             correlationId,
             timestamp: new Date().toISOString()
         };
@@ -234,7 +239,7 @@ export async function POST(req: NextRequest) {
             level: 'ERROR',
             source: 'API_USER_DOCS',
             action: 'CRITICAL_FAILURE',
-            message: error.message,
+            message: errorMessage,
             correlationId,
             details: errorDetails
         });
@@ -248,7 +253,7 @@ export async function POST(req: NextRequest) {
             console.error('Failed to write emergency log', e);
         }
 
-        if (error.name === 'ZodError') {
+        if (error instanceof ZodError) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_USER_DOCS',
@@ -258,20 +263,24 @@ export async function POST(req: NextRequest) {
                 details: error.issues
             });
             return NextResponse.json(
-                new ValidationError(`Invalid document metadata: ${error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(', ')}`, error.issues).toJSON(),
+                new ValidationError(`Invalid document metadata: ${error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')}`, error.issues).toJSON(),
                 { status: 400 }
             );
         }
 
         // Handle AppError even if instanceof fails (bundler isolation)
-        if (error instanceof AppError || error.name === 'AppError' || error.status) {
+        if (error instanceof AppError || errorName === 'AppError' || (error && typeof error === 'object' && 'status' in error)) {
+            const errCode = (error as { code?: string }).code || 'UPLOAD_ERROR';
+            const errStatus = (error as { status?: number }).status || 400;
+            const errDetails = (error as { details?: unknown }).details;
+
             return NextResponse.json(
                 {
-                    code: error.code || 'UPLOAD_ERROR',
-                    message: error.message,
-                    details: error.details
+                    code: errCode,
+                    message: errorMessage,
+                    details: errDetails
                 },
-                { status: error.status || 400 }
+                { status: errStatus }
             );
         }
 
@@ -279,9 +288,9 @@ export async function POST(req: NextRequest) {
             level: 'ERROR',
             source: 'API_USER_DOCS',
             action: 'UPLOAD_DOC_ERROR',
-            message: error.message,
+            message: errorMessage,
             correlationId,
-            stack: error.stack
+            stack: errorStack
         });
 
         return NextResponse.json(

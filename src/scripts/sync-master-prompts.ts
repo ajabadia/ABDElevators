@@ -64,8 +64,8 @@ async function syncMasterPrompts() {
                     { upsert: true }
                 );
                 console.log(`✅ [SYNC] Prompt "${key}" sincronizado.`);
-            } catch (err: any) {
-                console.error(`❌ Error sincronizando prompt "${key}":`, err.message);
+            } catch (err: unknown) {
+                console.error(`❌ Error sincronizando prompt "${key}":`, err instanceof Error ? err.message : String(err));
             }
         }
 
