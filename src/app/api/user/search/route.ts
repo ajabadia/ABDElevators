@@ -4,6 +4,7 @@ import { hybridSearch } from '@abd/rag-engine/server';
 import { UsageService } from "@/services/ops/usage-service"
 import { AppError, handleApiError } from "@/lib/errors"
 import { logEvento } from "@/lib/logger"
+import { PromptRunner } from "@/lib/llm-core/PromptRunner"
 import { z } from "zod"
 import { randomUUID } from "crypto"
 
@@ -68,25 +69,27 @@ export async function POST(req: NextRequest) {
             .map((r, i) => `[${i + 1}] ${r.text}`)
             .join("\n\n")
 
-        const synthesisPrompt = `Eres un asistente técnico experto en ascensores.
-Pregunta: "${validated.query}"
-Contexto de manuales técnicos:
-${context}
-
-Responde de forma clara y profesional en español. Máximo 3 oraciones. 
-Cita tus fuentes si es posible usando [1], [2], etc. 
-Si la información no es suficiente para responder con seguridad, indícalo.`
-
         let synthesisAnswer = ""
         try {
-            const { getGenAI } = await import("@/lib/gemini-client")
-            const genAI = getGenAI()
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
-            const result = await model.generateContent(synthesisPrompt)
-            synthesisAnswer = result.response.text()
-        } catch (err) {
+            synthesisAnswer = await PromptRunner.runText({
+                key: 'USER_SEARCH_SYNTHESIS',
+                variables: { query: validated.query, context },
+                tenantId,
+                correlationId,
+                temperature: 0.2
+            });
+        } catch (error: unknown) {
             // Fallback simple
             synthesisAnswer = ragResults[0].text.substring(0, 300) + "..."
+            await logEvento({
+                level: "WARN",
+                source: "API_USER_SEARCH",
+                action: "AI_SYNTHESIS_FAILED",
+                message: `Synthesis failed, falling back to raw text`,
+                correlationId,
+                tenantId,
+                details: { error: error instanceof Error ? error.message : String(error) }
+            });
         }
 
         // FORMAT RESPONSE
@@ -131,7 +134,7 @@ Si la información no es suficiente para responder con seguridad, indícalo.`
             correlationId
         })
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, "API_USER_SEARCH_POST", correlationId)
     }
 }

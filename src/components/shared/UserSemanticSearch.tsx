@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 interface SearchSource {
     title: string
@@ -35,6 +36,7 @@ interface SearchResponse {
 }
 
 export function UserSemanticSearch() {
+    const t = useTranslations("search")
     const [query, setQuery] = useState("")
     const [isSearching, setIsSearching] = useState(false)
     const [response, setResponse] = useState<SearchResponse | null>(null)
@@ -64,11 +66,11 @@ export function UserSemanticSearch() {
                     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }, 100)
             } else {
-                toast.error(data.message || "Error al realizar la búsqueda")
+                toast.error(data.message || t('error_search'))
             }
         } catch (error) {
             console.error("Search error:", error)
-            toast.error("Error de conexión. Intenta de nuevo.")
+            toast.error(t('error_connection'))
         } finally {
             setIsSearching(false)
         }
@@ -77,7 +79,7 @@ export function UserSemanticSearch() {
     const handleFeedback = (type: "up" | "down") => {
         if (feedback) return
         setFeedback(type)
-        toast.success("¡Gracias por tu feedback!")
+        toast.success(t('feedback_thanks'))
     }
 
     return (
@@ -92,7 +94,7 @@ export function UserSemanticSearch() {
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Pregunta sobre manuales, averías o códigos... (ej: 'Fallo E07 en ARCA II')"
+                        placeholder={t('input_placeholder_semantic')}
                         className="w-full pl-16 pr-36 py-7 bg-transparent border-none focus:ring-0 text-lg font-medium placeholder:text-slate-400"
                         disabled={isSearching}
                     />
@@ -105,7 +107,7 @@ export function UserSemanticSearch() {
                             {isSearching ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                "Preguntar"
+                                t('ask_button')
                             )}
                         </Button>
                     </div>
@@ -121,12 +123,12 @@ export function UserSemanticSearch() {
                         <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-amber-500 animate-pulse" />
                     </div>
                     <div className="text-center space-y-2">
-                        <p className="text-xl font-bold text-foreground">Sintetizando respuesta...</p>
+                        <p className="text-xl font-bold text-foreground">{t('synthesizing')}</p>
                         <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground font-mono">
                             <span className="inline-block w-2 h-2 bg-teal-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                             <span className="inline-block w-2 h-2 bg-teal-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
                             <span className="inline-block w-2 h-2 bg-teal-500 rounded-full animate-bounce" />
-                            <span>Consultando red de activos técnicos</span>
+                            <span>{t('consulting_network')}</span>
                         </div>
                     </div>
                 </div>
@@ -142,10 +144,10 @@ export function UserSemanticSearch() {
                             <div className="flex items-center justify-between">
                                 <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/40 px-3 py-1.5 gap-2 uppercase text-[10px] font-black tracking-widest h-auto">
                                     <Sparkles className="w-3 h-3 text-teal-400" />
-                                    Global Intelligence
+                                    {t('global_intelligence')}
                                 </Badge>
                                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest bg-slate-800/50 px-3 py-1 rounded-full">
-                                    Precision: {Math.round(response.confidence * 100)}%
+                                    {t('precision')}: {Math.round(response.confidence * 100)}%
                                 </div>
                             </div>
 
@@ -155,7 +157,7 @@ export function UserSemanticSearch() {
 
                             <div className="flex items-center justify-between pt-8 border-t border-slate-800/50">
                                 <div className="flex items-center gap-6 text-xs text-slate-400 font-medium">
-                                    <span className="opacity-70">¿Fue útil esta respuesta?</span>
+                                    <span className="opacity-70">{t('feedback_prompt')}</span>
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => handleFeedback("up")}
@@ -182,7 +184,7 @@ export function UserSemanticSearch() {
                                     </div>
                                 </div>
                                 <div className="text-[10px] font-mono text-slate-600 bg-black/40 px-3 py-1 rounded-lg">
-                                    REF_ID: {response.correlationId.split('-')[0].toUpperCase()}
+                                    {t('ref_id')}: {response.correlationId.split('-')[0].toUpperCase()}
                                 </div>
                             </div>
                         </div>
@@ -193,7 +195,7 @@ export function UserSemanticSearch() {
                         <div className="flex items-center justify-between px-1">
                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                                 <MessageSquare className="w-4 h-4 text-teal-600" />
-                                Fuentes Técnicas de Respaldo ({response.sources.length})
+                                {t('technical_sources')} ({response.sources.length})
                             </h3>
                         </div>
 
@@ -210,13 +212,13 @@ export function UserSemanticSearch() {
             {!isSearching && !response && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
                     <HelpPreview
-                        title="Diagnóstico Basado en Datos"
-                        description="Anticípate a fallos buscando síntomas y patrones descritos en manuales oficiales."
+                        title={t('help_data_title')}
+                        description={t('help_data_desc')}
                         icon={<BrainCircuit className="w-6 h-6 text-purple-500" />}
                     />
                     <HelpPreview
-                        title="Conexionado y Esquemas"
-                        description="Localiza de forma instantánea planos y esquemas eléctricos asociados a tu modelo."
+                        title={t('help_schematic_title')}
+                        description={t('help_schematic_desc')}
                         icon={<AlertCircle className="w-6 h-6 text-amber-500" />}
                     />
                 </div>
@@ -226,7 +228,8 @@ export function UserSemanticSearch() {
 }
 
 function SourceCard({ source }: { source: SearchSource }) {
-    const fileName = source.title.split('/').pop() || 'Documento Técnico'
+    const t = useTranslations("search")
+    const fileName = source.title.split('/').pop() || t('source_document')
 
     return (
         <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl hover:border-teal-500/50 hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
@@ -241,7 +244,7 @@ function SourceCard({ source }: { source: SearchSource }) {
                 </div>
                 {source.page && (
                     <Badge variant="secondary" className="text-[10px] font-bold px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 shrink-0">
-                        Pág. {source.page}
+                        {t('source_page')} {source.page}
                     </Badge>
                 )}
             </div>
@@ -261,11 +264,11 @@ function SourceCard({ source }: { source: SearchSource }) {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 text-[10px] font-black text-teal-600 hover:text-teal-700 transition-all hover:translate-x-1"
                     >
-                        VER ORIGINAL
+                        {t('source_view_original')}
                         <ExternalLink className="w-3 h-3" />
                     </a>
                 ) : (
-                    <div className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Acceso Restringido</div>
+                    <div className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">{t('source_restricted')}</div>
                 )}
             </div>
         </div>

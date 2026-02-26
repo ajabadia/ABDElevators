@@ -317,6 +317,19 @@ export const PROMPTS: Record<string, PromptMaster> = {
     version: 1.0
   },
 
+  USER_SEARCH_SYNTHESIS: {
+    template: `Eres un asistente técnico experto en la industria de {{industry}}.
+    Pregunta del usuario: "{{query}}"
+    
+    Contexto de manuales técnicos recuperado:
+    {{context}}
+    
+    Responde de forma clara y profesional en español. Máximo 3 oraciones.
+    Cita tus fuentes si es posible usando [1], [2], etc.
+    Si la información no es suficiente para responder con seguridad basándote en el contexto, indícalo claramente.`,
+    version: 1.0
+  },
+
   // ⚡ FASE 127: Intelligent Workflow Orchestration Prompts
   WORKFLOW_ROUTER: {
     template: `Eres un experto en procesos de negocio y workflows para la industria de {{vertical}}.
