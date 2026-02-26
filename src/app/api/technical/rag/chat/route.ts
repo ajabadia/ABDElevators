@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
                         // Enviamos el chunk como un evento JSON (formato SSE simplificado)
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(value)}\n\n`));
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                         controller.error(err);
                     }
                 }
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
             correlationId
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'TECHNICAL_RAG_CHAT_API', correlationId);
     } finally {
         const durationMs = Date.now() - start;

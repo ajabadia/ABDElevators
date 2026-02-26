@@ -218,7 +218,8 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                     }
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Error in quick analysis:", error);
             setMessages(prev => [...prev, {
                 role: 'assistant',
@@ -226,7 +227,7 @@ export function QuickAnalyzeModal({ asset, open, onClose }: QuickAnalyzeModalPro
                 timestamp: new Date()
             }]);
             toast.error(t('analyze_modal.errors.title'), {
-                description: error.message || t('analyze_modal.errors.unexpected'),
+                description: errorMessage || t('analyze_modal.errors.unexpected'),
             });
         } finally {
             setIsQuerying(false);
