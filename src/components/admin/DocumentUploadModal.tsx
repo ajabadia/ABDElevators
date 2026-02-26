@@ -181,6 +181,7 @@ export function DocumentUploadModal({ isOpen, onClose }: DocumentUploadModalProp
                                             variant="ghost"
                                             size="icon"
                                             className="ml-auto text-slate-400 hover:text-red-500"
+                                            aria-label={t('actions.remove_file')}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setFile(null);

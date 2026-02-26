@@ -77,8 +77,8 @@ export class IngestApiService {
 
             return { success: true, message: 'Enrichment completed.', docId, totalChunks: result?.chunks ?? 0, correlationId };
 
-        } catch (error: any) {
-            if (rootSpan) await IngestTracer.endSpanError(rootSpan, { correlationId, tenantId: tenantId || 'unknown' }, error);
+        } catch (error: unknown) {
+            if (rootSpan) await IngestTracer.endSpanError(rootSpan, { correlationId, tenantId: tenantId || 'unknown' }, error instanceof Error ? error : new Error(String(error)));
             throw error;
         }
     }
@@ -161,8 +161,8 @@ export class IngestApiService {
                 correlationId
             };
 
-        } catch (error: any) {
-            if (rootSpan) await IngestTracer.endSpanError(rootSpan, { correlationId, tenantId: tenantId || 'unknown' }, error);
+        } catch (error: unknown) {
+            if (rootSpan) await IngestTracer.endSpanError(rootSpan, { correlationId, tenantId: tenantId || 'unknown' }, error instanceof Error ? error : new Error(String(error)));
             throw error;
         }
     }
@@ -215,9 +215,9 @@ export class IngestApiService {
             enableVision: formData.get('enableVision') === 'true',
             enableTranslation: formData.get('enableTranslation') === 'true',
             enableGraphRag: formData.get('enableGraphRag') === 'true',
-            chunkSize: formData.get('chunkSize') ? parseInt(formData.get('chunkSize') as string) : undefined,
-            chunkOverlap: formData.get('chunkOverlap') ? parseInt(formData.get('chunkOverlap') as string) : undefined,
-            chunkThreshold: formData.get('chunkThreshold') ? parseFloat(formData.get('chunkThreshold') as string) : undefined,
+            chunkSize: formData.get('chunkSize') && formData.get('chunkSize') !== '' ? parseInt(formData.get('chunkSize') as string, 10) : undefined,
+            chunkOverlap: formData.get('chunkOverlap') && formData.get('chunkOverlap') !== '' ? parseInt(formData.get('chunkOverlap') as string, 10) : undefined,
+            chunkThreshold: formData.get('chunkThreshold') && formData.get('chunkThreshold') !== '' ? parseFloat(formData.get('chunkThreshold') as string) : undefined,
         };
     }
 

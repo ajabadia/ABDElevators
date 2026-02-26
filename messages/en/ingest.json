@@ -52,6 +52,7 @@
     "close": "Close",
     "cancel": "Cancel",
     "submit": "Upload & Index",
-    "done": "Done"
+    "done": "Done",
+    "remove_file": "Remove selected file"
   }
 }

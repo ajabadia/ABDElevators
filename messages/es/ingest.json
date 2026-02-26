@@ -52,6 +52,7 @@
     "close": "Cerrar",
     "cancel": "Cancelar",
     "submit": "Subir e Indexar",
-    "done": "Finalizado"
+    "done": "Finalizado",
+    "remove_file": "Quitar archivo seleccionado"
   }
 }
