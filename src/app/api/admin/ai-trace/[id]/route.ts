@@ -80,14 +80,15 @@ export const GET = withPerformanceSLA(async function GET(
         };
 
         return NextResponse.json(trace);
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return NextResponse.json({
             success: false,
             message: 'Error retrieving AI trace',
-            error: error.message
+            error: errorMessage
         }, { status: 500 });
     }
 }, { endpoint: 'GET /api/admin/ai-trace/[id]', thresholdMs: 500 });
