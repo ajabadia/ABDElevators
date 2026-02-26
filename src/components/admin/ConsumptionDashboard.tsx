@@ -161,8 +161,8 @@ export function ConsumptionDashboard() {
             generateInvoicePDF(data.invoice);
 
             toast.success(t('invoice.success'), { description: t('invoice.success_desc') });
-        } catch (error) {
-            console.error(error);
+        } catch (error: unknown) {
+            console.error("Error downloading invoice preview:", error);
             toast.error(t('invoice.error'), { description: t('invoice.error_desc') });
         } finally {
             setDownloading(false);

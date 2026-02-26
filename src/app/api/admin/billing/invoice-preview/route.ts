@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         const invoice = await BillingService.generateInvoicePreview(tenantId, date.getMonth() + 1, date.getFullYear());
 
         return NextResponse.json({ success: true, invoice });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_BILLING_INVOICE_PREVIEW', correlacion_id);
     }
 }

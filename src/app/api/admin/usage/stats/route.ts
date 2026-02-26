@@ -28,9 +28,10 @@ export async function GET(req: NextRequest) {
             stats
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
         console.error('[API Usage Stats] Error:', error);
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, errorMessage).toJSON(), { status: 500 });
     }
 }
