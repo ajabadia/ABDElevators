@@ -40,7 +40,7 @@ export default function PlaygroundPage() {
     });
     const [query, setQuery] = useState("");
     const [baseInstruction, setBaseInstruction] = useState("Eres un experto en ingeniería de ascensores. Responde basado únicamente en los documentos proporcionados...");
-    const [resultData, setResultData] = useState<any>(null);
+    const [resultData, setResultData] = useState<Record<string, unknown> | null>(null);
 
     const handleRun = async () => {
         if (!query.trim()) {
@@ -68,8 +68,8 @@ export default function PlaygroundPage() {
 
             setResultData(data.result);
             toast.success("Experimento completado con éxito");
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : String(error));
         } finally {
             setIsLoading(false);
         }
@@ -196,7 +196,7 @@ export default function PlaygroundPage() {
                                 <TabsContent value="response" className="mt-0 min-h-[250px]">
                                     {resultData?.answer ? (
                                         <div className="p-4 bg-muted/5 rounded-lg border text-sm leading-relaxed whitespace-pre-wrap">
-                                            {resultData.answer}
+                                            {resultData.answer as React.ReactNode}
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full text-center py-12">
@@ -209,16 +209,16 @@ export default function PlaygroundPage() {
                                 <TabsContent value="chunks" className="mt-0 space-y-4">
                                     <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg text-[10px] text-blue-500/80 font-bold mb-4 uppercase">
                                         <Database className="w-3 h-3" />
-                                        Context Chunks ({resultData?.context?.length || 0})
+                                        Context Chunks ({(resultData?.context as any[])?.length || 0})
                                     </div>
-                                    {resultData?.context?.map((chunk: any, i: number) => (
+                                    {(resultData?.context as any[])?.map((chunk: Record<string, unknown>, i: number) => (
                                         <div key={i} className="p-3 border rounded-lg bg-muted/10 space-y-2">
                                             <div className="flex justify-between items-center text-[10px] opacity-70">
                                                 <span className="font-bold">CHUNK {i + 1}</span>
-                                                <Badge variant="secondary" className="px-1 text-[8px] h-4">Relevancia: {(chunk.score * 100).toFixed(1)}%</Badge>
+                                                <Badge variant="secondary" className="px-1 text-[8px] h-4">Relevancia: {(Number(chunk.score) * 100).toFixed(1)}%</Badge>
                                             </div>
                                             <p className="text-[11px] leading-relaxed italic text-muted-foreground">
-                                                "{chunk.text}"
+                                                "{String(chunk.text)}"
                                             </p>
                                         </div>
                                     ))}
@@ -230,9 +230,9 @@ export default function PlaygroundPage() {
                                 <TabsContent value="metrics" className="mt-0 space-y-6 pt-4">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <MetricCard label={tLab("playground.faithfulness")} score={resultData?.metrics?.faithfulness || 0.0} color="bg-emerald-500" />
-                                            <MetricCard label={tLab("playground.relevance")} score={resultData?.metrics?.answer_relevance || 0.0} color="bg-blue-500" />
-                                            <MetricCard label={tLab("playground.precision")} score={resultData?.metrics?.context_precision || 0.0} color="bg-amber-500" />
+                                            <MetricCard label={tLab("playground.faithfulness")} score={Number((resultData?.metrics as any)?.faithfulness || 0.0)} color="bg-emerald-500" />
+                                            <MetricCard label={tLab("playground.relevance")} score={Number((resultData?.metrics as any)?.answer_relevance || 0.0)} color="bg-blue-500" />
+                                            <MetricCard label={tLab("playground.precision")} score={Number((resultData?.metrics as any)?.context_precision || 0.0)} color="bg-amber-500" />
                                         </div>
                                     </div>
                                     <Card className="bg-muted/30 border-none">
@@ -243,7 +243,7 @@ export default function PlaygroundPage() {
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="pb-4 text-[11px] text-muted-foreground leading-relaxed">
-                                            {resultData?.metrics?.reasoning || "Los resultados de evaluación técnica se basan en métricas sintéticas generadas por un Juez LLM (Phase 86). Aquí podrás ver por qué una respuesta falló y qué estrategia de corrección se aplicó."}
+                                            {String((resultData?.metrics as any)?.reasoning || "Los resultados de evaluación técnica se basan en métricas sintéticas generadas por un Juez LLM (Phase 86). Aquí podrás ver por qué una respuesta falló y qué estrategia de corrección se aplicó.")}
                                         </CardContent>
                                     </Card>
                                 </TabsContent>

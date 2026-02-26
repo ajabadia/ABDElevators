@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
             correlationId
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_SUPERADMIN_METRICS', correlationId);
     }
 }

@@ -34,19 +34,21 @@ export async function POST(req: NextRequest) {
             updated: result.updated,
             correlationId
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         await logEvento({
             level: 'ERROR',
             source: 'CRON_SELF_HEALING',
             action: 'FAILED',
-            message: `Cron job failed: ${error.message}`,
+            message: `Cron job failed: ${errorMessage}`,
             correlationId,
-            details: { stack: error.stack }
+            details: { stack: errorStack }
         });
 
         return NextResponse.json({
             success: false,
-            error: error.message,
+            error: errorMessage,
             correlationId
         }, { status: 500 });
     }
