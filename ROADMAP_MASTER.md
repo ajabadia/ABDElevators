@@ -1057,7 +1057,7 @@ CONFIGURACIÓN (Admin Hub):
 | 236 | Guardian Sweep (Core & Public APIs) | 2-3 días | 🟠 ALTA | 235 |
 | 237 | Strict Typing Sweep (src/lib) | 3-4 días | 🟠 ALTA | — |
 | 238 | Strict Typing Sweep (src/services) | 4-5 días | 🟠 ALTA | 237 [COMPLETADO ✅] |
-| 239 | Test Infrastructure & Core Tests | 4-5 días | 🟠 ALTA | 238 |
+| 239 | Test Infrastructure & Core Tests | 4-5 días | 🟠 ALTA | 238 [COMPLETADO ✅] |
 | 240 | Performance SLA Expansion | 2-3 días | 🟡 MEDIA | 237 |
 | 241 | i18n Deep Polish | 2-3 días | 🟡 MEDIA | — |
 | 242 | Documentation Refresh | 2-3 días | 🟡 MEDIA | Todo lo anterior |

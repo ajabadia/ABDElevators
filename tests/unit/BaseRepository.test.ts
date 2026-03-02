@@ -41,8 +41,8 @@ describe('🏛️ BaseRepository', () => {
 
             const result = await repository.findById(id.toString());
 
-            expect(getTenantCollection).toHaveBeenCalledWith('test_collection', undefined);
-            expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: id });
+            expect(getTenantCollection).toHaveBeenCalledWith('test_collection', undefined, undefined);
+            expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: id }, { session: undefined });
             expect(result).toEqual({ _id: id, name: 'Test' });
         });
     });
@@ -69,7 +69,8 @@ describe('🏛️ BaseRepository', () => {
 
             expect(mockCollection.find).toHaveBeenCalledWith({}, expect.objectContaining({
                 limit: 50,
-                skip: 0
+                skip: 0,
+                session: undefined
             }));
             expect(result).toEqual(items);
         });

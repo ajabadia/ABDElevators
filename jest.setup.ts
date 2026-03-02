@@ -11,6 +11,19 @@ jest.mock("next/link", () => {
     };
 });
 
+// Mock Next.js Cache
+jest.mock("next/cache", () => ({
+    unstable_cache: (fn: any) => fn,
+    revalidateTag: jest.fn(),
+    revalidatePath: jest.fn(),
+}));
+
+// Mock Next.js Headers
+jest.mock("next/headers", () => ({
+    headers: jest.fn().mockReturnValue(new Map()),
+    cookies: jest.fn().mockReturnValue(new Map()),
+}));
+
 // Mock Lucide Icons globally
 jest.mock("lucide-react", () => {
     const React = require("react");
