@@ -198,6 +198,7 @@ src/
 - ✅ **Massive TypeScript Strictness (Phase 225C)**: Erradicación sistemática de validaciones `catch(error: any)` migrando al standard industrial `unknown` con inferencia de `AppError` para resiliencia absoluta.
 - ✅ **Middleware Hardening (Phase 234)**: Protección de rutas y gestión de sesiones con tipado estricto y blindaje contra accesos no autorizados en el edge.
 - ✅ **Guardian ABAC Enforcement Sweep (Phase 236)**: Extensión de la protección Guardian V3 a todas las APIs de uso diario (Core, Facturación, Perfiles), garantizando el aislamiento total multi-tenant.
+- ✅ **Guardian Enforcement Sweep (Phase 235)**: Blindaje sistemático de todas las APIs administrativas (`/api/admin/*`) mediante `enforcePermission`, asegurando el 100% de cobertura ABAC en el panel de control.
 - ✅ **Systematic Hygiene & Zero-Any Core (Phase 233)**: Barrido fundacional de todas las rutas de la plataforma uniendo (1) Aislamiento Multi-tenant DB, (2) UI/UX Hub Consolidation, (3) i18n Hardcode Purge, y (4) Strict Typing de la suite completa. El sistema compila con `tsc --noEmit` a cero errores.
 
 ## 🔧 Scripts Disponibles

@@ -938,14 +938,14 @@ CONFIGURACIÓN (Admin Hub):
 - Un usuario con rol ADMIN podría acceder a recursos de otro tenant si `requireRole` no filtra por tenant.
 
 **Tareas:**
-- [ ] **235.1: Inventariar TODAS las rutas `api/admin/*`** y clasificar: ✅ `enforcePermission` / ⚠️ solo `requireRole` / ❌ sin protección.
-- [ ] **235.2: Definir recursos y acciones Guardian** para cada API no cubierta (ej: `knowledge-assets:download → read`, `billing:contracts → read`).
-- [ ] **235.3: Migrar bloque 1 — Knowledge & RAG APIs** (~15 rutas): `knowledge-assets/*`, `ingest/*`, `graph/*`.
-- [ ] **235.4: Migrar bloque 2 — Billing & Organizations APIs** (~10 rutas): `billing/*`, `organizations/*`, `compliance/*`.
-- [ ] **235.5: Migrar bloque 3 — Operations & i18n APIs** (~12 rutas): `operations/*`, `logs/*`, `i18n/*`, `export/*`.
-- [ ] **235.6: Migrar bloque 4 — Notifications, Settings & Misc** (~8 rutas): `notifications/*`, `settings/*`, `document-types/*`, `contacts/*`.
-- [ ] **235.7: Actualizar `docs/permissions-matrix.md`** con cobertura 100% de admin APIs.
-- [ ] **235.8: Verificar build y smoke test** de sidebar (acceso/denegación con roles distintos).
+- [x] **235.1: Inventariar TODAS las rutas `api/admin/*`** y clasificar: ✅ `enforcePermission` / ⚠️ solo `requireRole` / ❌ sin protección.
+- [x] **235.2: Definir recursos y acciones Guardian** para cada API no cubierta (ej: `knowledge-assets:download → read`, `billing:contracts → read`).
+- [x] **235.3: Migrar bloque 1 — Knowledge & RAG APIs** (~15 rutas): `knowledge-assets/*`, `ingest/*`, `graph/*`.
+- [x] **235.4: Migrar bloque 2 — Billing & Organizations APIs** (~10 rutas): `billing/*`, `organizations/*`, `compliance/*`.
+- [x] **235.5: Migrar bloque 3 — Operations & i18n APIs** (~12 rutas): `operations/*`, `logs/*`, `i18n/*`, `export/*`.
+- [x] **235.6: Migrar bloque 4 — Notifications, Settings & Misc** (~8 rutas): `notifications/*`, `settings/*`, `document-types/*`, `contacts/*`.
+- [x] **235.7: Actualizar `docs/permissions-matrix.md`** con cobertura 100% de admin APIs.
+- [x] **235.8: Verificar build y smoke test** de sidebar (acceso/denegación con roles distintos).
 
 **Criterio de aceptación:** 100% de APIs bajo `/api/admin/*` protegidas con `enforcePermission`. Matriz de permisos actualizada. Zero `requireRole` como único mecanismo de protección.
 
