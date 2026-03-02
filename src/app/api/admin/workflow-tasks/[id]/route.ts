@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
@@ -6,7 +8,6 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { FeedbackService } from '@/services/support/FeedbackService';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const UpdateStatusSchema = z.object({
     status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']),
@@ -21,7 +22,7 @@ const UpdateStatusSchema = z.object({
     rejectionReason: z.string().optional(),
 });
 
-export async function PATCH(
+async function PATCH_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -158,3 +159,5 @@ export async function PATCH(
         return handleApiError(error, 'API_WORKFLOW_TASK_PATCH', correlationId);
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/workflow-tasks/[id]', thresholdMs: 1000 });

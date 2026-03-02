@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 // app/api/pedidos/[id]/checklist/route.ts
 // Checklist endpoint for Phase 6 – returns dynamic checklist items for a given order.
 // Implements strict TypeScript, Zod validation, AppError handling, structured logging, and performance measurement.
@@ -27,7 +28,7 @@ const ParamsSchema = z.object({
  * GET /api/pedidos/[id]/checklist?config_id=xxx
  * Returns a sorted list of checklist items for the order.
  */
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+async function GET_internal (request: Request, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
 
     const correlationId = uuidv4();
@@ -196,7 +197,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
  * PATCH /api/entities/[id]/checklist
  * Toggles a checklist item's completed status.
  */
-export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+async function PATCH_internal (request: Request, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = uuidv4();
 
@@ -244,3 +245,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         return handleApiError(error, 'API_CHECKLIST_PATCH', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/checklist', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/technical/entities/[id]/checklist', thresholdMs: 1000 });

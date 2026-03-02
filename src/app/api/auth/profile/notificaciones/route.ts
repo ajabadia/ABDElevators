@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
@@ -12,7 +13,7 @@ const UserPreferencesSchema = z.object({
     }))
 });
 
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user?.email) {
@@ -43,3 +44,5 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/auth/profile/notificaciones', thresholdMs: 1000 });

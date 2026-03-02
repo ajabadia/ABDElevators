@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/errors';
 import { QuotaService } from '@/services/security/quota-service';
 import { UsageService } from '@/services/ops/usage-service';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/admin/billing/usage
@@ -36,4 +36,4 @@ export const GET = withPerformanceSLA(async (req) => {
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_BILLING_USAGE_GET', correlationId);
     }
-}, { p95: 500, max: 1000 });
+}, { endpoint: 'GET /api/admin/billing/usage', thresholdMs: 500 });

@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/i18n/stats
  * Retorna estadísticas de namespaces para filtros.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('i18n', 'read');
@@ -57,3 +58,5 @@ function nestToFlat(obj: any, prefix = ''): Record<string, string> {
     }
     return result;
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n/stats', thresholdMs: 500 });

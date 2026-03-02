@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { TechnicalStatsService } from '@/services/core/TechnicalStatsService';
 import { handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/technical/stats
@@ -26,4 +26,4 @@ export const GET = withPerformanceSLA(async (req) => {
     } catch (error) {
         return handleApiError(error, 'API_TECHNICAL_STATS_GET', correlationId);
     }
-}, { p95: 300, max: 1000 });
+}, { endpoint: 'GET /api/technical/stats', thresholdMs: 300 });

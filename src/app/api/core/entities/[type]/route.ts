@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/core/entities/[type]
@@ -74,4 +74,4 @@ export const GET = withPerformanceSLA(async (
     } catch (error: unknown) {
         return handleApiError(error, `API_CORE_ENTITIES_LIST_${type}`, correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'API /api/core/entities/[type]', thresholdMs: 2000 });

@@ -1,5 +1,6 @@
-// src/components/admin/PromptList.tsx
 "use client";
+
+// src/components/admin/PromptList.tsx
 
 import React, { useEffect, useState } from 'react';
 import { PromptEditor } from './PromptEditor';
@@ -48,7 +49,7 @@ export const PromptList: React.FC = () => {
                 source: 'PROMPT_UI',
                 action: 'FETCH_LIST_ERROR',
                 message: 'Failed to fetch prompts',
-                correlationId: crypto.randomUUID()
+                correlationId: globalThis.crypto.randomUUID()
             });
             return;
         }

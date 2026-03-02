@@ -2,8 +2,9 @@ import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinit
 import { WorkflowDefinitionSchema, type WorkflowDefinition } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { type ClientSession } from 'mongodb';
+import { type ClientSession, ObjectId } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
+import { IndustryType } from '@/lib/schemas';
 
 /**
  * Servicio de Gestión de Workflows (Era 8 Hardened)
@@ -36,7 +37,7 @@ export class WorkflowService {
                 environment
             };
 
-            const collection = await (workflowDefinitionRepository as any).getCollection(session);
+            const collection = await (workflowDefinitionRepository as unknown as { getCollection: (s: TenantSession | null | undefined) => Promise<any> }).getCollection(session);
             const result = await collection.updateOne(
                 query,
                 { $set: { ...validated, updatedAt: new Date() } },
@@ -52,7 +53,7 @@ export class WorkflowService {
         } else {
             const { connectDB } = await import('@/lib/db');
             const db = await connectDB();
-            const client = (db as any).client;
+            const client = (db as unknown as { client: any }).client;
             const s = client.startSession();
             try {
                 resultId = await s.withTransaction(async () => await runWithTransaction(s));
@@ -85,7 +86,7 @@ export class WorkflowService {
     }, session?: TenantSession | null): Promise<WorkflowDefinition[] & { nextCursor?: string | null }> {
         const { tenantId, entityType = 'ENTITY', environment = 'PRODUCTION', limit = 100, after = null } = options;
 
-        const filter: any = { tenantId, entityType, environment };
+        const filter: Record<string, unknown> = { tenantId, entityType, environment };
         if (after) {
             filter._id = { $lt: workflowDefinitionRepository.toObjectId(after) };
         }
@@ -97,7 +98,7 @@ export class WorkflowService {
 
         const items = docs.slice(0, limit) as unknown as WorkflowDefinition[] & { nextCursor?: string | null };
         const hasNextPage = docs.length > limit;
-        items.nextCursor = hasNextPage ? (docs[limit - 1] as any)._id.toString() : null;
+        items.nextCursor = hasNextPage ? (docs[limit - 1] as unknown as { _id: ObjectId })._id.toString() : null;
 
         return items;
     }
@@ -106,7 +107,7 @@ export class WorkflowService {
      * Obtiene el workflow activo para una entidad.
      */
     static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION', session?: TenantSession | null) {
-        return await workflowDefinitionRepository.findOne({ tenantId, entityType, active: true, environment } as any, session);
+        return await workflowDefinitionRepository.findOne({ tenantId, entityType, active: true, environment } as Record<string, unknown>, session);
     }
 
     /**
@@ -122,7 +123,7 @@ export class WorkflowService {
     static async seedDefaultWorkflow(tenantId: string, industry: string, correlationId: string, session?: TenantSession | null) {
         const defaultWorkflow: Partial<WorkflowDefinition> = {
             tenantId,
-            industry: industry as any,
+            industry: industry as IndustryType,
             name: 'Flujo Estándar',
             entityType: 'ENTITY',
             is_default: true,

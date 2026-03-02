@@ -7,24 +7,59 @@ import { IngestStorageService } from './IngestStorageService';
 import { IngestAuditService } from './IngestAuditService';
 import { IngestStrategyService } from './IngestStrategyService';
 import { GraphExtractionService } from '@/services/core/graph-extraction-service';
-import { IngestOptions, IngestResult } from './types';
-import { StateTransitionValidator, IngestState } from './core/StateTransitionValidator';
+import { IngestOptions, IngestResult, EnrichmentOptions } from './types';
+import { logEvento } from '@/lib/logger';
+import { KnowledgeAsset } from '@/lib/schemas';
 import { UserRole } from '@/types/roles';
-
-export interface EnrichmentOptions extends Partial<IngestOptions> {
-    isEnrichment: boolean;
-    job?: any;
-}
+import { TenantSession } from '@/lib/db-tenant';
+import { StateTransitionValidator, IngestState } from './core/StateTransitionValidator';
 
 /**
- * IngestService: Orchestrator for the RAG ingestion pipeline.
- * Refactored Phase 213: Delegating logic to specialized modules.
- * Hardened Era 8: Strict types and centralized repository.
+ * 🚀 IngestService: Orchestrator for the Ingestion Pipeline (Phase 110)
+ * 
+ * Flow: Prepare -> Analyze -> Index
+ * Hardened for Era 8: Strict types, central repository, atomic states.
  */
 export class IngestService {
+    static async ingest(options: IngestOptions): Promise<IngestResult> {
+        const correlationId = options.correlationId || crypto.randomUUID();
 
-    static async prepareIngest(options: IngestOptions) {
-        return await IngestPreparer.prepare(options);
+        try {
+            // 1. Prepare
+            const preparation = await IngestPreparer.prepare({ ...options, correlationId });
+            if (preparation.status === 'DUPLICATE') {
+                return {
+                    success: true,
+                    docId: preparation.docId,
+                    status: 'DUPLICATE',
+                    correlationId,
+                    message: 'Document already exists and is completed'
+                };
+            }
+
+            // 2. Analyze & Index
+            const result = await this.executeAnalysis(preparation.docId, {
+                ...options.metadata,
+                correlationId,
+                userEmail: options.userEmail,
+                enableVision: options.enableVision,
+                enableTranslation: options.enableTranslation,
+                enableGraphRag: options.enableGraphRag,
+                enableCognitive: options.enableCognitive
+            });
+
+            return result;
+        } catch (error: any) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'INGEST_SERVICE',
+                action: 'INGEST_FAILED',
+                message: `Ingestion orchestration failed: ${error.message}`,
+                correlationId,
+                details: { error: error.message, stack: error.stack }
+            });
+            throw error;
+        }
     }
 
     static async executeAnalysis(docId: string, options: EnrichmentOptions): Promise<IngestResult> {
@@ -34,7 +69,7 @@ export class IngestService {
         if (!asset) throw new Error(`Asset ${docId} not found`);
 
         const correlationId = options.correlationId || asset.correlationId || crypto.randomUUID();
-        const workerSession = {
+        const workerSession: TenantSession = {
             user: {
                 id: 'system_worker',
                 email: options.userEmail || (asset as any).uploadedBy || 'system@abd.com',
@@ -43,9 +78,11 @@ export class IngestService {
             }
         };
 
+        const workerEmail = workerSession.user?.email || 'system@abd.com';
+
         // Transition FSM
         await StateTransitionValidator.transition(asset.ingestionStatus as IngestState, 'PROCESSING', {
-            docId, correlationId, tenantId: asset.tenantId, userId: workerSession.user.email
+            docId, correlationId, tenantId: asset.tenantId, userId: workerEmail
         });
 
         await knowledgeAssetRepository.update(docId, {
@@ -54,103 +91,90 @@ export class IngestService {
 
         const updateProgress = async (percent: number) => {
             if (options.job) await options.job.updateProgress(percent);
-            await knowledgeAssetRepository.update(docId, { $set: { progress: percent, updatedAt: new Date() } });
         };
 
         try {
-            await updateProgress(5);
+            // Retrieve Buffer
+            const buffer = await IngestStorageService.getBuffer(asset as any, correlationId);
 
-            // 1. Fetch Buffer
-            const buffer = await IngestStorageService.getBuffer(asset, correlationId);
-            await updateProgress(15);
+            // 2. Analyze
+            await updateProgress(10);
+            const analysis = await IngestAnalyzer.analyze(
+                buffer,
+                asset as KnowledgeAsset,
+                correlationId,
+                workerSession,
+                options as any
+            );
 
-            // 2. Analysis
-            const analysisOptions = IngestStrategyService.getAnalysisOptions(asset, options);
-            const analysis = await IngestAnalyzer.analyze(buffer, asset, correlationId, workerSession, analysisOptions);
+            // 3. Index
             await updateProgress(60);
+            const chunksCreated = await IngestIndexer.index(
+                analysis.rawText,
+                analysis.visualFindings as any,
+                asset as any,
+                analysis.documentContext,
+                analysis.detectedIndustry,
+                analysis.detectedLang,
+                correlationId,
+                workerSession,
+                updateProgress,
+                asset.chunkingLevel as any,
+                {} // chunkingConfig
+            );
 
-            // 3. Indexing
-            let processedChunks = 0;
-            if (!asset.skipIndexing && !options.metadata?.skipIndexing) {
-                if (options.isEnrichment) {
-                    // Solo indexamos los hallazgos visuales para evitar duplicar el texto base
-                    if (analysis.visualFindings.length > 0) {
-                        processedChunks = await IngestIndexer.index(
-                            "", analysis.visualFindings, asset, analysis.documentContext,
-                            analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession as any,
-                            updateProgress, asset.chunkingLevel as any,
-                            { size: options.chunkSize, overlap: options.chunkOverlap, threshold: options.chunkThreshold }
-                        );
-                    }
-                } else {
-                    processedChunks = await IngestIndexer.index(
-                        analysis.rawText, analysis.visualFindings, asset, analysis.documentContext,
-                        analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession as any,
-                        updateProgress, asset.chunkingLevel as any,
-                        { size: options.chunkSize, overlap: options.chunkOverlap, threshold: options.chunkThreshold }
-                    );
-                }
-            }
-
-            // 4. Graph Extraction
-            if (IngestStrategyService.shouldExecuteGraphRag(asset)) {
+            // 4. Graph (Optional)
+            if (options.enableGraphRag) {
+                await updateProgress(95);
                 await GraphExtractionService.extractAndPersist(
-                    analysis.rawText, asset.tenantId, correlationId, { sourceDoc: asset.filename }
-                ).catch((e: unknown) => console.error('[GRAPH_ERROR]', e));
+                    analysis.rawText,
+                    asset.tenantId,
+                    correlationId,
+                    { sourceDoc: asset.filename }
+                );
             }
 
-            // 5. Finalize
-            await StateTransitionValidator.transition('PROCESSING' as IngestState, 'COMPLETED', {
-                docId, correlationId, tenantId: asset.tenantId, userId: workerSession.user.email
+            await updateProgress(100);
+
+            // Final state
+            await knowledgeAssetRepository.update(docId, {
+                $set: { ingestionStatus: 'COMPLETED', totalChunks: chunksCreated, updatedAt: new Date() }
             });
 
+            const duration = Date.now() - start;
+            await IngestAuditService.logEvent({
+                assetId: docId,
+                correlationId,
+                tenantId: asset.tenantId,
+                action: 'INGEST_COMPLETE',
+                status: 'SUCCESS',
+                details: { durationMs: duration, chunksCreated }
+            }, workerSession);
+
+            return {
+                success: true,
+                docId,
+                status: 'COMPLETED',
+                correlationId,
+                chunks: chunksCreated,
+                language: analysis.detectedLang
+            };
+
+        } catch (error: any) {
             await knowledgeAssetRepository.update(docId, {
-                $set: {
-                    ingestionStatus: 'COMPLETED',
-                    progress: 100,
-                    model: analysis.detectedModels[0]?.model || asset.model || 'UNKNOWN',
-                    language: analysis.detectedLang || asset.language,
-                    totalChunks: (asset.totalChunks || 0) + processedChunks,
-                    industry: analysis.detectedIndustry || asset.industry,
-                    contextHeader: analysis.documentContext || asset.contextHeader,
-                    hasChunks: (asset.totalChunks || 0) + processedChunks > 0,
-                    updatedAt: new Date()
-                }
+                $set: { ingestionStatus: 'FAILED', updatedAt: new Date() }
             });
 
             await IngestAuditService.logEvent({
-                tenantId: asset.tenantId, performedBy: workerSession.user.email, filename: asset.filename,
-                sizeBytes: asset.sizeBytes || 0, md5: asset.fileMd5 || '', docId, correlationId, status: 'SUCCESS',
-                details: { source: 'ASYNC_WORKER', chunks: processedChunks, duration_ms: Date.now() - start }
-            });
+                assetId: docId,
+                correlationId,
+                tenantId: asset.tenantId,
+                action: 'INGEST_ERROR',
+                status: 'ERROR',
+                details: { error: error.message }
+            }, workerSession);
 
-            // 6. Async Storage (Cloudinary)
-            if (IngestStrategyService.isV2Enabled()) {
-                IngestStorageService.uploadToCloudinary(buffer, asset, correlationId).then(async (res) => {
-                    if (res.success) {
-                        await knowledgeAssetRepository.update(docId, {
-                            $set: { hasStorage: true, cloudinaryUrl: res.url, cloudinaryPublicId: res.publicId, updatedAt: new Date() }
-                        });
-                    }
-                });
-            }
-
-            return { success: true, correlationId, message: "Processed", chunks: processedChunks };
-
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            await knowledgeAssetRepository.update(docId, {
-                $set: { ingestionStatus: 'FAILED', error: errorMessage, updatedAt: new Date() }
-            });
             throw error;
         }
-    }
-
-    static async processDocument(options: IngestOptions): Promise<IngestResult> {
-        const prep = await this.prepareIngest(options);
-        if (prep.status === 'DUPLICATE') {
-            return { success: true, correlationId: prep.correlationId, message: "Duplicate", chunks: 0, isDuplicate: true };
-        }
-        return this.executeAnalysis(prep.docId, { ...options, correlationId: prep.correlationId, isEnrichment: false });
     }
 }

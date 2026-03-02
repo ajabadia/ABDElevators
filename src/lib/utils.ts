@@ -1,3 +1,5 @@
+
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -17,7 +19,8 @@ export function escapeRegExp(string: string) {
  * Generates a standard UUID v4.
  */
 export function generateUUID() {
-  return crypto.randomUUID();
+  return globalThis.crypto.randomUUID();
+
 }
 
 /**

@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { Filter } from 'mongodb';
 import { Entity } from '@/lib/schemas';
 
@@ -69,4 +69,4 @@ export const GET = withPerformanceSLA(async (req) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_TECHNICAL_ENTITIES_LIST_GET', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'GET /api/technical/entities', thresholdMs: 500 });

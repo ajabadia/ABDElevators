@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { SelfHealingService } from '@/services/ops/self-healing-service';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * ⏰ Cron Job: Self-Healing Knowledge Assets (Phase 110)
  * Triggered periodically to audit and heal the knowledge base.
  * Security: CRON_SECRET header validation.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const cronSecret = req.headers.get('x-cron-secret');
 
@@ -53,3 +54,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cron/self-healing', thresholdMs: 1000 });

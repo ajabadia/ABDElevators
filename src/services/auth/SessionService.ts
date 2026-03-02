@@ -44,10 +44,11 @@ export class SessionService {
             const result = await sessions.insertOne(validated);
             console.log(`🤝 [SESSION_SERVICE] Inserted session ID: ${result.insertedId}`);
             return result.insertedId.toString();
-        } catch (error: any) {
-            console.error(`💥 [SESSION_SERVICE] Validation or Insertion FAILED:`, error.message);
-            if (error.name === 'ZodError') {
-                console.error(`🔍 [SESSION_SERVICE] ZodError details:`, JSON.stringify(error.errors, null, 2));
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown session creation error';
+            console.error(`💥 [SESSION_SERVICE] Validation or Insertion FAILED:`, message);
+            if (typeof error === 'object' && error !== null && (error as Record<string, unknown>).name === 'ZodError') {
+                console.error(`🔍 [SESSION_SERVICE] ZodError details:`, JSON.stringify((error as any).errors, null, 2));
             }
             throw error;
         }
@@ -91,7 +92,7 @@ export class SessionService {
             .sort({ lastActive: -1 })
             .toArray();
 
-        return results as any;
+        return results as unknown as UserSession[];
     }
 
     /**
@@ -111,7 +112,7 @@ export class SessionService {
      */
     static async revokeAllUserSessions(userId: string, exceptSessionId?: string): Promise<void> {
         const db = await connectAuthDB();
-        const query: any = { userId };
+        const query: Record<string, unknown> = { userId };
         if (exceptSessionId) {
             query._id = { $ne: new ObjectId(exceptSessionId) };
         }

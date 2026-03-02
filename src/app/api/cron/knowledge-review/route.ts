@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { KnowledgeReviewService } from '@/services/ingest/knowledge-review-service';
 import { NotificationService } from '@/services/core/NotificationService';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * Cron Job: Knowledge Review Alerts (FASE 81)
  * Scheduled to run daily to notify admins about expiring documents.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -83,3 +84,5 @@ export async function GET(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/cron/knowledge-review', thresholdMs: 1000 });

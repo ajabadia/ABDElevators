@@ -71,14 +71,19 @@ export class WorkflowTaskService {
         return await workflowTaskRepository.list({
             tenantId,
             'metadata.createdBy': userId
-        } as any, { sort: { createdAt: -1 } }, session);
+        } as Filter<WorkflowTask>, { sort: { createdAt: -1 } }, session);
     }
 
     /**
      * Obtiene una tarea por ID verificando el tenant.
      */
     static async getTaskById(id: string, tenantId: string, session?: TenantSession | null) {
-        const task = await workflowTaskRepository.findOne({ _id: workflowTaskRepository.toObjectId(id), tenantId } as any, session);
+        const query: Filter<WorkflowTask> = {
+            _id: workflowTaskRepository.toObjectId(id) as any,
+            tenantId
+        };
+
+        const task = await workflowTaskRepository.findOne(query, session);
 
         if (!task) {
             throw new AppError('NOT_FOUND', 404, 'Tarea no encontrada');
@@ -97,7 +102,7 @@ export class WorkflowTaskService {
         userName: string;
         status: WorkflowTask['status'];
         notes?: string;
-        metadata?: Record<string, any>;
+        metadata?: Record<string, unknown>;
         correlationId: string;
     }, session?: TenantSession | null, mongoSession?: ClientSession) {
         const { id, tenantId, userId, status, notes, metadata, correlationId } = params;
@@ -105,7 +110,7 @@ export class WorkflowTaskService {
         // Validate state transition if needed (hardened check)
         // await this.getTaskById(id, tenantId, session);
 
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
             status,
             updatedAt: new Date(),
         };
@@ -125,7 +130,7 @@ export class WorkflowTaskService {
             }
         }
 
-        const success = await workflowTaskRepository.update(id, { $set: updateData }, session, mongoSession);
+        const success = await workflowTaskRepository.update(id, { $set: updateData as any }, session, mongoSession);
 
         if (!success) {
             throw new AppError('DATABASE_ERROR', 500, 'Error al actualizar la tarea');
@@ -158,7 +163,7 @@ export class WorkflowTaskService {
         description: string;
         assignedRole: UserRole;
         priority: WorkflowTask['priority'];
-        metadata?: Record<string, any>;
+        metadata?: Record<string, unknown>;
         correlationId?: string;
     }, session?: TenantSession | null, mongoSession?: ClientSession) {
         const taskData: Omit<WorkflowTask, '_id'> = {
@@ -172,7 +177,7 @@ export class WorkflowTaskService {
             status: 'PENDING',
             metadata: {
                 ...params.metadata,
-                createdBy: params.metadata?.createdBy
+                createdBy: params.metadata?.createdBy as string | undefined
             },
             createdAt: new Date(),
             updatedAt: new Date()

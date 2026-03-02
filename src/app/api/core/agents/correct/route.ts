@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { AgentEngine } from "@/core/engine/AgentEngine";
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
-import crypto from 'crypto';
 
 /**
  * POST /api/core/agents/correct
@@ -43,4 +43,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_AGENTS_CORRECT_POST', correlationId);
     }
-}, { p95: 1000, max: 2000 });
+}, { endpoint: 'POST /api/core/agents/correct', thresholdMs: 1000 });

@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { UserRole } from '@/types/roles';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/ingest/metrics
@@ -12,7 +13,7 @@ import crypto from 'crypto';
  * - Tiempos promedio por fase
  * - Documentos en estados parciales
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -143,3 +144,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_INGEST_METRICS', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ingest/metrics', thresholdMs: 10000 });

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { z } from 'zod';
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
 import { logEvento } from '@/lib/logger';

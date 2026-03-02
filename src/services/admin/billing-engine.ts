@@ -15,7 +15,7 @@ export interface BillingResult {
         coveredByCredits: number;
         billableUsage: number;
         unitPriceUsed?: number;
-        breakdown?: any[];
+        breakdown?: Record<string, unknown>[];
         overageUnits?: number;
         baseFeeApplied?: number;
         surchargeApplied?: number;
@@ -45,10 +45,11 @@ export class BillingEngine {
         let status: 'ALLOWED' | 'SURCHARGE' | 'BLOCKED' = 'ALLOWED';
         let actionApplied: string | undefined;
 
-        let details: any = {
+        const details: BillingResult['details'] = {
             totalUsage: usage,
-            coveredByCredits,
-            billableUsage
+            coveredByCredits: coveredByCredits,
+            billableUsage,
+            breakdown: [] as Record<string, unknown>[]
         };
 
         if (billableUsage <= 0 && pricing.type !== 'FLAT_FEE_OVERAGE') {
@@ -90,7 +91,7 @@ export class BillingEngine {
                 );
 
                 if (overageControl.status !== 'ALLOWED') {
-                    status = overageControl.status as any;
+                    status = overageControl.status as 'SURCHARGE';
                     totalCost += overageControl.surcharge;
                     details.surchargeApplied = overageControl.surcharge;
                     actionApplied = overageControl.annotation || undefined;

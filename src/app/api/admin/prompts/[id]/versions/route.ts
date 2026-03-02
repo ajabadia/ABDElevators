@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts/[id]/versions
  * Obtiene el historial de versiones de un prompt (Phase 70 compliance)
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) {
@@ -32,7 +33,7 @@ export async function GET(
  * POST /api/admin/prompts/[id]/versions
  * Rollback a una versión específica (Phase 70 compliance)
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) {
@@ -58,3 +59,7 @@ export async function POST(
         return handleApiError(error, 'API_ADMIN_PROMPTS_ROLLBACK', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/prompts/[id]/versions', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/[id]/versions', thresholdMs: 1000 });

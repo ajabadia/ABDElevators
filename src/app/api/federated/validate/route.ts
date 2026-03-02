@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 import { NextResponse } from 'next/server';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
@@ -10,7 +12,7 @@ const ValidateSchema = z.object({
     patternId: z.string().min(1),
 });
 
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const correlationId = crypto.randomUUID();
     const session = await auth();
 
@@ -47,3 +49,5 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/federated/validate', thresholdMs: 1000 });

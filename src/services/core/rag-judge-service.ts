@@ -90,7 +90,7 @@ export class RagJudgeService {
         context: string,
         badResponse: string,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        evaluation: Partial<RagEvaluationResult> & { causal_analysis?: any },
+        evaluation: Partial<RagEvaluationResult> & { causal_analysis?: Record<string, unknown> },
         tenantId: string,
         correlationId?: string
     ): Promise<{ improvedResponse: string, newEvaluation: RagEvaluationResult } | null> {

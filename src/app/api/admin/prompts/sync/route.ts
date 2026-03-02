@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/prompts/sync
  * Administrative endpoint to synchronize hardcoded fallback prompts with the DB.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -61,3 +62,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/sync', thresholdMs: 1000 });

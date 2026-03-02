@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
@@ -11,7 +12,7 @@ import { BillingService } from '@/services/admin/BillingService';
  * POST /api/webhooks/stripe
  * Maneja eventos de Stripe con Idempotencia y Atomicidad (FASE 84).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const start = Date.now();
     const body = await req.text();
     const headersList = await headers();
@@ -135,3 +136,5 @@ export async function POST(req: NextRequest) {
         await session.endSession();
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/webhooks/stripe', thresholdMs: 1000 });

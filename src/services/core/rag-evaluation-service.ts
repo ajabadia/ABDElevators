@@ -95,22 +95,23 @@ export class RagEvaluationService {
 
             return validated;
 
-        } catch (error) {
-            console.error("[RAG EVALUATION ERROR]", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[RAG EVALUATION ERROR]", errorMessage);
             throw error;
         }
     }
 
     static async listEvaluations(tenantId: string, limit: number = 50) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection('rag_evaluations', session);
-        return await collection.find({}, { sort: { timestamp: -1 }, limit } as Record<string, unknown>);
+        return await collection.find({}, { sort: { timestamp: -1 }, limit });
     }
 
     static async getMetrics(tenantId: string) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
         const collection = await getTenantCollection('rag_evaluations', session);
-        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 } as Record<string, unknown>);
+        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 });
 
         if (!Array.isArray(evals) || evals.length === 0) return { summary: { faithfulness: 0, relevance: 0, precision: 0, count: 0 }, trends: [] };
 

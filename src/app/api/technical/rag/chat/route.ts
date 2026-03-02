@@ -1,18 +1,18 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AgenticRAGService } from '@/lib/langgraph-rag';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
 import { SSEHelper } from '@/lib/sse-helper';
-import crypto from 'crypto';
 
 /**
  * POST /api/technical/rag/chat
  * Allows technicians to perform direct queries to the agentic RAG graph.
  * Returns the generated response and the agent's thought trace.
  */
-export async function POST(req: NextRequest) {
-    const correlationId = crypto.randomUUID();
+async function POST_internal(req: NextRequest) {
+    const correlationId = globalThis.crypto.randomUUID();
     const start = Date.now();
 
     try {
@@ -131,3 +131,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/rag/chat', thresholdMs: 1000 });

@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const DryRunSchema = z.object({
     prompt: z.string().min(1),
@@ -13,7 +14,7 @@ const DryRunSchema = z.object({
     temperature: z.number().min(0).max(1).optional()
 });
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -69,3 +70,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_DRY_RUN', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts/dry-run', thresholdMs: 1000 });

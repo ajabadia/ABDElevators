@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
  * Endpoint para servir la especificación OpenAPI.
  * Implementación Protegida con Guardian V3 y optimizada para Build Worker.
  */
-export async function GET() {
+async function GET_internal () {
     try {
         // 1. 🛡️ SEGURIDAD: Solo usuarios con permiso de lectura de documentación técnica
         // Usamos enforcePermission que integra auth() y GuardianEngine
@@ -98,3 +99,5 @@ export async function GET() {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/swagger/spec', thresholdMs: 1000 });

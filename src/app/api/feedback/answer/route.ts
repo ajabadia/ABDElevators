@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db';
@@ -11,7 +13,7 @@ import { z } from 'zod';
  * Submits feedback for a RAG answer.
  * FASE 195.1
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -93,3 +95,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/feedback/answer', thresholdMs: 1000 });

@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { logEvento } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +7,7 @@ import { auth } from '@/lib/auth';
 /**
  * API Route so client-side components can log events securely.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = uuidv4();
 
     try {
@@ -45,3 +46,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/logs', thresholdMs: 1000 });

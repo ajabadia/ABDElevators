@@ -1,9 +1,9 @@
-
 import { generateEmbedding } from '@/services/llm/llm-service';
 import { withLLMRetry } from '@/services/llm/llm-retry';
 import { logEvento } from '@/lib/logger';
 import { AI_MODEL_IDS } from '@abd/platform-core';
 import { LLMCostTracker } from '@/services/ingest/observability/LLMCostTracker';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * 🧬 Ingest Embedding Service
@@ -13,7 +13,7 @@ export class IngestEmbeddingService {
     /**
      * Genera un embedding de Gemini con reintentos y fallback determinista.
      */
-    static async generateGeminiEmbedding(text: string, tenantId: string, correlationId: string, session?: any): Promise<number[] | undefined> {
+    static async generateGeminiEmbedding(text: string, tenantId: string, correlationId: string, session?: TenantSession): Promise<number[] | undefined> {
         try {
             const start = Date.now();
             const embedding = await withLLMRetry(
@@ -30,15 +30,16 @@ export class IngestEmbeddingService {
                 );
             }
             return embedding;
-        } catch (error: any) {
-            if (error.status === 429) {
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            if ((err as any).status === 429) {
                 await logEvento({
                     level: 'WARN', source: 'EMBEDDING_SERVICE', action: 'QUOTA_EXHAUSTED',
                     message: 'Gemini Quota exhausted. Skipping vector.', correlationId, tenantId
                 });
                 return undefined;
             }
-            throw error;
+            throw err;
         }
     }
 

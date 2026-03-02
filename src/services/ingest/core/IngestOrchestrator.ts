@@ -22,7 +22,7 @@ export class IngestOrchestrator {
             tenantId: string;
             isEnrichment?: boolean;
             force?: boolean;
-            [key: string]: any;
+            [key: string]: unknown;
         }
     ) {
         const start = Date.now();
@@ -120,7 +120,8 @@ export class IngestOrchestrator {
 
             return result;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             // Handle Failure Transitions
             const failureState: IngestState = 'FAILED';
 
@@ -130,10 +131,11 @@ export class IngestOrchestrator {
                     correlationId,
                     tenantId: options.tenantId,
                     userId: options.userEmail,
-                    reason: error.message
+                    reason: err.message
                 });
-            } catch (fsmError) {
-                console.error('[INGEST_ORCHESTRATOR] Critical FSM Failure during error handling', fsmError);
+            } catch (fsmError: unknown) {
+                const fErr = fsmError as Error;
+                console.error('[INGEST_ORCHESTRATOR] Critical FSM Failure during error handling', fErr);
             }
 
             // Ensure cost even on failure
@@ -143,12 +145,12 @@ export class IngestOrchestrator {
                 level: 'ERROR',
                 source: 'INGEST_ORCHESTRATOR',
                 action: 'ORCHESTRATION_FAILED',
-                message: `Ingestion failed for doc ${docId}: ${error.message}`,
+                message: `Ingestion failed for doc ${docId}: ${err.message}`,
                 correlationId,
-                details: { error: error.message, stack: error.stack }
+                details: { error: err.message, stack: err.stack }
             });
 
-            throw error;
+            throw err;
         } finally {
             // Cleanup memory (last line of defense)
             LLMCostTracker.clearDocument(correlationId);

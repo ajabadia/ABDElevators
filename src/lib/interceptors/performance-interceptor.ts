@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LoggingService as ObservabilityService } from '@/services/observability/LoggingService';
-import crypto from 'crypto';
 
 /**
  * PerformanceSLAInterceptor - High-order function for API Routes.
  * Automatiza la medición de performance y detección de violaciones de SLA.
  * Phase 132.4
  */
-export function withPerformanceSLA<T = unknown>(
-    handler: (req: NextRequest, context: T) => Promise<NextResponse>,
+export function withPerformanceSLA<T = any>(
+    handler: (req: NextRequest, context: T) => Promise<Response | NextResponse>,
     config: {
         endpoint: string;
         thresholdMs: number;
@@ -17,49 +16,61 @@ export function withPerformanceSLA<T = unknown>(
 ) {
     return async (req: NextRequest, context: T) => {
         const start = Date.now();
+        // Use global crypto for randomUUID (Edge Runtime compatible)
         const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
-        // Inyectar correlationId en los headers de la request si no existe para que los servicios lo usen
-        if (!req.headers.has('x-correlation-id')) {
-            req.headers.set('x-correlation-id', correlationId);
+
+        // Ensure correlationId is available in headers for downstream services
+        const modifiedHeaders = new Headers(req.headers);
+        if (!modifiedHeaders.has('x-correlation-id')) {
+            modifiedHeaders.set('x-correlation-id', correlationId);
         }
 
         try {
             const response = await handler(req, context);
-
             const duration = Date.now() - start;
 
-            // ⚡ Registro asíncrono de SLA (no bloqueante para la respuesta)
+            // ⚡ Non-blocking SLA tracking
             const tenantId = req.headers.get('x-tenant-id') || 'SYSTEM';
 
-            // Usar setImmediate o Promise.resolve().then para no demorar el response final
-            Promise.resolve().then(() => {
-                ObservabilityService.trackSLAViolation(
-                    tenantId,
-                    config.endpoint,
-                    duration,
-                    config.thresholdMs,
-                    correlationId
-                );
+            // Use Promise.resolve().then to avoid delaying the response
+            Promise.resolve().then(async () => {
+                try {
+                    await ObservabilityService.trackSLAViolation(
+                        tenantId,
+                        config.endpoint,
+                        duration,
+                        config.thresholdMs,
+                        correlationId
+                    );
+                } catch (e) {
+                    console.error('Failed to track SLA violation:', e);
+                }
             });
 
-            // Añadir header de performance para transparencia (opcional, útil para debug)
-            response.headers.set('x-performance-ms', duration.toString());
-            response.headers.set('x-correlation-id', correlationId);
+            // Add performance headers for transparency
+            if (response && response.headers) {
+                response.headers.set('x-performance-ms', duration.toString());
+                response.headers.set('x-correlation-id', correlationId);
+            }
 
             return response;
         } catch (error) {
             const duration = Date.now() - start;
             const tenantId = req.headers.get('x-tenant-id') || 'SYSTEM';
 
-            // Incluso en error, tracking de performance
-            Promise.resolve().then(() => {
-                ObservabilityService.trackSLAViolation(
-                    tenantId,
-                    config.endpoint,
-                    duration,
-                    config.thresholdMs,
-                    correlationId
-                );
+            // Track performance even on failure
+            Promise.resolve().then(async () => {
+                try {
+                    await ObservabilityService.trackSLAViolation(
+                        tenantId,
+                        config.endpoint,
+                        duration,
+                        config.thresholdMs,
+                        correlationId
+                    );
+                } catch (e) {
+                    console.error('Failed to track SLA violation (error path):', e);
+                }
             });
 
             throw error;

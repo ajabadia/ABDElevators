@@ -1,5 +1,5 @@
 
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { IngestAuditSchema } from '@/lib/schemas';
 
 /**
@@ -13,7 +13,7 @@ export class IngestAuditService {
     /**
      * Registra un evento de auditoría.
      */
-    static async logEvent(data: any, session?: any) {
+    static async logEvent(data: Record<string, unknown>, session?: TenantSession | null) {
         const auditCollection = await getTenantCollection(this.COLLECTION, session);
         const validated = IngestAuditSchema.parse(data);
         return await auditCollection.insertOne(validated);

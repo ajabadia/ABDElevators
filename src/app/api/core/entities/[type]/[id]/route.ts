@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -6,8 +7,7 @@ import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { SecurityService } from '@/services/security/security-service';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET | PATCH /api/core/entities/[type]/[id]
@@ -59,7 +59,7 @@ export const GET = withPerformanceSLA(async (
     } catch (error: unknown) {
         return handleApiError(error, `API_CORE_ENTITIES_GET_${type}_${id}`, correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'GET /api/core/entities/[type]/[id]', thresholdMs: 2000 });
 
 export const PATCH = withPerformanceSLA(async (
     req: NextRequest,
@@ -108,4 +108,4 @@ export const PATCH = withPerformanceSLA(async (
     } catch (error: unknown) {
         return handleApiError(error, `API_CORE_ENTITIES_PATCH_${type}_${id}`, correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'PATCH /api/core/entities/[type]/[id]', thresholdMs: 2000 });

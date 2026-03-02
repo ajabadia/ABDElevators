@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from '@/types/roles';
 import { AppError, handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/ai-trace/[id]

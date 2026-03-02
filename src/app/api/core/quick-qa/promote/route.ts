@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -16,7 +17,7 @@ const PromoteSchema = z.object({
  * 🚀 Quick Q&A -> Asset Promotion API (Phase 125.3)
  * Converts an ephemeral snippet into a persistent KnowledgeAsset.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = generateUUID();
     try {
         const session = await enforcePermission('knowledge', 'ingest');
@@ -85,3 +86,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_QUICK_QA_PROMOTE', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/core/quick-qa/promote', thresholdMs: 1000 });

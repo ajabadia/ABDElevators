@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -7,7 +9,6 @@ import { IngestService } from '@/services/ingest/IngestService';
 import { GridFSUtils } from '@/lib/gridfs-utils';
 import { uploadPDFToCloudinary } from '@/lib/cloudinary';
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/knowledge-assets/[id]/retry
@@ -19,7 +20,7 @@ import crypto from 'crypto';
  * 
  * SLA: P95 < 500ms (to respond, processing is async)
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -328,3 +329,5 @@ async function retryFull(
         console.error(`[RETRY_FULL_ERROR] ${assetId}:`, err);
     });
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/knowledge-assets/[id]/retry', thresholdMs: 1000 });

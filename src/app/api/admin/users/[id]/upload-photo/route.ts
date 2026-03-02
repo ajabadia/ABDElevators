@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
@@ -6,14 +8,13 @@ import { ObjectId } from 'mongodb';
 import { UserService } from '@/services/auth/UserService';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/usuarios/[id]/upload-photo
  * Permite a un ADMIN subir una foto de perfil para cualquier usuario.
  * SLA: P95 < 2000ms
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -96,3 +97,5 @@ export async function POST(
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/[id]/upload-photo', thresholdMs: 1000 });

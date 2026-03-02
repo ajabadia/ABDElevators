@@ -70,6 +70,7 @@
       "title": "Processing..."
     },
     "dismiss": "Dismiss",
+    "coming_soon": "Coming soon",
     "upload_success": "The file has been uploaded and indexed successfully in the vault.",
     "search_complete": "Semantic analysis completed successfully.",
     "workflow_saved": "Workflow structure persisted atomically.",
@@ -333,9 +334,28 @@
   "notificationPrefs": "Notification preferences",
   "notificationPrefsSubtitle": "Configure how you want to receive notifications",
   "onboarding": {
-    "finish": "Finish",
+    "step_counter": "Step {current} of {total}",
+    "skip": "Skip tour",
     "next": "Next",
-    "skip": "Skip"
+    "finish": "Finish",
+    "steps": {
+      "welcome_title": "Welcome to ABD RAG Platform!",
+      "welcome_content": "The AI that understands your technical documentation. To start, what is your primary role?",
+      "upload_title": "Upload your first document",
+      "upload_content": "Drag a PDF, Word or technical text. Don't have one handy? Try our demo document.",
+      "ask_title": "Ask your first question",
+      "ask_content": "Based on the document you uploaded (or the demo one), try asking something technical.",
+      "explore_title": "Explore your environment",
+      "explore_content": "We've customized your dashboard based on your role. You're all set to go!",
+      "actions_title": "Quick Actions",
+      "search_title": "Technical Assistant",
+      "search_content": "Here you can perform natural language queries on technical manuals.",
+      "input_title": "Smart Search",
+      "input_content": "Type your question or select a suggestion. The system will search all indexed documents.",
+      "actions_content": "Quickly access the most used functions: Search, File Upload, and Tickets.",
+      "business_stats_title": "Value Metrics",
+      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
+    }
   },
   "parsing": "Processing...",
   "password": "Password",
@@ -543,10 +563,29 @@
     "branding": "Branding",
     "storage": "Storage",
     "features": "Features",
-    "billing": "Billing"
+    "billing": "Billing",
+    "entities": "Technical Entities",
+    "support": "Support Hub",
+    "operations": "Operations",
+    "observability": "Observability",
+    "ingest": "Ingestion Engine",
+    "status": "System Status",
+    "trace": "Trace"
+  },
+  "command_menu": {
+    "title": "Command Menu",
+    "no_results": "No results found.",
+    "system": "System Commands",
+    "themes": {
+      "light": "Light Mode",
+      "dark": "Dark Mode",
+      "system": "System Theme"
+    },
+    "esc_to_close": "Press ESC to close"
   },
   "days": {
     "one": "day",
     "other": "days"
-  }
+  },
+  "coming_soon": "Coming soon"
 }

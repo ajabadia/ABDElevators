@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -11,7 +13,7 @@ import { logEvento } from '@/lib/logger';
  * Saves human validation for an entity (Phase 6.4)
  * SLA: P95 < 300ms
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -124,7 +126,7 @@ export async function POST(
  * GET /api/entities/[id]/validate
  * Gets validation history for an entity
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -176,3 +178,7 @@ export async function GET(
         return handleApiError(error, 'VALIDATION_ENDPOINT', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/validate', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/validate', thresholdMs: 1000 });

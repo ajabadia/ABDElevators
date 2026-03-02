@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectLogsDB } from '@/lib/db';
@@ -8,7 +9,7 @@ import { AppError } from '@/lib/errors';
  * Calcula indicadores de nivel de servicio (SLIs) basados en application_logs.
  * Requiere rol SUPER_ADMIN.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (session?.user?.role !== 'SUPER_ADMIN') {
@@ -92,3 +93,5 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/observability/slis', thresholdMs: 1000 });

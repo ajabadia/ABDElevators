@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
@@ -15,7 +16,7 @@ const ReviewSchema = z.object({
  * Handle Manual Review of Knowledge Assets
  * POST /api/admin/knowledge-assets/[id]/review
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
@@ -45,3 +46,5 @@ export async function POST(
         return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/knowledge-assets/[id]/review', thresholdMs: 1000 });

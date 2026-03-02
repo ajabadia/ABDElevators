@@ -1,22 +1,24 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
-import crypto from 'crypto';
 
 /**
  * 📊 Global Platform Metrics API (Phase 110)
  * Aggregates high-level metrics across all tenants for SuperAdmins.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await auth();
+        // Rule #11: Multi-tenant Harmony - Secure access via Guardian
+        const session = await enforcePermission('technical:ops', 'read');
 
         // Security Gate: Only SuperAdmins can access global metrics
-        if (session?.user?.role !== UserRole.SUPER_ADMIN) {
+        if (session.user.role !== UserRole.SUPER_ADMIN) {
             throw new AppError('FORBIDDEN', 403, 'Solo SuperAdmins pueden acceder a métricas globales');
         }
 
@@ -143,3 +145,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_SUPERADMIN_METRICS', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/superadmin/metrics', thresholdMs: 1000 });

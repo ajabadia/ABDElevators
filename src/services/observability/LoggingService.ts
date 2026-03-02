@@ -1,6 +1,4 @@
 import { EventSchema, AppEvent } from './schemas/EventSchema';
-import { ObservabilityRepository } from './ObservabilityRepository';
-import crypto from 'crypto';
 
 /**
  * 📝 LoggingService
@@ -14,12 +12,26 @@ export class LoggingService {
     static async log(event: Partial<AppEvent> & { level: AppEvent['level'], source: string, action: string, message: string }) {
         const normalized: AppEvent = {
             ...event,
-            correlationId: event.correlationId || crypto.randomUUID(),
+            correlationId: event.correlationId || globalThis.crypto.randomUUID(),
+
             timestamp: new Date()
         };
 
         const validated = EventSchema.parse(normalized);
-        await ObservabilityRepository.saveLog(validated as AppEvent);
+
+        // ⚡ Edge Runtime Compatibility: Avoid Node-only Repository
+        if (process.env.NEXT_RUNTIME === 'edge') {
+            console.log(`[EDGE_LOG][${validated.level}][${validated.source}][${validated.action}] ${validated.message}`, validated.details || '');
+            return;
+        }
+
+        try {
+            const { ObservabilityRepository } = await import('./ObservabilityRepository');
+            await ObservabilityRepository.saveLog(validated as AppEvent);
+        } catch (error) {
+            console.error('Failed to save log to repository:', error);
+            console.log(`[FALLBACK_LOG][${validated.level}][${validated.source}][${validated.action}] ${validated.message}`);
+        }
     }
 
     /**
@@ -49,19 +61,20 @@ export class LoggingService {
     }
 
     // Sugar methods
-    static info(source: string, action: string, message: string, details?: any) {
-        return this.log({ level: 'INFO', source, action, message, details });
+    static info(source: string, action: string, message: string, details?: unknown) {
+        return this.log({ level: 'INFO', source, action, message, details: details as Record<string, unknown> });
     }
 
-    static error(source: string, action: string, message: string, error: any, correlationId?: string) {
+    static error(source: string, action: string, message: string, error: unknown, correlationId?: string) {
+        const err = error as Error;
         return this.log({
             level: 'ERROR',
             source,
             action,
             message,
             correlationId,
-            details: error?.message || error,
-            stack: error?.stack
+            details: err?.message || String(error),
+            stack: err?.stack
         });
     }
 

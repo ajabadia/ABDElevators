@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { PromptSchema } from '@/lib/schemas';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts
  * Lista todos los prompts del tenant (Phase 70 compliance)
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await enforcePermission('prompt', 'read');
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/prompts
  * Crea un nuevo prompt (Phase 70 compliance)
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await enforcePermission('prompt', 'manage');
@@ -125,3 +126,7 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_POST', correlacion_id);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/prompts', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/prompts', thresholdMs: 1000 });

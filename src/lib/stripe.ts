@@ -12,7 +12,7 @@ if (!stripeKey) {
 }
 
 export const stripe = new Stripe(stripeKey || 'sk_test_dummy', {
-    apiVersion: '2025-01-27' as any,
+    apiVersion: '2025-12-15.clover' as any,
     appInfo: {
         name: 'ABDElevators RAG Platform',
         version: '4.1.0',

@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { SupportStatsService } from '@/services/support/SupportStatsService';
 import { handleApiError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/support/stats
@@ -35,4 +35,4 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_SUPPORT_STATS', correlationId);
     }
-}, { p95: 300, max: 1000 });
+}, { endpoint: 'API /api/support/stats', thresholdMs: 300 });

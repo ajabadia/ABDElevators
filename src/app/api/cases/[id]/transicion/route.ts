@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/casos/[id]/transicion
  * Ejecuta una transición de estado en el workflow de un caso.
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -43,3 +44,5 @@ export async function POST(
         return handleApiError(error, 'API_CASOS_TRANSITION', correlacion_id);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cases/[id]/transicion', thresholdMs: 1000 });

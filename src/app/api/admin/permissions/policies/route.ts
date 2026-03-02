@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { PermissionPolicySchema, type PermissionPolicy } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
-import crypto from 'crypto';
 
 const API_SOURCE = 'API_ADMIN_PERMISSIONS_POLICIES';
 const SLA_READ = 500;
@@ -14,7 +15,7 @@ const SLA_WRITE = 1000;
  * GET /api/admin/permissions/policies
  * Lista todas las políticas de permiso del tenant
  */
-export async function GET() {
+async function GET_internal () {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -44,7 +45,7 @@ export async function GET() {
  * POST /api/admin/permissions/policies
  * Crea una nueva política de permiso
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -95,3 +96,7 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/permissions/policies', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/permissions/policies', thresholdMs: 1000 });

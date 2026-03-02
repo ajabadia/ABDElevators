@@ -1,10 +1,11 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const correlationId = uuidv4();
     try {
         const session = await enforcePermission('workflow:task', 'read');
@@ -26,3 +27,5 @@ export async function GET(request: Request) {
         return handleApiError(error, 'API_TASKS_MY', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/tasks/my', thresholdMs: 1000 });

@@ -1,5 +1,7 @@
+import { TenantSession } from '@/lib/db-tenant';
+
 export interface IngestOptions {
-    file: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
+    file?: File | { name: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
     metadata: {
         type: string;
         version: string;
@@ -11,6 +13,7 @@ export interface IngestOptions {
         skipIndexing?: boolean;
         chunkingLevel?: 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
         force?: boolean | string;
+        [key: string]: any; // Allow for dynamic metadata
     };
     tenantId: string;
     userEmail: string;
@@ -23,21 +26,38 @@ export interface IngestOptions {
     enableTranslation?: boolean;
     enableGraphRag?: boolean;
     enableCognitive?: boolean;
-    session?: any;
+    session?: TenantSession;
     chunkSize?: number;
     chunkOverlap?: number;
     chunkThreshold?: number;
+    isEnrichment?: boolean;
 }
 
 export interface IngestResult {
     success: boolean;
+    docId?: string;
     correlationId: string;
-    message: string;
-    chunks: number;
+    message?: string;
+    chunks?: number;
+    status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'DUPLICATE';
     isDuplicate?: boolean;
     isCloned?: boolean;
     savings?: number;
     language?: string;
+}
+
+export interface EnrichmentOptions {
+    correlationId: string;
+    userEmail?: string;
+    job?: { updateProgress: (percent: number) => Promise<void> };
+    enableVision?: boolean;
+    enableTranslation?: boolean;
+    enableGraphRag?: boolean;
+    enableCognitive?: boolean;
+    industry?: string;
+    type?: string;
+    version?: string;
+    documentTypeId?: string;
 }
 export interface IngestPrepareResult {
     docId: string;

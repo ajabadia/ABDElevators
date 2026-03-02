@@ -19,9 +19,10 @@ export class AuditService {
                 timestamp: new Date()
             });
 
-            await auditCollection.insertOne(validatedEntry as any);
-        } catch (error) {
-            console.error('[AuditService] Failed to record audit trail:', error);
+            await auditCollection.insertOne(validatedEntry as AuditTrail);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('[AuditService] Failed to record audit trail:', errorMessage);
         }
     }
 
@@ -34,8 +35,8 @@ export class AuditService {
         action: 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE';
         entityType: 'TENANT' | 'PROMPT' | 'LIMITS' | 'SYSTEM';
         entityId: string;
-        before: any;
-        after: any;
+        before: unknown;
+        after: unknown;
         correlationId: string;
     }): Promise<void> {
         const { userId, tenantId, action, entityType, entityId, before, after, correlationId } = params;
@@ -45,7 +46,7 @@ export class AuditService {
             actorType: 'USER',
             tenantId,
             action: `${action}_${entityType}`,
-            entityType: entityType === 'LIMITS' ? 'SYSTEM' : entityType as any,
+            entityType: entityType === 'LIMITS' ? 'SYSTEM' : entityType as 'TENANT' | 'PROMPT' | 'SYSTEM',
             entityId,
             changes: { before, after },
             correlationId,
@@ -58,9 +59,10 @@ export class AuditService {
             await configAuditCollection.insertOne({
                 ...params,
                 timestamp: new Date()
-            } as any);
-        } catch (e) {
-            console.error('[AuditService] Failed to record to audit_config_changes:', e);
+            });
+        } catch (e: unknown) {
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            console.error('[AuditService] Failed to record to audit_config_changes:', errorMessage);
         }
     }
 

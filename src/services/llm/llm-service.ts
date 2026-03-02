@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { ExternalServiceError } from '@/lib/errors';
@@ -9,6 +8,8 @@ import { executeWithResilience } from '@/lib/resilience';
 import { getGenAI, mapModelName, runShadowCall } from "@/lib/gemini-client";
 import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
 import { AiModelManager } from '@/services/core/ai-model-manager';
+import { TenantSession } from "@/lib/db-tenant";
+import { ClientSession } from "mongodb";
 
 // Re-export core utilities for backward compatibility where needed
 export { getGenAI, mapModelName, runShadowCall };
@@ -33,7 +34,7 @@ const CallGeminiMiniSchema = z.object({
 /**
  * Genera embeddings para un bloque de texto.
  */
-export async function generateEmbedding(text: string, tenantId: string, correlationId: string, session?: any): Promise<number[]> {
+export async function generateEmbedding(text: string, tenantId: string, correlationId: string, session?: TenantSession | ClientSession): Promise<number[]> {
     return tracer.startActiveSpan('gemini.embed_content', {
         attributes: {
             'tenant.id': tenantId,
@@ -46,7 +47,7 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
             GenerateEmbeddingSchema.parse({ text, correlationId });
             const start = Date.now();
 
-            const config = await AiModelManager.getTenantAiConfig({ user: { tenantId } } as any);
+            const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
             const embeddingModel = config.embeddingModel || AI_MODEL_IDS.EMBEDDING_1_0;
 
             const genAI = getGenAI();
@@ -78,20 +79,21 @@ export async function generateEmbedding(text: string, tenantId: string, correlat
 
             span.setStatus({ code: SpanStatusCode.OK });
             return result.embedding.values;
-        } catch (error) {
-            span.recordException(error as Error);
-            span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
 
             await logEvento({
                 level: 'ERROR',
                 source: 'GEMINI_EMBEDDING',
                 action: 'EMBED_ERROR',
-                message: `Fallo en embedding Gemini: ${(error as Error).message}`,
+                message: `Fallo en embedding Gemini: ${err.message}`,
                 correlationId,
                 tenantId,
-                stack: (error as Error).stack
+                stack: err.stack
             });
-            throw new ExternalServiceError('Error generating embedding with Gemini', error as Error);
+            throw new ExternalServiceError('Error generating embedding with Gemini', err);
         } finally {
             span.end();
         }
@@ -105,14 +107,15 @@ async function callGeminiDynamic(
     prompt: string,
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string },
-    session?: any
+    session?: TenantSession | ClientSession
 ): Promise<string> {
     const { correlationId, temperature = 0.7, model: preferredModel } = options;
 
     try {
         return await callGeminiRecursive(prompt, tenantId, options, session);
-    } catch (error: any) {
-        const isQuotaError = error.message?.includes('429') || error.message?.includes('QUOTA_EXCEEDED');
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        const isQuotaError = message.includes('429') || message.includes('QUOTA_EXCEEDED');
         const primaryModel = preferredModel || DEFAULT_MODEL;
 
         if (isQuotaError && primaryModel !== DEFAULT_MODEL) {
@@ -142,9 +145,9 @@ async function callGeminiRecursive(
     prompt: string,
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string },
-    session?: any
+    session?: TenantSession | ClientSession
 ): Promise<string> {
-    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId } } as any);
+    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
     const { correlationId, temperature = 0.7, model: rawModel = config.defaultModel } = options;
     const modelName = mapModelName(rawModel);
 
@@ -171,17 +174,18 @@ async function callGeminiRecursive(
             );
 
             const responseText = result.response.text();
-            const usage = (result.response as any).usageMetadata;
+            const usage = (result.response as unknown as { usageMetadata?: { totalTokenCount: number } }).usageMetadata;
             if (usage) {
                 await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId, session);
             }
 
             span.setStatus({ code: SpanStatusCode.OK });
             return responseText;
-        } catch (error: any) {
-            span.recordException(error);
-            span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-            throw error;
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+            throw err;
         } finally {
             span.end();
         }
@@ -195,7 +199,7 @@ export async function callGeminiMini(
     prompt: string,
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string },
-    session?: any
+    session?: TenantSession | ClientSession
 ): Promise<string> {
     CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlationId: options.correlationId } });
     return callGeminiDynamic(prompt, tenantId, options, session);
@@ -209,7 +213,7 @@ export async function callGeminiPro(
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string; maxTokens?: number }
 ): Promise<string> {
-    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId } } as any);
+    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
     return callGemini(prompt, tenantId, options.correlationId, {
         ...options,
         model: options.model || config.defaultModel,
@@ -258,32 +262,33 @@ export async function callGeminiStream(
                     }
 
                     const response = await result.response;
-                    const usage = (response as any).usageMetadata;
+                    const usage = (response as unknown as { usageMetadata?: { totalTokenCount: number } }).usageMetadata;
 
                     if (usage) {
                         await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     console.error("[STREAM WRAPPER ERROR]", err);
                     throw err;
                 }
             }
 
             return wrappedStream();
-        } catch (error: any) {
-            span.recordException(error);
-            console.error(`[AI STREAM ERROR]`, error.message);
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            console.error(`[AI STREAM ERROR]`, err.message);
 
             await logEvento({
                 level: 'ERROR',
                 source: 'GEMINI_STREAM',
                 action: 'STREAM_ERROR',
-                message: `Error en streaming Gemini: ${error.message}`,
+                message: `Error en streaming Gemini: ${err.message}`,
                 correlationId,
                 tenantId,
-                stack: error.stack
+                stack: err.stack
             });
-            throw error;
+            throw err;
         } finally {
             span.end();
         }
@@ -293,7 +298,7 @@ export async function callGeminiStream(
 /**
  * Proxies para servicios especializados (Mantener compatibilidad)
  */
-export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: any) {
+export async function extractModelsWithGemini(text: string, tenantId: string, correlationId: string, session?: TenantSession | ClientSession) {
     const { ExtractionService } = await import('@/services/core/ExtractionService');
     return await ExtractionService.extractModelsWithGemini(text, tenantId, correlationId, session);
 }
@@ -303,7 +308,7 @@ export async function analyzeEntityWithGemini(entitySlug: string, text: string, 
     return await AdaptiveAnalysisService.analyzeEntityWithGemini(entitySlug, text, tenantId, correlationId);
 }
 
-export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string, session?: any) {
+export async function analyzePDFVisuals(pdfBuffer: Buffer, tenantId: string, correlationId: string, session?: TenantSession | ClientSession) {
     const { VisionService } = await import('@/services/core/VisionService');
     return await VisionService.analyzePDFVisuals(pdfBuffer, tenantId, correlationId, session);
 }
@@ -367,7 +372,7 @@ export async function callGeminiExtended(
             span.setAttribute('genai.duration_ms', duration);
 
             let usageData: GeminiResponse['usage'] = undefined;
-            const usage = (result.response as any).usageMetadata;
+            const usage = (result.response as unknown as { usageMetadata?: { totalTokenCount: number, promptTokenCount: number, candidatesTokenCount: number } }).usageMetadata;
             if (usage) {
                 span.setAttribute('genai.tokens', usage.totalTokenCount);
                 usageData = {
@@ -380,10 +385,11 @@ export async function callGeminiExtended(
 
             span.setStatus({ code: SpanStatusCode.OK });
             return { text, usage: usageData };
-        } catch (error) {
-            span.recordException(error as Error);
-            span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
-            throw new ExternalServiceError(`Gemini API Error: ${(error as Error).message}`, error as Error);
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            span.recordException(err);
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+            throw new ExternalServiceError(`Gemini API Error: ${err.message}`, err);
         } finally {
             span.end();
         }

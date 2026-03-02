@@ -1,18 +1,26 @@
-
 import { analyzePDFVisuals } from '@/services/llm/llm-service';
 import { IngestAnalysisService } from './IngestAnalysisService';
 import { logEvento } from '@/lib/logger';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
 import { PDFTenantConfig } from '@/services/infra/pdf/PDFTenantConfig';
+import { KnowledgeAsset } from '@/lib/schemas';
+import { TenantSession } from '@/lib/db-tenant';
+import { IngestOptions } from './types';
 
 /**
  * IngestAnalyzer: Handles content extraction and semantic processing.
  * Refactored Phase 8.1: Orchestrated via PDFIngestionPipeline.
  */
 export class IngestAnalyzer {
-    static async analyze(buffer: Buffer, asset: any, correlationId: string, session?: any, options?: any) {
+    static async analyze(
+        buffer: Buffer,
+        asset: KnowledgeAsset,
+        correlationId: string,
+        session?: TenantSession,
+        options?: Partial<IngestOptions>
+    ) {
         // 1. Resolve Config & Run Pipeline
-        const ingestConfig = PDFTenantConfig.getIngestionConfig(asset.tenantId, asset.industry);
+        const ingestConfig = PDFTenantConfig.getIngestionConfig(asset.tenantId, asset.industry as any);
 
         const [pipelineResult, visualFindings] = await Promise.all([
             PDFIngestionPipeline.runPipeline(buffer, {

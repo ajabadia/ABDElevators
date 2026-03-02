@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -7,7 +8,7 @@ import { AppError } from '@/lib/errors';
  * GET /api/admin/ingest/status/[docId]
  * Devuelve el estado actual de la ingesta para un documento específico.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ docId: string }> }
 ) {
@@ -48,3 +49,5 @@ export async function GET(
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ingest/status/[docId]', thresholdMs: 10000 });

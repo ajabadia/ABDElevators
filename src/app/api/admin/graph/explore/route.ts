@@ -1,25 +1,19 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { runQuery } from '@/lib/neo4j';
-import { AppError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import neo4j from 'neo4j-driver';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            return NextResponse.json({ error: 'AUTH_REQUIRED', code: 401 }, { status: 401 });
-        }
-
-        const userRole = session.user.role as UserRole;
-        if (userRole !== UserRole.ADMIN && userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.TECHNICAL) {
-            return NextResponse.json({ error: 'ACCESS_DENIED', code: 403 }, { status: 403 });
-        }
-
-        const tenantId = session.user.tenantId || 'default';
+        const session = await enforcePermission('knowledge:graph', 'read');
+        const tenantId = session.user.tenantId;
         const { searchParams } = new URL(req.url);
         const search = searchParams.get('search')?.toLowerCase() || '';
         const limitStr = searchParams.get('limit') || '300';
@@ -115,11 +109,9 @@ export async function GET(req: NextRequest) {
             meta: { nodeCount: nodes.length, linkCount: links.length }
         });
 
-    } catch (error: any) {
-        console.error('[GRAPH_EXPLORE_API_ERROR]', error);
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
-        }
-        return NextResponse.json({ error: error.message || 'Internal Server Error', details: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_EXPLORE', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/graph/explore', thresholdMs: 5000 });

@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * Supports Liveness (uptime) and Readiness (DB connection).
  * GET /api/health?full=true
  */
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const { searchParams } = new URL(request.url);
     const isFull = searchParams.get('full') === 'true';
 
@@ -69,3 +70,5 @@ export async function GET(request: Request) {
         }, { status: 503 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/health', thresholdMs: 1000 });

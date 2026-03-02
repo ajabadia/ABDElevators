@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
@@ -8,7 +9,7 @@ import { z } from 'zod';
  * POST /api/admin/ingest/[id]/enrich
  * Triggers partial re-processing (enrichment) of an existing document.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+async function POST_internal (req: NextRequest, { params }: { params: { id: string } }) {
     try {
         // Authentication (Rule #9: Security Check)
         const session = await auth();
@@ -52,3 +53,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         );
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest/[id]/enrich', thresholdMs: 10000 });

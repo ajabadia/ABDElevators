@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { publicApiHandler } from '@/lib/api-handler';
 import { connectDB } from '@/lib/db';
@@ -9,7 +10,6 @@ import { UsageService } from '@/services/ops/usage-service';
 import { validateLanguageCode } from '@/services/core/LanguageValidator';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const IngestV1Schema = z.object({
     text: z.string().min(50, "Content too short (min 50 chars)"),

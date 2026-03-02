@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { connectAuthDB } from '@/lib/db';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { QuotaService } from '@/services/security/quota-service';

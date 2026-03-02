@@ -1,5 +1,6 @@
 
-import crypto from 'crypto';
+
+
 
 /**
  * 🔗 Correlation ID Service
@@ -12,7 +13,8 @@ export class CorrelationIdService {
      * @param source - Prefijo opcional para identificar el origen (ej: 'BILLING', 'GDPR', 'INGEST')
      */
     static generate(source?: string): string {
-        const uuid = crypto.randomUUID();
+        const uuid = globalThis.crypto.randomUUID();
+
         return source ? `${source.toUpperCase()}-${uuid}` : uuid;
     }
 

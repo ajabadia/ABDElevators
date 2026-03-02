@@ -51,7 +51,11 @@
       "Guardian ABAC Enforcement Sweep (Ph 236)",
       "Middleware Security Hardening (Ph 234)",
       "Structured API Logging (logEvento)",
-      "Standardized Vertical Architecture (Ph 232)"
+      "Standardized Vertical Architecture (Ph 232)",
+      "Strict Typing Sweep (Ph 238)",
+      "Testing Infrastructure & Core Unit Tests (Ph 239)",
+      "Edge Runtime Compatibility (Ph 240)",
+      "High Availability i18n Governance (Ph 241)"
     ]
   },
   "UX_REVOLUTION": {

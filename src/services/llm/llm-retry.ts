@@ -40,8 +40,9 @@ export async function withLLMRetry<T>(
             }
 
             return result;
-        } catch (error) {
-            lastError = error as Error;
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            lastError = err;
             await logRetryAttempt(context, attempt, maxRetries, lastError, correlationId);
 
             if (attempt === maxRetries) {

@@ -4,6 +4,7 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@/lib/logger';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * 🛰️ Domain Router Service (Phase 101)
@@ -35,7 +36,7 @@ export class DomainRouterService {
         text: string,
         tenantId: string,
         correlationId?: string,
-        session?: any,
+        session?: TenantSession,
         options?: { skipAIFallback?: boolean }
     ): Promise<IndustryType> {
         const lowerText = text.toLowerCase();

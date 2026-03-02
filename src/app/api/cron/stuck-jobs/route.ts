@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { StuckDetector } from '@/services/ingest/recovery/StuckDetector';
 import { logEvento } from '@/lib/logger';
@@ -7,7 +8,7 @@ import { AppError } from '@/lib/errors';
  * GET /api/cron/stuck-jobs
  * Triggered by Vercel Cron to detect and recover stuck ingestion jobs.
  */
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const authHeader = request.headers.get('authorization');
     const correlationId = `cron-stuck-${Date.now()}`;
 
@@ -69,3 +70,5 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/cron/stuck-jobs', thresholdMs: 1000 });

@@ -1,6 +1,7 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
 import { GraphMutationService } from '@/services/graph/GraphMutationService';
@@ -13,20 +14,15 @@ export const dynamic = 'force-dynamic';
  * POST /api/admin/graph/nodes
  * Create a new node
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
     try {
-        const session = await auth();
+        const session = await enforcePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = CreateGraphNodeSchema.parse(body);
-        const tenantId = session?.user?.tenantId || 'default';
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        const tenantId = session.user.tenantId;
 
         const nodeId = await GraphMutationService.createNode(validated, tenantId);
 
@@ -42,8 +38,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, id: nodeId });
 
-    } catch (error: any) {
-        return handleError(error, 'CREATE_NODE', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_NODES_CREATE', correlationId);
     }
 }
 
@@ -51,20 +47,15 @@ export async function POST(req: NextRequest) {
  * PATCH /api/admin/graph/nodes
  * Update an existing node
  */
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
     try {
-        const session = await auth();
+        const session = await enforcePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = UpdateGraphNodeSchema.parse(body);
-        const tenantId = session?.user?.tenantId || 'default';
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        const tenantId = session.user.tenantId;
 
         await GraphMutationService.updateNode(validated, tenantId);
 
@@ -80,8 +71,8 @@ export async function PATCH(req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
-        return handleError(error, 'UPDATE_NODE', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_NODES_UPDATE', correlationId);
     }
 }
 
@@ -89,23 +80,18 @@ export async function PATCH(req: NextRequest) {
  * DELETE /api/admin/graph/nodes?id=...
  * Delete a node
  */
-export async function DELETE(req: NextRequest) {
+async function DELETE_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
     try {
-        const session = await auth();
+        const session = await enforcePermission('knowledge:graph', 'manage');
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 
         if (!id) throw new AppError('VALIDATION_ERROR', 400, 'Node ID is required');
 
-        const tenantId = session?.user?.tenantId || 'default';
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        const tenantId = session.user.tenantId;
 
         await GraphMutationService.deleteNode(id, tenantId);
 
@@ -121,8 +107,8 @@ export async function DELETE(req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
-        return handleError(error, 'DELETE_NODE', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_NODES_DELETE', correlationId);
     }
 }
 
@@ -148,3 +134,9 @@ function handleError(error: any, action: string, correlationId: string) {
         message: error.message
     }, { status: 500 });
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/nodes', thresholdMs: 5000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/graph/nodes', thresholdMs: 5000 });
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/nodes', thresholdMs: 5000 });

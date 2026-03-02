@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -5,7 +6,6 @@ import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AdminUpdateUserSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { UserRole } from '@/types/roles';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';

@@ -10,7 +10,7 @@ export class SupportStatsService {
      * Calculates support metrics by tenant or globally.
      */
     static async getSupportStats(tenantId?: string) {
-        const query: any = {};
+        const query: Record<string, unknown> = {};
         if (tenantId) query.tenantId = tenantId;
 
         // Fetch all tickets for calculation (or use aggregation if database grows large)

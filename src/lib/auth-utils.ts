@@ -1,4 +1,5 @@
 import { CredentialsSignin } from "next-auth";
+import { NextRequest } from "next/server";
 import { connectAuthDB, connectDB } from "./db";
 import bcrypt from "bcryptjs";
 import { logEvento } from "./logger";
@@ -8,7 +9,6 @@ import { headers } from "next/headers";
 import { UserRole } from "@/types/roles";
 import { FeatureFlags } from "@/services/security/feature-flags";
 import { IndustryType } from "@/lib/schemas";
-import crypto from "crypto";
 
 // Custom error classes for NextAuth v5 (Preserve codes in client)
 export class MfaRequiredError extends CredentialsSignin {
@@ -37,7 +37,7 @@ export class InvalidPasswordError extends CredentialsSignin {
  */
 export async function authorizeCredentials(
     credentials: Partial<Record<"email" | "password" | "mfaCode", unknown>>,
-    req?: any
+    req?: Request | NextRequest
 ) {
     const correlationId = typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
@@ -125,7 +125,7 @@ export async function authorizeCredentials(
                 { returnDocument: 'after' }
             );
 
-            const magicLink = (result as any)?.value || result;
+            const magicLink = result as unknown as { used: boolean };
             if (!magicLink || magicLink.used !== true) {
                 console.warn(`🛑 [AUTH_UTILS] Magic Link invalid/expired for ${email}`);
                 throw new InvalidMagicLinkError();
@@ -234,14 +234,16 @@ export async function authorizeCredentials(
             sessionId
         };
 
-    } catch (error: any) {
-        console.log(`[AUTH_TRACE] 💥 CAUGHT ERROR: ${error.message} | Code: ${error.code}`);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorCode = (error as { code?: string })?.code;
+        console.log(`[AUTH_TRACE] 💥 CAUGHT ERROR: ${errorMessage} | Code: ${errorCode}`);
         // Robust re-throw: check both for instance and for existence of 'code' property
         if (error instanceof CredentialsSignin || (error && typeof error === 'object' && 'code' in error)) {
-            console.log(`[AUTH_TRACE] 🛑 Handled Auth Error Re-thrown: ${error.code}`);
+            console.log(`[AUTH_TRACE] 🛑 Handled Auth Error Re-thrown: ${errorCode}`);
             throw error;
         }
-        console.error("💥 [AUTH_UTILS] UNHANDLED CRITICAL ERROR:", error.message, error.stack);
+        console.error("💥 [AUTH_UTILS] UNHANDLED CRITICAL ERROR:", errorMessage, (error as Error).stack);
         // Important: Still return null to prevent crashes, but log the hell out of it.
         return null;
     }

@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * PATCH /api/admin/prompts/[id]
  * Actualiza un prompt específico (Phase 70 compliance).
  */
-export async function PATCH(
+async function PATCH_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -46,3 +47,5 @@ export async function PATCH(
         return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlationId);
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/prompts/[id]', thresholdMs: 1000 });

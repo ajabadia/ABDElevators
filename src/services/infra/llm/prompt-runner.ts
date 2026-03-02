@@ -2,10 +2,10 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { getGenAI, runShadowCall } from '@/lib/gemini-client';
 import { LlmJsonUtils } from '@/services/llm/json-utils';
 import { logEvento } from '@/lib/logger';
-import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from '@/lib/resilience';
 import { UsageService } from '@/services/ops/usage-service';
+import { TenantSession } from '../../storage/BlobStorageService';
 
 const tracer = trace.getTracer('abd-rag-platform');
 
@@ -20,10 +20,10 @@ export class InfraPromptRunner {
      */
     static async runTextPrompt(
         key: string,
-        variables: Record<string, any>,
+        variables: Record<string, unknown>,
         tenantId: string,
         correlationId: string,
-        session?: any,
+        session?: TenantSession,
         options?: { modelOverride?: string; temperature?: number }
     ): Promise<string> {
         return tracer.startActiveSpan(`llm.run_text.${key.toLowerCase()}`, {
@@ -59,7 +59,7 @@ export class InfraPromptRunner {
                     },
                     correlationId,
                     tenantId
-                ) as any;
+                ) as { response: { text: () => string; usageMetadata?: { totalTokenCount: number } } };
 
                 const text = result.response.text();
 
@@ -77,9 +77,10 @@ export class InfraPromptRunner {
                 span.setStatus({ code: SpanStatusCode.OK });
                 return text;
 
-            } catch (error: any) {
-                span.recordException(error);
-                span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : 'Unknown prompt runner error';
+                span.recordException(error as Error);
+                span.setStatus({ code: SpanStatusCode.ERROR, message: message });
                 throw error;
             } finally {
                 span.end();
@@ -92,10 +93,10 @@ export class InfraPromptRunner {
      */
     static async runJsonPrompt<T>(
         key: string,
-        variables: Record<string, any>,
+        variables: Record<string, unknown>,
         tenantId: string,
         correlationId: string,
-        session?: any,
+        session?: TenantSession,
         options?: { modelOverride?: string; temperature?: number }
     ): Promise<T> {
         const text = await this.runTextPrompt(key, variables, tenantId, correlationId, session, options);

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinitionRepository';
@@ -6,7 +7,6 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { WorkflowService } from '@/services/ops/WorkflowService';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),

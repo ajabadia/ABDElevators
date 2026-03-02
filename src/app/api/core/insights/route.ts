@@ -1,11 +1,11 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { InsightEngine, Insight } from "@/core/engine/InsightEngine";
 import { logEvento } from "@/lib/logger";
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
-import crypto from 'crypto';
 
 interface InsightCacheData {
     insights: Insight[];
@@ -77,4 +77,4 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_INSIGHTS_GET', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'GET /api/core/insights', thresholdMs: 2000 });

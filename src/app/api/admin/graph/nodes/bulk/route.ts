@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
@@ -13,7 +14,7 @@ const BulkDeleteSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-export async function DELETE(req: NextRequest) {
+async function DELETE_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
@@ -53,3 +54,5 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: 'INTERNAL_ERROR', message: error.message }, { status: 500 });
     }
 }
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/nodes/bulk', thresholdMs: 5000 });

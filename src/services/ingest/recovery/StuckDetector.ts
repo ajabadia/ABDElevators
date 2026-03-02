@@ -2,6 +2,7 @@ import { logEvento } from '@/lib/logger';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { StateTransitionValidator, IngestState } from '../core/StateTransitionValidator';
 import { DeadLetterQueue } from './DeadLetterQueue';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * Stuck Job Detector - Finds and recovers jobs stuck in PROCESSING
@@ -22,7 +23,7 @@ export class StuckDetector {
     /**
      * Detect jobs stuck in PROCESSING state for > 30 mins
      */
-    static async detectStuckJobs(session?: any): Promise<StuckJobReport[]> {
+    static async detectStuckJobs(session?: TenantSession | null): Promise<StuckJobReport[]> {
         const stuckJobs: StuckJobReport[] = [];
         const thresholdDate = new Date(Date.now() - STUCK_THRESHOLD_MS);
 
@@ -62,8 +63,9 @@ export class StuckDetector {
             }
 
             return stuckJobs;
-        } catch (error: any) {
-            console.error('[STUCK DETECTOR ERROR]', error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('[STUCK DETECTOR ERROR]', err);
             return [];
         }
     }
@@ -71,7 +73,7 @@ export class StuckDetector {
     /**
      * Recover stuck jobs by transitioning to FAILED and adding to Dead Letter Queue
      */
-    static async recoverStuckJobs(session?: any): Promise<{ recovered: number; errors: number }> {
+    static async recoverStuckJobs(session?: TenantSession | null): Promise<{ recovered: number; errors: number }> {
         const stuckJobs = await this.detectStuckJobs(session);
         let recovered = 0;
         let errors = 0;
@@ -92,7 +94,7 @@ export class StuckDetector {
                 const collection = await getTenantCollection('knowledge_assets', session, 'MAIN');
                 const { ObjectId } = await import('mongodb');
                 await collection.updateOne(
-                    { _id: new ObjectId(job.docId) as any },
+                    { _id: new ObjectId(job.docId) },
                     {
                         $set: {
                             ingestionStatus: 'STUCK',
@@ -124,18 +126,19 @@ export class StuckDetector {
                 });
 
                 recovered++;
-            } catch (error: any) {
-                console.error(`[STUCK RECOVERY ERROR] ${job.docId}`, error);
+            } catch (error: unknown) {
+                const err = error as Error;
+                console.error(`[STUCK RECOVERY ERROR] ${job.docId}`, err);
                 errors++;
 
                 await logEvento({
                     level: 'ERROR',
                     source: 'STUCK_DETECTOR',
                     action: 'RECOVERY_ERROR',
-                    message: `Failed to recover stuck job: ${error.message}`,
+                    message: `Failed to recover stuck job: ${err.message}`,
                     correlationId: job.correlationId || 'stuck-recovery',
                     tenantId: job.tenantId,
-                    details: { docId: job.docId, error: error.message }
+                    details: { docId: job.docId, error: err.message }
                 });
             }
         }
@@ -154,7 +157,7 @@ export class StuckDetector {
     /**
      * Run periodic detection (called by cron job every 5 mins)
      */
-    static async runPeriodicCheck(session?: any): Promise<void> {
+    static async runPeriodicCheck(session?: TenantSession | null): Promise<void> {
         await logEvento({
             level: 'DEBUG',
             source: 'STUCK_DETECTOR',

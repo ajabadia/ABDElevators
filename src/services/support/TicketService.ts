@@ -37,7 +37,7 @@ export class TicketService {
         description: string,
         priority?: TicketPriority,
         category?: string,
-        attachments?: any[]
+        attachments?: Ticket['attachments']
     }): Promise<Ticket> {
         // 1. Generate sequential number
         const count = await ticketRepository.count({ tenantId: data.tenantId });
@@ -62,7 +62,8 @@ export class TicketService {
         };
 
         const validated = TicketSchema.parse(newTicketData);
-        const insertedId = await ticketRepository.create(validated, { user: { tenantId: data.tenantId } } as any);
+        // Cast mock session to any to satisfy getTenantCollection without full object
+        const insertedId = await ticketRepository.create(validated, { user: { tenantId: data.tenantId, role: 'SYSTEM' } } as any);
 
         await logEvento({
             level: 'INFO',
@@ -116,7 +117,7 @@ export class TicketService {
             if (user.role !== 'SUPER_ADMIN') {
                 const allowedTenants = [
                     user.tenantId,
-                    ...(user.tenantAccess || []).map((t: any) => t.tenantId)
+                    ...(user.tenantAccess || []).map((t: { tenantId: string }) => t.tenantId)
                 ].filter(Boolean);
 
                 if (!allowedTenants.includes(ticket.tenantId)) {
@@ -147,7 +148,7 @@ export class TicketService {
         };
 
         const updateOp: UpdateFilter<Ticket> = {
-            $push: { messages: newMessage } as any,
+            $push: { messages: newMessage as any },
             $set: { updatedAt: new Date() }
         };
 
@@ -210,8 +211,8 @@ export class TicketService {
                     author: data.authorId,
                     content: data.note,
                     timestamp: timestamp
-                }
-            } as any;
+                } as any
+            };
         }
 
         const success = await ticketRepository.update(ticketId, updateOp);

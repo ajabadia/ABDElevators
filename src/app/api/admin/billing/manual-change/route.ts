@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { UserRole } from '@/types/roles';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/billing/manual-change
@@ -45,4 +45,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_BILLING_MANUAL_CHANGE_POST', correlationId);
     }
-}, { p95: 1000, max: 2000 });
+}, { endpoint: 'POST /api/admin/billing/manual-change', thresholdMs: 1000 });

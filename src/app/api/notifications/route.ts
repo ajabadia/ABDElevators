@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { NotificationService } from '@/services/core/NotificationService';
 import { handleApiError, AppError } from '@/lib/errors';
@@ -8,7 +9,7 @@ import { auth } from '@/lib/auth';
  * API para gestionar notificaciones de usuario.
  * Fase 10: Platform Governance.
  */
-export async function GET() {
+async function GET_internal () {
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
@@ -24,7 +25,7 @@ export async function GET() {
     }
 }
 
-export async function PATCH(request: Request) {
+async function PATCH_internal (request: Request) {
     const correlacion_id = uuidv4();
     try {
         const session = await auth();
@@ -47,3 +48,7 @@ export async function PATCH(request: Request) {
         return handleApiError(error, 'API_NOTIFICATIONS_MARK_READ', correlacion_id);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/notifications', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/notifications', thresholdMs: 1000 });

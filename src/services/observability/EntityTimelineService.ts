@@ -13,7 +13,7 @@ export interface TimelineEvent {
     action: string;
     message: string;
     actor: string;
-    details?: any;
+    details?: Record<string, unknown>;
     level: string;
     correlationId?: string;
 }
@@ -64,64 +64,68 @@ export class EntityTimelineService {
 
         // Application Logs
         appLogs.forEach(l => {
+            const doc = l as unknown as { _id: { toString: () => string } };
             events.push({
-                id: (l as any)._id.toString(),
+                id: doc._id.toString(),
                 timestamp: l.timestamp,
                 type: l.source.includes('GEMINI') || l.source.includes('IA') ? 'IA' : 'SYSTEM',
                 source: l.source,
                 action: l.action,
                 message: l.message,
-                actor: (l.details as any)?.userId || 'SYSTEM',
+                actor: (l.details as Record<string, any>)?.userId || 'SYSTEM',
                 level: l.level,
                 correlationId: l.correlationId,
-                details: l.details
+                details: l.details as Record<string, unknown>
             });
         });
 
         // Audit Logs
-        auditLogs.forEach((a: any) => {
+        auditLogs.forEach((a) => {
+            const doc = a as unknown as { _id: { toString: () => string }, timestamp: Date, actorType: string, source: string, action: string, reason: string, actorId: string, correlationId: string, changes: any };
             events.push({
-                id: a._id.toString(),
-                timestamp: a.timestamp,
-                type: a.actorType === 'IA' ? 'IA' : (a.actorType === 'SYSTEM' ? 'SYSTEM' : 'HUMAN'),
-                source: a.source || 'AUDIT',
-                action: a.action,
-                message: a.reason || `Acción administrativa: ${a.action}`,
-                actor: a.actorId,
+                id: doc._id.toString(),
+                timestamp: doc.timestamp,
+                type: doc.actorType === 'IA' ? 'IA' : (doc.actorType === 'SYSTEM' ? 'SYSTEM' : 'HUMAN'),
+                source: doc.source || 'AUDIT',
+                action: doc.action,
+                message: doc.reason || `Acción administrativa: ${doc.action}`,
+                actor: doc.actorId,
                 level: 'INFO',
-                correlationId: a.correlationId,
-                details: a.changes
+                correlationId: doc.correlationId,
+                details: doc.changes
             });
         });
 
         // Validaciones Humanas
         validations.forEach(v => {
+            const doc = v as unknown as { _id: { toString: () => string }, timestamp?: Date, createdAt?: Date };
             events.push({
-                id: (v as any)._id.toString(),
-                timestamp: v.timestamp || (v as any).createdAt || new Date(),
+                id: doc._id.toString(),
+                timestamp: doc.timestamp || doc.createdAt || new Date(),
                 type: 'HUMAN',
                 source: 'VALIDATION',
                 action: 'HUMAN_VERIFIED',
                 message: `Validación humana completada (${v.status})`,
                 actor: v.userId || v.validatedBy || 'USER',
                 level: 'INFO',
-                details: v.details
+                details: v.details as Record<string, unknown>
             });
         });
 
         // Ingest Audits
         ingestAudits.forEach(i => {
+            const doc = i as unknown as { _id: { toString: () => string }, timestamp?: Date, createdAt?: Date, performedBy?: string, correlationId?: string, details?: any };
             events.push({
-                id: (i as any)._id.toString(),
-                timestamp: (i as any).timestamp || (i as any).createdAt || new Date(),
+                id: doc._id.toString(),
+                timestamp: doc.timestamp || doc.createdAt || new Date(),
                 type: 'INGEST',
                 source: 'INGEST_ENGINE',
                 action: i.status === 'SUCCESS' ? 'INGEST_SUCCESS' : 'INGEST_FAILED',
                 message: `Archivo ingestado: ${i.status}`,
-                actor: (i as any).performedBy || 'SYSTEM',
+                actor: doc.performedBy || 'SYSTEM',
                 level: i.status === 'SUCCESS' ? 'INFO' : 'ERROR',
-                correlationId: (i as any).correlationId,
-                details: (i as any).details
+                correlationId: doc.correlationId,
+                details: doc.details
             });
         });
 

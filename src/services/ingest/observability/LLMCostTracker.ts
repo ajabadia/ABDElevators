@@ -4,8 +4,8 @@
  * Single Responsibility: Track and aggregate LLM costs per document
  */
 
-import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
+import { logEvento } from '@/lib/logger';
 import { AI_MODEL_IDS, ModelName, MODEL_COSTS } from '@abd/platform-core';
 
 /**

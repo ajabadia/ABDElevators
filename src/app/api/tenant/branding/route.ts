@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TenantService } from '@/services/tenant/tenant-service';
@@ -8,7 +9,7 @@ import { AppError } from '@/lib/errors';
  * Recupera la configuración de marca (branding) para el tenant del usuario actual.
  * Accesible para cualquier usuario autenticado (no solo admins).
  */
-export async function GET() {
+async function GET_internal () {
     try {
         const session = await auth();
 
@@ -53,3 +54,5 @@ export async function GET() {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/tenant/branding', thresholdMs: 1000 });

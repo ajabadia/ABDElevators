@@ -1,5 +1,5 @@
-import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
+import { logEvento } from '@/lib/logger';
 
 /**
  * Valid ingestion state transitions for banking-grade traceability.

@@ -1,13 +1,14 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { CrossVerticalEngine } from "@/core/engine/CrossVerticalEngine";
-import crypto from 'crypto';
 
 /**
  * POST /api/core/search/cross-vertical
  * Realiza una búsqueda semántica entre verticales (Horizontal Search).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const session = await auth();
     if (!session?.user) {
         return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -39,3 +40,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/core/search/cross-vertical', thresholdMs: 1000 });

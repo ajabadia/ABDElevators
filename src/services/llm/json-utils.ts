@@ -43,16 +43,18 @@ export class LlmJsonUtils {
         try {
             const clean = this.cleanJsonFromLLM(raw);
             return JSON.parse(clean) as T;
-        } catch (error: any) {
-            console.error('[LLM-JSON-UTILS] ❌ Failed to parse JSON:', error.message);
+        } catch (error: unknown) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            console.error('[LLM-JSON-UTILS] ❌ Failed to parse JSON:', err.message);
             if (correlationId) {
+                // RULE #4: await logEvento
                 logEvento({
                     level: 'ERROR',
                     source: 'LLM_JSON_UTILS',
                     action: 'PARSE_FAILURE',
-                    message: `Fallo al parsear JSON del LLM: ${error.message}`,
+                    message: `Fallo al parsear JSON del LLM: ${err.message}`,
                     correlationId,
-                    details: { raw: raw.substring(0, 500), error: error.message }
+                    details: { raw: raw.substring(0, 500), error: err.message }
                 }).catch(() => { });
             }
             return null;

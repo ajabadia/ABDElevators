@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { BillingAdminService } from '@/core/application/billing/BillingAdminService';
 import { z } from 'zod';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 const API_SOURCE = 'API_BILLING';
 
@@ -27,7 +28,7 @@ const UpdateContractSchema = z.object({
  * GET /api/admin/billing/contracts
  * List all tenants with billing status.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('billing:contract', 'read');
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/billing/contracts
  * Update a tenant's contract (Tier / Custom Limits).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('billing:contract', 'manage');
@@ -83,3 +84,7 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, API_SOURCE, correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/billing/contracts', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/billing/contracts', thresholdMs: 1000 });

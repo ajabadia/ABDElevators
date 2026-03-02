@@ -66,19 +66,20 @@ export class PDFExtractionEngine {
                 durationMs
             };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             const durationMs = Date.now() - start;
             await logEvento({
                 level: 'ERROR',
                 source: 'PDF_EXTRACTION_ENGINE',
                 action: 'EXTRACT_FAILED',
-                message: `Failed to extract PDF text: ${error.message}`,
+                message: `Failed to extract PDF text: ${err.message}`,
                 correlationId,
                 details: { strategy, durationMs }
             });
 
             throw new ExternalServiceError('Fallo crítico en la extracción de texto del PDF', {
-                message: error.message,
+                message: err.message,
                 details: { strategy, durationMs }
             });
         }

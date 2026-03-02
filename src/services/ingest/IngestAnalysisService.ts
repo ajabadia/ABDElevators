@@ -1,6 +1,6 @@
-
-import { extractModelsWithGemini, callGeminiMini } from '@/services/llm/llm-service';
+import { extractModelsWithGemini } from '@/services/llm/llm-service';
 import { PromptRunner } from '@/lib/llm-core/PromptRunner';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * 🔍 Ingest Analysis Service
@@ -10,14 +10,14 @@ export class IngestAnalysisService {
     /**
      * Detecta el idioma del texto.
      */
-    static async detectLanguage(text: string, tenantId: string, correlationId: string, session?: any): Promise<string> {
+    static async detectLanguage(text: string, tenantId: string, correlationId: string, session?: TenantSession): Promise<string> {
         try {
             const detected = await PromptRunner.runText({
                 key: 'LANGUAGE_DETECTOR',
                 variables: { text: text.substring(0, 2000) },
                 tenantId,
                 correlationId,
-                session
+                session: session as any
             });
 
             return (detected || 'es').trim().toLowerCase().substring(0, 2);
@@ -30,7 +30,7 @@ export class IngestAnalysisService {
     /**
      * Detecta la industria/dominio.
      */
-    static async detectIndustry(text: string, tenantId: string, correlationId: string, session?: any, options?: any) {
+    static async detectIndustry(text: string, tenantId: string, correlationId: string, session?: TenantSession, options?: Record<string, unknown>) {
         const { DomainRouterService } = await import('@/services/core/domain-router-service');
         return await DomainRouterService.detectIndustry(text, tenantId, correlationId, session, options);
     }
@@ -38,7 +38,7 @@ export class IngestAnalysisService {
     /**
      * Extrae modelos del texto.
      */
-    static async extractModels(text: string, tenantId: string, correlationId: string, session?: any) {
+    static async extractModels(text: string, tenantId: string, correlationId: string, session?: TenantSession) {
         return await extractModelsWithGemini(text, tenantId, correlationId, session);
     }
 }

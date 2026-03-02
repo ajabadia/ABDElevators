@@ -7,7 +7,7 @@ import { logEvento } from '@/lib/logger';
 
 export interface IngestionJob {
     docId: string;
-    data: any;
+    data: Record<string, unknown>;
     status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     addedAt: Date;
     startedAt?: Date;
@@ -21,7 +21,7 @@ class SimpleIngestionQueue {
     /**
      * Add a new job to the queue
      */
-    add(docId: string, data: any): void {
+    add(docId: string, data: Record<string, unknown>): void {
         this.queue.set(docId, {
             docId,
             data,
@@ -34,8 +34,8 @@ class SimpleIngestionQueue {
             source: 'SIMPLE_QUEUE',
             action: 'JOB_ADDED',
             message: `Job added to queue: ${docId}`,
-            correlationId: data.correlationId,
-            tenantId: data.tenantId,
+            correlationId: (data as any).correlationId,
+            tenantId: (data as any).tenantId,
         });
     }
 

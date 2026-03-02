@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -7,7 +9,6 @@ import { AppError, handleApiError, ValidationError } from '@/lib/errors';
 import { NotificationTypeSchema } from '@/lib/schemas';
 import { getMongoClient } from '@/lib/db';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const UpdateConfigBodySchema = z.object({
     events: z.record(z.string(), z.object({
@@ -27,7 +28,7 @@ const SLA_THRESHOLD = 500; // ms
  * GET /api/admin/notifications/config
  * Obtiene la configuración de notificaciones del tenant actual.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
  * PUT /api/admin/notifications/config
  * Actualiza la configuración y guarda auditoría.
  */
-export async function PUT(req: NextRequest) {
+async function PUT_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -168,3 +169,7 @@ export async function PUT(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/notifications/config', thresholdMs: 1000 });
+
+export const PUT = withPerformanceSLA(PUT_internal, { endpoint: 'PUT /api/admin/notifications/config', thresholdMs: 1000 });

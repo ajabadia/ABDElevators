@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
 import { SovereignOntologyService } from '@/services/core/SovereignOntologyService';
 // TODO: Fix rerankDocuments import when @abd/rag-engine is ready
 const rerankDocuments = async (q: string, d: any[]) => d;
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * ⏰ Cron Job: Early Warning System (Phase 160.3)
  * Runs predictive audits to detect statistical anomalies in the platform.
  * Security: CRON_SECRET header validation.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const cronSecret = req.headers.get('x-cron-secret');
 
@@ -72,3 +73,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cron/status-check', thresholdMs: 1000 });

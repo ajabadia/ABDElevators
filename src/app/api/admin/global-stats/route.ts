@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth';
 import { connectDB, connectAuthDB, connectLogsDB } from '@/lib/db';
@@ -8,7 +9,7 @@ import { AppError } from '@/lib/errors';
  * Devuelve métricas globales de toda la plataforma (Solo SUPER_ADMIN).
  * SLA: P95 < 500ms
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     try {
         const session = await requireSuperAdmin();
 
@@ -146,3 +147,5 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/global-stats', thresholdMs: 500 });

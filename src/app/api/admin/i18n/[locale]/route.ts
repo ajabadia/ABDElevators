@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * PATCH /api/admin/i18n/[locale]
  * Actualiza múltiples traducciones para un idioma.
  */
-export async function PATCH(
+async function PATCH_internal (
     req: NextRequest,
     { params }: { params: Promise<{ locale: string }> }
 ) {
@@ -42,3 +43,5 @@ export async function PATCH(
         return handleApiError(error, 'API_ADMIN_I18N_LANG_PATCH', correlationId);
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/i18n/[locale]', thresholdMs: 300 });

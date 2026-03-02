@@ -12,20 +12,28 @@ export interface AuditEvent {
     target: string;
     changes: {
         field: string;
-        oldValue: any;
-        newValue: any;
+        oldValue: unknown;
+        newValue: unknown;
     }[];
     reason?: string;
+    details?: {
+        changes?: {
+            field: string;
+            oldValue: unknown;
+            newValue: unknown;
+        }[];
+        reason?: string;
+    };
 }
 
 export class ConfigAuditService {
     /**
      * Retrieves the history of configuration changes.
      */
-    static async getHistory(limit = 50, session?: any): Promise<AuditEvent[]> {
+    static async getHistory(limit = 50, session?: unknown): Promise<AuditEvent[]> {
         // RULE #11: Use getTenantCollection for isolation
         // Using 'audit_logs' (mapped to LOGS db or AUTH depending on configuration, but handled by helper)
-        const collection = await getTenantCollection<any>('audit_logs', session);
+        const collection = await getTenantCollection<AuditEvent>('audit_logs', session as any);
 
         // We look for audit logs specifically related to configuration changes
         const logs = await collection.find(

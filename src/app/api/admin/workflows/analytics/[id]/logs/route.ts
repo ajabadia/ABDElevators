@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { AppError } from '@/lib/errors';
@@ -8,7 +10,7 @@ import { logEvento } from '@/lib/logger';
  * GET /api/admin/workflows/analytics/[id]/logs
  * Returns the most recent execution logs for a workflow.
  */
-export async function GET(
+async function GET_internal (
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -46,3 +48,5 @@ export async function GET(
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/workflows/analytics/[id]/logs', thresholdMs: 1000 });

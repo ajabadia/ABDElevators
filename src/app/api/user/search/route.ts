@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server"
 import { enforcePermission } from "@/lib/guardian-guard"
 import { hybridSearch } from '@abd/rag-engine/server';
@@ -17,7 +18,7 @@ const SearchRequestSchema = z.object({
     limit: z.number().min(3).max(20).default(10)
 })
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = randomUUID()
     const startTime = Date.now()
 
@@ -138,3 +139,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, "API_USER_SEARCH_POST", correlationId)
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/user/search', thresholdMs: 1000 });

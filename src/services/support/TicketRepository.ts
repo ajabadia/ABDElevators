@@ -11,14 +11,14 @@ export class TicketRepository {
 
     static async findById(id: string, tenantId: string): Promise<Ticket | null> {
         // tenantId isolation is handled by getTenantCollection wrapper filter
-        const coll = await getTenantCollection<Ticket>(this.COLLECTION, { tenantId } as any);
-        return await coll.findOne({ _id: new ObjectId(id) as any });
+        const coll = await getTenantCollection<Ticket>(this.COLLECTION, { user: { id: 'system', role: 'SYSTEM' as any, tenantId } } as any);
+        return await coll.findOne({ _id: new ObjectId(id) });
     }
 
-    static async list(query: any, options: { sort?: any, limit?: number, skip?: number } = {}) {
+    static async list(query: Record<string, unknown>, options: { sort?: Record<string, number>, limit?: number, skip?: number } = {}) {
         const coll = await getTenantCollection<Ticket>(this.COLLECTION);
         return await coll.find(query, {
-            sort: options.sort || { updatedAt: -1 },
+            sort: (options.sort || { updatedAt: -1 }) as any,
             limit: options.limit || 50,
             skip: options.skip || 0
         });
@@ -27,19 +27,19 @@ export class TicketRepository {
     static async create(ticket: Ticket): Promise<string> {
         const coll = await getTenantCollection<Ticket>(this.COLLECTION);
         const result = await coll.insertOne(ticket as any);
-        return result.insertedId.toString();
+        return (result.insertedId as unknown as ObjectId).toString();
     }
 
-    static async update(id: string, update: any): Promise<boolean> {
+    static async update(id: string, update: Record<string, unknown>): Promise<boolean> {
         const coll = await getTenantCollection<Ticket>(this.COLLECTION);
         const result = await coll.updateOne(
-            { _id: new ObjectId(id) as any },
+            { _id: new ObjectId(id) },
             update
         );
         return result.matchedCount > 0;
     }
 
-    static async count(query: any): Promise<number> {
+    static async count(query: Record<string, unknown>): Promise<number> {
         const coll = await getTenantCollection<Ticket>(this.COLLECTION);
         return await coll.countDocuments(query);
     }

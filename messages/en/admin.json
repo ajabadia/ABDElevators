@@ -114,13 +114,13 @@
       "template": "Template",
       "variables": "System Variables",
       "change_reason": "Reason for change",
-      "template_title": "Plantilla de Ingeniería",
+      "template_title": "Plantilla de IngenierÃ­a",
       "load_example": "Cargar Ejemplo",
       "chars": "chars",
       "tips_title": "Consejos de Prompting:",
-      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
-      "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
-      "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
+      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinÃ¡micos.",
+      "tip_2": "Define claramente el rol de la IA (ej: \"ActÃºa como un experto en...\") al inicio.",
+      "tip_3": "Solicita el formato de salida deseado de forma explÃ­cita (JSON, Markdown, etc)."
     },
     "history": {
       "title": "Global Audit Log",
@@ -254,11 +254,11 @@
     },
     "workflows": {
       "syncing": "Sincronizando Motor de Workflows...",
-      "title": "Diseñador de Workflows",
+      "title": "DiseÃ±ador de Workflows",
       "loadError": "Error de Carga",
       "backToHub": "Volver al Hub de IA",
-      "loadErrorDesc": "No se pudo recuperar la definición del workflow: {error}",
-      "saveSuccess": "Configuración Guardada",
+      "loadErrorDesc": "No se pudo recuperar la definiciÃ³n del workflow: {error}",
+      "saveSuccess": "ConfiguraciÃ³n Guardada",
       "back": "Volver",
       "publish": "Publicar Workflow",
       "tabs": {
@@ -266,7 +266,7 @@
         "states": "Estados",
         "config": "Master Config"
       },
-      "saveSuccessDesc": "El workflow ha sido actualizado con éxito.",
+      "saveSuccessDesc": "El workflow ha sido actualizado con Ã©xito.",
       "states": {
         "title": "Estados de Proceso",
         "id": "ID del Estado",
@@ -278,17 +278,17 @@
         "schemaKey": "Output Schema"
       },
       "transitions": {
-        "title": "Configuración de Transiciones",
+        "title": "ConfiguraciÃ³n de Transiciones",
         "to": "Hacia",
         "from": "Desde",
-        "strategy": "Estrategia de Decisión",
-        "add": "Añadir Transición",
-        "label": "Acción / Etiqueta",
+        "strategy": "Estrategia de DecisiÃ³n",
+        "add": "AÃ±adir TransiciÃ³n",
+        "label": "AcciÃ³n / Etiqueta",
         "strategies": {
-          "human": "🛡️ Solo Humana",
-          "llm_suggest": "🧠 IA + HITL (Sugerida)",
-          "user": "👤 Usuario (Manual)",
-          "llm_direct": "🤖 LLM Directa (Auto)"
+          "human": "ðŸ›¡ï¸ Solo Humana",
+          "llm_suggest": "ðŸ§  IA + HITL (Sugerida)",
+          "user": "ðŸ‘¤ Usuario (Manual)",
+          "llm_direct": "ðŸ¤– LLM Directa (Auto)"
         },
         "routing": {
           "branches": "{count} Ramas Configuradas",
@@ -300,10 +300,10 @@
         "identity": "Identidad del Workflow",
         "active": "Estado Activo",
         "activeDesc": "Disponible para nuevos casos",
-        "publication": "Parámetros de Publicación",
+        "publication": "ParÃ¡metros de PublicaciÃ³n",
         "environment": "Entorno",
-        "defaultDesc": "Asignado automáticamente",
-        "version": "Versión",
+        "defaultDesc": "Asignado automÃ¡ticamente",
+        "version": "VersiÃ³n",
         "default": "Workflow por Defecto",
         "name": "Nombre Interno"
       }
@@ -338,7 +338,22 @@
     "title": "Welcome to ABDElevators",
     "description": "Let's set up your organization workspace in a few steps.",
     "steps": {
-      "welcome": "Welcome",
+      "welcome": {
+        "title": "Welcome to the ABD Ecosystem",
+        "content": "The AI that understands your technical documentation. To start, select your primary role to customize the tools."
+      },
+      "upload": {
+        "title": "Upload your first document",
+        "content": "Drag a technical PDF or schematic. If you don't have one handy, try our demo document on ITC AEM 1."
+      },
+      "ask": {
+        "title": "Ask your first question",
+        "content": "Try asking something technical based on the document. The AI will respond with direct citations to the original manual."
+      },
+      "explore": {
+        "title": "Discover your environment",
+        "content": "We've configured quick access based on your specialty. All set to optimize your work!"
+      },
       "identity": "Identity",
       "branding": "Branding",
       "storage": "Storage",
@@ -350,6 +365,10 @@
       "back": "Back",
       "finish": "Finish Setup",
       "skip": "Skip for now"
+    },
+    "toasts": {
+      "completed": "Onboarding successfully completed!",
+      "reset": "Onboarding has been reset for this user."
     }
   },
   "automation": {
@@ -511,28 +530,28 @@
     },
     "charts": {
       "tokens_title": "AI Consumption Trends",
-      "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
+      "tokens_desc": "VisualizaciÃ³n del consumo de tokens y eficiencia de cachÃ© en los Ãºltimos 15 dÃ­as."
     },
     "contracts": {
       "edit": {
         "warning_title": "Atention",
         "title": "Editar Contrato",
         "plan_label": "Plan Base",
-        "overrides_title": "Overrides (Límites Personalizados)",
-        "description": "Configuración personalizada para {name} ({id})",
+        "overrides_title": "Overrides (LÃ­mites Personalizados)",
+        "description": "ConfiguraciÃ³n personalizada para {name} ({id})",
         "plan_desc": "El plan define las tarifas base y funcionalidades.",
         "storage_desc": "1 GB = 1073741824 Bytes.",
         "save": "Guardar Cambios",
         "success_desc": "Se han aplicado los cambios para {name}",
-        "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
+        "tokens_desc": "0 o vacÃ­o = Sin lÃ­mite (Enterprise). Ej: 1000000",
         "cancel": "cancelar",
-        "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
-        "storage_label": "Límite Almacenamiento (Bytes)",
-        "tokens_label": "Límite Tokens Mensuales",
+        "warning_desc": "Modificar estos lÃ­mites afectarÃ¡ inmediatamente a la capacidad de operaciÃ³n del inquilino.",
+        "storage_label": "LÃ­mite Almacenamiento (Bytes)",
+        "tokens_label": "LÃ­mite Tokens Mensuales",
         "success": "Contrato actualizado"
       },
-      "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
-      "title": "Gestión de Contratos ('Casos')",
+      "subtitle": "Configura planes, lÃ­mites personalizados (overrides) y reglas de facturaciÃ³n para cada tenant.",
+      "title": "GestiÃ³n de Contratos ('Casos')",
       "table": {
         "override": "Override",
         "plan": "Plan Base",
@@ -696,10 +715,10 @@
       "strategy": "Decision Strategy",
       "add": "Add Transition",
       "strategies": {
-        "user": "👤 User (Manual)",
-        "llm_direct": "🤖 LLM Direct (Auto)",
-        "llm_suggest": "🧠 IA + HITL (Suggested)",
-        "human": "🛡️ Human Only"
+        "user": "ðŸ‘¤ User (Manual)",
+        "llm_direct": "ðŸ¤– LLM Direct (Auto)",
+        "llm_suggest": "ðŸ§  IA + HITL (Suggested)",
+        "human": "ðŸ›¡ï¸ Human Only"
       },
       "routing": {
         "promptKey": "Routing Prompt Key",
@@ -779,7 +798,7 @@
         "sovereign_tool": "Sovereign Tool",
         "simple_if": "IF Simple",
         "switch": "Switch / Case",
-        "multi_path": "Ruta de Múltiples Caminos",
+        "multi_path": "Ruta de MÃºltiples Caminos",
         "wait": "Espera / Delay",
         "wait_5s": "Esperar 5s"
       },
@@ -865,8 +884,8 @@
     "tabs": {
       "explorer": "Explorer",
       "ai": "AI Query",
-      "assets": "[TRANSLATE] Gestión de Activos",
-      "audit": "[TRANSLATE] Auditoría de Ingesta"
+      "assets": "[TRANSLATE] GestiÃ³n de Activos",
+      "audit": "[TRANSLATE] AuditorÃ­a de Ingesta"
     },
     "actions": {
       "export": "Export Chunks",
@@ -1349,17 +1368,17 @@
       "title": "i18n Governance",
       "highlight": "Internationalization",
       "subtitle": "Master translation management and AI-assisted localization.",
-      "syncBtn": "Sync L4 → DB",
+      "syncBtn": "Sync L4 â†’ DB",
       "newKeyBtn": "New Key",
       "searchPlaceholder": "Search by key or text...",
       "syncAllBtn": "Sync all languages",
       "allFilter": "ALL",
       "filterMissing": "Show only missing",
       "exportBtn": "Exportar a JSON",
-      "exportSuccessTitle": "Exportación Exitosa",
+      "exportSuccessTitle": "ExportaciÃ³n Exitosa",
       "exportSuccessDesc": "Las traducciones se han persistido en los archivos locales.",
-      "syncToDbBtn": "Sincronización hacia BD",
-      "syncToFileBtn": "Sincronización hacia archivos JSON"
+      "syncToDbBtn": "SincronizaciÃ³n hacia BD",
+      "syncToFileBtn": "SincronizaciÃ³n hacia archivos JSON"
     },
     "languages": {
       "es": "Spanish",
@@ -1536,12 +1555,14 @@
       "type": "Process Type",
       "status": "Current State",
       "duration": "Execution Time",
-      "failed_reason": "Error Trace"
+      "failed_reason": "Error Trace",
+      "actions": "Actions"
     },
     "actions": {
       "retry": "Manual Retry",
       "delete": "Purge from Queue",
-      "details": "View Stack Trace"
+      "details": "View Stack Trace",
+      "refresh": "Refresh List"
     },
     "monitor": "Agent Monitor",
     "status": {
@@ -1680,32 +1701,32 @@
         "upcoming_desc": "This feature will be available soon."
       },
       "edit": {
-        "title": "Editar Configuración de Contrato",
-        "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
-        "plan_label": "Plan de Suscripción",
+        "title": "Editar ConfiguraciÃ³n de Contrato",
+        "description": "Ajusta el plan y lÃ­mites personalizados para {name} (ID: {id})",
+        "plan_label": "Plan de SuscripciÃ³n",
         "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
         "plans": {
-          "basic": "Básico Business",
+          "basic": "BÃ¡sico Business",
           "free": "Prueba Gratuita",
           "enterprise": "Corporativo",
           "pro": "Profesional"
         },
         "tokens_desc": "0 para usar el valor por defecto del plan.",
-        "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+        "warning_desc": "Modificar estos lÃ­mites afecta directamente a la capacidad operativa del cliente y a su prÃ³xima factura.",
         "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
-        "warning_title": "Cambio Crítico de Cuotas",
-        "overrides_title": "Límites Personalizados (Overrides)",
-        "tokens_label": "Límite de Tokens (Mes)",
-        "storage_label": "Límite de Almacenamiento (Bytes)",
-        "success_desc": "Se ha guardado la configuración para {name}",
+        "warning_title": "Cambio CrÃ­tico de Cuotas",
+        "overrides_title": "LÃ­mites Personalizados (Overrides)",
+        "tokens_label": "LÃ­mite de Tokens (Mes)",
+        "storage_label": "LÃ­mite de Almacenamiento (Bytes)",
+        "success_desc": "Se ha guardado la configuraciÃ³n para {name}",
         "success": "Contrato Actualizado",
         "cancel": "Cancelar",
         "save": "Guardar Cambios",
         "error_updating": "Error al actualizar el contrato",
-        "spaces_tenant_label": "Límite Espacios (Tenant)",
-        "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
-        "spaces_user_label": "Límite Espacios (Usuario)",
-        "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)"
+        "spaces_tenant_label": "LÃ­mite Espacios (Tenant)",
+        "spaces_tenant_desc": "LÃ­mite TOTAL de espacios en el tenant (0 = default del plan)",
+        "spaces_user_label": "LÃ­mite Espacios (Usuario)",
+        "spaces_user_desc": "LÃ­mite de espacios por cada usuario (0 = default del plan)"
       }
     },
     "title": "Billing Data",
@@ -1882,10 +1903,10 @@
       "nextBillingDate": "Next billing date"
     },
     "page": {
-      "title": "Facturación & Consumo",
-      "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
-      "metadata_title": "Facturación y Consumo | ABD RAG Platform",
-      "metadata_desc": "Gestión de recursos y facturación SaaS."
+      "title": "FacturaciÃ³n & Consumo",
+      "subtitle": "Control centralizado de recursos industriales y mÃ©tricas de plataforma.",
+      "metadata_title": "FacturaciÃ³n y Consumo | ABD RAG Platform",
+      "metadata_desc": "GestiÃ³n de recursos y facturaciÃ³n SaaS."
     }
   },
   "billing_hub": {
@@ -2924,5 +2945,6 @@
     "cache_label": "Master Cache Exists",
     "cache_active": "ACTIVE",
     "cache_inactive": "INACTIVE"
-  }
+  },
+  "operations": "Operations Center"
 }

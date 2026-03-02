@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * GET /api/auth/invite/verify
  * Verifica si un token de invitación es válido y no ha expirado
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const { searchParams } = new URL(req.url);
     const token = searchParams.get('token');
@@ -69,3 +70,5 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/auth/invite/verify', thresholdMs: 1000 });

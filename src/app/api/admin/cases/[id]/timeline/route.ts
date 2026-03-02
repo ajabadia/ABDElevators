@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { EntityTimelineService } from '@/services/observability/EntityTimelineService';
 import { handleApiError } from '@/lib/errors';

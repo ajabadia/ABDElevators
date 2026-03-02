@@ -1,3 +1,5 @@
+
+
 // lib/configs.ts
 // Helper utilities for fetching checklist configurations from MongoDB.
 // Implements strict TypeScript, Zod validation, AppError handling, and structured logging.
@@ -17,7 +19,8 @@ import { getTenantCollection } from "@/lib/db-tenant";
  */
 export async function getChecklistConfigById(id: string, session?: any, correlationId?: string): Promise<ChecklistConfig> {
     const start = Date.now();
-    const effectiveCorrelationId = correlationId || crypto.randomUUID();
+    const effectiveCorrelationId = correlationId || globalThis.crypto.randomUUID();
+
     try {
         if (id === "default") {
             const { defaultChecklistConfig } = await import("./default-checklist-config");

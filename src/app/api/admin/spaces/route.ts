@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
@@ -7,7 +9,6 @@ import { SpaceService } from '@/services/tenant/space-service';
 import { SpaceSchema, Space } from '@/lib/schemas/spaces';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const AdminQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20),
@@ -19,7 +20,7 @@ const AdminQuerySchema = z.object({
  * [PHASE 125.2] List Spaces (Admin Context)
  * SLA: P95 < 500ms
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -100,7 +101,7 @@ export async function GET(req: NextRequest) {
  * [PHASE 125.2] Create Space
  * SLA: P95 < 500ms
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -171,3 +172,7 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/spaces', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/spaces', thresholdMs: 1000 });

@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/logs
  * Recupera logs de aplicación con filtrado avanzado.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         // Phase 70: Centralized typed role check
@@ -87,3 +88,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_LOGS', correlacion_id);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs', thresholdMs: 1000 });

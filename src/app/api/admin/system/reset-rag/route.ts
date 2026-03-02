@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { resetGeminiCircuitBreaker } from '@/lib/resilience';
@@ -5,13 +7,12 @@ import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * Endpoint de EMERGENCIA para resetear el Circuit Breaker y diagnosticar RAG.
  * POST /api/admin/system/reset-rag
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -71,3 +72,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'ADMIN_SYSTEM_RESET_RAG', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/system/reset-rag', thresholdMs: 1000 });

@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UsageService } from '@/services/ops/usage-service';
-import crypto from 'crypto';
 
 /**
  * 📈 Tenant Prediction API (Phase 110)
  * Provides cost projections based on actual usage for the Simulator.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -32,3 +33,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_BILLING_PREDICTION', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/billing/prediction', thresholdMs: 1000 });

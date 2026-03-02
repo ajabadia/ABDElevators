@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -7,7 +9,6 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { SystemEmailTemplateSchema } from '@/lib/schemas';
 import { getMongoClient } from '@/lib/db';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const UpdateTemplateBodySchema = z.object({
     subjectTemplates: z.record(z.string(), z.string()),
@@ -24,7 +25,7 @@ const SLA_THRESHOLD = 500;
  * GET /api/admin/notifications/templates/[type]
  * Obtiene el detalle de una plantilla.
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+async function GET_internal (req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
  * PUT /api/admin/notifications/templates/[type]
  * Actualiza una plantilla y genera registro de auditoría.
  */
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+async function PUT_internal (req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -193,3 +194,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ type
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/notifications/templates/[type]', thresholdMs: 1000 });
+
+export const PUT = withPerformanceSLA(PUT_internal, { endpoint: 'PUT /api/admin/notifications/templates/[type]', thresholdMs: 1000 });

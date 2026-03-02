@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.6.0 - ERA 9 SYMPHONY)
+# ABD Multi-Industry RAG Platform (Vision 5.6.5 - ERA 9 SYMPHONY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.6.0** asienta la plataforma como un sistema de Grado Enterprise absoluto. Tras la ejecución de la **FASE 236 (Guardian Enforcement Sweep)** y la **FASE 234 (Middleware Hardening)**, el sistema cuenta con protección ABAC (Attribute-Based Access Control) nativa en todos sus bloques Core, Billing y User, además de un Middleware blindado y estrictamente tipado.
+Esta versión **v5.6.5** asienta la plataforma como un sistema de Grado Enterprise absoluto. Tras la ejecución de la **FASE 241 (i18n REPAIR & BOM PURGE)** y la **FASE 240 (EDGE RUNTIME COMPATIBILITY)**, el sistema cuenta con una gobernanza de traducciones impecable y compatibilidad nativa con el Edge Runtime de Vercel.
 
 ## 🚀 Inicio Rápido
 

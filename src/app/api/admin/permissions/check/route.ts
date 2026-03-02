@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const CheckItemSchema = z.object({
     resource: z.string(),
@@ -16,7 +17,7 @@ const CheckSchema = z.union([
     z.array(CheckItemSchema)
 ]);
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -80,3 +81,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/permissions/check', thresholdMs: 1000 });

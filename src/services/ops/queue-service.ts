@@ -1,7 +1,7 @@
+import crypto from 'crypto';
 import { Queue, Job } from 'bullmq';
 import { getRedisConnection } from '@/lib/redis';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * Definición de tipos de trabajos asíncronos permitidos en la plataforma.
@@ -16,7 +16,7 @@ export interface JobPayload {
     tenantId: string;
     userId: string;
     correlationId?: string;
-    data: any;
+    data: Record<string, unknown>;
 }
 
 /**
@@ -103,9 +103,9 @@ export class QueueService {
     /**
      * Lista trabajos de una cola con paginación y filtro de estado.
      */
-    public async listJobs(type: JobType, statuses: any[] = ['failed', 'completed', 'active', 'waiting', 'delayed'], start = 0, end = 10) {
+    public async listJobs(type: JobType, statuses: JobType[] = ['failed' as any, 'completed' as any, 'active' as any, 'waiting' as any, 'delayed' as any], start = 0, end = 10) {
         const queue = this.getQueue(type);
-        const jobs = await queue.getJobs(statuses, start, end, true);
+        const jobs = await queue.getJobs(statuses as any, start, end, true);
 
         return Promise.all(jobs.map(async (job) => ({
             id: job.id,

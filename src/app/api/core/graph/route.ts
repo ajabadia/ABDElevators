@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { GraphEngine } from "@/core/engine/GraphEngine";
 import { logEvento } from "@/lib/logger";
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
-import crypto from "crypto";
 
 /**
  * GET /api/core/graph
@@ -37,7 +37,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_GRAPH_GET', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'GET /api/core/graph', thresholdMs: 500 });
 
 /**
  * POST /api/core/graph/sync
@@ -74,4 +74,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_GRAPH_SYNC_POST', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'POST /api/core/graph', thresholdMs: 2000 });

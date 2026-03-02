@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -20,3 +21,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_INVITATIONS_LIST', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/users/invite', thresholdMs: 1000 });

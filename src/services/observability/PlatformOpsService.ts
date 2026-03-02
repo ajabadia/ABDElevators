@@ -1,4 +1,4 @@
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { connectLogsDB } from '@/lib/db';
 
 // Temporarily stub JobSchedulerService to bypass build failure (dangling reference)
@@ -16,7 +16,7 @@ export class PlatformOpsService {
      * Get platform-wide health metrics.
      * SLA: P95 < 500ms
      */
-    static async getPlatformHealth(session: any): Promise<any> {
+    static async getPlatformHealth(session: TenantSession): Promise<Record<string, unknown>> {
         if (session.user?.role !== 'SUPER_ADMIN') {
             throw new Error('Forbidden: SuperAdmin access required');
         }
@@ -51,7 +51,7 @@ export class PlatformOpsService {
                     totalTokens: { $sum: '$value' }
                 }
             }
-        ]).toArray();
+        ]).toArray() as unknown as { totalTokens: number }[];
 
         // 4. Critical Errors (last 24h)
         const criticalErrors = await logsCollection.countDocuments({

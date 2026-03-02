@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -6,14 +8,13 @@ import { callGeminiMini } from '@/services/llm/llm-service';
 import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/suggest-questions
  * Generates dynamic, proactive question suggestions for a specific asset.
  * Phase 216.3: Agentic Quick-Analysis
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
@@ -87,3 +88,5 @@ export async function GET(
         return handleApiError(error, 'API_SUGGEST_QUESTIONS', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/suggest-questions', thresholdMs: 1000 });

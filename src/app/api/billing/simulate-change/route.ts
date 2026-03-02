@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { PlanTier } from '@/lib/plans';
 
@@ -37,4 +37,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_BILLING_SIMULATE_CHANGE_POST', correlationId);
     }
-}, { p95: 1000, max: 2000 });
+}, { endpoint: 'POST /api/billing/simulate-change', thresholdMs: 1000 });

@@ -34,12 +34,15 @@ export class ObservabilityRepository {
     /**
      * Aggregates token usage per tenant.
      */
-    static async getUsageMetrics(days: number = 7) {
+    static async getUsageMetrics(days: number = 7): Promise<Record<string, unknown>[]> {
         const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
         const since = new Date();
         since.setDate(since.getDate() - days);
 
-        return await (collection as any).unsecureRawCollection.aggregate([
+        // Accessing unsecureRawCollection for cross-tenant metrics (System use)
+        const raw = (collection as unknown as { unsecureRawCollection: { aggregate: (p: unknown[]) => { toArray: () => Promise<Record<string, unknown>[]> } } }).unsecureRawCollection;
+
+        return await raw.aggregate([
             { $match: { action: 'PROMPT_RUNNER_SUCCESS', timestamp: { $gte: since } } },
             {
                 $group: {
@@ -56,12 +59,14 @@ export class ObservabilityRepository {
     /**
      * Aggregates LLM health (Success vs Error).
      */
-    static async getLlmHealth(days: number = 7) {
+    static async getLlmHealth(days: number = 7): Promise<Record<string, unknown>[]> {
         const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
         const since = new Date();
         since.setDate(since.getDate() - days);
 
-        return await (collection as any).unsecureRawCollection.aggregate([
+        const raw = (collection as unknown as { unsecureRawCollection: { aggregate: (p: unknown[]) => { toArray: () => Promise<Record<string, unknown>[]> } } }).unsecureRawCollection;
+
+        return await raw.aggregate([
             { $match: { source: 'LLM_CORE', timestamp: { $gte: since } } },
             {
                 $group: {

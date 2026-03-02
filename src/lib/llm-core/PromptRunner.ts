@@ -21,11 +21,11 @@ export class PromptRunner {
      */
     static async runJson<T>(params: {
         key: string;
-        variables: Record<string, any>;
+        variables: Record<string, unknown>;
         schema: z.ZodSchema<T>;
         tenantId: string;
         correlationId: string;
-        session?: any;
+        session?: import('next-auth').Session | null;
         temperature?: number;
     }): Promise<T> {
         const { key, variables, schema, tenantId, correlationId, session, temperature = 0.1 } = params;
@@ -42,7 +42,7 @@ export class PromptRunner {
                     variables,
                     tenantId,
                     'GENERIC',
-                    session
+                    session as any
                 );
 
                 // 2. Execution Sombra (Async)
@@ -112,10 +112,10 @@ export class PromptRunner {
      */
     static async runText(params: {
         key: string;
-        variables: Record<string, any>;
+        variables: Record<string, unknown>;
         tenantId: string;
         correlationId: string;
-        session?: any;
+        session?: import('next-auth').Session | null;
         temperature?: number;
     }): Promise<string> {
         const { key, variables, tenantId, correlationId, session, temperature = 0.7 } = params;
@@ -129,7 +129,7 @@ export class PromptRunner {
                     variables,
                     tenantId,
                     'GENERIC',
-                    session
+                    session as any
                 );
 
                 const start = Date.now();
@@ -156,9 +156,10 @@ export class PromptRunner {
                     details: { key, model: production.model }
                 });
                 return result;
-            } catch (error: any) {
-                span.recordException(error);
-                span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                span.recordException(error as Error);
+                span.setStatus({ code: SpanStatusCode.ERROR, message: errorMessage });
                 throw error;
             } finally {
                 span.end();

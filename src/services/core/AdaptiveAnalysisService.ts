@@ -33,7 +33,7 @@ export class AdaptiveAnalysisService {
                 const agent = AgentEngine.getInstance();
 
                 let renderedPrompt = engine.renderPrompt(entitySlug, 'analyze', { text });
-                let modelName = DEFAULT_MODEL as any;
+                let modelName: string = DEFAULT_MODEL;
 
                 // Inyectar aprendizaje del contexto del agente (Feedback Loop)
                 const learningContext = await agent.getCorrectionContext(entitySlug, tenantId);
@@ -70,23 +70,26 @@ export class AdaptiveAnalysisService {
 
                 let resultData = JSON.parse(jsonMatch[0]);
 
-                const usage = (result.response as any).usageMetadata;
+                const response = result.response as any;
+                const usage = response.usageMetadata;
                 if (usage) {
-                    span.setAttribute('genai.tokens', usage.totalTokenCount);
-                    await UsageService.trackLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
+                    const totalTokens = usage.totalTokenCount || 0;
+                    span.setAttribute('genai.tokens', totalTokens);
+                    await UsageService.trackLLM(tenantId, totalTokens, modelName, correlationId);
                 }
 
                 span.setStatus({ code: SpanStatusCode.OK });
                 return resultData;
-            } catch (error: any) {
-                span.recordException(error);
-                span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                span.recordException(error as Error);
+                span.setStatus({ code: SpanStatusCode.ERROR, message: errorMessage });
 
                 await logEvento({
                     level: 'ERROR',
                     source: 'ADAPTIVE_ANALYSIS_SERVICE',
                     action: 'ANALYSIS_ERROR',
-                    message: `Error analizando ${entitySlug}: ${error.message}`,
+                    message: `Error analizando ${entitySlug}: ${errorMessage}`,
                     correlationId,
                     details: { entitySlug }
                 });

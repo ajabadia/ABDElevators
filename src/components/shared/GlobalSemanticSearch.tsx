@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from 'react';
 import {
     Search,
@@ -169,7 +170,7 @@ export function GlobalSemanticSearch() {
                                 {synthesis}
                             </div>
                             <AnswerFeedback
-                                answerId={`synth-${crypto.randomUUID()}`}
+                                answerId={`synth-${globalThis.crypto.randomUUID()}`}
                                 question={query}
                                 documentSource="Cross-Vertical RAG"
                                 className="border-t-slate-800/50 mt-4"

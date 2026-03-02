@@ -1,3 +1,5 @@
+
+
 import { logEvento } from '@/lib/logger';
 
 export interface StressTestResult {
@@ -69,7 +71,8 @@ export class PerformanceGuard {
             source: 'PERFORMANCE_GUARD',
             action: 'STRESS_TEST_COMPLETE',
             message: `Stress Test finalizado: ${testResult.successRate.toFixed(2)}% success rate con ${config.virtualUsers} usuarios.`,
-            correlationId: crypto.randomUUID(),
+            correlationId: globalThis.crypto.randomUUID(),
+
             details: testResult
         });
 

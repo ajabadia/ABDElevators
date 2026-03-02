@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
 import { NotificationTypeSchema } from '@/lib/schemas';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/notifications/templates
  * Lista todas las plantillas de email del sistema.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('notification:template', 'read');
@@ -36,3 +37,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_NOTIFICATIONS_TEMPLATES_GET', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/notifications/templates', thresholdMs: 1000 });

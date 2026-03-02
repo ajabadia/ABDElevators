@@ -70,11 +70,11 @@ export class IntelligenceAnalyticsService {
         const collection = db.collection('federated_patterns');
         const skip = (page - 1) * limit;
 
-        const sort: any = {};
+        const sort: Record<string, number> = {};
         sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
         const patterns = await collection.find({ status: { $ne: 'ARCHIVED' } })
-            .sort(sort)
+            .sort(sort as any)
             .skip(skip)
             .limit(limit)
             .toArray();
@@ -91,7 +91,7 @@ export class IntelligenceAnalyticsService {
     /**
      * Archive or Moderate a pattern.
      */
-    static async moderatePattern(patternId: string, action: 'ARCHIVE' | 'EDIT', updates?: any) {
+    static async moderatePattern(patternId: string, action: 'ARCHIVE' | 'EDIT', updates?: Partial<FederatedPattern>) {
         const db = await connectDB();
         const collection = db.collection('federated_patterns');
 

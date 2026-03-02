@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -6,7 +7,6 @@ import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { CreateUserSchema, UserSchema } from '@/lib/schemas';
 import { handleApiError, ValidationError, DatabaseError } from '@/lib/errors';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 

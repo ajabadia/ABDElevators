@@ -44,8 +44,9 @@ export class SecurityService {
             const authTag = cipher.getAuthTag().toString('hex');
 
             return `${iv.toString('hex')}:${encrypted}:${authTag}`;
-        } catch (error: any) {
-            throw new AppError('INTERNAL_ERROR', 500, `Encryption failed: ${error.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown encryption error';
+            throw new AppError('INTERNAL_ERROR', 500, `Encryption failed: ${message}`);
         }
     }
 
@@ -70,8 +71,9 @@ export class SecurityService {
             decrypted += decipher.final('utf8');
 
             return decrypted;
-        } catch (error: any) {
-            console.error('[SecurityService] Decryption failed:', error.message);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown decryption error';
+            console.error('[SecurityService] Decryption failed:', message);
             return '[ERROR_DECRYPTING]';
         }
     }

@@ -1,7 +1,7 @@
+import crypto from 'crypto';
 import { getTenantCollection } from "@/lib/db-tenant";
 import { TenantConfigSchema, type TenantConfig } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";
-import crypto from 'crypto';
 import { type ClientSession } from 'mongodb';
 import { UserRole } from "@/types/roles";
 
@@ -28,7 +28,7 @@ export class TenantService {
                 }
             };
 
-            const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
+            const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as unknown as Parameters<typeof getTenantCollection>[1]);
             const config = await collection.findOne({ tenantId });
 
             if (!config) {
@@ -69,10 +69,10 @@ export class TenantService {
                 }
             };
 
-            const collection = await getTenantCollection<TenantConfig>('tenants', authContext as any);
+            const collection = await getTenantCollection<TenantConfig>('tenants', authContext as unknown as Parameters<typeof getTenantCollection>[1]);
             const previousState = await collection.findOne({ tenantId }, { session: metadata?.session });
 
-            const { _id, tenantId: _ign, ...updateData } = validated as any;
+            const { _id, tenantId: _ign, ...updateData } = validated as Record<string, unknown>;
 
             await collection.updateOne(
                 { tenantId },
@@ -129,7 +129,7 @@ export class TenantService {
                 role: UserRole.SUPER_ADMIN
             }
         };
-        const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
+        const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as unknown as Parameters<typeof getTenantCollection>[1]);
         const results = await collection.find({});
         return results as TenantConfig[];
     }

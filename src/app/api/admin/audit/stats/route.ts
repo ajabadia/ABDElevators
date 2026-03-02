@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB, connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * API Route: GET /api/admin/audit/stats
  * Provides aggregated metrics for the Audit Dashboard.
  * Satisfaction for FASE 195.3 components.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('audit:stats', 'read');
@@ -73,3 +74,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_AUDIT_STATS', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/audit/stats', thresholdMs: 2000 });

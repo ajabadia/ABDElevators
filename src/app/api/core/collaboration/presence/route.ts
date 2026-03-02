@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { CollaborationService } from '@/services/core/CollaborationService';
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
-import crypto from 'crypto';
 
 /**
  * POST /api/core/collaboration/presence
@@ -32,4 +32,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_COLLABORATION_PRESENCE_POST', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'POST /api/core/collaboration/presence', thresholdMs: 500 });

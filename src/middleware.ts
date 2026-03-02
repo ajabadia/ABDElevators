@@ -3,7 +3,6 @@ import NextAuth, { Session } from 'next-auth';
 import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
 import { logEvento } from './lib/logger';
-import crypto from 'crypto';
 
 const { auth } = NextAuth(authConfig);
 
@@ -23,7 +22,8 @@ export default auth(async function middleware(request: NextAuthRequest) {
     const { pathname } = request.nextUrl;
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
-    const correlationId = crypto.randomUUID();
+    const correlationId = globalThis.crypto.randomUUID();
+
 
     // 🛡️ [SECURITY] Rate Limiting (Phase 140)
     // Apply rate limits to API routes
@@ -176,7 +176,8 @@ export default auth(async function middleware(request: NextAuthRequest) {
         }
 
         // 3. Security Headers (CSP, HSTS, etc)
-        const nonce = btoa(crypto.randomUUID());
+        const nonce = btoa(globalThis.crypto.randomUUID());
+
         const response = NextResponse.next();
 
         response.headers.set('x-nonce', nonce);

@@ -1,8 +1,9 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 import { z } from 'zod';
 
 // Schema for request body
@@ -10,7 +11,7 @@ const RequestMagicLinkSchema = z.object({
     email: z.string().email(),
 });
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -180,3 +181,5 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/magic-link/request', thresholdMs: 1000 });

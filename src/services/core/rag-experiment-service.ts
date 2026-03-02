@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { ragExperimentRepository } from '@/lib/repositories/RagExperimentRepository';
 import { logEvento } from '@/lib/logger';
 import { RagEvaluationService } from './rag-evaluation-service';
 import { RagExperiment } from '@/lib/schemas/rag-experiment';
 import { TenantSession } from '@/lib/db-tenant';
 import { ClientSession } from 'mongodb';
-import crypto from 'crypto';
 import { AppError } from '@/lib/errors';
 
 export interface RagExperimentConfig {
@@ -83,17 +83,17 @@ export class RagExperimentService {
 
             return { ...experiment, _id: 'generated' } as RagExperiment;
 
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'RAG_EXPERIMENT',
                 action: 'FAILED',
-                message,
+                message: errorMessage,
                 correlationId,
                 tenantId
             });
-            throw new AppError('DATABASE_ERROR', 500, `Experiment execution failed: ${message}`);
+            throw new AppError('DATABASE_ERROR', 500, `Experiment execution failed: ${errorMessage}`);
         }
     }
 

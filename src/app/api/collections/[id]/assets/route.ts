@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import crypto from 'crypto';
 
 const AddAssetsSchema = z.object({
     assetIds: z.array(z.string()).min(1),
@@ -13,7 +14,7 @@ const AddAssetsSchema = z.object({
  * 📚 Add Assets to Collection API
  * POST: /api/collections/[id]/assets
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> } // Node 20+ App Router params
 ) {
@@ -45,3 +46,5 @@ export async function POST(
         return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/collections/[id]/assets', thresholdMs: 1000 });

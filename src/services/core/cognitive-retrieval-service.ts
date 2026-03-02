@@ -3,6 +3,7 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { logEvento } from '@/lib/logger';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * 🧠 Cognitive Retrieval Service (Phase 102)
@@ -17,7 +18,7 @@ export class CognitiveRetrievalService {
         industry: string,
         tenantId: string,
         correlationId?: string,
-        session?: any
+        session?: TenantSession
     ): Promise<string> {
         let renderedPrompt: string;
         let modelName: string = DEFAULT_MODEL;
@@ -102,13 +103,14 @@ export class CognitiveRetrievalService {
             });
 
             return response.trim();
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             await IngestTracer.endSpanError(span, {
                 correlationId: correlationId || 'cognitive-router',
                 tenantId,
-            }, error);
+            }, error as Error);
 
-            console.error('[COGNITIVE RETRIEVAL ERROR]', error);
+            console.error('[COGNITIVE RETRIEVAL ERROR]', errorMessage);
             return 'Documento técnico general sin contexto específico detectado.';
         }
     }

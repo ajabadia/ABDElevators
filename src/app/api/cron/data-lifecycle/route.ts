@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { DataLifecycleService } from '@/services/ops/data-lifecycle-service';
 import { logEvento } from '@/lib/logger';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
-import crypto from 'crypto';
 
 /**
  * GET /api/cron/data-lifecycle

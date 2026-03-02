@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { UsageService } from '@/services/ops/usage-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * Endpoint para obtener métricas de ROI y Ahorro del Tenant (Phase 70 compliance).
  * - Accesible para ADMIN (su propio tenant) y SUPER_ADMIN (cualquier tenant).
  */
-export async function GET(request: NextRequest) {
+async function GET_internal (request: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('usage', 'read');
@@ -49,3 +50,5 @@ export async function GET(request: NextRequest) {
         return handleApiError(error, 'API_USAGE_ROI', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/usage/roi', thresholdMs: 1000 });

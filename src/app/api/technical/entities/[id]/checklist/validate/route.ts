@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -16,7 +17,7 @@ const ParamsSchema = z.object({
  * POST /api/entities/[id]/checklist/validate
  * Persists technician validation for a specific checklist item.
  */
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+async function POST_internal (request: Request, context: { params: Promise<{ id: string }> }) {
     const { id: entityId } = await context.params;
     const correlationId = uuidv4();
     const start = Date.now();
@@ -77,3 +78,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         return handleApiError(error, 'CHECKLIST_VALIDATION', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/checklist/validate', thresholdMs: 1000 });

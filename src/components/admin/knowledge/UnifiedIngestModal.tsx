@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
@@ -159,7 +160,8 @@ export function UnifiedIngestModal({ isOpen, onClose, onSuccess }: UnifiedIngest
         setDeduplicated(false);
         setLastLog("Iniciando conexión...");
 
-        const correlationId = crypto.randomUUID();
+        const correlationId = globalThis.crypto.randomUUID();
+
         setActiveCorrelationId(correlationId);
 
         const formData = new FormData();

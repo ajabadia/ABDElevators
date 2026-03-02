@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { OrderAnalysisEngine as agentEngine } from '@/core/engine';
@@ -7,7 +9,6 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { AccessControlService } from '@/lib/access-control';
 import { UsageService } from '@/services/ops/usage-service';
 import { SSEHelper } from '@/lib/sse-helper';
-import crypto from 'crypto';
 
 interface GraphFinding {
     source: 'extraction' | 'risk_analysis' | 'validation';
@@ -37,7 +38,7 @@ interface GraphState {
  * Utiliza Server-Sent Events (SSE) para streaming de pasos.
  * Fulfills Phase 21.1 and 21.2.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -186,3 +187,5 @@ export async function GET(
         },
     });
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/analyze', thresholdMs: 5000 });

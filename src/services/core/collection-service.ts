@@ -1,5 +1,6 @@
 
 import { UserCollection, UserCollectionSchema } from '@/lib/schemas/collections';
+import { TenantSession } from '@/lib/db-tenant';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { collectionRepository } from '@/repositories/CollectionRepository';
@@ -13,7 +14,7 @@ export class CollectionService {
     /**
      * Create a new collection (Notebook)
      */
-    static async createCollection(tenantId: string, ownerUserId: string, data: Partial<UserCollection>, session?: any) {
+    static async createCollection(tenantId: string, ownerUserId: string, data: Partial<UserCollection>, session?: TenantSession | null) {
         const correlationId = CorrelationIdService.generate();
 
         const newCollection: UserCollection = UserCollectionSchema.parse({
@@ -42,14 +43,14 @@ export class CollectionService {
     /**
      * Get accessible collections for a user
      */
-    static async getUserCollections(tenantId: string, userId: string, session?: any) {
+    static async getUserCollections(tenantId: string, userId: string, session?: TenantSession | null) {
         return await collectionRepository.findByOwner(userId, session);
     }
 
     /**
      * Add multiple assets to a collection
      */
-    static async addAssetsToCollection(collectionId: string, assetIds: string[], userId: string, session?: any) {
+    static async addAssetsToCollection(collectionId: string, assetIds: string[], userId: string, session?: TenantSession | null) {
         const correlationId = CorrelationIdService.generate();
 
         const result = await collectionRepository.addAssets(collectionId, assetIds, userId, session);
@@ -64,7 +65,7 @@ export class CollectionService {
     /**
      * Delete a collection
      */
-    static async deleteCollection(collectionId: string, userId: string, session?: any) {
+    static async deleteCollection(collectionId: string, userId: string, session?: TenantSession | null) {
         const result = await collectionRepository.deletePhysical(collectionId, {}, session);
 
         if (result.deletedCount === 0) {

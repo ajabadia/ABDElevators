@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { WorkflowAnalyticsService } from '@/services/ops/workflow-analytics-service';
 import { AppError } from '@/lib/errors';
@@ -14,7 +16,7 @@ const SearchParamsSchema = z.object({
  * GET /api/admin/workflows/analytics/[id]/report
  * Generates a technical PDF report for a workflow's performance and anomalies.
  */
-export async function GET(
+async function GET_internal (
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -104,3 +106,5 @@ export async function GET(
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/workflows/analytics/[id]/report', thresholdMs: 1000 });

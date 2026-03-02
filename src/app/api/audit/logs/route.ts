@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -10,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
  * Permite a los administradores consultar el historial de auditoría de su tenant.
  * Implementa Regla de Oro #2 (Zod) y #11 (SecureCollection).
  */
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const correlationId = uuidv4();
     try {
         const session = await auth();
@@ -95,3 +96,5 @@ export async function GET(request: Request) {
     }
 }
 
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/audit/logs', thresholdMs: 2000 });

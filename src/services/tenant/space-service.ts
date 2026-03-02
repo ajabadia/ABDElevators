@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { ObjectId, Filter } from 'mongodb';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { Space, SpaceSchema } from '@/lib/schemas/spaces';
@@ -5,7 +6,6 @@ import { IndustryType } from '@/lib/schemas/core';
 import { LimitsService } from '@/services/security/limits-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * 🌌 SpaceService: Gestión de Espacios Universales (Phase 125.2)

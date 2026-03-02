@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
@@ -14,7 +15,7 @@ const NodeMergeSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
@@ -58,3 +59,5 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'INTERNAL_ERROR', message: error.message }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/nodes/merge', thresholdMs: 5000 });

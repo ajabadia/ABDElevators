@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { ContactService } from '@/services/support/ContactService';
 import { handleApiError } from '@/lib/errors';
@@ -8,7 +9,7 @@ import { auth } from '@/lib/auth';
  * Endpoint público/semi-público para enviar mensajes de contacto.
  * Fase 10: Soporte Técnico.
  */
-export async function POST(request: Request) {
+async function POST_internal (request: Request) {
     const correlacion_id = uuidv4();
     try {
         const body = await request.json();
@@ -32,3 +33,5 @@ export async function POST(request: Request) {
         return handleApiError(error, 'API_CONTACT_PUBLIC', correlacion_id);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/contact', thresholdMs: 1000 });

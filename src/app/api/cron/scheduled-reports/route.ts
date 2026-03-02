@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { ReportScheduleService } from '@/services/ops/report-schedule-service';
 import { logEvento } from '@/lib/logger';
@@ -11,7 +12,7 @@ export const maxDuration = 60; // Allow 60s for execution
  * GET /api/cron/scheduled-reports
  * Triggered by Vercel Cron to generate and deliver scheduled reports.
  */
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const authHeader = request.headers.get('authorization');
     const correlationId = `cron-sched-reports-${Date.now()}`;
 
@@ -95,3 +96,5 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/cron/scheduled-reports', thresholdMs: 1000 });

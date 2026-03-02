@@ -1,6 +1,7 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { GraphGuardian } from '@/services/graph/security/GraphGuardian';
 import { GraphMutationService } from '@/services/graph/GraphMutationService';
@@ -13,20 +14,15 @@ export const dynamic = 'force-dynamic';
  * POST /api/admin/graph/relations
  * Create or update a relationship
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
     try {
-        const session = await auth();
+        const session = await enforcePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = CreateGraphRelationSchema.parse(body);
-        const tenantId = session?.user?.tenantId || 'default';
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        const tenantId = session.user.tenantId;
 
         await GraphMutationService.createRelation(validated, tenantId);
 
@@ -42,8 +38,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
-        return handleError(error, 'CREATE_RELATION', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_RELATIONS_CREATE', correlationId);
     }
 }
 
@@ -51,20 +47,15 @@ export async function POST(req: NextRequest) {
  * DELETE /api/admin/graph/relations
  * Delete a relationship
  */
-export async function DELETE(req: NextRequest) {
+async function DELETE_internal (req: NextRequest) {
     const correlationId = uuidv4();
     const start = Date.now();
 
     try {
-        const session = await auth();
+        const session = await enforcePermission('knowledge:graph', 'manage');
         const body = await req.json();
         const validated = DeleteGraphRelationSchema.parse(body);
-        const tenantId = session?.user?.tenantId || 'default';
-
-        await GraphGuardian.authorizeMutation(session, {
-            tenantId,
-            correlationId,
-        });
+        const tenantId = session.user.tenantId;
 
         await GraphMutationService.deleteRelation(validated, tenantId);
 
@@ -80,30 +71,11 @@ export async function DELETE(req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
-        return handleError(error, 'DELETE_RELATION', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_GRAPH_RELATIONS_MUTATION', correlationId);
     }
 }
 
-function handleError(error: any, action: string, correlationId: string) {
-    console.error(`[API_GRAPH_RELATIONS][${action}]`, error);
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/graph/relations', thresholdMs: 5000 });
 
-    if (error.name === 'ZodError') {
-        return NextResponse.json({
-            error: 'VALIDATION_ERROR',
-            details: error.errors
-        }, { status: 400 });
-    }
-
-    if (error instanceof AppError) {
-        return NextResponse.json({
-            error: error.message,
-            code: error.code
-        }, { status: error.status });
-    }
-
-    return NextResponse.json({
-        error: 'INTERNAL_ERROR',
-        message: error.message
-    }, { status: 500 });
-}
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/graph/relations', thresholdMs: 5000 });

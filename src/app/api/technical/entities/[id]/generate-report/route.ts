@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -16,7 +18,7 @@ import { AIMODELIDS } from '@/lib/ai-models';
  * Generates a professional report using LLM based on approved human validation
  * SLA: P95 < 5s (includes Gemini call)
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -199,7 +201,7 @@ export async function POST(
  * GET /api/entities/[id]/generate-report
  * Gets the latest generated report for an entity
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -266,3 +268,7 @@ export async function GET(
         return handleApiError(error, 'REPORT_ENDPOINT', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/generate-report', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/generate-report', thresholdMs: 1000 });

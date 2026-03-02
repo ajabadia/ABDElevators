@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { UpdateProfileSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
@@ -12,7 +13,7 @@ import { UserRole } from '@/types/roles';
  * Retrieves the authenticated user's profile.
  * SLA: P95 < 300ms
  */
-export async function GET() {
+async function GET_internal () {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -67,7 +68,7 @@ export async function GET() {
  * Updates the authenticated user's profile.
  * SLA: P95 < 500ms
  */
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -173,3 +174,7 @@ export async function PATCH(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/auth/profile', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/auth/profile', thresholdMs: 1000 });

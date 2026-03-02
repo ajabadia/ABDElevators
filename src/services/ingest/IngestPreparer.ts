@@ -8,6 +8,7 @@ import { IngestOptions, IngestPrepareResult } from './types';
 import { logEvento } from '@/lib/logger';
 import { type KnowledgeAsset } from '@/lib/schemas';
 import { type Filter } from 'mongodb';
+import { ValidationError } from '@/lib/errors';
 
 /**
  * IngestPreparer: Handles validations, deduplication and initial storage.
@@ -17,13 +18,15 @@ import { type Filter } from 'mongodb';
 export class IngestPreparer {
     static async prepare(options: IngestOptions): Promise<IngestPrepareResult> {
         const { file, metadata, tenantId, environment = 'PRODUCTION' } = options;
+        if (!file) throw new ValidationError('File is required for preparation');
+
         const correlationId = options.correlationId || crypto.randomUUID();
         const start = Date.now();
         const scope = metadata.scope || 'TENANT';
         const spaceId = metadata.spaceId;
 
         // 1. Validations
-        metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel) as any;
+        metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel) as IngestOptions['metadata']['chunkingLevel'];
         const sizeBytes = file.size || 0;
         IngestValidator.validateFileSize(sizeBytes);
 
@@ -56,16 +59,16 @@ export class IngestPreparer {
         // 3. Deduplication Check
         const dedupeQuery: Filter<KnowledgeAsset> = {
             fileMd5: fileHash,
-            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }) as any,
+            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }) as Filter<KnowledgeAsset>['tenantId'],
             spaceId,
-            environment: environment as any
+            environment: environment as Filter<KnowledgeAsset>['environment']
         };
 
         const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any);
 
         if (existingDoc) {
             // Restoration logic
-            if ((existingDoc as any).deletedAt) {
+            if ((existingDoc as Record<string, unknown>).deletedAt) {
                 await knowledgeAssetRepository.update(existingDoc._id, {
                     $unset: { deletedAt: "" },
                     $set: {
@@ -123,9 +126,9 @@ export class IngestPreparer {
         }
 
         // 4. Register Asset
-        const docMetadata: any = {
+        const docMetadata: Omit<KnowledgeAsset, '_id'> = {
             tenantId: (scope === 'TENANT' ? tenantId : 'global') as string,
-            industry: (metadata.industry || 'GENERIC') as any,
+            industry: (metadata.industry || 'GENERIC') as KnowledgeAsset['industry'],
             filename: file.name,
             componentType: (metadata.type || 'DOCUMENT') as any,
             model: 'PENDING',
@@ -138,8 +141,8 @@ export class IngestPreparer {
             documentTypeId: metadata.documentTypeId,
             scope: scope as any,
             spaceId,
-            chunkingLevel: metadata.chunkingLevel as any,
-            environment: environment as any,
+            chunkingLevel: metadata.chunkingLevel as KnowledgeAsset['chunkingLevel'],
+            environment: environment as KnowledgeAsset['environment'],
             correlationId,
             enableVision: !!options.enableVision,
             enableTranslation: !!options.enableTranslation,
@@ -151,9 +154,9 @@ export class IngestPreparer {
             hasStorage: !!blobId,
             createdAt: new Date(),
             updatedAt: new Date(),
-        };
+        } as any;
 
-        const insertedId = await knowledgeAssetRepository.create(docMetadata as any, null, options.session as any);
+        const insertedId = await knowledgeAssetRepository.create(docMetadata, null, options.session as any);
 
         await IngestAuditService.logEvent({
             assetId: insertedId,

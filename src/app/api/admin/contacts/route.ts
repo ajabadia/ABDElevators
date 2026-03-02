@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { ContactService } from '@/services/support/ContactService';
 import { handleApiError, AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from '@/types/roles';
-import crypto from 'crypto';
 
 /**
  * Endpoint Admin para gestionar solicitudes de contacto (Phase 70 compliance).
  * Fase 10: Platform Governance.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('support', 'read');
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('support', 'manage');
@@ -42,3 +43,7 @@ export async function PATCH(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_CONTACT_RESPOND', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/contacts', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/contacts', thresholdMs: 1000 });

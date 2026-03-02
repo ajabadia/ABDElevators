@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { RagJudgeService } from '@/services/core/rag-judge-service';
 import { z } from 'zod';
@@ -13,7 +14,7 @@ const JudgeSchema = z.object({
     tenantId: z.string().optional()
 });
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = generateUUID();
     const inicio = Date.now();
 
@@ -65,3 +66,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/v1/rag/judge', thresholdMs: 1000 });

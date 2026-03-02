@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
@@ -9,7 +10,7 @@ import { connectLogsDB } from '@/lib/db';
  * SSE Endpoint to track analysis progress.
  * Phase 31: Async Jobs + Real-time Observability.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -112,3 +113,5 @@ export async function GET(
         },
     });
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/analyze/[id]', thresholdMs: 5000 });

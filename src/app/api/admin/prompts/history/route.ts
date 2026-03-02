@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/prompts/history
  * Obtiene el historial global de cambios en prompts (Phase 70 compliance)
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await enforcePermission('prompt', 'read');
@@ -23,3 +24,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_HISTORY', correlacion_id);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/prompts/history', thresholdMs: 1000 });

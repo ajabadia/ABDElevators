@@ -1,4 +1,6 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { queueService, JobType } from '@/services/ops/queue-service';
 import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
@@ -10,11 +12,13 @@ export const dynamic = 'force-dynamic';
  * GET /api/admin/operations/queues
  * Retorna el estado y métricas de todas las colas BullMQ del sistema.
  */
-export async function GET() {
+async function GET_internal () {
     const correlationId = generateUUID();
     const start = Date.now();
 
     try {
+        // Rule #11: Multi-tenant Harmony - Secure access via Guardian
+        await enforcePermission('technical:ops', 'read');
         const jobTypes: JobType[] = [
             'PDF_ANALYSIS',
             'REPORT_GENERATION',
@@ -81,3 +85,5 @@ export async function GET() {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/operations/queues', thresholdMs: 1000 });

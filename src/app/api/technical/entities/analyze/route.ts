@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
@@ -7,8 +8,7 @@ import { EntitySchema, GenericCaseSchema, IndustryType } from '@/lib/schemas';
 import { mapEntityToCase } from '@/lib/mappers';
 import { TechnicalEntityService } from '@/services/core/TechnicalEntityService';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * POST /api/technical/entities/analyze
@@ -185,4 +185,4 @@ export const POST = withPerformanceSLA(async (req) => {
     } catch (error) {
         return handleApiError(error, 'API_TECHNICAL_ENTITIES_ANALYZE_POST', correlationId);
     }
-}, { p95: 10000, max: 30000 });
+}, { endpoint: 'POST /api/technical/entities/analyze', thresholdMs: 10000 });

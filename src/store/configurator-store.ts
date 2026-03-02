@@ -1,3 +1,5 @@
+
+
 import { create } from 'zustand';
 import { ChecklistConfig, ChecklistCategory, ChecklistItem } from '@/lib/types';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -70,7 +72,8 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
     setIsSaving: (isSaving) => set({ isSaving }),
 
     addCategory: () => {
-        const newId = crypto.randomUUID();
+        const newId = globalThis.crypto.randomUUID();
+
         const { config } = get();
         const newCategory: ChecklistCategory = {
             id: newId,
@@ -133,7 +136,8 @@ export const useConfiguratorStore = create<ConfiguratorState>((set, get) => ({
         if (!selectedCategoryId) return;
 
         const newItem: ChecklistItem = {
-            id: crypto.randomUUID(),
+            id: globalThis.crypto.randomUUID(),
+
             label: 'Nuevo punto de validación',
             description: 'Nuevo punto de validación',
             category: get().getCurrentCategory()?.name || 'General',

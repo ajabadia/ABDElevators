@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
 import { auth } from '@/lib/auth';
@@ -13,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
  * API to execute state transitions on entities/cases.
  * Phase 7.2: Multilevel Workflow Engine.
  */
-export async function POST(
+async function POST_internal (
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -49,3 +50,5 @@ export async function POST(
         return handleApiError(error, 'WORKFLOW_TRANSITION_API', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/transition', thresholdMs: 1000 });

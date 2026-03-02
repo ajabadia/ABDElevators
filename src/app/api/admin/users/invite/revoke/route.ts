@@ -1,16 +1,17 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const RevokeSchema = z.object({
     token: z.string().min(1),
 });
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -38,3 +39,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_INVITATIONS_REVOKE', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/invite/revoke', thresholdMs: 1000 });

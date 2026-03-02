@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { PredictiveEngine } from "@/core/engine/PredictiveEngine";
 import { logEvento } from "@/lib/logger";
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
-import crypto from 'crypto';
 
 /**
  * GET /api/core/predictive/maintenance
@@ -28,4 +28,4 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_PREDICTIVE_MAINTENANCE_GET', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'GET /api/core/predictive/maintenance', thresholdMs: 2000 });

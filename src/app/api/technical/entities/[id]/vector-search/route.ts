@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { auth } from '@/lib/auth';
@@ -12,7 +14,7 @@ import { ObjectId } from 'mongodb';
  * SLA: P95 < 200ms
  * Golden Rule #3: AppError for all errors.
  */
-export async function GET(
+async function GET_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -82,3 +84,5 @@ export async function GET(
         }
     });
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/vector-search', thresholdMs: 1000 });

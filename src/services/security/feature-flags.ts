@@ -29,7 +29,7 @@ export const FeatureFlags = {
     /**
      * Check if a feature is enabled
      */
-    isEnabled: (flag: FeatureFlag, context?: any): boolean => {
+    isEnabled: (flag: FeatureFlag, _context?: Record<string, unknown>): boolean => {
         const envKey = `FEATURE_${flag}`;
         if (process.env[envKey] === 'true') return true;
         if (process.env[envKey] === 'false') return false;

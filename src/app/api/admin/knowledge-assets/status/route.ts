@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
@@ -5,7 +7,6 @@ import { connectDB } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
 
 const StatusUpdateSchema = z.object({
     documentId: z.string(),
@@ -17,7 +18,7 @@ const StatusUpdateSchema = z.object({
  * Updates the status of a document and its associated chunks.
  * SLA: P95 < 1000ms
  */
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -133,3 +134,5 @@ export async function PATCH(req: NextRequest) {
         }
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/knowledge-assets/status', thresholdMs: 1000 });

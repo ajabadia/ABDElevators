@@ -3,7 +3,6 @@ import { IAuditRepository } from '../../domain/repositories/IAuditRepository';
 import { IngestAnalyzer } from '@/services/ingest/IngestAnalyzer';
 import { IngestIndexer } from '@/services/ingest/IngestIndexer';
 import { AppError } from '@/lib/errors';
-import crypto from 'crypto';
 import { PermissionService } from '../security/PermissionService';
 import { AppPermission } from '@/types/permissions';
 import { TenantTier } from '@/types/tiers';

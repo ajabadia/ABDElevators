@@ -12,7 +12,7 @@ export class IngestStorageService {
     /**
      * Obtiene el buffer del archivo, priorizando GridFS y cayendo a Cloudinary.
      */
-    static async getBuffer(asset: any, correlationId: string): Promise<Buffer> {
+    static async getBuffer(asset: { blobId?: string, filename: string, tenantId: string, cloudinaryUrl?: string, cloudinaryPublicId?: string, cloudinary_public_id?: string }, correlationId: string): Promise<Buffer> {
         // 1. Intentar GridFS (Pipeline v2)
         if (asset.blobId) {
             try {
@@ -29,29 +29,33 @@ export class IngestStorageService {
     /**
      * Sube a Cloudinary de forma asíncrona.
      */
-    static async uploadToCloudinary(buffer: Buffer, asset: any, correlationId: string) {
+    static async uploadToCloudinary(buffer: Buffer, asset: { filename: string, tenantId: string }, correlationId: string) {
         try {
             const result = await uploadPDFToCloudinary(buffer, asset.filename, asset.tenantId);
             return { success: true, url: result.secureUrl, publicId: result.publicId };
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'INGEST_STORAGE_SERVICE',
                 action: 'CLOUDFINARY_UPLOAD_FAILED',
-                message: error.message,
+                message: err.message,
                 correlationId,
                 tenantId: asset.tenantId
             });
-            return { success: false, error: error.message };
+            return { success: false, error: err.message };
         }
     }
 
-    private static async fetchFromCloudinary(asset: any, correlationId: string): Promise<Buffer> {
+    private static async fetchFromCloudinary(asset: { cloudinaryUrl?: string, cloudinaryPublicId?: string, cloudinary_public_id?: string }, correlationId: string): Promise<Buffer> {
         if (!asset.cloudinaryUrl) {
             throw new AppError('EXTERNAL_SERVICE_ERROR', 503, 'Asset sin URL de Cloudinary');
         }
 
-        const signedUrl = getSignedUrl(asset.cloudinaryPublicId || asset.cloudinary_public_id, 'raw');
+        const signedUrl = getSignedUrl((asset.cloudinaryPublicId || asset.cloudinary_public_id) || '', 'raw');
+        if (!signedUrl) {
+            throw new AppError('EXTERNAL_SERVICE_ERROR', 503, 'No se pudo generar URL firmada de Cloudinary');
+        }
         const response = await fetch(signedUrl);
 
         if (!response.ok) {

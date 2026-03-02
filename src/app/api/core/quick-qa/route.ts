@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { callGeminiStream } from '@/services/llm/llm-service';
@@ -7,8 +8,7 @@ import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { PromptService } from '@/services/llm/prompt-service';
 import { SSEHelper } from '@/lib/sse-helper';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 const QuickQASchema = z.object({
     snippet: z.string().min(1).max(50000), // Max 50KB/tokens for ephemeral
@@ -99,4 +99,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_QUICK_QA_POST', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'POST /api/core/quick-qa', thresholdMs: 2000 });

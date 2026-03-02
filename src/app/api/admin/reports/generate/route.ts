@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AppError } from '@/lib/errors';
@@ -21,7 +22,7 @@ const GenerateReportSchema = z.object({
     dataOverride: z.record(z.string(), z.any()).optional()
 });
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = `gen-rep-${Date.now()}`;
     const start = Date.now();
 
@@ -144,3 +145,5 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/reports/generate', thresholdMs: 1000 });

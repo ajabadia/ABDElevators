@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -9,7 +11,7 @@ import { logEvento } from '@/lib/logger';
  * Inicializa la oferta comercial (Standard, Pro, Premium, Ultra)
  * Solo ejecutable por SUPER_ADMIN.
  */
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const correlacion_id = crypto.randomUUID();
 
     try {
@@ -40,3 +42,5 @@ export async function POST(req: Request) {
         return handleApiError(error, 'ADMIN_BILLING', correlacion_id);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/billing/seed-plans', thresholdMs: 1000 });

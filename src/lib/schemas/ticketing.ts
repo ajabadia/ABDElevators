@@ -9,7 +9,7 @@ export const TicketCategorySchema = z.enum(['TECHNICAL', 'BILLING', 'SECURITY', 
 export const TicketStatusSchema = z.enum(['OPEN', 'IN_PROGRESS', 'WAITING_USER', 'ESCALATED', 'RESOLVED', 'CLOSED']);
 
 export const TicketSchema = z.object({
-    _id: z.any().optional(),
+    _id: z.unknown().optional(),
     ticketNumber: z.string(), // TKT-2026-XXXXX
     tenantId: z.string(),
     createdBy: z.string(), // User ID

@@ -44,7 +44,7 @@ export class WorkshopService {
         orderDescription: string,
         tenantId: string,
         correlationId: string,
-        sessionUser: any
+        session: TenantSession
     ) {
         const source = 'WORKSHOP_SERVICE';
         const action = 'ANALYZE_ORDER';
@@ -80,7 +80,7 @@ export class WorkshopService {
                 throw new AppError('LLM_INVALID_RESPONSE', 500, 'Failed to parse JSON from LLM response');
             }
 
-            const rawAnalysis = JSON.parse(jsonMatch[0]);
+            const rawAnalysis: unknown = JSON.parse(jsonMatch[0]);
             const analysis = WorkshopAnalysisSchema.parse(rawAnalysis);
 
             // 2. RAG Enrichment (Find Manuals for each part)
@@ -105,8 +105,8 @@ export class WorkshopService {
                         score: r.score ?? 0
                     }));
 
-                } catch (err) {
-                    console.warn(`[WorkshopService] RAG failed for part ${part.partName}`, err);
+                } catch (err: unknown) {
+                    console.warn(`[WorkshopService] RAG failed for part ${part.partName}`, err instanceof Error ? err.message : err);
                     // Continue without manuals rather than failing the whole process
                 }
 
@@ -124,15 +124,7 @@ export class WorkshopService {
             };
 
             // 3. Persist to Entity
-            const collection = await getTenantCollection('entities', { user: sessionUser }); // Mock session for now if needed, or pass full session
-            // We assume sessionUser passed has necessary context for getTenantCollection, 
-            // or we construct a minimal session object if getTenantCollection requires it.
-            // Actually getTenantCollection expects a NextAuth session object roughly.
-            // If sessionUser is just the user struct, we might need to wrap it.
-            // But let's assume sessionUser IS the session object or compatible.
-
-            // To be safe and compliant with getTenantCollection signature in `db-tenant.ts`:
-            // It expects `session: any`. We should ensure the caller passes the full session.
+            const collection = await getTenantCollection('entities', session);
 
             await collection.updateOne(
                 { _id: new ObjectId(entityId) },
@@ -159,15 +151,18 @@ export class WorkshopService {
 
             return finalAnalysis;
 
-        } catch (error) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            const stack = error instanceof Error ? error.stack : undefined;
+
             await logEvento({
                 level: 'ERROR',
                 source,
                 action: 'ANALYZE_ERROR',
-                message: `Error analyzing workshop order: ${error instanceof Error ? error.message : 'Unknown'}`,
+                message: `Error analyzing workshop order: ${message}`,
                 tenantId,
                 correlationId,
-                details: { error: error instanceof Error ? error.stack : error }
+                details: { error: stack || message }
             });
             throw error;
         }

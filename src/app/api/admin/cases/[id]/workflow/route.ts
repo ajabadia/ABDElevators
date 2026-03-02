@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -6,7 +8,6 @@ import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { WorkflowService } from '@/services/ops/WorkflowService';
 import { WorkflowLLMNodeService } from '@/services/ops/WorkflowLLMNodeService';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';
 
@@ -14,7 +15,7 @@ import { z } from 'zod';
  * GET /api/admin/cases/[id]/workflow
  * Obtiene el estado actual, definición y análisis IA del caso.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -55,7 +56,7 @@ export async function GET(
  * PATCH /api/admin/cases/[id]/workflow
  * Ejecuta el análisis IA (LLM Node) para el estado actual.
  */
-export async function PATCH(
+async function PATCH_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -109,7 +110,7 @@ export async function PATCH(
  * POST /api/admin/cases/[id]/workflow
  * Ejecuta una transición de estado.
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -142,3 +143,9 @@ export async function POST(
     }
 }
 
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/cases/[id]/workflow', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/cases/[id]/workflow', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/cases/[id]/workflow', thresholdMs: 1000 });

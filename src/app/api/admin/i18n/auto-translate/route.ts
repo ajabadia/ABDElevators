@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/i18n/auto-translate
  * Genera traducciones usando IA (Gemini).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -33,3 +34,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_I18N_AUTO_TRANSLATE_POST', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/i18n/auto-translate', thresholdMs: 300 });

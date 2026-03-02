@@ -7,7 +7,7 @@ export class TenantQuotaService {
      */
     static async hasStorageQuota(tenantId: string, bytesToUpload: number): Promise<boolean> {
         const config = await TenantConfigService.getConfig(tenantId);
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
         const collection = await getTenantCollection('usage_logs', session);
 
         const usage = await collection.aggregate([

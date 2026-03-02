@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const ReassignSchema = z.object({
     assignedTo: z.string().min(1, 'Se requiere un destinatario'),
@@ -37,4 +37,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
     } catch (error) {
         return handleApiError(error, 'API_TICKET_REASSIGN', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'API /api/support/tickets/[id]/reassign', thresholdMs: 500 });

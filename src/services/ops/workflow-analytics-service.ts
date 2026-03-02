@@ -2,6 +2,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError } from '@/lib/errors';
 import { NotificationService } from '@/services/core/NotificationService';
+import { TenantSession } from '@/lib/db-tenant';
 
 export interface WorkflowExecutionEvent {
     _id?: ObjectId;
@@ -14,7 +15,7 @@ export interface WorkflowExecutionEvent {
     timestamp: Date;
     correlationId: string;
     error?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 /**
@@ -28,7 +29,7 @@ export class WorkflowAnalyticsService {
      */
     static async recordEvent(event: Omit<WorkflowExecutionEvent, 'timestamp'>) {
         try {
-            const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId: event.tenantId, role: 'SYSTEM' } } as any);
+            const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId: event.tenantId, role: 'SYSTEM' } } as unknown as TenantSession);
             await collection.insertOne({
                 ...event,
                 timestamp: new Date()
@@ -47,7 +48,7 @@ export class WorkflowAnalyticsService {
      * Detects anomalies based on error rates and latency spikes.
      */
     static async detectAnomalies(workflowId: string, tenantId: string, nodeId?: string) {
-        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as TenantSession);
         const windowSize = 50; // Last 50 executions
         const errorThreshold = 0.15; // 15% error rate spike
 
@@ -81,21 +82,21 @@ export class WorkflowAnalyticsService {
         // 2. Check for Latency Spikes (Comparing with baseline)
         if (nodeId) {
             const stats = await this.getWorkflowStats(workflowId, tenantId, 7);
-            const nodeStat = stats.nodes.find((n: any) => n.nodeId === nodeId);
+            const nodeStat = (stats.nodes as unknown as { nodeId: string, avgDuration: number }[]).find((n) => n.nodeId === nodeId);
 
             if (nodeStat && recentEvents.length > 0) {
                 const recentAvgDuration = recentEvents.reduce((acc: number, curr: WorkflowExecutionEvent) => acc + curr.durationMs, 0) / recentEvents.length;
                 const baselineAvg = nodeStat.avgDuration;
 
                 // Threshold: 2x baseline AND > 500ms (to avoid alerts on tiny values)
-                if (recentAvgDuration > baselineAvg * 2 && recentAvgDuration > 500) {
+                if ((recentAvgDuration > (nodeStat.avgDuration * 2)) && recentAvgDuration > 500) {
                     await NotificationService.notify({
                         tenantId,
                         type: 'RISK_ALERT',
                         level: 'WARNING',
                         title: 'Anomaly Detected: Latency Spike',
-                        message: `Node ${nodeId} in workflow ${workflowId} is performing slower than usual (${Math.round(recentAvgDuration)}ms vs baseline ${Math.round(baselineAvg)}ms).`,
-                        metadata: { workflowId, nodeId, baselineAvg, recentAvgDuration, type: 'LATENCY_SPIKE' }
+                        message: `Node ${nodeId} in workflow ${workflowId} is performing slower than usual (${Math.round(recentAvgDuration)}ms vs baseline ${Math.round(nodeStat.avgDuration)}ms).`,
+                        metadata: { workflowId, nodeId, baselineAvg: nodeStat.avgDuration, recentAvgDuration, type: 'LATENCY_SPIKE' }
                     });
                 }
             }
@@ -106,7 +107,7 @@ export class WorkflowAnalyticsService {
      * Gets aggregated heatmap and bottleneck data for a specific workflow.
      */
     static async getWorkflowStats(workflowId: string, tenantId: string, timeRangeDays: number = 7) {
-        const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        const collection = await getTenantCollection('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as TenantSession);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - timeRangeDays);
 
@@ -144,10 +145,10 @@ export class WorkflowAnalyticsService {
             }
         ];
 
-        const stats = await collection.aggregate<any>(pipeline);
+        const stats = await collection.aggregate<Record<string, unknown>>(pipeline);
 
         // Calculate global KPIs
-        const kpis = await collection.aggregate<any>([
+        const kpis = await collection.aggregate<Record<string, unknown>>([
             {
                 $match: {
                     workflowId,
@@ -177,7 +178,7 @@ export class WorkflowAnalyticsService {
      * Gets detailed execution logs for a specific workflow.
      */
     static async getWorkflowLogs(workflowId: string, tenantId: string, limit: number = 50) {
-        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any);
+        const collection = await getTenantCollection<WorkflowExecutionEvent>('workflow_analytics', { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as TenantSession);
 
         return await collection.find({
             workflowId,

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TenantService } from '@/services/tenant/tenant-service';
@@ -5,7 +7,6 @@ import { logEvento } from '@/lib/logger';
 import { handleApiError, AppError } from '@/lib/errors';
 import { getMongoClient } from '@/lib/db';
 import { UserRole } from '@/types/roles';
-import crypto from 'crypto';
 
 const API_SOURCE = 'API_ADMIN_TENANTS';
 const SLA_THRESHOLD = 500;
@@ -14,7 +15,7 @@ const SLA_THRESHOLD = 500;
  * GET /api/admin/tenants
  * Lista todos los tenants a los que el usuario tiene acceso
  */
-export async function GET() {
+async function GET_internal () {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -65,7 +66,7 @@ export async function GET() {
  * POST /api/admin/tenants
  * Crea o actualiza la configuración de un tenant
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -126,3 +127,7 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/tenants', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/tenants', thresholdMs: 1000 });

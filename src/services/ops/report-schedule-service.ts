@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import cronParser from 'cron-parser';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { ReportSchedule, CreateReportScheduleSchema, UpdateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -14,12 +14,12 @@ export class ReportScheduleService {
     /**
      * Creates a new report schedule.
      */
-    static async createSchedule(session: any, data: any): Promise<string> {
+    static async createSchedule(session: TenantSession, data: Record<string, unknown>): Promise<string> {
         const validated = CreateReportScheduleSchema.parse(data);
 
         // Validate cron expression
         try {
-            (cronParser as any).parseExpression(validated.cronExpression);
+            (cronParser as unknown as { parseExpression: (s: string) => void }).parseExpression(validated.cronExpression);
         } catch (err) {
             throw new AppError('VALIDATION_ERROR', 400, 'Invalid cron expression');
         }
@@ -27,30 +27,30 @@ export class ReportScheduleService {
         const collection = await getTenantCollection('report_schedules', session);
 
         // Calculate next run
-        const interval = (cronParser as any).parseExpression(validated.cronExpression);
+        const interval = (cronParser as unknown as { parseExpression: (s: string) => { next: () => { toDate: () => Date } } }).parseExpression(validated.cronExpression);
         const nextRunAt = interval.next().toDate();
 
         const schedule: ReportSchedule = {
             ...validated,
-            tenantId: session.user.tenantId,
-            createdBy: session.user.id,
+            tenantId: session.user?.tenantId || '',
+            createdBy: session.user?.id || 'system',
             nextRunAt,
             createdAt: new Date(),
             updatedAt: new Date(),
             enabled: true
         };
 
-        const result: any = await collection.insertOne(schedule);
+        const result = await collection.insertOne(schedule as any);
 
         await logEvento({
             level: 'INFO',
             source: 'API_ADMIN',
             action: 'CREATE',
             message: `Schedule created: ${validated.name}`,
-            tenantId: session.user.tenantId,
+            tenantId: session.user?.tenantId || 'system',
             correlationId: `create-sched-${Date.now()}`,
             details: { scheduleId: result.insertedId.toString() }
-        } as any);
+        });
 
         return result.insertedId.toString();
     }
@@ -58,7 +58,7 @@ export class ReportScheduleService {
     /**
      * Lists schedules for the current tenant.
      */
-    static async listSchedules(session: any): Promise<ReportSchedule[]> {
+    static async listSchedules(session: TenantSession): Promise<ReportSchedule[]> {
         const collection = await getTenantCollection<ReportSchedule>('report_schedules', session);
         // SecureCollection.find returns Promise<T[]> directly
         return collection.find({});
@@ -144,7 +144,7 @@ export class ReportScheduleService {
             const failed = results.filter(r => r.status === 'rejected').length;
 
             // Update Schedule (nextRunAt)
-            const interval = (cronParser as any).parseExpression(schedule.cronExpression);
+            const interval = (cronParser as unknown as { parseExpression: (s: string) => { next: () => { toDate: () => Date } } }).parseExpression(schedule.cronExpression);
             const nextRunAt = interval.next().toDate();
 
             // Update via raw collection to avoid session requirement here if running in background
@@ -174,16 +174,17 @@ export class ReportScheduleService {
                 details: { nextRunAt }
             });
 
-        } catch (error: any) {
-            console.error(`Failed to execute schedule ${schedule._id}:`, error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error(`Failed to execute schedule ${schedule._id}:`, err);
             await logEvento({
                 level: 'ERROR',
                 source: 'REPORT_SCHEDULER',
                 action: 'EXECUTE_FAILED',
-                message: error.message || 'Unknown error',
+                message: err.message || 'Unknown error',
                 tenantId: schedule.tenantId,
                 correlationId,
-                details: { stack: error.stack }
+                details: { stack: err.stack }
             });
         }
     }

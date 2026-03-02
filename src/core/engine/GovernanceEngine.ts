@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { GovernancePolicy, AIDecisionAudit } from '@/types/governance';

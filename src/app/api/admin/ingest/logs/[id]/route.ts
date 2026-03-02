@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
@@ -7,7 +8,7 @@ import { AppError } from '@/lib/errors';
  * GET /api/admin/ingest/logs/[id]
  * Polls for the latest ingestion logs for a given correlationId.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -43,3 +44,5 @@ export async function GET(
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ingest/logs/[id]', thresholdMs: 10000 });

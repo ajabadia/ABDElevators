@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/tenants/[tenantId]
  * Obtiene la configuración de un tenant específico
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ tenantId: string }> }
 ) {
@@ -59,3 +60,5 @@ export async function GET(
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/tenants/[tenantId]', thresholdMs: 1000 });

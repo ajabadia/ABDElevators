@@ -1,12 +1,13 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { TranslationService } from '@/services/core/translation-service';
 import { requireRole } from '@/lib/auth';
 import { UserRole } from '@/types/roles';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     await logEvento({
         level: 'INFO',
@@ -39,3 +40,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_I18N_SYNC_PUBLIC', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/i18n-sync', thresholdMs: 300 });

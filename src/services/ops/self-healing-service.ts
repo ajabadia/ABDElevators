@@ -70,12 +70,13 @@ export class SelfHealingService {
                 });
 
                 updatedCount++;
-            } catch (error: any) {
+            } catch (error: unknown) {
+                const err = error as Error;
                 await logEvento({
                     level: 'ERROR',
                     source: 'SELF_HEALING',
                     action: 'ASSET_AUDIT_FAILED',
-                    message: `Failed to process asset ${asset._id}: ${error.message}`,
+                    message: `Failed to process asset ${asset._id}: ${err.message}`,
                     correlationId,
                     details: { assetId: asset._id }
                 });

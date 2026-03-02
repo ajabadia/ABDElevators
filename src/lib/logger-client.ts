@@ -1,5 +1,6 @@
 /**
  * Client-side logger utility.
+
  * Used by "use client" components to log events without importing server-side MongoDB logic.
  */
 
@@ -32,7 +33,8 @@ export async function logClientEvent(entry: ClientLogEntry): Promise<void> {
             },
             body: JSON.stringify({
                 ...entry,
-                correlationId: entry.correlationId || crypto.randomUUID()
+                correlationId: entry.correlationId || globalThis.crypto.randomUUID()
+
             }),
         });
     } catch (error) {

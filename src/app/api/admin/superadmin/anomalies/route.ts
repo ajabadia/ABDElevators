@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UserRole } from '@/types/roles';
 import { AnomalyDetectionService } from '@/services/ops/AnomalyDetectionService';
-import crypto from 'crypto';
 
 /**
  * 🛰️ Global Anomalies API (Phase 160.3)
  * Provides SuperAdmins with real-time anomaly detection results.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -40,3 +41,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_SUPERADMIN_ANOMALIES', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/superadmin/anomalies', thresholdMs: 1000 });

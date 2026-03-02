@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse, NextRequest } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { BackupService } from '@/services/ops/backup-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * GET /api/admin/compliance/backup
  * Crea y descarga paquete de conocimiento (Phase 70 compliance)
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('compliance', 'manage');
@@ -35,3 +36,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_COMPLIANCE_BACKUP', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/compliance/backup', thresholdMs: 1000 });

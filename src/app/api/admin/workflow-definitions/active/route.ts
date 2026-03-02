@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * API para obtener la definición de workflow activa.
  * Fase 7.2: Motor de Workflows Multinivel.
  */
-export async function GET(request: NextRequest) {
+async function GET_internal (request: NextRequest) {
     const correlationId = crypto.randomUUID();
     const { searchParams } = new URL(request.url);
     const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
@@ -34,3 +35,5 @@ export async function GET(request: NextRequest) {
         return handleApiError(error, 'API_GET_ACTIVE_WORKFLOW', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/workflow-definitions/active', thresholdMs: 1000 });

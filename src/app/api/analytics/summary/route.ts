@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AnalyticsService } from '@/core/services/AnalyticsService';
@@ -5,7 +6,7 @@ import { UsageService } from '@/services/ops/usage-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const correlationId = uuidv4();
     try {
         const session = await auth();
@@ -34,3 +35,5 @@ export async function GET(request: Request) {
         return handleApiError(error, 'API_ANALYTICS_SUMMARY', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/analytics/summary', thresholdMs: 1000 });

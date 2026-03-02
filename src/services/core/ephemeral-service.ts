@@ -1,7 +1,7 @@
+import crypto from 'crypto';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { TenantConfigSchema, UserSchema } from '@/lib/schemas';
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
 
 export class EphemeralTenantService {
 

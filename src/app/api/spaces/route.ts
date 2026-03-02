@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SpaceService } from '@/services/tenant/space-service';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
-import crypto from 'crypto';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -18,7 +19,7 @@ const QuerySchema = z.object({
  * [PHASE 125.2] Get Accessible Spaces for current user
  * SLA: P95 < 300ms
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -91,3 +92,5 @@ export async function GET(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/spaces', thresholdMs: 1000 });

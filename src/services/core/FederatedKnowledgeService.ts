@@ -1,8 +1,8 @@
+import crypto from 'crypto';
 import { FederatedPattern, FederatedPatternSchema, IndustryType } from '@/lib/schemas';
 import { connectDB } from '@/lib/db';
 import { generateEmbedding } from '@/services/llm/llm-service';
 import { ApplicationLogSchema } from '@/lib/schemas';
-import crypto from 'crypto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AI_MODEL_IDS } from '@abd/platform-core';
 import { ObjectId } from 'mongodb';
@@ -96,8 +96,9 @@ export class FederatedKnowledgeService {
 
             return validated;
 
-        } catch (error) {
-            console.error("Error extracting federated pattern:", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("Error extracting federated pattern:", errorMessage);
             return null;
         }
     }
@@ -138,8 +139,9 @@ export class FederatedKnowledgeService {
             if (results.length > 0) {
                 return results as unknown as FederatedPattern[];
             }
-        } catch (error) {
-            console.warn("[Federated] Vector search failed or index missing, falling back to keyword search.", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.warn("[Federated] Vector search failed or index missing, falling back to keyword search.", errorMessage);
         }
 
         // 3. Fallback: Keyword Search (regex on problemVector or keywords)
@@ -176,8 +178,9 @@ export class FederatedKnowledgeService {
             );
 
             return result.modifiedCount > 0;
-        } catch (error) {
-            console.error("[Federated] Validation error:", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[Federated] Validation error:", errorMessage);
             return false;
         }
     }

@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { ExportService } from "@/services/ops/export-service";
@@ -5,7 +6,7 @@ import { AppError } from "@/lib/errors";
 import { ExportType } from "@/lib/schemas/export";
 import { logEvento } from "@/lib/logger";
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const session = await auth();
     if (!session) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -72,3 +73,5 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/ops/export', thresholdMs: 1000 });

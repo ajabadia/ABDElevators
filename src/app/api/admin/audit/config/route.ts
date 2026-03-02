@@ -1,8 +1,9 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
@@ -11,7 +12,7 @@ const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
  * GET /api/admin/audit/config
  * Recupera el historial de auditoría de configuración de tenants (Phase 70 compliance).
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:config', 'read');
@@ -54,3 +55,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, API_SOURCE, correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/audit/config', thresholdMs: 2000 });

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { User } from '@/lib/schemas';
@@ -5,7 +7,6 @@ import { AuditService } from '@/services/admin/AuditService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const PreferencesUpdateSchema = z.object({
     onboarding: z.object({
@@ -19,7 +20,7 @@ const PreferencesUpdateSchema = z.object({
     language: z.string().optional()
 });
 
-export async function GET() {
+async function GET_internal () {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('user:profile', 'read');
@@ -38,7 +39,7 @@ export async function GET() {
     }
 }
 
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('user:profile', 'manage');
@@ -91,3 +92,7 @@ export async function POST(req: Request) {
         return handleApiError(error, 'API_USER_PREFERENCES_POST', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/user/preferences', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/user/preferences', thresholdMs: 1000 });

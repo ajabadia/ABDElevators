@@ -9,7 +9,7 @@ export const PromptTestSchema = z.object({
     promptId: z.string().optional(),
     template: z.string().min(1),
     templateB: z.string().optional(), // Para A/B testing
-    variables: z.record(z.string(), z.any()),
+    variables: z.record(z.string(), z.unknown()),
     tenantId: z.string(),
     industry: z.string(),
     model: z.enum([AI_MODEL_IDS.GEMINI_2_5_FLASH, AI_MODEL_IDS.GEMINI_2_5_PRO, AI_MODEL_IDS.GEMINI_3_PRO_PREVIEW]).default(AI_MODEL_IDS.GEMINI_2_5_FLASH),
@@ -75,17 +75,18 @@ export class PromptTesterService {
                 timestamp: new Date().toISOString()
             };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'PROMPT_TESTER',
                 action: 'SIMULATION_ERROR',
-                message: `Error en simulación: ${error.message}`,
+                message: `Error en simulación: ${err.message}`,
                 correlationId,
                 tenantId,
-                stack: error.stack
+                stack: err.stack
             });
-            throw new AppError('INTERNAL_ERROR', 500, error.message);
+            throw new AppError('INTERNAL_ERROR', 500, err.message);
         }
     }
 

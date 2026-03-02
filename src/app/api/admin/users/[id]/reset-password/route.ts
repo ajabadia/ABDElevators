@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { auth } from '@/lib/auth';
@@ -5,14 +7,13 @@ import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
 import { AppError, NotFoundError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/usuarios/[id]/reset-password
  * Resetea la contraseña de un usuario (solo ADMIN)
  * SLA: P95 < 1000ms
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -91,3 +92,5 @@ export async function POST(
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/[id]/reset-password', thresholdMs: 1000 });

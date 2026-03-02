@@ -15,7 +15,7 @@ export const AgentState = Annotation.Root({
     /**
      * Historial de mensajes de la conversación / traza
      */
-    messages: Annotation<any[]>({
+    messages: Annotation<Record<string, any>[]>({
         reducer: (x, y) => x.concat(y),
     }),
 
@@ -46,7 +46,7 @@ export const AgentState = Annotation.Root({
     /**
      * Hallazgos específicos (modelos, riesgos, etc)
      */
-    findings: Annotation<any[]>({
+    findings: Annotation<Record<string, unknown>[]>({
         reducer: (x, y) => x.concat(y),
         default: () => [],
     }),
@@ -95,7 +95,7 @@ export const AgentState = Annotation.Root({
     /**
      * Insights federados (Vision 2027)
      */
-    federated_insights: Annotation<any[]>({
+    federated_insights: Annotation<Record<string, unknown>[]>({
         reducer: (x, y) => x.concat(y),
         default: () => [],
     }),
@@ -110,12 +110,12 @@ export type AgentStateType = typeof AgentState.State;
 async function extractionNode(state: AgentStateType) {
     const { tenantId, correlationId: correlacion_id } = state;
     const lastMessage = state.messages[state.messages.length - 1];
-    const text = typeof lastMessage === 'string' ? lastMessage : lastMessage.content;
+    const text = typeof lastMessage === 'string' ? lastMessage : (lastMessage as any).content;
 
     const models = await extractModelsWithGemini(text, tenantId!, correlacion_id!);
 
     return {
-        findings: models.map((m: any) => ({ ...m, source: 'extraction' })),
+        findings: models.map((m: Record<string, any>) => ({ ...m, source: 'extraction' })),
         messages: [{ role: 'assistant', content: `He detectado los siguientes componentes: ${models.map((m: any) => m.model).join(', ')}` }]
     };
 }
@@ -181,11 +181,11 @@ async function riskAnalysisNode(state: AgentStateType) {
     try {
         const parsed = JSON.parse(result.match(/\{[\s\S]*\}/)?.[0] || '{}');
         return {
-            findings: (parsed.riesgos || []).map((r: any) => ({ ...r, source: 'risk_analysis' })),
+            findings: (parsed.riesgos || []).map((r: Record<string, any>) => ({ ...r, source: 'risk_analysis' })),
             confidence_score: parsed.confidence || 0.5,
             messages: [{ role: 'assistant', content: `Análisis de riesgos completado. Confianza: ${parsed.confidence}` }]
         };
-    } catch (e) {
+    } catch (e: unknown) {
         return {
             messages: [{ role: 'assistant', content: "Error procesando el análisis de riesgos." }]
         };

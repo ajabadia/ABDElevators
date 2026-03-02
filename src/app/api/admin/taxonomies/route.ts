@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { TaxonomyService } from '@/services/core/taxonomy-service';
 import { AppError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/taxonomias
  * Obtiene las taxonomías para el tenant e industria del usuario.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/taxonomias
  * Crea una nueva taxonomía.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const session = await auth();
@@ -54,3 +55,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/taxonomies', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/taxonomies', thresholdMs: 1000 });

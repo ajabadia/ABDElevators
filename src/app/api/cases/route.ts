@@ -1,16 +1,17 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getCaseCollection } from '@/lib/db-tenant';
 import { GenericCaseSchema } from '@/lib/schemas';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * GET /api/casos
  * Lista casos del tenant actual.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
  * POST /api/casos
  * Crea un nuevo caso genérico.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
 
     try {
@@ -64,3 +65,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/cases', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cases', thresholdMs: 1000 });

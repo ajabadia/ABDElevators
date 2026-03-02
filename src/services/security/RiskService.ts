@@ -49,14 +49,15 @@ export class RiskService {
 
             return validatedFindings;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'RISK_SERVICE',
                 action: 'ANALYZE_ERROR',
-                message: `Error analyzing risks: ${error.message}`,
+                message: `Error analyzing risks: ${err.message}`,
                 correlationId,
-                stack: error.stack
+                stack: err.stack
             });
             return []; // Safe fallback
         }

@@ -30,18 +30,19 @@ async function processNextJob() {
 
     isProcessing = true;
 
+    const jobData = job.data as Record<string, any>;
     await logEvento({
         level: 'INFO',
         source: 'SIMPLE_WORKER',
         action: 'JOB_START',
         message: `Processing job: ${job.docId}`,
-        correlationId: job.data.correlationId,
-        tenantId: job.data.tenantId,
+        correlationId: jobData.correlationId,
+        tenantId: jobData.tenantId,
     });
 
     try {
         // Execute the analysis
-        await IngestService.executeAnalysis(job.docId, job.data);
+        await IngestService.executeAnalysis(job.docId, job.data as any);
 
         // Mark as completed
         ingestionQueue.complete(job.docId);
@@ -51,21 +52,22 @@ async function processNextJob() {
             source: 'SIMPLE_WORKER',
             action: 'JOB_COMPLETED',
             message: `Job completed successfully: ${job.docId}`,
-            correlationId: job.data.correlationId,
-            tenantId: job.data.tenantId,
+            correlationId: jobData.correlationId,
+            tenantId: jobData.tenantId,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Mark as failed
-        ingestionQueue.fail(job.docId, error.message);
+        const err = error as Error;
+        ingestionQueue.fail(job.docId, err.message);
 
         await logEvento({
             level: 'ERROR',
             source: 'SIMPLE_WORKER',
             action: 'JOB_FAILED',
-            message: `Job failed: ${job.docId} - ${error.message}`,
-            correlationId: job.data.correlationId,
-            tenantId: job.data.tenantId,
-            stack: error.stack,
+            message: `Job failed: ${job.docId} - ${err.message}`,
+            correlationId: jobData.correlationId,
+            tenantId: jobData.tenantId,
+            stack: err.stack,
         });
     } finally {
         isProcessing = false;

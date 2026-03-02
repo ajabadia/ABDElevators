@@ -1,8 +1,8 @@
+import crypto from 'crypto';
 
 import { MongoClient, ObjectId } from 'mongodb';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import crypto from 'crypto';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 

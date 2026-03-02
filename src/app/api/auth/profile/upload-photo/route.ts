@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadProfilePhoto } from '@/lib/cloudinary';
 import { connectAuthDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/auth/profile/upload-photo
  * Sube una foto de perfil a Cloudinary y devuelve la URL.
  * SLA: P95 < 2000ms
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
@@ -99,3 +100,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/profile/upload-photo', thresholdMs: 1000 });

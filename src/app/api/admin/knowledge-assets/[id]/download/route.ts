@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -5,14 +7,13 @@ import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { AppError, NotFoundError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/download
  * Downloads the original PDF from Cloudinary
  * SLA: P95 < 500ms
  */
-export async function GET(
+async function GET_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -108,3 +109,5 @@ export async function GET(
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/download', thresholdMs: 1000 });

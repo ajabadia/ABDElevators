@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/i18n/[locale]/debug?key=some.key
  * Retorna detalles técnicos de una llave para debugging.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ locale: string }> }
 ) {
@@ -34,3 +35,5 @@ export async function GET(
         return handleApiError(error, 'API_ADMIN_I18N_DEBUG_GET', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n/[locale]/debug', thresholdMs: 300 });

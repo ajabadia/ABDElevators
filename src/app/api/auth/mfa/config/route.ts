@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { MfaService } from '@/services/auth/MfaService';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { EmailService } from '@/services/infra/EmailService';
-import crypto from 'crypto';
 import { z } from 'zod';
 
 /**
  * GET /api/auth/mfa/config
  * Obtiene el estado del MFA para el usuario actual.
  */
-export async function GET() {
+async function GET_internal () {
     try {
         const session = await auth();
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
@@ -35,7 +36,7 @@ export async function GET() {
  * POST /api/auth/mfa/config
  * Inicia el setup (Gerenar QR) o elimina el MFA.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
  * PUT /api/auth/mfa/config
  * Finaliza el setup validando el primer código.
  */
-export async function PUT(req: NextRequest) {
+async function PUT_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user?.id) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
@@ -104,3 +105,9 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/auth/mfa/config', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/mfa/config', thresholdMs: 1000 });
+
+export const PUT = withPerformanceSLA(PUT_internal, { endpoint: 'PUT /api/auth/mfa/config', thresholdMs: 1000 });

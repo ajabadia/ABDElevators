@@ -1,8 +1,9 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
 
@@ -10,7 +11,7 @@ import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
  * API para gestionar una definición de workflow específica.
  * Fase 127: Orquestación Inteligente.
  */
-export async function GET(
+async function GET_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -38,7 +39,7 @@ export async function GET(
     }
 }
 
-export async function PATCH(
+async function PATCH_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -64,3 +65,7 @@ export async function PATCH(
         return handleApiError(error, 'API_ADMIN_WORKFLOW_PATCH', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/workflow-definitions/[id]', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/workflow-definitions/[id]', thresholdMs: 1000 });

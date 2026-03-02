@@ -59,7 +59,8 @@ export async function runShadowCall(
         const duration = Date.now() - start;
         const responseText = result.response.text();
 
-        const usage = (result.response as any).usageMetadata;
+        const response = result.response;
+        const usage = response.usageMetadata;
         if (usage) {
             await UsageService.trackShadowLLM(tenantId, usage.totalTokenCount, modelName, correlationId);
         }
@@ -80,12 +81,13 @@ export async function runShadowCall(
             }
         });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
         await logEvento({
             level: 'WARN',
             source: 'GEMINI_SHADOW',
             action: 'SHADOW_ERROR',
-            message: `Fallo en ejecución sombra ${shadowKey}: ${err.message}`,
+            message: `Fallo en ejecución sombra ${shadowKey}: ${errorMessage}`,
             correlationId,
             tenantId,
             details: { shadowKey, originalKey }

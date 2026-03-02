@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB, connectLogsDB } from '@/lib/db';
@@ -9,7 +10,7 @@ import { ObjectId } from 'mongodb';
  * Retrieves the full execution trace (audit + logs) for an asset.
  * SLA: P95 < 500ms
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -81,3 +82,5 @@ export async function GET(
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/trace', thresholdMs: 1000 });

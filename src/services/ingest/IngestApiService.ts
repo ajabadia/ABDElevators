@@ -1,21 +1,23 @@
-
+import crypto from 'crypto';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
 import { IngestService } from './IngestService';
 import { IngestGuardian, type IngestScope } from './security/GuardianAuthz';
 import { IngestTracer } from './observability/IngestTracer';
-import crypto from 'crypto';
 import { z } from 'zod';
+import { Span } from '@opentelemetry/api';
+import type { Session } from 'next-auth';
+import { IngestOptions } from './types';
 
 /**
  * 🛰️ Ingest API Service
  * Proposito: Orquestar la ingestión desde la capa de API (Auth, Tracing, Logging, Core).
  */
 export class IngestApiService {
-    static async handleEnrichRequest(req: Request, docId: string, session: any) {
+    static async handleEnrichRequest(req: Request, docId: string, session: Session) {
         let correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
-        let rootSpan: any;
+        let rootSpan: Span | undefined;
         const tenantId = session.user.tenantId;
 
         try {
@@ -52,10 +54,10 @@ export class IngestApiService {
             });
 
             const options = {
-                metadata: {} as any,
+                metadata: { type: 'DOCUMENT', version: '1.0' } as IngestOptions['metadata'],
                 tenantId,
                 environment: 'PRODUCTION',
-                userEmail: session.user.email,
+                userEmail: session.user.email as string,
                 ip: ipAddress,
                 userAgent,
                 correlationId,
@@ -69,11 +71,13 @@ export class IngestApiService {
 
             const result = await IngestService.executeAnalysis(docId, options);
 
-            await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
-                syncExecution: true,
-                docId,
-                totalChunks: result?.chunks ?? 0,
-            });
+            if (rootSpan) {
+                await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
+                    syncExecution: true,
+                    docId,
+                    totalChunks: result?.chunks ?? 0,
+                });
+            }
 
             return { success: true, message: 'Enrichment completed.', docId, totalChunks: result?.chunks ?? 0, correlationId };
 
@@ -83,9 +87,9 @@ export class IngestApiService {
         }
     }
 
-    static async handleIngestRequest(req: Request, session: any) {
+    static async handleIngestRequest(req: Request, session: Session) {
         let correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
-        let rootSpan: any;
+        let rootSpan: Span | undefined;
         const tenantId = session.user.tenantId;
 
         try {
@@ -147,11 +151,13 @@ export class IngestApiService {
                 isEnrichment: false
             });
 
-            await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
-                syncExecution: true,
-                docId: prep.docId,
-                totalChunks: result?.chunks ?? 0,
-            });
+            if (rootSpan) {
+                await IngestTracer.endSpanSuccess(rootSpan, { correlationId, tenantId, userId: session.user.id }, {
+                    syncExecution: true,
+                    docId: prep.docId,
+                    totalChunks: result?.chunks ?? 0,
+                });
+            }
 
             return {
                 success: true,
@@ -181,7 +187,7 @@ export class IngestApiService {
         };
     }
 
-    private static validateMetadata(raw: any) {
+    private static validateMetadata(raw: unknown) {
         const Schema = z.object({
             type: z.string().min(1, "Tipo de activo es requerido").default('Documento'),
             version: z.string().min(1, "Versión es requerida").default('1.0'),
@@ -202,7 +208,7 @@ export class IngestApiService {
         return Schema.parse(raw);
     }
 
-    private static extractOptions(formData: FormData, metadata: any, session: any, correlationId: string, ip: string, userAgent: string) {
+    private static extractOptions(formData: FormData, metadata: any, session: Session, correlationId: string, ip: string, userAgent: string) {
         return {
             metadata,
             tenantId: session.user.tenantId,
@@ -221,7 +227,7 @@ export class IngestApiService {
         };
     }
 
-    private static async logRequest(file: File, metadata: any, session: any, correlationId: string, tenantId: string) {
+    private static async logRequest(file: File, metadata: any, session: Session, correlationId: string, tenantId: string) {
         await logEvento({
             level: 'INFO',
             source: 'API_INGEST',

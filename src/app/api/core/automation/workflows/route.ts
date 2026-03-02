@@ -1,11 +1,11 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { logEvento } from "@/lib/logger";
 import { enforcePermission } from "@/lib/guardian-guard";
-import { withPerformanceSLA } from "@/lib/performance-sla";
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { handleApiError } from "@/lib/errors";
 import { MongoAIWorkflowRepository } from "@/core/adapters/persistence/MongoAIWorkflowRepository";
-import crypto from 'crypto';
 
 const workflowRepository = new MongoAIWorkflowRepository();
 
@@ -32,7 +32,7 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_AUTOMATION_WORKFLOWS_GET', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'GET /api/core/automation/workflows', thresholdMs: 2000 });
 
 /**
  * POST /api/core/automation/workflows
@@ -78,4 +78,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error: unknown) {
         return handleApiError(error, 'API_CORE_AUTOMATION_WORKFLOWS_POST', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'POST /api/core/automation/workflows', thresholdMs: 2000 });

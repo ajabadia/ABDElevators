@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { UsageService } from '@/services/ops/usage-service';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { PLANS, PlanTier } from '@/lib/plans';
@@ -8,7 +9,6 @@ import { TenantSubscriptionSchema, TenantSubscription } from '@/lib/schemas/bill
 import { logEvento } from '@/lib/logger';
 import { stripe, createCheckoutSession } from '@/lib/stripe';
 import Stripe from 'stripe';
-import crypto from 'crypto';
 import { EmailService } from '@/services/infra/EmailService';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -136,13 +136,14 @@ export class BillingService {
                 default:
                     break;
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'BILLING_SERVICE',
                 action: 'WEBHOOK_PROCESS_ERROR',
                 correlationId,
-                message: error instanceof Error ? error.message : 'Error processing webhook',
+                message: errorMessage,
                 details: { eventType: event.type }
             });
             throw error;
@@ -181,15 +182,17 @@ export class BillingService {
     }
 
     private static async handleInvoicePaid(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
-        const subscriptionId = typeof (invoice as any).subscription === 'string'
-            ? (invoice as any).subscription
-            : (invoice as any).subscription?.id;
+        const inv = invoice as unknown as { subscription: string | { id: string } | null };
+        const subscriptionId = typeof inv.subscription === 'string'
+            ? inv.subscription
+            : inv.subscription?.id;
 
         if (!subscriptionId) return;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const sub = subscription as unknown as { metadata?: Record<string, string>; current_period_end: number };
 
-        const tenantId = (subscription as any).metadata?.tenantId;
+        const tenantId = sub.metadata?.tenantId;
         if (!tenantId) {
             await logEvento({
                 level: 'WARN',
@@ -202,7 +205,7 @@ export class BillingService {
             return;
         }
 
-        const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+        const currentPeriodEnd = new Date(sub.current_period_end * 1000);
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'active',
             'subscription.currentPeriodEnd': currentPeriodEnd,
@@ -211,16 +214,18 @@ export class BillingService {
     }
 
     private static async handleInvoicePaymentFailed(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
-        const subscriptionId = typeof (invoice as any).subscription === 'string'
-            ? (invoice as any).subscription
-            : (invoice as any).subscription?.id;
+        const inv = invoice as unknown as { subscription: string | { id: string } | null; customer: string | { id: string } | null };
+        const subscriptionId = typeof inv.subscription === 'string'
+            ? inv.subscription
+            : inv.subscription?.id;
 
         if (!subscriptionId) return;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const tenantId = (subscription as any).metadata?.tenantId;
+        const sub = subscription as unknown as { metadata?: Record<string, string> };
+        const tenantId = sub.metadata?.tenantId;
         if (!tenantId) {
-            const customerId = typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer as any)?.id || '';
+            const customerId = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id || '';
             await logEvento({
                 level: 'WARN',
                 source: 'BILLING_SERVICE',
@@ -251,16 +256,17 @@ export class BillingService {
                     tenantName: tenant.name || 'Tu Organización',
                     amount: invoice.amount_due / 100,
                     currency: invoice.currency,
-                    attemptCount: (invoice as any).attempt_count || 1,
+                    attemptCount: (invoice as unknown as { attempt_count?: number }).attempt_count || 1,
                 });
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             await logEvento({
                 level: 'ERROR',
                 source: 'BILLING_SERVICE',
                 action: 'PAYMENT_FAILED_LOGIC_ERROR',
                 correlationId,
-                message: `Error in payment failed logic: ${error instanceof Error ? error.message : String(error)}`,
+                message: `Error in payment failed logic: ${errorMessage}`,
                 details: { tenantId }
             });
         }
@@ -283,10 +289,11 @@ export class BillingService {
         const priceId = subscription.items.data[0].price.id;
         const tier = Object.values(PLANS).find(p => p.stripePriceId === priceId)?.tier || 'FREE';
 
+        const sub = subscription as unknown as { current_period_end: number };
         await TenantService.updateConfig(tenantId, {
             'subscription.planSlug': tier,
-            'subscription.status': subscription.status as any,
-            'subscription.currentPeriodEnd': new Date((subscription as any).current_period_end * 1000),
+            'subscription.status': subscription.status as 'active',
+            'subscription.currentPeriodEnd': new Date(sub.current_period_end * 1000),
             'subscription.updatedAt': new Date()
         }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
@@ -336,14 +343,15 @@ export class BillingService {
 
         let limit = 0;
         let usage = 0;
-        const customLimits = ((config as any).customLimits as unknown as TenantConfigCustomLimits) || {};
+        const customLimits = (config as unknown as { customLimits?: TenantConfigCustomLimits }).customLimits || {};
 
         if (metric === 'TOKENS') {
             limit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
             const aggregate = await UsageService.getAggregateUsage(tenantId, new Date(new Date().setDate(1)), new Date());
             usage = (aggregate['LLM_TOKENS'] as number) || 0;
         } else if (metric === 'STORAGE') {
-            limit = customLimits.storage_bytes ?? ((config.storage as any)?.quota_bytes || plan.limits.storage_bytes || 0);
+            const configStorage = config.storage as unknown as { quota_bytes?: number } | undefined;
+            limit = customLimits.storage_bytes ?? (configStorage?.quota_bytes || plan.limits.storage_bytes || 0);
             const aggregate = await UsageService.getAggregateUsage(tenantId, new Date(new Date().setDate(1)), new Date());
             usage = (aggregate['STORAGE_BYTES'] as number) || 0;
         } else {
@@ -458,7 +466,7 @@ export class BillingService {
             creditApplied: credit / 100,
             newPlanCost: debit / 100,
             totalDueNow: invoicePreview.amount_due / 100,
-            currency: (invoicePreview as any).currency.toUpperCase(),
+            currency: (invoicePreview as unknown as { currency: string }).currency.toUpperCase(),
             nextBillingDate: new Date((invoicePreview.next_payment_attempt || Date.now() / 1000) * 1000)
         };
     }
@@ -492,7 +500,7 @@ export class BillingService {
         }
 
         if (plan.overage.tokens > 0) {
-            const customLimits = ((tenantConfig as any).customLimits as unknown as TenantConfigCustomLimits) || {};
+            const customLimits = (tenantConfig as unknown as { customLimits?: TenantConfigCustomLimits }).customLimits || {};
             const includedTokens = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
             const excessTokens = Math.max(0, tokensUsed - includedTokens);
             if (excessTokens > 0) {
@@ -520,9 +528,9 @@ export class BillingService {
             tenant: {
                 id: tenantId,
                 name: tenantConfig.name,
-                fiscalName: (tenantConfig.billing as any)?.fiscalName,
-                taxId: (tenantConfig.billing as any)?.taxId,
-                address: (tenantConfig.billing as any)?.billingAddress?.line1
+                fiscalName: (tenantConfig.billing as unknown as BillingFiscalData)?.fiscalName,
+                taxId: (tenantConfig.billing as unknown as BillingFiscalData)?.taxId,
+                address: (tenantConfig.billing as unknown as BillingFiscalData)?.billingAddress?.line1
             },
             lineItems,
             subtotal,
@@ -585,7 +593,7 @@ export class BillingService {
             ...currentSub,
             ...data,
             updatedAt: new Date(),
-            createdAt: (currentSub as any).createdAt || new Date()
+            createdAt: (currentSub as unknown as { createdAt?: Date }).createdAt || new Date()
         } as TenantSubscription;
 
         const validated = TenantSubscriptionSchema.parse(newSubData);

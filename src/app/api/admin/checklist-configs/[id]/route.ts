@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
 
 /**
  * GET /api/admin/checklist-configs/[id]
  */
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function GET_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
 
     if (!ObjectId.isValid(id)) {
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 /**
  * PATCH /api/admin/checklist-configs/[id]
  */
-export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = crypto.randomUUID();
 
@@ -111,7 +112,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 /**
  * DELETE /api/admin/checklist-configs/[id]
  */
-export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function DELETE_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = crypto.randomUUID();
 
@@ -154,3 +155,9 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/checklist-configs/[id]', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/checklist-configs/[id]', thresholdMs: 1000 });
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/checklist-configs/[id]', thresholdMs: 1000 });

@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import { AuditSchema, AuditEntry } from './schemas/AuditSchema';
 import { ObservabilityRepository } from './ObservabilityRepository';
 import { LoggingService } from './LoggingService';
-import crypto from 'crypto';
+import { ClientSession } from 'mongodb';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * 🛡️ AuditTrailService
@@ -15,7 +17,7 @@ export class AuditTrailService {
     private static async record(
         collection: 'audit_config_changes' | 'audit_admin_ops' | 'audit_data_access' | 'audit_trails' | 'audit_security_events' | 'audit_billing',
         entry: Omit<AuditEntry, '_id' | 'timestamp'>,
-        session?: any // Using any to avoid importing ClientSession if not needed, or just type it
+        session?: ClientSession
     ): Promise<void> {
         const correlationId = entry.correlationId || crypto.randomUUID();
 
@@ -28,11 +30,11 @@ export class AuditTrailService {
 
             await ObservabilityRepository.saveAudit(collection, validated as AuditEntry, session);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Fallback to technical logs if audit recording fails
             await LoggingService.error('AUDIT_TRAIL_SERVICE', 'RECORD_FAILURE',
                 `Critical: Failed to record audit in ${collection}`,
-                error,
+                error instanceof Error ? error : new Error(String(error)),
                 correlationId
             );
         }
@@ -51,14 +53,15 @@ export class AuditTrailService {
     /**
      * Audit: Configuration or policy changes.
      */
-    static async logConfigChange(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, sessionOrHeaders?: any) {
+    static async logConfigChange(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, sessionOrHeaders?: TenantSession | ClientSession | Headers) {
         let headers: Headers | undefined;
-        let session: any;
+        let session: ClientSession | undefined;
 
         if (sessionOrHeaders instanceof Headers) {
             headers = sessionOrHeaders;
-        } else {
-            session = sessionOrHeaders;
+        } else if (sessionOrHeaders && 'client' in sessionOrHeaders) {
+            // It's a ClientSession (approx check, or use specific mongo type guards if available)
+            session = sessionOrHeaders as ClientSession;
         }
 
         return this.record('audit_config_changes', {

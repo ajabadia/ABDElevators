@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
@@ -10,7 +11,7 @@ const AcceptSchema = z.object({
     token: z.string().min(1),
 });
 
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const correlationId = generateUUID();
 
     try {
@@ -41,3 +42,5 @@ export async function POST(req: Request) {
         return handleApiError(error, 'API_SPACES', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/spaces/invite/accept', thresholdMs: 1000 });

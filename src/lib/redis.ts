@@ -14,9 +14,18 @@ if (!hasUpstash && !hasLocal) {
 
 // REST Client (for serverless/edge)
 // Phase 120: Added local Redis Socket support via REDIS_URL
-let redisClient: any;
+let redisClient: RedisClient;
 
-const createDummyClient = () => ({
+interface RedisClient {
+    get: (key: string) => Promise<any>;
+    set: (key: string, value: any, options?: { ex?: number }) => Promise<any>;
+    del: (...keys: string[]) => Promise<number>;
+    exists: (key: string) => Promise<number>;
+    keys: (pattern: string) => Promise<string[]>;
+    flushall?: () => Promise<string>;
+}
+
+const createDummyClient = (): RedisClient => ({
     get: async () => null,
     set: async () => 'OK',
     del: async () => 0,
@@ -57,16 +66,29 @@ if (process.env.REDIS_URL) {
     if (process.env.NODE_ENV === 'development') {
         console.log('☁️ [REDIS] Usando instancia CLOUD (Upstash/REST)');
     }
-    redisClient = new Redis({
+    const upstash = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
+
+    redisClient = {
+        get: async (key: string) => upstash.get(key),
+        set: async (key: string, value: any, options?: { ex?: number }) => {
+            if (options?.ex) {
+                return upstash.set(key, value, { ex: options.ex });
+            }
+            return upstash.set(key, value);
+        },
+        del: async (...keys: string[]) => upstash.del(...keys),
+        exists: async (key: string) => upstash.exists(key),
+        keys: async (pattern: string) => upstash.keys(pattern)
+    };
 } else {
     // Phase 120: Mock client if no configuration to avoid bootsrap errors (Auditoría 016)
     redisClient = createDummyClient();
 }
 
-export const redis = redisClient;
+export const redis: RedisClient = redisClient as any;
 
 // Socket Client Factory (for BullMQ / Worker)
 let ioredisInstance: IORedis;

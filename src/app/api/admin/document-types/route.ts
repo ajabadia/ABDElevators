@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { DocumentTypeSchema } from '@/lib/schemas';
 import { z } from 'zod';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
 import { getTenantCollection } from '@/lib/db-tenant';
 
@@ -13,7 +14,7 @@ import { getTenantCollection } from '@/lib/db-tenant';
  * Lists all configured document types for the tenant.
  * SLA: P95 < 200ms
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
  * Creates a new document type (ADMIN only).
  * SLA: P95 < 400ms
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -153,7 +154,7 @@ export async function POST(req: NextRequest) {
  * PATCH /api/admin/document-types
  * Updates a document type.
  */
-export async function PATCH(req: NextRequest) {
+async function PATCH_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -209,7 +210,7 @@ export async function PATCH(req: NextRequest) {
  * DELETE /api/admin/document-types
  * Deletes a document type if not in use.
  */
-export async function DELETE(req: NextRequest) {
+async function DELETE_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
@@ -293,3 +294,11 @@ async function handleApiError(error: any, source: string, correlationId: string)
         { status: 500 }
     );
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/document-types', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/document-types', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/document-types', thresholdMs: 1000 });
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/document-types', thresholdMs: 1000 });

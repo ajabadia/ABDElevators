@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
@@ -6,7 +8,7 @@ import { logEvento } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -79,3 +81,5 @@ export async function GET(request: Request) {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/reports', thresholdMs: 1000 });

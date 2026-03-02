@@ -177,7 +177,7 @@ export class QuotaService {
                     total: { $sum: '$value' }
                 }
             }
-        ]) as any[];
+        ]) as unknown as { total: number }[];
 
         return result[0]?.total || 0;
     }

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
@@ -5,7 +6,6 @@ import { ChecklistConfigSchema } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { checklistConfigRepository } from '@/lib/repositories/ChecklistConfigRepository';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/checklist-configs

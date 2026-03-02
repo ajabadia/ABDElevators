@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
@@ -7,7 +9,7 @@ import { logEvento } from '@/lib/logger';
  * Sirve los planes de precios públicos para la landing page.
  * SLA: < 100ms (P95)
  */
-export async function GET() {
+async function GET_internal () {
     const correlacion_id = crypto.randomUUID();
 
     try {
@@ -52,3 +54,5 @@ export async function GET() {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/pricing/plans', thresholdMs: 1000 });

@@ -1,8 +1,8 @@
+import crypto from 'crypto';
 import { getTenantCollection } from "@/lib/db-tenant";
 import { TenantConfigSchema, TenantConfig } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
-import crypto from 'crypto';
 import { ClientSession } from 'mongodb';
 
 export class TenantConfigService {
@@ -13,7 +13,7 @@ export class TenantConfigService {
         const correlationId = `sys-get-config-${tenantId}-${Date.now()}`;
 
         try {
-            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
             const collection = await getTenantCollection('tenants', session);
             const config = await collection.findOne({ tenantId });
 
@@ -40,7 +40,7 @@ export class TenantConfigService {
 
         try {
             const validated = TenantConfigSchema.partial().parse(data);
-            const session = { user: { id: metadata?.performedBy || 'SYSTEM', tenantId, role: 'USER' } } as any;
+            const session = { user: { id: metadata?.performedBy || 'SYSTEM', tenantId, role: 'USER' } } as unknown as Parameters<typeof getTenantCollection>[1];
             const collection = await getTenantCollection<TenantConfig>('tenants', session);
             const previousState = await collection.findOne({ tenantId });
 
@@ -54,15 +54,18 @@ export class TenantConfigService {
             this.cache.delete(tenantId);
 
             // Audit via internal dynamic import to avoid circular dependency
-            const { AuditTrailService } = await import('@/services/observability/AuditTrailService').catch(() => ({ AuditTrailService: null as any }));
+            const { AuditTrailService } = await import('@/services/observability/AuditTrailService').catch(() => ({ AuditTrailService: null }));
             if (AuditTrailService) {
                 await AuditTrailService.logConfigChange({
+                    actorType: 'SYSTEM',
                     actorId: metadata?.performedBy || 'SYSTEM',
                     tenantId,
                     action: 'UPDATE_TENANT_CONFIG',
-                    changes: { before: previousState, after: validated },
-                    correlationId
-                } as any);
+                    changes: { before: previousState as unknown as Record<string, unknown>, after: validated as Record<string, unknown> },
+                    correlationId,
+                    entityType: 'TENANT',
+                    entityId: tenantId
+                });
             }
 
             return validated as TenantConfig;
@@ -72,7 +75,7 @@ export class TenantConfigService {
     }
 
     static async getAllTenants() {
-        const session = { user: { role: 'SUPER_ADMIN' } } as any;
+        const session = { user: { role: 'SUPER_ADMIN' } } as unknown as Parameters<typeof getTenantCollection>[1];
         const collection = await getTenantCollection('tenants', session);
         return await collection.find({});
     }

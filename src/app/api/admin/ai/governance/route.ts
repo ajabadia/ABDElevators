@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { AiModelManager } from '@/services/core/ai-model-manager';
 import { SecureLoupeInspector } from '@/services/security/secure-loupe-inspector';
@@ -9,7 +10,7 @@ import { logEvento } from '@/lib/logger';
  * GET /api/admin/ai/governance
  * Retrieve current AI configuration.
  */
-export async function GET() {
+async function GET_internal () {
     const session = await auth();
     if (!session || (session.user?.role !== 'SUPER_ADMIN' && session.user?.role !== 'ADMIN')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,7 +28,7 @@ export async function GET() {
  * PATCH /api/admin/ai/governance
  * Update AI configuration.
  */
-export async function PATCH(req: Request) {
+async function PATCH_internal (req: Request) {
     const session = await auth();
     if (!session || (session.user?.role !== 'SUPER_ADMIN' && session.user?.role !== 'ADMIN')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -47,3 +48,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: error.message }, { status: error instanceof AppError ? error.status : 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ai/governance', thresholdMs: 1000 });
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/ai/governance', thresholdMs: 1000 });

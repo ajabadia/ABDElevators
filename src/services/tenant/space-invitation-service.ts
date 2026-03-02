@@ -1,4 +1,4 @@
-import { getTenantCollection } from "@/lib/db-tenant";
+import { getTenantCollection, TenantSession } from "@/lib/db-tenant";
 import { SpaceInvitation, SpaceInvitationSchema } from "@/lib/schemas/spaces";
 import { generateUUID } from "@/lib/utils";
 import { AppError } from "@/lib/errors";
@@ -17,7 +17,7 @@ export class SpaceInvitationService {
         expiresInDays?: number;
     }, dbSession?: ClientSession): Promise<SpaceInvitation> {
         // Obtenemos la colección usando el tenantId proporcionado para el aislamiento
-        const collection = await getTenantCollection<SpaceInvitation>('space_invitations', { user: { id: data.invitedBy, role: 'ADMIN', tenantId: data.tenantId } });
+        const collection = await getTenantCollection<SpaceInvitation>('space_invitations', { user: { id: data.invitedBy, role: 'ADMIN' as any, tenantId: data.tenantId } } as unknown as TenantSession);
 
         const token = generateUUID();
         const expiresAt = new Date();
@@ -36,7 +36,7 @@ export class SpaceInvitationService {
         };
 
         const validated = SpaceInvitationSchema.parse(invitation);
-        await collection.insertOne(validated as any, { session: dbSession });
+        await collection.insertOne(validated as unknown as any, { session: dbSession });
 
         return validated;
     }
@@ -65,7 +65,7 @@ export class SpaceInvitationService {
      */
     static async acceptInvitation(token: string, userId: string, dbSession?: ClientSession): Promise<void> {
         // Para buscar por token, usamos un contexto de sistema ya que no conocemos el tenantId aún
-        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } };
+        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' as any } } as unknown as TenantSession;
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', systemSession);
 
         const invitation = await collection.findOne({ token, status: 'PENDING' }, { session: dbSession });
@@ -81,7 +81,7 @@ export class SpaceInvitationService {
         );
 
         // 2. Grant access to the space
-        const targetSession = { user: { id: userId, tenantId: invitation.tenantId, role: 'USER' } };
+        const targetSession = { user: { id: userId, tenantId: invitation.tenantId, role: 'USER' as any } } as unknown as TenantSession;
         const spacesCol = await getTenantCollection('spaces', targetSession);
         await spacesCol.updateOne(
             { _id: new ObjectId(invitation.spaceId) },
@@ -113,7 +113,7 @@ export class SpaceInvitationService {
      * Revoca una invitación.
      */
     static async revokeInvitation(token: string, dbSession?: ClientSession): Promise<void> {
-        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' } };
+        const systemSession = { user: { id: 'system', tenantId: 'platform_master', role: 'SYSTEM' as any } } as unknown as TenantSession;
         const collection = await getTenantCollection<SpaceInvitation>('space_invitations', systemSession);
         const result = await collection.updateOne(
             { token, status: 'PENDING' },

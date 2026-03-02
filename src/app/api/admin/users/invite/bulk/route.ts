@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { BulkInviteRequestSchema, UserInviteSchema } from '@/lib/schemas';
 import { AppError, ValidationError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';
 
@@ -13,7 +14,7 @@ import { z } from 'zod';
  * Processes multiple invitations in a single request.
  * Returns a summary of success and failures.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -167,3 +168,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/users/invite/bulk', thresholdMs: 1000 });

@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { PLANS } from '@/lib/plans';
 
@@ -54,4 +54,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_BILLING_CHECKOUT_POST', correlationId);
     }
-}, { p95: 2000, max: 5000 });
+}, { endpoint: 'POST /api/billing/create-checkout', thresholdMs: 2000 });

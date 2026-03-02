@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { CollectionService } from '@/services/core/collection-service';
 import { CreateCollectionSchema } from '@/lib/schemas/collections';
 import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
-import crypto from 'crypto';
 
 /**
  * 📚 User Collections API
  * GET: List user collections
  * POST: Create a new collection (Notebook)
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const start = Date.now();
     const correlationId = crypto.randomUUID();
 
@@ -66,3 +67,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/collections', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/collections', thresholdMs: 1000 });

@@ -28,16 +28,17 @@ export class NotificationEmailSender {
             });
 
             console.log(`[NotificationEmailSender] Email sent successfully to ${Array.isArray(options.to) ? options.to.length : 1} recipients`);
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as Error;
             await logEvento({
                 level: 'ERROR',
                 source: 'EMAIL_SENDER',
                 action: 'SEND_EMAIL_ERROR',
-                message: error.message || 'Failed to send email',
+                message: err.message || 'Failed to send email',
                 details: { to: options.to, subject: options.subject },
-                stack: error.stack
+                stack: err.stack
             });
-            throw error;
+            throw err;
         }
     }
 }

@@ -1,11 +1,11 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { TicketPrioritySchema, TicketStatusSchema } from '@/lib/schemas/ticketing';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const CreateTicketSchema = z.object({
     subject: z.string().min(5),
@@ -47,7 +47,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_TICKETS_CREATE_POST', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'POST /api/support/tickets', thresholdMs: 500 });
 
 /**
  * GET /api/support/tickets
@@ -86,4 +86,4 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_TICKETS_GET', correlationId);
     }
-}, { p95: 300, max: 1000 });
+}, { endpoint: 'GET /api/support/tickets', thresholdMs: 300 });

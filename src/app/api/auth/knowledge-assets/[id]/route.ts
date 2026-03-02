@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB, connectAuthDB } from '@/lib/db';
@@ -5,7 +7,6 @@ import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { v2 as cloudinary } from 'cloudinary';
 import { AppError, NotFoundError } from '@/lib/errors';
-import crypto from 'crypto';
 
 // Configurar Cloudinary para borrado
 cloudinary.config({
@@ -19,7 +20,7 @@ cloudinary.config({
  * Soft-Delete de un activo de conocimiento (Compliance).
  * SLA: P95 < 1000ms
  */
-export async function DELETE(
+async function DELETE_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -105,3 +106,5 @@ export async function DELETE(
         }
     }
 }
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/auth/knowledge-assets/[id]', thresholdMs: 1000 });

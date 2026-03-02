@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CausalImpactService } from '@/services/core/causal-impact-service';
@@ -13,7 +15,7 @@ const RequestSchema = z.object({
  * POST /api/intelligence/causal-analysis
  * Endpoint para simulación de impacto causal (Fase 86).
  */
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const start = Date.now();
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
@@ -103,3 +105,5 @@ export async function POST(req: Request) {
         });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/intelligence/causal-analysis', thresholdMs: 1000 });

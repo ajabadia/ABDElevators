@@ -53,16 +53,17 @@ export class GraphExtractionService {
                 details: { entityCount: data.entities.length, relationCount: data.relations.length }
             });
 
-        } catch (error) {
-            console.error("[GRAPH EXTRACTION ERROR]", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[GRAPH EXTRACTION ERROR]", errorMessage);
             await logEvento({
                 level: 'ERROR',
                 source: 'GRAPH_EXTRACTOR',
                 action: 'EXTRACTION_FAILED',
-                message: `Failed to extract graph data from ${metadata.sourceDoc}`,
+                message: `Failed to extract graph data from ${metadata.sourceDoc}: ${errorMessage}`,
                 correlationId,
                 tenantId,
-                details: { error: String(error) }
+                details: { error: errorMessage }
             });
             throw error;
         }

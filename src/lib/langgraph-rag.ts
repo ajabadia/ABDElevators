@@ -15,7 +15,7 @@ import { FactCheckerService } from "@/services/core/rag/fact-checker-service";
  */
 const GraphState = Annotation.Root({
     question: Annotation<string>(),
-    history: Annotation<any[]>(), // Support for thread history
+    history: Annotation<Record<string, unknown>[] | any[]>(), // Support for thread history
     documents: Annotation<RagResult[]>(),
     generation: Annotation<string>(),
     retry_count: Annotation<number>(),
@@ -65,7 +65,7 @@ export class AgenticRAGService {
                     limit: state.intensity === 'KW_ONLY' ? 10 : 4,
                     environment,
                     filename,
-                    intensity: state.intensity as any
+                    intensity: state.intensity as 'FAST' | 'DEEP' | 'KW_ONLY'
                 }
             );
 
@@ -73,11 +73,12 @@ export class AgenticRAGService {
                 documents: docs,
                 trace: [`RETRIEVAL: Found ${docs.length} chunks in ${industry}/${environment}.`]
             };
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("[AgenticRAGService] Error in retrieve node:", error);
             return {
                 documents: [],
-                trace: [`RETRIEVAL_ERROR: Failed to fetch documents. ${error.message}`]
+                trace: [`RETRIEVAL_ERROR: Failed to fetch documents. ${errorMessage}`]
             };
         }
     }
@@ -101,7 +102,7 @@ export class AgenticRAGService {
                     tenantId,
                     'PRODUCTION',
                     'GENERIC',
-                    { user: { tenantId, role: 'SYSTEM' } } as any // Session bridge
+                    { user: { tenantId, role: 'SYSTEM' } } as any // Session bridge - expected internal object
                 );
 
                 const response = await callGeminiMini(gradePrompt, tenantId, { correlationId, model });
@@ -131,7 +132,7 @@ export class AgenticRAGService {
             ? documents.map(d => d.text).join("\n\n---\n\n")
             : "No relevant documents found in the corpus.";
 
-        const promptKey = history && history.length > 0 ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
+        const promptKey = (history && history.length > 0) ? 'CHAT_RAG_GENERATOR' : 'RAG_GENERATOR';
 
         let genPrompt: string;
         let model: string = DEFAULT_MODEL;
@@ -152,9 +153,10 @@ export class AgenticRAGService {
             );
             genPrompt = result.text;
             model = result.model;
-        } catch (err) {
-            console.warn(`[AgenticRAGService] ⚠️ Fallback to Master Prompt (${promptKey}):`, err);
-            const masterTemplate = (PROMPTS as any)[promptKey];
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            console.warn(`[AgenticRAGService] ⚠️ Fallback to Master Prompt (${promptKey}):`, errorMessage);
+            const masterTemplate = (PROMPTS as Record<string, string>)[promptKey];
             genPrompt = masterTemplate
                 .replace('{{question}}', question)
                 .replace('{{context}}', context)
@@ -162,7 +164,7 @@ export class AgenticRAGService {
         }
 
         const { truncateContext } = await import('@abd/rag-engine/server');
-        const truncated = truncateContext(genPrompt, history || [], documents);
+        const truncated = truncateContext(genPrompt, (history as Record<string, unknown>[] | any[]) || [], documents);
 
         // Standardize context for callGeminiMini
         const contextString = truncated.chunks.map(d => d.text).join("\n\n---\n\n");
@@ -202,12 +204,13 @@ export class AgenticRAGService {
                 retry_count: (retry_count || 0) + 1,
                 trace: [`RE-WRITE: Query optimized for better recall: "${betterQuestion}"`]
             };
-        } catch (error: any) {
-            console.warn("[AgenticRAGService] Error in transformQuery node, using original question:", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.warn("[AgenticRAGService] Error in transformQuery node, using original question:", errorMessage);
             return {
                 question,
                 retry_count: (retry_count || 0) + 1,
-                trace: [`RE-WRITE_ERROR: Optimization failed (${error.message || 'Unknown error'}), using original question.`]
+                trace: [`RE-WRITE_ERROR: Optimization failed (${errorMessage}), using original question.`]
             };
         }
     }
@@ -272,7 +275,7 @@ export class AgenticRAGService {
     /**
      * Compila e invoca el flujo agéntico devolviendo un flujo de eventos (docs, trace, generation stream)
      */
-    public static async *runStream(
+    public static async * runStream(
         question: string,
         tenantId: string,
         correlationId: string,
@@ -397,12 +400,13 @@ export class AgenticRAGService {
             }
             yield { type: 'connected', data: { status: 'complete' } };
 
-        } catch (error: any) {
-            console.error("[AgenticRAGService.runStream] Fatal Error:", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[AgenticRAGService.runStream] Fatal Error:", errorMessage);
             yield {
                 type: 'error',
                 data: {
-                    message: error.message || "Error interno del motor RAG",
+                    message: errorMessage,
                     trace: lastState?.trace
                 }
             };
@@ -436,10 +440,10 @@ export class AgenticRAGService {
         RagEvaluationService.evaluateQuery(
             correlationId,
             question,
-            result.generation,
-            result.documents.map((d: any) => d.text || d.content),
+            result.generation as string,
+            (result.documents as RagResult[]).map((d) => d.text || (d as any).content),
             tenantId,
-            result.trace || []
+            (result.trace as string[]) || []
         ).catch(err => console.error("❌ [RAG EVAL ERROR]", err));
 
         return result;

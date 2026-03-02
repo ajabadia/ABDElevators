@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SessionService } from "@/services/auth/SessionService";
@@ -7,7 +8,7 @@ import { AppError } from '@/lib/errors';
  * GET /api/auth/profile/sesiones
  * Obtiene todas las sesiones activas del usuario actual.
  */
-export async function GET() {
+async function GET_internal () {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -33,7 +34,7 @@ export async function GET() {
  * DELETE /api/auth/profile/sesiones
  * Revoca una sesión específica (Logout remoto).
  */
-export async function DELETE(req: NextRequest) {
+async function DELETE_internal (req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -61,3 +62,7 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: error.status || 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/auth/profile/sesiones', thresholdMs: 1000 });
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/auth/profile/sesiones', thresholdMs: 1000 });

@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { RagEvaluationService } from '@/services/core/rag-evaluation-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/rag/evaluations
  * Returns metrics and recent evaluations for the dashboard
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const user = await enforcePermission('rag:evaluation', 'read');
@@ -34,3 +35,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_RAG_EVAL_GET', correlacion_id);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/rag/evaluations', thresholdMs: 1000 });

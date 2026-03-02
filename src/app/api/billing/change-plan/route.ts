@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 
 const ChangePlanSchema = z.object({
@@ -36,4 +36,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_BILLING_CHANGE_PLAN_POST', correlationId);
     }
-}, { p95: 1000, max: 3000 });
+}, { endpoint: 'POST /api/billing/change-plan', thresholdMs: 1000 });

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
@@ -5,14 +7,13 @@ import { AppError, NotFoundError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { getPDFDownloadUrl } from '@/lib/cloudinary';
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/knowledge-assets/[id]/preview
  * Generates a direct URL for inline PDF viewing (Securely)
  * SLA: P95 < 500ms
  */
-export async function GET(
+async function GET_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -100,3 +101,5 @@ export async function GET(
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/knowledge-assets/[id]/preview', thresholdMs: 1000 });

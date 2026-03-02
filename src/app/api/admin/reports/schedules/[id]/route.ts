@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
@@ -8,7 +9,7 @@ import { ObjectId } from 'mongodb';
 import cronParser from 'cron-parser';
 import { z } from 'zod';
 
-export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function PATCH_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = `update-sched-${Date.now()}`;
 
@@ -88,7 +89,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     }
 }
 
-export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+async function DELETE_internal (req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const { id } = await context.params;
     const correlationId = `delete-sched-${Date.now()}`;
 
@@ -143,3 +144,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
         );
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/reports/schedules/[id]', thresholdMs: 1000 });
+
+export const DELETE = withPerformanceSLA(DELETE_internal, { endpoint: 'DELETE /api/admin/reports/schedules/[id]', thresholdMs: 1000 });

@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 // Schema para validación de queries
 const QuerySchema = z.object({
@@ -15,7 +16,7 @@ const QuerySchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:ingest', 'read');
@@ -71,3 +72,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_AUDIT_INGEST', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/audit/ingest', thresholdMs: 10000 });

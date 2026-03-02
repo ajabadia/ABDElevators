@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 
 import React, { useState, useRef, useEffect } from "react"
 import {
@@ -148,7 +149,7 @@ export function ConversationalSearch() {
 
                 if (isDone || fullAssistantContent.length > 0) {
                     setMessages(prev => [...prev, {
-                        id: crypto.randomUUID(),
+                        id: globalThis.crypto.randomUUID(),
                         role: "assistant",
                         content: fullAssistantContent,
                         documents: currentDocs,
@@ -180,7 +181,7 @@ export function ConversationalSearch() {
         if (!success) {
             toast.error(t("error_connection"))
             setMessages(prev => [...prev, {
-                id: crypto.randomUUID(),
+                id: globalThis.crypto.randomUUID(),
                 role: "assistant",
                 content: "error_retry"
             }])

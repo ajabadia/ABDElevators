@@ -3,7 +3,7 @@ import { Entity, GenericCase, IndustryType } from '@/lib/schemas';
 /**
  * Maps an Entity (Legacy Entity) to a Generic Case (Vision 2.0).
  */
-export function mapEntityToCase(entity: any, tenantId: string): GenericCase {
+export function mapEntityToCase(entity: Entity, tenantId: string): GenericCase {
     return {
         _id: entity._id?.toString() || '',
         tenantId,
@@ -29,7 +29,7 @@ export function mapEntityToCase(entity: any, tenantId: string): GenericCase {
 /**
  * Maps a Generic Case back to the structure expected by the Entity UI (Compatibility).
  */
-export function mapCaseToEntity(genericCase: GenericCase): any {
+export function mapCaseToEntity(genericCase: GenericCase): Partial<Entity> | null {
     if (genericCase.industry !== 'ELEVATORS') return null;
 
     return {

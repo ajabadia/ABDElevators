@@ -13,13 +13,13 @@ export class ObservabilityService {
         const usage = await ObservabilityRepository.getUsageMetrics(days);
         const health = await ObservabilityRepository.getLlmHealth(days);
 
-        const totalTokens = usage.reduce((acc: number, curr: any) => acc + (curr.totalTokens || 0), 0);
+        const totalTokens = usage.reduce((acc: number, curr: { totalTokens?: number }) => acc + (curr.totalTokens || 0), 0);
         const avgLatency = usage.length > 0
-            ? usage.reduce((acc: number, curr: any) => acc + (curr.avgLatency || 0), 0) / usage.length
+            ? usage.reduce((acc: number, curr: { avgLatency?: number }) => acc + (curr.avgLatency || 0), 0) / usage.length
             : 0;
 
-        const successCount = health.find((h: any) => h._id === 'PROMPT_RUNNER_SUCCESS')?.count || 0;
-        const failureCount = health.find((h: any) => h._id === 'PROMPT_RUNNER_FAILURE')?.count || 0;
+        const successCount = (health as { _id: string, count: number }[]).find((h) => h._id === 'PROMPT_RUNNER_SUCCESS')?.count || 0;
+        const failureCount = (health as { _id: string, count: number }[]).find((h) => h._id === 'PROMPT_RUNNER_FAILURE')?.count || 0;
         const totalRequests = successCount + failureCount;
 
         return {
@@ -29,7 +29,7 @@ export class ObservabilityService {
                 successRate: totalRequests > 0 ? (successCount / totalRequests) * 100 : 100,
                 totalRequests
             },
-            tenants: usage.map((u: any) => ({
+            tenants: usage.map((u: Record<string, any>) => ({
                 id: u._id,
                 tokens: u.totalTokens,
                 avgLatency: Math.round(u.avgLatency),

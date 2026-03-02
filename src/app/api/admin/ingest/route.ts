@@ -4,6 +4,9 @@ import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
 import { z } from 'zod';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+
+const API_SOURCE = 'API_ADMIN_INGEST';
 
 /**
  * POST /api/admin/ingest
@@ -12,7 +15,7 @@ import { z } from 'zod';
  * 
  * Refactored Phase 213: Delegates orchestration to IngestApiService.
  */
-export async function POST(req: NextRequest) {
+export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
     try {
         // Authentication & ABAC Enforcement (Rule #11)
         const session = await enforcePermission('ingest', 'write');
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
 
         await logEvento({
             level: 'ERROR',
-            source: 'API_INGEST',
+            source: API_SOURCE,
             action: 'INGEST_PROCESS_ERROR',
             message: `Critical ingest error: ${errorMessage}`,
             correlationId: req.headers.get('x-correlation-id') || undefined,
@@ -62,4 +65,4 @@ export async function POST(req: NextRequest) {
             { status: 500 }
         );
     }
-}
+}, { endpoint: 'POST /api/admin/ingest', thresholdMs: 20000 });

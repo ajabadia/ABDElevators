@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
@@ -6,7 +7,7 @@ import { ReportScheduleService } from '@/services/ops/report-schedule-service';
 import { CreateReportScheduleSchema } from '@/lib/schemas/report-schedule';
 import { z } from 'zod';
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = `list-sched-${Date.now()}`;
 
     try {
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = `create-sched-${Date.now()}`;
 
     try {
@@ -58,3 +59,7 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/reports/schedules', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/reports/schedules', thresholdMs: 1000 });

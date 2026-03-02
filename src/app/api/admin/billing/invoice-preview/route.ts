@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * GET /api/admin/billing/invoice-preview
@@ -29,4 +29,4 @@ export const GET = withPerformanceSLA(async (req) => {
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_BILLING_INVOICE_PREVIEW_GET', correlationId);
     }
-}, { p95: 1000, max: 2000 });
+}, { endpoint: 'GET /api/admin/billing/invoice-preview', thresholdMs: 1000 });

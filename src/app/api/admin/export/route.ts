@@ -1,17 +1,18 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from '@/types/roles';
 import { ExportParamsSchema } from '@/lib/schemas/export';
 import { ExportService } from '@/services/ops/export-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/export
  * Universal Data Export Endpoint.
  * Supports CSV/JSON streaming for Logs, Assets, and Tenants.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -62,3 +63,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_EXPORT', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/export', thresholdMs: 1000 });

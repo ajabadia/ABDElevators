@@ -119,8 +119,9 @@ export class GraphRetrievalService {
 
             return { nodes, relations, textSummary };
 
-        } catch (error) {
-            console.error("[GRAPH RETRIEVAL ERROR]", error);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[GRAPH RETRIEVAL ERROR]", errorMessage);
             return null;
         }
     }

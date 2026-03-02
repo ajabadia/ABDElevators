@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { queueService, JobType } from '@/services/ops/queue-service';
+import { queueService } from '@/services/ops/queue-service';
 import { handleApiError, ValidationError } from '@/lib/errors';
-import * as crypto from 'crypto';
 
 /**
  * GET /api/admin/ingest/jobs
  * Lista los trabajos de la cola de ingesta (DLQ monitoring).
  */
-export async function GET(req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('ingest:jobs', 'read');
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
  * POST /api/admin/ingest/jobs
  * Acciones sobre los trabajos (retry, delete).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('ingest:jobs', 'update');
@@ -69,3 +70,7 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_INGEST_JOBS_POST', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/ingest/jobs', thresholdMs: 10000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/ingest/jobs', thresholdMs: 10000 });

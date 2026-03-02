@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -6,13 +8,12 @@ import { AppError, handleApiError } from '@/lib/errors';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { CollaborationCommentSchema } from '@/lib/schemas/collaboration';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * GET /api/entities/[id]/comments
  * Lista los comentarios asociados a una entidad.
  */
-export async function GET(
+async function GET_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -39,7 +40,7 @@ export async function GET(
  * POST /api/entities/[id]/comments
  * Crea un nuevo comentario en una entidad.
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -77,3 +78,7 @@ export async function POST(
         return handleApiError(error, 'API_COMMENTS_CREATE', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/technical/entities/[id]/comments', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/technical/entities/[id]/comments', thresholdMs: 1000 });

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
@@ -5,7 +7,6 @@ import { AppError, NotFoundError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const RelationshipSchema = z.object({
     targetId: z.string(),
@@ -19,7 +20,7 @@ const RelationshipsArraySchema = z.array(RelationshipSchema);
  * PATCH /api/admin/knowledge-assets/[id]/relationships
  * Updates the relationships for a document
  */
-export async function PATCH(
+async function PATCH_internal (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
@@ -93,3 +94,5 @@ export async function PATCH(
         );
     }
 }
+
+export const PATCH = withPerformanceSLA(PATCH_internal, { endpoint: 'PATCH /api/admin/knowledge-assets/[id]/relationships', thresholdMs: 1000 });

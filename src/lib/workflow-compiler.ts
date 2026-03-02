@@ -1,4 +1,6 @@
 
+
+
 import { Edge, Node } from '@xyflow/react';
 import { AIWorkflow, WorkflowTrigger, WorkflowAction, WorkflowTriggerType, WorkflowActionType } from '@/types/workflow';
 
@@ -130,6 +132,7 @@ export function compileGraphToLogic(
         trigger: trigger,
         actions: actions,
         tenantId: tenantId,
-        id: crypto.randomUUID(),
+        id: globalThis.crypto.randomUUID(),
+
     };
 }

@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 
 /**
  * POST /api/admin/i18n/sync
@@ -11,7 +12,7 @@ import crypto from 'crypto';
  * - direction: 'to-db' → Añade claves del JSON a la BD (merge, no borra)
  * - direction: 'to-file' → Añade claves de la BD al JSON (merge, no borra)
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('i18n', 'manage');
@@ -74,3 +75,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_I18N_SYNC_POST', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/i18n/sync', thresholdMs: 300 });

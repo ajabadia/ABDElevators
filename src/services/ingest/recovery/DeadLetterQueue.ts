@@ -1,6 +1,6 @@
-import { logEvento } from '@/lib/logger';
 import crypto from 'crypto';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { logEvento } from '@/lib/logger';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 
 /**
@@ -17,7 +17,7 @@ export interface DeadLetterJob {
     retryCount: number;
     lastAttempt: Date;
     stackTrace?: string;
-    jobData?: Record<string, any>; // Original job parameters
+    jobData?: Record<string, unknown>; // Original job parameters
     auditHash: string; // SHA-256 for immutability
     createdAt: Date;
     resolved?: boolean; // Manual resolution flag
@@ -31,7 +31,7 @@ export class DeadLetterQueue {
      */
     static async addToQueue(
         job: Omit<DeadLetterJob, 'auditHash' | 'createdAt'>,
-        session?: any
+        session?: TenantSession | null
     ): Promise<void> {
         const auditHash = this.hashJob(job);
         const deadLetterJob: DeadLetterJob = {
@@ -60,8 +60,9 @@ export class DeadLetterQueue {
                     auditHash
                 }
             });
-        } catch (error: any) {
-            console.error('[DEAD LETTER QUEUE ERROR]', error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('[DEAD LETTER QUEUE ERROR]', err);
             // Fallback: log to console if DB insertion fails
             console.error('[DEAD LETTER JOB]', JSON.stringify(deadLetterJob, null, 2));
         }
@@ -77,13 +78,13 @@ export class DeadLetterQueue {
             skip?: number;
             unresolvedOnly?: boolean;
         } = {},
-        session?: any
+        session?: TenantSession | null
     ): Promise<DeadLetterJob[]> {
         const { limit = 50, skip = 0, unresolvedOnly = true } = options;
 
         const collection = await getTenantCollection('dead_letter_queue', session);
 
-        const filter: any = { tenantId };
+        const filter: Record<string, unknown> = { tenantId };
         if (unresolvedOnly) {
             filter.resolved = { $ne: true };
         }
@@ -93,7 +94,7 @@ export class DeadLetterQueue {
             sort: { createdAt: -1 } as any,
             skip,
             limit
-        }) as any as DeadLetterJob[];
+        }) as unknown as DeadLetterJob[];
     }
 
     /**
@@ -103,14 +104,14 @@ export class DeadLetterQueue {
         jobId: string,
         tenantId: string,
         retryBy: string,
-        session?: any
+        session?: TenantSession | null
     ): Promise<{ success: boolean; message: string }> {
         const collection = await getTenantCollection('dead_letter_queue', session);
 
         const job = await collection.findOne({
             _id: new ObjectId(jobId),
             tenantId
-        }) as any as DeadLetterJob | null;
+        }) as unknown as DeadLetterJob | null;
 
         if (!job) {
             return { success: false, message: 'Job not found in Dead Letter Queue' };
@@ -148,14 +149,14 @@ export class DeadLetterQueue {
     /**
      * Get statistics for monitoring
      */
-    static async getStats(tenantId: string, session?: any): Promise<{
+    static async getStats(tenantId: string, session?: TenantSession | null): Promise<{
         total: number;
         byJobType: Record<string, number>;
         unresolved: number;
     }> {
         const collection = await getTenantCollection('dead_letter_queue', session);
 
-        const jobs = await collection.find({ tenantId }) as any as DeadLetterJob[];
+        const jobs = await collection.find({ tenantId }) as unknown as DeadLetterJob[];
 
         const stats = {
             total: jobs.length,

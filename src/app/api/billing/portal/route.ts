@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { createPortalSession } from '@/lib/stripe';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * POST /api/billing/portal
@@ -38,4 +38,4 @@ export const POST = withPerformanceSLA(async (req) => {
     } catch (error) {
         return handleApiError(error, 'API_BILLING_PORTAL_POST', correlationId);
     }
-}, { p95: 1000, max: 2000 });
+}, { endpoint: 'POST /api/billing/portal', thresholdMs: 1000 });

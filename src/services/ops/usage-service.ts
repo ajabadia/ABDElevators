@@ -1,7 +1,8 @@
-
-import { getTenantCollection } from '@/lib/db-tenant';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { UsageLogSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
+import { PlanTier } from '@/lib/plans';
+import { ClientSession } from 'mongodb';
 
 /**
  * Servicio de Tracking de Consumo (Visión 2.0 - Fase 7.4)
@@ -10,7 +11,7 @@ export class UsageService {
     /**
      * Registra el uso de tokens de LLM.
      */
-    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string, session?: any) {
+    static async trackLLM(tenantId: string, tokens: number, model: string, correlationId?: string, session?: TenantSession | ClientSession) {
         return this.logUsage({
             tenantId,
             type: 'LLM_TOKENS',
@@ -129,7 +130,7 @@ export class UsageService {
         resource?: string,
         description?: string,
         correlationId?: string,
-        metadata?: Record<string, any>
+        metadata?: Record<string, unknown>
     }) {
         return this.logUsage({
             tenantId,
@@ -141,10 +142,10 @@ export class UsageService {
     /**
      * Método interno para persistir el log de uso.
      */
-    private static async logUsage(data: any, session?: any) {
+    private static async logUsage(data: Record<string, unknown>, session?: TenantSession | ClientSession) {
         try {
             const validated = UsageLogSchema.parse(data);
-            const collection = await getTenantCollection('usage_logs', session);
+            const collection = await getTenantCollection('usage_logs', session as any);
 
             await collection.insertOne(validated);
 
@@ -170,8 +171,8 @@ export class UsageService {
             }
 
             return true;
-        } catch (error) {
-            console.error('[UsageService ERROR] Failed to log usage:', error);
+        } catch (error: unknown) {
+            console.error('[UsageService ERROR] Failed to log usage:', error instanceof Error ? error.message : error);
             return false;
         }
     }
@@ -189,14 +190,15 @@ export class UsageService {
                 status: 'completed'
             });
 
-            const usageStats = await usageColl.aggregate<any>([
+            interface UsageStatGroup { _id: string; count: number; totalValue: number }
+            const usageStats = await usageColl.aggregate<UsageStatGroup>([
                 { $match: { timestamp: { $gte: thirtyDaysAgo } } },
                 { $group: { _id: '$type', count: { $sum: 1 }, totalValue: { $sum: '$value' } } }
             ]);
 
-            const vectorSearches = usageStats.find((s: any) => s._id === 'VECTOR_SEARCH')?.count || 0;
-            const dedupEvents = usageStats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.count || 0;
-            const savedTokens = usageStats.find((s: any) => s._id === 'SAVINGS_TOKENS')?.totalValue || 0;
+            const vectorSearches = usageStats.find(s => s._id === 'VECTOR_SEARCH')?.count || 0;
+            const dedupEvents = usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.count || 0;
+            const savedTokens = usageStats.find(s => s._id === 'SAVINGS_TOKENS')?.totalValue || 0;
 
             const TIME_PER_ANALYSIS_MIN = 20;
             const TIME_PER_SEARCH_MIN = 15;
@@ -221,7 +223,7 @@ export class UsageService {
                 },
                 efficiencyScore: analysisCount > 0 ? Math.min(100, Math.round(totalSavedMinutes / (analysisCount * 2))) : 0
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[UsageService] Error calculating ROI:', error);
             return {
                 period: '30d',
@@ -235,15 +237,16 @@ export class UsageService {
     static async getAggregateUsage(tenantId: string, start: Date, end: Date) {
         try {
             const collection = await getTenantCollection('usage_logs');
-            const stats = await collection.aggregate<any>([
+            interface AggregateStat { _id: string; total: number }
+            const stats = await collection.aggregate<AggregateStat>([
                 { $match: { tenantId, timestamp: { $gte: start, $lte: end } } },
                 { $group: { _id: '$type', total: { $sum: '$value' } } }
             ]);
 
             const usageMap: Record<string, number> = {};
-            stats.forEach((s: any) => { usageMap[s._id] = s.total; });
+            stats.forEach(s => { usageMap[s._id] = s.total; });
             return usageMap;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[UsageService] Error fetching aggregate usage:', error);
             return {};
         }
@@ -262,7 +265,7 @@ export class UsageService {
                 validationsCount, ticketsCreated, ticketsResolved,
                 efficiencyScore: Math.min(100, (validationsCount * 5) + (ticketsResolved * 10))
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[UsageService] Error calculating User Metrics:', error);
             return { validationsCount: 0, ticketsCreated: 0, ticketsResolved: 0, efficiencyScore: 0 };
         }
@@ -301,7 +304,7 @@ export class UsageService {
                 confidenceScore: tenants.length > 5 ? 0.85 : 0.6,
                 trend: dailyBurnTokens > 0 ? 'STABLE' : 'LOW_USAGE'
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[UsageService] Error generating global cost prediction:', error);
             return null;
         }
@@ -323,7 +326,7 @@ export class UsageService {
             const monthlyStorage = usage['STORAGE_BYTES'] || 0;
             const monthlySearches = usage['VECTOR_SEARCHES'] || 0;
 
-            const currentPlan = (tenant as any).planTier || 'FREE';
+            const currentPlan = (tenant as { planTier?: PlanTier }).planTier || 'FREE';
             const projectedOverage = calculateOverageCost(currentPlan, { tokens: monthlyTokens, storage: monthlyStorage, searches: monthlySearches });
 
             const comparisons: Record<string, number> = {};
@@ -337,7 +340,7 @@ export class UsageService {
                 comparisons,
                 recommendation: this.getPlanRecommendation(currentPlan, monthlyTokens, monthlyStorage)
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[UsageService] Error generating tenant cost prediction:', error);
             return null;
         }

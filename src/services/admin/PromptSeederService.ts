@@ -2,6 +2,7 @@
 import { connectDB } from '@/lib/db';
 import { PromptSchema } from '@/lib/schemas';
 import { DEFAULT_PROMPTS } from '@/lib/prompts/core-definitions';
+import { ObjectId } from 'mongodb';
 
 /**
  * 🛰️ Prompt Seeder Service
@@ -24,37 +25,37 @@ export class PromptSeederService {
             console.log(`🏢 Procesando Tenant: ${tenantId}`);
 
             for (const basePrompt of DEFAULT_PROMPTS) {
-                const promptData = { ...basePrompt, tenantId } as any;
+                const promptData = { ...basePrompt, tenantId };
 
                 const existing = await collection.findOne({
                     key: promptData.key,
                     tenantId: promptData.tenantId
-                });
+                }) as unknown as Record<string, unknown> | null;
 
                 if (existing) {
                     if (this.hasChanges(existing, promptData)) {
                         console.log(`🆙 Versionando prompt "${promptData.key}" para ${tenantId}...`);
 
-                        // Snapshot de versión anterior
+                        const existingPrompt = existing as unknown as { _id: ObjectId, version?: number, template: string, variables?: Record<string, unknown> };
                         await versionsCollection.insertOne({
-                            promptId: existing._id,
+                            promptId: existingPrompt._id,
                             tenantId: existing.tenantId,
-                            version: existing.version,
-                            template: existing.template,
-                            variables: existing.variables,
+                            version: existingPrompt.version,
+                            template: existingPrompt.template,
+                            variables: existingPrompt.variables,
                             changedBy: 'system-seed',
                             changeReason: 'Core Update via PromptSeederService',
                             createdAt: new Date()
                         });
 
-                        const nextVersion = (existing.version || 1) + 1;
+                        const nextVersion = (existingPrompt.version || 1) + 1;
                         const validated = PromptSchema.parse({
                             ...promptData,
                             version: nextVersion,
                             updatedAt: new Date()
                         });
 
-                        await collection.updateOne({ _id: existing._id }, { $set: validated });
+                        await collection.updateOne({ _id: existingPrompt._id }, { $set: validated });
                     }
                 } else {
                     const validated = PromptSchema.parse(promptData);
@@ -66,9 +67,9 @@ export class PromptSeederService {
         console.log('\n🎉 Sincronización completada');
     }
 
-    private static hasChanges(existing: any, target: any): boolean {
-        return existing.template !== target.template ||
-            existing.model !== target.model ||
-            JSON.stringify(existing.variables) !== JSON.stringify(target.variables);
+    private static hasChanges(existing: Record<string, unknown>, target: Record<string, unknown>): boolean {
+        return (existing as any).template !== (target as any).template ||
+            (existing as any).model !== (target as any).model ||
+            JSON.stringify((existing as any).variables) !== JSON.stringify((target as any).variables);
     }
 }

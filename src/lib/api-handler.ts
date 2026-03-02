@@ -1,9 +1,10 @@
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { ObjectId } from 'mongodb';
-import crypto from 'crypto';
 
 type ApiHandlerFunction = (
     req: NextRequest,
@@ -25,8 +26,9 @@ export function publicApiHandler(
 ) {
     return async (req: NextRequest) => {
         const start = Date.now();
-        const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
-        let apiKeyDetails: any = null;
+        const correlationId = req.headers.get('x-correlation-id') || globalThis.crypto.randomUUID();
+
+        let apiKeyDetails: { _id: ObjectId; tenantId: string } | null = null;
         let tenantId = 'unknown';
 
         try {
@@ -38,7 +40,7 @@ export function publicApiHandler(
 
             // 2. Validar Key y Permisos
             const validKey = await ApiKeyService.validateApiKey(apiKey, requiredPermission);
-            apiKeyDetails = validKey;
+            apiKeyDetails = validKey as unknown as { _id: ObjectId; tenantId: string };
             tenantId = validKey.tenantId;
 
             // 3. Ejecutar Lógica

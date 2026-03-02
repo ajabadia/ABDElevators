@@ -9,7 +9,7 @@ export class PromptInputSanitizer {
      * Sanitizes variables to prevent simple prompt injection attacks.
      * Removes control characters and specific templating syntax.
      */
-    static sanitize(input: any): string {
+    static sanitize(input: unknown): string {
         if (input === null || input === undefined) return '';
         if (typeof input !== 'string') return String(input);
 
@@ -34,8 +34,8 @@ export class PromptInputSanitizer {
     /**
      * Mass sanitization of a variables object.
      */
-    static sanitizeRecord(variables: Record<string, any>): Record<string, any> {
-        const sanitized: Record<string, any> = {};
+    static sanitizeRecord(variables: Record<string, unknown>): Record<string, unknown> {
+        const sanitized: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(variables)) {
             sanitized[key] = this.sanitize(value);
         }

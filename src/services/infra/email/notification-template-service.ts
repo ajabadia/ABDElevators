@@ -38,12 +38,13 @@ export class NotificationTemplateService {
     /**
      * Compiles a template with data using Handlebars.
      */
-    static compile(templateStr: string, data: any): string {
+    static compile(templateStr: string, data: Record<string, unknown>): string {
         try {
             const compiled = Handlebars.compile(templateStr);
             return compiled(data);
-        } catch (error: any) {
-            console.error('[NotificationTemplateService] Compilation error:', error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('[NotificationTemplateService] Compilation error:', err);
             // Fallback: return the template or a safe subset if possible
             return templateStr;
         }

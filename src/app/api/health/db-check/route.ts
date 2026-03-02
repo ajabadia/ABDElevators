@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
 import { requireRole } from '@/lib/auth';
@@ -5,7 +6,7 @@ import { UserRole } from '@/types/roles';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+async function GET_internal (request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const secret = searchParams.get('secret');
@@ -73,3 +74,5 @@ export async function GET(request: Request) {
         }, { status: 500 });
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/health/db-check', thresholdMs: 1000 });

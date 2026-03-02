@@ -1,14 +1,15 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * GET /api/admin/logs/stats
  * Proporciona contadores agregados para los filtros de auditoría.
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('audit:logs', 'read');
@@ -60,3 +61,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_LOGS_STATS', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/logs/stats', thresholdMs: 500 });

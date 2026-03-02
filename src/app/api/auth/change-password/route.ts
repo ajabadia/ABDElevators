@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { connectAuthDB } from '@/lib/db';
@@ -5,14 +7,13 @@ import bcrypt from 'bcryptjs';
 import { logEvento } from '@/lib/logger';
 import { ChangePasswordSchema } from '@/lib/schemas';
 import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
-import crypto from 'crypto';
 
 /**
  * POST /api/auth/cambiar-password
  * Cambia la contraseña del usuario autenticado.
  * SLA: P95 < 1000ms (debido al hashing de bcrypt)
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const inicio = Date.now();
 
@@ -97,3 +98,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/change-password', thresholdMs: 1000 });

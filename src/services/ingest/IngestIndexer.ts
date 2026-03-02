@@ -4,6 +4,8 @@ import { documentChunkRepository } from '@/lib/repositories/DocumentChunkReposit
 import { IngestEmbeddingService } from './IngestEmbeddingService';
 import { logEvento } from '@/lib/logger';
 import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
+import { TenantSession } from '@/lib/db-tenant';
+import { IndustryType } from '@/lib/schemas';
 
 /**
  * IngestIndexer: Handles chunking, embedding and vector storage.
@@ -12,17 +14,31 @@ import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
 export class IngestIndexer {
     static async index(
         text: string,
-        visualFindings: any[],
-        asset: any,
+        visualFindings: { technical_description: string, page: number }[],
+        asset: {
+            tenantId: string,
+            filename: string,
+            enableVision?: boolean,
+            enableTranslation?: boolean,
+            enableGraphRag?: boolean,
+            enableCognitive?: boolean,
+            usage?: string,
+            componentType?: string,
+            model?: string,
+            version?: string,
+            revisionDate?: Date,
+            cloudinaryUrl?: string | null,
+            environment?: string
+        },
         context: string,
         industry: string,
         lang: string,
         correlationId: string,
-        session?: any,
+        session?: TenantSession,
         onProgress?: (percent: number) => Promise<void>,
         chunkingLevel: 'SIMPLE' | 'SEMANTIC' | 'LLM' | 'bajo' | 'medio' | 'alto' = 'SIMPLE',
         chunkingConfig?: { size?: number; overlap?: number; threshold?: number }
-    ) {
+    ): Promise<number> {
         // 1. Chunking
         const textChunks = await ChunkingOrchestrator.chunk({
             tenantId: asset.tenantId, correlationId, level: chunkingLevel, text,
@@ -58,7 +74,7 @@ export class IngestIndexer {
 
                     await documentChunkRepository.create({
                         tenantId: asset.tenantId,
-                        industry: industry as any,
+                        industry: industry as IndustryType,
                         componentType: asset.componentType || 'DOCUMENT',
                         model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,
@@ -71,14 +87,14 @@ export class IngestIndexer {
                         embedding: embGemini,
                         embedding_multilingual: embBGE,
                         cloudinaryUrl: asset.cloudinaryUrl ?? undefined,
-                        environment: asset.environment,
+                        environment: (asset.environment as any) || 'PRODUCTION',
                         createdAt: new Date(),
-                    }, session);
+                    }, session as TenantSession | undefined);
 
                     await IngestTracer.endSpanSuccess(span, { correlationId, tenantId: asset.tenantId }, { 'chunk.index': chunkIndex });
                     return true;
-                } catch (error: any) {
-                    await IngestTracer.endSpanError(span, { correlationId, tenantId: asset.tenantId }, error);
+                } catch (error: unknown) {
+                    await IngestTracer.endSpanError(span, { correlationId, tenantId: asset.tenantId }, error as Error);
                     throw error;
                 }
             }));

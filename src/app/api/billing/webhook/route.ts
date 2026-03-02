@@ -1,9 +1,9 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { BillingService } from '@/services/admin/BillingService';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { handleApiError, AppError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 
 /**
  * 💸 Stripe Webhook Endpoint
@@ -32,7 +32,7 @@ export const POST = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_STRIPE_WEBHOOK_POST', correlationId);
     }
-}, { p95: 300, max: 1000 });
+}, { endpoint: 'POST /api/billing/webhook', thresholdMs: 300 });
 
 // Ensure raw body is preserved (though in App Router we use req.text() above)
 export const config = {

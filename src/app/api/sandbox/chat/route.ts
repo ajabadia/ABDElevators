@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -7,7 +8,7 @@ import { PromptService } from '@/services/llm/prompt-service';
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     try {
         // 1. Rate Limiting (Strict by IP)
         const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
@@ -81,3 +82,5 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/sandbox/chat', thresholdMs: 1000 });

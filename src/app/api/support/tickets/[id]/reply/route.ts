@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TicketService } from '@/services/support/TicketService';
 import { handleApiError, AppError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const ReplySchema = z.object({
     content: z.string().min(1, 'El mensaje no puede estar vacío'),
@@ -59,4 +59,4 @@ export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { pa
     } catch (error) {
         return handleApiError(error, 'API_TICKET_REPLY_POST', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'POST /api/support/tickets/[id]/reply', thresholdMs: 500 });

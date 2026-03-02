@@ -1,15 +1,16 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse, NextRequest } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { ComplianceService } from '@/services/security/compliance-service';
 import { handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/admin/compliance/certificate
  * Genera y descarga certificado de destrucción de datos (Phase 70 compliance)
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('compliance', 'manage');
@@ -38,3 +39,5 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_COMPLIANCE_CERT', correlationId);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/compliance/certificate', thresholdMs: 1000 });

@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { connectDB, connectLogsDB } from "@/lib/db"
@@ -7,7 +8,7 @@ import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
 import { ApplicationLog } from "@/lib/schemas"
 
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = randomUUID()
 
     try {
@@ -100,3 +101,5 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, "API_USER_DASHBOARD_GET", correlationId)
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/user/dashboard', thresholdMs: 1000 });

@@ -1,3 +1,4 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { auth } from '@/lib/auth';
 import { CreateWorkshopOrderSchema } from '@/lib/schemas';
 import { WorkshopService } from '@/services/ops/workshop-service';
@@ -11,7 +12,7 @@ import { randomUUID } from 'crypto';
  * ⚡ FASE 128.2: Workshop Order Creation & Analysis API
  * POST /api/workshop/orders
  */
-export async function POST(req: Request) {
+async function POST_internal (req: Request) {
     const correlationId = randomUUID();
     const session = await auth();
 
@@ -94,3 +95,5 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/workshop/orders', thresholdMs: 1000 });

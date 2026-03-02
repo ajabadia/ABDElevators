@@ -10,7 +10,8 @@ import {
     BulkWriteOptions,
     OptionalUnlessRequiredId,
     FindOneAndUpdateOptions,
-    ClientSession
+    ClientSession,
+    AnyBulkWriteOperation
 } from 'mongodb';
 import { connectDB, connectLogsDB, connectAuthDB, getMongoClient } from './db';
 import { AppError } from '../errors';
@@ -30,6 +31,7 @@ export interface TenantSession {
         tenantAccess?: { tenantId: string }[];
         accessibleSpaces?: string[];
     }
+    session?: ClientSession;
 }
 
 /**
@@ -83,27 +85,28 @@ export class SecureCollection<T extends Document> {
                         { spaceId: { $in: this.session?.user?.accessibleSpaces || [] } },
                         { ownerUserId: userId }
                     ]
-                } as any;
+                } as Filter<T>;
             } else if (isGlobalAllowed) {
-                const incomingTenantId = (baseFilter as any).tenantId;
+                const incomingFilter = baseFilter as Record<string, unknown>;
+                const incomingTenantId = incomingFilter.tenantId;
                 const allowedSet = [...this.allowedTenants, 'abd_global'];
 
                 if (incomingTenantId && typeof incomingTenantId === 'string') {
                     if (!allowedSet.includes(incomingTenantId)) {
-                        baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as any;
+                        baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as Filter<T>;
                     }
                 } else {
-                    baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as any;
+                    baseFilter = { ...baseFilter, tenantId: { $in: allowedSet } } as Filter<T>;
                 }
             } else if (this.allowedTenants.length > 1) {
-                baseFilter = { ...baseFilter, tenantId: { $in: this.allowedTenants } } as any;
+                baseFilter = { ...baseFilter, tenantId: { $in: this.allowedTenants } } as Filter<T>;
             } else {
-                baseFilter = { ...baseFilter, tenantId: this.primaryTenantId } as any;
+                baseFilter = { ...baseFilter, tenantId: this.primaryTenantId } as Filter<T>;
             }
         }
 
         if (this.useSoftDeletes && !includeDeleted) {
-            baseFilter = { ...baseFilter, deletedAt: { $exists: false } } as any;
+            baseFilter = { ...baseFilter, deletedAt: { $exists: false } } as Filter<T>;
         }
 
         return baseFilter;
@@ -121,16 +124,17 @@ export class SecureCollection<T extends Document> {
         return this.collection.countDocuments(this.applyTenantFilter(filter, options?.includeDeleted));
     }
 
-    async aggregate<A extends Document>(pipeline: any[], options?: any): Promise<A[]> {
-        const tenantStep = { $match: this.applyTenantFilter({}) };
+    async aggregate<A extends Document>(pipeline: Document[], options?: FindOptions): Promise<A[]> {
+        const tenantStep: Document = { $match: this.applyTenantFilter({}) };
         return this.collection.aggregate<A>([tenantStep, ...pipeline], options).toArray();
     }
 
     async insertOne(doc: OptionalUnlessRequiredId<T>, options?: InsertOneOptions) {
         const isGlobalAllowed = ['document_types', 'translations', 'file_blobs', 'spaces'].includes(this.collection.collectionName);
-        const incomingTenantId = (doc as any).tenantId;
+        const incomingDoc = doc as Record<string, unknown>;
+        const incomingTenantId = incomingDoc.tenantId;
 
-        const finalTenantId = (this.isSuperAdmin && incomingTenantId)
+        const finalTenantId = (this.isSuperAdmin && incomingTenantId && typeof incomingTenantId === 'string')
             ? incomingTenantId
             : (isGlobalAllowed && incomingTenantId === 'abd_global')
                 ? 'abd_global'
@@ -139,7 +143,7 @@ export class SecureCollection<T extends Document> {
         const secureDoc = {
             ...doc,
             tenantId: finalTenantId,
-            ownerUserId: (doc as any).ownerUserId || this.session?.user?.id,
+            ownerUserId: (incomingDoc.ownerUserId as string) || this.session?.user?.id,
             createdAt: new Date(),
             updatedAt: new Date()
         } as OptionalUnlessRequiredId<T>;
@@ -158,28 +162,30 @@ export class SecureCollection<T extends Document> {
     }
 
     async updateOne(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions & { includeDeleted?: boolean }) {
-        const finalUpdate = (update as any).$set || (update as any).$push || (update as any).$pull || (update as any).$inc
+        const updateObj = update as Record<string, unknown>;
+        const finalUpdate = updateObj.$set || updateObj.$push || updateObj.$pull || updateObj.$inc
             ? update
             : { $set: update };
 
-        if ((finalUpdate as any).$set) {
-            (finalUpdate as any).$set.updatedAt = new Date();
+        const finalUpdateObj = finalUpdate as Record<string, any>; // Partial use of any inside logic to handle MongoDB dynamic operators safely
+        if (finalUpdateObj.$set) {
+            finalUpdateObj.$set.updatedAt = new Date();
         } else {
-            (finalUpdate as any).$set = { updatedAt: new Date() };
+            finalUpdateObj.$set = { updatedAt: new Date() };
         }
 
         return this.collection.updateOne(this.applyTenantFilter(filter, options?.includeDeleted), finalUpdate as UpdateFilter<T>, options);
     }
 
     async updateMany(filter: Filter<T>, update: UpdateFilter<T> | Partial<T>, options?: UpdateOptions & { includeDeleted?: boolean }) {
-        return this.collection.updateMany(this.applyTenantFilter(filter, options?.includeDeleted), update, options);
+        return this.collection.updateMany(this.applyTenantFilter(filter, options?.includeDeleted), update as UpdateFilter<T>, options);
     }
 
     async findOneAndUpdate(filter: Filter<T>, update: UpdateFilter<T>, options: FindOneAndUpdateOptions = {}) {
         return this.collection.findOneAndUpdate(this.applyTenantFilter(filter), update, options);
     }
 
-    async bulkWrite(operations: any[], options?: BulkWriteOptions) {
+    async bulkWrite(operations: AnyBulkWriteOperation<T>[], options?: BulkWriteOptions) {
         return this.collection.bulkWrite(operations, options);
     }
 
@@ -189,7 +195,7 @@ export class SecureCollection<T extends Document> {
         }
         const result = await this.collection.updateOne(
             this.applyTenantFilter(filter),
-            { $set: { deletedAt: new Date(), updatedAt: new Date() } } as any
+            { $set: { deletedAt: new Date(), updatedAt: new Date() } } as unknown as UpdateFilter<T>
         );
         return {
             acknowledged: result.acknowledged,
@@ -203,7 +209,7 @@ export class SecureCollection<T extends Document> {
         }
         const result = await this.collection.updateMany(
             this.applyTenantFilter(filter),
-            { $set: { deletedAt: new Date(), updatedAt: new Date() } } as any
+            { $set: { deletedAt: new Date(), updatedAt: new Date() } } as unknown as UpdateFilter<T>
         );
         return {
             acknowledged: result.acknowledged,
@@ -223,10 +229,13 @@ export async function withTransaction<R>(fn: (session: ClientSession) => Promise
     const client = await getMongoClient();
     const session = client.startSession();
     try {
-        let result: R = undefined as any;
+        let result: R | undefined;
         await session.withTransaction(async () => {
             result = await fn(session);
         });
+        if (result === undefined) {
+            throw new AppError('INTERNAL_ERROR', 500, 'Transaction result is undefined');
+        }
         return result;
     } finally {
         await session.endSession();
@@ -241,7 +250,7 @@ export async function getTenantCollection<T extends Document>(
     dbType: DatabaseType = 'MAIN',
     options: { softDeletes?: boolean } = {}
 ): Promise<SecureCollection<T>> {
-    let session = providedSession;
+    const session = providedSession;
 
     const hasValidSession = session && session.user && session.user.tenantId;
     const isSingleTenantMode = !!process.env.SINGLE_TENANT_ID;

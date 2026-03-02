@@ -1,10 +1,11 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { TranslationSchema } from '@/lib/schemas';
-import crypto from 'crypto';
 import { z } from 'zod';
 
 /**
@@ -12,7 +13,7 @@ import { z } from 'zod';
  * Lista traducciones del sistema con soporte para filtros (lazy loading).
  * Query params: locale, namespace, search
  */
-export async function GET(req: NextRequest) {
+async function GET_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('i18n', 'read');
@@ -138,7 +139,7 @@ function flatToNest(flat: Record<string, string>): any {
  * POST /api/admin/i18n
  * Crea una nueva llave de traducción.
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('i18n', 'manage');
@@ -170,3 +171,7 @@ export async function POST(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_I18N_CREATE_POST', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/admin/i18n', thresholdMs: 300 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/i18n', thresholdMs: 300 });

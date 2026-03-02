@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { UserDocumentSchema, IngestAuditSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';
-import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ZodError } from 'zod';
 
@@ -12,7 +13,7 @@ import { ZodError } from 'zod';
  * Lists all documents for the authenticated user.
  * SLA: P95 < 200ms
  */
-export async function GET() {
+async function GET_internal () {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -103,7 +104,7 @@ export async function GET() {
  * Uploads a new personal document for the user.
  * SLA: P95 < 2000ms
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -311,3 +312,7 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/auth/knowledge-assets', thresholdMs: 1000 });
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/knowledge-assets', thresholdMs: 1000 });

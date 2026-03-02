@@ -81,6 +81,7 @@
       "title": "Procesando..."
     },
     "dismiss": "Cerrar",
+    "coming_soon": "Próximamente",
     "upload_success": "El archivo se ha subido e indexado correctamente en la bóveda.",
     "search_complete": "Análisis semántico completado con éxito.",
     "workflow_saved": "Estructura del flujo de trabajo persistida atómicamente.",
@@ -325,9 +326,28 @@
   "notificationPrefs": "Preferencias de notificaciones",
   "notificationPrefsSubtitle": "Configura cómo quieres recibir notificaciones",
   "onboarding": {
-    "finish": "Finalizar",
+    "step_counter": "Paso {current} de {total}",
+    "skip": "Saltar tour",
     "next": "Siguiente",
-    "skip": "Omitir"
+    "finish": "Finalizar",
+    "steps": {
+      "welcome_title": "¡Bienvenido a ABD RAG Platform!",
+      "welcome_content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?",
+      "upload_title": "Sube tu primer documento",
+      "upload_content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo.",
+      "ask_title": "Haz tu primera pregunta",
+      "ask_content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico.",
+      "explore_title": "Explora tu entorno",
+      "explore_content": "Hemos personalizado tu tablero basándon en tu rol. ¡Todo listo para empezar!",
+      "actions_title": "Acciones Rápidas",
+      "search_title": "Asistente Técnico",
+      "search_content": "Aquí puedes realizar consultas en lenguaje natural sobre manuales técnicos.",
+      "input_title": "Búsqueda Inteligente",
+      "input_content": "Escribe tu pregunta o selecciona una sugerencia. El sistema buscará en todos los documentos indexados.",
+      "actions_content": "Accede rápidamente a las funciones más usadas: Búsqueda, Subida de Archivos y Tickets.",
+      "business_stats_title": "Métricas de Valor",
+      "business_stats_content": "Visualize the time saved and efficiency gained through AI automation."
+    }
   },
   "parsing": "Procesando...",
   "password": "Contraseña",
@@ -549,10 +569,29 @@
     "branding": "Branding",
     "storage": "Almacenamiento",
     "features": "Funcionalidades",
-    "billing": "Facturación"
+    "billing": "Facturación",
+    "entities": "Entidades Técnicas",
+    "support": "Hub de Soporte",
+    "operations": "Operaciones",
+    "observability": "Observabilidad",
+    "ingest": "Motor de Ingesta",
+    "status": "Estado del Sistema",
+    "trace": "Trazabilidad"
+  },
+  "command_menu": {
+    "title": "Menú de Comandos",
+    "no_results": "No se encontraron resultados.",
+    "system": "Comandos del Sistema",
+    "themes": {
+      "light": "Modo Claro",
+      "dark": "Modo Oscuro",
+      "system": "Tema del Sistema"
+    },
+    "esc_to_close": "Presiona ESC para cerrar"
   },
   "days": {
     "one": "día",
     "other": "días"
-  }
+  },
+  "coming_soon": "Próximamente"
 }

@@ -26,7 +26,7 @@ export const FileBlobSchema = z.object({
     firstSeenAt: z.date().default(() => new Date()),
     lastSeenAt: z.date().default(() => new Date()),
 
-    metadata: z.record(z.string(), z.any()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type FileBlob = z.infer<typeof FileBlobSchema>;

@@ -29,7 +29,7 @@ export class SovereignOntologyService {
     /**
      * Analyzes corrections in FeedbackService to identify "drift".
      */
-    static async analyzeFeedbackDrift(tenantId: string, windowDays: number = 7): Promise<any[]> {
+    static async analyzeFeedbackDrift(tenantId: string, windowDays: number = 7): Promise<Record<string, any>[]> {
         const collection = await getTenantCollection('ai_human_feedback');
         const since = new Date();
         since.setDate(since.getDate() - windowDays);
@@ -58,7 +58,7 @@ export class SovereignOntologyService {
             { $sort: { count: -1 } }
         ]);
 
-        return await (aggregation as any).toArray();
+        return await aggregation;
     }
 
     /**
@@ -101,8 +101,9 @@ export class SovereignOntologyService {
             });
 
             return parsed.proposals;
-        } catch (error) {
-            throw new AppError('INTERNAL_ERROR', 500, 'Error al procesar propuestas del Sovereign Engine');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new AppError('INTERNAL_ERROR', 500, `Error al procesar propuestas del Sovereign Engine: ${errorMessage}`);
         }
     }
 

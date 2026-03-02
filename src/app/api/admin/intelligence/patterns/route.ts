@@ -1,10 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { IntelligenceService } from '@/services/admin/IntelligenceService';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
-import { withPerformanceSLA } from '@/lib/performance-sla';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 const PatternQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).default(20)
@@ -28,4 +28,4 @@ export const GET = withPerformanceSLA(async (req: NextRequest) => {
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_INTELLIGENCE_PATTERNS_GET', correlationId);
     }
-}, { p95: 500, max: 2000 });
+}, { endpoint: 'GET /api/admin/intelligence/patterns', thresholdMs: 500 });

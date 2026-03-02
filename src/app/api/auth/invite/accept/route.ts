@@ -1,8 +1,9 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB, getMongoClient } from '@/lib/db';
 import { AppError, ValidationError, NotFoundError, DatabaseError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { AcceptInviteSchema, UserSchema } from '@/lib/schemas';
 
@@ -11,7 +12,7 @@ import { AcceptInviteSchema, UserSchema } from '@/lib/schemas';
  * Processes invitation acceptance, creates the user and marks the invitation as used.
  * Uses MongoDB transactions to ensure atomicity (Rule #7).
  */
-export async function POST(req: NextRequest) {
+async function POST_internal (req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
@@ -139,3 +140,5 @@ export async function POST(req: NextRequest) {
         }
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/auth/invite/accept', thresholdMs: 1000 });

@@ -1,16 +1,17 @@
+import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { uploadBrandingAsset, deleteFromCloudinary } from '@/lib/cloudinary';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * POST /api/admin/tenants/[tenantId]/branding/upload
  * Sube un logo o favicon para el branding del tenant (Phase 70 compliance).
  */
-export async function POST(
+async function POST_internal (
     req: NextRequest,
     { params }: { params: Promise<{ tenantId: string }> }
 ) {
@@ -75,3 +76,5 @@ export async function POST(
         return handleApiError(error, 'API_ADMIN_BRANDING_UPLOAD', correlacion_id);
     }
 }
+
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/admin/tenants/[tenantId]/branding/upload', thresholdMs: 1000 });

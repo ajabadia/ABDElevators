@@ -1,14 +1,29 @@
+import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { FileBlobSchema, FileBlob } from '@/lib/schemas/blob';
-import crypto from 'crypto';
 import { AppError } from '@/lib/errors';
+import { ClientSession } from 'mongodb';
 
 export interface StorageContext {
     tenantId: string;
     userId?: string;
     correlationId: string;
     source: 'RAG_INGEST' | 'USER_DOCS' | 'SYSTEM';
+}
+
+/**
+ * Interface representing the session/auth context passed to services.
+ */
+export interface TenantSession {
+    user: {
+        id: string; // Required for getTenantCollection
+        tenantId: string;
+        role: string;
+        email?: string;
+        [key: string]: unknown;
+    };
+    session?: ClientSession;
 }
 
 /**
@@ -37,7 +52,7 @@ export class BlobStorageService {
             mimeType: string;
         },
         context: StorageContext,
-        session?: any
+        session?: TenantSession
     ): Promise<{ blob: FileBlob; deduplicated: boolean }> {
         const md5 = this.calculateHash(buffer);
         const correlationId = context.correlationId;
@@ -46,7 +61,7 @@ export class BlobStorageService {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || {}),
+                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
                 tenantId: 'platform_master',
                 role: 'SUPER_ADMIN' // 🚨 Crucial: SecureCollection respects tenantId if role is SUPER_ADMIN
             }
@@ -55,7 +70,7 @@ export class BlobStorageService {
         // 1. Check for existing blob (Atomic update)
         // Ensure atomic result is handled correctly based on driver version
         const findResult = await blobsCollection.findOneAndUpdate(
-            { _id: md5 as any },
+            { _id: md5 as unknown as any }, // MongoDB _id can be string or ObjectId, using any here sparingly for driver compatibility
             {
                 $inc: { refCount: 1 },
                 $set: { lastSeenAt: new Date() }
@@ -67,30 +82,32 @@ export class BlobStorageService {
         );
 
         // Normalize MongoDB ModifyResult vs Direct Document
-        const existingBlob = (findResult as any)?.value !== undefined
-            ? (findResult as any).value
-            : findResult;
+        // findOneAndUpdate can return the document or a ModifyResult object
+        const existingBlob = (findResult as unknown as { value?: FileBlob }).value !== undefined
+            ? (findResult as unknown as { value: FileBlob }).value
+            : (findResult as unknown as FileBlob);
 
         if (existingBlob) {
             // 🔄 Backward Compatibility: Normalize old field names (Phase 125.1)
+            const legacyBlob = existingBlob as unknown as Record<string, unknown>;
             const normalizedBlobData = {
                 ...existingBlob,
-                _id: existingBlob._id || (existingBlob as any).md5, // Support old MD5 field if necessary
-                providerId: existingBlob.providerId || (existingBlob as any).cloudinaryPublicId,
-                url: existingBlob.url || (existingBlob as any).cloudinaryUrl,
-                secureUrl: existingBlob.secureUrl || existingBlob.url || (existingBlob as any).cloudinaryUrl,
+                _id: existingBlob._id || (legacyBlob.md5 as string), // Support old MD5 field if necessary
+                providerId: existingBlob.providerId || (legacyBlob.cloudinaryPublicId as string),
+                url: existingBlob.url || (legacyBlob.cloudinaryUrl as string),
+                secureUrl: existingBlob.secureUrl || existingBlob.url || (legacyBlob.cloudinaryUrl as string),
                 provider: existingBlob.provider || 'cloudinary',
                 // Default required fields if missing in legacy records
                 mimeType: existingBlob.mimeType || 'application/pdf',
                 sizeBytes: existingBlob.sizeBytes || 0,
                 refCount: existingBlob.refCount ?? 1,
-                firstSeenAt: existingBlob.firstSeenAt || existingBlob.createdAt || new Date(),
+                firstSeenAt: (existingBlob.firstSeenAt as unknown as Date) || (legacyBlob.createdAt as Date) || new Date(),
                 lastSeenAt: new Date()
             };
 
             try {
                 console.log(`[BLOB_STORAGE] Normalizing legacy blob ${md5}:`, {
-                    hasCloudinaryPublicId: !!(existingBlob as any).cloudinaryPublicId,
+                    hasCloudinaryPublicId: !!legacyBlob.cloudinaryPublicId,
                     hasProviderId: !!existingBlob.providerId
                 });
 
@@ -112,14 +129,15 @@ export class BlobStorageService {
                 });
 
                 return { blob: validatedBlob, deduplicated: true };
-            } catch (validationError: any) {
-                console.error(`[BLOB_STORAGE] Legacy blob validation failed for MD5 ${md5}:`, validationError.issues);
+            } catch (validationError: unknown) {
+                const message = validationError instanceof Error ? validationError.message : 'Unknown validation error';
+                console.error(`[BLOB_STORAGE] Legacy blob validation failed for MD5 ${md5}:`, validationError);
                 // Fallthrough to re-upload if legacy record is too corrupted to use
                 await logEvento({
                     level: 'WARN',
                     source: 'BLOB_STORAGE',
                     action: 'LEGACY_BLOB_CORRUPTED',
-                    message: `Existing blob ${md5} is corrupted, forcing re-upload: ${validationError.message}`,
+                    message: `Existing blob ${md5} is corrupted, forcing re-upload: ${message}`,
                     correlationId
                 });
             }
@@ -127,7 +145,7 @@ export class BlobStorageService {
 
         // 2. Not found - Upload to Provider (Cloudinary by default for now)
         // Note: For now we use the existing Cloudinary utility based on context
-        let uploadResult;
+        let uploadResult: { publicId: string; secureUrl: string };
         const { uploadRAGDocument, uploadUserDocument } = await import('@/lib/cloudinary');
 
         try {
@@ -137,22 +155,23 @@ export class BlobStorageService {
                 // USER_DOCS or SYSTEM
                 uploadResult = await uploadUserDocument(buffer, metadata.filename, context.tenantId, context.userId || 'system');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown upload error';
             await logEvento({
                 level: 'ERROR',
                 source: 'BLOB_STORAGE',
                 action: 'UPLOAD_FAILED',
-                message: `Upload to provider failed for ${metadata.filename}: ${error.message}`,
+                message: `Upload to provider failed for ${metadata.filename}: ${message}`,
                 correlationId,
-                details: { md5, tenantId: context.tenantId, error: error.message }
+                details: { md5, tenantId: context.tenantId, error: message }
             });
-            throw new AppError('EXTERNAL_SERVICE_ERROR', 502, `Storage provider error: ${error.message}`);
+            throw new AppError('EXTERNAL_SERVICE_ERROR', 502, `Storage provider error: ${message}`);
         }
 
         // 3. Register new blob
         const newBlobData = {
             _id: md5,
-            provider: 'cloudinary',
+            provider: 'cloudinary' as const,
             providerId: uploadResult.publicId,
             url: uploadResult.secureUrl,
             secureUrl: uploadResult.secureUrl,
@@ -173,10 +192,11 @@ export class BlobStorageService {
 
         try {
             // Cast to any to avoid ObjectId vs string _id linting issues
-            await blobsCollection.insertOne(validatedBlob as any, { session: session?.session });
-        } catch (insertError: any) {
+            await blobsCollection.insertOne(validatedBlob as unknown as any, { session: session?.session });
+        } catch (insertError: unknown) {
+            const mongoErr = insertError as { code?: number; message?: string };
             // 🛡️ Conflict Resolution (Rule #7 Atomic Operations)
-            if (insertError.code === 11000 || insertError.message?.includes('E11000')) {
+            if (mongoErr.code === 11000 || mongoErr.message?.includes('E11000')) {
                 await logEvento({
                     level: 'WARN',
                     source: 'BLOB_STORAGE',
@@ -188,8 +208,8 @@ export class BlobStorageService {
                 // Conflict means it was just created or already existed. 
                 // We overwrite with the latest valid data since we've already uploaded.
                 await blobsCollection.updateOne(
-                    { _id: md5 as any },
-                    { $set: validatedBlob as any },
+                    { _id: md5 as unknown as any },
+                    { $set: validatedBlob as unknown as any },
                     { session: session?.session }
                 );
 
@@ -213,18 +233,18 @@ export class BlobStorageService {
     /**
      * Decrements the reference count of a blob.
      */
-    static async unregisterBlob(md5: string, session?: any): Promise<void> {
+    static async unregisterBlob(md5: string, session?: TenantSession): Promise<void> {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || {}),
+                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
                 tenantId: 'platform_master',
                 role: 'SUPER_ADMIN'
             }
         });
 
         await blobsCollection.updateOne(
-            { _id: md5 as any },
+            { _id: md5 as unknown as any },
             { $inc: { refCount: -1 } },
             { session: session?.session }
         );
@@ -235,11 +255,11 @@ export class BlobStorageService {
      * 
      * Used by garbage collection job
      */
-    static async findOrphanedBlobs(session?: any): Promise<FileBlob[]> {
+    static async findOrphanedBlobs(session?: TenantSession): Promise<FileBlob[]> {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || {}),
+                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
                 tenantId: 'platform_master',
                 role: 'SUPER_ADMIN'
             },
@@ -257,18 +277,18 @@ export class BlobStorageService {
     static async deleteOrphanedBlob(
         md5: string,
         correlationId: string,
-        session?: any
+        session?: TenantSession
     ): Promise<void> {
         const blobsCollection = await getTenantCollection('file_blobs', {
             ...session,
             user: {
-                ...(session?.user || {}),
+                ...(session?.user || { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN', email: 'system@platform.local' }),
                 tenantId: 'platform_master',
                 role: 'SUPER_ADMIN'
             },
         });
 
-        const blob = await blobsCollection.findOne({ _id: md5 as any });
+        const blob = await blobsCollection.findOne({ _id: md5 as unknown as any });
         if (!blob || blob.refCount > 0) {
             // Not orphaned, skip
             return;
@@ -284,7 +304,7 @@ export class BlobStorageService {
         }
 
         // Delete blob record
-        await blobsCollection.deleteOne({ _id: md5 as any }, { session: session?.session });
+        await blobsCollection.deleteOne({ _id: md5 as unknown as any }, { session: session?.session });
 
         await logEvento({
             level: 'INFO',

@@ -47,7 +47,7 @@ export class LlmJsonParser {
     }): T {
         const { raw, schema, source, correlationId, tenantId } = params;
 
-        let parsed: any = null;
+        let parsed: unknown = null;
         let recoveryMethod = 'DIRECT';
 
         const cleaned = this.clean(raw);

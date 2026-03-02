@@ -15,19 +15,19 @@ export async function safeParseLlmJson<T>(params: {
 }): Promise<T> {
     const { raw, schema, source, correlationId, tenantId } = params;
 
-    let parsed: any = null;
+    let parsed: unknown = null;
     let method = 'DIRECT';
 
     try {
         parsed = JSON.parse(raw.trim());
-    } catch (e) {
+    } catch (e: unknown) {
         method = 'REGEX_MATCH';
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
         if (jsonMatch) {
             try {
                 parsed = JSON.parse(jsonMatch[0]);
-            } catch (e2) {
+            } catch (e2: unknown) {
                 method = 'MARKDOWN_CLEAN';
                 const cleaned = raw
                     .replace(/```json/g, '')
@@ -36,7 +36,7 @@ export async function safeParseLlmJson<T>(params: {
 
                 try {
                     parsed = JSON.parse(cleaned);
-                } catch (e3) {
+                } catch (e3: unknown) {
                     method = 'REPAIR_ATTEMPT';
                     const repaired = jsonMatch[0]
                         .replace(/,\s*([\]}])/g, '$1')
@@ -44,7 +44,8 @@ export async function safeParseLlmJson<T>(params: {
 
                     try {
                         parsed = JSON.parse(repaired);
-                    } catch (e4) {
+                    } catch (e4: unknown) {
+                        const err = e4 instanceof Error ? e4 : new Error(String(e4));
                         await logEvento({
                             level: 'ERROR',
                             source,
@@ -55,7 +56,7 @@ export async function safeParseLlmJson<T>(params: {
                             details: {
                                 rawLength: raw.length,
                                 snippet: raw.slice(0, 500),
-                                error: (e4 as Error).message
+                                error: err.message
                             }
                         });
                         throw new AppError('LLM_INVALID_RESPONSE', 500, 'La IA no devolvió un JSON válido después de varios intentos de recuperación');
@@ -83,7 +84,8 @@ export async function safeParseLlmJson<T>(params: {
         }
 
         return validated;
-    } catch (zodError) {
+    } catch (zodError: unknown) {
+        const err = zodError as z.ZodError;
         await logEvento({
             level: 'ERROR',
             source,
@@ -93,7 +95,7 @@ export async function safeParseLlmJson<T>(params: {
             tenantId,
             details: {
                 method,
-                errors: (zodError as z.ZodError).issues,
+                errors: err.issues,
                 parsedSnippet: JSON.stringify(parsed).slice(0, 500)
             }
         });

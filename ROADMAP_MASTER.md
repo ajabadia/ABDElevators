@@ -14,7 +14,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
+- **Recent Ship**: **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
 - **Project Status**: **ERA 9: SYMPHONY** in progress. 100% ABAC Enforcement achieved in Core, Billing and User blocks (Phase 236). Middleware hardened and strictly typed (Phase 234).
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -796,7 +796,27 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-#### 🧹 FASE 225B: HOOKS, API HYGIENE & SECURITY CLEANUP
+#### 🚀 FASE 240: EDGE RUNTIME COMPATIBILITY & SYSTEM HYGIENE
+**Status:** `[COMPLETED ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 2 días
+
+**Objetivo:** Eliminar dependencias ilegales del módulo `crypto` de Node.js en el Edge Runtime y asegurar la estabilidad de las APIs en Vercel.
+
+- [X] **Refactor de Crypto**: Reemplazo de `crypto.randomUUID()` por `globalThis.crypto.randomUUID()` en componentes de cliente y Middleware. ✅
+- [X] **Eliminación de Side-effects**: Remoción de imports innecesarios de `crypto` en utilidades compartidas. ✅
+
+#### 🚀 FASE 241: i18n RECOVERY & STRUCTURAL INTEGRITY
+**Status:** `[COMPLETED ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 2 días
+
+**Objetivo:** Reparar la corrupción de archivos JSON i18n y restaurar la gobernanza de traducciones.
+
+- [X] **BOM Purge**: Eliminación del Byte Order Mark (BOM) `EF-BB-BF` que impedía el parseo de JSON en Node.js. ✅
+- [X] **Deduplicación Estructural**: Fusión de secciones duplicadas (`onboarding`, `search`) en `common.json`. ✅
+- [X] **Restauración de Claves**: Recuperación de claves críticas para `CommandMenu`, `breadcrumbs.trace` y `coming_soon`. ✅
+- [X] **Validación de Integridad**: Script de validación automatizada para asegurar JSONs 100% válidos. ✅
+
+---
+
+### 📦 ERA 9: SYMPHONY
 
 **Objetivo:** Resolver violaciones de reglas del proyecto en hooks, eliminar duplicados de componentes compartidos, y auditar seguridad de APIs de debug.
 
@@ -968,7 +988,7 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **236.3: Inventariar y migrar rutas Billing** (`/api/billing/*`): portal, webhook, simulate-change, create-checkout, change-plan.
 - [x] **236.4: Inventariar y migrar rutas User** (`/api/user/*`): preferences, search, documents.
 - [x] **236.5: Excluir webhooks** (`/api/billing/webhook`) del enforcement — son llamadas de Stripe server-to-server, no de usuarios.
-- [ ] **236.6: Build + smoke test completo**.
+- [x] **236.6: Build + smoke test completo**.
 
 **Criterio de aceptación:** 100% de APIs de la aplicación con enforcement ABAC (excepto webhooks, health checks y auth). Documentado en `docs/permissions-matrix.md`.
 
@@ -993,7 +1013,7 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🔧 FASE 238: STRICT TYPING SWEEP (src/services)
 
-**Status:** `[EN CURSO 🏗️]` | **Prioridad:** ALTA | **Estimación:** 4-5 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 4-5 días
 
 **Objetivo:** Erradicación de `: any` en toda la capa de servicios (`src/services`), asegurando contratos de tipos robustos en la lógica de negocio.
 
@@ -1010,17 +1030,17 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 🧪 FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS
 
-**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4-5 día
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 4-5 día
 
 **Objetivo:** Activar la infraestructura de testing existente (`jest.config.js`) y escribir los primeros tests unitarios para los módulos más críticos.
 
 **Tareas:**
-- [ ] **239.1: Crear `jest.setup.ts`** con mocks globales (env vars, MongoDB connection mock).
-- [ ] **239.2: Crear estructura `tests/unit/` y `tests/integration/`**.
-- [ ] **239.3: Tests LLM Core** — `PromptRunner.test.ts`, `LlmJsonParser.test.ts` (mocks de Gemini API).
-- [ ] **239.4: Tests Repositories** — `BaseRepository.test.ts` (mock de MongoDB).
-- [ ] **239.5: Tests Guardian** — `guardian-guard.test.ts`: `enforcePermission` happy path + denied.
-- [ ] **239.6: Tests Schemas** — Validación de Zod schemas para ingest, billing, support.
+- [x] **239.1: Crear `jest.setup.ts`** con mocks globales (env vars, MongoDB connection mock).
+- [x] **239.2: Crear estructura `tests/unit/` y `tests/integration/`**.
+- [x] **239.3: Tests LLM Core** — `PromptRunner.test.ts`, `LlmJsonParser.test.ts` (mocks de Gemini API).
+- [x] **239.4: Tests Repositories** — `BaseRepository.test.ts` (mock de MongoDB).
+- [x] **239.5: Tests Guardian** — `guardian-guard.test.ts`: `enforcePermission` happy path + denied.
+- [x] **239.6: Tests Schemas** — Validación de Zod schemas para ingest, billing, support.
 
 ---
 

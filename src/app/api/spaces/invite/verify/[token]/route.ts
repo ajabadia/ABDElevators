@@ -1,10 +1,11 @@
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextResponse } from 'next/server';
 import { SpaceInvitationService } from '@/services/tenant/space-invitation-service';
 import { handleApiError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
 import { logEvento } from '@/lib/logger';
 
-export async function GET(
+async function GET_internal (
     req: Request,
     { params }: { params: Promise<{ token: string }> }
 ) {
@@ -32,3 +33,5 @@ export async function GET(
         return handleApiError(error, 'API_SPACES', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(GET_internal, { endpoint: 'GET /api/spaces/invite/verify/[token]', thresholdMs: 1000 });

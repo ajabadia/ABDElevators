@@ -4,7 +4,7 @@ export class CsvStreamBuilder {
     /**
      * Converts an array of objects to a CSV stream.
      */
-    static toCsvStream(data: any[]): Readable {
+    static toCsvStream(data: Record<string, unknown>[] | Record<string, any>[]): Readable {
         if (data.length === 0) return Readable.from(['']);
 
         const headers = Object.keys(data[0]);
@@ -26,8 +26,8 @@ export class CsvStreamBuilder {
     /**
      * Deep flattens an object for better CSV representation.
      */
-    static flattenObject(obj: any, prefix = ''): Record<string, any> {
-        const result: any = {};
+    static flattenObject(obj: Record<string, unknown> | Record<string, any>, prefix = ''): Record<string, any> {
+        const result: Record<string, any> = {};
         for (const key in obj) {
             const newKey = prefix ? `${prefix}.${key}` : key;
             if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
