@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { Queue, Job } from 'bullmq';
 import { getRedisConnection } from '@/lib/redis';
 import { logEvento } from '@/lib/logger';

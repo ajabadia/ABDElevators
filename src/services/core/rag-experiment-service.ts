@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { ragExperimentRepository } from '@/lib/repositories/RagExperimentRepository';
 import { logEvento } from '@/lib/logger';
 import { RagEvaluationService } from './rag-evaluation-service';

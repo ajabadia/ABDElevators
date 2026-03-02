@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+// 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 import { getTenantCollection } from '@/lib/db-tenant';
 import { logEvento } from '@/lib/logger';
 import { GovernancePolicy, AIDecisionAudit } from '@/types/governance';

@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { FederatedPattern, FederatedPatternSchema, IndustryType } from '@/lib/schemas';
 import { connectDB } from '@/lib/db';
 import { generateEmbedding } from '@/services/llm/llm-service';

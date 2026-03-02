@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { IntelligenceDashboard } from "@/core/engine/IntelligenceDashboard";
 import { logEvento } from "@/lib/logger";

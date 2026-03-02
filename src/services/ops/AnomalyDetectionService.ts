@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { connectLogsDB } from '@/lib/db';
 import { logEvento } from '@/lib/logger';
 import { NotificationService } from '@/services/core/NotificationService';

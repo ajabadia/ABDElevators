@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { PredictiveEngine } from "@/core/engine/PredictiveEngine";
 import { logEvento } from "@/lib/logger";

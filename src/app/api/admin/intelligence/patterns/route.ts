@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { IntelligenceService } from '@/services/admin/IntelligenceService';
 import { enforcePermission } from '@/lib/guardian-guard';

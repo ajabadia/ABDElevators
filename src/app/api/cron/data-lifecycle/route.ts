@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { DataLifecycleService } from '@/services/ops/data-lifecycle-service';
 import { logEvento } from '@/lib/logger';

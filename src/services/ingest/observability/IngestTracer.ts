@@ -11,7 +11,6 @@
  * - Performance SLA tracking (P95, P99)
  */
 
-import crypto from 'crypto';
 import { trace, Span, SpanStatusCode, context, propagation } from '@opentelemetry/api';
 import { logEvento } from '@/lib/logger';
 

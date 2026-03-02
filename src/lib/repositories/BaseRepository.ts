@@ -1,5 +1,5 @@
-import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
-import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions } from 'mongodb';
+import { getTenantCollection, TenantSession, SecureCollection, DatabaseType } from '@/lib/db-tenant';
+import { ObjectId, Document, AnyBulkWriteOperation, Sort, Filter, UpdateFilter, type ClientSession, type UpdateOptions, OptionalUnlessRequiredId } from 'mongodb';
 
 /**
  * 🏛️ BaseRepository
@@ -14,8 +14,8 @@ export abstract class BaseRepository<T extends Document> {
     /**
      * Obtiene la colección de MongoDB con aislamiento de tenant.
      */
-    protected async getCollection(session?: TenantSession | null): Promise<any> {
-        return await getTenantCollection<T>(this.collectionName, session, this.clusterName as any);
+    protected async getCollection(session?: TenantSession | null): Promise<SecureCollection<T>> {
+        return await getTenantCollection<T>(this.collectionName, session, this.clusterName as DatabaseType);
     }
 
     /**
@@ -56,8 +56,7 @@ export abstract class BaseRepository<T extends Document> {
             sort: options.sort || { updatedAt: -1 } as Sort,
             limit: options.limit || 50,
             skip: options.skip || 0,
-            session: mongoSession
-        }).toArray() as unknown as T[];
+        }) as unknown as T[];
     }
 
     /**
@@ -65,7 +64,7 @@ export abstract class BaseRepository<T extends Document> {
      */
     async create(data: Partial<T>, session?: TenantSession | null, mongoSession?: ClientSession): Promise<string> {
         const collection = await this.getCollection(session);
-        const result = await collection.insertOne(data as any, { session: mongoSession });
+        const result = await collection.insertOne(data as OptionalUnlessRequiredId<T>, { session: mongoSession });
         return result.insertedId.toString();
     }
 
@@ -97,7 +96,7 @@ export abstract class BaseRepository<T extends Document> {
      */
     async count(query: Filter<T> = {}, session?: TenantSession | null, mongoSession?: ClientSession): Promise<number> {
         const collection = await this.getCollection(session);
-        return await collection.countDocuments(query, { session: mongoSession });
+        return await collection.countDocuments(query);
     }
 
     /**

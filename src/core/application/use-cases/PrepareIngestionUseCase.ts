@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+// 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 import 'server-only';
 import { IKnowledgeRepository } from '../../domain/repositories/IKnowledgeRepository';
 import { IAuditRepository } from '../../domain/repositories/IAuditRepository';
@@ -24,7 +24,7 @@ export class PrepareIngestionUseCase {
 
     async execute(options: IngestOptions) {
         const { tenantId, environment = 'PRODUCTION', userEmail, correlationId: inputCorrelationId } = options;
-        const correlationId = inputCorrelationId || crypto.randomUUID();
+        const correlationId = inputCorrelationId || globalThis.crypto.randomUUID();
 
         // 1. DELEGATE to IngestPreparer for all preparation logic
         const prepareResult = await IngestPreparer.prepare({

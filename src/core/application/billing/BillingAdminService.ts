@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+// 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 import { connectAuthDB } from '@/lib/db';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { QuotaService } from '@/services/security/quota-service';
@@ -218,7 +218,7 @@ export class BillingAdminService {
 
         await TenantService.updateConfig(tenantId, updates, {
             performedBy: 'BillingAdmin',
-            correlationId: crypto.randomUUID()
+            correlationId: globalThis.crypto.randomUUID()
         });
 
         await logEvento({
@@ -226,7 +226,7 @@ export class BillingAdminService {
             source: 'BILLING_ADMIN',
             action: 'CONTRACT_UPDATED',
             message: `Contract updated for tenant ${tenantId}`,
-            correlationId: crypto.randomUUID(),
+            correlationId: globalThis.crypto.randomUUID(),
             details: { tenantId, updates }
         });
 

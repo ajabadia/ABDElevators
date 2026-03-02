@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { getTenantCollection } from "@/lib/db-tenant";
 import { TenantConfigSchema, type TenantConfig } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";

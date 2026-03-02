@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { AppError } from '@/lib/errors';
 
 const ALGORITHM = 'aes-256-gcm';

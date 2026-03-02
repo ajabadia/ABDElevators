@@ -570,7 +570,8 @@
     "observability": "Observability",
     "ingest": "Ingestion Engine",
     "status": "System Status",
-    "trace": "Trace"
+    "trace": "Trace",
+    "tasks": "Tasks"
   },
   "command_menu": {
     "title": "Command Menu",

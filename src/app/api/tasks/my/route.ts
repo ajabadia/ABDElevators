@@ -5,7 +5,7 @@ import { WorkflowTaskService } from '@/services/ops/WorkflowTaskService';
 import { AppError, handleApiError } from '@/lib/errors';
 import { v4 as uuidv4 } from 'uuid';
 
-async function GET_internal (request: Request) {
+async function GET_internal(request: Request) {
     const correlationId = uuidv4();
     try {
         const session = await enforcePermission('workflow:task', 'read');
@@ -15,7 +15,7 @@ async function GET_internal (request: Request) {
 
         const tasks = await WorkflowTaskService.listTasks(tenantId, {
             assignedUserId: userId
-        });
+        }, session);
 
         return NextResponse.json({
             success: true,

@@ -1,6 +1,7 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AuditTrail, AuditTrailSchema } from '@/lib/schemas';
-import { randomUUID } from 'crypto';
+
+// 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 
 /**
  * AuditService provides banking-grade traceability for system state changes.
@@ -68,7 +69,7 @@ export class AuditService {
 
     static generateCorrelationId(): string {
         try {
-            return randomUUID();
+            return globalThis.crypto.randomUUID();
         } catch (e) {
             return Math.random().toString(36).substring(2, 15);
         }

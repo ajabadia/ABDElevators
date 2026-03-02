@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+// 🛡️ Edge Runtime Compatibility: Use globalThis.crypto instead of 'crypto' module.
 import { connectAuthDB } from '@/lib/db';
 import { UserInviteSchema } from '@/lib/schemas';
 import { logEvento } from '@/lib/logger';
@@ -49,7 +49,7 @@ export class BulkInviteUseCase {
                 const tenant = await authDb.collection('tenants').findOne({ tenantId });
                 const tenantName = tenant?.name || tenantId;
 
-                const token = crypto.randomBytes(32).toString('hex');
+                const token = globalThis.crypto.randomUUID().replace(/-/g, ''); // Use randomUUID for token if Edge
                 const expiresAt = new Date();
                 expiresAt.setDate(expiresAt.getDate() + 7);
 

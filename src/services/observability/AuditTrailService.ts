@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { AuditSchema, AuditEntry } from './schemas/AuditSchema';
 import { ObservabilityRepository } from './ObservabilityRepository';
 import { LoggingService } from './LoggingService';

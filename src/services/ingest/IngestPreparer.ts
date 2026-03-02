@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 import { IngestAuditService } from './IngestAuditService';
 import { IngestValidator } from './IngestValidator';

@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { Ticket, TicketSchema, TicketStatus, TicketPriority } from "@/lib/schemas/ticketing";
 import { ticketRepository } from "@/lib/repositories/TicketRepository";
 import { AppError } from "@/lib/errors";

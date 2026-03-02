@@ -576,7 +576,8 @@
     "observability": "Observabilidad",
     "ingest": "Motor de Ingesta",
     "status": "Estado del Sistema",
-    "trace": "Trazabilidad"
+    "trace": "Trazabilidad",
+    "tasks": "Tareas"
   },
   "command_menu": {
     "title": "Menú de Comandos",

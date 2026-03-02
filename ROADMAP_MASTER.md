@@ -14,7 +14,7 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
+- **Recent Ship**: **FASE 242: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING**, **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
 - **Project Status**: **ERA 9: SYMPHONY** in progress. 100% ABAC Enforcement achieved in Core, Billing and User blocks (Phase 236). Middleware hardened and strictly typed (Phase 234).
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
@@ -1062,9 +1062,16 @@ CONFIGURACIÓN (Admin Hub):
 
 #### 📖 FASE 242: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING
 
-**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-02
 
 **Objetivo:** Actualizar toda la documentación de proyecto para reflejar ERA 8+9 y facilitar onboarding de nuevos desarrolladores.
+
+- [X] **ARCHITECTURE_ERA9.md**: Documento de arquitectura completo (monorepo, módulos, seguridad 3 capas, DB multi-cluster, stack).
+- [X] **DEVELOPER_ONBOARDING_ERA9.md**: Guía de onboarding para nuevos desarrolladores (setup, estructura, flujos, reglas, checklist PR).
+- [X] **CODING_CONVENTIONS_ERA9.md**: Convenciones de código (TypeScript strict, APIs, DB, crypto Edge, i18n, React 19, testing).
+- [X] **SECURITY_GUIDE_ERA9.md**: Guía de seguridad (Defense in Depth, multi-tenant isolation, PII, auditoría).
+- [X] **API_REFERENCE_ERA9.md**: Referencia de 128 endpoints categorizados por módulo con permisos Guardian y SLAs.
+
 
 ---
 
@@ -1080,7 +1087,7 @@ CONFIGURACIÓN (Admin Hub):
 | 239 | Test Infrastructure & Core Tests | 4-5 días | 🟠 ALTA | 238 [COMPLETADO ✅] |
 | 240 | Performance SLA Expansion | 2-3 días | 🟡 MEDIA | 237 |
 | 241 | i18n Deep Polish | 2-3 días | 🟡 MEDIA | — |
-| 242 | Documentation Refresh | 2-3 días | 🟡 MEDIA | Todo lo anterior |
+| 242 | Documentation Refresh | 2-3 días | 🟡 MEDIA | Todo lo anterior [COMPLETADO ✅] |
 
 **Total estimado:** 25-33 días (~6 semanas).
 

@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { auth } from '@/lib/auth';
 import { logEvento } from '@/lib/logger';
 import { AppError, ValidationError } from '@/lib/errors';

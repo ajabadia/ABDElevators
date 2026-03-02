@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { logEvento } from '@/lib/logger';
 
 /**

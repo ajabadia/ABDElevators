@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { TechnicalStatsService } from '@/services/core/TechnicalStatsService';
 import { handleApiError } from '@/lib/errors';

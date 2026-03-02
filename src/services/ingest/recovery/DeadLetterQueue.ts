@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';

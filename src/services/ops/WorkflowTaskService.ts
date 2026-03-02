@@ -3,7 +3,7 @@ import { type WorkflowTask, WorkflowTaskSchema } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { UserRole } from '@/types/roles';
-import { type ClientSession, type Filter } from 'mongodb';
+import { type ClientSession, type Filter, type UpdateFilter } from 'mongodb';
 import { type TenantSession } from '@/lib/db-tenant';
 
 /**
@@ -79,7 +79,7 @@ export class WorkflowTaskService {
      */
     static async getTaskById(id: string, tenantId: string, session?: TenantSession | null) {
         const query: Filter<WorkflowTask> = {
-            _id: workflowTaskRepository.toObjectId(id) as any,
+            _id: id as any, // ID in WorkflowTask schema is string, but repository handles ObjectId
             tenantId
         };
 
@@ -130,7 +130,7 @@ export class WorkflowTaskService {
             }
         }
 
-        const success = await workflowTaskRepository.update(id, { $set: updateData as any }, session, mongoSession);
+        const success = await workflowTaskRepository.update(id, { $set: updateData as UpdateFilter<WorkflowTask> }, session, mongoSession);
 
         if (!success) {
             throw new AppError('DATABASE_ERROR', 500, 'Error al actualizar la tarea');

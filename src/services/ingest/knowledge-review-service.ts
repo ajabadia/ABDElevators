@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { KnowledgeAsset, KnowledgeAssetSchema } from '@/lib/schemas/knowledge';
 import { ObjectId } from 'mongodb';

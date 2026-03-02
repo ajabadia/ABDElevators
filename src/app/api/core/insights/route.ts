@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { InsightEngine, Insight } from "@/core/engine/InsightEngine";
