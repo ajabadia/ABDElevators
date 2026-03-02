@@ -963,11 +963,11 @@ CONFIGURACIÓN (Admin Hub):
 - `/api/user/*` tiene preferences, search, documents — acceso personal.
 
 **Tareas:**
-- [ ] **236.1: Inventariar rutas Core** (`/api/core/*`): entities, quick-qa, insights, predictive, graph, governance, agents, automation, collaboration, dashboard.
-- [ ] **236.2: Definir recursos Guardian para rutas Core** y migrar al modelo ABAC.
-- [ ] **236.3: Inventariar y migrar rutas Billing** (`/api/billing/*`): portal, webhook, simulate-change, create-checkout, change-plan.
-- [ ] **236.4: Inventariar y migrar rutas User** (`/api/user/*`): preferences, search, documents.
-- [ ] **236.5: Excluir webhooks** (`/api/billing/webhook`) del enforcement — son llamadas de Stripe server-to-server, no de usuarios.
+- [x] **236.1: Inventariar rutas Core** (`/api/core/*`): entities, quick-qa, insights, predictive, graph, governance, agents, automation, collaboration, dashboard.
+- [x] **236.2: Definir recursos Guardian para rutas Core** y migrar al modelo ABAC.
+- [x] **236.3: Inventariar y migrar rutas Billing** (`/api/billing/*`): portal, webhook, simulate-change, create-checkout, change-plan.
+- [x] **236.4: Inventariar y migrar rutas User** (`/api/user/*`): preferences, search, documents.
+- [x] **236.5: Excluir webhooks** (`/api/billing/webhook`) del enforcement — son llamadas de Stripe server-to-server, no de usuarios.
 - [ ] **236.6: Build + smoke test completo**.
 
 **Criterio de aceptación:** 100% de APIs de la aplicación con enforcement ABAC (excepto webhooks, health checks y auth). Documentado en `docs/permissions-matrix.md`.
