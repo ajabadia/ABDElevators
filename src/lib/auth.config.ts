@@ -1,4 +1,8 @@
-import type { NextAuthConfig } from "next-auth";
+import type { NextAuthConfig, User, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import { logEvento } from "./logger";
+
+const LOG_SOURCE = "AUTH_CONFIG";
 
 export const authConfig = {
     pages: {
@@ -24,25 +28,45 @@ export const authConfig = {
         }
     },
     callbacks: {
-        async jwt({ token, user, trigger, session }) {
+        async jwt({ token, user, trigger, session }: { token: JWT, user?: User | any, trigger?: string, session?: any }) {
             if (user) {
-                console.log(`🎟️ [JWT_CALLBACK] New user login detected for ${user.email}. Enhancing token...`);
-                console.log(`🔎 [JWT_CALLBACK] User properties - role: ${user.role}, mfaVerified: ${(user as any).mfaVerified}`);
-                token.id = user.id!;
-                token.role = user.role;
-                token.baseRole = user.baseRole;
-                token.tenantId = user.tenantId;
-                token.industry = user.industry;
-                token.activeModules = user.activeModules;
-                token.image = user.image;
-                token.tenantAccess = user.tenantAccess;
-                token.permissionGroups = user.permissionGroups;
-                token.permissionOverrides = user.permissionOverrides;
-                token.sessionId = (user as any).sessionId;
-                token.mfaVerified = (user as any).mfaVerified === true;
-                token.mfaPending = (user as any).mfaPending === true;
+                const u = user as User;
+                await logEvento({
+                    level: 'INFO',
+                    source: LOG_SOURCE,
+                    action: 'JWT_CALLBACK_INIT',
+                    message: `New user login detected for ${u.email}. Enhancing token...`
+                });
+
+                await logEvento({
+                    level: 'DEBUG',
+                    source: LOG_SOURCE,
+                    action: 'JWT_CALLBACK_DETAIL',
+                    message: `User properties - role: ${u.role}, mfaVerified: ${u.mfaVerified}`,
+                    details: { role: u.role, mfaVerified: u.mfaVerified }
+                });
+
+                token.id = u.id!;
+                token.role = u.role;
+                token.baseRole = u.baseRole;
+                token.tenantId = u.tenantId;
+                token.industry = u.industry;
+                token.activeModules = u.activeModules;
+                token.image = u.image;
+                token.tenantAccess = u.tenantAccess;
+                token.permissionGroups = u.permissionGroups;
+                token.permissionOverrides = u.permissionOverrides;
+                token.sessionId = u.sessionId;
+                token.mfaVerified = u.mfaVerified === true;
+                token.mfaPending = u.mfaPending === true;
                 token.lastValidated = Date.now();
-                console.log(`✅ [JWT_CALLBACK] Token enhanced for ${user.email}. mfaVerified in token: ${token.mfaVerified}`);
+
+                await logEvento({
+                    level: 'INFO',
+                    source: LOG_SOURCE,
+                    action: 'JWT_CALLBACK_SUCCESS',
+                    message: `Token enhanced for ${u.email}. mfaVerified in token: ${token.mfaVerified}`
+                });
             }
 
             // Manejar actualización de sesión (Visión 2.0)
@@ -59,56 +83,89 @@ export const authConfig = {
 
             return token;
         },
-        async session({ session, token }) {
+        async session({ session, token }: { session: Session, token: JWT }) {
             try {
                 // Sincronizar campos del token a la sesión (Auditoría P0: Higiene de tipos)
-                const t = token as any;
-                if (session.user && t) {
-                    console.log(`🤝 [SESSION_CALLBACK] Syncing token for ${session.user.email}. mfaVerified: ${t.mfaVerified}`);
-                    session.user.id = t.id;
-                    session.user.role = t.role;
-                    session.user.baseRole = t.baseRole;
-                    session.user.tenantId = t.tenantId;
-                    session.user.industry = t.industry;
-                    session.user.activeModules = t.activeModules || [];
-                    session.user.image = t.image;
-                    session.user.tenantAccess = t.tenantAccess;
-                    session.user.permissionGroups = t.permissionGroups || [];
-                    session.user.permissionOverrides = t.permissionOverrides || [];
+                if (session.user && token) {
+                    await logEvento({
+                        level: 'DEBUG',
+                        source: LOG_SOURCE,
+                        action: 'SESSION_CALLBACK_SYNC',
+                        message: `Syncing token for ${session.user.email}. mfaVerified: ${token.mfaVerified}`
+                    });
+
+                    session.user.id = token.id;
+                    session.user.role = token.role;
+                    session.user.baseRole = token.baseRole;
+                    session.user.tenantId = token.tenantId;
+                    session.user.industry = token.industry;
+                    session.user.activeModules = token.activeModules || [];
+                    session.user.image = token.image;
+                    session.user.tenantAccess = token.tenantAccess;
+                    session.user.permissionGroups = token.permissionGroups || [];
+                    session.user.permissionOverrides = token.permissionOverrides || [];
 
                     // Explicit propagation of MFA flags to session user
-                    session.user.mfaVerified = t.mfaVerified === true;
-                    session.user.mfaPending = t.mfaPending === true;
+                    session.user.mfaVerified = token.mfaVerified === true;
+                    session.user.mfaPending = token.mfaPending === true;
 
-                    (session as any).sessionId = t.sessionId; // Pass sessionId to session object
-                    console.log(`✅ [SESSION_CALLBACK] Session synced for ${session.user.email}`);
+                    session.sessionId = token.sessionId; // sessionId propagation
+
+                    await logEvento({
+                        level: 'INFO',
+                        source: LOG_SOURCE,
+                        action: 'SESSION_CALLBACK_SUCCESS',
+                        message: `Session synced for ${session.user.email}`
+                    });
                 }
-            } catch (error: any) {
-                console.error("🔥 [SESSION_CALLBACK_ERROR]", error);
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                await logEvento({
+                    level: 'ERROR',
+                    source: LOG_SOURCE,
+                    action: 'SESSION_CALLBACK_ERROR',
+                    message: `Error in session callback: ${errorMessage}`,
+                    details: { error: errorMessage }
+                });
             }
 
             return session;
         },
-        authorized({ auth, request: { nextUrl } }) {
+        async authorized({ auth, request: { nextUrl } }) {
             const pathname = nextUrl.pathname;
             const isLoggedIn = !!auth?.user;
-            const mfaPending = (auth?.user as any)?.mfaPending === true;
+            const mfaPending = auth?.user?.mfaPending === true;
             const isOnDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
 
-            console.log(`🛡️ [AUTHORIZED] ${pathname} | User: ${auth?.user?.email || 'none'} | LoggedIn: ${isLoggedIn} | MFA Pending: ${mfaPending}`);
+            await logEvento({
+                level: 'DEBUG',
+                source: LOG_SOURCE,
+                action: 'AUTHORIZED_CHECK',
+                message: `Auth check for ${pathname}`,
+                details: {
+                    user: auth?.user?.email || 'none',
+                    isLoggedIn,
+                    mfaPending,
+                    pathname
+                }
+            });
 
             // 1. Si no está logado, permitir páginas públicas
             if (!isLoggedIn) return true;
 
             // 2. PROTECCIÓN MFA: Si tiene sesión pero MFA está pendiente, bloquear dashboard
             if (isOnDashboard && mfaPending) {
-                console.warn(`🛑 [AUTHORIZED_CALLBACK] User ${auth?.user?.email} blocked: MFA Pending`);
+                await logEvento({
+                    level: 'WARN',
+                    source: LOG_SOURCE,
+                    action: 'MFA_BLOCKED',
+                    message: `User ${auth?.user?.email} blocked: MFA Pending`
+                });
                 return false; // Esto redirigirá al login
             }
 
             // 3. Protección de dashboard
             if (isOnDashboard) {
-                console.log(`✅ [AUTHORIZED_CALLBACK] Access granted to ${auth?.user?.email}`);
                 return true;
             }
 

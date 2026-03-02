@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from 'next/server';
-import NextAuth from 'next-auth';
+import NextAuth, { Session } from 'next-auth';
 import { authConfig } from './lib/auth.config';
 import { checkRateLimit, LIMITS } from './lib/rate-limit';
+import { logEvento } from './lib/logger';
+import crypto from 'crypto';
 
 const { auth } = NextAuth(authConfig);
 
@@ -10,10 +12,18 @@ export const config = {
     matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
 };
 
-export default auth(async function middleware(request: NextRequest & { auth?: any }) {
+// Interface extension for NextAuth 5 middleware request
+interface NextAuthRequest extends NextRequest {
+    auth: Session | null;
+}
+
+// NextJS Middleware with NextAuth 5 (Beta) wrapper. 
+// Note: 'auth' provides the session in 'request.auth'
+export default auth(async function middleware(request: NextAuthRequest) {
     const { pathname } = request.nextUrl;
     const session = request.auth;
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    const correlationId = crypto.randomUUID();
 
     // 🛡️ [SECURITY] Rate Limiting (Phase 140)
     // Apply rate limits to API routes
@@ -23,7 +33,15 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         const rateLimit = await checkRateLimit(ip, limitConfig);
 
         if (!rateLimit.success) {
-            console.warn(`[RATE_LIMIT] Blocked ${ip} on ${pathname}`);
+            await logEvento({
+                level: 'WARN',
+                source: 'MIDDLEWARE',
+                action: 'RATE_LIMIT_EXCEEDED',
+                message: `Rate limit blocked ${ip} on ${pathname}`,
+                correlationId,
+                details: { ip, pathname, limit: rateLimit.limit }
+            });
+
             return new NextResponse(JSON.stringify({
                 success: false,
                 message: "Too many requests",
@@ -40,9 +58,22 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         }
     }
 
-    // Trace path for debugging
-    if (pathname.startsWith('/admin') || pathname === '/dashboard' || pathname === '/search' || pathname === '/settings' || pathname === '/login') {
-        console.log(`🛡️ [MIDDLEWARE] Path: ${pathname} | Session: ${!!session} | User: ${session?.user?.email ?? 'none'} | MFA Verified: ${session?.user?.mfaVerified} | MFA Pending: ${session?.user?.mfaPending}`);
+    // Trace path for debugging (Non-sensitive)
+    const monitoredPaths = ['/admin', '/dashboard', '/search', '/settings', '/login'];
+    if (monitoredPaths.some(p => pathname === p || pathname.startsWith(p + '/'))) {
+        await logEvento({
+            level: 'DEBUG',
+            source: 'MIDDLEWARE',
+            action: 'ROUTE_ACCESS',
+            message: `Acceso a ruta: ${pathname}`,
+            correlationId,
+            details: {
+                pathname,
+                hasSession: !!session,
+                user: session?.user?.email ?? 'anonymous',
+                mfaStatus: session?.user ? (session.user.mfaVerified ? 'VERIFIED' : (session.user.mfaPending ? 'PENDING' : 'OFF')) : 'N/A'
+            }
+        });
     }
 
     try {
@@ -86,7 +117,21 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
             if (!isAuthorizedSecret || !isAuthorizedIp) {
                 const sanitizedPath = pathname.replace(/[^\w\/\.\-]/g, '');
                 const sanitizedIp = ip.replace(/[^\d\.]/g, '');
-                console.error(`🚨 [SECURITY] Unauthorized internal access attempt to ${sanitizedPath} from ${sanitizedIp} (Secret: ${!!isAuthorizedSecret}, IP: ${!!isAuthorizedIp})`);
+
+                await logEvento({
+                    level: 'ERROR',
+                    source: 'SECURITY_GATEWAY',
+                    action: 'UNAUTHORIZED_INTERNAL_ACCESS',
+                    message: `Intento de acceso interno no autorizado a ${sanitizedPath}`,
+                    correlationId,
+                    details: {
+                        ip: sanitizedIp,
+                        path: sanitizedPath,
+                        authSecretMatch: !!isAuthorizedSecret,
+                        ipMatch: !!isAuthorizedIp
+                    }
+                });
+
                 return new NextResponse(JSON.stringify({ success: false, message: "Forbidden" }), { status: 403 });
             }
         }
@@ -111,7 +156,15 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         const isMfaAllowedPath = pathname.startsWith('/api/auth') || pathname === '/login' || pathname === '/admin/profile';
 
         if (isMfaPending && !isMfaAllowedPath) {
-            console.error(`🔒 [MFA ENFORCEMENT] REDIRECTING ${pathname} -> /admin/profile`);
+            await logEvento({
+                level: 'INFO',
+                source: 'MFA_ENFORCEMENT',
+                action: 'MFA_REDIRECT',
+                message: `Redirigiendo a /admin/profile para completar MFA: ${pathname}`,
+                correlationId,
+                details: { pathname }
+            });
+
             if (pathname.startsWith('/api/')) {
                 return new NextResponse(JSON.stringify({
                     success: false,
@@ -167,14 +220,28 @@ export default auth(async function middleware(request: NextRequest & { auth?: an
         response.headers.set("Content-Security-Policy", cspHeader);
         return response;
 
-    } catch (error: any) {
-        console.error('🔥 [MIDDLEWARE ERROR]', error);
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        await logEvento({
+            level: 'ERROR',
+            source: 'MIDDLEWARE',
+            action: 'UNEXPECTED_ERROR',
+            message: `Error inesperado en middleware: ${errorMsg}`,
+            correlationId,
+            details: {
+                pathname,
+                error: errorMsg,
+                stack: errorStack
+            }
+        });
+
         // CRITICAL SECURITY FIX: Fail Closed, not Open.
         return new NextResponse(JSON.stringify({
             success: false,
             message: 'Middleware Error',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred',
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: process.env.NODE_ENV === 'development' ? errorMsg : 'An unexpected error occurred'
         }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }

@@ -27,6 +27,17 @@ interface PromptEditorProps {
     onCancel: () => void;
 }
 
+interface PromptVersion {
+    _id: string;
+    version: number;
+    changeReason: string;
+    template: string;
+    createdAt: string;
+    changedBy: string;
+    model?: string;
+    category?: Prompt['category'];
+}
+
 export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSaved, onCancel }) => {
     const t = useTranslations('admin.prompts');
     const isEdit = Boolean(initialPrompt);
@@ -35,25 +46,25 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         key: initialPrompt?.key ?? '',
         name: initialPrompt?.name ?? '',
         description: initialPrompt?.description ?? '',
-        category: initialPrompt?.category ?? 'GENERAL' as any,
+        category: (initialPrompt?.category ?? 'GENERAL') as Prompt['category'],
         template: initialPrompt?.template ?? '',
         model: initialPrompt?.model ?? DEFAULT_MODEL,
-        industry: initialPrompt?.industry ?? 'GENERIC' as any,
+        industry: (initialPrompt?.industry ?? 'GENERIC') as Prompt['industry'],
         maxLength: initialPrompt?.maxLength,
         variables: initialPrompt?.variables ?? []
     });
 
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
-    const [versions, setVersions] = useState<any[]>([]);
+    const [versions, setVersions] = useState<PromptVersion[]>([]);
     const [loadingVersions, setLoadingVersions] = useState<boolean>(false);
     const [showHistory, setShowHistory] = useState<boolean>(false);
 
     const fetchVersions = useCallback(async () => {
-        if (!initialPrompt || !(initialPrompt as any)._id) return;
+        if (!initialPrompt || !initialPrompt?._id) return;
         setLoadingVersions(true);
         try {
-            const res = await fetch(`/api/admin/prompts/${(initialPrompt as any)._id}/versions`);
+            const res = await fetch(`/api/admin/prompts/${initialPrompt._id}/versions`);
             if (res.ok) {
                 const data = await res.json();
                 setVersions(data.versions || []);
@@ -79,7 +90,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         }));
     };
 
-    const updateVariable = (index: number, updates: any) => {
+    const updateVariable = (index: number, updates: Partial<Prompt['variables'][number]>) => {
         setFormData(prev => {
             const newVars = [...prev.variables];
             newVars[index] = { ...newVars[index], ...updates };
@@ -139,7 +150,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
             };
 
             const validated = PromptSchema.parse(payload);
-            const url = isEdit && (initialPrompt as any)._id ? `/api/admin/prompts/${(initialPrompt as any)._id}` : '/api/admin/prompts';
+            const url = isEdit && initialPrompt?._id ? `/api/admin/prompts/${initialPrompt._id}` : '/api/admin/prompts';
             const method = isEdit ? 'PATCH' : 'POST';
 
             const response = await fetch(url, {
@@ -155,15 +166,18 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
 
             toast.success(t('messages.save_success'));
             onSaved();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('Save Error:', e);
             if (e instanceof z.ZodError) {
-                const msg = `Validación: ${e.issues.map((err: any) => (err.path || []).join('.') + ': ' + err.message).join(', ')}`;
+                const msg = `Validación: ${e.issues.map((err) => (err.path || []).join('.') + ': ' + err.message).join(', ')}`;
                 setError(msg);
                 toast.error("Error de Validación", { description: msg });
-            } else {
+            } else if (e instanceof Error) {
                 setError(e.message || t('messages.error_saving'));
                 toast.error("Error", { description: e.message || t('messages.error_saving') });
+            } else {
+                setError(t('messages.error_saving'));
+                toast.error("Error", { description: t('messages.error_saving') });
             }
         } finally {
             setLoading(false);
@@ -174,7 +188,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
         if (!confirm(`${t('editor.rollback_confirm')} (V${targetVersion})`)) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/admin/prompts/${(initialPrompt as any)._id}/versions`, {
+            const res = await fetch(`/api/admin/prompts/${initialPrompt?._id}/versions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ targetVersion, changeReason: `Restauración de versión ${targetVersion}` })
@@ -185,10 +199,11 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSav
             }
             toast.success("Versión Restaurada", { description: `Se ha vuelto a la versión ${targetVersion} correctamente.` });
             onSaved();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Rollback Error:', err);
-            setError(err.message);
-            toast.error("Error en Restauración", { description: err.message });
+            const message = err instanceof Error ? err.message : "Error desconocido";
+            setError(message);
+            toast.error("Error en Restauración", { description: message });
         } finally {
             setLoading(false);
         }

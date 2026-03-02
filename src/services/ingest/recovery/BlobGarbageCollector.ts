@@ -45,10 +45,10 @@ export class BlobGarbageCollector {
     /**
      * Execute garbage collection
      * 
-     * @param session - Admin session for DB access
+     * @param session - Optional TenantSession
      * @returns GC statistics
      */
-    static async execute(session: any): Promise<GCResult> {
+    static async execute(session?: import('@/lib/db-tenant').TenantSession | null): Promise<GCResult> {
         const correlationId = crypto.randomUUID();
         const startTime = Date.now();
 

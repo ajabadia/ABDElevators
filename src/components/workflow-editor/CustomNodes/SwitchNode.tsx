@@ -4,7 +4,9 @@ import { Handle, Position } from '@xyflow/react';
 import { GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export const SwitchNode = memo(({ data, selected }: { data: any, selected: boolean }) => {
+import { WorkflowNodeData } from '../types';
+
+export const SwitchNode = memo(({ data, selected }: { data: WorkflowNodeData, selected: boolean }) => {
     const cases = data.cases || ['Default', 'Case 1', 'Case 2'];
 
     return (

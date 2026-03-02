@@ -12,10 +12,11 @@ import { AlertCircle, Save, History as HistoryIcon, RefreshCcw } from 'lucide-re
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { NotificationTemplate } from '@/lib/schemas/notifications';
 
 interface TemplateEditorProps {
     type: string;
-    initialData: any; // NotificationTemplate | null
+    initialData: NotificationTemplate | null;
 }
 
 export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
@@ -35,13 +36,13 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
         reason: '' // For Audit
     });
 
-    const handleChange = (field: string, lang: string | null, value: any) => {
+    const handleChange = (field: string, lang: string | null, value: string | boolean) => {
         if (lang) {
             setFormData(prev => ({
                 ...prev,
                 [field]: {
-                    ...prev[field as keyof typeof prev],
-                    [lang]: value
+                    ...(prev[field as keyof typeof prev] as Record<string, string>),
+                    [lang]: value as string
                 }
             }));
         } else {
@@ -73,7 +74,8 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
 
             router.refresh();
 
-        } catch (error) {
+        } catch (error: unknown) {
+            console.error('[TemplateEditor] Save error:', error);
             toast.error(t('toast.error'), {
                 description: t('toast.errorDesc'),
             });
@@ -167,7 +169,7 @@ export function TemplateEditor({ type, initialData }: TemplateEditorProps) {
                                 <Badge key={v} variant="secondary" className="font-mono cursor-pointer hover:bg-slate-200"
                                     onClick={() => {
                                         navigator.clipboard.writeText(`{{${v}}}`);
-                                        toast.info("Copiado", { description: `Variable {{${v}}} copiada al portapapeles` });
+                                        toast.info(t('variables.copied'), { description: t('variables.copiedDesc', { v }) });
                                     }}
                                 >
                                     {`{{${v}}}`}

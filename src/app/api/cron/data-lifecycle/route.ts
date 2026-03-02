@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
 import { DataLifecycleService } from '@/services/ops/data-lifecycle-service';
 import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import crypto from 'crypto';
 
 /**
  * GET /api/cron/data-lifecycle
  * Triggered by Vercel Cron to perform weekly data maintenance.
- * Phase 132.5
+ * Hardened Era 8: Performance SLA and trace tracking.
  */
-export async function GET(request: Request) {
+async function cronHandler(request: Request) {
     const authHeader = request.headers.get('authorization');
-    const correlationId = `cron-lifecycle-${Date.now()}`;
+    const correlationId = crypto.randomUUID();
 
     // 1. Security Check (Vercel Cron Secret)
     if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -55,24 +57,13 @@ export async function GET(request: Request) {
             duration_ms: duration
         });
 
-    } catch (error: any) {
-        const duration = Date.now() - start;
-        console.error('[CRON_LIFECYCLE_ERROR]', error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_CRON_LIFECYCLE',
-            action: 'LIFECYCLE_FAILED',
-            message: `Error en mantenimiento de ciclo de vida: ${error.message}`,
-            correlationId,
-            tenantId: 'platform_master',
-            details: { error: error.message, stack: error.stack, duration_ms: duration }
-        });
-
-        if (error instanceof AppError) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
-        }
-
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CRON_LIFECYCLE', correlationId);
     }
 }
+
+export const GET = withPerformanceSLA(cronHandler, {
+    endpoint: 'CRON_DATA_LIFECYCLE',
+    thresholdMs: 30000, // SLA: 30s as it handles large datasets
+    source: 'API_CRON'
+});

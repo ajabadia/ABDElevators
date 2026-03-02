@@ -1,6 +1,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { AnyBulkWriteOperation, Document } from 'mongodb';
 import { I18nObjectUtils } from '@/lib/i18n/i18n-object-utils';
 import { TranslationRepository } from './TranslationRepository';
 import { TranslationCache } from './TranslationCache';
@@ -13,9 +14,9 @@ export class TranslationSyncService {
     /**
      * Carga archivos locales por namespace.
      */
-    static async loadFromLocalFile(locale: string): Promise<Record<string, any>> {
+    static async loadFromLocalFile(locale: string): Promise<Record<string, unknown>> {
         const namespaceDir = path.join(process.cwd(), 'messages', locale);
-        const merged: Record<string, any> = {};
+        const merged: Record<string, unknown> = {};
 
         try {
             if (fs.existsSync(namespaceDir) && fs.statSync(namespaceDir).isDirectory()) {
@@ -40,7 +41,7 @@ export class TranslationSyncService {
     /**
      * Sincroniza objeto anidado a la DB.
      */
-    static async syncToDb(locale: string, messages: Record<string, any>, tenantId = 'platform_master') {
+    static async syncToDb(locale: string, messages: Record<string, unknown>, tenantId = 'platform_master') {
         const flat = I18nObjectUtils.flattenObject(messages);
 
         const operations = Object.entries(flat).map(([key, value]) => {
@@ -83,14 +84,14 @@ export class TranslationSyncService {
                     upsert: true
                 }
             };
-        }).filter(Boolean);
+        }).filter(Boolean) as AnyBulkWriteOperation<Document>[];
 
         const result = await TranslationRepository.bulkUpdate(operations, tenantId);
         await TranslationCache.invalidate(locale, tenantId);
 
         return {
-            added: (result as any).upsertedCount || 0,
-            updated: (result as any).modifiedCount || 0
+            added: (result as { upsertedCount?: number, modifiedCount?: number }).upsertedCount || 0,
+            updated: (result as { upsertedCount?: number, modifiedCount?: number }).modifiedCount || 0
         };
     }
 

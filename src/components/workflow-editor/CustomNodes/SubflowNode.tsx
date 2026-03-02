@@ -6,7 +6,9 @@ import { GitFork, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-export function SubflowNode({ data, selected }: any) {
+import { WorkflowNodeData } from '../types';
+
+export function SubflowNode({ data, selected }: { data: WorkflowNodeData; selected: boolean }) {
     return (
         <div className={cn(
             "px-4 py-3 rounded-xl border-2 shadow-lg transition-all min-w-[180px]",

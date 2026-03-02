@@ -10,6 +10,7 @@ export interface IngestOptions {
         usage?: 'REFERENCE' | 'TRANSACTIONAL';
         skipIndexing?: boolean;
         chunkingLevel?: 'bajo' | 'medio' | 'alto' | 'SIMPLE' | 'SEMANTIC' | 'LLM';
+        force?: boolean | string;
     };
     tenantId: string;
     userEmail: string;

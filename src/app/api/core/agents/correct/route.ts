@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { AgentEngine } from "@/core/engine/AgentEngine";
-import { logEvento } from "@/lib/logger";
+import { enforcePermission } from "@/lib/guardian-guard";
+import { withPerformanceSLA } from "@/lib/performance-sla";
+import { handleApiError } from "@/lib/errors";
+import crypto from 'crypto';
 
 /**
  * POST /api/core/agents/correct
  * Registra una corrección humana sobre datos de IA para aprendizaje.
+ * SLA: P95 < 1000ms
  */
-export async function POST(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
 
     try {
+        const session = await enforcePermission('technical:agents', 'update');
+
         const body = await req.json();
-        const { entitySlug, originalData, correctedData, correlationId: correlacion_id} = body;
+        const { entitySlug, originalData, correctedData, correlationId: bodyCorrelationId } = body;
 
         if (!entitySlug || !originalData || !correctedData) {
             return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
         }
 
-        const tenantId = session.user.tenantId || 'default_tenant';
+        const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
         const userId = session.user.email || 'unknown';
 
         const resultId = await AgentEngine.getInstance().recordCorrection(
@@ -30,19 +32,15 @@ export async function POST(req: NextRequest) {
             correctedData,
             userId,
             tenantId,
-            correlacion_id || crypto.randomUUID()
+            bodyCorrelationId || correlationId
         );
 
         return NextResponse.json({
             success: true,
-            correctionId: resultId
+            correctionId: resultId,
+            correlationId
         });
-    } catch (error: any) {
-        console.error('[CORE_AGENT_CORRECT] Error:', error);
-        return NextResponse.json({
-            success: false,
-            message: "Error al registrar corrección",
-            error: error.message
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CORE_AGENTS_CORRECT_POST', correlationId);
     }
-}
+}, { p95: 1000, max: 2000 });

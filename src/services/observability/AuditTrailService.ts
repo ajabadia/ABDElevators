@@ -14,7 +14,8 @@ export class AuditTrailService {
      */
     private static async record(
         collection: 'audit_config_changes' | 'audit_admin_ops' | 'audit_data_access' | 'audit_trails' | 'audit_security_events' | 'audit_billing',
-        entry: Omit<AuditEntry, '_id' | 'timestamp'>
+        entry: Omit<AuditEntry, '_id' | 'timestamp'>,
+        session?: any // Using any to avoid importing ClientSession if not needed, or just type it
     ): Promise<void> {
         const correlationId = entry.correlationId || crypto.randomUUID();
 
@@ -25,7 +26,7 @@ export class AuditTrailService {
                 timestamp: new Date()
             });
 
-            await ObservabilityRepository.saveAudit(collection, validated as AuditEntry);
+            await ObservabilityRepository.saveAudit(collection, validated as AuditEntry, session);
 
         } catch (error: any) {
             // Fallback to technical logs if audit recording fails
@@ -50,12 +51,21 @@ export class AuditTrailService {
     /**
      * Audit: Configuration or policy changes.
      */
-    static async logConfigChange(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, headers?: Headers) {
+    static async logConfigChange(entry: Omit<AuditEntry, '_id' | 'timestamp' | 'source' | 'ip' | 'userAgent'>, sessionOrHeaders?: any) {
+        let headers: Headers | undefined;
+        let session: any;
+
+        if (sessionOrHeaders instanceof Headers) {
+            headers = sessionOrHeaders;
+        } else {
+            session = sessionOrHeaders;
+        }
+
         return this.record('audit_config_changes', {
             ...entry,
             source: 'CONFIG_CHANGE',
             ...this.getContext(headers)
-        });
+        }, session);
     }
 
     /**

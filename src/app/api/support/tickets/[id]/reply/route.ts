@@ -1,60 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TicketService } from '@/services/support/TicketService';
-import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/performance-sla';
+import { z } from 'zod';
 import crypto from 'crypto';
-import { connectDB } from '@/lib/db';
-import { ObjectId } from 'mongodb';
-import { UserRole } from '@/types/roles';
+
+const ReplySchema = z.object({
+    content: z.string().min(1, 'El mensaje no puede estar vacío'),
+    isInternal: z.boolean().optional().default(false)
+});
 
 /**
  * POST /api/support/tickets/[id]/reply
- * Adds a message to an existing ticket (Phase 70 compliance).
+ * Adds a message to an existing ticket.
+ * SLA: P95 < 500ms
  */
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Debe iniciar sesión');
-        }
-
+        const session = await enforcePermission('support:ticket', 'update');
         const body = await req.json();
-        const { content, isInternal } = body;
 
-        if (!content || typeof content !== 'string' || !content.trim()) {
-            throw new AppError('VALIDATION_ERROR', 400, 'El mensaje no puede estar vacío');
-        }
+        const { content, isInternal } = ReplySchema.parse(body);
 
-        // Verify ticket access via Service (Phase 173.1)
-        const ticket = await TicketService.getTicketByIdWithAcl(id, session);
+        // Verify ticket access via Service
+        await TicketService.getTicketByIdWithAcl(id, session);
 
-        const isSupport = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(session.user.role as UserRole);
+        const isSupport = ['ADMIN', 'SUPER_ADMIN', 'SUPPORT'].includes(session.user.role);
 
         if (isInternal && !isSupport) {
             throw new AppError('FORBIDDEN', 403, 'Solo soporte puede añadir notas internas');
         }
 
-        // Determine author
-        const authorType = isSupport ? 'Support' : 'User';
-        const authorName = session.user.name || session.user.email;
+        // Determine author details
+        const authorType: 'Support' | 'User' = isSupport ? 'Support' : 'User';
+        const authorName = session.user.name || session.user.email || 'Usuario';
 
         const message = await TicketService.addMessage(id, session.user.tenantId, {
             content,
-            author: authorType as any,
-            authorName: authorName as string,
+            author: session.user.id,
+            authorType,
+            authorName,
             isInternal: !!isInternal
         });
 
-        // Update status automatically (Phase 173.1)
+        // Update status automatically
         if (!isInternal) {
-            await TicketService.updateStatusOnReply(id, session.user.tenantId, authorType as any);
+            await TicketService.updateStatusOnReply(id, authorType);
         }
 
-        return NextResponse.json({ success: true, message });
-
+        return NextResponse.json({
+            success: true,
+            message,
+            correlationId
+        });
     } catch (error) {
-        return handleApiError(error, 'API_TICKET_REPLY', correlationId);
+        return handleApiError(error, 'API_TICKET_REPLY_POST', correlationId);
     }
-}
+}, { p95: 500, max: 2000 });

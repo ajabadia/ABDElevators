@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB, connectLogsDB } from '@/lib/db';
-import { AppError, handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
+import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 
 /**
@@ -12,13 +11,8 @@ import crypto from 'crypto';
  */
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    const start = Date.now();
-
     try {
-        const session = await auth();
-        if (!session?.user || (session.user.role !== UserRole.ADMIN && session.user.role !== UserRole.SUPER_ADMIN)) {
-            throw new AppError('UNAUTHORIZED', 401, 'No tienes permisos para acceder a estas estadísticas');
-        }
+        await enforcePermission('audit:stats', 'read');
 
         const db = await connectDB();
         const logsDb = await connectLogsDB();
@@ -75,7 +69,7 @@ export async function GET(req: NextRequest) {
         };
 
         return NextResponse.json(response);
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_AUDIT_STATS', correlationId);
     }
 }

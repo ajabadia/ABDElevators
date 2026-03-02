@@ -46,8 +46,13 @@ export class AccessControlService {
         } catch (error) {
             if (error instanceof AppError) throw error;
             console.error('[AccessControl] Error checking limits:', error);
-            // Fail open (permitir acceso si hay error de sistema) o fail close? 
-            // Fail open preferible para no detener negocio por bug de billing.
+
+            // Fail closed: Protect business if billing system is down
+            throw new AppError(
+                'EXTERNAL_SERVICE_ERROR',
+                503,
+                'Sistema de control de acceso no disponible temporalmente.'
+            );
         }
     }
 }

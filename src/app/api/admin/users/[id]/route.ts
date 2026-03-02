@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth, requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
 import { AdminUpdateUserSchema } from '@/lib/schemas';
-import { AppError, ValidationError, NotFoundError } from '@/lib/errors';
+import { AppError, ValidationError, NotFoundError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { UserRole } from '@/types/roles';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+
+const API_SOURCE = 'API_ADMIN_USERS_ID';
 
 /**
  * PATCH /api/admin/users/[id]
@@ -22,7 +24,7 @@ export const PATCH = withPerformanceSLA(async function PATCH(
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('user', 'manage');
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
@@ -35,8 +37,7 @@ export const PATCH = withPerformanceSLA(async function PATCH(
 
         // Isolation: If Admin, verify that the user to edit belongs to their tenant
         if (isAdmin) {
-            const authDb = await connectAuthDB();
-            const userToEdit = await authDb.collection('users').findOne({ _id: new ObjectId(id) });
+            const userToEdit = await db.collection('users').findOne({ _id: new ObjectId(id) });
             if (!userToEdit) {
                 throw new NotFoundError('User not found');
             }
@@ -53,13 +54,12 @@ export const PATCH = withPerformanceSLA(async function PATCH(
             }
         }
 
-        const updateData: any = {
+        const updateData = {
             ...validated,
             updatedAt: new Date()
         };
 
-        const authDb = await connectAuthDB();
-        const result = await authDb.collection('users').updateOne(
+        const result = await db.collection('users').updateOne(
             { _id: new ObjectId(id) },
             { $set: updateData }
         );
@@ -78,30 +78,11 @@ export const PATCH = withPerformanceSLA(async function PATCH(
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                new ValidationError('Invalid update data', error.issues).toJSON(),
-                { status: 400 }
-            );
+            return handleApiError(new ValidationError('Invalid update data', error.issues), API_SOURCE, correlationId);
         }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_USERS',
-            action: 'UPDATE_USER_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error updating user').toJSON(),
-            { status: 500 }
-        );
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }, { endpoint: 'PATCH /api/admin/users/[id]', thresholdMs: 400 });
 
@@ -117,7 +98,7 @@ export const GET = withPerformanceSLA(async function GET(
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('user', 'read');
         const isAdmin = session.user.role === UserRole.ADMIN;
 
         const { id } = await params;
@@ -135,21 +116,7 @@ export const GET = withPerformanceSLA(async function GET(
 
         const { password, ...safeUser } = userToEdit;
         return NextResponse.json(safeUser);
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_USERS',
-            action: 'GET_USER_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Server error').toJSON(),
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }, { endpoint: 'GET /api/admin/users/[id]', thresholdMs: 200 });

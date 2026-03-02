@@ -1,43 +1,40 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TicketService } from '@/services/support/TicketService';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/performance-sla';
+import { z } from 'zod';
 import crypto from 'crypto';
 
+const ReassignSchema = z.object({
+    assignedTo: z.string().min(1, 'Se requiere un destinatario'),
+    note: z.string().optional()
+});
+
 /**
- * PATCH /api/support/tickets/[id]/reassign
- * Reassigns a ticket to another administrator or support level.
+ * POST /api/support/tickets/[id]/reassign
+ * Reassigns a ticket to another agent.
  */
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withPerformanceSLA(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(session?.user?.role || '')) {
-            throw new AppError('FORBIDDEN', 403, 'Solo administradores pueden reasignar');
-        }
-
+        const session = await enforcePermission('support:admin', 'update');
         const body = await req.json();
-        const { assignedTo, note } = body;
 
-        if (!assignedTo) {
-            throw new AppError('VALIDATION_ERROR', 400, 'assignedTo es requerido');
-        }
+        const validated = ReassignSchema.parse(body);
 
-        await TicketService.reassignTicket(
-            id,
-            session?.user?.tenantId as string,
-            {
-                assignedTo,
-                note,
-                authorId: session?.user?.id as string
-            }
-        );
+        // Verify ticket access via Service
+        await TicketService.getTicketByIdWithAcl(id, session);
+
+        await TicketService.reassignTicket(id, session.user.tenantId, {
+            assignedTo: validated.assignedTo,
+            note: validated.note,
+            authorId: session.user.id
+        });
 
         return NextResponse.json({ success: true });
-
     } catch (error) {
         return handleApiError(error, 'API_TICKET_REASSIGN', correlationId);
     }
-}
+}, { p95: 500, max: 2000 });

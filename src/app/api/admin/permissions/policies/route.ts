@@ -1,36 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { PermissionPolicySchema } from '@/lib/schemas';
+import { PermissionPolicySchema, type PermissionPolicy } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
+const API_SOURCE = 'API_ADMIN_PERMISSIONS_POLICIES';
+const SLA_READ = 500;
+const SLA_WRITE = 1000;
+
 /**
  * GET /api/admin/permissions/policies
  * Lista todas las políticas de permiso del tenant
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const user = await enforcePermission('permission:policy', 'read');
-        const policiesCollection = await getTenantCollection('policies', user);
-        const policies = await policiesCollection.find({});
+        const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
+        const policies = await (policiesCollection.find({}) as any).toArray();
 
         return NextResponse.json({ success: true, policies });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PERMISSIONS_POLICIES_GET', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, `${API_SOURCE}_GET`, correlationId);
     } finally {
         const duration = Date.now() - start;
-        if (duration > 500) { // SLA: P95 < 500ms
+        if (duration > SLA_READ) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_PERMISSIONS',
                 action: 'PERF_SLA_VIOLATION',
                 message: `GET /api/admin/permissions/policies tardó ${duration}ms`,
                 correlationId,
-                details: { duration_ms: duration, threshold_ms: 500 }
+                details: { duration_ms: duration, threshold_ms: SLA_READ }
             });
         }
     }
@@ -46,7 +50,7 @@ export async function POST(req: NextRequest) {
     try {
         const user = await enforcePermission('permission:policy', 'write');
         const body = await req.json();
-        const tenantId = (user as any).tenantId;
+        const tenantId = (user as any).tenantId as string;
 
         const policyData = {
             ...body,
@@ -57,7 +61,7 @@ export async function POST(req: NextRequest) {
         };
 
         const validated = PermissionPolicySchema.parse(policyData);
-        const policiesCollection = await getTenantCollection('policies', user);
+        const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
 
         const result = await policiesCollection.insertOne(validated as any);
 
@@ -75,18 +79,18 @@ export async function POST(req: NextRequest) {
             success: true,
             policy: { ...validated, _id: result.insertedId }
         });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PERMISSIONS_POLICIES_POST', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, `${API_SOURCE}_POST`, correlationId);
     } finally {
         const duration = Date.now() - start;
-        if (duration > 1000) { // SLA: MAX 1000ms for writes
+        if (duration > SLA_WRITE) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_PERMISSIONS',
                 action: 'PERF_SLA_VIOLATION',
                 message: `POST /api/admin/permissions/policies tardó ${duration}ms`,
                 correlationId,
-                details: { duration_ms: duration, threshold_ms: 1000 }
+                details: { duration_ms: duration, threshold_ms: SLA_WRITE }
             });
         }
     }

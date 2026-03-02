@@ -1,11 +1,12 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { BillingAdminService } from '@/core/application/billing/BillingAdminService';
 import { z } from 'zod';
-import { AppError, ValidationError } from '@/lib/errors';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { UserRole } from '@/types/roles';
+import crypto from 'crypto';
+
+const API_SOURCE = 'API_BILLING';
 
 // Schema Validation for POST
 const UpdateContractSchema = z.object({
@@ -29,12 +30,7 @@ const UpdateContractSchema = z.object({
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-
-        // 1. Security Check: ONLY SUPER_ADMIN
-        if (!session?.user || session.user.role !== UserRole.SUPER_ADMIN) {
-            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
-        }
+        await enforcePermission('billing:contract', 'read');
 
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get('page') || '1');
@@ -44,20 +40,8 @@ export async function GET(req: NextRequest) {
         const result = await BillingAdminService.getTenantContracts(page, limit, search);
 
         return NextResponse.json({ success: true, ...result });
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_BILLING',
-            action: 'GET_CONTRACTS_ERROR',
-            correlationId,
-            message: error.message,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            { success: false, error: error.message || 'Internal Server Error' },
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }
 
@@ -68,12 +52,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-
-        // 1. Security Check: ONLY SUPER_ADMIN
-        if (!session?.user || session.user.role !== UserRole.SUPER_ADMIN) {
-            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
-        }
+        const session = await enforcePermission('billing:contract', 'manage');
 
         const body = await req.json();
 
@@ -97,24 +76,10 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ success: false, error: 'Validation Error', details: error.issues }, { status: 400 });
         }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_BILLING',
-            action: 'CONTRACT_UPDATE_ERROR',
-            correlationId,
-            message: error.message,
-            stack: error.stack
-        });
-
-        const status = error instanceof AppError ? error.status : 500;
-        return NextResponse.json(
-            { success: false, error: error.message || 'Internal Server Error' },
-            { status }
-        );
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }

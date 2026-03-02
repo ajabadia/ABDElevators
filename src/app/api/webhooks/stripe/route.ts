@@ -101,7 +101,10 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ received: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
         // Manejo especial para duplicados (Idempotencia)
         if (error instanceof AppError && error.code === 'CONFLICT') {
             await logEvento({
@@ -119,10 +122,10 @@ export async function POST(req: NextRequest) {
             level: 'ERROR',
             source: 'STRIPE_WEBHOOK',
             action: 'PROCESSING_ERROR',
-            message: `Error processing webhook: ${error.message}`,
+            message: `Error processing webhook: ${errorMessage}`,
             correlationId,
             details: { durationMs, eventType: event.type },
-            stack: error.stack,
+            stack: errorStack,
         });
 
         // Intentamos marcar el fallo si la sesión sigue viva (aunque withTransaction aborta, 

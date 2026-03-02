@@ -5,7 +5,9 @@ import { UserCheck, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-export const HumanValidationNode = memo(({ data, selected }: { data: any, selected: boolean }) => {
+import { WorkflowNodeData } from '../types';
+
+export const HumanValidationNode = memo(({ data, selected }: { data: WorkflowNodeData, selected: boolean }) => {
     const isPending = data.status === 'pending';
 
     return (

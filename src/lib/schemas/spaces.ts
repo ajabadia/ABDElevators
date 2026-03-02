@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IndustryTypeSchema } from './core';
+import { ObjectId } from 'mongodb';
 
 /**
  * 🌌 SPACE SCHEMA (Phase 125.2)
@@ -12,7 +13,7 @@ export const SpaceVisibilitySchema = z.enum(['PUBLIC', 'INTERNAL', 'PRIVATE', 'R
 export type SpaceVisibility = z.infer<typeof SpaceVisibilitySchema>;
 
 export const SpaceSchema = z.object({
-    _id: z.any().optional(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
     name: z.string().min(1, 'El nombre es obligatorio'),
     slug: z.string().min(1, 'El slug es obligatorio'),
     description: z.string().optional(),
@@ -58,7 +59,7 @@ export const SpaceSchema = z.object({
 export type Space = z.infer<typeof SpaceSchema>;
 
 export const SpaceInvitationSchema = z.object({
-    _id: z.any().optional(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
     spaceId: z.string(), // ID of the space to join
     email: z.string().email(),
     token: z.string(), // Unique secret token

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
 import crypto from 'crypto';
 
 /**
@@ -12,14 +11,13 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('audit:logs', 'read');
 
         // Contexto de base de datos de LOGS
         // Al ser logs, desactivamos softDeletes para evitar filtros innecesarios
         const logColl = await getTenantCollection('application_logs', session, 'LOGS', { softDeletes: false });
 
         // Pipeline de agregación para obtener niveles y fuentes
-        // SecureCollection.aggregate ya devuelve un array, por lo que llamamos directamente.
         const statsResults = await logColl.aggregate([
             {
                 $facet: {
@@ -58,7 +56,7 @@ export async function GET(req: NextRequest) {
             sources: sourceCounts
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_LOGS_STATS', correlationId);
     }
 }

@@ -1,20 +1,24 @@
-
-import { NextResponse } from 'next/server';
-import { resetGeminiCircuitBreaker, geminiResilience } from '@/lib/resilience';
+import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { resetGeminiCircuitBreaker } from '@/lib/resilience';
 import { logEvento } from '@/lib/logger';
 import { connectDB } from '@/lib/db';
-import { AI_MODEL_IDS } from '@/lib/constants/ai-models';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 
 /**
  * Endpoint de EMERGENCIA para resetear el Circuit Breaker y diagnosticar RAG.
  * POST /api/admin/system/reset-rag
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
+        // 🔐 [SECURITY] Restrict to authorized personnel (was SUPER_ADMIN)
+        await enforcePermission('system:rag', 'manage');
+
         await logEvento({
             level: 'INFO',
             source: 'ADMIN_SYSTEM',
@@ -47,7 +51,7 @@ export async function POST(req: Request) {
                 connectivity,
                 chunkCount,
                 promptCount,
-                durationMs: Date.now() - start
+                duration_ms: Date.now() - start
             }
         });
 
@@ -63,22 +67,7 @@ export async function POST(req: Request) {
             }
         });
 
-    } catch (error: any) {
-        console.error("❌ [ADMIN] Error en reset de RAG:", error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'ADMIN_SYSTEM',
-            action: 'RESET_RAG_FAILURE',
-            message: `Fallo en el reset de emergencia: ${error.message}`,
-            correlationId,
-            details: { error: error.message, stack: error.stack }
-        });
-
-        return NextResponse.json({
-            success: false,
-            error: error.message,
-            status: "RECOVERY_FAILED"
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'ADMIN_SYSTEM_RESET_RAG', correlationId);
     }
 }

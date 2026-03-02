@@ -64,6 +64,11 @@ export function AppSidebar() {
 
     const { canBulk } = useGuardian();
     const [allowedKeys, setAllowedKeys] = useState<Set<string>>(new Set());
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const filteredSections = useNavigation();
 
@@ -106,6 +111,8 @@ export function AppSidebar() {
         router.push(basePath);
         setIsAppMenuOpen(false);
     };
+
+    if (!mounted) return null;
 
     return (
         <aside

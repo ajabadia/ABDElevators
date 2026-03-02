@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, requireRole } from '@/lib/auth'; // Adjust if using different auth provider
-import { UserRole } from '@/types/roles';
 import { EntityTimelineService } from '@/services/observability/EntityTimelineService';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { TenantSession } from '@/lib/db-tenant';
 
 /**
  * GET /api/admin/cases/[id]/timeline
@@ -12,18 +11,19 @@ import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
  */
 async function handler(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> } // In Next.js 15+ params is a Promise
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        // Validación de RBAC (Admin o SuperAdmin)
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        // Validación de RBAC (Admin o SuperAdmin) vía Guardian
+        const user = await enforcePermission('cases:timeline', 'read');
+        const session = user as unknown as TenantSession;
 
-        const tenantId = session.user?.tenantId || 'default_tenant'; // Adjust based on your auth session structure
+        const tenantId = session.user?.tenantId || 'default';
 
-        const timeline = await EntityTimelineService.getTimeline(id, tenantId);
+        const timeline = await EntityTimelineService.getTimeline(id, tenantId, session);
 
         return NextResponse.json({
             success: true,
@@ -31,31 +31,14 @@ async function handler(
             data: timeline
         });
 
-    } catch (error: any) {
-        // El interceptor SLA ya manejará el log de latencia, pero manejamos errores funcionales
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_TIMELINE',
-            action: 'GET_TIMELINE_ERROR',
-            message: `Error obteniendo timeline para caso ${id}: ${error.message}`,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            { error: 'Internal Server Error', message: error.message },
-            { status: 500 }
-        );
+    } catch (error) {
+        return handleApiError(error, 'API_ADMIN_CASE_TIMELINE_GET', correlationId);
     }
 }
 
 // Aplicar interceptor de SLA
 export const GET = withPerformanceSLA(handler, {
     endpoint: 'GET_CASE_TIMELINE',
-    thresholdMs: 500, // SLA: 500ms
+    thresholdMs: 1000, // SLA: 1s for aggregation
     source: 'API_ADMIN'
 });

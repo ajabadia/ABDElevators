@@ -120,6 +120,9 @@ export const UserSchema = z.object({
     mfaRecoveryCodes: z.array(z.string()).optional(),
 
     isActive: z.boolean().default(true),
+    mustChangePassword: z.boolean().default(false),
+    activationToken: z.string().optional(),
+    activationTokenExpiry: z.date().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
     deletedAt: z.date().optional(),

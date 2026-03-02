@@ -35,12 +35,20 @@ export function DynamicBreadcrumb() {
 
                 // Fallback: If no translation exists, t(segment) will return the key or we can handle it
                 // Using try/catch or just checking if translation exists. Next-intl returns key by default if missing.
-                /* 
-                 * To safely handle missing keys without warning logs in console in next-intl,
-                 * we can just let it fallback to the capitalized segment if the translation equals the key 
-                 */
-                const translatedLabel = t(segment);
-                const hasTranslation = translatedLabel !== segment && translatedLabel !== `common.breadcrumbs.${segment}`;
+                let translatedLabel = segment;
+                let hasTranslation = false;
+                try {
+                    // next-intl throws if missing in strict mode, so we try-catch it
+                    // cast to any to allow dynamic keys
+                    const result = t(segment as any);
+                    if (result && result !== `common.breadcrumbs.${segment}`) {
+                        translatedLabel = result;
+                        hasTranslation = true;
+                    }
+                } catch (e) {
+                    // Expected if key doesn't exist
+                    hasTranslation = false;
+                }
 
                 const label = isId
                     ? t("detail")

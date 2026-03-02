@@ -20,7 +20,7 @@ export class TaxonomyService {
     /**
      * Crea una nueva taxonomía.
      */
-    static async createTaxonomy(data: any, correlationId: string) {
+    static async createTaxonomy(data: Record<string, unknown>, correlationId: string) {
         const validated = TaxonomySchema.parse(data);
         const collection = await getTenantCollection('taxonomias');
 
@@ -48,7 +48,7 @@ export class TaxonomyService {
         return { ...validated, _id: result.insertedId };
     }
 
-    static async updateTaxonomy(id: string, data: any, tenantId: string, correlationId: string) {
+    static async updateTaxonomy(id: string, data: Record<string, unknown>, tenantId: string, correlationId: string) {
         const collection = await getTenantCollection('taxonomias');
         const existing = await collection.findOne({ _id: new ObjectId(id), tenantId });
 
@@ -72,7 +72,11 @@ export class TaxonomyService {
     /**
      * Actualiza múltiples taxonomías en lote (Sovereign Engine).
      */
-    static async batchUpdateTaxonomies(updates: any[], tenantId: string, correlationId: string) {
+    static async batchUpdateTaxonomies(
+        updates: { targetKey: string, newName: string, newDescription?: string, action: string }[],
+        tenantId: string,
+        correlationId: string
+    ) {
         const collection = await getTenantCollection('taxonomias');
 
         const operations = updates.map(update => ({

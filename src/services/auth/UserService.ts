@@ -10,6 +10,24 @@ export class UserService {
     private static COLLECTION = 'users';
 
     /**
+     * Lista usuarios filtrando por tenant, rol o estado.
+     */
+    static async list(filter: { tenantId?: string; role?: string; isActive?: boolean }): Promise<{ users: any[] }> {
+        const authDb = await connectAuthDB();
+        const mongoFilter: any = {};
+        if (filter.tenantId) mongoFilter.tenantId = filter.tenantId;
+        if (filter.role) mongoFilter.role = filter.role;
+        if (filter.isActive !== undefined) mongoFilter.isActive = filter.isActive;
+
+        const users = await authDb.collection(this.COLLECTION)
+            .find(mongoFilter)
+            .project({ password: 0 })
+            .toArray();
+
+        return { users };
+    }
+
+    /**
      * Actualiza la foto de perfil de un usuario.
      * @param userId ID del usuario
      * @param secureUrl URL segura de Cloudinary

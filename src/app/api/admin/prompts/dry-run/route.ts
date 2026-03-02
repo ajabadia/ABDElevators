@@ -1,10 +1,10 @@
-
-import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { logEvento } from '@/lib/logger';
+import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 const DryRunSchema = z.object({
     prompt: z.string().min(1),
@@ -13,18 +13,15 @@ const DryRunSchema = z.object({
     temperature: z.number().min(0).max(1).optional()
 });
 
-export const POST = auth(async function POST(req) {
-    const session = req.auth;
-    const correlationId = uuidv4();
-
-    if (!session?.user?.id || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
-        return new NextResponse('Unauthorized', { status: 401 });
-    }
+export async function POST(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
 
     try {
+        const session = await enforcePermission('prompt', 'manage');
+        const tenantId = session.user.tenantId || 'default';
+
         const json = await req.json();
         const body = DryRunSchema.parse(json);
-        const tenantId = session.user.tenantId || 'default';
 
         const start = Date.now();
 
@@ -42,7 +39,7 @@ export const POST = auth(async function POST(req) {
                 temperature: body.temperature ?? 0.7,
                 model: body.model
             },
-            session
+            session as any
         );
 
         const duration = Date.now() - start;
@@ -53,8 +50,7 @@ export const POST = auth(async function POST(req) {
             action: 'PROMPT_DRY_RUN',
             message: 'Dry run executed successfully',
             correlationId,
-            tenantId,
-            details: { duration, model: body.model }
+            details: { duration_ms: duration, model: body.model }
         });
 
         return NextResponse.json({
@@ -66,24 +62,10 @@ export const POST = auth(async function POST(req) {
             }
         });
 
-    } catch (error) {
-        console.error('[DRY RUN ERROR]', error);
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                success: false,
-                error: {
-                    code: 'VALIDATION_ERROR',
-                    message: 'Validation Failed',
-                    details: error.issues
-                }
-            }, { status: 400 });
+            throw new ValidationError('Validation Failed', error.issues);
         }
-        return NextResponse.json({
-            success: false,
-            error: {
-                code: 'INTERNAL_ERROR',
-                message: 'Internal Server Error'
-            }
-        }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_PROMPTS_DRY_RUN', correlationId);
     }
-});
+}

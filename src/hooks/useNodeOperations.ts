@@ -5,11 +5,12 @@ import { addEdge, Connection, Node, Edge, ReactFlowInstance } from "@xyflow/reac
 import dagre from 'dagre';
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { WorkflowNode, WorkflowNodeData } from "@/components/workflow-editor/types";
 
 interface UseNodeOperationsProps {
-    setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;
     setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
-    setSelectedNode: (node: Node | null) => void;
+    setSelectedNode: (node: WorkflowNode | null) => void;
     reactFlowInstance: ReactFlowInstance | null;
     reactFlowWrapper: React.RefObject<HTMLDivElement | null>;
     edges: Edge[]; // Added for auto-layout
@@ -31,11 +32,11 @@ export function useNodeOperations({
         [setEdges]
     );
 
-    const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    const onNodeClick = useCallback((_: React.MouseEvent, node: WorkflowNode) => {
         setSelectedNode(node);
     }, [setSelectedNode]);
 
-    const updateNodeData = useCallback((nodeId: string, newData: any) => {
+    const updateNodeData = useCallback((nodeId: string, newData: WorkflowNodeData) => {
         setNodes((nds) =>
             nds.map((node) => {
                 if (node.id === nodeId) {
@@ -73,7 +74,7 @@ export function useNodeOperations({
                 y: event.clientY,
             });
 
-            const newNode: Node = {
+            const newNode: WorkflowNode = {
                 id: `dndnode_${+new Date()}`,
                 type,
                 position,
@@ -85,7 +86,7 @@ export function useNodeOperations({
         [reactFlowInstance, reactFlowWrapper, setNodes]
     );
 
-    const deleteSelection = useCallback((nodes: Node[], edges: Edge[]) => {
+    const deleteSelection = useCallback((nodes: WorkflowNode[], edges: Edge[]) => {
         const selectedNodes = nodes.filter(n => n.selected);
         const selectedEdges = edges.filter(e => e.selected);
 
@@ -116,7 +117,7 @@ export function useNodeOperations({
         toast.success(t('align_success' as any, { defaultValue: 'Nodes Aligned' }));
     }, [setNodes, toast, t]);
 
-    const detectCycles = useCallback((nodes: Node[], edges: Edge[]) => {
+    const detectCycles = useCallback((nodes: WorkflowNode[], edges: Edge[]) => {
         const adj = new Map<string, string[]>();
         edges.forEach(e => {
             if (!adj.has(e.source)) adj.set(e.source, []);

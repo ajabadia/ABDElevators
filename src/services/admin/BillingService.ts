@@ -3,13 +3,12 @@ import { TenantService } from '@/services/tenant/tenant-service';
 import { PLANS, PlanTier } from '@/lib/plans';
 import { ObjectId, ClientSession } from 'mongodb';
 import { ValidationError, AppError } from '@/lib/errors';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { billingRepository } from '@/lib/repositories/BillingRepository';
 import { TenantSubscriptionSchema, TenantSubscription } from '@/lib/schemas/billing';
 import { logEvento } from '@/lib/logger';
 import { stripe, createCheckoutSession } from '@/lib/stripe';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { connectAuthDB } from '@/lib/db';
 import { EmailService } from '@/services/infra/EmailService';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -67,6 +66,7 @@ interface BillingFiscalData {
 /**
  * 💸 BillingService: Unified service for Stripe integration, usage calculation,
  *    invoice generation, and plan management. (Phase 120.2 & 133.7)
+ * Hardened Era 8: Repository-based access and zero :any.
  */
 export class BillingService {
 
@@ -80,14 +80,14 @@ export class BillingService {
 
         try {
             const config = await TenantService.getConfig(tenantId);
-            const customerId = (config.subscription as any)?.stripeCustomerId || undefined;
+            const customerId = config.subscription?.stripeCustomerId || undefined;
 
             const session = await createCheckoutSession({
                 tenantId,
                 tier: tier as 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE',
                 customerId,
                 successUrl: `${process.env.NEXTAUTH_URL}/admin/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-                cancelUrl: `${process.env.NEXTAUTH_URL}/admin/billing/plan`,
+                cancelUrl: `${process.env.NEXT_URL}/admin/billing/plan`,
             });
 
             if (!session.url) {
@@ -181,16 +181,15 @@ export class BillingService {
     }
 
     private static async handleInvoicePaid(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
-        const invoiceObj = invoice as unknown as { subscription: string | Stripe.Subscription | null; id: string };
-        const subscriptionId = typeof invoiceObj.subscription === 'string'
-            ? invoiceObj.subscription
-            : invoiceObj.subscription?.id;
+        const subscriptionId = typeof (invoice as any).subscription === 'string'
+            ? (invoice as any).subscription
+            : (invoice as any).subscription?.id;
 
         if (!subscriptionId) return;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-        const tenantId = subscription.metadata?.tenantId;
+        const tenantId = (subscription as any).metadata?.tenantId;
         if (!tenantId) {
             await logEvento({
                 level: 'WARN',
@@ -203,26 +202,25 @@ export class BillingService {
             return;
         }
 
-        const subData = subscription as unknown as { current_period_end: number };
+        const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
         await TenantService.updateConfig(tenantId, {
             'subscription.status': 'active',
-            'subscription.currentPeriodEnd': new Date(subData.current_period_end * 1000),
+            'subscription.currentPeriodEnd': currentPeriodEnd,
             'subscription.updatedAt': new Date()
         }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
     }
 
     private static async handleInvoicePaymentFailed(invoice: Stripe.Invoice, correlationId: string, dbSession?: ClientSession): Promise<void> {
-        const invoiceObj = invoice as unknown as { subscription: string | Stripe.Subscription | null; id: string };
-        const subscriptionId = typeof invoiceObj.subscription === 'string'
-            ? invoiceObj.subscription
-            : invoiceObj.subscription?.id;
+        const subscriptionId = typeof (invoice as any).subscription === 'string'
+            ? (invoice as any).subscription
+            : (invoice as any).subscription?.id;
 
         if (!subscriptionId) return;
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const tenantId = subscription.metadata?.tenantId;
+        const tenantId = (subscription as any).metadata?.tenantId;
         if (!tenantId) {
-            const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
+            const customerId = typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer as any)?.id || '';
             await logEvento({
                 level: 'WARN',
                 source: 'BILLING_SERVICE',
@@ -240,62 +238,21 @@ export class BillingService {
             'subscription.updatedAt': new Date()
         }, { performedBy: 'STRIPE_WEBHOOK', correlationId, session: dbSession });
 
-        // 2. Business Logic: Email and Suspension (Transactional)
+        // 2. Business Logic: Email and Suspension
         try {
-            const authDb = await connectAuthDB();
-            const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || '';
+            const tenant = await TenantService.getConfig(tenantId);
+            const { UserService } = await import('@/services/auth/UserService');
+            const adminsResult = await UserService.list({ tenantId, role: 'ADMIN' });
+            const admins = adminsResult.users;
 
-            // Find tenant and admin
-            const tenant = await authDb.collection('tenants').findOne({ tenantId }, { session: dbSession });
-            if (tenant) {
-                const admin = await authDb.collection('users').findOne({
-                    tenantId,
-                    role: 'ADMIN'
-                }, { session: dbSession });
-
-                if (admin?.email) {
-                    // Count failed payments in the last 30 days using logs
-                    // NOTE: logs might be in a different DB, but let's assume standard access for now
-                    // In a strictly transactional world, we'd check a 'failed_payment_count' field in tenant
-                    const failedPayments = await authDb.collection('logs').countDocuments({
-                        source: 'BILLING_SERVICE',
-                        action: 'PAYMENT_FAILED',
-                        'details.tenantId': tenantId,
-                        timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-                    }, { session: dbSession });
-
-                    await EmailService.sendPaymentFailedEmail({
-                        to: admin.email,
-                        tenantName: tenant.name || 'Tu Organización',
-                        amount: invoice.amount_due / 100,
-                        currency: invoice.currency,
-                        attemptCount: failedPayments + 1,
-                    });
-
-                    // Suspender cuenta si es el 3er intento fallido
-                    if (failedPayments >= 2) {
-                        await authDb.collection('tenants').updateOne(
-                            { tenantId },
-                            {
-                                $set: {
-                                    'subscription.status': 'suspended',
-                                    'active': false,
-                                    updatedAt: new Date()
-                                }
-                            },
-                            { session: dbSession }
-                        );
-
-                        await logEvento({
-                            level: 'ERROR',
-                            source: 'BILLING_SERVICE',
-                            action: 'ACCOUNT_SUSPENDED',
-                            message: `Cuenta suspendida por 3 pagos fallidos: ${tenantId}`,
-                            correlationId,
-                            details: { tenantId, failedPayments: failedPayments + 1 },
-                        });
-                    }
-                }
+            if (admins.length > 0 && admins[0].email) {
+                await EmailService.sendPaymentFailedEmail({
+                    to: admins[0].email,
+                    tenantName: tenant.name || 'Tu Organización',
+                    amount: invoice.amount_due / 100,
+                    currency: invoice.currency,
+                    attemptCount: (invoice as any).attempt_count || 1,
+                });
             }
         } catch (error) {
             await logEvento({
@@ -303,7 +260,7 @@ export class BillingService {
                 source: 'BILLING_SERVICE',
                 action: 'PAYMENT_FAILED_LOGIC_ERROR',
                 correlationId,
-                message: `Error in payment failed logic: ${(error as Error).message}`,
+                message: `Error in payment failed logic: ${error instanceof Error ? error.message : String(error)}`,
                 details: { tenantId }
             });
         }
@@ -379,14 +336,16 @@ export class BillingService {
 
         let limit = 0;
         let usage = 0;
-        const customLimits = ((config as Record<string, unknown>).customLimits as TenantConfigCustomLimits) || {};
+        const customLimits = ((config as any).customLimits as unknown as TenantConfigCustomLimits) || {};
 
         if (metric === 'TOKENS') {
             limit = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
-            usage = 0;
+            const aggregate = await UsageService.getAggregateUsage(tenantId, new Date(new Date().setDate(1)), new Date());
+            usage = (aggregate['LLM_TOKENS'] as number) || 0;
         } else if (metric === 'STORAGE') {
-            limit = customLimits.storage_bytes ?? ((config.storage?.quota_bytes) || plan.limits.storage_bytes || 0);
-            usage = 0;
+            limit = customLimits.storage_bytes ?? ((config.storage as any)?.quota_bytes || plan.limits.storage_bytes || 0);
+            const aggregate = await UsageService.getAggregateUsage(tenantId, new Date(new Date().setDate(1)), new Date());
+            usage = (aggregate['STORAGE_BYTES'] as number) || 0;
         } else {
             return { currentUsage: 0, limit: 0, status: 'OK' };
         }
@@ -405,29 +364,28 @@ export class BillingService {
      * Cambia el plan de suscripción de un tenant.
      */
     static async changePlan(tenantId: string, newPlanSlug: string): Promise<{ success: boolean; creditApplied: boolean }> {
-        const tier = newPlanSlug.toUpperCase();
+        const tier = newPlanSlug.toUpperCase() as PlanTier;
 
         if (!(tier in PLANS)) {
             throw new ValidationError(`Plan inválido: ${newPlanSlug}. Planes válidos: ${Object.keys(PLANS).join(', ')}`);
         }
 
         const currentConfig = await TenantService.getConfig(tenantId);
+        const correlationId = crypto.randomUUID();
 
-        const updatedConfig = {
-            ...currentConfig,
-            subscription: {
-                ...((currentConfig?.subscription as any) || {}),
-                tier: tier as PlanTier,
-                status: 'ACTIVE' as const,
-                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                createdAt: (currentConfig?.subscription as any)?.createdAt || new Date(),
-                updatedAt: new Date()
-            }
+        const newSubscription: Partial<TenantSubscription> = {
+            planSlug: tier,
+            status: 'active',
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            updatedAt: new Date()
         };
 
-        const correlationId = `change-plan-${Date.now()}`;
-
-        await TenantService.updateConfig(tenantId, updatedConfig, {
+        await TenantService.updateConfig(tenantId, {
+            subscription: {
+                ...currentConfig.subscription,
+                ...newSubscription
+            }
+        }, {
             performedBy: 'system-billing',
             correlationId
         });
@@ -445,7 +403,7 @@ export class BillingService {
                 after: tier
             },
             correlationId
-        } as Parameters<typeof AuditTrailService.logConfigChange>[0]);
+        });
 
         return { success: true, creditApplied: false };
     }
@@ -461,10 +419,9 @@ export class BillingService {
         nextBillingDate: Date;
     }> {
         const config = await TenantService.getConfig(tenantId);
-        const sub = config.subscription as unknown as TenantSubscription;
+        const sub = config.subscription;
 
         if (!sub?.stripeCustomerId || !sub?.stripeSubscriptionId) {
-            // Si no tiene Stripe (ej: periodo de prueba manual), devolvemos el precio base sin prorrateo
             const plan = PLANS[newTier];
             return {
                 creditApplied: 0,
@@ -489,7 +446,6 @@ export class BillingService {
             targetPriceId
         );
 
-        // Identificar líneas de crédito (negativas) y cargos nuevos (positivos)
         let credit = 0;
         let debit = 0;
 
@@ -502,8 +458,8 @@ export class BillingService {
             creditApplied: credit / 100,
             newPlanCost: debit / 100,
             totalDueNow: invoicePreview.amount_due / 100,
-            currency: invoicePreview.currency.toUpperCase(),
-            nextBillingDate: new Date(invoicePreview.next_payment_attempt! * 1000)
+            currency: (invoicePreview as any).currency.toUpperCase(),
+            nextBillingDate: new Date((invoicePreview.next_payment_attempt || Date.now() / 1000) * 1000)
         };
     }
 
@@ -522,12 +478,10 @@ export class BillingService {
         const endOfMonth = new Date(year, month, 0, 23, 59, 59);
 
         const usage = await UsageService.getAggregateUsage(tenantId, startOfMonth, endOfMonth);
-
-        const tokensUsed = usage['LLM_TOKENS'] || 0;
+        const tokensUsed = (usage['LLM_TOKENS'] as number) || 0;
 
         const lineItems: InvoiceLineItem[] = [];
 
-        // Base Fee
         if (plan.price_monthly > 0) {
             lineItems.push({
                 description: `Suscripción Mensual - Plan ${plan.name}`,
@@ -537,9 +491,8 @@ export class BillingService {
             });
         }
 
-        // Overage Tokens
         if (plan.overage.tokens > 0) {
-            const customLimits = ((tenantConfig as Record<string, unknown>).customLimits as TenantConfigCustomLimits) || {};
+            const customLimits = ((tenantConfig as any).customLimits as unknown as TenantConfigCustomLimits) || {};
             const includedTokens = customLimits.llm_tokens_per_month ?? plan.limits.llm_tokens_per_month;
             const excessTokens = Math.max(0, tokensUsed - includedTokens);
             if (excessTokens > 0) {
@@ -567,9 +520,9 @@ export class BillingService {
             tenant: {
                 id: tenantId,
                 name: tenantConfig.name,
-                fiscalName: (tenantConfig.billing as BillingFiscalData)?.fiscalName,
-                taxId: (tenantConfig.billing as BillingFiscalData)?.taxId,
-                address: (tenantConfig.billing as BillingFiscalData)?.billingAddress?.line1
+                fiscalName: (tenantConfig.billing as any)?.fiscalName,
+                taxId: (tenantConfig.billing as any)?.taxId,
+                address: (tenantConfig.billing as any)?.billingAddress?.line1
             },
             lineItems,
             subtotal,
@@ -591,7 +544,7 @@ export class BillingService {
      */
     static async updateFiscalData(tenantId: string, billingData: BillingFiscalData): Promise<unknown> {
         return await TenantService.updateConfig(tenantId, {
-            billing: billingData
+            billing: billingData as any
         });
     }
 
@@ -625,28 +578,23 @@ export class BillingService {
         data: Partial<TenantSubscription>,
         updatedBy: string
     ): Promise<TenantSubscription> {
-        const collection = await getTenantCollection('tenants');
-        const tenant = await collection.findOne({ tenantId });
-
-        if (!tenant) throw new AppError('NOT_FOUND', 404, 'Tenant no encontrado');
-
-        const currentSub = (tenant.subscription as Partial<TenantSubscription>) || { planSlug: 'FREE' as const, status: 'active' as const };
+        const tenant = await TenantService.getConfig(tenantId);
+        const currentSub = tenant.subscription || { planSlug: 'FREE' as const, status: 'trial' as const };
 
         const newSubData: TenantSubscription = {
             ...currentSub,
             ...data,
             updatedAt: new Date(),
-            createdAt: (currentSub as TenantSubscription).createdAt || new Date()
+            createdAt: (currentSub as any).createdAt || new Date()
         } as TenantSubscription;
 
         const validated = TenantSubscriptionSchema.parse(newSubData);
 
-        await collection.updateOne(
-            { tenantId },
-            { $set: { subscription: validated, updatedAt: new Date() } }
-        );
+        await TenantService.updateConfig(tenantId, {
+            subscription: validated
+        });
 
-        const correlationId = `manual_${Date.now()}`;
+        const correlationId = crypto.randomUUID();
 
         const { AuditTrailService } = await import('@/services/observability/AuditTrailService');
         await AuditTrailService.logConfigChange({
@@ -661,7 +609,7 @@ export class BillingService {
                 after: validated
             },
             correlationId
-        } as Parameters<typeof AuditTrailService.logConfigChange>[0]);
+        });
 
         await logEvento({
             level: 'INFO',

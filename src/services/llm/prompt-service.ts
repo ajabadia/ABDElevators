@@ -1,4 +1,3 @@
-
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { unstable_cache } from 'next/cache';
 import { PromptSchema, PromptVersionSchema, Prompt, PromptVersion } from '@/lib/schemas';
@@ -8,6 +7,7 @@ import { ObjectId } from 'mongodb';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
 import { AiModelManager } from '@/services/llm/ai-model-manager';
 import { PromptInputSanitizer } from '@/services/llm/PromptInputSanitizer';
+import { AIMODELIDS } from '@/lib/ai-models';
 
 /**
  * Servicio de Gestión de Prompts Dinámicos (Fase 7.6)
@@ -16,8 +16,8 @@ export class PromptService {
     /**
      * Sanitiza inputs de variables para prevenir prompt injection.
      */
-    private static sanitizePromptInput(input: any): string {
-        return PromptInputSanitizer.sanitize(input);
+    private static sanitizePromptInput(input: unknown): string {
+        return PromptInputSanitizer.sanitize(String(input));
     }
 
     /**
@@ -28,7 +28,7 @@ export class PromptService {
         tenantId: string,
         environment: string = 'PRODUCTION',
         industry: string = 'GENERIC',
-        session?: any
+        session?: TenantSession
     ): Promise<Prompt> {
         try {
             const cachedFetcher = unstable_cache(
@@ -38,8 +38,9 @@ export class PromptService {
             );
 
             return await cachedFetcher(key, tenantId, environment, industry);
-        } catch (error: any) {
-            if (error.message?.includes('incrementalCache') || error.message?.includes('unstable_cache')) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (errorMessage.includes('incrementalCache') || errorMessage.includes('unstable_cache')) {
                 return this.fetchPromptInternal(key, tenantId, environment, industry, session);
             }
             throw error;
@@ -51,7 +52,7 @@ export class PromptService {
         tenantId: string,
         environment: string,
         industry: string,
-        session?: any
+        session?: TenantSession
     ): Promise<Prompt> {
         const collection = await getTenantCollection('prompts', session);
 
@@ -87,7 +88,7 @@ export class PromptService {
                     createdAt: new Date(),
                     updatedAt: new Date(),
                     category: 'GENERIC'
-                } as any;
+                } as unknown as Prompt;
             }
 
             throw new AppError('NOT_FOUND', 404, `Prompt con key "${key}" no encontrado`);
@@ -101,7 +102,7 @@ export class PromptService {
      */
     static async getRenderedPrompt(
         key: string,
-        variables: Record<string, any>,
+        variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
         environment: string = 'PRODUCTION',
         industry: string = 'GENERIC',
@@ -128,16 +129,19 @@ export class PromptService {
         try {
             const collection = await getTenantCollection('prompts', session);
             await collection.updateOne(
-                { _id: (prompt as any)._id },
+                { _id: new ObjectId((prompt as Prompt)._id as string) },
                 { $inc: { usageCount: 1 }, $set: { lastUsedAt: new Date() } }
             );
         } catch (err) {
             console.error("Error auditing prompt usage:", err);
         }
 
-        let model = (prompt as any).model;
+        let model = prompt.model;
         if (!model || model === DEFAULT_MODEL) {
-            model = session ? await AiModelManager.getFunctionalModel(session, key as any) : DEFAULT_MODEL;
+            const purpose = key as keyof typeof AIMODELIDS;
+            model = session && (key in AIMODELIDS)
+                ? await AiModelManager.getFunctionalModel(session, purpose)
+                : DEFAULT_MODEL;
         }
 
         return { text: rendered, model };
@@ -148,7 +152,7 @@ export class PromptService {
      */
     static async getPromptWithShadow(
         key: string,
-        variables: Record<string, any>,
+        variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
         industry: string = 'GENERIC',
         session?: TenantSession
@@ -168,8 +172,8 @@ export class PromptService {
                     production,
                     shadow: {
                         text: shadowRendered.text,
-                        model: (promptObj as any).shadowModel || shadowRendered.model,
-                        key: promptObj.shadowPromptKey
+                        model: (promptObj as Prompt).shadowModel || shadowRendered.model,
+                        key: (promptObj as Prompt).shadowPromptKey as string
                     }
                 };
             } catch (err) {
@@ -183,7 +187,7 @@ export class PromptService {
 
     private static async render(
         prompt: Prompt,
-        variables: Record<string, any>,
+        variables: Record<string, string | number | boolean | unknown>,
         tenantId: string,
         session?: TenantSession
     ): Promise<{ text: string, model: string }> {
@@ -207,12 +211,12 @@ export class PromptService {
             rendered = rendered.replace(new RegExp(`${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g'), sanitizedValue);
         }
 
-        return { text: rendered, model: (prompt as any).model || DEFAULT_MODEL };
+        return { text: rendered, model: prompt.model || DEFAULT_MODEL };
     }
 
     static async updatePrompt(
         promptId: string,
-        updates: { template: string, variables: any[], category?: string, model?: string, industry?: string },
+        updates: { template: string, variables: unknown[], category?: string, model?: string, industry?: string },
         changedBy: string,
         changeReason: string,
         tenantId?: string,
@@ -221,7 +225,7 @@ export class PromptService {
         const collection = await getTenantCollection('prompts');
         const versionsCollection = await getTenantCollection('prompt_versions');
 
-        const query: any = { _id: new ObjectId(promptId) };
+        const query: Record<string, unknown> = { _id: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
 
         const prompt = await collection.findOne(query);
@@ -272,7 +276,7 @@ export class PromptService {
             action: 'UPDATE_PROMPT', entityType: 'PROMPT', entityId: promptId,
             changes: { before: { version: prompt.version }, after: { version: prompt.version + 1 } },
             reason: changeReason, correlationId: auditMetadata?.correlationId || promptId
-        } as any);
+        });
 
         await logEvento({
             level: 'INFO', source: 'PROMPT_SERVICE', action: 'UPDATE_PROMPT',
@@ -310,7 +314,7 @@ export class PromptService {
     } = {}): Promise<Prompt[] & { nextCursor?: string | null }> {
         const { tenantId = null, activeOnly = false, environment = 'PRODUCTION', limit = 50, after = null } = options;
         const collection = await getTenantCollection('prompts');
-        const filter: any = {};
+        const filter: Record<string, unknown> = {};
 
         if (environment === 'PRODUCTION') filter.environment = { $in: ['PRODUCTION', null, undefined] };
         else filter.environment = environment;
@@ -320,15 +324,18 @@ export class PromptService {
         if (after) filter._id = { $gt: new ObjectId(after) };
 
         const results = await collection.find(filter, { sort: { _id: 1 }, limit: limit + 1 });
-        const items: any = results.slice(0, limit).map(p => PromptSchema.safeParse(p).success ? PromptSchema.parse(p) : { ...p, _validationError: true });
+        const items = results.slice(0, limit).map(p => {
+            const parsed = PromptSchema.safeParse(p);
+            return parsed.success ? parsed.data : { ...p, _validationError: true } as unknown as Prompt;
+        });
 
-        items.nextCursor = results.length > limit ? (results[limit - 1]._id.toString()) : null;
-        return items;
+        const nextCursor = results.length > limit ? (results[limit - 1]._id.toString()) : null;
+        return Object.assign(items, { nextCursor });
     }
 
     static async getVersionHistory(promptId: string, tenantId?: string): Promise<PromptVersion[]> {
         const collection = await getTenantCollection('prompt_versions');
-        const query: any = { promptId: new ObjectId(promptId) };
+        const query: Record<string, unknown> = { promptId: new ObjectId(promptId) };
         if (tenantId) query.tenantId = tenantId;
         const versions = await collection.find(query, { sort: { version: -1 } });
         return versions.map(v => PromptVersionSchema.parse(v));
@@ -338,22 +345,25 @@ export class PromptService {
         const versionsCollection = await getTenantCollection('prompt_versions');
         const promptsCollection = await getTenantCollection('prompts');
 
-        const query: any = {};
+        const query: Record<string, unknown> = {};
         if (tenantId) query.tenantId = tenantId;
 
         const versions = await versionsCollection.find(query, { sort: { createdAt: -1 }, limit: 50 });
         const promptIds = Array.from(new Set(versions.map(v => v.promptId)));
         const prompts = await promptsCollection.find({ _id: { $in: promptIds } });
-        const promptMap = new Map(prompts.map(p => [(p as any)._id.toString(), p]));
+        const promptMap = new Map(prompts.map(p => [(p as { _id: ObjectId })._id.toString(), p]));
 
-        return versions.map(v => ({
-            ...v,
-            promptName: (promptMap.get(v.promptId.toString()) as any)?.name || 'Prompt Eliminado',
-            promptKey: (promptMap.get(v.promptId.toString()) as any)?.key || 'UNKNOWN'
-        }));
+        return versions.map(v => {
+            const prompt = promptMap.get(v.promptId.toString()) as Prompt | undefined;
+            return {
+                ...v,
+                promptName: prompt?.name || 'Prompt Eliminado',
+                promptKey: prompt?.key || 'UNKNOWN'
+            };
+        });
     }
 
-    static async syncFallbacks(tenantId: string = 'abd_global', session?: any): Promise<{ created: number, updated: number, errors: number }> {
+    static async syncFallbacks(tenantId: string = 'abd_global', session?: TenantSession): Promise<{ created: number, updated: number, errors: number }> {
         const { PROMPTS } = await import('@/lib/prompts');
         const collection = await getTenantCollection('prompts', session);
         let created = 0, updated = 0, errors = 0;

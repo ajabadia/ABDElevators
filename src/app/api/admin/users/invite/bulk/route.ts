@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, connectAuthDB } from '@/lib/db';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { BulkInviteRequestSchema, UserInviteSchema } from '@/lib/schemas';
-import { AppError, ValidationError } from '@/lib/errors';
-import * as crypto from 'crypto';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
+import { z } from 'zod';
 
 /**
  * POST /api/admin/users/invite/bulk
@@ -17,14 +18,13 @@ export async function POST(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('user:invite', 'manage');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();
         const validated = BulkInviteRequestSchema.parse(body);
 
         const authDb = await connectAuthDB();
-        const bizDb = await connectDB(); // Although mostly logic is in Auth DB
 
         const results = {
             total: validated.invitations.length,
@@ -148,27 +148,11 @@ export async function POST(req: NextRequest) {
             results
         });
 
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
-            return NextResponse.json(
-                new ValidationError('Invalid bulk data', error.issues).toJSON(),
-                { status: 400 }
-            );
+    } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
+            return handleApiError(new ValidationError('Invalid bulk data', error.issues), 'API_BULK_INVITE', correlationId);
         }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_BULK_INVITE',
-            action: 'PROCESS_BATCH_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error processing bulk invitations').toJSON(),
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_BULK_INVITE', correlationId);
     } finally {
         const duration = Date.now() - start;
         if (duration > 5000) { // Higher threshold for bulk

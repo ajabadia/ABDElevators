@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { requireRole } from '@/lib/auth';
-import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
-import { UserRole } from '@/types/roles';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 
 /**
  * API para obtener la definición de workflow activa.
  * Fase 7.2: Motor de Workflows Multinivel.
  */
-export async function GET(request: Request) {
-    const correlationId = uuidv4();
+export async function GET(request: NextRequest) {
+    const correlationId = crypto.randomUUID();
     const { searchParams } = new URL(request.url);
     const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
 
@@ -21,7 +20,7 @@ export async function GET(request: Request) {
     else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER, UserRole.SUPPORT]);
+        const session = await enforcePermission('workflow', 'read');
 
         const definition = await WorkflowService.getActiveWorkflow(session.user.tenantId, entityType);
 
@@ -31,7 +30,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ success: true, definition });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_GET_ACTIVE_WORKFLOW', correlationId);
     }
 }

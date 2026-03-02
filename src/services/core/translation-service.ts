@@ -69,7 +69,7 @@ export class TranslationService {
     /**
      * Obtiene todos los mensajes para un idioma dado.
      */
-    static async getMessages(locale: string, tenantId: string = 'platform_master'): Promise<Record<string, any>> {
+    static async getMessages(locale: string, tenantId: string = 'platform_master'): Promise<Record<string, unknown>> {
         const cached = await TranslationCache.getCachedMessages(locale, tenantId);
         if (cached && Object.keys(cached).length > 0) return cached;
 
@@ -104,7 +104,7 @@ export class TranslationService {
     static async getDetailedMessages(locale: string, tenantId: string = 'platform_master') {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         const flatLocal = I18nObjectUtils.flattenObject(localMessages);
-        const result: Record<string, any> = {};
+        const result: Record<string, unknown> = {};
 
         for (const [key, value] of Object.entries(flatLocal)) {
             result[key] = { value, source: 'local' };
@@ -131,7 +131,7 @@ export class TranslationService {
         return { success: res.modifiedCount > 0 };
     }
 
-    static async updateTranslation(params: any) {
+    static async updateTranslation(params: { key: string, value: string, locale: string, namespace?: string, userId?: string, tenantId?: string }) {
         const { key, value, locale, namespace, userId, tenantId } = params;
         const effectiveTenantId = tenantId || 'platform_master';
         const filter = { key, locale, tenantId: effectiveTenantId };
@@ -159,21 +159,21 @@ export class TranslationService {
         const localMessages = await TranslationSyncService.loadFromLocalFile(locale);
         const flatLocal = I18nObjectUtils.flattenObject(localMessages);
 
-        let info: any = {
+        const info: Record<string, unknown> = {
             key,
             locale,
             localValue: flatLocal[key] || null,
-            sources: []
+            sources: [] as { type: string, value: string, isCustomized?: boolean }[]
         };
 
         if (flatLocal[key]) {
-            info.sources.push({ type: 'FILE', value: flatLocal[key] });
+            (info.sources as { type: string, value: string }[]).push({ type: 'FILE', value: flatLocal[key] as string });
         }
 
         const masterDocs = await TranslationRepository.findMessages(locale, 'platform_master');
         const masterDoc = masterDocs.find(d => d.key === key);
         if (masterDoc) {
-            info.sources.push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
+            (info.sources as { type: string, value: string, isCustomized?: boolean }[]).push({ type: 'DB_MASTER', value: masterDoc.value, isCustomized: !!masterDoc.isCustomized });
             info.currentValue = masterDoc.value;
         }
 
@@ -181,7 +181,7 @@ export class TranslationService {
             const tenantDocs = await TranslationRepository.findMessages(locale, tenantId);
             const tenantDoc = tenantDocs.find(d => d.key === key);
             if (tenantDoc) {
-                info.sources.push({ type: 'DB_TENANT', value: tenantDoc.value });
+                (info.sources as { type: string, value: string }[]).push({ type: 'DB_TENANT', value: tenantDoc.value });
                 info.currentValue = tenantDoc.value;
             }
         }
@@ -193,8 +193,8 @@ export class TranslationService {
         return info;
     }
 
-    static nestToFlat(obj: any) { return I18nObjectUtils.flattenObject(obj); }
-    static flatToNested(docs: any[]) { return I18nObjectUtils.flatToNested(Object.fromEntries(docs.map(d => [d.key, d.value]))); }
+    static nestToFlat(obj: Record<string, unknown>) { return I18nObjectUtils.flattenObject(obj); }
+    static flatToNested(docs: { key: string, value: string }[]) { return I18nObjectUtils.flatToNested(Object.fromEntries(docs.map(d => [d.key, d.value]))); }
 
     /**
      * Sincroniza desde el archivo local JSON a la base de datos (Legacy facade).
@@ -209,7 +209,7 @@ export class TranslationService {
      * Sincroniza todos los idiomas configurados (Legacy facade).
      */
     static async forceSyncAllLocales(tenantId = 'platform_master') {
-        const results: Record<string, any> = {};
+        const results: Record<string, unknown> = {};
         for (const locale of SUPPORTED_LOCALES) {
             results[locale] = await this.forceSyncFromLocal(locale, tenantId);
         }

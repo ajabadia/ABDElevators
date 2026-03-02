@@ -1,8 +1,9 @@
-import { getTenantCollection } from '@/lib/db-tenant';
-import { connectLogsDB } from '@/lib/db';
-import { AuditTrail } from '@/lib/schemas/system';
-import { z } from 'zod';
+import { applicationLogRepository } from '@/lib/repositories/ApplicationLogRepository';
+import { auditLogRepository } from '@/lib/repositories/AuditLogRepository';
+import { humanValidationRepository } from '@/lib/repositories/HumanValidationRepository';
+import { ingestAuditRepository } from '@/lib/repositories/IngestAuditRepository';
 import { AppError } from '@/lib/errors';
+import { TenantSession } from '@/lib/db-tenant';
 
 export interface TimelineEvent {
     id: string;
@@ -19,14 +20,14 @@ export interface TimelineEvent {
 
 /**
  * EntityTimelineService - Agrega y normaliza la historia de una entidad desde múltiples fuentes.
- * Phase 132.6
+ * Hardened Era 8: Repository-based aggregation and strict typing.
  */
 export class EntityTimelineService {
 
     /**
      * Recupera el historial completo de una entidad (Caso).
      */
-    static async getTimeline(entityId: string, tenantId: string): Promise<TimelineEvent[]> {
+    static async getTimeline(entityId: string, tenantId: string, session?: TenantSession | null): Promise<TimelineEvent[]> {
         // Validación de entrada (Quality Audit Fix)
         if (!entityId || typeof entityId !== 'string') {
             throw new AppError('VALIDATION_ERROR', 400, 'Invalid entityId');
@@ -35,29 +36,27 @@ export class EntityTimelineService {
             throw new AppError('VALIDATION_ERROR', 400, 'Invalid tenantId');
         }
 
-        const dbLogs = await connectLogsDB();
-
-        // 1. Consultas paralelas a las fuentes de datos
+        // 1. Consultas paralelas a las fuentes de datos (Repositories)
         const [appLogs, auditLogs, validations, ingestAudits] = await Promise.all([
-            dbLogs.collection('application_logs').find({
+            applicationLogRepository.list({
                 $or: [{ 'details.entityId': entityId }, { 'details.caseId': entityId }],
                 tenantId
-            }).limit(100).toArray(),
+            }, { limit: 100 }, session),
 
-            dbLogs.collection('audit_admin_ops').find({
+            auditLogRepository.list({
                 entityId,
                 tenantId
-            }).toArray(),
+            }, { limit: 100 }, session),
 
-            dbLogs.collection('human_validations').find({
+            humanValidationRepository.list({
                 entityId,
                 tenantId
-            }).toArray(),
+            }, { limit: 100 }, session),
 
-            dbLogs.collection('ingest_audits').find({
+            ingestAuditRepository.list({
                 docId: entityId,
                 tenantId
-            }).toArray()
+            }, { limit: 100 }, session)
         ]);
 
         // 2. Normalización de eventos
@@ -66,13 +65,13 @@ export class EntityTimelineService {
         // Application Logs
         appLogs.forEach(l => {
             events.push({
-                id: l._id.toString(),
+                id: (l as any)._id.toString(),
                 timestamp: l.timestamp,
                 type: l.source.includes('GEMINI') || l.source.includes('IA') ? 'IA' : 'SYSTEM',
                 source: l.source,
                 action: l.action,
                 message: l.message,
-                actor: l.userId || 'SYSTEM',
+                actor: (l.details as any)?.userId || 'SYSTEM',
                 level: l.level,
                 correlationId: l.correlationId,
                 details: l.details
@@ -98,8 +97,8 @@ export class EntityTimelineService {
         // Validaciones Humanas
         validations.forEach(v => {
             events.push({
-                id: v._id.toString(),
-                timestamp: v.timestamp || v.createdAt || new Date(),
+                id: (v as any)._id.toString(),
+                timestamp: v.timestamp || (v as any).createdAt || new Date(),
                 type: 'HUMAN',
                 source: 'VALIDATION',
                 action: 'HUMAN_VERIFIED',
@@ -113,16 +112,16 @@ export class EntityTimelineService {
         // Ingest Audits
         ingestAudits.forEach(i => {
             events.push({
-                id: i._id.toString(),
-                timestamp: i.timestamp,
+                id: (i as any)._id.toString(),
+                timestamp: (i as any).timestamp || (i as any).createdAt || new Date(),
                 type: 'INGEST',
                 source: 'INGEST_ENGINE',
                 action: i.status === 'SUCCESS' ? 'INGEST_SUCCESS' : 'INGEST_FAILED',
                 message: `Archivo ingestado: ${i.status}`,
-                actor: i.performedBy,
+                actor: (i as any).performedBy || 'SYSTEM',
                 level: i.status === 'SUCCESS' ? 'INFO' : 'ERROR',
-                correlationId: i.correlationId,
-                details: i.details
+                correlationId: (i as any).correlationId,
+                details: (i as any).details
             });
         });
 

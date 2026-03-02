@@ -1,7 +1,6 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -14,11 +13,7 @@ export async function GET(
 ) {
     try {
         const { id: correlationId } = await params;
-        const session = await auth();
-
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
-        }
+        const session = await enforcePermission('ingest:logs', 'read');
 
         const auditCollection = await getTenantCollection('audit_ingestion', {
             user: { id: 'system_monitor', tenantId: session.user.tenantId, role: 'SUPER_ADMIN' }
@@ -39,11 +34,12 @@ export async function GET(
             }))
         });
 
-    } catch (error: any) {
-        console.error('[INGEST_LOGS_API_ERROR]', error);
+    } catch (error: unknown) {
+        const err = error instanceof AppError ? error : new AppError('INTERNAL_ERROR', 500, String(error));
+        console.error('[INGEST_LOGS_API_ERROR]', err);
         return NextResponse.json(
-            { success: false, error: error.message },
-            { status: error.status || 500 }
+            { success: false, error: err.message },
+            { status: err.status }
         );
     }
 }

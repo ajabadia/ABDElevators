@@ -1,6 +1,7 @@
-import { ObjectId } from 'mongodb';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { ObjectId, Filter } from 'mongodb';
+import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { Space, SpaceSchema } from '@/lib/schemas/spaces';
+import { IndustryType } from '@/lib/schemas/core';
 import { LimitsService } from '@/services/security/limits-service';
 import { AppError, ValidationError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
@@ -15,7 +16,7 @@ export class SpaceService {
     /**
      * Crea un nuevo espacio validando cuotas y calculando jerarquía.
      */
-    static async createSpace(tenantId: string, userId: string, data: Partial<Space>, session?: any) {
+    static async createSpace(tenantId: string, userId: string, data: Partial<Space>, session?: TenantSession) {
         const correlationId = crypto.randomUUID();
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
 
@@ -84,14 +85,14 @@ export class SpaceService {
             parentSpaceId?: string;
             search?: string;
         } = {},
-        session?: any
+        session?: TenantSession
     ) {
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const limits = await LimitsService.getEffectiveLimits(tenantId);
         const isFreePlan = limits.tier === 'FREE';
 
         // 🛡️ Filtro de seguridad base (Basado en Reglas de Negocio + Guardian Parity)
-        const accessibilityQuery: any = {
+        const accessibilityQuery: Filter<Space> = {
             $or: [
                 // 1. Espacios Personales
                 { type: 'PERSONAL', createdBy: userId },
@@ -113,12 +114,12 @@ export class SpaceService {
 
         // 4. Restricciones de Plan para INDUSTRY y GLOBAL
         if (!isFreePlan) {
-            accessibilityQuery.$or.push({ type: 'INDUSTRY', industry: filters.industry as any });
-            accessibilityQuery.$or.push({ type: 'GLOBAL' });
+            (accessibilityQuery.$or as any[]).push({ type: 'INDUSTRY', industry: filters.industry as IndustryType });
+            (accessibilityQuery.$or as any[]).push({ type: 'GLOBAL' });
         }
 
         // 2. Aplicar filtros jerárquicos y búsqueda
-        const extraFilters: any = {};
+        const extraFilters: Filter<Space> = {};
         if (filters.isRoot) {
             extraFilters.parentSpaceId = { $exists: false };
         } else if (filters.parentSpaceId) {
@@ -131,13 +132,13 @@ export class SpaceService {
 
         return await collection.find({
             $and: [accessibilityQuery, extraFilters]
-        } as any);
+        } as Filter<Space>);
     }
 
     /**
      * Mueve un espacio (actualiza recursivamente el materializedPath).
      */
-    static async moveSpace(spaceId: string, newParentId: string | null, tenantId: string, session?: any) {
+    static async moveSpace(spaceId: string, newParentId: string | null, tenantId: string, session?: TenantSession) {
         const collection = await getTenantCollection<Space>(this.COLLECTION, session);
         const space = await collection.findOne({ _id: new ObjectId(spaceId) });
         if (!space) throw new ValidationError('Espacio no encontrado');
@@ -159,7 +160,7 @@ export class SpaceService {
 
         // 2. Actualizar hijos recursivamente (Fase 125.2)
         if (oldPath) {
-            const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } } as any);
+            const children = await collection.find({ materializedPath: { $regex: `^${oldPath}/` } } as Filter<Space>);
             for (const child of children) {
                 const childSubPath = child.materializedPath?.replace(oldPath, '');
                 await collection.updateOne(

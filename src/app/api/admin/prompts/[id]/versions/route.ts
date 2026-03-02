@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
@@ -15,17 +14,17 @@ export async function GET(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
         const tenantId = session.user.tenantId;
 
         const versions = await PromptService.getVersionHistory(id, isSuperAdmin ? undefined : tenantId);
 
         return NextResponse.json({ success: true, versions });
-    } catch (error: any) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_VERSIONS_GET', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_ADMIN_PROMPTS_VERSIONS_GET', correlationId);
     }
 }
 
@@ -38,16 +37,9 @@ export async function POST(
     context: { params: Promise<{ id: string }> }
 ) {
     const { id } = await context.params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        // Double defense: Role check + Guardian Permission check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-
-        // FASE 58 & 70: Enforce Guardian V2 ABAC
-        await enforcePermission('developer-tools:prompts', 'manage');
-
-        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
-        const tenantId = session.user.tenantId;
+        const session = await enforcePermission('prompt', 'manage');
 
         const { targetVersion } = await req.json();
 
@@ -62,7 +54,7 @@ export async function POST(
         );
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return handleApiError(error, 'API_ADMIN_PROMPTS_ROLLBACK', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_ADMIN_PROMPTS_ROLLBACK', correlationId);
     }
 }

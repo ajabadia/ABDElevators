@@ -1,60 +1,31 @@
 
-'use client';
-
 import React from 'react';
-import { GlobalPatternsTable } from '@/components/admin/intelligence/GlobalPatternsTable';
+import { InsightGovernance } from '@/components/admin/intelligence/InsightGovernance';
 import { TrendsChart, ImpactScoreCard } from '@/components/admin/intelligence/TrendsChart';
-import { toast } from 'sonner';
-import { Sparkles, BrainCircuit, Globe, ShieldCheck, TrendingUp } from 'lucide-react';
-import { FederatedPattern } from '@/lib/schemas';
-import { IntelligenceStats } from '@/lib/intelligence-analytics';
-import { PageContainer } from '@/components/ui/page-container';
-import { PageHeader } from '@/components/ui/page-header';
+import { Sparkles, Globe, ShieldCheck } from 'lucide-react';
 import { ContentCard } from '@/components/ui/content-card';
 import { MetricCard } from '@/components/ui/metric-card';
-import { useTranslations } from 'next-intl';
-import { useApiItem } from '@/hooks/useApiItem';
-import { useApiMutation } from '@/hooks/useApiMutation';
+import { getTranslations } from 'next-intl/server';
+import { PageContainer } from '@/components/ui/page-container';
+import { PageHeader } from '@/components/ui/page-header';
+import { requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
+import { IntelligenceService } from '@/services/admin/IntelligenceService';
 
-export default function IntelligenceDashboard() {
-    const t = useTranslations('admin.intelligence');
+/**
+ * 📈 Intelligence Dashboard (Phase 233)
+ * Real-time trends and automated insight governance.
+ * Refactored to Server Component for Security Rule #12 and Performance Rule #8.
+ */
+export default async function IntelligenceDashboard() {
+    await requireRole([UserRole.SUPER_ADMIN]);
+    const t = await getTranslations('admin.intelligence');
 
-    // Unified Data Fetching (Rule 11/12 Alignment)
-    const { data: stats, isLoading: isLoadingStats, refresh: refreshStats } = useApiItem<IntelligenceStats>({
-        endpoint: '/api/admin/intelligence/stats',
-    });
-
-    const { data: patternsData, isLoading: isLoadingPatterns, refresh: refreshPatterns } = useApiItem<{ patterns: FederatedPattern[] }>({
-        endpoint: '/api/admin/intelligence/patterns?limit=20',
-    });
-
-    // Governance Action via useApiMutation
-    const { mutate: archivePattern, isLoading: isArchiving } = useApiMutation({
-        endpoint: '/api/admin/intelligence/patterns',
-        method: 'PATCH',
-        onSuccess: () => {
-            toast.success(t('table.archive_success'));
-            refreshPatterns();
-        },
-        onError: () => toast.error(t('table.archive_error'))
-    });
-
-    const handleArchive = (id: string) => {
-        archivePattern({ patternId: id, action: 'ARCHIVE' });
-    };
-
-    const loading = isLoadingStats || isLoadingPatterns;
-
-    if (loading) {
-        return (
-            <div className="h-full flex items-center justify-center p-8" aria-busy="true" aria-live="polite">
-                <div className="flex flex-col items-center gap-4">
-                    <BrainCircuit className="h-10 w-10 text-primary animate-pulse" />
-                    <p className="text-sm text-muted-foreground animate-pulse">{t('loading')}</p>
-                </div>
-            </div>
-        );
-    }
+    // Unified Data Fetching - Parallelized (Rule 8)
+    const [stats, patternsData] = await Promise.all([
+        IntelligenceService.getStats(),
+        IntelligenceService.getPatterns({ limit: 20 })
+    ]);
 
     return (
         <PageContainer>
@@ -111,7 +82,7 @@ export default function IntelligenceDashboard() {
                     aria-label={t('charts.topics_title')}
                 >
                     <div className="space-y-4 pt-4">
-                        {stats?.topTags?.map((tag, i) => (
+                        {stats?.topTags?.map((tag: { tag: string; count: number }) => (
                             <div key={tag.tag} className="flex items-center" role="listitem">
                                 <div className="w-full flex-1 space-y-1">
                                     <div className="flex justify-between mb-1">
@@ -129,7 +100,7 @@ export default function IntelligenceDashboard() {
                         ))}
                         {(!stats?.topTags || stats.topTags.length === 0) && (
                             <div className="flex flex-col items-center justify-center py-8 text-center opacity-50">
-                                <TrendingUp className="h-8 w-8 mb-2" aria-hidden="true" />
+                                <Globe className="h-8 w-8 mb-2 opacity-20" aria-hidden="true" />
                                 <p className="text-xs text-muted-foreground">{t('charts.no_topics')}</p>
                             </div>
                         )}
@@ -137,9 +108,9 @@ export default function IntelligenceDashboard() {
                 </ContentCard>
             </div>
 
-            {/* Pattern Governance Table */}
+            {/* Pattern Governance Table - Wrapped in InsightGovernance for client actions */}
             <ContentCard title={t('table.title')} description={t('table.desc')}>
-                <GlobalPatternsTable patterns={patternsData?.patterns || []} onArchive={handleArchive} />
+                <InsightGovernance patterns={patternsData?.patterns || []} />
             </ContentCard>
         </PageContainer>
     );

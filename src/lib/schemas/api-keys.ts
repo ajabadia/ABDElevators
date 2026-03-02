@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ObjectId } from 'mongodb';
 
 /**
  * 🔌 Public API Key Management Schemas
@@ -13,7 +14,7 @@ export const ApiKeyPermissionSchema = z.enum([
 export type ApiKeyPermission = z.infer<typeof ApiKeyPermissionSchema>;
 
 export const ApiKeySchema = z.object({
-    _id: z.any().optional(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
     tenantId: z.string(),
     keyHash: z.string(),           // Hash SHA-256 de la key completa
     keyPrefix: z.string(),         // Primeros 7 caracteres para display (ej: "sk_live_...")
@@ -29,8 +30,8 @@ export const ApiKeySchema = z.object({
 export type ApiKey = z.infer<typeof ApiKeySchema>;
 
 export const ApiKeyLogSchema = z.object({
-    _id: z.any().optional(),
-    apiKeyId: z.any(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
+    apiKeyId: z.union([z.string(), z.instanceof(ObjectId)]),
     tenantId: z.string(),
     endpoint: z.string(),
     method: z.string(),

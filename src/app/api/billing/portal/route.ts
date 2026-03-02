@@ -1,24 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 import { createPortalSession } from '@/lib/stripe';
 import { TenantService } from '@/services/tenant/tenant-service';
-import { AppError } from '@/lib/errors';
+import { handleApiError, AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
+import crypto from 'crypto';
 
 /**
  * POST /api/billing/portal
  * Crea una sesión del Stripe Billing Portal para gestionar suscripción
+ * SLA: P95 < 1000ms
  */
-export async function POST(req: NextRequest) {
+export const POST = withPerformanceSLA(async (req) => {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('billing:portal', 'manage');
 
         const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
         const tenantConfig = await TenantService.getConfig(tenantId);
 
         const customerId = tenantConfig.subscription?.stripeCustomerId;
@@ -35,14 +33,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             portalUrl: portalSession.url,
+            correlationId
         });
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
-            { status: 500 }
-        );
+    } catch (error) {
+        return handleApiError(error, 'API_BILLING_PORTAL_POST', correlationId);
     }
-}
+}, { p95: 1000, max: 2000 });

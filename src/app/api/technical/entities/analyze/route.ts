@@ -1,53 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, getCaseCollection } from '@/lib/db-tenant';
 import { PDFIngestionPipeline } from '@/services/infra/pdf/PDFIngestionPipeline';
-import { extractModelsWithGemini } from '@/services/llm/llm-service';
-import { RagService, RagResult } from '@/services/core/RagService';
-import { AppError, ValidationError } from '@/lib/errors';
-import { EntitySchema, GenericCaseSchema } from '@/lib/schemas';
+import { handleApiError } from '@/lib/errors';
+import { EntitySchema, GenericCaseSchema, IndustryType } from '@/lib/schemas';
 import { mapEntityToCase } from '@/lib/mappers';
-import { RiskService } from '@/services/security/RiskService';
-import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
+import { TechnicalEntityService } from '@/services/core/TechnicalEntityService';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 /**
  * POST /api/technical/entities/analyze
  * RAG Orchestrator for technicians.
- * SLA: P95 < 10000ms
+ * SLA: P95 < 10s, MAX 30s
  */
-export async function POST(req: NextRequest) {
+export const POST = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
-    const start = Date.now();
 
     try {
         // Rule #9: Security Check
-        const session = await auth();
-        if (!session?.user?.email) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const user = session.user as any;
-        const tenantId = user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const session = await enforcePermission('technical:entities', 'create');
+        const tenantId = session.user.tenantId;
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
-        // Rule #2: Zod First (or immediate manual validation)
         if (!file) {
-            throw new ValidationError('Entidad no proporcionada');
+            return NextResponse.json({ success: false, message: 'Archivo no proporcionado' }, { status: 400 });
         }
 
         await logEvento({
             level: 'INFO',
             source: 'TECHNICAL_ENTITIES_ANALYZE_API',
             action: 'START',
-            message: `Starting entity analysis: ${file.name} `,
-            correlationId
+            message: `Starting entity analysis: ${file.name}`,
+            correlationId,
+            tenantId
         });
 
         // 1. Extract text from entity
@@ -55,8 +44,6 @@ export async function POST(req: NextRequest) {
 
         // 0. MD5 De-duplication (Token Savings)
         const fileHash = crypto.createHash('md5').update(textBuffer).digest('hex');
-        const { TechnicalEntityService } = await import('@/services/core/TechnicalEntityService');
-        const entitiesCollection = await getTenantCollection('entities');
         const existingEntity = await TechnicalEntityService.findExistingByHash(fileHash, tenantId);
 
         if (existingEntity) {
@@ -64,34 +51,36 @@ export async function POST(req: NextRequest) {
                 level: 'INFO',
                 source: 'TECHNICAL_ENTITIES_ANALYZE_API',
                 action: 'DEDUPLICATION',
-                message: `Identical entity detected for tenant ${tenantId}.Returning previous analysis.`,
+                message: `Identical entity detected for tenant ${tenantId}. Returning previous analysis.`,
                 correlationId,
+                tenantId,
                 details: { entityId: existingEntity._id, filename: file.name }
             });
 
             return NextResponse.json({
                 success: true,
                 entityId: existingEntity._id,
-                patterns: existingEntity.ragContextFull || existingEntity.detectedPatterns,
-                risks: (existingEntity.metadata as any)?.risks || [],
+                patterns: (existingEntity as any).ragContextFull || existingEntity.detectedPatterns,
+                risks: existingEntity.metadata?.risks || [],
                 correlationId,
                 isDuplicate: true
             });
         }
 
-        const industry = (session.user as any).industry || 'ELEVATORS';
+        const industry = (session.user as any).industry as IndustryType || 'ELEVATORS';
         const pipelineResult = await PDFIngestionPipeline.runPipeline(textBuffer, {
             tenantId,
             correlationId,
-            industry: industry as any,
+            industry,
             strategy: 'ADVANCED',
             pii: { enabled: true }
         });
         const entityText = pipelineResult.maskedText || pipelineResult.cleanedText;
         const ingestOnly = formData.get('ingestOnly') === 'true';
 
+        const entitiesCollection = await getTenantCollection('entities');
+
         if (ingestOnly) {
-            // 🛡️ MIGRACIÓN A BULLMQ (Fase 31: Async Jobs)
             const insertResult = await entitiesCollection.insertOne({
                 identifier: file.name.split('.')[0],
                 filename: file.name,
@@ -101,13 +90,15 @@ export async function POST(req: NextRequest) {
                 status: 'received',
                 tenantId,
                 createdAt: new Date(),
-                correlationId
-            });
+                industry,
+                detectedPatterns: [],
+                isValidated: false
+            } as any);
 
             const { queueService } = await import('@/services/ops/queue-service');
             const job = await queueService.addJob('PDF_ANALYSIS', {
-                tenantId: tenantId!,
-                userId: user.id || 'unknown',
+                tenantId,
+                userId: session.user.id,
                 correlationId,
                 data: {
                     entityId: insertResult.insertedId.toString(),
@@ -146,10 +137,12 @@ export async function POST(req: NextRequest) {
             originalText: entityText,
             detectedPatterns: patternsForStorage,
             analysisDate: new Date(),
-            status: 'analyzed' as const,
+            status: 'analyzed',
             tenantId,
             fileMd5: fileHash,
             createdAt: new Date(),
+            industry,
+            isValidated: false,
             metadata: {
                 risks: detectedRisks,
                 federatedInsights: federatedInsights
@@ -161,7 +154,7 @@ export async function POST(req: NextRequest) {
             ...validatedEntity,
             ragContextFull: resultsWithContext,
             correlationId
-        });
+        } as any);
 
         // 5. Vision 2.0: Save as Generic Case
         try {
@@ -189,35 +182,7 @@ export async function POST(req: NextRequest) {
             correlationId,
         });
 
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'TECHNICAL_ENTITIES_ANALYZE_API',
-            action: 'FATAL_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error procesando la entidad RAG').toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        const durationMs = Date.now() - start;
-        if (durationMs > 10000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'TECHNICAL_ENTITIES_ANALYZE_API',
-                action: 'SLA_VIOLATION',
-                message: `Slow RAG analysis: ${durationMs} ms`,
-                correlationId,
-                details: { durationMs }
-            });
-        }
+    } catch (error) {
+        return handleApiError(error, 'API_TECHNICAL_ENTITIES_ANALYZE_POST', correlationId);
     }
-}
+}, { p95: 10000, max: 30000 });

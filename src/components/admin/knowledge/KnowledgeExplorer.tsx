@@ -225,22 +225,22 @@ export const KnowledgeExplorer: React.FC = () => {
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div className="md:col-span-2">
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Método de Recuperación</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">{t('filters.method_label')}</Label>
                                         <Tabs
                                             value={simulationMode ? 'semantic' : 'regex'}
                                             onValueChange={(v) => setSimulationMode(v === 'semantic')}
                                             className="w-full"
                                         >
                                             <TabsList className="grid w-full grid-cols-2 h-9">
-                                                <TabsTrigger value="regex" className="text-[10px] font-bold uppercase">Búsqueda Exacta</TabsTrigger>
+                                                <TabsTrigger value="regex" className="text-[10px] font-bold uppercase">{t('filters.method_exact')}</TabsTrigger>
                                                 <TabsTrigger value="semantic" className="text-[10px] font-bold uppercase gap-1.5 text-blue-600">
-                                                    <Sparkles size={12} /> Semántica (IA)
+                                                    <Sparkles size={12} /> {t('filters.method_semantic')}
                                                 </TabsTrigger>
                                             </TabsList>
                                         </Tabs>
                                     </div>
                                     <div>
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Idioma de Fuente</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">{t('filters.lang_label')}</Label>
                                         <Select value={filters.language} onValueChange={(val) => setFilter('language', val)}>
                                             <SelectTrigger aria-label={t('filters.lang_label')} className="h-9">
                                                 <SelectValue placeholder={t('filters.lang_label')} />
@@ -257,7 +257,7 @@ export const KnowledgeExplorer: React.FC = () => {
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">Tipo de Fragmento</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 block">{t('filters.type_label')}</Label>
                                         <Select value={filters.type} onValueChange={(val) => setFilter('type', val)}>
                                             <SelectTrigger aria-label={t('filters.type_label')} className="h-9">
                                                 <SelectValue placeholder={t('filters.type_label')} />

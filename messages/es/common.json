@@ -541,6 +541,18 @@
     "intelligence": "Inteligencia",
     "trends": "Tendencias",
     "configurator": "Configurador",
-    "detail": "Detalle"
+    "detail": "Detalle",
+    "active": "Activos",
+    "pending": "Pendientes",
+    "organizations": "Organizaciones",
+    "general": "General",
+    "branding": "Branding",
+    "storage": "Almacenamiento",
+    "features": "Funcionalidades",
+    "billing": "Facturación"
+  },
+  "days": {
+    "one": "día",
+    "other": "días"
   }
 }

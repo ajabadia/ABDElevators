@@ -1,7 +1,7 @@
 # 🗺️ Application Map & Architecture Registry
-**Last Audit:** 2026-02-24 (ERA 8 — Deep Route-by-Route Inspection + Security Alignment)
-**Status:** Full 101-route audit complete. FASE 222B (HubPage/DRY) and FASE 220 (Guardian Server-Side Enforcement) implemented.
-**Routes:** 101 `page.tsx` | 43 Canónicas | 30 No Documentadas | 7 Redirects | 1 Placeholder | 1 DEPRECATED zombi
+**Last Audit:** 2026-03-02 (ERA 9 — Guardian Enforcement Sweep & Middleware Hardening)
+**Status:** Full 101-route audit complete. FASE 236 (Guardian ABAC Core/Billing) and FASE 234 (Middleware Hardening) implemented.
+**Routes:** 101 `page.tsx` | 44 Canónicas | 30 No Documentadas | 7 Redirects | 1 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
 
@@ -60,10 +60,8 @@ graph TD
             AuditPage --> ConfigChanges[Config Changes]
         end
 
-        subgraph Users_Perms["👮 Users & Permissions"]
-            Admin --> UsersHub[Users Hub]
             UsersHub --> UsersActive[Active Users]
-            UsersHub --> UsersPending[Pending]
+            UsersHub --> UsersInvitations[Invitations]
             Admin --> Permissions[Permissions]
             Permissions --> PermGroups[Groups]
             Permissions --> PermSimulator[Simulator]
@@ -142,125 +140,135 @@ graph TD
 ```
 
 ---
-
-## 🏢 Panel de Administración
-Ubicación base: `/admin` (Protegido por Guardian)
-
-### 🏠 Admin General
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin` | **Dashboard Unificado (Hub)**: DashboardTabs compound component | `/api/admin/stats` | ✅ | — | 2026-02-23 |
-| `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin) | - | ✅ | 489 | 2026-02-23 |
-| `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio | - | ✅ | — | 2026-02-23 |
-| `/admin/workflow-tasks` | **Workflow Ops**: Tareas de orquestación técnica | - | ✅ | — | 2026-02-23 |
-| `/admin/profile` | Perfil de usuario administrativo | - | ✅ | — | 2026-02-23 |
-
-### 🧠 Knowledge & RAG
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento | `/api/knowledge/stats` | ✅ | — | 2026-02-23 |
-| `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG y búsqueda | - | ✅ | — | 2026-02-23 |
-| `/admin/knowledge/assets` | **Asset Management**: Gestión de activos | - | ✅ | — | 2026-02-23 |
-| `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos personales (admin) | - | ✅ | — | 2026-02-23 |
-| `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios | - | ✅ | — | 2026-02-23 |
-| `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal (admin) | - | ✅ | — | 2026-02-23 |
-| `/admin/intelligence/trends` | **Trend Analysis**: Inteligencia industrial | - | ✅ | — | 2026-02-23 |
-
-### ⚡ AI & Automation Studio
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/ai` | **AI Hub**: Dashboard de Inteligencia | `/api/ai/stats` | ✅ | — | 2026-02-23 |
-| `/admin/ai/playground` | **Playground**: Experimentación RAG | - | ✅ | — | 2026-02-23 |
-| `/admin/ai/workflows` | **Workflows**: Editor de flujos | - | ✅ | — | 2026-02-23 |
-| `/admin/ai/rag-quality` | **RAG Quality**: Métricas de calidad RAG | - | ✅ | — | 2026-02-23 |
-| `/admin/ai/predictive` | **Predictive Maintenance**: Mantenimiento predictivo | - | ✅ | — | 2026-02-23 |
-| `/admin/ai/governance` | **AI Governance**: Selección de modelos LLM, cuotas, PII masking | - | 🆕 | 361 | 2026-02-23 |
-| `/admin/prompts` | **Prompt Management**: Gestión completa de prompts maestros | - | 🆕 | 486 | 2026-02-23 |
-| `/admin/workflows` | **Workflows List**: Lista de workflows | - | 🆕 | — | 2026-02-23 |
-| `/admin/workflows/[id]` | **Workflow Editor**: Editor individual de workflow | - | 🆕 | — | 2026-02-23 |
-| `/admin/checklist-configs` | **Checklists**: Configuración de Checklists | - | ✅ | — | 2026-02-23 |
-| `/admin/checklist-configs/[id]` | **Checklist Editor**: Edición de Checklist | - | ✅ | — | 2026-02-23 |
-| `/admin/checklist-configs/new` | **New Checklist**: Crear checklist | - | 🆕 | — | 2026-02-23 |
+ 
+ ## 🏢 Panel de Administración
+ Ubicación base: `/admin` (Protegido por Guardian)
+ 
+ ### 🏠 Admin General
+ | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+ |------|---------------|--------------|---------|--------|--------|----------|
+ | `/admin` | **Dashboard Unificado (Hub)**: DashboardTabs compound component | `/api/admin/stats` | Platform | ✅ | — | 2026-02-23 |
+ | `/admin/superadmin` | **Platform Dashboard**: Observabilidad global (SuperAdmin) | - | Platform | ✅ | 489 | 2026-02-23 |
+ | `/admin/tasks` | **Tasks Hub**: Gestión de tareas de negocio | - | Operations | ✅ | — | 2026-02-23 |
+ | `/admin/workflow-tasks` | **Workflow Ops**: Tareas de orquestación técnica | - | Operations | ✅ | — | 2026-02-23 |
+ | `/admin/profile` | Perfil de usuario administrativo | - | Platform | ✅ | — | 2026-02-23 |
+ 
+ ### 🧠 Knowledge & RAG
+ | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+ |------|---------------|--------------|---------|--------|--------|----------|
+ | `/admin/knowledge` | **Knowledge Hub**: Dashboard de conocimiento | `/api/knowledge/stats` | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/knowledge/explorer` | **Neural Explorer**: Simulación RAG y búsqueda | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/knowledge/assets` | **Asset Management**: Gestión de activos | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/knowledge/my-docs` | **Knowledge > My Docs**: Documentos personales (admin) | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/knowledge/spaces` | **Space Config**: Gestión administrativa de espacios | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/my-documents` | **Personal Multi-tenant Store**: Almacén personal (admin) | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ | `/admin/intelligence/trends` | **Trend Analysis**: Inteligencia industrial | - | Knowledge | ✅ | — | 2026-02-26 18:00 |
+ 
+ ### ⚡ AI & Automation Studio
+ | Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+ |------|---------------|--------------|---------|--------|--------|----------|
+ | `/admin/ai` | **AI Hub**: Dashboard de Inteligencia | `/api/ai/stats` | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/ai/playground` | **Playground**: Experimentación RAG | - | AI | ✅ | — | 2026-02-26 16:50 |
+| `/admin/ai/workflows` | **Workflows**: Editor de flujos | - | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/ai/rag-quality` | **RAG Quality**: Métricas de calidad RAG | - | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/ai/predictive` | **Predictive Maintenance**: Mantenimiento predictivo | - | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/ai/governance` | **AI Governance**: LLM guardrails y rate limits | `/api/admin/ai/guardrails` | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/prompts` | **Prompt Studio**: Gestión de system prompts y tuning | `/api/admin/prompts` | AI | ✅ | — | 2026-02-26 19:30 |
+| `/admin/checklist-configs` | **Checklist Rules**: Motor de reglas de negocio | `/api/admin/checklist-configs` | Configuration | ✅ | — | 2026-02-26 19:30 |
+| `/admin/workflows` | **Workflows List**: Lista de workflows | - | AI | 🆕 | — | 2026-02-23 |
+| `/admin/workflows/[id]` | **Workflow Editor**: Editor individual de workflow | - | AI | 🆕 | — | 2026-02-23 |
+| `/admin/checklist-configs` | **Checklists**: Configuración de Checklists | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/checklist-configs/[id]` | **Checklist Editor**: Edición de Checklist | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/checklist-configs/new` | **New Checklist**: Crear checklist | - | Operations | 🆕 | — | 2026-02-23 |
 
 ### 🛡️ Security & Audit
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/security` | **Security Hub**: Dashboard de seguridad | `/api/admin/security` | ✅ | 123 | 2026-02-23 |
-| `/admin/security/audit` | **Security Audit Trail**: Registro inmutable (security-focused) | - | ✅ | — | 2026-02-23 |
-| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones concurrentes | - | ✅ | — | 2026-02-23 |
-| `/admin/audit` | **Audit Log Explorer**: Explorador industrial de logs con filtros y métricas | - | 🆕 | 260 | 2026-02-23 |
-| `/admin/audit/config-changes` | **Config Audit**: Auditoría SOC2 inmutable de cambios de configuración | - | 🆕 | 40 | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/security` | **Security Hub**: Dashboard de seguridad | `/api/admin/security` | Security | ✅ | 123 | 2026-02-23 |
+| `/admin/security/audit` | **Security Audit Trail**: Registro inmutable (security-focused) | - | Security | ✅ | — | 2026-02-23 |
+| `/admin/security/sessions` | **Active Sessions**: Gestión de sesiones concurrentes | - | Security | ✅ | — | 2026-02-23 |
+| `/admin/audit` | **Audit Log Explorer**: Explorador industrial de logs con filtros y métricas | - | Security | 🆕 | 260 | 2026-02-23 |
+| `/admin/audit/config-changes` | **Config Audit**: Auditoría SOC2 inmutable de cambios de configuración | - | Security | 🆕 | 40 | 2026-02-23 |
 
 > **Nota**: `/admin/audit` y `/admin/security/audit` son módulos DIFERENTES. `audit` = log explorer industrial con filtros. `security/audit` = trail inmutable de seguridad.
 
 ### 👮 Users & Permissions
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/users` | **Users Hub**: Gestión de usuarios | `/api/admin/users/stats`| ✅ | — | 2026-02-23 |
-| `/admin/users/active` | Usuarios activos | - | ✅ | — | 2026-02-23 |
-| `/admin/users/pending` | Invitaciones pendientes | - | ✅ | — | 2026-02-23 |
-| `/admin/permissions` | Matriz de permisos (Guardian) | - | ✅ | — | 2026-02-23 |
-| `/admin/permissions/groups` | Jerarquía de grupos | - | ✅ | — | 2026-02-23 |
-| `/admin/permissions/simulator` | Sandbox de permisos | - | ✅ | — | 2026-02-23 |
-| `/admin/permissions/matrix` | Vista matricial de permisos | - | 🆕 | — | 2026-02-23 |
-| `/admin/document-types` | Tipos de documento | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/users` | **Users Hub**: Gestión de usuarios | `/api/admin/users/stats`| Users | ✅ | — | 2026-02-26 17:50 |
+| `/admin/users/active` | Usuarios activos | - | Users | ✅ | — | 2026-02-26 17:50 |
+| `/admin/users/invitations` | Gestión de Invitaciones | - | Users | ✅ | — | 2026-02-27 19:45 |
+| `/admin/permissions` | Matriz de permisos (Guardian) | - | Users | ✅ | — | 2026-02-23 |
+| `/admin/permissions/groups` | Jerarquía de grupos | - | Users | ✅ | — | 2026-02-23 |
+| `/admin/permissions/simulator` | Sandbox de permisos | - | Users | ✅ | — | 2026-02-23 |
+| `/admin/permissions/matrix` | Vista matricial de permisos | - | Users | 🆕 | — | 2026-02-23 |
+| `/admin/document-types` | Tipos de documento | - | Knowledge | ✅ | — | 2026-02-23 |
+| `/admin/profile` | **Mi Perfil**: Perfil del usuario actual | - | Personal | ✅ | — | 2026-02-26 17:50 |
+
+### 🛡️ Security
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/security` | **Security Hub**: Panel de seguridad | - | Operations | ✅ | — | 2026-02-26 17:50 |
+| `/admin/security/audit` | **Audit Logs**: Registro de eventos | `/api/admin/audit` | Operations | ✅ | — | 2026-02-26 17:50 |
+| `/admin/security/sessions` | **Active Sessions**: Sesiones activas | `/api/admin/sessions` | Operations | ✅ | — | 2026-02-26 17:50 |
+
 
 ### 💰 Billing & Organizations
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/billing` | **Billing Hub**: Suscripciones y facturación | `/api/admin/billing` | ✅ | — | 2026-02-23 |
-| `/admin/billing/invoices` | Historial de facturas | - | ✅ | — | 2026-02-23 |
-| `/admin/billing/contracts` | Gestión de contratos PDF | - | ✅ | — | 2026-02-23 |
-| `/admin/billing/plan` | **Plan Selector**: Selector de plan de suscripción | - | 🆕 | 95 | 2026-02-23 |
-| `/admin/billing/usage` | **Usage & ROI**: Métricas de uso, cuotas y ROI | - | 🆕 | 373 | 2026-02-23 |
-| `/admin/organizations` | **Organization Hub**: Dashboard multitenant | `/api/organizations` | ✅ | — | 2026-02-23 |
-| `/admin/organizations/general` | Configuración básica del tenant | - | ✅ | — | 2026-02-23 |
-| `/admin/organizations/branding` | Personalización visual (Logo/Colores) | - | ✅ | — | 2026-02-23 |
-| `/admin/organizations/features` | Control de módulos activos por tenant | - | ✅ | — | 2026-02-23 |
-| `/admin/organizations/billing` | Facturación por organización | - | 🆕 | — | 2026-02-23 |
-| `/admin/compliance` | Centro de Cumplimiento GDPR / Auditoría | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/billing` | **Billing Hub**: Suscripciones y facturación | `/api/admin/billing` | Billing | ✅ | — | 2026-02-23 |
+| `/admin/billing/invoices` | Historial de facturas | - | Billing | ✅ | — | 2026-02-23 |
+| `/admin/billing/contracts` | Gestión de contratos PDF | - | Billing | ✅ | — | 2026-02-23 |
+| `/admin/billing/plan` | **Plan Selector**: Selector de plan de suscripción | - | Billing | 🆕 | 95 | 2026-02-23 |
+| `/admin/billing/usage` | **Usage & ROI**: Métricas de uso, cuotas y ROI | - | Billing | 🆕 | 373 | 2026-02-23 |
+| `/admin/organizations` | **Organization Hub**: Dashboard multitenant | `/api/organizations` | Organizations | ✅ | — | 2026-02-23 |
+| `/admin/organizations/general` | Configuración básica del tenant | - | Organizations | ✅ | — | 2026-02-23 |
+| `/admin/organizations/branding" | Personalización visual (Logo/Colores) | - | Organizations | ✅ | — | 2026-02-23 |
+| `/admin/organizations/features` | Control de módulos activos por tenant | - | Organizations | ✅ | — | 2026-02-23 |
+| `/admin/organizations/billing` | Facturación por organización | - | Organizations | 🆕 | — | 2026-02-23 |
+| `/admin/compliance` | Centro de Cumplimiento GDPR / Auditoría | - | Security | ✅ | — | 2026-02-23 |
 
 ### ⚙️ Operations
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/operations` | **Operations Hub**: Punto de entrada operaciones | `/api/admin/operations` | ✅ | 137 | 2026-02-23 |
-| `/admin/operations/status` | Estado de servicios e infraestructura | - | ✅ | — | 2026-02-23 |
-| `/admin/operations/maintenance` | Mantenimiento y corrección de datos | - | ✅ | — | 2026-02-23 |
-| `/admin/operations/logs` | **System Logs**: Logs del sistema (canónica) | - | ✅ | — | 2026-02-23 |
-| `/admin/operations/ingest` | **Ingest Jobs**: Trabajos de ingesta (canónica) | - | ✅ | — | 2026-02-23 |
-| `/admin/operations/trace` | **Trace Viewer**: Auditoría forense de decisiones IA | - | ✅ | — | 2026-02-23 |
-| `/admin/operations/observability` | **Observability**: Observabilidad del sistema | - | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/operations` | **Operations Hub**: Punto de entrada operaciones | `/api/admin/operations` | Operations | ✅ | 137 | 2026-02-23 |
+| `/admin/operations/status` | Estado de servicios e infraestructura | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/operations/maintenance` | Mantenimiento y corrección de datos | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/operations/logs` | **System Logs**: Logs del sistema (canónica) | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/operations/ingest` | **Ingest Jobs**: Trabajos de ingesta (canónica) | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/operations/trace` | **Trace Viewer**: Auditoría forense de decisiones IA | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/operations/observability` | **Observability**: Observabilidad del sistema | - | Operations | 🆕 | — | 2026-02-23 |
 
 ### 📣 Communications
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/notifications` | **Communication Hub**: Plantillas y log de envíos | `/api/admin/notifications` | ✅ | — | 2026-02-23 |
-| `/admin/notifications/settings` | Configuración de notificaciones | - | 🆕 | — | 2026-02-23 |
-| `/admin/notifications/templates` | Lista de plantillas de notificación | - | 🆕 | — | 2026-02-23 |
-| `/admin/notifications/templates/[type]` | Editor de plantilla por tipo | - | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/notifications` | **Communication Hub**: Plantillas y log de envíos | `/api/admin/notifications` | Comms | ✅ | — | 2026-02-26 14:40 |
+| `/admin/notifications/settings` | Configuración de notificaciones | - | Comms | 🆕 | — | 2026-02-23 |
+| `/admin/notifications/templates` | Lista de plantillas de notificación | - | Comms | 🆕 | — | 2026-02-26 14:40 |
+| `/admin/notifications/templates/[type]` | Editor de plantilla por tipo | - | Comms | 🆕 | — | 2026-02-26 14:40 |
 
 ### ⚙️ Settings
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/settings` | **Settings Hub**: Configuración centralizada | `/api/admin/settings` | ✅ | — | 2026-02-23 |
-| `/admin/settings/branding` | **Branding** (Placeholder: "Próximamente") | - | 🏗️ | 20 | 2026-02-23 |
-| `/admin/settings/i18n` | **Translation Editor**: Gestión maestra de traducciones | - | 🆕 | 317 | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/settings` | **Settings Hub**: Configuración centralizada | `/api/admin/settings` | Settings | ✅ | — | 2026-02-23 |
+| `/admin/settings/branding` | **Branding** (Placeholder: "Próximamente") | - | Settings | 🏗️ | 20 | 2026-02-23 |
+| `/admin/settings/i18n` | **Translation Editor**: Gestión maestra de traducciones | - | Settings | 🆕 | 317 | 2026-02-23 |
 
 ### 📊 Reports & Analytics
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/reports` | **Report Hub**: Dashboard de informes de negocio | `/api/admin/reports` | ✅ | — | 2026-02-23 |
-| `/admin/reports/schedules` | Programación de informes | - | 🆕 | — | 2026-02-23 |
-| `/admin/analytics` | **Analytics Center**: Métricas de uso y adopción | - | ✅ | — | 2026-02-23 |
-| `/admin/api-docs` | **API Reference**: Swagger/Doc interna | ✅ | — | 2026-02-23 |
-| `/admin/api-keys` | **Key Management**: Tokens de integración | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/reports` | **Report Hub**: Dashboard de informes de negocio | `/api/admin/reports` | Reports | ✅ | — | 2026-02-23 |
+| `/admin/reports/schedules` | Programación de informes | - | Reports | 🆕 | — | 2026-02-23 |
+| `/admin/analytics` | **Analytics Center**: Métricas de uso y adopción | - | Reports | ✅ | — | 2026-02-23 |
+| `/admin/api-docs` | **API Reference**: Swagger/Doc interna | - | Platform | ✅ | — | 2026-02-23 |
+| `/admin/api-keys` | **Key Management**: Tokens de integración | - | Platform | ✅ | — | 2026-02-23 |
 
 ### 🏭 Verticales, Taller & Soporte Admin
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/admin/workshop/orders/new` | Registro de pedidos de taller | - | ✅ | — | 2026-02-23 |
-| `/admin/cases/[id]` | Detalle de Caso (Case Hero). Sin hub page | - | ✅ | — | 2026-02-23 |
-| `/admin/support` | *Admin Support Redirect* | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/admin/workshop/orders/new` | Registro de pedidos de taller | - | Vertical | ✅ | — | 2026-02-23 |
+| `/admin/cases/[id]` | Detalle de Caso (Case Hero). Sin hub page | - | Operations | ✅ | — | 2026-02-23 |
+| `/admin/support` | *Admin Support Redirect* | - | Support | ✅ | — | 2026-02-23 |
 
 ### 🔀 Redirects (Admin)
 | Ruta | Destino | Notas |
@@ -277,30 +285,30 @@ Ubicación base: `/admin` (Protegido por Guardian)
 ## 🌐 User Experience (Non-Admin)
 Rutas accesibles por usuarios autenticados sin rol de admin.
 
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/dashboard` | **Dashboard**: Entry point por rol (DashboardDispatcher) | - | 🆕 | 9 | 2026-02-23 |
-| `/search` | **RAG Search**: Búsqueda conversacional con ConversationalSearch | - | 🆕 | 53 | 2026-02-23 |
-| `/my-documents` | **My Documents**: Almacén personal de documentos (user-facing) | - | 🆕 | 379 | 2026-02-23 |
-| `/profile` | **Profile**: Perfil de usuario | - | 🆕 | — | 2026-02-23 |
-| `/settings` | **Settings**: Configuración de usuario | - | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/dashboard` | **Dashboard**: Entry point por rol (DashboardDispatcher) | - | Platform | 🆕 | 9 | 2026-02-23 |
+| `/search` | **RAG Search**: Búsqueda conversacional con ConversationalSearch | - | Knowledge | 🆕 | 53 | 2026-02-23 |
+| `/my-documents` | **My Documents**: Almacén personal de documentos (user-facing) | - | Personal | 🆕 | 379 | 2026-02-23 |
+| `/profile` | **Profile**: Perfil de usuario | - | Platform | 🆕 | — | 2026-02-23 |
+| `/settings` | **Settings**: Configuración de usuario | - | Platform | 🆕 | — | 2026-02-23 |
 
 ### 🪐 Spaces
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/spaces` | **Spaces Hub**: Navegación por espacios de usuario | - | ✅ | — | 2026-02-23 |
-| `/spaces/collections` | Colecciones del usuario | - | 🆕 | — | 2026-02-23 |
-| `/spaces/personal` | Espacio personal | - | 🆕 | — | 2026-02-23 |
-| `/spaces/playground` | Playground de espacio | - | 🆕 | — | 2026-02-23 |
-| `/spaces/quick-qa` | Preguntas rápidas | - | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/spaces` | **Spaces Hub**: Navegación por espacios de usuario | - | Personal | ✅ | — | 2026-02-23 |
+| `/spaces/collections` | Colecciones del usuario | - | Personal | 🆕 | — | 2026-02-23 |
+| `/spaces/personal` | Espacio personal | - | Personal | 🆕 | — | 2026-02-23 |
+| `/spaces/playground` | Playground de espacio | - | Personal | 🆕 | — | 2026-02-23 |
+| `/spaces/quick-qa` | Preguntas rápidas | - | Personal | 🆕 | — | 2026-02-23 |
 
 ### 💬 Support (Client)
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/support` | **Support Center (Client)**: Centro de ayuda y tickets | - | ✅ | — | 2026-02-23 |
-| `/support/[id]` | Detalle de ticket | - | 🆕 | — | 2026-02-23 |
-| `/support/nuevo` | Crear nuevo ticket | - | 🆕 | — | 2026-02-23 |
-| `/support-dashboard` | **Support Hub (Staff)**: Gestión de soporte interno | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/support` | **Support Center (Client)**: Centro de ayuda y tickets | - | Support | ✅ | — | 2026-02-23 |
+| `/support/[id]` | Detalle de ticket | - | Support | 🆕 | — | 2026-02-23 |
+| `/support/nuevo` | Crear nuevo ticket | - | Support | 🆕 | — | 2026-02-23 |
+| `/support-dashboard` | **Support Hub (Staff)**: Gestión de soporte interno | - | Support | ✅ | — | 2026-02-23 |
 
 ### 🔀 Redirects (User)
 | Ruta | Destino | Notas |
@@ -310,22 +318,22 @@ Rutas accesibles por usuarios autenticados sin rol de admin.
 ---
 
 ## 🛠️ Technical Panel
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/technical` | **Technical Hub**: Punto de entrada técnico | - | 🆕 | — | 2026-02-23 |
-| `/entities` | **Entity Explorer**: Dashboard de Entidades | - | ✅ | — | 2026-02-23 |
-| `/entities/[id]/validar` | Validación Técnica de Entidad | - | ✅ | — | 2026-02-23 |
-| `/graphs` | **Neo4j Explorer**: Visualizador de Grafo | - | ✅ | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/technical` | **Technical Hub**: Punto de entrada técnico | - | Technical | 🆕 | — | 2026-02-23 |
+| `/entities` | **Entity Explorer**: Dashboard de Entidades | - | Technical | ✅ | — | 2026-02-23 |
+| `/entities/[id]/validar` | Validación Técnica de Entidad | - | Technical | ✅ | — | 2026-02-23 |
+| `/graphs` | **Neo4j Explorer**: Visualizador de Grafo | - | Technical | ✅ | — | 2026-02-23 |
 
 ## 🔧 Ops Portal
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/ops/reports` | **Ops Reports**: Reportes operacionales | - | 🆕 | — | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/ops/reports` | **Ops Reports**: Reportes operacionales | - | Operations | 🆕 | — | 2026-02-23 |
 
 ## 🏢 Vertical Demos
-| Ruta | Funcionalidad | API Contract | Estado | Líneas | Revisión |
-|------|---------------|--------------|--------|--------|----------|
-| `/real-estate` | **Real Estate Demo**: Property Twin con datos mock (Fase 85) | - | 🎭 | 120 | 2026-02-23 |
+| Ruta | Funcionalidad | API Contract | Dominio | Estado | Líneas | Revisión |
+|------|---------------|--------------|---------|--------|--------|----------|
+| `/real-estate` | **Real Estate Demo**: Property Twin con datos mock (Fase 85) | - | Vertical (Demo) | 🎭 | 120 | 2026-02-23 |
 
 ---
 

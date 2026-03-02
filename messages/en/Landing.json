@@ -29,7 +29,7 @@
   "AI_VISION": {
     "badge": "AI GOVERNANCE",
     "title": "Total Industrial Control",
-    "description": "Centralized model management and high-performance monorepo architecture for critical environments.",
+    "description": "Centralized model management, Guardian V3 ABAC shielding and high-performance architecture for critical environments.",
     "features": [
       "Single Model Registry",
       "RAG Playground",
@@ -48,7 +48,8 @@
       "Dynamic AI Suggestions (Ph 216)",
       "Unified Service Layer (Ph 222)",
       "Guardian Permission Alignment (Ph 220)",
-      "Server-Side ABAC Enforcement",
+      "Guardian ABAC Enforcement Sweep (Ph 236)",
+      "Middleware Security Hardening (Ph 234)",
       "Structured API Logging (logEvento)",
       "Standardized Vertical Architecture (Ph 232)"
     ]

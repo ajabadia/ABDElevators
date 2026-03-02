@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
-import { auth, requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from '@/types/roles';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import crypto from 'crypto';
 
 /**
  * GET /api/admin/ai-trace/[id]
@@ -15,8 +16,9 @@ export const GET = withPerformanceSLA(async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const correlationIdInternal = crypto.randomUUID();
     try {
-        await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        await enforcePermission('audit:logs', 'read');
         const { id: correlationId } = await params;
 
         const db = await connectLogsDB();
@@ -81,14 +83,6 @@ export const GET = withPerformanceSLA(async function GET(
 
         return NextResponse.json(trace);
     } catch (error: unknown) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return NextResponse.json({
-            success: false,
-            message: 'Error retrieving AI trace',
-            error: errorMessage
-        }, { status: 500 });
+        return handleApiError(error, 'API_ADMIN_AI_TRACE_GET', correlationIdInternal);
     }
 }, { endpoint: 'GET /api/admin/ai-trace/[id]', thresholdMs: 500 });

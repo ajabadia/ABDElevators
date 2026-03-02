@@ -3,23 +3,24 @@
 import { useState, useCallback } from "react";
 import { useNodesState, useEdgesState, Node, Edge } from "@xyflow/react";
 import { useTranslations } from "next-intl";
+import { WorkflowNode, WorkflowInstance } from "@/components/workflow-editor/types";
 
 export function useWorkflowState() {
     const t = useTranslations('admin.workflows.canvas');
 
     // ReactFlow States
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
     // Workflow List State
-    const [workflows, setWorkflows] = useState<any[]>([]);
+    const [workflows, setWorkflows] = useState<WorkflowInstance[]>([]);
 
     // Metadata States
     const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
     const [workflowName, setWorkflowName] = useState<string>(t('new_name'));
     const [currentVersion, setCurrentVersion] = useState<number>(1);
     const [currentIndustry, setCurrentIndustry] = useState<string>("ELEVATORS");
-    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
 
     // UI Global States
     const [showLogs, setShowLogs] = useState(false);

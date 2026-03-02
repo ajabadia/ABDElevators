@@ -1,36 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { PermissionGroupSchema } from '@/lib/schemas';
+import { PermissionGroupSchema, type PermissionGroup } from '@/lib/schemas';
 import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
 import crypto from 'crypto';
 
+const API_SOURCE = 'API_ADMIN_PERMISSIONS_ROLES';
+const SLA_READ = 500;
+const SLA_WRITE = 1000;
+
 /**
  * GET /api/admin/permissions/roles
  * Lista todos los grupos (roles) de permiso del tenant
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const user = await enforcePermission('permission:role', 'read');
-        const groupsCollection = await getTenantCollection('permission_groups', user);
-        const roles = await groupsCollection.find({});
+        const groupsCollection = await getTenantCollection<PermissionGroup>('permission_groups', user);
+        const roles = await (groupsCollection.find({}) as any).toArray();
 
         return NextResponse.json({ success: true, roles });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PERMISSIONS_ROLES_GET', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, `${API_SOURCE}_GET`, correlationId);
     } finally {
         const duration = Date.now() - start;
-        if (duration > 500) { // SLA: P95 < 500ms
+        if (duration > SLA_READ) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_PERMISSIONS',
                 action: 'PERF_SLA_VIOLATION',
                 message: `GET /api/admin/permissions/roles tardó ${duration}ms`,
                 correlationId,
-                details: { duration_ms: duration, threshold_ms: 500 }
+                details: { duration_ms: duration, threshold_ms: SLA_READ }
             });
         }
     }
@@ -46,19 +50,19 @@ export async function POST(req: NextRequest) {
     try {
         const user = await enforcePermission('permission:role', 'write');
         const body = await req.json();
-        const tenantId = (user as any).tenantId;
+        const tenantId = (user as any).tenantId as string;
 
         const roleData = {
             ...body,
             tenantId,
-            slug: body.name.toLowerCase().replace(/\s+/g, '-'),
+            slug: (body.name as string).toLowerCase().replace(/\s+/g, '-'),
             policies: body.policies || [],
             createdAt: new Date(),
             updatedAt: new Date()
         };
 
         const validated = PermissionGroupSchema.parse(roleData);
-        const groupsCollection = await getTenantCollection('permission_groups', user);
+        const groupsCollection = await getTenantCollection<PermissionGroup>('permission_groups', user);
 
         const result = await groupsCollection.insertOne(validated as any);
 
@@ -76,18 +80,18 @@ export async function POST(req: NextRequest) {
             success: true,
             role: { ...validated, _id: result.insertedId }
         });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_PERMISSIONS_ROLES_POST', correlationId);
+    } catch (error: unknown) {
+        return handleApiError(error, `${API_SOURCE}_POST`, correlationId);
     } finally {
         const duration = Date.now() - start;
-        if (duration > 1000) { // SLA: MAX 1000ms for writes
+        if (duration > SLA_WRITE) {
             await logEvento({
                 level: 'WARN',
                 source: 'API_PERMISSIONS',
                 action: 'PERF_SLA_VIOLATION',
                 message: `POST /api/admin/permissions/roles tardó ${duration}ms`,
                 correlationId,
-                details: { duration_ms: duration, threshold_ms: 1000 }
+                details: { duration_ms: duration, threshold_ms: SLA_WRITE }
             });
         }
     }

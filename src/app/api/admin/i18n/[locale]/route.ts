@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
-import { UserRole } from '@/types/roles';
 import crypto from 'crypto';
 
 /**
@@ -18,7 +16,7 @@ export async function PATCH(
     const { locale } = await params;
 
     try {
-        const session = await requireRole([UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('i18n', 'manage');
         const body = await req.json();
         const { translations } = body; // Map: { "nav.home": "Inicio", ... }
 
@@ -40,7 +38,7 @@ export async function PATCH(
             success: true,
             count: keys.length
         });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_I18N_LANG_PATCH', correlationId);
     }
 }

@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db';
 import { ApiKeySchema, ApiKeyLogSchema, ApiKey, ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
 
 const PREFIX = 'sk_live_';
 
@@ -46,7 +47,7 @@ export class ApiKeyService {
 
         const validated = ApiKeySchema.parse(apiKeyData);
         const db = await connectDB();
-        const result = await db.collection('api_keys').insertOne(validated);
+        const result = await db.collection('api_keys').insertOne(validated as any);
 
         return {
             apiKey: { ...validated, _id: result.insertedId },
@@ -101,7 +102,6 @@ export class ApiKeyService {
      */
     static async revokeApiKey(keyId: string, tenantId: string) {
         const db = await connectDB();
-        const { ObjectId } = await import('mongodb');
 
         await db.collection('api_keys').updateOne(
             { _id: new ObjectId(keyId), tenantId },
@@ -113,7 +113,7 @@ export class ApiKeyService {
      * Loguea el uso de la API (Auditoría Técnica)
      */
     static async logUsage(data: {
-        apiKeyId: any;
+        apiKeyId: ObjectId | string;
         tenantId: string;
         endpoint: string;
         method: string;
@@ -125,8 +125,8 @@ export class ApiKeyService {
         try {
             const db = await connectDB();
             const logEntry = ApiKeyLogSchema.parse(data);
-            await db.collection('api_key_logs').insertOne(logEntry);
-        } catch (error) {
+            await db.collection('api_key_logs').insertOne(logEntry as any);
+        } catch (error: unknown) {
             console.error('Failed to log API usage:', error);
         }
     }

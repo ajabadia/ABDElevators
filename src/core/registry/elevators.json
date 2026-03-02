@@ -98,7 +98,7 @@
             "icon": "Users",
             "fields": [
                 {
-                    "key": "nombre",
+                    "key": "firstName",
                     "label": "Nombre",
                     "type": "string",
                     "required": true,
@@ -108,7 +108,7 @@
                     }
                 },
                 {
-                    "key": "apellidos",
+                    "key": "lastName",
                     "label": "Apellidos",
                     "type": "string",
                     "ui": {
@@ -126,7 +126,7 @@
                     }
                 },
                 {
-                    "key": "puesto",
+                    "key": "jobTitle",
                     "label": "Puesto",
                     "type": "string",
                     "ui": {
@@ -143,7 +143,7 @@
                     }
                 },
                 {
-                    "key": "rol",
+                    "key": "role",
                     "label": "Rol",
                     "type": "select",
                     "options": [
@@ -157,7 +157,7 @@
                     }
                 },
                 {
-                    "key": "activo",
+                    "key": "isActive",
                     "label": "Estado",
                     "type": "boolean",
                     "ui": {

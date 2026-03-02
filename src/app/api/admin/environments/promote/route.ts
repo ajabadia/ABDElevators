@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { EnvironmentService } from '@/services/core/environment-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -10,9 +10,9 @@ import { UserRole } from '@/types/roles';
  * Promueve una entidad de STAGING a PRODUCTION (Phase 70 compliance)
  */
 export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('environment', 'manage');
         const tenantId = session.user.tenantId;
 
         const body = await req.json();
@@ -25,15 +25,15 @@ export async function POST(req: NextRequest) {
         const changedBy = session.user.email || 'system';
 
         if (type === 'PROMPT') {
-            await EnvironmentService.promotePromptToProduction(id, tenantId, correlacion_id, changedBy);
+            await EnvironmentService.promotePromptToProduction(id, tenantId, correlationId, changedBy);
         } else if (type === 'WORKFLOW') {
-            await EnvironmentService.promoteWorkflowToProduction(id, tenantId, correlacion_id, changedBy);
+            await EnvironmentService.promoteWorkflowToProduction(id, tenantId, correlationId, changedBy);
         } else {
             throw new AppError('VALIDATION_ERROR', 400, `Tipo de promoción '${type}' no soportado`);
         }
 
         return NextResponse.json({ success: true, message: 'Entidad promovida correctamente' });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_ENV_PROMOTE', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_ADMIN_ENV_PROMOTE', correlationId);
     }
 }

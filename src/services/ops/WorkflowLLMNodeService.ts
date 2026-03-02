@@ -10,7 +10,7 @@ import { logEvento } from '@/lib/logger';
 import { AppError } from '@/lib/errors';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { safeParseLlmJson } from '@/lib/safe-llm-json';
-import { AI_MODEL_IDS, DEFAULT_MODEL } from '@abd/platform-core';
+import { DEFAULT_MODEL } from '@abd/platform-core';
 
 // Generic LLM Node Output Schema
 const LLMNodeOutputSchema = z.object({
@@ -33,9 +33,9 @@ export class WorkflowLLMNodeService {
         caseId: string;
         stateId: string;
         llmNodeConfig: { promptKey?: string; schemaKey?: string; enabled: boolean };
-        caseContext: any;
+        caseContext: Record<string, unknown> & { industry?: string };
         correlationId: string;
-    }): Promise<Record<string, any>> {
+    }): Promise<Record<string, unknown>> {
         const { tenantId, caseId, stateId, llmNodeConfig, caseContext, correlationId } = params;
 
         if (!llmNodeConfig.enabled) {
@@ -151,18 +151,19 @@ export class WorkflowLLMNodeService {
                 correlationId,
             });
 
-            return validated;
-        } catch (error: any) {
+            return validated as Record<string, unknown>;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             await logEvento({
                 level: 'ERROR',
                 source: 'WORKFLOW_LLM_NODE',
                 action: 'NODE_EXECUTION_ERROR',
-                message: `Error executing LLM node: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                message: `Error executing LLM node: ${errorMessage}`,
                 tenantId,
                 details: {
                     caseId,
                     stateId,
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: errorMessage,
                 },
                 correlationId,
             });
@@ -171,7 +172,7 @@ export class WorkflowLLMNodeService {
             return {
                 riskLevel: 'MEDIUM',
                 confidence: 0,
-                reason: `LLM_FALLBACK: ${error.message || 'Unknown error'}`,
+                reason: `LLM_FALLBACK: ${errorMessage}`,
                 detectedIssues: ['LLM_UNAVAILABLE'],
                 source: 'LLM_FALLBACK'
             };
@@ -184,7 +185,7 @@ export class WorkflowLLMNodeService {
     static async route(params: {
         tenantId: string;
         caseId: string;
-        llmOutput: Record<string, any>;
+        llmOutput: Record<string, unknown>;
         llmRouting: {
             promptKey: string;
             branches: Array<{ value: string; to: string; label: string }>
@@ -209,7 +210,7 @@ export class WorkflowLLMNodeService {
             for (const branch of llmRouting.branches) {
                 // Check if the branch value matches any field value in llmOutput
                 const matchingField = Object.entries(llmOutput).find(
-                    ([key, value]) => value === branch.value
+                    ([, value]) => value === branch.value
                 );
 
                 if (matchingField) {
@@ -233,7 +234,7 @@ export class WorkflowLLMNodeService {
             }
 
             // If no match found, check for nextBranch field
-            if (llmOutput.nextBranch) {
+            if (llmOutput.nextBranch && typeof llmOutput.nextBranch === 'string') {
                 const matchingBranch = llmRouting.branches.find(
                     b => b.value === llmOutput.nextBranch
                 );
@@ -276,16 +277,17 @@ export class WorkflowLLMNodeService {
             });
 
             return defaultBranch.to;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             await logEvento({
                 level: 'ERROR',
                 source: 'WORKFLOW_LLM_ROUTER',
                 action: 'ROUTING_ERROR',
-                message: `Error during routing decision: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                message: `Error during routing decision: ${errorMessage}`,
                 tenantId,
                 details: {
                     caseId,
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: errorMessage,
                 },
                 correlationId,
             });

@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectLogsDB } from '@/lib/db';
-import { auth } from '@/lib/auth';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError } from '@/lib/errors';
 import { NotificationTypeSchema } from '@/lib/schemas';
+import crypto from 'crypto';
 
 /**
  * GET /api/admin/notifications/templates
  * Lista todas las plantillas de email del sistema.
  */
 export async function GET(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('FORBIDDEN', 403, 'Solo SuperAdmin puede gestionar plantillas globales');
-        }
+        await enforcePermission('notification:template', 'read');
 
         const db = await connectLogsDB();
 
@@ -35,10 +32,7 @@ export async function GET(req: NextRequest) {
             missingTypes // Para que el frontend sepa que puede "crear/seedear" estas
         });
 
-    } catch (error: any) {
-        return NextResponse.json(
-            { error: error.message },
-            { status: error.status || 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_ADMIN_NOTIFICATIONS_TEMPLATES_GET', correlationId);
     }
 }

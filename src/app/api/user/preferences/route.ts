@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { User, AuditTrail } from '@/lib/schemas';
+import { User } from '@/lib/schemas';
 import { AuditService } from '@/services/admin/AuditService';
-import { UserService } from '@/services/auth/UserService';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 const PreferencesUpdateSchema = z.object({
     onboarding: z.object({
@@ -20,12 +20,12 @@ const PreferencesUpdateSchema = z.object({
 });
 
 export async function GET() {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user?.email) throw new AppError('UNAUTHORIZED', 401, 'No session');
+        const session = await enforcePermission('user:profile', 'read');
 
         const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
-        const user = await userCollection.findOne({ email: session.user.email });
+        const user = await userCollection.findOne({ email: session.user.email as string });
 
         if (!user) throw new AppError('NOT_FOUND', 404, 'User not found');
 
@@ -34,54 +34,20 @@ export async function GET() {
             preferences: user.preferences || {}
         });
     } catch (error) {
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, message: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_USER_PREFERENCES_GET', correlationId);
     }
 }
 
 export async function POST(req: Request) {
-    // The AuditService.generateCorrelationId() call is correct.
-    // The definition of generateCorrelationId should be in the AuditService class file.
-    // Assuming the user intended to show the *implementation* of generateCorrelationId
-    // and that randomUUID needs to be imported for it.
-    // The provided snippet for generateCorrelationId is a class method, not a function
-    // to be placed directly in POST.
-    // If AuditService is a class, its method would be defined like this:
-    // class AuditService {
-    //     static generateCorrelationId(): string {
-    //         try {
-    //             return randomUUID();
-    //         } catch (e) {
-    //             return Math.random().toString(36).substring(2, 15);
-    //         }
-    //     }
-    //     // ... other methods
-    // }
-    // Since AuditService is imported, we only need to ensure randomUUID is available
-    // for its implementation (which would be in '@/lib/audit-service').
-    // However, if the intent was to *move* the definition here, it's syntactically incorrect
-    // to place it inside the POST function.
-    // Given the instruction "Fix type mismatches and randomUUID usage" and the snippet,
-    // the most direct interpretation for *this file* is to import randomUUID.
-    // The snippet itself seems to be a misplaced class method definition.
-    // I will assume the user wants to ensure randomUUID is available for use,
-    // and that the AuditService class (where generateCorrelationId is defined)
-    // would correctly use it.
-
-    const correlationId = AuditService.generateCorrelationId();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user?.email || !session?.user?.id || !session?.user?.tenantId) {
-            throw new AppError('UNAUTHORIZED', 401, 'Incomplete session');
-        }
+        const session = await enforcePermission('user:profile', 'manage');
 
         const body = await req.json();
         const validated = PreferencesUpdateSchema.parse(body);
 
         const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
-        const user = await userCollection.findOne({ email: session.user.email });
+        const user = await userCollection.findOne({ email: session.user.email as string });
 
         if (!user) throw new AppError('NOT_FOUND', 404, 'User not found');
 
@@ -122,13 +88,6 @@ export async function POST(req: Request) {
             correlationId
         });
     } catch (error) {
-        console.error('[Preferences Error]:', error);
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, message: 'Validation failed', errors: error.issues }, { status: 400 });
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, message: error.message }, { status: error.status });
-        }
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+        return handleApiError(error, 'API_USER_PREFERENCES_POST', correlationId);
     }
 }

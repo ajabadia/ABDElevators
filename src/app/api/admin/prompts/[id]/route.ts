@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -17,7 +17,7 @@ export async function PATCH(
     const { id } = await params;
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('prompt', 'manage');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
         const tenantId = session.user.tenantId;
 
@@ -42,7 +42,7 @@ export async function PATCH(
 
         return NextResponse.json({ success: true });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_PROMPT_UPDATE', correlationId);
     }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { IngestApiService } from '@/services/ingest/IngestApiService';
@@ -14,11 +14,8 @@ import { z } from 'zod';
  */
 export async function POST(req: NextRequest) {
     try {
-        // Authentication (Rule #9: Security Check)
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
-        }
+        // Authentication & ABAC Enforcement (Rule #11)
+        const session = await enforcePermission('ingest', 'write');
 
         const result = await IngestApiService.handleIngestRequest(req, session);
         return NextResponse.json(result);

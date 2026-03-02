@@ -10,9 +10,11 @@ import { useWorkflowHistory } from "@/hooks/useWorkflowHistory";
 import { useWorkflowShortcuts } from "@/hooks/useWorkflowShortcuts";
 import { useWorkflowValidation } from "@/hooks/useWorkflowValidation";
 import { useEnvironmentStore } from "@/store/environment-store";
-import { runWorkflowSimulation, SimulationResult } from "@/lib/simulation-engine";
+import { runWorkflowSimulation } from "@/lib/simulation-engine";
+import { SimulationResult } from "@/lib/simulation-engine";
+import { WorkflowContextValue } from "./types";
 
-const WorkflowContext = createContext<any>(null);
+const WorkflowContext = createContext<WorkflowContextValue | null>(null);
 
 export function useWorkflow() {
     const context = useContext(WorkflowContext);
@@ -131,8 +133,9 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
         setShowSimulation,
         handleRunSimulation,
         reactFlowWrapper,
+        reactFlowInstance,
         setReactFlowInstance
-    }), [state, nodeOps, history, crud, analytics]);
+    }), [state, nodeOps, history, crud, analytics, isSimulating, simResults, showSimulation, reactFlowInstance]);
 
     return (
         <WorkflowContext.Provider value={value}>

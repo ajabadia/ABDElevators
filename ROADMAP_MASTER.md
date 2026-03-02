@@ -1,4 +1,4 @@
-# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v5.1.1-beta - SUITE ERA)
+# ROADMAP_MASTER – Source of Truth for ABD RAG Platform (Unified v5.6.0 - ERA 9 SYMPHONY)
 
 ## 📖 Overview
 
@@ -14,8 +14,8 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
-- **Project Status**: **ERA-8 CONSOLIDATION COMPLETE.** 100% Zero-`any` and Strict Typing achieved. Foundation ready for ERA 9.
+- **Recent Ship**: **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
+- **Project Status**: **ERA 9: SYMPHONY** in progress. 100% ABAC Enforcement achieved in Core, Billing and User blocks (Phase 236). Middleware hardened and strictly typed (Phase 234).
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -883,3 +883,246 @@ CONFIGURACIÓN (Admin Hub):
 **Tareas Inmediatas:**
 - [x] **233.1: Sweep general de Typing en Infraestructura y Core**.
 - [x] **233.2: Sweep masivo de Zero `any` en todos los archivos de servicios (`src/services/`) y APIs (`src/app/api/`)**.
+
+---
+
+## 🎵 ERA 9: SYMPHONY — ROBUSTNESS, VERIFICATION & FULL ENFORCEMENT
+
+> **Principio Rector**: Si no está testeado, no existe. Si no está protegido, es una vulnerabilidad.
+> **Motivación**: ERA 8 dejó la plataforma coherente, tipada en servicios core y visualmente unificada. Sin embargo, la infraestructura compartida (`src/lib`, middleware) conserva ~32 archivos con `: any`, solo ~30 de 128 APIs tienen `enforcePermission` ABAC, y existe zero cobertura de tests automatizados. ERA 9 transforma la plataforma de "coherente" a **"verificable y robusta"**.
+> **Fecha de inicio**: 2026-03-02
+>
+> **Hallazgos del análisis pre-ERA 9:**
+>
+> | Área | Estado Actual | Gap |
+> |------|---------------|-----|
+> | Tests | `jest.config.js` existe, **0 archivos de test** | Cobertura 0% |
+> | Guardian API | ~30 de 128 `route.ts` con `enforcePermission` | ~98 APIs sin enforcement ABAC |
+> | `: any` residual | ~32 archivos en `src/lib` con `: any` | Middleware, HOFs, infra adapters |
+> | Performance SLA | `withPerformanceSLA` en ~30 APIs | ~98 sin medición |
+> | i18n deuda | Documentada en `docs/i18n-debt.md` | Dashboard, AppError, placeholders |
+> | Middleware | `catch (error: any)` L170, `console.log/warn` | Viola Reglas #1 y #4 |
+
+---
+
+#### 🔒 FASE 234: MIDDLEWARE HARDENING & TYPING
+
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 1-2 días
+
+**Objetivo:** Corregir las violaciones de reglas del proyecto en el punto de entrada más crítico de la aplicación: `middleware.ts`.
+
+**Contexto del problema:**
+- `catch (error: any)` en L170 → Viola Regla #1 (TypeScript Strict).
+- `request.auth?: any` en L13 → Tipo genérico en vez de interface de NextAuth.
+- `console.log`/`console.warn`/`console.error` en L26, L45, L89, L114, L171 → Viola Regla #4 (Structured Logging) y puede filtrar info en producción.
+
+**Tareas:**
+- [x] **234.1: Corregir `catch (error: any)`** → `catch (error: unknown)` con type guard. ✅
+- [x] **234.2: Tipar `request.auth`** → Interface proper con la session de NextAuth. ✅
+- [x] **234.3: Reemplazar `console.log/warn/error`** por `logEvento` o eliminar traces de debug. ✅
+- [x] **234.4: Verificar build limpio** con `npm run build`. ✅
+
+**Criterio de aceptación:** Zero `: any` en `middleware.ts`. Zero `console.log` fuera de dev-only guards. Build limpio.
+
+---
+
+#### 🛡️ FASE 235: GUARDIAN ENFORCEMENT SWEEP (APIs ADMIN)
+
+**Status:** `[PENDIENTE]` | **Prioridad:** CRÍTICA | **Estimación:** 3-5 días
+
+**Objetivo:** Implementar `enforcePermission` en todas las APIs bajo `/api/admin/*` que actualmente solo usan `requireRole`.
+
+**Contexto del problema:**
+- ~40 rutas bajo `/api/admin/*` protegidas solo con `requireRole` (check de rol estático).
+- `enforcePermission` (Guardian ABAC V3) solo cubre ~30 rutas actualmente.
+- Un usuario con rol ADMIN podría acceder a recursos de otro tenant si `requireRole` no filtra por tenant.
+
+**Tareas:**
+- [ ] **235.1: Inventariar TODAS las rutas `api/admin/*`** y clasificar: ✅ `enforcePermission` / ⚠️ solo `requireRole` / ❌ sin protección.
+- [ ] **235.2: Definir recursos y acciones Guardian** para cada API no cubierta (ej: `knowledge-assets:download → read`, `billing:contracts → read`).
+- [ ] **235.3: Migrar bloque 1 — Knowledge & RAG APIs** (~15 rutas): `knowledge-assets/*`, `ingest/*`, `graph/*`.
+- [ ] **235.4: Migrar bloque 2 — Billing & Organizations APIs** (~10 rutas): `billing/*`, `organizations/*`, `compliance/*`.
+- [ ] **235.5: Migrar bloque 3 — Operations & i18n APIs** (~12 rutas): `operations/*`, `logs/*`, `i18n/*`, `export/*`.
+- [ ] **235.6: Migrar bloque 4 — Notifications, Settings & Misc** (~8 rutas): `notifications/*`, `settings/*`, `document-types/*`, `contacts/*`.
+- [ ] **235.7: Actualizar `docs/permissions-matrix.md`** con cobertura 100% de admin APIs.
+- [ ] **235.8: Verificar build y smoke test** de sidebar (acceso/denegación con roles distintos).
+
+**Criterio de aceptación:** 100% de APIs bajo `/api/admin/*` protegidas con `enforcePermission`. Matriz de permisos actualizada. Zero `requireRole` como único mecanismo de protección.
+
+---
+
+#### 🛡️ FASE 236: GUARDIAN ENFORCEMENT SWEEP (APIs CORE & PUBLIC)
+
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Estimación:** 2-3 días
+
+**Objetivo:** Extender `enforcePermission` a las APIs bajo `/api/core/*`, `/api/billing/*`, `/api/user/*` y `/api/support/*`.
+
+**Contexto del problema:**
+- `/api/core/*` contiene entities, quick-qa, insights, predictive, graph, governance, agents, automation, collaboration, dashboard — muchos sin enforcement.
+- `/api/billing/*` tiene portal, webhook, simulate-change, create-checkout, change-plan — mezcla de endpoints de usuario y de Stripe.
+- `/api/user/*` tiene preferences, search, documents — acceso personal.
+
+**Tareas:**
+- [ ] **236.1: Inventariar rutas Core** (`/api/core/*`): entities, quick-qa, insights, predictive, graph, governance, agents, automation, collaboration, dashboard.
+- [ ] **236.2: Definir recursos Guardian para rutas Core** y migrar al modelo ABAC.
+- [ ] **236.3: Inventariar y migrar rutas Billing** (`/api/billing/*`): portal, webhook, simulate-change, create-checkout, change-plan.
+- [ ] **236.4: Inventariar y migrar rutas User** (`/api/user/*`): preferences, search, documents.
+- [ ] **236.5: Excluir webhooks** (`/api/billing/webhook`) del enforcement — son llamadas de Stripe server-to-server, no de usuarios.
+- [ ] **236.6: Build + smoke test completo**.
+
+**Criterio de aceptación:** 100% de APIs de la aplicación con enforcement ABAC (excepto webhooks, health checks y auth). Documentado en `docs/permissions-matrix.md`.
+
+---
+
+#### 🔧 FASE 237: STRICT TYPING SWEEP (src/lib INFRASTRUCTURE)
+
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 3-4 días
+
+**Objetivo:** Purga definitiva de `: any` en los ~32 archivos de `src/lib` que aún lo contienen. Perímetro de infraestructura compartida que toda la app consume.
+
+**Contexto del problema:**
+- ERA 8 (FASE 233) limpió `src/services/` y `src/app/api/` de `: any`.
+- `src/lib/` quedó fuera de scope por su naturaleza de infraestructura (adapters, HOFs, configs).
+- Archivos afectados incluyen: `PromptRunner.ts`, `auth.ts`, `performance-sla.ts`, `redis.ts`, `workflow-compiler.ts`, entre otros.
+
+**Tareas:**
+- [ ] **237.1: Bloque 1 — LLM & AI** (~5 archivos): `llm-core/PromptRunner.ts`, `llm-core/LlmJsonParser.ts`, `gemini-client.ts`, `langgraph-rag.ts`, `intelligence-analytics.ts`.
+- [ ] **237.2: Bloque 2 — Infra adapters** (~6 archivos): `redis.ts`, `server-pdf-utils.ts`, `pdf-utils.ts`, `sse-helper.ts`, `geo-distributor.ts`, `async-jobs-logic.ts`.
+- [ ] **237.3: Bloque 3 — Auth & security** (~4 archivos): `auth.ts`, `auth.config.ts`, `auth-utils.ts`, `api-handler.ts`.
+- [ ] **237.4: Bloque 4 — Business logic** (~5 archivos): `workflow-compiler.ts`, `simulation-engine.ts`, `billing-circuit-breaker.ts`, `billing/BillingPolicy.ts`, `self-healing-resync.ts`.
+- [ ] **237.5: Bloque 5 — Observability & utils** (~6 archivos): `performance-sla.ts` (HOF `context: any`), `performance-guard.ts`, `tracing.ts`, `retry.ts`, `resilience.ts`, `mappers.ts`.
+- [ ] **237.6: Bloque 6 — Data layer** (~4 archivos): `repository/BaseRepository.ts`, `configs.ts`, `agent-persistence.ts`, `app-registry.ts`.
+- [ ] **237.7: Bloque 7 — i18n & audit** (~2 archivos): `i18n/i18n-object-utils.ts`, `audit-pdf-export.ts`.
+- [ ] **237.8: Validar build** con `npm run build` (zero errores de tipo).
+
+**Criterio de aceptación:** `grep -r ": any" src/lib/` devuelve ZERO resultados (excluyendo comentarios). Build limpio.
+
+---
+
+#### 🧪 FASE 238: TEST INFRASTRUCTURE & CORE UNIT TESTS
+
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 4-5 días
+
+**Objetivo:** Activar la infraestructura de testing existente (`jest.config.js`) y escribir los primeros tests unitarios para los módulos más críticos.
+
+**Contexto del problema:**
+- `jest.config.js` existe con `ts-jest`, `@/` alias mapper y `testMatch: ['**/tests/**/*.test.ts']`.
+- `jest.setup.ts` referenciado en config pero **no existe**.
+- Zero archivos de test en todo el proyecto.
+- Módulos críticos sin verificación automatizada: LLM, Guardian, Repositories, Schemas.
+
+**Tareas:**
+- [ ] **238.1: Crear `jest.setup.ts`** con mocks globales (env vars, MongoDB connection mock).
+- [ ] **238.2: Crear estructura `tests/unit/` y `tests/integration/`**.
+- [ ] **238.3: Tests LLM Core** — `PromptRunner.test.ts`, `LlmJsonParser.test.ts` (mocks de Gemini API).
+- [ ] **238.4: Tests Repositories** — `BaseRepository.test.ts` (mock de MongoDB con `mongodb-memory-server` o mock manual).
+- [ ] **238.5: Tests Guardian** — `guardian-guard.test.ts`: `enforcePermission` happy path + denied + missing session.
+- [ ] **238.6: Tests Error Handling** — `AppError` subclasses, serialización, status codes.
+- [ ] **238.7: Tests Schemas** — Validación de Zod schemas para ingest, billing, support (happy + invalid input).
+- [ ] **238.8: Configurar script `npm test`** en `package.json` si no existe o verificar el existente.
+- [ ] **238.9: Ejecutar suite completa** y verificar que pasa con zero fallos.
+
+**Criterio de aceptación:** ≥ 20 tests unitarios cubriendo módulos core (LLM, Guardian, Repos, Schemas, Errors). Suite ejecutable con `npm test`. CI-ready.
+
+---
+
+#### ⚡ FASE 239: PERFORMANCE SLA COVERAGE EXPANSION
+
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+
+**Objetivo:** Extender `withPerformanceSLA` a todas las APIs de la aplicación y definir SLAs por categoría.
+
+**Contexto del problema:**
+- `withPerformanceSLA` HOF implementado en `src/lib/performance-sla.ts` (ERA 8).
+- Actualmente ~30 APIs lo usan. ~98 APIs no tienen medición de performance.
+- El HOF tiene `context: any` que viola la política de typing.
+- No existe un dashboard centralizado para visualizar SLA breaches.
+
+**Tareas:**
+- [ ] **239.1: Corregir `context: any`** en `performance-sla.ts` por tipo de Next.js `RouteContext`.
+- [ ] **239.2: Definir SLAs por categoría** de endpoint:
+  - **Lectura simple** (stats, list): P95 < 200ms, MAX 500ms
+  - **Lectura compleja** (search, analytics): P95 < 500ms, MAX 2000ms
+  - **Escritura** (create, update): P95 < 300ms, MAX 1000ms
+  - **LLM-backed** (analyze, enrich, suggest): P95 < 2000ms, MAX 10000ms
+- [ ] **239.3: Aplicar `withPerformanceSLA`** en bloque a APIs de admin sin cobertura.
+- [ ] **239.4: Aplicar en bloque** a APIs de core/billing/support.
+- [ ] **239.5: Crear lectura de SLA breaches** en Observability Hub (filtro de logs `source: PERFORMANCE_SLA`).
+
+**Criterio de aceptación:** 100% de APIs con medición de SLA. Breaches visibles en Observability. Zero `: any` en `performance-sla.ts`.
+
+---
+
+#### 🌐 FASE 240: i18n DEEP POLISH & RESIDUAL DEBT
+
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+
+**Objetivo:** Resolver la deuda i18n documentada en `docs/i18n-debt.md` y completar la internacionalización profunda.
+
+**Contexto del problema (documentado en `docs/i18n-debt.md`):**
+1. Dashboard principal (`admin/page.tsx`): "Insights rápidos", "Notificaciones" hardcoded.
+2. Mensajes de `AppError` expuestos en toasts al usuario.
+3. Placeholders en modales administrativos (URLs, hints).
+
+**Tareas:**
+- [ ] **240.1: Migrar textos del Dashboard** principal (`admin/page.tsx`): "Insights rápidos", "Notificaciones", etc.
+- [ ] **240.2: Migrar mensajes de `AppError`** que se exponen en toasts al usuario (no los internos de logging).
+- [ ] **240.3: Migrar placeholders de modales** administrativos (URLs, hints de configuración).
+- [ ] **240.4: Ejecutar skill `i18n-a11y-auditor`** sobre las páginas modificadas.
+- [ ] **240.5: Sincronizar diccionarios ES/EN** y verificar paridad 1:1 de keys.
+
+**Criterio de aceptación:** `docs/i18n-debt.md` marcado como RESUELTO. Diccionarios sincronizados. Zero texto visible al usuario hardcoded en español o inglés.
+
+---
+
+#### 📖 FASE 241: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING
+
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 2-3 días
+
+**Objetivo:** Actualizar toda la documentación de proyecto para reflejar ERA 8+9 y facilitar onboarding de nuevos desarrolladores.
+
+**Tareas:**
+- [ ] **241.1: Actualizar `README.md`** con la versión v6.0.0 (ERA 9), arquitectura actual, y quick start.
+- [ ] **241.2: Actualizar `map.md`** con la columna "Guardian Coverage" (✅/❌) por ruta de API.
+- [ ] **241.3: Crear `docs/architecture-overview.md`** — Diagrama de capas (API → Service → Repository → DB) con ejemplos de flujo.
+- [ ] **241.4: Actualizar `docs/vertical-guide.md`** si hubo cambios en la estructura de verticales.
+- [ ] **241.5: Crear `docs/testing-guide.md`** — Cómo correr tests, cómo añadir nuevos, convenciones de naming, mocking.
+- [ ] **241.6: Marcar ERA 9 como COMPLETED** en `ROADMAP_MASTER.md`.
+
+**Criterio de aceptación:** Documentación actualizada. Un nuevo desarrollador puede hacer setup, correr tests y entender la arquitectura en < 30 minutos.
+
+---
+
+### 📊 RESUMEN DE FASES ERA 9
+
+| Fase | Nombre | Duración | Prioridad | Dependencias |
+|------|--------|----------|-----------|--------------|
+| 234 | Middleware Hardening & Typing | 1-2 días | 🔴 CRÍTICA | — |
+| 235 | Guardian Sweep (Admin APIs) | 3-5 días | 🔴 CRÍTICA | — |
+| 236 | Guardian Sweep (Core & Public APIs) | 2-3 días | 🟠 ALTA | 235 |
+| 237 | Strict Typing Sweep (src/lib) | 3-4 días | 🟠 ALTA | — |
+| 238 | Test Infrastructure & Core Tests | 4-5 días | 🟠 ALTA | 237 |
+| 239 | Performance SLA Expansion | 2-3 días | 🟡 MEDIA | 237 |
+| 240 | i18n Deep Polish | 2-3 días | 🟡 MEDIA | — |
+| 241 | Documentation Refresh | 2-3 días | 🟡 MEDIA | Todo lo anterior |
+
+**Total estimado:** 20-28 días (~4-5 semanas).
+
+### 📊 MÉTRICAS DE ÉXITO GLOBALES (ERA 9)
+
+| Métrica | Objetivo | Medición |
+|---------|----------|----------|
+| Cobertura `enforcePermission` | 100% APIs (excepto webhooks/health) | `grep` en `src/app/api/` |
+| `: any` en `src/lib` | 0 ocurrencias | `grep -r ": any" src/lib/` |
+| Tests unitarios | ≥ 20 tests passing | `npm test` |
+| SLA breach visibility | 100% APIs monitorizadas | `withPerformanceSLA` grep |
+| i18n debt | 0 items en `docs/i18n-debt.md` | Archivo vacío/resuelto |
+| Build status | Zero errores TypeScript | `npm run build` |
+
+### 🧠 PRINCIPIOS DE DISEÑO (ERA 9)
+
+1. **Verification First**: Todo cambio debe ser verificable automáticamente
+2. **Defense in Depth**: Auth (middleware) + Authorization (Guardian) + Validation (Zod) en cada endpoint
+3. **Zero Trust APIs**: Ningún endpoint accesible sin `enforcePermission` explícito
+4. **Typing as Documentation**: Los tipos reemplazan comentarios — `: any` es un comentario que dice "no sé"
+5. **Progressive Testing**: Empezar por módulos críticos, expandir cobertura con cada fase futura

@@ -1,56 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhookSignature } from '@/lib/stripe';
 import { BillingService } from '@/services/admin/BillingService';
-import { logEvento } from '@/lib/logger';
+import { verifyWebhookSignature } from '@/lib/stripe';
+import { handleApiError, AppError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 /**
  * 💸 Stripe Webhook Endpoint
  * Handles subscription lifecycle events from Stripe.
- * SECURE: Verifies Stripe signature before processing.
+ * SLA: P95 < 300ms
  */
-export async function POST(req: NextRequest) {
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-        return NextResponse.json({ error: 'Missing stripe-signature' }, { status: 400 });
+        throw new AppError('BAD_REQUEST', 400, 'Missing stripe-signature');
     }
 
     try {
         const payload = await req.text();
         const event = verifyWebhookSignature(payload, signature);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'STRIPE_WEBHOOK',
-            action: 'EVENT_RECEIVED',
-            correlationId,
-            message: `Stripe event received: ${event.type}`,
-            details: { eventId: event.id }
-        });
-
         // Delegate to BillingService for persistent logic
         await BillingService.handleWebhookEvent(event);
 
-        return NextResponse.json({ received: true });
-
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'STRIPE_WEBHOOK',
-            action: 'WEBHOOK_ERROR',
-            correlationId,
-            message: error.message,
-            stack: error.stack
+        return NextResponse.json({
+            received: true,
+            correlationId
         });
-
-        return NextResponse.json(
-            { error: `Webhook Error: ${error.message}` },
-            { status: 400 }
-        );
+    } catch (error) {
+        return handleApiError(error, 'API_STRIPE_WEBHOOK_POST', correlationId);
     }
-}
+}, { p95: 300, max: 1000 });
 
 // Ensure raw body is preserved (though in App Router we use req.text() above)
 export const config = {

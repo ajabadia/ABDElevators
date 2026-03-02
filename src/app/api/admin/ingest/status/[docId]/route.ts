@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
 import { ObjectId } from 'mongodb';
-import { auth, requireRole } from "@/lib/auth";
-import { UserRole } from "@/types/roles";
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError } from '@/lib/errors';
 
 /**
@@ -14,7 +12,7 @@ export async function GET(
     { params }: { params: Promise<{ docId: string }> }
 ) {
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('ingest:status', 'read');
 
         const { docId } = await params;
         if (!docId) {
@@ -41,12 +39,12 @@ export async function GET(
             updatedAt: asset.updatedAt
         });
 
-    } catch (error: any) {
-        console.error(`[INGEST STATUS ERROR]`, error);
-        const status = error.statusCode || 500;
+    } catch (error: unknown) {
+        const err = error instanceof AppError ? error : new AppError('INTERNAL_ERROR', 500, String(error));
+        console.error(`[INGEST STATUS ERROR]`, err);
         return NextResponse.json(
-            { success: false, message: error.message },
-            { status }
+            { success: false, message: err.message },
+            { status: err.status }
         );
     }
 }

@@ -1,61 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantCollection } from '@/lib/db-tenant';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { ChecklistConfigSchema } from '@/lib/schemas';
-import { AppError, ValidationError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { checklistConfigRepository } from '@/lib/repositories/ChecklistConfigRepository';
 import crypto from 'crypto';
-import { z } from 'zod';
 
 /**
  * GET /api/admin/checklist-configs
  * Lista todas las configuraciones de checklist del tenant.
  */
-export async function GET(req: NextRequest) {
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
-    const start = Date.now();
 
     try {
         const session = await enforcePermission('checklists', 'read');
-        const collection = await getTenantCollection('configs_checklist', session);
-
-        const configs = await collection.find({}, {
-            sort: { creado: -1 }
-        });
+        const configs = await checklistConfigRepository.list({}, { sort: { creado: -1 } }, session as any);
 
         return NextResponse.json({ configs });
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_CHECKLIST_CONFIGS',
-            action: 'GET_ALL',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al obtener configuraciones').toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_CHECKLIST_CONFIGS',
-                action: 'PERFORMANCE_SLA_VIOLATION',
-                message: `GET /api/admin/checklist-configs took ${duration}ms`,
-                correlationId,
-                details: { duration_ms: duration }
-            });
-        }
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CHECKLIST_CONFIGS_GET', correlationId);
     }
-}
+}, { endpoint: 'API_CHECKLIST_CONFIGS_GET', thresholdMs: 500 });
 
 /**
  * POST /api/admin/checklist-configs
@@ -77,9 +44,10 @@ export async function POST(req: NextRequest) {
         };
 
         const validated = ChecklistConfigSchema.parse(configToValidate);
-        const collection = await getTenantCollection('configs_checklist', session);
 
-        const result = await collection.insertOne(validated);
+        // Remove id string if it conflicts or handle it
+        const { id: _id_orig, ...insertData } = validated;
+        const resultId = await checklistConfigRepository.create(insertData as any, session as any);
 
         await logEvento({
             level: 'INFO',
@@ -87,33 +55,11 @@ export async function POST(req: NextRequest) {
             action: 'CREATE',
             message: `Checklist config created: ${validated.name}`,
             correlationId,
-            details: { tenantId: session.user.tenantId, config_id: result.insertedId }
+            details: { tenantId: session.user.tenantId, config_id: resultId }
         });
 
-        return NextResponse.json({ success: true, config_id: result.insertedId });
-    } catch (error: any) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                new ValidationError('Datos de configuración inválidos', error.issues).toJSON(),
-                { status: 400 }
-            );
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_CHECKLIST_CONFIGS',
-            action: 'CREATE_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error al crear configuración').toJSON(),
-            { status: 500 }
-        );
+        return NextResponse.json({ success: true, config_id: resultId });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CHECKLIST_CONFIGS_POST', correlationId);
     }
 }

@@ -234,6 +234,8 @@
       "categories": "Categorías",
       "status": "Estado",
       "actions": "Acciones",
+      "remove": "Eliminar",
+      "edit": "Editar",
       "active": "ACTIVO",
       "inactive": "INACTIVO"
     },
@@ -554,7 +556,10 @@
       "type_label": "Tipo de Indexación",
       "type_all": "Todo el contenido",
       "type_original": "Originales",
-      "type_shadow": "Shadow Chunks (Traducciones)"
+      "type_shadow": "Shadow Chunks (Traducciones)",
+      "method_label": "Método de Recuperación",
+      "method_exact": "Búsqueda Exacta",
+      "method_semantic": "Semántica (IA)"
     },
     "view": {
       "showing": "Mostrando {count} de {total} fragmentos técnicos encontrados",
@@ -940,6 +945,15 @@
       "mfa_active": "MFA Activo",
       "no_mfa": "Sin MFA"
     },
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "email": "Email",
+      "jobTitle": "Puesto/Cargo",
+      "tenantId": "Tenant",
+      "role": "Rol",
+      "isActive": "Estado"
+    },
     "bulk": {
       "title": "Invitación Masiva",
       "desc": "Sube un archivo CSV o Excel con columnas \"email\" y opcionalmente \"role\".",
@@ -978,11 +992,18 @@
     },
     "tabs": {
       "active": "Usuarios Activos",
-      "pending": "Invitaciones Pendientes"
+      "invitations": "Gestión de Invitaciones"
     },
     "invitations": {
       "title": "Invitaciones Pendientes",
-      "desc": "Gestiona y revoca invitaciones que aún no han sido aceptadas."
+      "desc": "Gestiona y revoca invitaciones que aún no han sido aceptadas.",
+      "empty": "No hay invitaciones pendientes.",
+      "table": {
+        "email": "Email",
+        "role": "Rol",
+        "status": "Estado",
+        "expiry": "Expiración"
+      }
     },
     "invite_modal": {
       "success_title": "¡Invitación Enviada!",
@@ -1048,16 +1069,6 @@
         "aiSuccessDesc": "Se han generado las traducciones faltantes.",
         "upToDateTitle": "Todo al día",
         "upToDateDesc": "No hay llaves faltantes en este idioma.",
-        "autoTranslateBtn": "Auto-traducir faltantes",
-        "cancel": "Cancelar",
-        "empty": "Sin resultados",
-        "keyHeader": "Clave",
-        "noMatch": "Sin coincidencias",
-        "missing": "Faltante",
-        "noResults": "Sin resultados",
-        "primaryLabel": "Idioma primario",
-        "save": "Guardar",
-        "secondaryLabel": "Idioma secundario",
         "syncCompletedTitle": "Sincronización completada",
         "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
         "syncSuccessTitle": "Sincronización Exitosa",
@@ -1166,6 +1177,7 @@
       "create_success": "Nuevo prompt registrado en el sistema.",
       "error_loading": "Error al cargar la lista de prompts",
       "error_saving": "Error al guardar el prompt",
+      "sync_success_title": "Gobernanza Sincronizada",
       "sync_success": "Sincronización finalizada: {created} creados, {updated} actualizados, {errors} errores.",
       "sync_error": "Error al sincronizar prompts desde el código."
     },
@@ -1861,7 +1873,9 @@
         },
         "variables": {
           "title": "Variables Disponibles",
-          "copy": "Haz clic para copiar. Estas variables se rellenarán automáticamente al enviar."
+          "copy": "Haz clic para copiar. Estas variables se rellenarán automáticamente al enviar.",
+          "copied": "Copiada",
+          "copiedDesc": "Variable {v} copiada al portapapeles"
         },
         "version": {
           "title": "Información de Versión",
@@ -2673,36 +2687,21 @@
     "cache_inactive": "INACTIVA"
   },
   "onboarding": {
-    "welcome_title": "¡Bienvenido a ABD RAG Platform!",
-    "welcome_content": "Estamos listos para potenciar tu organización con inteligencia artificial soberana. ¿Comenzamos el tour?",
+    "title": "Bienvenido a ABDElevators",
+    "description": "Vamos a configurar el espacio de trabajo de tu organización en pocos pasos.",
     "steps": {
-      "welcome": {
-        "title": "¡Bienvenido a ABD RAG Platform!",
-        "content": "La IA que entiende tu documentación técnica. Para empezar, ¿cuál es tu rol principal?"
-      },
-      "upload": {
-        "title": "Sube tu primer documento",
-        "content": "Arrastra un PDF, Word o texto técnico. ¿No tienes uno a mano? Prueba con nuestro documento de ejemplo."
-      },
-      "ask": {
-        "title": "Haz tu primera pregunta",
-        "content": "Basado en el documento que subiste (o el de ejemplo), prueba a preguntar algo técnico."
-      },
-      "explore": {
-        "title": "Explora tu entorno",
-        "content": "Hemos personalizado tu tablero basándonos en tu rol. ¡Todo listo para empezar!"
-      }
+      "welcome": "Bienvenida",
+      "identity": "Identidad",
+      "branding": "Branding",
+      "storage": "Almacenamiento",
+      "features": "Funcionalidades",
+      "billing": "Facturación"
     },
-    "buttons": {
-      "next": "Siguiente",
-      "back": "Anterior",
-      "skip": "Saltar Tour",
-      "finish": "Finalizar"
-    },
-    "toasts": {
-      "completed": "¡Tour completado!",
-      "skipped": "Tour omitido. Puedes reiniciarlo desde tu perfil.",
-      "reset": "Onboarding reiniciado"
+    "actions": {
+      "next": "Continuar",
+      "back": "Atrás",
+      "finish": "Finalizar Configuración",
+      "skip": "Omitir por ahora"
     }
   }
 }

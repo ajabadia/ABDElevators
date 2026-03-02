@@ -101,7 +101,7 @@ export const ChecklistConfigList: React.FC = () => {
                         size="sm"
                         asChild
                         className="h-8 w-8 p-0 rounded-full hover:bg-teal-50 hover:text-teal-600 transition-all"
-                        aria-label={`${t('table.actions')}: ${t('table.name')} ${config.name}`}
+                        aria-label={`${t('table.actions')}: ${t('table.edit')} ${config.name}`}
                     >
                         <Link href={`/admin/checklist-configs/${config._id}`}>
                             <Edit size={14} />
@@ -112,7 +112,7 @@ export const ChecklistConfigList: React.FC = () => {
                         size="sm"
                         onClick={() => deleteConfig(String(config._id))}
                         className="h-8 w-8 p-0 rounded-full hover:bg-rose-50 hover:text-rose-600 transition-all text-slate-400"
-                        aria-label={`${t('table.actions')}: Remove ${config.name}`}
+                        aria-label={`${t('table.actions')}: ${t('table.remove')} ${config.name}`}
                     >
                         <Trash2 size={14} />
                     </Button>

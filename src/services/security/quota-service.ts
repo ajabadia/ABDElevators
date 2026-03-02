@@ -126,7 +126,14 @@ export class QuotaService {
 
         } catch (error) {
             console.error('[QuotaService] Error evaluating quota:', error);
-            return { status: 'ALLOWED', current: 0, limit: 0, percentage: 0 };
+            // hard failure - fail closed
+            return {
+                status: 'BLOCKED',
+                reason: 'Sistema de cuotas no disponible (Fail-Closed)',
+                current: 0,
+                limit: 0,
+                percentage: 100
+            };
         }
     }
 

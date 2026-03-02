@@ -1,5 +1,5 @@
 import { ticketRepository } from "@/lib/repositories/TicketRepository";
-import { Ticket } from "./schemas/TicketSchema";
+import { Ticket } from "@/lib/schemas/ticketing";
 
 /**
  * 🎧 SupportStatsService (Phase 219)

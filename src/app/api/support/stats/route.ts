@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { SupportStatsService } from '@/services/support/SupportStatsService';
 import { handleApiError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 /**
  * GET /api/support/stats
  * Returns support metrics for dashboards.
  */
-export async function GET(req: NextRequest) {
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
         // Requires admin-level support permissions
@@ -31,8 +32,7 @@ export async function GET(req: NextRequest) {
                 timestamp: new Date()
             }
         });
-
     } catch (error) {
         return handleApiError(error, 'API_SUPPORT_STATS', correlationId);
     }
-}
+}, { p95: 300, max: 1000 });

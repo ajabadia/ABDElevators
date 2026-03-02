@@ -1,45 +1,68 @@
 import crypto from 'crypto';
-import { Ticket, TicketSchema, TicketMessage } from "./schemas/TicketSchema";
+import { Ticket, TicketSchema, TicketStatus, TicketPriority } from "@/lib/schemas/ticketing";
 import { ticketRepository } from "@/lib/repositories/TicketRepository";
 import { AppError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
+import { TenantSession } from "@/lib/db-tenant";
+import { Filter, UpdateFilter } from 'mongodb';
 
 /**
- * TicketService - Domain service for the Support/Ticketing module.
- * Reinforces separation as an independent app within the suite.
+ * 🎫 TicketMessage - Local interface for internal message structure
+ */
+interface TicketMessage {
+    id: string;
+    author: string;
+    authorType: 'User' | 'Support';
+    authorName: string;
+    content: string;
+    timestamp: Date;
+    isInternal: boolean;
+}
+
+/**
+ * 🏢 TicketService
+ * Domain service for the Support/Ticketing module.
+ * Standardized for Era 8 (Zero any, explicit types).
  */
 export class TicketService {
 
     /**
      * Creates a new ticket with a sequential TKT-YYYY-XXXXX format.
      */
-    static async createTicket(data: Partial<Ticket> & { tenantId: string, createdBy: string, userEmail: string }) {
-        // Generar ID secuencial
+    static async createTicket(data: {
+        tenantId: string,
+        createdBy: string,
+        userEmail: string,
+        subject: string,
+        description: string,
+        priority?: TicketPriority,
+        category?: string,
+        attachments?: any[]
+    }): Promise<Ticket> {
+        // 1. Generate sequential number
         const count = await ticketRepository.count({ tenantId: data.tenantId });
         const year = new Date().getFullYear();
         const ticketNumber = `TKT-${year}-${(count + 1).toString().padStart(5, '0')}`;
 
-        const newTicket: Ticket = {
-            ...data,
+        const newTicketData = {
             ticketNumber,
-            status: data.status || "OPEN",
-            priority: data.priority || "MEDIUM",
-            category: data.category || "TECHNICAL",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            messages: [],
-            internalNotes: [],
-            attachments: data.attachments || [],
-            tags: data.tags || [],
             tenantId: data.tenantId,
             createdBy: data.createdBy,
-            userEmail: data.userEmail,
-            subject: data.subject || "Sin asunto",
-            description: data.description || "Sin descripción"
+            subject: data.subject,
+            description: data.description,
+            priority: data.priority || 'MEDIUM',
+            category: data.category || 'TECHNICAL',
+            status: 'OPEN' as TicketStatus,
+            attachments: data.attachments || [],
+            messages: [],
+            internalNotes: [],
+            tags: [],
+            createdAt: new Date(),
+            updatedAt: new Date()
         };
 
-        const validated = TicketSchema.parse(newTicket);
-        const insertedId = await ticketRepository.create(validated as Ticket);
+        const validated = TicketSchema.parse(newTicketData);
+        const insertedId = await ticketRepository.create(validated, { user: { tenantId: data.tenantId } } as any);
 
         await logEvento({
             level: 'INFO',
@@ -47,26 +70,24 @@ export class TicketService {
             action: 'CREATE_TICKET',
             message: `Ticket ${ticketNumber} creado para ${data.userEmail}`,
             correlationId: ticketNumber,
-            tenantId: data.tenantId,
-            userId: data.createdBy
+            details: { ticketNumber, tenantId: data.tenantId, userId: data.createdBy }
         });
 
         return { ...validated, _id: insertedId };
     }
 
     /**
-     * Lists tickets with multi-tenant isolation.
+     * Lists tickets with multi-tenant isolation and filtering.
      */
     static async getTickets(options: {
         userId?: string;
-        userEmail?: string;
-        status?: string;
-        priority?: string;
+        tenantId: string;
+        status?: TicketStatus;
+        priority?: TicketPriority;
         limit?: number;
-    }) {
-        const query: any = {};
+    }): Promise<Ticket[]> {
+        const query: Filter<Ticket> = { tenantId: options.tenantId };
         if (options.userId) query.createdBy = options.userId;
-        if (options.userEmail) query.userEmail = options.userEmail;
         if (options.status) query.status = options.status;
         if (options.priority) query.priority = options.priority;
 
@@ -79,24 +100,23 @@ export class TicketService {
     /**
      * Retrieves a single ticket ensuring ACL.
      */
-    static async getTicketByIdWithAcl(id: string, session: any) {
+    static async getTicketByIdWithAcl(id: string, session: TenantSession): Promise<Ticket> {
         const ticket = await ticketRepository.findById(id);
 
         if (!ticket) {
             throw new AppError('NOT_FOUND', 404, 'Ticket no encontrado');
         }
-        // ...
 
-        // ACL logic
-        const canManage = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(session.user.role);
+        const user = session.user;
+        if (!user) throw new AppError('UNAUTHORIZED', 401, 'No session found');
+
+        const canManage = ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(user.role);
 
         if (canManage) {
-            // Simplified: getTenantCollection already filters by session tenantId or allowed list if using multi-tenant wrapper
-            // But we reinforce here for the explicit logic requested
-            if (session.user.role !== 'SUPER_ADMIN') {
+            if (user.role !== 'SUPER_ADMIN') {
                 const allowedTenants = [
-                    session.user.tenantId,
-                    ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
+                    user.tenantId,
+                    ...(user.tenantAccess || []).map((t: any) => t.tenantId)
                 ].filter(Boolean);
 
                 if (!allowedTenants.includes(ticket.tenantId)) {
@@ -104,7 +124,7 @@ export class TicketService {
                 }
             }
         } else {
-            if (ticket.createdBy !== session.user.id) {
+            if (ticket.createdBy !== user.id) {
                 throw new AppError('FORBIDDEN', 403, 'Solo puedes ver tus propios tickets');
             }
         }
@@ -119,22 +139,22 @@ export class TicketService {
         ticketId: string,
         tenantId: string,
         message: Omit<TicketMessage, 'id' | 'timestamp'>
-    ) {
+    ): Promise<TicketMessage> {
         const newMessage: TicketMessage = {
             id: crypto.randomUUID(),
             ...message,
             timestamp: new Date()
         };
 
-        const updateOp = {
-            $push: { messages: newMessage },
+        const updateOp: UpdateFilter<Ticket> = {
+            $push: { messages: newMessage } as any,
             $set: { updatedAt: new Date() }
         };
 
         const success = await ticketRepository.update(ticketId, updateOp);
 
         if (!success) {
-            throw new AppError('NOT_FOUND', 404, 'No se pudo añadir el mensaje');
+            throw new AppError('NOT_FOUND', 404, 'No se pudo añadir el mensaje al ticket');
         }
 
         await logEvento({
@@ -143,7 +163,7 @@ export class TicketService {
             action: 'ADD_MESSAGE',
             message: `Nuevo mensaje en ticket ${ticketId}`,
             correlationId: ticketId,
-            tenantId
+            details: { ticketId, tenantId, authorType: message.authorType }
         });
 
         return newMessage;
@@ -152,11 +172,11 @@ export class TicketService {
     /**
      * Updates ticket status based on reply authorship.
      */
-    static async updateStatusOnReply(ticketId: string, tenantId: string, authorType: 'User' | 'Support') {
+    static async updateStatusOnReply(ticketId: string, authorType: 'User' | 'Support'): Promise<void> {
         const ticket = await ticketRepository.findById(ticketId);
         if (!ticket) return;
 
-        let newStatus = ticket.status;
+        let newStatus = ticket.status as TicketStatus;
         if (authorType === 'User' && ticket.status === 'WAITING_USER') {
             newStatus = 'OPEN';
         } else if (authorType === 'Support' && !['RESOLVED', 'CLOSED'].includes(ticket.status)) {
@@ -165,21 +185,21 @@ export class TicketService {
 
         if (newStatus !== ticket.status) {
             await ticketRepository.update(ticketId, {
-                $set: { status: newStatus as any, updatedAt: new Date() }
-            });
+                $set: { status: newStatus, updatedAt: new Date() }
+            } as UpdateFilter<Ticket>);
         }
     }
 
     /**
      * Reassigns a ticket to another team member.
      */
-    static async reassignTicket(ticketId: string, tenantId: string, data: { assignedTo: string, note?: string, authorId: string }) {
+    static async reassignTicket(ticketId: string, tenantId: string, data: { assignedTo: string, note?: string, authorId: string }): Promise<void> {
         const timestamp = new Date();
-        const updateOp: any = {
+        const updateOp: UpdateFilter<Ticket> = {
             $set: {
                 assignedTo: data.assignedTo,
                 updatedAt: timestamp,
-                status: 'IN_PROGRESS'
+                status: 'IN_PROGRESS' as TicketStatus
             }
         };
 
@@ -191,7 +211,7 @@ export class TicketService {
                     content: data.note,
                     timestamp: timestamp
                 }
-            };
+            } as any;
         }
 
         const success = await ticketRepository.update(ticketId, updateOp);
@@ -203,7 +223,7 @@ export class TicketService {
             action: 'REASSIGN',
             message: `Ticket ${ticketId} reasignado a ${data.assignedTo}`,
             correlationId: ticketId,
-            tenantId
+            details: { ticketId, tenantId, assignedTo: data.assignedTo }
         });
     }
 }

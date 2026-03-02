@@ -25,10 +25,6 @@ export * from './workshop';
 export * from './intelligence';
 export * from './audit-logs';
 export * from './rag-evaluation';
-// The instruction to add 'spaceId' to 'KnowledgeAssetSchema' cannot be applied directly here
-// as 'KnowledgeAssetSchema' is defined within the './knowledge' module, not in this 'index.ts' file.
-// This file only re-exports modules.
-// The provided snippet for 'KnowledgeAssetSchema' definition is syntactically incorrect for this file.
 export * from './pagination';
 export * from './feedback';
 

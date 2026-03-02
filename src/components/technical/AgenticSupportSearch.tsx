@@ -133,7 +133,7 @@ export function AgenticSupportSearch() {
                             <BookOpen size={16} /> {t('sources_title')}
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {searchResult.documents.map((doc, idx) => (
+                            {searchResult.documents.map((doc: any, idx) => (
                                 <Card key={idx} className="border-none shadow-sm bg-slate-50 hover:bg-slate-100 transition-colors">
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start mb-2">

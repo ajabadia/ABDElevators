@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
 import { SystemEmailTemplateSchema } from '@/lib/schemas';
+import { getMongoClient } from '@/lib/db';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -23,13 +25,15 @@ const SLA_THRESHOLD = 500;
  * Obtiene el detalle de una plantilla.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const { type } = await params;
-        const session = await auth();
-        if (session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('FORBIDDEN', 403, 'Acceso denegado');
+        const session = await enforcePermission('notification:template', 'read');
+        const tenantId = session.user.tenantId;
+
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
         }
 
         const collection = await getTenantCollection('notification_templates', session, 'LOGS');
@@ -41,8 +45,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
 
         return NextResponse.json(template);
 
-    } catch (error: any) {
-        return handleApiError(error, API_SOURCE, correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     } finally {
         const duration = Date.now() - start;
         if (duration > SLA_THRESHOLD) {
@@ -50,7 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
                 level: 'WARN',
                 source: API_SOURCE,
                 action: 'SLA_BREACH_GET',
-                correlationId: correlacion_id,
+                correlationId: correlationId,
                 message: `GET Template excedió SLA`,
                 details: { duration_ms: duration }
             });
@@ -63,106 +67,118 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
  * Actualiza una plantilla y genera registro de auditoría.
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const { type } = await params;
-        const session = await auth();
-        const userId = session?.user?.id;
+        const session = await enforcePermission('notification:template', 'manage');
+        const userId = session.user.id;
+        const tenantId = session.user.tenantId;
 
-        if (session?.user?.role !== 'SUPER_ADMIN' || !userId) {
-            throw new AppError('FORBIDDEN', 403, 'Solo SuperAdmin puede editar plantillas');
+        if (!tenantId || !userId) {
+            throw new AppError('FORBIDDEN', 403, 'Context information missing in session');
         }
 
         const body = await req.json();
         const validated = UpdateTemplateBodySchema.parse(body);
 
-        const collection = await getTenantCollection('notification_templates', session, 'LOGS');
-        const historyCollection = await getTenantCollection('notification_templates_history', session, 'LOGS');
+        const client = await getMongoClient();
+        const mongoSession = client.startSession();
 
-        // 1. Buscar estado actual
-        const currentTemplate = await collection.findOne({ type });
+        try {
+            await mongoSession.withTransaction(async () => {
+                const collection = await getTenantCollection('notification_templates', session, 'LOGS');
+                const historyCollection = await getTenantCollection('notification_templates_history', session, 'LOGS');
 
-        if (currentTemplate) {
-            // 2. Guardar HISTÓRICO (Audit Trail)
-            const historyEntry = {
-                originalTemplateId: currentTemplate._id,
-                type: currentTemplate.type,
-                version: currentTemplate.version,
-                subjectTemplates: currentTemplate.subjectTemplates,
-                bodyHtmlTemplates: currentTemplate.bodyHtmlTemplates,
-                action: 'UPDATE',
-                performedBy: userId,
-                reason: validated.reason || 'Actualización manual por SuperAdmin',
-                timestamp: new Date(),
-                validFrom: currentTemplate.updatedAt,
-                validTo: new Date()
-            };
+                // 1. Buscar estado actual
+                const currentTemplate = await collection.findOne({ type }, { session: mongoSession });
 
-            await historyCollection.insertOne(historyEntry);
+                if (currentTemplate) {
+                    // 2. Guardar HISTÓRICO (Audit Trail)
+                    const historyEntry = {
+                        originalTemplateId: currentTemplate._id,
+                        type: currentTemplate.type,
+                        version: currentTemplate.version,
+                        subjectTemplates: currentTemplate.subjectTemplates,
+                        bodyHtmlTemplates: currentTemplate.bodyHtmlTemplates,
+                        action: 'UPDATE',
+                        performedBy: userId,
+                        reason: validated.reason || 'Actualización manual por Admin/SuperAdmin',
+                        timestamp: new Date(),
+                        validFrom: currentTemplate.updatedAt || currentTemplate.createdAt,
+                        validTo: new Date()
+                    };
 
-            // 3. ACTUALIZAR (Incrementar versión)
-            await collection.updateOne(
-                { type },
-                {
-                    $set: {
+                    await historyCollection.insertOne(historyEntry, { session: mongoSession });
+
+                    // 3. ACTUALIZAR (Incrementar versión)
+                    await collection.updateOne(
+                        { type },
+                        {
+                            $set: {
+                                subjectTemplates: validated.subjectTemplates,
+                                bodyHtmlTemplates: validated.bodyHtmlTemplates,
+                                description: validated.description || currentTemplate.description,
+                                active: validated.active ?? currentTemplate.active,
+                                version: (currentTemplate.version || 0) + 1,
+                                updatedAt: new Date(),
+                                updatedBy: userId
+                            }
+                        },
+                        { session: mongoSession }
+                    );
+
+                } else {
+                    // 4. CREAR (Si no existe)
+                    const newTemplate = {
+                        type,
+                        name: `Plantilla ${type}`,
                         subjectTemplates: validated.subjectTemplates,
                         bodyHtmlTemplates: validated.bodyHtmlTemplates,
-                        description: validated.description || currentTemplate.description,
-                        active: validated.active ?? currentTemplate.active,
-                        version: (currentTemplate.version || 0) + 1,
+                        availableVariables: ['tenantName', 'date', 'tenant_custom_note', 'branding_logo', 'branding_primary_color', 'branding_accent_color', 'company_name'],
+                        description: validated.description,
+                        version: 1,
+                        active: true,
+                        createdAt: new Date(),
                         updatedAt: new Date(),
                         updatedBy: userId
-                    }
+                    };
+
+                    // Validar
+                    SystemEmailTemplateSchema.parse(newTemplate);
+                    await collection.insertOne(newTemplate, { session: mongoSession });
+
+                    // Log de creación en historial
+                    await historyCollection.insertOne({
+                        type,
+                        version: 1,
+                        action: 'CREATE',
+                        performedBy: userId,
+                        reason: 'Creación inicial',
+                        timestamp: new Date(),
+                        subjectTemplates: validated.subjectTemplates,
+                        bodyHtmlTemplates: validated.bodyHtmlTemplates,
+                        validFrom: new Date()
+                    }, { session: mongoSession });
                 }
-            );
-
-        } else {
-            // 4. CREAR (Si no existe)
-            const newTemplate = {
-                type,
-                name: `Plantilla ${type}`,
-                subjectTemplates: validated.subjectTemplates,
-                bodyHtmlTemplates: validated.bodyHtmlTemplates,
-                availableVariables: ['tenantName', 'date', 'tenant_custom_note', 'branding_logo', 'branding_primary_color', 'branding_accent_color', 'company_name'],
-                description: validated.description,
-                version: 1,
-                active: true,
-                updatedAt: new Date(),
-                updatedBy: userId
-            };
-
-            // Validar
-            SystemEmailTemplateSchema.parse(newTemplate);
-            await collection.insertOne(newTemplate);
-
-            // Log de creación en historial
-            await historyCollection.insertOne({
-                type,
-                version: 1,
-                action: 'CREATE',
-                performedBy: userId,
-                reason: 'Creación inicial',
-                timestamp: new Date(),
-                subjectTemplates: validated.subjectTemplates,
-                bodyHtmlTemplates: validated.bodyHtmlTemplates,
-                validFrom: new Date()
             });
+        } finally {
+            await mongoSession.endSession();
         }
 
         await logEvento({
             level: 'INFO',
             source: 'ADMIN_NOTIFICATIONS',
             action: 'UPDATE_TEMPLATE',
-            message: `Plantilla ${type} actualizada por SuperAdmin`,
-            correlationId: correlacion_id,
+            message: `Plantilla ${type} actualizada por ${session.user.role}`,
+            correlationId: correlationId,
             details: { type, userId, duration_ms: Date.now() - start }
         });
 
         return NextResponse.json({ success: true, type });
 
-    } catch (error: any) {
-        return handleApiError(error, API_SOURCE, correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     } finally {
         const duration = Date.now() - start;
         if (duration > SLA_THRESHOLD * 2) {
@@ -170,7 +186,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ type
                 level: 'WARN',
                 source: API_SOURCE,
                 action: 'SLA_BREACH_PUT',
-                correlationId: correlacion_id,
+                correlationId: correlationId,
                 message: `PUT Template excedió SLA`,
                 details: { duration_ms: duration }
             });

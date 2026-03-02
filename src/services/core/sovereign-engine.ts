@@ -9,7 +9,11 @@ export class SovereignEngine {
     /**
      * Actualiza múltiples taxonomías en lote.
      */
-    static async batchUpdateTaxonomies(updates: any[], tenantId: string, correlationId: string) {
+    static async batchUpdateTaxonomies(
+        updates: { targetKey: string, newName: string, newDescription?: string, action: string }[],
+        tenantId: string,
+        correlationId: string
+    ) {
         const collection = await getTenantCollection('taxonomias');
 
         const operations = updates.map(update => ({

@@ -50,7 +50,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
     return (
         <div className="space-y-4">
             {keys.map((key) => (
-                <div key={key._id} className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${key.isActive ? 'border-slate-800 bg-slate-900/50 hover:border-teal-900/50' : 'border-red-900/20 bg-red-950/5 opacity-70'}`}>
+                <div key={key._id?.toString()} className={`p-5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${key.isActive ? 'border-slate-800 bg-slate-900/50 hover:border-teal-900/50' : 'border-red-900/20 bg-red-950/5 opacity-70'}`}>
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
                             <h4 className="font-semibold text-white">{key.name}</h4>
@@ -97,7 +97,7 @@ export function ApiKeyList({ keys }: ApiKeyListProps) {
                                 variant="destructive"
                                 size="sm"
                                 className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
-                                onClick={() => handleRevoke(key._id, key.name)}
+                                onClick={() => handleRevoke(key._id?.toString() || "", key.name)}
                                 title={t('revoke_btn')}
                             >
                                 <Trash2 className="w-4 h-4" />

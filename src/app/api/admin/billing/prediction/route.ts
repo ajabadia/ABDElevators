@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { AppError, handleApiError } from '@/lib/errors';
 import { UsageService } from '@/services/ops/usage-service';
 import crypto from 'crypto';
@@ -12,12 +12,9 @@ export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
 
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Debes iniciar sesión');
-        }
-
+        const session = await enforcePermission('billing:prediction', 'read');
         const tenantId = session.user.tenantId;
+
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'No tienes un tenant asignado');
         }
@@ -31,7 +28,7 @@ export async function GET(req: NextRequest) {
             correlationId
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_BILLING_PREDICTION', correlationId);
     }
 }

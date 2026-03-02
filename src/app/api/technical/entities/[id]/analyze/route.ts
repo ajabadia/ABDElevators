@@ -9,6 +9,28 @@ import { UsageService } from '@/services/ops/usage-service';
 import { SSEHelper } from '@/lib/sse-helper';
 import crypto from 'crypto';
 
+interface GraphFinding {
+    source: 'extraction' | 'risk_analysis' | 'validation';
+    type: string;
+    model: string;
+    field?: string;
+    severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    originalValue?: any;
+    correctedValue?: any;
+    status?: string;
+}
+
+interface GraphState {
+    messages: { role: string, content: string }[];
+    entityId: string;
+    tenantId: string;
+    correlationId: string;
+    industry: string;
+    environment: string;
+    confidence_score?: number;
+    findings?: GraphFinding[];
+}
+
 /**
  * POST /api/pedidos/[id]/analyze
  * Ejecuta el motor agéntico para analizar un pedido.
@@ -28,14 +50,14 @@ export async function GET(
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const user = session.user as any;
+    const user = session.user as { id: string, tenantId: string, role: string, tenantAccess?: { tenantId: string }[] };
     const tenantId = user.tenantId;
 
     // 2. Preparar el Stream de Eventos (SSE)
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
         async start(controller) {
-            const sendEvent = (event: string, data: any) => {
+            const sendEvent = (event: string, data: unknown) => {
                 controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
             };
 
@@ -77,9 +99,9 @@ export async function GET(
                     streamMode: "values" // Recibimos el estado completo en cada paso
                 });
 
-                let finalState: any = null;
+                let finalState: GraphState | null = null;
                 for await (const update of eventStream) {
-                    finalState = update;
+                    finalState = update as unknown as GraphState;
                     const lastMessage = update.messages[update.messages.length - 1];
 
                     sendEvent('trace', {
@@ -92,11 +114,11 @@ export async function GET(
                 // 5. Persistir resultados finales en la entidad
                 if (finalState) {
                     const detectedPatterns = (finalState.findings || [])
-                        .filter((f: any) => f.source === 'extraction')
-                        .map((f: any) => ({ type: f.type, model: f.model }));
+                        .filter((f: GraphFinding) => f.source === 'extraction')
+                        .map((f: GraphFinding) => ({ type: f.type, model: f.model }));
 
                     const riesgos = (finalState.findings || [])
-                        .filter((f: any) => f.source === 'risk_analysis');
+                        .filter((f: GraphFinding) => f.source === 'risk_analysis');
 
                     await collection.updateOne(
                         { _id: new ObjectId(id) },
@@ -111,7 +133,7 @@ export async function GET(
                     );
 
                     // Alerta Proactiva (Fase 82)
-                    if ((finalState.confidence_score || 0) < 0.70 || riesgos.some((r: any) => r.severity === 'HIGH' || r.severity === 'CRITICAL')) {
+                    if ((finalState.confidence_score || 0) < 0.70 || riesgos.some((r: GraphFinding) => r.severity === 'HIGH' || r.severity === 'CRITICAL')) {
                         const { NotificationService } = await import('@/services/core/NotificationService');
                         await NotificationService.notify({
                             tenantId: tenantId!,
@@ -140,13 +162,14 @@ export async function GET(
 
                 controller.close();
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 // Manejo especial para errores de facturación (AccessControl)
                 if (error instanceof AppError && error.code === 'FORBIDDEN') {
                     sendEvent('error', { message: error.message, type: 'BILLING_BLOCK' });
                 } else {
+                    const message = error instanceof Error ? error.message : 'Error interno en el agente';
                     console.error('[AGENTIC_STREAM_ERROR]', error);
-                    sendEvent('error', { message: error.message || 'Error interno en el agente' });
+                    sendEvent('error', { message });
                 }
                 controller.close();
             }

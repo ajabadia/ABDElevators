@@ -11,7 +11,7 @@ export interface NotificationPayload {
     title: string;
     message: string;
     link?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     language?: string;
     extraRecipients?: string[];
 }
@@ -31,7 +31,7 @@ export class NotificationService {
 
         try {
             const config = await NotificationConfigService.getTenantConfig(tenantId);
-            let eventConfig = config.events?.[type] || {
+            let eventConfig = ((config.events || {}) as Record<string, { enabled?: boolean, channels?: string[], recipients?: string[], customNote?: string }>)[type] || {
                 enabled: true,
                 channels: ['EMAIL', 'IN_APP'],
                 recipients: []
@@ -43,7 +43,7 @@ export class NotificationService {
             let recipientsSet: Set<string> = new Set();
             let userPrefs = userId ? await NotificationConfigService.getUserPreferences(userId, tenantId, type) : { email: true, inApp: true };
 
-            if (eventConfig.recipients?.length > 0) {
+            if (eventConfig.recipients && eventConfig.recipients.length > 0) {
                 eventConfig.recipients.forEach((r: string) => recipientsSet.add(r));
             }
 
@@ -53,7 +53,7 @@ export class NotificationService {
             }
 
             if (recipientsSet.size === 0 && !userId && config.fallbackEmail) {
-                recipientsSet.add(config.fallbackEmail);
+                recipientsSet.add(config.fallbackEmail as string);
             }
 
             extraRecipients.forEach(r => recipientsSet.add(r));
@@ -66,12 +66,12 @@ export class NotificationService {
             }
 
             // Process Channels
-            if (eventConfig.channels.includes('EMAIL') && recipients.length > 0) {
+            if (eventConfig.channels && eventConfig.channels.includes('EMAIL') && recipients.length > 0) {
                 await this.deliverEmail(payload, recipients, eventConfig.customNote, language);
                 if (notifId) await NotificationRepository.markAsSent(notifId, tenantId, recipients[0]);
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[NotificationService] Error:', error);
         }
     }

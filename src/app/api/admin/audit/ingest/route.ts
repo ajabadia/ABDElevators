@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
-import { AppError } from '@/lib/errors';
+import { handleApiError, ValidationError } from '@/lib/errors';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 // Schema para validación de queries
 const QuerySchema = z.object({
@@ -15,12 +16,9 @@ const QuerySchema = z.object({
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        // Regla #9: Security Headers & Auth
-        if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('audit:ingest', 'read');
 
         const url = new URL(req.url);
         const query = QuerySchema.parse({
@@ -66,13 +64,10 @@ export async function GET(req: NextRequest) {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ code: 'VALIDATION_ERROR', errors: (error as any).errors }, { status: 400 });
+            throw new ValidationError('Validation Failed', error.issues);
         }
-        return NextResponse.json(
-            { code: 'INTERNAL_ERROR', message: error.message || 'Error al obtener auditoría de ingesta' },
-            { status: 500 }
-        );
+        return handleApiError(error, 'API_ADMIN_AUDIT_INGEST', correlationId);
     }
 }

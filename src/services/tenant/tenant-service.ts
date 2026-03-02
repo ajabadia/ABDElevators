@@ -1,21 +1,34 @@
 import { getTenantCollection } from "@/lib/db-tenant";
-import { TenantConfigSchema } from "@/lib/schemas";
+import { TenantConfigSchema, type TenantConfig } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";
 import crypto from 'crypto';
-import { ClientSession } from 'mongodb';
+import { type ClientSession } from 'mongodb';
+import { UserRole } from "@/types/roles";
 
 /**
- * TenantService (formerly TenantConfigService)
+ * 🏢 TenantService
  * Domain-specific service for tenant management.
+ * Standardized for Era 8 (Zero any, explicit types).
  */
 export class TenantService {
-    private static cache = new Map<string, { data: any, timestamp: number }>();
+    private static cache = new Map<string, { data: TenantConfig, timestamp: number }>();
     private static CACHE_TTL = 5 * 60 * 1000;
 
-    static async getConfig(tenantId: string) {
+    /**
+     * Recupera la configuración de un tenant.
+     */
+    static async getConfig(tenantId: string): Promise<TenantConfig> {
         try {
-            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
-            const collection = await getTenantCollection('tenants', session);
+            // Internal system session for getTenantCollection
+            const systemSession = {
+                user: {
+                    id: 'system',
+                    tenantId,
+                    role: UserRole.SUPER_ADMIN // System acts with elevated permissions for config retrieval
+                }
+            };
+
+            const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
             const config = await collection.findOne({ tenantId });
 
             if (!config) {
@@ -26,58 +39,98 @@ export class TenantService {
             this.cache.set(tenantId, { data: validated, timestamp: Date.now() });
 
             return validated;
-        } catch (error: any) {
-            if (error instanceof NotFoundError) throw error;
+        } catch (error: unknown) {
+            if (error instanceof NotFoundError || error instanceof AppError) throw error;
+            console.error(`[TenantService] Error getConfig(${tenantId}):`, error);
             throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error al recuperar configuración del tenant');
         }
     }
 
+    /**
+     * Actualiza la configuración de un tenant y registra auditoría.
+     */
     static async updateConfig(
         tenantId: string,
-        data: any,
+        data: Partial<TenantConfig> | Record<string, unknown>,
         metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
-    ): Promise<any> {
+    ): Promise<TenantConfig> {
         const correlationId = metadata?.correlationId || crypto.randomUUID();
 
         try {
-            const validated = TenantConfigSchema.partial().parse(data);
-            const session = { user: { id: metadata?.performedBy || 'SYSTEM', tenantId, role: 'USER' } } as any;
-            const collection = await getTenantCollection('tenants', session);
-            const previousState = await collection.findOne({ tenantId });
+            const hasDotNotation = Object.keys(data).some(key => key.includes('.'));
+            const validated = (hasDotNotation ? data : TenantConfigSchema.partial().parse(data)) as Partial<TenantConfig>;
+
+            // Internal session for collection access
+            const authContext = {
+                user: {
+                    id: metadata?.performedBy || 'SYSTEM',
+                    tenantId,
+                    role: UserRole.ADMIN
+                }
+            };
+
+            const collection = await getTenantCollection<TenantConfig>('tenants', authContext as any);
+            const previousState = await collection.findOne({ tenantId }, { session: metadata?.session });
 
             const { _id, tenantId: _ign, ...updateData } = validated as any;
+
             await collection.updateOne(
                 { tenantId },
-                { $set: { ...updateData, updatedAt: new Date() } },
+                {
+                    $set: {
+                        ...updateData,
+                        updatedAt: new Date(),
+                        updatedBy: metadata?.performedBy || 'SYSTEM'
+                    }
+                },
                 { upsert: true, session: metadata?.session }
             );
 
             this.cache.delete(tenantId);
 
             // Audit via internal dynamic import
-            const { AuditTrailService } = await import('@/services/observability/AuditTrailService').catch(() => ({ AuditTrailService: null as any }));
-            if (AuditTrailService) {
-                await AuditTrailService.logConfigChange({
-                    actorId: metadata?.performedBy || 'SYSTEM',
-                    actorType: 'USER',
-                    tenantId,
-                    action: 'UPDATE_TENANT_CONFIG',
-                    entityType: 'TENANT',
-                    entityId: tenantId,
-                    changes: { before: previousState, after: validated },
-                    correlationId
-                } as any);
+            try {
+                const auditTrailModule = await import('@/services/observability/AuditTrailService');
+                if (auditTrailModule?.AuditTrailService) {
+                    await auditTrailModule.AuditTrailService.logConfigChange({
+                        actorId: metadata?.performedBy || 'SYSTEM',
+                        actorType: 'USER',
+                        tenantId,
+                        action: 'UPDATE_TENANT_CONFIG',
+                        entityType: 'TENANT',
+                        entityId: tenantId,
+                        changes: {
+                            before: previousState as unknown as Record<string, unknown>,
+                            after: validated as Record<string, unknown>
+                        },
+                        correlationId
+                    }, metadata?.session);
+                }
+            } catch (auditError) {
+                console.warn('[TenantService] Failed to log audit trail:', auditError);
             }
 
-            return validated;
-        } catch (error: any) {
+            return validated as TenantConfig;
+        } catch (error: unknown) {
+            console.error(`[TenantService] Error updateConfig(${tenantId}):`, error);
             throw error;
         }
     }
 
-    static async getAllTenants() {
-        const session = { user: { role: 'SUPER_ADMIN' } } as any;
-        const collection = await getTenantCollection('tenants', session);
-        return await collection.find({});
+    /**
+     * Lista todos los tenants registrados.
+     */
+    static async getAllTenants(): Promise<TenantConfig[]> {
+        // Standardized system session for global access
+        const systemSession = {
+            user: {
+                id: 'system',
+                tenantId: 'platform_master',
+                role: UserRole.SUPER_ADMIN
+            }
+        };
+        const collection = await getTenantCollection<TenantConfig>('tenants', systemSession as any);
+        const results = await collection.find({});
+        return results as TenantConfig[];
     }
 }

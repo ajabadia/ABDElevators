@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { ChecklistItem } from '@/lib/types';
+import { RagResult, DocumentChunk } from '@/lib/schemas';
 
-interface SearchResult {
+interface SearchResult extends RagResult {
     answer: string;
-    documents: any[];
+    documents: DocumentChunk[];
     trace: string[];
 }
 

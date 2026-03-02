@@ -13,6 +13,19 @@ export interface GraphContext {
     textSummary: string;
 }
 
+export interface Neo4jNode {
+    id: string;
+    label: string;
+    name: string;
+    type: string;
+}
+
+export interface Neo4jRelation {
+    source: string;
+    type: string;
+    target: string;
+}
+
 export class GraphRetrievalService {
     /**
      * Finds related entities and relationships in the Knowledge Graph for a given user query
@@ -49,7 +62,6 @@ export class GraphRetrievalService {
             const entityNames = entityCsv.split(',').map(s => s.trim().toLowerCase());
 
             // 2. Query Neo4j for these entities and their immediate neighborhood
-            // We use fuzzy matching on 'id' or 'name'
             const cypher = `
                 UNWIND $names AS name
                 MATCH (e)
@@ -70,8 +82,8 @@ export class GraphRetrievalService {
                 return null;
             }
 
-            const nodesMap = new Map<string, any>();
-            const relations: any[] = [];
+            const nodesMap = new Map<string, Neo4jNode>();
+            const relations: Neo4jRelation[] = [];
 
             result.records.forEach(record => {
                 const e = record.get('e');
@@ -79,8 +91,8 @@ export class GraphRetrievalService {
                 const neighbor = record.get('neighbor');
                 const isOutgoing = record.get('isOutgoing');
 
-                if (e) nodesMap.set(e.properties.id, { id: e.properties.id, name: e.properties.name, type: e.labels[0] });
-                if (neighbor) nodesMap.set(neighbor.properties.id, { id: neighbor.properties.id, name: neighbor.properties.name, type: neighbor.labels[0] });
+                if (e) nodesMap.set(e.properties.id, { id: e.properties.id, label: e.labels[0], name: e.properties.name, type: e.labels[0] });
+                if (neighbor) nodesMap.set(neighbor.properties.id, { id: neighbor.properties.id, label: neighbor.labels[0], name: neighbor.properties.name, type: neighbor.labels[0] });
                 if (r) {
                     relations.push({
                         source: isOutgoing ? e.properties.id : neighbor.properties.id,
@@ -113,7 +125,7 @@ export class GraphRetrievalService {
         }
     }
 
-    private static generateSummary(nodes: any[], relations: any[]): string {
+    private static generateSummary(nodes: Neo4jNode[], relations: Neo4jRelation[]): string {
         if (nodes.length === 0) return "";
 
         let summary = "Conexiones encontradas en el Grafo de Conocimiento:\n";

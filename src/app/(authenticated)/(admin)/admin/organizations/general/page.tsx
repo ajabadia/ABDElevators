@@ -24,20 +24,10 @@ export default function OrganizationsGeneralPage() {
 
     const { config, setConfig, isSaving, setIsSaving } = useTenantConfigStore();
 
-    const { data: tenants, refresh: refreshTenants } = useApiList<TenantConfig>({
-        endpoint: '/api/admin/tenants',
-        dataKey: 'tenants',
-        onSuccess: (data) => {
-            if (data.length > 0 && !config) {
-                setConfig(data[0]);
-            }
-        }
-    });
 
     const { mutate: saveConfig } = useApiMutation({
         endpoint: '/api/admin/tenants',
         successMessage: t('saveSuccess'),
-        onSuccess: () => refreshTenants(),
         onError: (err) => {
             toast.error(t('error'), {
                 description: typeof err === 'string' ? err : t('saveError'),

@@ -5,6 +5,7 @@ import { TicketService } from "@/services/support/TicketService"
 import { UserService } from '@/services/auth/UserService';
 import { AppError, handleApiError } from "@/lib/errors"
 import { randomUUID } from "crypto"
+import { ApplicationLog } from "@/lib/schemas"
 
 export async function GET(req: NextRequest) {
     const correlationId = randomUUID()
@@ -15,7 +16,8 @@ export async function GET(req: NextRequest) {
             throw new AppError("UNAUTHORIZED", 401, "No autorizado")
         }
 
-        const tenantId = (session.user as any).tenantId
+        const user = session.user as { id: string, tenantId: string };
+        const tenantId = user.tenantId;
         const db = await connectDB()
 
         // 1. Obtener estadísticas de documentos
@@ -56,23 +58,24 @@ export async function GET(req: NextRequest) {
             .limit(10)
             .toArray()
 
-        const activities = recentLogs.map((log: any) => {
+        const activities = recentLogs.map((log) => {
+            const appLog = log as unknown as ApplicationLog;
             let type: "upload" | "search" | "success" = "search"
 
-            if (log.source === "API_INGEST") {
+            if (appLog.source === "API_INGEST") {
                 type = "upload"
-            } else if (log.source === "API_USER_SEARCH") {
+            } else if (appLog.source === "API_USER_SEARCH") {
                 type = "search"
-                if (log.details?.resultsCount > 0) {
+                if ((appLog.details as any)?.resultsCount > 0) {
                     type = "success"
                 }
             }
 
             return {
-                id: log._id.toString(),
+                id: appLog._id?.toString() || '',
                 type,
-                message: log.message, // Mantener mensaje original del log
-                timestamp: log.timestamp // Pasar timestamp original para formateo en cliente
+                message: appLog.message, // Mantener mensaje original del log
+                timestamp: appLog.timestamp // Pasar timestamp original para formateo en cliente
             }
         })
 
@@ -84,6 +87,7 @@ export async function GET(req: NextRequest) {
                 accuracyRate,
                 avgResponseTime: 2.3,
                 openTickets: (await TicketService.getTickets({
+                    tenantId: session.user.tenantId,
                     userId: session.user.id,
                     status: 'OPEN'
                 })).length

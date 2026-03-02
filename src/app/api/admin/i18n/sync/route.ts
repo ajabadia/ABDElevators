@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError, AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { UserRole } from '@/types/roles';
 import crypto from 'crypto';
 
 /**
@@ -15,7 +14,7 @@ import crypto from 'crypto';
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await requireRole([UserRole.SUPER_ADMIN]);
+        await enforcePermission('i18n', 'manage');
 
         const body = await req.json().catch(() => ({}));
         const { locale, action = 'import', direction } = body; // Support 'import' (JSON -> DB) or 'export' (DB -> JSON)
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
                     ? `Sincronización global completada`
                     : `Sincronización completada para ${locale}`)
         });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_I18N_SYNC_POST', correlationId);
     }
 }

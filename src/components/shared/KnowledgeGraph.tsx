@@ -8,16 +8,35 @@ import { RefreshCw, ZoomIn, ZoomOut, Maximize2, Share2, Info } from 'lucide-reac
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface GraphNode {
+    id: string;
+    label: string;
+    type: string;
+    color: string;
+    x?: number;
+    y?: number;
+}
+
+interface GraphLink {
+    source: string | GraphNode;
+    target: string | GraphNode;
+    label: string;
+}
+
 interface GraphData {
-    nodes: any[];
-    links: any[];
+    nodes: GraphNode[];
+    links: GraphLink[];
 }
 
 export function KnowledgeGraph() {
     const [graphData, setGraphData] = useState<GraphData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
-    const fgRef = useRef<any>(null);
+    const fgRef = useRef<{
+        centerAt: (x?: number, y?: number, duration?: number) => void;
+        zoom: (zoomLevel?: number, duration?: number) => void;
+        zoomToFit: (duration?: number, padding?: number) => void;
+    } | null>(null);
 
 
     const fetchGraph = async () => {
@@ -78,37 +97,39 @@ export function KnowledgeGraph() {
 
         return (
             <ForceGraph2D
-                ref={fgRef}
+                ref={fgRef as any} // react-force-graph doesn't have easy types for its ref methods in all versions
                 graphData={graphData}
                 nodeLabel="label"
-                nodeColor={(node: any) => node.color}
+                nodeColor={(node) => (node as GraphNode).color}
                 nodeRelSize={6}
                 linkLabel="label"
                 linkDirectionalArrowLength={3.5}
                 linkDirectionalArrowRelPos={1}
                 linkCurvature={0.25}
-                onNodeClick={(node: any) => {
-                    fgRef.current.centerAt(node.x, node.y, 1000);
-                    fgRef.current.zoom(2.5, 1000);
+                onNodeClick={(node) => {
+                    const n = node as GraphNode;
+                    fgRef.current?.centerAt(n.x, n.y, 1000);
+                    fgRef.current?.zoom(2.5, 1000);
                 }}
-                nodeCanvasObject={(node: any, ctx: any, globalScale: number) => {
-                    const label = node.label;
+                nodeCanvasObject={(node, ctx, globalScale) => {
+                    const n = node as GraphNode;
+                    const label = n.label;
                     const fontSize = 12 / globalScale;
                     ctx.font = `${fontSize}px Inter, sans-serif`;
                     const textWidth = ctx.measureText(label).width;
-                    const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
+                    const bckgDimensions = [textWidth, fontSize].map(num => num + fontSize * 0.2);
 
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2 + 10, bckgDimensions[0], bckgDimensions[1]);
+                    ctx.fillRect((n.x || 0) - bckgDimensions[0] / 2, (n.y || 0) - bckgDimensions[1] / 2 + 10, bckgDimensions[0], bckgDimensions[1]);
 
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = node.color;
-                    ctx.fillText(label, node.x, node.y + 10);
+                    ctx.fillStyle = n.color;
+                    ctx.fillText(label, n.x || 0, (n.y || 0) + 10);
 
                     ctx.beginPath();
-                    ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
-                    ctx.fillStyle = node.color;
+                    ctx.arc(n.x || 0, n.y || 0, 4, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = n.color;
                     ctx.fill();
                 }}
             />
@@ -172,10 +193,16 @@ export function KnowledgeGraph() {
                 </div>
 
                 <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-                    <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => fgRef.current?.zoom(fgRef.current.zoom() * 1.2)}>
+                    <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => {
+                        const currentZoom = (fgRef.current as any)?.zoom() || 1;
+                        fgRef.current?.zoom(currentZoom * 1.2);
+                    }}>
                         <ZoomIn size={18} />
                     </Button>
-                    <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => fgRef.current?.zoom(fgRef.current.zoom() * 0.8)}>
+                    <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => {
+                        const currentZoom = (fgRef.current as any)?.zoom() || 1;
+                        fgRef.current?.zoom(currentZoom * 0.8);
+                    }}>
                         <ZoomOut size={18} />
                     </Button>
                 </div>

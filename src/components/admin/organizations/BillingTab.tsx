@@ -17,13 +17,46 @@ import { TenantConfig } from '@/lib/schemas';
 import { Progress } from "@/components/ui/progress";
 import { PLANS, PlanTier } from '@/lib/plans';
 import { toast } from "sonner";
-
 import { useTranslations } from 'next-intl';
 
 interface BillingTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
-    usageStats?: any;
+    usageStats?: UsageStats;
+}
+
+interface UsageStats {
+    tier: string;
+    usage: {
+        tokens: number;
+        storage: number;
+        searches: number;
+        apiRequests: number;
+    };
+    limits: {
+        llm_tokens_per_month: number;
+        storage_bytes: number;
+        vector_searches_per_month: number;
+        api_requests_per_month: number;
+    };
+    status: {
+        tokens: UsageStatus;
+        storage: UsageStatus;
+        searches: UsageStatus;
+        apiRequests: UsageStatus;
+    };
+}
+
+interface UsageStatus {
+    status: 'ALLOWED' | 'OVERAGE_WARNING' | 'BLOCKED';
+    consumed_percentage: number;
+}
+
+interface SimulationResult {
+    creditApplied: number;
+    newPlanCost: number;
+    totalDueNow: number;
+    nextBillingDate: string;
 }
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
@@ -31,7 +64,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
     // Estados para la simulación de precio
-    const [simulation, setSimulation] = useState<any>(null);
+    const [simulation, setSimulation] = useState<SimulationResult | null>(null);
     const [isSimulating, setIsSimulating] = useState(false);
     const [selectedTier, setSelectedTier] = useState<PlanTier | null>(null);
 
@@ -53,9 +86,10 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
             if (!res.ok) throw new Error(data.error || t('tab.simulation_error'));
 
             setSimulation(data.simulation);
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : t('tab.simulation_error');
             toast.error(t('tab.error_sim_title'), {
-                description: error.message,
+                description: message,
             });
         } finally {
             setIsSimulating(false);
@@ -75,9 +109,10 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
             if (!res.ok) throw new Error(data.error || t('tab.checkout_error'));
 
             window.location.href = data.url;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : t('tab.checkout_error');
             toast.error(t('tab.error'), {
-                description: error.message,
+                description: message,
             });
             setIsCheckingOut(false);
         }
@@ -190,7 +225,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                                     <p className="text-sm text-slate-500 italic">{t('tab.calculating_stripe')}</p>
                                                 </div>
-                                            ) : (
+                                            ) : simulation && (
                                                 <div className="space-y-6">
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                                                         <div className="space-y-1 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
@@ -239,7 +274,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
                     {/* Tarjetas de Consumo */}
                     <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {usageStats && (
+                        {usageStats?.usage && usageStats?.limits && usageStats?.status && (
                             <>
                                 <UsageCard
                                     title={t('tab.tokens_ia')}
@@ -281,7 +316,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
 
             <div className="lg:col-span-3 border-t border-slate-100 my-4"></div>
 
-            {/* Columna 1: Datos Fiscales y Recepción (Original Refactored) */}
+            {/* Columna 1: Datos Fiscales y Recepción */}
             <div className="lg:col-span-1 space-y-8">
                 <div className="space-y-4">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
@@ -326,11 +361,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                             <Label>{t('tab.channel_label')}</Label>
                             <Select
                                 value={config?.billing?.recepcion?.canal || 'EMAIL'}
-                                onValueChange={(val: any) => setConfig(prev => prev ? {
+                                onValueChange={(val: string) => setConfig(prev => prev ? {
                                     ...prev,
                                     billing: {
                                         ...(prev.billing || {}),
-                                        recepcion: { ...(prev.billing?.recepcion || { modo: 'PDF' }), canal: val }
+                                        recepcion: { ...(prev.billing?.recepcion || { modo: 'PDF' }), canal: val as any }
                                     }
                                 } : null)}
                             >
@@ -369,11 +404,11 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                             <Label>{t('tab.file_format_label')}</Label>
                             <Select
                                 value={config?.billing?.recepcion?.modo || 'PDF'}
-                                onValueChange={(val: any) => setConfig(prev => prev ? {
+                                onValueChange={(val: string) => setConfig(prev => prev ? {
                                     ...prev,
                                     billing: {
                                         ...(prev.billing || {}),
-                                        recepcion: { ...(prev.billing?.recepcion || { canal: 'EMAIL' }), modo: val }
+                                        recepcion: { ...(prev.billing?.recepcion || { canal: 'EMAIL' }), modo: val as any }
                                     }
                                 } : null)}
                             >
@@ -392,7 +427,7 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
                 </div>
             </div>
 
-            {/* Columna 2 & 3: Direcciones (Original) */}
+            {/* Columna 2 & 3: Direcciones */}
             <div className="lg:col-span-2 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
@@ -564,8 +599,17 @@ export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
     );
 }
 
+interface UsageCardProps {
+    title: string;
+    icon: React.ReactNode;
+    current: number;
+    limit: number;
+    format: (v: number) => string;
+    status: UsageStatus;
+}
+
 // Sub-componente para tarjetas de uso
-function UsageCard({ title, icon, current, limit, format, status }: any) {
+function UsageCard({ title, icon, current, limit, format, status }: UsageCardProps) {
     const t = useTranslations('admin.billing');
     const isInfinity = limit === Infinity || limit === null;
     const percentage = isInfinity ? 0 : Math.min(100, (current / limit) * 100);

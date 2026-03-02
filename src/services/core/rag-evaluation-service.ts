@@ -16,12 +16,12 @@ export class RagEvaluationService {
         contexts: string[],
         tenantId: string,
         trace: string[] = []
-    ): Promise<any> {
+    ): Promise<Record<string, unknown>> {
         try {
             const contextText = contexts.join('\n\n');
 
             // 1. Run Judge Prompt via Pipeline
-            const metrics = await PromptRunner.runJson<any>({
+            const metrics = await PromptRunner.runJson<Record<string, unknown>>({
                 key: 'RAG_JUDGE',
                 variables: { query, context: contextText, response, vertical: 'ELEVATORS' },
                 schema: RagJudgeOutputSchema,
@@ -37,18 +37,18 @@ export class RagEvaluationService {
                 context_chunks: contexts,
                 trace,
                 metrics: {
-                    faithfulness: metrics.faithfulness,
-                    answer_relevance: metrics.answer_relevance,
-                    context_precision: metrics.context_precision
+                    faithfulness: metrics.faithfulness as number,
+                    answer_relevance: metrics.answer_relevance as number,
+                    context_precision: metrics.context_precision as number
                 },
                 judge_model: 'AUTO', // PromptRunner handles this
-                feedback: metrics.reasoning,
+                feedback: metrics.reasoning as string,
                 causal_analysis: metrics.causal_analysis,
                 timestamp: new Date()
             };
 
             // 2. Persist & Audit
-            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+            const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
             const collection = await getTenantCollection('rag_evaluations', session);
 
             const validated = RagEvaluationSchema.parse(evaluation);
@@ -66,9 +66,9 @@ export class RagEvaluationService {
 
             // 3. Causal AI Self-Correction (Phase 86)
             const MIN_SCORE = 0.8;
-            const needsCorrection = metrics.faithfulness < MIN_SCORE || metrics.answer_relevance < MIN_SCORE;
+            const needsCorrection = (metrics.faithfulness as number) < MIN_SCORE || (metrics.answer_relevance as number) < MIN_SCORE;
 
-            if (needsCorrection && metrics.causal_analysis?.fix_strategy) {
+            if (needsCorrection && (metrics.causal_analysis as Record<string, unknown>)?.fix_strategy) {
                 const correction = await RagJudgeService.selfCorrect(
                     query,
                     contextText,
@@ -102,19 +102,19 @@ export class RagEvaluationService {
     }
 
     static async listEvaluations(tenantId: string, limit: number = 50) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
         const collection = await getTenantCollection('rag_evaluations', session);
-        return await collection.find({}, { sort: { timestamp: -1 }, limit } as any);
+        return await collection.find({}, { sort: { timestamp: -1 }, limit } as Record<string, unknown>);
     }
 
     static async getMetrics(tenantId: string) {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
+        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as unknown as Parameters<typeof getTenantCollection>[1];
         const collection = await getTenantCollection('rag_evaluations', session);
-        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 } as any);
+        const evals = await collection.find({}, { sort: { timestamp: -1 }, limit: 100 } as Record<string, unknown>);
 
-        if (evals.length === 0) return { summary: { faithfulness: 0, relevance: 0, precision: 0, count: 0 }, trends: [] };
+        if (!Array.isArray(evals) || evals.length === 0) return { summary: { faithfulness: 0, relevance: 0, precision: 0, count: 0 }, trends: [] };
 
-        const avg = (arr: any[], key: string) => arr.reduce((acc, curr) => acc + (curr.metrics[key] || 0), 0) / arr.length;
+        const avg = (arr: Record<string, unknown>[], key: string) => arr.reduce((acc, curr) => acc + (((curr.metrics as Record<string, number>)?.[key]) || 0), 0) / arr.length;
 
         return {
             summary: {
@@ -123,10 +123,10 @@ export class RagEvaluationService {
                 precision: avg(evals, 'context_precision'),
                 count: evals.length
             },
-            trends: evals.slice(0, 10).reverse().map((e: any) => ({
+            trends: evals.slice(0, 10).reverse().map((e: Record<string, unknown>) => ({
                 date: e.timestamp,
-                f: e.metrics.faithfulness,
-                r: e.metrics.answer_relevance
+                f: (e.metrics as Record<string, number>)?.faithfulness,
+                r: (e.metrics as Record<string, number>)?.answer_relevance
             }))
         };
     }

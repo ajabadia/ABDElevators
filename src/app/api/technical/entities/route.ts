@@ -1,15 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
+import { Filter } from 'mongodb';
+import { Entity } from '@/lib/schemas';
 
 /**
  * GET /api/technical/entities
  * List of entities for the current tenant.
  * Supports pagination and basic search.
+ * SLA: P95 < 500ms
  */
-export async function GET(req: NextRequest) {
+export const GET = withPerformanceSLA(async (req) => {
     const correlationId = crypto.randomUUID();
     const { searchParams } = new URL(req.url);
 
@@ -20,10 +24,13 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
 
     try {
+        const session = await enforcePermission('technical:entities', 'read');
+        const tenantId = session.user.tenantId;
+
         const collection = await getTenantCollection('entities');
 
         // Build filter
-        const filter: any = {};
+        const filter: Filter<any> = { tenantId };
         if (search) {
             filter.$or = [
                 { identifier: { $regex: search, $options: 'i' } },
@@ -59,20 +66,7 @@ export async function GET(req: NextRequest) {
             correlationId
         });
 
-    } catch (error: any) {
-        console.error('[API_ENTITIES_LIST] Error:', error);
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'TECHNICAL_ENTITIES_LIST_API',
-            action: 'GET_LIST',
-            message: error.message,
-            correlationId
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error recuperando lista de entidades').toJSON(),
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_TECHNICAL_ENTITIES_LIST_GET', correlationId);
     }
-}
+}, { p95: 500, max: 2000 });

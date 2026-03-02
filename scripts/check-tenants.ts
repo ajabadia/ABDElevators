@@ -1,19 +1,21 @@
-import { MongoClient } from 'mongodb';
-import * as dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
+import { TenantService } from "../src/services/tenant/tenant-service";
+import { connectDB } from "../src/lib/db";
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-
-async function checkTenants() {
-    const client = new MongoClient(process.env.MONGODB_URI!);
+async function main() {
     try {
-        await client.connect();
-        const db = client.db('ABDElevators');
-        const tenants = await db.collection('tenants').find({}).toArray();
-        fs.writeFileSync('tenants_check.txt', JSON.stringify(tenants, null, 2));
-    } finally {
-        await client.close();
+        await connectDB();
+        const tenants = await TenantService.getAllTenants();
+        console.log("Total tenants found:", tenants.length);
+        tenants.forEach(t => {
+            console.log(`- [${t.tenantId}] ${t.name}`);
+        });
+        process.exit(0);
+    } catch (err: any) {
+        console.error("Error checking tenants:", err);
+        if (err.stack) console.error(err.stack);
+        if (err.details) console.log("Error details:", JSON.stringify(err.details, null, 2));
+        process.exit(1);
     }
 }
-checkTenants();
+
+main();

@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { ComplianceService } from '@/services/security/compliance-service';
+import { handleApiError } from '@/lib/errors';
+import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
@@ -8,8 +10,9 @@ import { UserRole } from '@/types/roles';
  * Genera y descarga certificado de destrucción de datos (Phase 70 compliance)
  */
 export async function POST(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('compliance', 'manage');
         const tenantId = session.user.tenantId;
 
         const body = await req.json();
@@ -31,8 +34,7 @@ export async function POST(req: NextRequest) {
             }
         });
 
-    } catch (error) {
-        console.error('Compliance Cert Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_ADMIN_COMPLIANCE_CERT', correlationId);
     }
 }

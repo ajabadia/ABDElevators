@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectDB } from '@/lib/db';
 import { AppError, handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
+
+const API_SOURCE = 'API_ADMIN_AUDIT_CONFIG';
 
 /**
  * GET /api/admin/audit/config
  * Recupera el historial de auditoría de configuración de tenants (Phase 70 compliance).
  */
 export async function GET(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('audit:config', 'read');
 
         const { searchParams } = new URL(req.url);
         const tenantId = searchParams.get('tenantId');
@@ -20,18 +22,18 @@ export async function GET(req: NextRequest) {
         const db = await connectDB();
         const collection = db.collection('tenant_configs_history');
 
-        const query: any = {};
+        const query: Record<string, unknown> = {};
 
         // Seguridad: Los admins solo ven su tenant
         if (session.user.role === UserRole.ADMIN) {
             const allowedTenants = [
                 session.user.tenantId,
-                ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
+                ...(session.user.tenantAccess || []).map(t => t.tenantId)
             ].filter(Boolean);
 
             if (tenantId) {
                 if (!allowedTenants.includes(tenantId)) {
-                    throw new AppError('UNAUTHORIZED', 403, 'No tienes acceso a este tenant');
+                    throw new AppError('FORBIDDEN', 403, 'No tienes acceso a este tenant');
                 }
                 query.tenantId = tenantId;
             } else {
@@ -48,7 +50,7 @@ export async function GET(req: NextRequest) {
             .toArray();
 
         return NextResponse.json({ success: true, history });
-    } catch (error) {
-        return handleApiError(error, 'API_ADMIN_AUDIT_CONFIG', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }

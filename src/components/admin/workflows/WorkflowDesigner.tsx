@@ -267,7 +267,7 @@ export function WorkflowDesigner({ initialWorkflow }: WorkflowDesignerProps) {
                                                     <SelectContent>
                                                         <SelectItem value="none" className="text-xs italic text-slate-400">None</SelectItem>
                                                         {checklists.map(c => (
-                                                            <SelectItem key={c._id?.toString()} value={c._id?.toString()} className="text-xs font-bold">
+                                                            <SelectItem key={c._id?.toString()} value={c._id?.toString() || ""} className="text-xs font-bold">
                                                                 {c.name}
                                                             </SelectItem>
                                                         ))}

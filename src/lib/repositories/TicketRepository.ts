@@ -1,12 +1,17 @@
 import { BaseRepository } from './BaseRepository';
-import { Ticket } from '@/services/support/schemas/TicketSchema';
+import { Ticket } from '../schemas/ticketing';
 
 /**
- * 🏛️ TicketRepository
- * Repositorio centralizado para tickets de soporte.
+ * 🎫 TicketRepository
+ * Centralized data access for support tickets.
+ * Cluster: MAIN
  */
 export class TicketRepository extends BaseRepository<Ticket> {
     protected readonly collectionName = 'tickets';
+
+    constructor() {
+        super();
+    }
 }
 
 export const ticketRepository = new TicketRepository();

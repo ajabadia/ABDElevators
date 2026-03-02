@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RagExperimentService } from '@/services/core/rag-experiment-service';
 import { AppError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { TenantSession } from '@/lib/db-tenant';
 
 const ExperimentRequestSchema = z.object({
     query: z.string().min(1),
@@ -19,12 +21,18 @@ const ExperimentRequestSchema = z.object({
  * POST /api/admin/rag/experiment
  * Runs a new RAG experiment from the playground
  */
-export async function POST(req: NextRequest) {
+async function postHandler(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const user = await enforcePermission('rag:experiment', 'create');
-        const tenantId = (user as any).tenantId;
-        const userId = (user as any).id;
+        const session = user as unknown as TenantSession;
+
+        if (!session.user) {
+            throw new AppError('AUTH_ERROR', 401, 'User session invalid');
+        }
+
+        const tenantId = session.user.tenantId;
+        const userId = session.user.id;
 
         const body = await req.json();
         const validated = ExperimentRequestSchema.parse(body);
@@ -36,7 +44,8 @@ export async function POST(req: NextRequest) {
                 ...validated.config,
                 promptKey: 'RAG_SANDBOX' // Default for playground
             },
-            userId
+            userId,
+            session
         );
 
         return NextResponse.json({
@@ -53,13 +62,19 @@ export async function POST(req: NextRequest) {
  * GET /api/admin/rag/experiment
  * Lists recent experiments
  */
-export async function GET(req: NextRequest) {
+async function getHandler(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         const user = await enforcePermission('rag:experiment', 'read');
-        const tenantId = (user as any).tenantId;
+        const session = user as unknown as TenantSession;
 
-        const experiments = await RagExperimentService.listExperiments(tenantId);
+        if (!session.user) {
+            throw new AppError('AUTH_ERROR', 401, 'User session invalid');
+        }
+
+        const tenantId = session.user.tenantId;
+
+        const experiments = await RagExperimentService.listExperiments(tenantId, session);
 
         return NextResponse.json({
             success: true,
@@ -70,3 +85,15 @@ export async function GET(req: NextRequest) {
         return handleApiError(error, 'API_ADMIN_RAG_EXPERIMENT_GET', correlacion_id);
     }
 }
+
+export const POST = withPerformanceSLA(postHandler, {
+    endpoint: 'POST_RAG_EXPERIMENT',
+    thresholdMs: 5000, // SLA: 5s for experiments
+    source: 'API_ADMIN'
+});
+
+export const GET = withPerformanceSLA(getHandler, {
+    endpoint: 'GET_RAG_EXPERIMENTS',
+    thresholdMs: 500,
+    source: 'API_ADMIN'
+});

@@ -15,7 +15,7 @@ export class RagService {
         correlationId: string,
         limit: number = 5,
         industry: string = 'GENERIC',
-        options?: any
+        options?: { environment?: string; spaceId?: string; filename?: string;[key: string]: unknown }
     ) {
         return await performTechnicalSearch(query, tenantId, correlationId, limit, industry, options?.environment, options?.spaceId, options?.filename);
     }
@@ -30,7 +30,7 @@ export class RagService {
     /**
      * Hybrid search across chunks.
      */
-    static async hybridSearch(query: string, tenantId: string, correlationId: string, industry: string, options?: any) {
+    static async hybridSearch(query: string, tenantId: string, correlationId: string, industry: string, options?: Record<string, unknown>) {
         return await hybridSearch(query, tenantId, correlationId, industry, options);
     }
 }

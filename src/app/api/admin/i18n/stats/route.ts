@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
 import { handleApiError } from '@/lib/errors';
-import { UserRole } from '@/types/roles';
 import crypto from 'crypto';
 
 /**
@@ -12,7 +11,7 @@ import crypto from 'crypto';
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await requireRole([UserRole.SUPER_ADMIN]);
+        await enforcePermission('i18n', 'read');
 
         const { searchParams } = new URL(req.url);
         const locale = searchParams.get('locale') || 'es';
@@ -38,7 +37,7 @@ export async function GET(req: NextRequest) {
             total,
             namespaces: namespaceCounts
         });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_I18N_STATS_GET', correlationId);
     }
 }

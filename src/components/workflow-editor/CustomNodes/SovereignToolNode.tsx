@@ -5,7 +5,9 @@ import { Terminal, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-export const SovereignToolNode = memo(({ data, selected }: { data: any, selected: boolean }) => {
+import { WorkflowNodeData } from '../types';
+
+export const SovereignToolNode = memo(({ data, selected }: { data: WorkflowNodeData, selected: boolean }) => {
     return (
         <div className={cn(
             "px-4 py-3 shadow-xl rounded-lg border-2 bg-card min-w-[200px] transition-all relative",

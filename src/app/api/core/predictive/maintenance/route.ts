@@ -1,35 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { PredictiveEngine } from "@/core/engine/PredictiveEngine";
 import { logEvento } from "@/lib/logger";
+import { enforcePermission } from "@/lib/guardian-guard";
+import { withPerformanceSLA } from "@/lib/performance-sla";
+import { handleApiError } from "@/lib/errors";
 import crypto from 'crypto';
 
 /**
  * GET /api/core/predictive/maintenance
  * Obtiene el tablero de mantenimiento predictivo (Fase 8).
+ * SLA: P95 < 2000ms
  */
-export async function GET(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const tenantId = session.user.tenantId || 'default_tenant';
-    const correlacion_id = crypto.randomUUID();
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
 
     try {
-        const predictions = await PredictiveEngine.getInstance().getMaintenanceForecast(tenantId, correlacion_id);
+        const session = await enforcePermission('technical:predictive', 'read');
+        const tenantId = session.user.tenantId || process.env.SINGLE_TENANT_ID || 'default_tenant';
+
+        const predictions = await PredictiveEngine.getInstance().getMaintenanceForecast(tenantId, correlationId);
 
         return NextResponse.json({
             success: true,
-            predictions, correlationId: correlacion_id
+            predictions,
+            correlationId
         });
-    } catch (error: any) {
-        console.error('[CORE_PREDICTIVE] Error:', error);
-        return NextResponse.json({
-            success: false,
-            message: "Error al generar predicciones",
-            error: error.message
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_PREDICTIVE_MAINTENANCE_GET', correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

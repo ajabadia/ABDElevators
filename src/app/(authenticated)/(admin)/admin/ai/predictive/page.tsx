@@ -1,18 +1,20 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart } from "lucide-react";
+import { requireRole } from "@/lib/auth";
+import { UserRole } from "@/types/roles";
 
 /**
- * 📈 Predictive Maintenance Module
+ * 📈 Predictive Maintenance Module (Phase 233)
  * Pattern analysis for real-time failure prevention.
  * UI Standardized with PageContainer/Header pattern.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function PredictivePage() {
-    const t = useTranslations("aiHub");
+export default async function PredictivePage() {
+    await requireRole([UserRole.SUPER_ADMIN]);
+    const t = await getTranslations("aiHub");
 
     return (
         <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">

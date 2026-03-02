@@ -48,11 +48,20 @@ export async function POST(req: NextRequest) {
             evaluation,
             correlationId
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: (error as any).errors }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'VALIDATION_ERROR', details: error.issues }, { status: 400 });
         }
+
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        const stack = error instanceof Error ? error.stack : undefined;
+
         console.error('[API JUDGE ERROR]', error);
-        return NextResponse.json({ success: false, error: 'INTERNAL_ERROR', message: error.message }, { status: 500 });
+
+        return NextResponse.json({
+            success: false,
+            error: 'INTERNAL_ERROR',
+            message
+        }, { status: 500 });
     }
 }

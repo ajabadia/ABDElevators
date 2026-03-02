@@ -1,8 +1,8 @@
-# ABD Multi-Industry RAG Platform (Vision 5.5.0 - ERA 8 CONSOLIDATED)
+# ABD Multi-Industry RAG Platform (Vision 5.6.0 - ERA 9 SYMPHONY)
 
 Sistema RAG (Retrieval-Augmented Generation) de grado industrial, genérico y multi-tenant. Diseñado para el análisis masivo de documentos técnicos, legales e industriales con una arquitectura agéntica de vanguardia.
 
-Esta versión **v5.5.0** asienta la plataforma como un sistema de Grado Enterprise absoluto. Tras la ejecución de la **FASE 233 (Batch Audit & Systematic Hygiene)**, el código base ha alcanzado **Zero `any`** Types en todos sus módulos Core y Rutas, consolidando la **Alineación Vertical, la seguridad ABAC y la observabilidad de extremo a extremo**.
+Esta versión **v5.6.0** asienta la plataforma como un sistema de Grado Enterprise absoluto. Tras la ejecución de la **FASE 236 (Guardian Enforcement Sweep)** y la **FASE 234 (Middleware Hardening)**, el sistema cuenta con protección ABAC (Attribute-Based Access Control) nativa en todos sus bloques Core, Billing y User, además de un Middleware blindado y estrictamente tipado.
 
 ## 🚀 Inicio Rápido
 
@@ -196,6 +196,8 @@ src/
 - ✅ **Guardian Permission Alignment (Phase 220)**: Unified ABAC policy enforcement across Sidebar and Backend. Robust server-side protection for all critical administrative routes (Billing, Audit, Security, Organizations, AI Governance, Prompts, SuperAdmin). High-performance bulk permission checks.
 - ✅ **Vertical Architecture & Tech Hygiene (Phase 232)**: Standardized industry extensions (`elevators`, `real-estate`), unified canonical onboarding hooks, and total eradication of `localStorage` (Regla #5 compliance). Hardened diagnostic APIs for `SUPER_ADMIN`.
 - ✅ **Massive TypeScript Strictness (Phase 225C)**: Erradicación sistemática de validaciones `catch(error: any)` migrando al standard industrial `unknown` con inferencia de `AppError` para resiliencia absoluta.
+- ✅ **Middleware Hardening (Phase 234)**: Protección de rutas y gestión de sesiones con tipado estricto y blindaje contra accesos no autorizados en el edge.
+- ✅ **Guardian ABAC Enforcement Sweep (Phase 236)**: Extensión de la protección Guardian V3 a todas las APIs de uso diario (Core, Facturación, Perfiles), garantizando el aislamiento total multi-tenant.
 - ✅ **Systematic Hygiene & Zero-Any Core (Phase 233)**: Barrido fundacional de todas las rutas de la plataforma uniendo (1) Aislamiento Multi-tenant DB, (2) UI/UX Hub Consolidation, (3) i18n Hardcode Purge, y (4) Strict Typing de la suite completa. El sistema compila con `tsc --noEmit` a cero errores.
 
 ## 🔧 Scripts Disponibles

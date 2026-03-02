@@ -20,7 +20,9 @@
     "mark_reviewed": "Mark as Reviewed",
     "snooze_review": "Snooze Review",
     "analyze": "Analyze / Consult",
-    "view_chunks": "View Ingested Chunks"
+    "view_chunks": "View Ingested Chunks",
+    "enrich": "Enrich Document",
+    "upload_first": "Upload my First Document"
   },
   "table": {
     "document": "Document",
@@ -31,7 +33,9 @@
     "loading": "Loading documents...",
     "empty": "No documents found.",
     "uploaded": "Uploaded on",
-    "cost_tooltip": "Estimated processing cost (tokens/vision)"
+    "cost_tooltip": "Estimated processing cost (tokens/vision)",
+    "empty_title": "Your Corpus is Empty",
+    "empty_description": "Start by uploading technical specifications or manuals so the AI can learn from your knowledge."
   },
   "status": {
     "pending": "Pending",
@@ -42,7 +46,9 @@
     "processing": "Processing",
     "reviewed": "Reviewed",
     "expired": "Expired",
-    "snoozed": "Snoozed"
+    "snoozed": "Snoozed",
+    "stuck": "Stuck",
+    "dead": "Dead"
   },
   "review": {
     "next_date": "Next Review",
@@ -51,8 +57,10 @@
     "dialog_desc": "Set the date for the next technical review of this manual.",
     "success": "Documento marcado como reviewed",
     "error": "Error updating review",
-    "filter_all": "Reviews: All"
+    "filter_all": "Reviews: All",
+    "imminent": "IMMINENT"
   },
+  "snooze_success": "Review snoozed",
   "retry_success": "Retry initiated",
   "retry_desc": "The document is being processed again.",
   "title": "Technical Corpus Management",

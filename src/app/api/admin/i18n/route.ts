@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TranslationService } from '@/services/core/translation-service';
-import { handleApiError, AppError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { UserRole } from '@/types/roles';
 import { TranslationSchema } from '@/lib/schemas';
 import crypto from 'crypto';
 import { z } from 'zod';
@@ -16,7 +15,7 @@ import { z } from 'zod';
 export async function GET(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        await requireRole([UserRole.SUPER_ADMIN]);
+        await enforcePermission('i18n', 'read');
 
         const { searchParams } = new URL(req.url);
         const locale = z.string().min(2).max(5).parse(searchParams.get('locale') || 'es');
@@ -142,7 +141,7 @@ function flatToNest(flat: Record<string, string>): any {
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('i18n', 'manage');
         const body = await req.json();
 
         // Validation Layer (Strict)

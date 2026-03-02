@@ -1,13 +1,13 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit, Activity, GitFork, Sparkles, LineChart, ArrowRight, Terminal, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { requireRole } from "@/lib/auth";
+import { UserRole } from "@/types/roles";
 
 interface HubCard {
     id: string;
@@ -20,13 +20,14 @@ interface HubCard {
 }
 
 /**
- * 🤖 AI Hub Dashboard (Phase 133)
+ * 🤖 AI Hub Dashboard (Phase 133/233)
  * Central navigation hub for all AI-related modules.
  * UI Standardized with Hub Dashboard pattern.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function AIHubPage() {
-    const router = useRouter();
-    const t = useTranslations("aiHub");
+export default async function AIHubPage() {
+    await requireRole([UserRole.SUPER_ADMIN]);
+    const t = await getTranslations("aiHub");
 
     const hubCards: HubCard[] = [
         {
@@ -85,7 +86,7 @@ export default function AIHubPage() {
     ];
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
+        <PageContainer>
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
@@ -93,48 +94,62 @@ export default function AIHubPage() {
             />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-                {hubCards.map((card) => (
-                    <Card
-                        key={card.id}
-                        onClick={() => card.isActive && router.push(card.href)}
-                        className={cn(
-                            "border-l-4 transition-all duration-300 relative overflow-hidden",
-                            card.color,
-                            card.isActive
-                                ? "group cursor-pointer hover:shadow-lg hover:scale-[1.02]"
-                                : "cursor-not-allowed opacity-60"
-                        )}
-                    >
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "p-2 rounded-lg bg-muted transition-colors",
-                                        card.isActive && "group-hover:bg-primary group-hover:text-primary-foreground text-primary"
-                                    )}>
-                                        {card.icon}
-                                    </div>
-                                    <CardTitle className="text-xl tracking-tight">
-                                        {card.title}
-                                    </CardTitle>
-                                </div>
-                                {card.isActive && (
-                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                                )}
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardDescription className="text-sm leading-relaxed">
-                                {card.description}
-                            </CardDescription>
-                            {!card.isActive && (
-                                <span className="inline-flex items-center mt-3 text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800">
-                                    🚧 {t("coming_soon")}
-                                </span>
+                {hubCards.map((card) => {
+                    const CardComponent = (
+                        <Card
+                            className={cn(
+                                "h-full border-l-4 transition-all duration-300 relative overflow-hidden",
+                                card.color,
+                                card.isActive
+                                    ? "group cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+                                    : "cursor-not-allowed opacity-60"
                             )}
-                        </CardContent>
-                    </Card>
-                ))}
+                        >
+                            <CardHeader className="pb-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "p-2 rounded-lg bg-muted transition-colors",
+                                            card.isActive && "group-hover:bg-primary group-hover:text-primary-foreground text-primary"
+                                        )}>
+                                            {card.icon}
+                                        </div>
+                                        <CardTitle className="text-xl tracking-tight">
+                                            {card.title}
+                                        </CardTitle>
+                                    </div>
+                                    {card.isActive && (
+                                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                    )}
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription className="text-sm leading-relaxed text-muted-foreground">
+                                    {card.description}
+                                </CardDescription>
+                                {!card.isActive && (
+                                    <span className="inline-flex items-center mt-3 text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800">
+                                        🚧 {t("coming_soon")}
+                                    </span>
+                                )}
+                            </CardContent>
+                        </Card>
+                    );
+
+                    if (card.isActive) {
+                        return (
+                            <Link key={card.id} href={card.href} className="block group h-full">
+                                {CardComponent}
+                            </Link>
+                        );
+                    }
+
+                    return (
+                        <div key={card.id} className="block h-full block">
+                            {CardComponent}
+                        </div>
+                    );
+                })}
             </div>
         </PageContainer>
     );

@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 interface StorageTabProps {
     config: TenantConfig | null;
     setConfig: React.Dispatch<React.SetStateAction<TenantConfig | null>>;
-    usageStats: any;
+    usageStats: Record<string, number> | null | undefined;
 }
 
 export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
@@ -94,8 +94,8 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                             <div
                                 className={cn(
                                     "h-full transition-all duration-1000",
-                                    (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
-                                        (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
+                                    ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "bg-destructive" :
+                                        ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.7 ? "bg-amber-500" : "bg-primary"
                                 )}
                                 style={{ width: `${Math.min(100, Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100))}%` }}
                             />
@@ -104,7 +104,7 @@ export function StorageTab({ config, setConfig, usageStats }: StorageTabProps) {
                             <span className="text-muted-foreground italic">{tUsage('metric')}</span>
                             <span className={cn(
                                 "font-bold",
-                                (usageStats?.storage / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
+                                ((usageStats?.storage ?? 0) / (config?.storage?.quota_bytes || 1)) > 0.9 ? "text-destructive" : "text-muted-foreground"
                             )}>
                                 {Math.round((usageStats?.storage || 0) / (config?.storage?.quota_bytes || 1) * 100)}% {tUsage('used')}
                             </span>

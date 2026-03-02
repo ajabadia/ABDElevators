@@ -1,16 +1,18 @@
-
 import crypto from 'crypto';
-import { KnowledgeAssetRepository } from './KnowledgeAssetRepository';
+import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 import { IngestAuditService } from './IngestAuditService';
 import { IngestValidator } from './IngestValidator';
 import { IngestStorageService } from './IngestStorageService';
 import { IngestStrategyService } from './IngestStrategyService';
 import { IngestOptions, IngestPrepareResult } from './types';
 import { logEvento } from '@/lib/logger';
+import { type KnowledgeAsset } from '@/lib/schemas';
+import { type Filter } from 'mongodb';
 
 /**
  * IngestPreparer: Handles validations, deduplication and initial storage.
  * Refactored Phase 213: Delegating to specialized services.
+ * Hardened Era 8: Strict types and centralized repository.
  */
 export class IngestPreparer {
     static async prepare(options: IngestOptions): Promise<IngestPrepareResult> {
@@ -22,7 +24,7 @@ export class IngestPreparer {
 
         // 1. Validations
         metadata.chunkingLevel = IngestValidator.normalizeChunkingLevel(metadata.chunkingLevel) as any;
-        const sizeBytes = (file as any).size || 0;
+        const sizeBytes = file.size || 0;
         IngestValidator.validateFileSize(sizeBytes);
 
         if (IngestValidator.shouldUseStreaming(sizeBytes)) {
@@ -52,19 +54,19 @@ export class IngestPreparer {
         }
 
         // 3. Deduplication Check
-        const dedupeQuery = {
+        const dedupeQuery: Filter<KnowledgeAsset> = {
             fileMd5: fileHash,
-            tenantId: scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] },
+            tenantId: (scope === 'TENANT' ? tenantId : { $in: ['global', 'abd_global'] }) as any,
             spaceId,
-            environment
+            environment: environment as any
         };
 
-        const existingDoc = await KnowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session);
+        const existingDoc = await knowledgeAssetRepository.findForDeduplication(dedupeQuery, options.session as any);
 
         if (existingDoc) {
             // Restoration logic
-            if (existingDoc.deletedAt) {
-                await KnowledgeAssetRepository.update(existingDoc._id, {
+            if ((existingDoc as any).deletedAt) {
+                await knowledgeAssetRepository.update(existingDoc._id, {
                     $unset: { deletedAt: "" },
                     $set: {
                         status: 'vigente',
@@ -72,7 +74,7 @@ export class IngestPreparer {
                         updatedAt: new Date(),
                         correlationId
                     }
-                }, options.session, { includeDeleted: true });
+                }, options.session as any);
 
                 await IngestAuditService.logEvent({
                     assetId: existingDoc._id.toString(),
@@ -93,7 +95,7 @@ export class IngestPreparer {
 
             // Duplicate Prevention
             const hasChunks = (existingDoc.totalChunks || 0) > 0;
-            const isForce = (metadata as any).force === true || (metadata as any).force === 'true';
+            const isForce = metadata.force === true || metadata.force === 'true';
 
             if (existingDoc.ingestionStatus === 'COMPLETED' && hasChunks && !isForce) {
                 await IngestAuditService.logEvent({
@@ -114,36 +116,36 @@ export class IngestPreparer {
 
             // Fallback for corrupted records
             if (!existingDoc.cloudinaryUrl && !isV2) {
-                await KnowledgeAssetRepository.deletePhysical(existingDoc._id, options.session);
+                await knowledgeAssetRepository.deletePhysical(existingDoc._id, options.session as any);
             } else {
                 return { docId: existingDoc._id.toString(), status: 'PENDING', correlationId, savings: 0 };
             }
         }
 
         // 4. Register Asset
-        const docMetadata = {
-            tenantId: scope === 'TENANT' ? tenantId : 'global',
-            industry: metadata.industry || 'GENERIC',
+        const docMetadata: any = {
+            tenantId: (scope === 'TENANT' ? tenantId : 'global') as string,
+            industry: (metadata.industry || 'GENERIC') as any,
             filename: file.name,
-            componentType: metadata.type,
+            componentType: (metadata.type || 'DOCUMENT') as any,
             model: 'PENDING',
-            version: metadata.version,
+            version: metadata.version || '1.0',
             revisionDate: new Date(),
             status: 'vigente',
             ingestionStatus: 'PENDING',
             fileMd5: fileHash,
             sizeBytes,
             documentTypeId: metadata.documentTypeId,
-            scope,
+            scope: scope as any,
             spaceId,
-            chunkingLevel: metadata.chunkingLevel,
-            environment,
+            chunkingLevel: metadata.chunkingLevel as any,
+            environment: environment as any,
             correlationId,
             enableVision: !!options.enableVision,
             enableTranslation: !!options.enableTranslation,
             enableGraphRag: !!options.enableGraphRag,
             enableCognitive: !!options.enableCognitive,
-            usage: metadata.usage || 'REFERENCE',
+            usage: (metadata.usage || 'REFERENCE') as any,
             skipIndexing: !!metadata.skipIndexing,
             blobId,
             hasStorage: !!blobId,
@@ -151,10 +153,10 @@ export class IngestPreparer {
             updatedAt: new Date(),
         };
 
-        const result = await KnowledgeAssetRepository.create(docMetadata, options.session);
+        const insertedId = await knowledgeAssetRepository.create(docMetadata as any, null, options.session as any);
 
         await IngestAuditService.logEvent({
-            assetId: result.insertedId.toString(),
+            assetId: insertedId,
             correlationId,
             tenantId,
             action: 'REGISTER',
@@ -170,6 +172,6 @@ export class IngestPreparer {
             }
         }, options.session);
 
-        return { docId: result.insertedId.toString(), status: 'PENDING', correlationId, savings: 0 };
+        return { docId: insertedId, status: 'PENDING', correlationId, savings: 0 };
     }
 }

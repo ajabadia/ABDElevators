@@ -1,19 +1,20 @@
 import { BaseRepository } from './BaseRepository';
-import { ObjectId } from 'mongodb';
+import { Entity } from '@/lib/schemas';
 
 /**
- * 🏛️ TechnicalEntityRepository
+ * 🏛️ TechnicalEntityRepository (Era 8)
  * Repositorio para la gestión de entidades técnicas analizadas.
+ * Cluster: MAIN
  */
-export class TechnicalEntityRepository extends BaseRepository<any> {
+export class TechnicalEntityRepository extends BaseRepository<Entity> {
     protected readonly collectionName = 'entities';
 
     /**
      * Busca por hash MD5 para deduplicación.
      */
-    async findByHash(md5Hash: string, tenantId: string) {
+    async findByHash(md5Hash: string, tenantId: string): Promise<Entity | null> {
         const collection = await this.getCollection();
-        return await collection.findOne({ md5Hash, tenantId } as any);
+        return await collection.findOne({ md5Hash, tenantId }) as Entity | null;
     }
 }
 

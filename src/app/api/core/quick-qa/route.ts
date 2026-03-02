@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { callGeminiStream } from '@/services/llm/llm-service';
-import { AppError, ValidationError } from '@/lib/errors';
+import { AppError, ValidationError, handleApiError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { logEvento } from '@/lib/logger';
 import { checkRateLimit, LIMITS } from '@/lib/rate-limit';
 import { PromptService } from '@/services/llm/prompt-service';
 import { SSEHelper } from '@/lib/sse-helper';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 const QuickQASchema = z.object({
@@ -18,9 +19,9 @@ const QuickQASchema = z.object({
 /**
  * 🧠 Quick Q&A (Ephemeral Mode) API
  * Allows fast questioning on pasted text without persistence.
+ * SLA: P95 < 2000ms
  */
-export async function POST(req: NextRequest) {
-    const start = Date.now();
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
 
     try {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
             tenantId: session.user.tenantId
         });
 
-        // 3. Get Prompt from Governance Service (Regla de Oro #4)
+        // 4. Get Prompt from Governance Service (Regla de Oro #4)
         const { text: systemPromptText, model } = await PromptService.getRenderedPrompt(
             'QUICK_QA_EPHEMERAL',
             {
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
             session
         );
 
-        // 4. Call Gemini with Stream (Streaming)
+        // 5. Call Gemini with Stream (Streaming)
         const geminiStream = await callGeminiStream(systemPromptText, session.user.tenantId, {
             correlationId,
             temperature: 0.2, // More precise for technical snippets
@@ -92,37 +93,10 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        const duration = Date.now() - start;
-        if (duration > 2000) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_QUICK_QA',
-                action: 'SLA_VIOLATION',
-                message: `Quick Q & A lento: ${duration} ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
+        // Cast needed because Response !== NextResponse natively for TypeScript in this context
+        return response as unknown as NextResponse;
 
-        return response;
-
-    } catch (error: any) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, error: 'Validación fallida', details: error.issues }, { status: 400 });
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_QUICK_QA',
-            action: 'UNHANDLED_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_QUICK_QA_POST', correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

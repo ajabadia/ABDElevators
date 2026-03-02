@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { getTenantCollection } from "@/lib/db-tenant";
 import { logEvento } from "@/lib/logger";
 import { enforcePermission } from "@/lib/guardian-guard";
+import { withPerformanceSLA } from "@/lib/performance-sla";
+import { handleApiError } from "@/lib/errors";
 import { MongoAIWorkflowRepository } from "@/core/adapters/persistence/MongoAIWorkflowRepository";
 import crypto from 'crypto';
 
@@ -11,47 +12,45 @@ const workflowRepository = new MongoAIWorkflowRepository();
 /**
  * GET /api/core/automation/workflows
  * Lista los flujos de trabajo de IA activos.
+ * SLA: P95 < 2000ms
  */
-export async function GET(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
 
     try {
-        const enforcedSession = await enforcePermission('automation:workflows', 'read');
-        const userId = enforcedSession.user.id;
+        const enforcedSession = await enforcePermission('automation:workflow', 'read');
         const tenantId = enforcedSession.user.tenantId;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const workflows = await workflowRepository.findActiveByTrigger('on_event' as any, tenantId);
 
         return NextResponse.json({
             success: true,
-            workflows
+            workflows,
+            correlationId
         });
-    } catch (error: any) {
-        return NextResponse.json({
-            success: false,
-            message: "Error al listar workflows",
-            error: error.message
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CORE_AUTOMATION_WORKFLOWS_GET', correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });
 
 /**
  * POST /api/core/automation/workflows
  * Crea o actualiza un flujo de trabajo de IA.
+ * SLA: P95 < 2000ms
  */
-export async function POST(req: NextRequest) {
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
+
     try {
-        const enforcedSession = await enforcePermission('automation:workflows', 'write');
+        const enforcedSession = await enforcePermission('automation:workflow', 'manage');
         const body = await req.json();
-        const collection = await getTenantCollection('ai_workflows', enforcedSession as any);
+        const collection = await getTenantCollection('ai_workflows', enforcedSession as unknown as Parameters<typeof getTenantCollection>[1]);
 
         let result;
         if (body._id) {
             const { _id, ...updateData } = body;
-            result = await collection.updateOne({ _id: _id } as any, { $set: updateData });
+            result = await collection.updateOne({ _id: _id } as Record<string, unknown>, { $set: updateData });
         } else {
             const workflowData = {
                 ...body,
@@ -67,19 +66,16 @@ export async function POST(req: NextRequest) {
             source: 'API_AUTOMATION',
             action: 'SAVE_WORKFLOW',
             message: `Workflow de IA guardado: ${body.name}`,
-            correlationId: crypto.randomUUID(),
+            correlationId,
             tenantId: enforcedSession.user.tenantId
         });
 
         return NextResponse.json({
             success: true,
-            result
+            result,
+            correlationId
         });
-    } catch (error: any) {
-        return NextResponse.json({
-            success: false,
-            message: "Error al guardar workflow",
-            error: error.message
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_CORE_AUTOMATION_WORKFLOWS_POST', correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

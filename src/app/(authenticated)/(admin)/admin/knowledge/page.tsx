@@ -1,32 +1,24 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit, FileText, FolderOpen, Globe, ArrowRight } from "lucide-react";
+import { requireRole } from "@/lib/auth";
+import { UserRole } from "@/types/roles";
 import { cn } from "@/lib/utils";
 
-interface HubCard {
-    id: string;
-    title: string;
-    description: string;
-    href: string;
-    icon: React.ReactNode;
-    color: string;
-}
-
 /**
- * 🧠 Knowledge Hub Dashboard (Phase 133)
+ * 🧠 Knowledge Hub Dashboard (Phase 133/233)
  * Central navigation hub for all knowledge management modules.
  * UI Standardized with Hub Dashboard pattern.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function KnowledgeHubPage() {
-    const router = useRouter();
-    const t = useTranslations("knowledge_hub");
+export default async function KnowledgeHubPage() {
+    await requireRole([UserRole.SUPER_ADMIN]);
+    const t = await getTranslations("knowledge_hub");
 
-    const hubCards: HubCard[] = [
+    const hubCards = [
         {
             id: "explorer",
             title: t("cards.explorer.title"),
@@ -62,7 +54,7 @@ export default function KnowledgeHubPage() {
     ];
 
     return (
-        <PageContainer className="animate-in fade-in duration-500">
+        <PageContainer>
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
@@ -70,34 +62,34 @@ export default function KnowledgeHubPage() {
 
             <div className="grid gap-6 md:grid-cols-2 mt-6">
                 {hubCards.map((card) => (
-                    <Card
-                        key={card.id}
-                        onClick={() => router.push(card.href)}
-                        className={cn(
-                            "group cursor-pointer border-l-4 hover:shadow-lg transition-all duration-300",
-                            "hover:scale-[1.02] relative overflow-hidden",
-                            card.color
-                        )}
-                    >
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                        {card.icon}
+                    <Link key={card.id} href={card.href} className="block group">
+                        <Card
+                            className={cn(
+                                "h-full border-l-4 hover:shadow-lg transition-all duration-300",
+                                "hover:scale-[1.01] relative overflow-hidden",
+                                card.color
+                            )}
+                        >
+                            <CardHeader className="pb-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-muted text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                            {card.icon}
+                                        </div>
+                                        <CardTitle className="text-xl tracking-tight">
+                                            {card.title}
+                                        </CardTitle>
                                     </div>
-                                    <CardTitle className="text-xl tracking-tight">
-                                        {card.title}
-                                    </CardTitle>
+                                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                                 </div>
-                                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardDescription className="text-sm leading-relaxed">
-                                {card.description}
-                            </CardDescription>
-                        </CardContent>
-                    </Card>
+                            </CardHeader>
+                            <CardContent>
+                                <CardDescription className="text-sm leading-relaxed text-muted-foreground">
+                                    {card.description}
+                                </CardDescription>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 ))}
             </div>
         </PageContainer>

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
-import { getTenantCollection } from '@/lib/db-tenant';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinitionRepository';
 import { AppError, handleApiError } from '@/lib/errors';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { z } from 'zod';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
+import crypto from 'crypto';
 
 const WorkflowSchema = z.object({
     id: z.string().optional(),
@@ -13,93 +14,101 @@ const WorkflowSchema = z.object({
     nodes: z.array(z.any()), // React Flow nodes
     edges: z.array(z.any()), // React Flow edges
     active: z.boolean().default(true),
-    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).optional(),
+    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).optional().default('PRODUCTION'),
     version: z.number().optional().default(1),
     industry: z.string().optional().default('ELEVATORS')
 });
 
-export async function GET(req: NextRequest) {
+const ListWorkflowsSchema = z.object({
+    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).default('PRODUCTION'),
+    limit: z.coerce.number().min(1).max(100).default(50),
+    after: z.string().optional().nullable()
+});
+
+/**
+ * GET /api/admin/workflows
+ * Lista flujos visuales con validación y SLA.
+ */
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
     const correlationId = crypto.randomUUID();
     try {
-        // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('ai_governance', 'read');
 
         const { searchParams } = new URL(req.url);
-        const environment = searchParams.get('environment') || 'PRODUCTION';
-        const tenantId = session.user.tenantId;
-
-        const limit = parseInt(searchParams.get('limit') || '50');
-        const after = searchParams.get('after');
+        const validated = ListWorkflowsSchema.parse(Object.fromEntries(searchParams));
 
         const items = await WorkflowService.listDefinitions({
-            tenantId,
+            tenantId: session.user.tenantId,
             entityType: 'ENTITY',
-            environment,
-            limit,
-            after
-        });
+            environment: validated.environment,
+            limit: validated.limit,
+            after: validated.after
+        }, session as any);
+
         const nextCursor = (items as any).nextCursor;
         return NextResponse.json({ success: true, items, nextCursor });
     } catch (error) {
         return handleApiError(error, 'API_WORKFLOWS_GET', correlationId);
     }
-}
+}, { endpoint: 'API_WORKFLOWS_GET', thresholdMs: 500 });
 
+/**
+ * POST /api/admin/workflows
+ * Guarda flujos visuales con compilación y versionado.
+ */
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
-        // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('ai_governance', 'write');
 
         const body = await req.json();
-        const environment = body.environment || 'PRODUCTION';
-
         const validated = WorkflowSchema.parse(body);
         const tenantId = session.user.tenantId;
 
-        const workflows = await getTenantCollection('workflow_definitions');
+        const collection = await (workflowDefinitionRepository as any).getCollection(session as any);
 
         const visibleGraph = {
             nodes: validated.nodes,
             edges: validated.edges
         };
 
-        let executableLogic: Partial<import('@/types/workflow').AIWorkflow> | null = null;
+        let executableLogic: Record<string, unknown> | null = null;
         let compilationError: string | null = null;
 
         try {
             const { compileGraphToLogic } = await import('@/lib/workflow-compiler');
-            executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId);
-        } catch (e: any) {
+            executableLogic = compileGraphToLogic(validated.nodes, validated.edges, validated.name, tenantId) as any;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Unknown compilation error';
             await logEvento({
                 level: 'WARN',
                 source: 'API_ADMIN_WORKFLOWS_POST',
                 action: 'COMPILATION_WARNING',
                 message: 'Workflow Compilation Failed',
                 correlationId,
-                details: { error: e.message }
+                details: { error: msg }
             });
-            compilationError = e.message;
+            compilationError = msg;
         }
 
         // Optimized Update with Version Check (Optimistic Locking)
-        const query: any = { name: validated.name, tenantId, environment };
+        const query: any = { name: validated.name, tenantId, environment: validated.environment };
 
         // If it's an update (not first creation), we check the version
         if (validated.version > 1) {
             query.version = validated.version;
         }
 
-        const result = await workflows.updateOne(
+        const result = await collection.updateOne(
             query,
             {
                 $set: {
                     name: validated.name,
                     active: validated.active,
                     tenantId,
-                    environment,
+                    environment: validated.environment,
                     industry: validated.industry,
-                    entityType: 'ENTITY', // Default for now
+                    entityType: 'ENTITY',
                     visual: visibleGraph,
                     executable: executableLogic,
                     compilationError: compilationError,
@@ -116,7 +125,7 @@ export async function POST(req: NextRequest) {
         );
 
         if (result.matchedCount === 0 && validated.version > 1) {
-            throw new AppError('CONFLICT', 409, 'Optimistic locking failure: The workflow has been modified by another user. Please refresh and try again.');
+            throw new AppError('CONFLICT', 409, 'Optimistic locking failure: The workflow has been modified by another user.');
         }
 
         return NextResponse.json({

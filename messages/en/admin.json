@@ -35,6 +35,137 @@
       "delete_category_tooltip": "Delete Category"
     }
   },
+  "prompts": {
+    "messages": {
+      "save_success": "Prompt saved successfully.",
+      "promote_success": "Promoted successfully",
+      "promote_desc": "The prompt has been copied to the production environment.",
+      "no_prompts": "No prompts found with the current filters.",
+      "delete_success": "Prompt archived successfully.",
+      "create_success": "New prompt registered in the system.",
+      "error_loading": "Error loading prompt list",
+      "error_saving": "Error saving the prompt",
+      "sync_success": "Synchronization finished: {created} created, {updated} updated, {errors} errors.",
+      "sync_error": "Error syncing prompts from code."
+    },
+    "title": "Prompt Governance",
+    "subtitle": "Manage master directives and AI behavior by industry.",
+    "sync": "Sync from Code",
+    "actions": {
+      "history": "Global History",
+      "promote": "Promote to PROD",
+      "sync": "Sync from Code",
+      "clear_filters": "Clear Filters",
+      "create_first": "Create my first Prompt",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Prompt",
+      "view": "View",
+      "delete": "Delete",
+      "simulate": "Simulate",
+      "rollback": "Restore"
+    },
+    "new_prompt": "New Prompt",
+    "search_placeholder": "Search by key, name or category...",
+    "filters": {
+      "all": "All Prompts",
+      "organization": "Filter by Organization",
+      "industry": "Filter by Industry"
+    },
+    "info": {
+      "multi_vertical": "Prompts marked as 'ELEVATORS' only affect that industry."
+    },
+    "sync_modal": {
+      "title": "Run Global Sync?",
+      "description": "This action will scrape all master prompts in {codePath} and load them into the database for this tenant.",
+      "governance": "Governance:",
+      "governance_desc": "If a prompt in the DB has a higher version than the code, it will not be overwritten. New prompts will be created automatically.",
+      "cancel": "Cancel",
+      "confirm": "Sync Now"
+    },
+    "industries": {
+      "all": "Filter by Industry",
+      "GENERIC": "Generic",
+      "ELEVATORS": "Elevators",
+      "LEGAL": "Legal",
+      "BANKING": "Banking",
+      "INSURANCE": "Insurance",
+      "IT": "IT",
+      "MEDICAL": "Medical"
+    },
+    "editor_placeholder_title": "Master Prompt Editor",
+    "editor_placeholder_desc": "Select a prompt from the list or create a new one to start editing.",
+    "editor": {
+      "rollback_confirm": "Are you sure you want to restore this version?",
+      "configuration": "Configuration",
+      "simulation": "Simulation",
+      "metadata": "Metadata",
+      "key": "Key",
+      "placeholder": {
+        "key": "EX: TECHNICAL_ANALYSIS",
+        "name": "Descriptive name",
+        "template": "Write the AI directive here..."
+      },
+      "name": "Name",
+      "industry": "Industry (Vertical)",
+      "model": "Model",
+      "category": "Category",
+      "template": "Template",
+      "variables": "System Variables",
+      "change_reason": "Reason for change",
+      "template_title": "Plantilla de Ingeniería",
+      "load_example": "Cargar Ejemplo",
+      "chars": "chars",
+      "tips_title": "Consejos de Prompting:",
+      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
+      "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
+      "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
+    },
+    "history": {
+      "title": "Global Audit Log",
+      "subtitle": "Master tracking of AI directive changes",
+      "search": "Search by prompt, key or reason...",
+      "records": "Records",
+      "version": "V",
+      "system": "System",
+      "no_records": "No records found in history",
+      "by": "By",
+      "reason": "Reason",
+      "date": "Date"
+    },
+    "variables": {
+      "title": "Dynamic Variables",
+      "add_btn": "Add Variable",
+      "name_placeholder": "Var Name",
+      "desc_placeholder": "Variable description...",
+      "empty": "No variables configured",
+      "types": {
+        "string": "String",
+        "number": "Number",
+        "boolean": "Boolean",
+        "json": "JSON"
+      }
+    },
+    "tabs": {
+      "active": "Active Prompts",
+      "testing": "Testing / Drafts"
+    },
+    "form": {
+      "key": "Internal Key",
+      "is_active": "Set as active version",
+      "tags": "Tags",
+      "title": "Descriptive Title",
+      "version": "Semantic Version",
+      "content": "System Prompt Content"
+    },
+    "table": {
+      "prompt": "Prompt",
+      "version": "Version",
+      "last_modified": "Last Modified",
+      "status": "Current Status"
+    }
+  },
   "dashboard": {
     "title": "Global Control",
     "subtitle": "Consolidated view of the entire infrastructure.",
@@ -203,6 +334,24 @@
     "no_data": "No ROI data available for this period.",
     "info": "Info"
   },
+  "onboarding": {
+    "title": "Welcome to ABDElevators",
+    "description": "Let's set up your organization workspace in a few steps.",
+    "steps": {
+      "welcome": "Welcome",
+      "identity": "Identity",
+      "branding": "Branding",
+      "storage": "Storage",
+      "features": "Features",
+      "billing": "Billing"
+    },
+    "actions": {
+      "next": "Continue",
+      "back": "Back",
+      "finish": "Finish Setup",
+      "skip": "Skip for now"
+    }
+  },
   "automation": {
     "title": "Automation Studio",
     "subtitle": "Orchestration of autonomous actions based on AI and Graphs.",
@@ -234,6 +383,8 @@
       "categories": "Categories",
       "status": "Status",
       "actions": "Actions",
+      "remove": "Remove",
+      "edit": "Edit",
       "active": "ACTIVE",
       "inactive": "INACTIVE"
     },
@@ -743,7 +894,10 @@
       "type_label": "Indexing Type",
       "type_all": "All content",
       "type_original": "Originals",
-      "type_shadow": "Shadow Chunks (Translations)"
+      "type_shadow": "Shadow Chunks (Translations)",
+      "method_label": "Retrieval Method",
+      "method_exact": "Exact Search",
+      "method_semantic": "Semantic (AI)"
     },
     "view": {
       "showing": "Showing {count} of {total} technical fragments",
@@ -1103,6 +1257,15 @@
       "mfa_active": "MFA Active",
       "no_mfa": "No MFA"
     },
+    "fields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "jobTitle": "Job Title",
+      "tenantId": "Tenant",
+      "role": "Role",
+      "isActive": "Status"
+    },
     "bulk": {
       "title": "Bulk Invitation",
       "desc": "Upload a CSV or Excel file with \"email\" and optionally \"role\" columns.",
@@ -1141,11 +1304,18 @@
     },
     "tabs": {
       "active": "Active Users",
-      "pending": "Pending Invitations"
+      "invitations": "Manage Invitations"
     },
     "invitations": {
       "title": "Pending Invitations",
-      "desc": "Manage and revoke invitations that haven't been accepted yet."
+      "desc": "Manage and revoke invitations that haven't been accepted yet.",
+      "empty": "No pending invitations found.",
+      "table": {
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "expiry": "Expiry"
+      }
     },
     "invite_modal": {
       "success_title": "Invitation Sent!",
@@ -1211,59 +1381,7 @@
       "noMatch": "No match",
       "aiSuccessDesc": "All missing translations have been generated",
       "aiSuccessTitle": "Auto-translation completed",
-      "upToDateDesc": "No missing translations",
-      "upToDateTitle": "Translations up to date",
-      "notifications": {
-        "aiSuccessTitle": "IA: Traducción completada",
-        "aiSuccessDesc": "Se han generado las traducciones faltantes.",
-        "upToDateTitle": "Todo al día",
-        "upToDateDesc": "No hay llaves faltantes en este idioma.",
-        "autoTranslateBtn": "Auto-traducir faltantes",
-        "cancel": "Cancelar",
-        "empty": "Sin resultados",
-        "keyHeader": "Clave",
-        "noMatch": "Sin coincidencias",
-        "missing": "Faltante",
-        "noResults": "Sin resultados",
-        "primaryLabel": "Idioma primario",
-        "save": "Guardar",
-        "secondaryLabel": "Idioma secundario",
-        "syncCompletedTitle": "Sincronización completada",
-        "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
-        "syncSuccessTitle": "Sincronización Exitosa",
-        "syncSuccessDetail": "{added} nuevas, {updated} actualizadas.",
-        "syncErrorTitle": "Error de sincronización",
-        "syncErrorDesc": "Error al sincronizar con la base de datos",
-        "exportCompletedTitle": "Exportación completada",
-        "exportNoChanges": "Los archivos JSON ya están sincronizados con la BD.",
-        "exportSuccessDetail": "{added} nuevas, {updated} actualizadas en JSON.",
-        "exportErrorTitle": "Error de exportación",
-        "exportErrorDesc": "Error al exportar a archivos locales",
-        "saveSuccess": "Traducción actualizada correctamente.",
-        "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
-        "batch_translate_progress": "Iniciando IA: {current}/{total}...",
-        "batch_translate_chunk": "Traduciendo lote {current}/{total} ({count} llaves)...",
-        "batch_success_title": "Traducción completada",
-        "batch_success_desc": "Se tradujeron {count} llaves correctamente.",
-        "batch_error_title": "Error de traducción masiva",
-        "batch_error_interrupted": "Proceso interrumpido: El lote {batch} falló.",
-        "batch_error_generic": "Error durante la traducción masiva"
-      }
-    },
-    "notifications": {
-      "aiSuccessTitle": "AI: Translation completed",
-      "aiSuccessDesc": "Missing translations have been generated.",
-      "upToDateTitle": "Up to date",
       "upToDateDesc": "No missing keys in this language.",
-      "autoTranslateBtn": "Auto-translate missing",
-      "cancel": "Cancel",
-      "empty": "No results",
-      "keyHeader": "Key",
-      "missing": "Missing",
-      "noResults": "No results",
-      "primaryLabel": "Primary language",
-      "save": "Save",
-      "secondaryLabel": "Secondary language",
       "syncCompletedTitle": "Sync completed",
       "syncNoChanges": "No discrepancies detected between JSON and DB.",
       "syncSuccessTitle": "Sync Successful",
@@ -1285,53 +1403,7 @@
       "batch_error_interrupted": "Process interrupted: Batch {batch} failed.",
       "batch_error_generic": "Error during bulk translation"
     },
-    "api_docs": {
-      "loading": "Iniciando Portal Técnico...",
-      "title": "Portal de Documentación API",
-      "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
-      "card_title": "Especificación de Plataforma RAG ABD",
-      "error_loading": "No se pudo cargar la definición de la API."
-    },
-    "buttons": {
-      "downloadBackup": "Descargar Backup Completo (.zip)",
-      "generatingZip": "Generando ZIP...",
-      "generateCertificate": "Generar Certificado de Eliminación (PDF)",
-      "signingPdf": "Firmando PDF...",
-      "requestDeletion": "Solicitar Eliminación Permanente de Tenant",
-      "manualAdminRequest": "Petición manual de Administrador"
-    },
-    "toasts": {
-      "backupDownloaded": "Backup Descargado",
-      "certificateGenerated": "Certificado Generado",
-      "backupSuccess": "Tu paquete de conocimiento ha sido exportado exitosamente.",
-      "backupError": "No se pudo generar el backup.",
-      "certificateSuccess": "El certificado legal PDF ha sido descargado.",
-      "error": "Error",
-      "certificateError": "No se pudo generar el certificado."
-    },
-    "aiGovernance": {
-      "title": "Gobernanza de IA (EU AI Act)",
-      "description": "Supervisión de modelos, categorización de riesgos y transparencia según la normativa europea.",
-      "registryTitle": "Registro de Modelos",
-      "registryDesc": "Listado de LLMs y servicios de embeddings autorizados.",
-      "riskTitle": "Categorización de Riesgo",
-      "riskDesc": "Nivel de criticidad de las implementaciones de IA.",
-      "auditTitle": "Métricas de Transparencia",
-      "auditDesc": "Evidencia de calidad y fidelidad de las respuestas.",
-      "model": "Modelo",
-      "provider": "Proveedor",
-      "status": "Estado de Auditoría",
-      "lastUpdate": "Última Validación",
-      "riskLevels": {
-        "unacceptable": "Inaceptable",
-        "high": "Alto",
-        "limited": "Limitado",
-        "minimal": "Mínimo"
-      },
-      "euRisk": "Riesgo EU",
-      "governed": "Gobernado",
-      "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación RAG se clasifica como <strong>riesgo {risk}</strong> ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
-    }
+    "complianceNoteHtml": "<strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{risk} risk</strong> as it provides technical assistance and information retrieval without automated decision-making."
   },
   "api_docs": {
     "loading": "Starting Technical Portal...",
@@ -1479,142 +1551,6 @@
       "failed": "Failed (DLQ)",
       "delayed": "Delayed"
     }
-  },
-  "prompts": {
-    "messages": {
-      "save_success": "Prompt saved successfully.",
-      "promote_success": "Promoted successfully",
-      "promote_desc": "The prompt has been copied to the production environment.",
-      "no_prompts": "No prompts found with the current filters.",
-      "delete_success": "Prompt archived successfully.",
-      "create_success": "New prompt registered in the system.",
-      "error_loading": "Error loading prompt list",
-      "error_saving": "Error saving the prompt",
-      "sync_success": "Synchronization finished: {created} created, {updated} updated, {errors} errors.",
-      "sync_error": "Error syncing prompts from code."
-    },
-    "title": "Prompt Governance",
-    "subtitle": "Manage master directives and AI behavior by industry.",
-    "sync": "Sync from Code",
-    "actions": {
-      "history": "Global History",
-      "promote": "Promote to PROD",
-      "sync": "Sync from Code",
-      "clear_filters": "Clear Filters",
-      "create_first": "Create my first Prompt",
-      "edit": "Edit",
-      "cancel": "Cancel",
-      "saving": "Saving...",
-      "save": "Save Prompt",
-      "view": "View",
-      "delete": "Delete",
-      "simulate": "Simulate",
-      "rollback": "Restore"
-    },
-    "new_prompt": "New Prompt",
-    "search_placeholder": "Search by key, name or category...",
-    "filters": {
-      "all": "All Prompts",
-      "organization": "Filter by Organization",
-      "industry": "Filter by Industry"
-    },
-    "info": {
-      "multi_vertical": "Prompts marked as 'ELEVATORS' only affect that industry."
-    },
-    "sync_modal": {
-      "title": "Run Global Sync?",
-      "description": "This action will scrape all master prompts in {codePath} and load them into the database for this tenant.",
-      "governance": "Governance:",
-      "governance_desc": "If a prompt in the DB has a higher version than the code, it will not be overwritten. New prompts will be created automatically.",
-      "cancel": "Cancel",
-      "confirm": "Sync Now"
-    },
-    "industries": {
-      "all": "Filter by Industry",
-      "GENERIC": "Generic",
-      "ELEVATORS": "Elevators",
-      "LEGAL": "Legal",
-      "BANKING": "Banking",
-      "INSURANCE": "Insurance",
-      "IT": "IT",
-      "MEDICAL": "Medical"
-    },
-    "editor_placeholder_title": "Master Prompt Editor",
-    "editor_placeholder_desc": "Select a prompt from the list or create a new one to start editing.",
-    "editor": {
-      "rollback_confirm": "Are you sure you want to restore this version?",
-      "configuration": "Configuration",
-      "simulation": "Simulation",
-      "metadata": "Metadata",
-      "key": "Key",
-      "placeholder": {
-        "key": "EX: TECHNICAL_ANALYSIS",
-        "name": "Descriptive name",
-        "template": "Write the AI directive here..."
-      },
-      "name": "Name",
-      "industry": "Industry (Vertical)",
-      "model": "Model",
-      "category": "Category",
-      "template": "Template",
-      "variables": "System Variables",
-      "change_reason": "Reason for change",
-      "template_title": "Plantilla de Ingeniería",
-      "load_example": "Cargar Ejemplo",
-      "chars": "chars",
-      "tips_title": "Consejos de Prompting:",
-      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
-      "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
-      "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
-    },
-    "history": {
-      "title": "Global Audit Log",
-      "subtitle": "Master tracking of AI directive changes",
-      "search": "Search by prompt, key or reason...",
-      "records": "Records",
-      "version": "V",
-      "system": "System",
-      "no_records": "No records found in history",
-      "by": "By",
-      "reason": "Reason",
-      "date": "Date"
-    },
-    "variables": {
-      "title": "Dynamic Variables",
-      "add_btn": "Add Variable",
-      "name_placeholder": "Var Name",
-      "desc_placeholder": "Variable description...",
-      "empty": "No variables configured",
-      "types": {
-        "string": "String",
-        "number": "Number",
-        "boolean": "Boolean",
-        "json": "JSON"
-      }
-    },
-    "tabs": {
-      "active": "Active Prompts",
-      "testing": "Testing / Drafts"
-    },
-    "form": {
-      "key": "Internal Key",
-      "is_active": "Set as active version",
-      "tags": "Tags",
-      "title": "Descriptive Title",
-      "version": "Semantic Version",
-      "content": "System Prompt Content"
-    },
-    "table": {
-      "prompt": "Prompt",
-      "version": "Version",
-      "last_modified": "Last Modified",
-      "status": "Current Status"
-    },
-    "system": "Sistema",
-    "no_records": "No se encontraron registros en el historial",
-    "by": "Por",
-    "reason": "Motivo",
-    "date": "Fecha"
   },
   "support": {
     "title": "Industrial Support Console",
@@ -2021,6 +1957,45 @@
       "fallbackMessage": "This notification uses the system generic fallback. Configure it to customize it.",
       "createTemplate": "Create Template"
     },
+    "editor": {
+      "title": "System Template Editor",
+      "subtitle": "Define the global content for notifications.",
+      "contentCard": "Content Editor",
+      "contentDesc": "Define the subject and HTML body. You can use dynamic variables.",
+      "es": "Spanish (ES)",
+      "en": "English (EN)",
+      "subject": "Email Subject",
+      "subjectPlaceholder": "e.g., Your order {{orderId}} is ready",
+      "body": "HTML Body",
+      "bodyDesc": "Supports basic HTML and Handlebars. Be sure to include {{{tenant_custom_note}}} if you want to allow customization.",
+      "audit": {
+        "title": "Changes Audit",
+        "reason": "Update reason",
+        "reasonPlaceholder": "e.g., Legal terms update 2026...",
+        "save": "Save Version v{version}",
+        "reasonRequired": "Reason required",
+        "reasonRequiredDesc": "Please indicate the reason for the change for auditing purposes."
+      },
+      "variables": {
+        "title": "Available Variables",
+        "copy": "Click to copy. These variables will be filled automatically when sending.",
+        "copied": "Copied",
+        "copiedDesc": "Variable {v} copied to clipboard"
+      },
+      "version": {
+        "title": "Version Information",
+        "current": "Current Version:",
+        "lastUpdate": "Last Modified:",
+        "modifiedBy": "Modified By:",
+        "history": "View Full History"
+      },
+      "toast": {
+        "success": "Changes saved",
+        "successDesc": "The template has been successfully updated and versioned.",
+        "error": "Error",
+        "errorDesc": "Could not save the template."
+      }
+    },
     "settings": {
       "form": {
         "title": "Communication Preferences",
@@ -2166,6 +2141,11 @@
         "currentUsage": "Current Usage (Cloudinary / Storage)",
         "warning": "When exceeding the quota, access to new analysis requests will be blocked."
       }
+    },
+    "storageUsage": {
+      "metric": "Metric calculated on total quota",
+      "used": "used",
+      "mb": "MB"
     },
     "features": {
       "features": {

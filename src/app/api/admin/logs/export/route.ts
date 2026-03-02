@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { connectLogsDB } from '@/lib/db';
 import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -10,9 +10,9 @@ import { UserRole } from '@/types/roles';
  * Exporta logs masivamente para auditoría (CSV) (Phase 70 compliance).
  */
 export async function GET(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(req.url);
         const level = searchParams.get('level') || searchParams.get('nivel');
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
             }
         });
 
-    } catch (error) {
-        return handleApiError(error, 'API_LOGS_EXPORT', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_LOGS_EXPORT', correlationId);
     }
 }

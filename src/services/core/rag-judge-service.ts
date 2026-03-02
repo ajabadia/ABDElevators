@@ -22,7 +22,7 @@ export interface RagEvaluationResult {
         fix_strategy: string;
     };
     self_corrected?: boolean;
-    original_evaluation?: any;
+    original_evaluation?: unknown;
     timestamp: Date;
 }
 
@@ -66,7 +66,7 @@ export class RagJudgeService {
                 causal_analysis: evaluation.causal_analysis,
                 timestamp: new Date()
             };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('❌ [RAG JUDGE ERROR]', error);
             return {
                 tenantId,
@@ -76,7 +76,7 @@ export class RagJudgeService {
                 context_chunks: [context],
                 metrics: { faithfulness: 0, answer_relevance: 0, context_precision: 0 },
                 judge_model: 'error',
-                feedback: `Error en la evaluación: ${error.message}`,
+                feedback: `Error en la evaluación: ${(error as Error).message || String(error)}`,
                 timestamp: new Date()
             };
         }
@@ -89,7 +89,8 @@ export class RagJudgeService {
         query: string,
         context: string,
         badResponse: string,
-        evaluation: any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        evaluation: Partial<RagEvaluationResult> & { causal_analysis?: any },
         tenantId: string,
         correlationId?: string
     ): Promise<{ improvedResponse: string, newEvaluation: RagEvaluationResult } | null> {
@@ -122,7 +123,7 @@ export class RagJudgeService {
             );
 
             return { improvedResponse, newEvaluation };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[SELF-CORRECT ERROR]', error);
             return null;
         }

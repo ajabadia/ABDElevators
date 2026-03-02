@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectAuthDB } from '@/lib/db';
-import { auth, requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from "@/types/roles";
 import { logEvento } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { CreateUserSchema, UserSchema } from '@/lib/schemas';
-import { AppError, ValidationError, DatabaseError } from '@/lib/errors';
+import { handleApiError, ValidationError, DatabaseError } from '@/lib/errors';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+
+const API_SOURCE = 'API_ADMIN_USERS';
 
 /**
  * GET /api/admin/users
@@ -19,20 +21,15 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-        // ... (resto de la lógica igual, pero sin el try/finally manual de performance)
+        const session = await enforcePermission('user', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
-        const db = await connectAuthDB();
-
         // Dynamic filter: SuperAdmin sees everything, Admin sees their allowed tenants
-        let filter = {};
-        if (isSuperAdmin) {
-            filter = {};
-        } else {
+        let filter: Record<string, unknown> = {};
+        if (!isSuperAdmin) {
             const allowedIds = [
                 session.user.tenantId,
-                ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
+                ...(session.user.tenantAccess || []).map(t => t.tenantId)
             ].filter(Boolean);
 
             filter = { tenantId: { $in: allowedIds } };
@@ -63,22 +60,8 @@ export const GET = withPerformanceSLA(async function GET(req: NextRequest) {
         ]).toArray();
 
         return NextResponse.json({ users });
-    } catch (error: any) {
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_USERS',
-            action: 'GET_USERS_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error retrieving users').toJSON(),
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }, { endpoint: 'GET /api/admin/users', thresholdMs: 200 });
 
@@ -91,7 +74,7 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
     const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
 
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('user', 'manage');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         const body = await req.json();
@@ -111,7 +94,6 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
         }
 
         // Generate cryptographically secure temporary password (never returned to client)
-        // This is just a placeholder because MongoDB requires a password field
         const secureRandomPass = crypto.randomBytes(32).toString('hex');
         const hashedPassword = await bcrypt.hash(secureRandomPass, 12);
 
@@ -124,16 +106,16 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             ? body.tenantId
             : session.user.tenantId;
 
-        const newUser = {
+        const newUser: any = {
             email: validated.email.toLowerCase().trim(),
             password: hashedPassword,
             firstName: validated.firstName,
             lastName: validated.lastName,
             jobTitle: validated.jobTitle || '',
-            role: validated.role,
-            activeModules: validated.activeModules || ['TECHNICAL', 'RAG'],
-            tenantId: tenantId || process.env.SINGLE_TENANT_ID,
-            industry: body.industry || session.user.industry || 'ELEVATORS',
+            role: validated.role as UserRole,
+            activeModules: (validated.activeModules || ['TECHNICAL', 'RAG']) as ("TECHNICAL" | "RAG" | "FINANCE" | "LEGAL")[],
+            tenantId: (tenantId || process.env.SINGLE_TENANT_ID || 'default') as string,
+            industry: (body.industry || session.user.industry || 'ELEVATORS') as any,
             isActive: true,
             mustChangePassword: true,
             activationToken: hashedToken,
@@ -152,14 +134,14 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
 
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_USERS',
+            source: API_SOURCE,
             action: 'CREATE_USER',
             message: `User created: ${validated.email} in tenant ${tenantId}. Activation flow initiated.`,
             correlationId,
             details: { email: validated.email, role: validated.role, tenantId }
         });
 
-        // Determine base URL for activation link (in production this should be the public URL)
+        // Determine base URL for activation link
         const baseUrl = process.env.NEXTAUTH_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`;
         const activationLink = `${baseUrl}/auth-pages/activate?token=${activationToken}`;
 
@@ -168,29 +150,10 @@ export const POST = withPerformanceSLA(async function POST(req: NextRequest) {
             userId: result.insertedId,
             activationLink,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                new ValidationError('Invalid user data', error.issues).toJSON(),
-                { status: 400 }
-            );
+            return handleApiError(new ValidationError('Invalid user data', error.issues), API_SOURCE, correlationId);
         }
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_USERS',
-            action: 'CREATE_USER_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error creating user').toJSON(),
-            { status: 500 }
-        );
+        return handleApiError(error, API_SOURCE, correlationId);
     }
 }, { endpoint: 'POST /api/admin/users', thresholdMs: 1000 });

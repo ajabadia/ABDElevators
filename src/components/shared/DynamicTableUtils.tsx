@@ -6,12 +6,12 @@ import { formatDateTime } from '@/lib/date-utils';
 /**
  * Utilidad para generar columnas de DataTable a partir de una definición de entidad.
  */
-export function generateColumnsFromEntity<T>(entity: EntityDefinition): Column<T>[] {
+export function generateColumnsFromEntity<T>(entity: EntityDefinition, t?: (key: string) => string): Column<T>[] {
     return entity.fields
         .filter((f: EntityField) => !f.ui?.hidden)
         .sort((a: EntityField, b: EntityField) => (a.ui?.order || 0) - (b.ui?.order || 0))
         .map((field: EntityField) => ({
-            header: field.label,
+            header: t ? t(field.key) : field.label,
             accessorKey: field.key,
             className: field.ui?.width,
             cell: (item: T) => {

@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react";
 
 interface DynamicFormProps {
     entitySlug: string;
-    initialData?: any;
+    initialData?: Record<string, any>;
     onSuccess?: (result: any) => void;
     onCancel?: () => void;
 }
@@ -29,7 +29,7 @@ interface DynamicFormProps {
  */
 export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: DynamicFormProps) {
     const entity = EntityEngine.getInstance().getEntity(entitySlug);
-    const [formData, setFormData] = useState<any>(initialData || {});
+    const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
     const isEdit = !!initialData?._id || !!initialData?.id;
 
     // Mutación universal apuntando al Core del Sistema
@@ -69,7 +69,7 @@ export function DynamicForm({ entitySlug, initialData, onSuccess, onCancel }: Dy
     };
 
     const handleChange = (key: string, value: any) => {
-        setFormData((prev: any) => ({ ...prev, [key]: value }));
+        setFormData((prev) => ({ ...prev, [key]: value }));
     };
 
     const sortedFields = [...entity.fields].sort((a, b) => (a.ui?.order || 99) - (b.ui?.order || 99));

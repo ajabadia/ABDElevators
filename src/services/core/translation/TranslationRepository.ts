@@ -1,5 +1,6 @@
 
 import { getTenantCollection } from '@/lib/db-tenant';
+import { AnyBulkWriteOperation, Document } from 'mongodb';
 
 /**
  * 🏛️ Translation Repository
@@ -15,22 +16,22 @@ export class TranslationRepository {
         const effectiveTenantId = tenantId || 'platform_master';
         const collection = await getTenantCollection(this.COLLECTION, {
             user: { id: 'system', tenantId: effectiveTenantId, role: 'SUPER_ADMIN' }
-        } as any);
+        } as unknown as Parameters<typeof getTenantCollection>[1]);
 
         return await collection.find({
             locale,
             tenantId: effectiveTenantId,
-            isObsolete: { $ne: true } as any
+            isObsolete: { $ne: true }
         });
     }
 
     /**
      * Actualiza un set de traducciones en batch (bulkWrite).
      */
-    static async bulkUpdate(operations: any[], tenantId: string) {
+    static async bulkUpdate(operations: AnyBulkWriteOperation<Document>[], tenantId: string) {
         const collection = await getTenantCollection(this.COLLECTION, {
             user: { id: 'system', tenantId, role: 'SUPER_ADMIN' }
-        } as any);
+        } as unknown as Parameters<typeof getTenantCollection>[1]);
 
         if (operations.length === 0) return { matchedCount: 0, modifiedCount: 0 };
         return await collection.unsecureRawCollection.bulkWrite(operations);
@@ -39,10 +40,10 @@ export class TranslationRepository {
     /**
      * Actualiza una única traducción con upsert.
      */
-    static async updateOne(filter: any, update: any) {
+    static async updateOne(filter: Record<string, unknown>, update: Record<string, unknown>) {
         const collection = await getTenantCollection(this.COLLECTION, {
             user: { id: 'system', tenantId: 'platform_master', role: 'SUPER_ADMIN' }
-        } as any);
+        } as unknown as Parameters<typeof getTenantCollection>[1]);
 
         return await collection.updateOne(filter, update, { upsert: true });
     }
@@ -53,7 +54,7 @@ export class TranslationRepository {
     static async markObsolete(key: string, locale: string, tenantId: string) {
         const collection = await getTenantCollection(this.COLLECTION, {
             user: { id: 'system', tenantId, role: 'SUPER_ADMIN' }
-        } as any);
+        } as unknown as Parameters<typeof getTenantCollection>[1]);
 
         return await collection.updateOne(
             { key, locale, tenantId },

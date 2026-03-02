@@ -1,20 +1,17 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { UsageService } from '@/services/ops/usage-service';
-import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import { handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import crypto from 'crypto';
 
 /**
  * Endpoint para obtener métricas personales del usuario.
  * Fase 24.2: User View (Personal Insights)
  */
-export async function GET(request: Request) {
-    const correlacion_id = uuidv4();
+export async function GET() {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('user:profile', 'read');
 
         const stats = await UsageService.getUserMetrics(session.user.id, session.user.tenantId);
 
@@ -24,6 +21,6 @@ export async function GET(request: Request) {
         });
 
     } catch (error) {
-        return handleApiError(error, 'API_USER_STATS', correlacion_id);
+        return handleApiError(error, 'API_USER_STATS', correlationId);
     }
 }

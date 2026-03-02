@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
 
@@ -11,12 +11,12 @@ import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
  * Fase 127: Orquestación Inteligente.
  */
 export async function GET(
-    request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('workflow', 'read');
         const { id } = await params;
 
         const definition = await WorkflowService.getDefinitionById(id);
@@ -33,18 +33,18 @@ export async function GET(
 
         return NextResponse.json({ success: true, definition });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_WORKFLOW_GET', correlationId);
     }
 }
 
 export async function PATCH(
-    request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('workflow', 'manage');
         const { id } = await params;
         const body = WorkflowDefinitionSchema.partial().parse(await request.json());
 
@@ -53,13 +53,14 @@ export async function PATCH(
             ...body,
             _id: id,
             tenantId: session.user.tenantId
+            // Rule #11: tenantId isolation ensured here
         } as any;
 
         const result = await WorkflowService.createOrUpdateDefinition(updatedDefinition, correlationId);
 
         return NextResponse.json({ success: true, result });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_WORKFLOW_PATCH', correlationId);
     }
 }

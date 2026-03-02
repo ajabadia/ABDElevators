@@ -1,5 +1,6 @@
 
 import { z } from 'zod';
+import { ObjectId } from 'mongodb';
 
 /**
  * ⚡ FASE 129: Standardized Checklist Schema
@@ -25,7 +26,7 @@ export const ChecklistItemConfigSchema = z.object({
 });
 
 export const ChecklistConfigSchema = z.object({
-    _id: z.any().optional(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
     id: z.string(), // Human readable ID (e.g., 'maintenance_monthly_v1')
     tenantId: z.string(),
     title: z.string(),
@@ -62,7 +63,7 @@ export const ItemValidationSchema = z.object({
     itemId: z.string(), // Refers to ChecklistItemConfigSchema.id (must be stable across extractions)
     status: ValidationStatusSchema.default('PENDING'),
     validationSource: z.enum(['HUMAN', 'AI', 'AUTO']).default('HUMAN'),
-    value: z.any().optional(),
+    value: z.unknown().optional(),
     comments: z.string().optional(),
     evidenceUrls: z.array(z.string()).optional(),
     validatedBy: z.string().optional(),
@@ -71,14 +72,14 @@ export const ItemValidationSchema = z.object({
 });
 
 export const ExtractedChecklistSchema = z.object({
-    _id: z.any().optional(),
+    _id: z.union([z.string(), z.instanceof(ObjectId)]).optional(),
     entityId: z.string(), // Reference to the document/case
     checklistConfigId: z.string().optional(), // Template used (if any)
     version: z.number().optional().default(1),
     validations: z.array(ItemValidationSchema).default([]),
     overallStatus: ValidationStatusSchema.default('PENDING'),
     completionPercentage: z.number().min(0).max(100).default(0),
-    metadata: z.record(z.string(), z.any()).default({}),
+    metadata: z.record(z.string(), z.unknown()).default({}),
     createdAt: z.coerce.date().default(() => new Date()),
     updatedAt: z.coerce.date().default(() => new Date()),
 });

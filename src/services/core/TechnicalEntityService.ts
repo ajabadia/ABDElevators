@@ -1,13 +1,22 @@
-import { EntitySchema, IndustryType } from '@/lib/schemas';
+import { Entity, IndustryType } from '@/lib/schemas';
 import { technicalEntityRepository } from '@/lib/repositories/TechnicalEntityRepository';
 import { callGeminiMini } from '@/services/llm/llm-service';
 import { RagService } from '@/services/core/RagService';
 import { RiskService } from '@/services/security/RiskService';
 import { FederatedKnowledgeService } from '@/services/core/FederatedKnowledgeService';
-import { logEvento } from '@/lib/logger';
+import { LlmJsonParser } from '@/lib/llm-core/LlmJsonParser';
+import { z } from 'zod';
+import { AppError } from '@/lib/errors';
+
+const DetectedPatternSchema = z.object({
+    type: z.string(),
+    model: z.string()
+});
 
 /**
- * TechnicalEntityService: Orchestrates the analysis of technical entities (Phase 105 Hygiene)
+ * 🏢 TechnicalEntityService
+ * Orchestrates the analysis of technical entities.
+ * Standardized for Era 8 (Zero any, explicit types, resilient parsing).
  */
 export class TechnicalEntityService {
     /**
@@ -25,20 +34,18 @@ export class TechnicalEntityService {
         const prompt = `Analiza el texto técnico y extrae modelos de componentes.\nTEXTO: ${entityText}\nResponde SOLO con un array JSON de objetos {type: string, model: string}.`;
         const responseText = await callGeminiMini(prompt, tenantId, { correlationId });
 
-        // Extract JSON array from LLM response
-        let detectedPatterns: any[] = [];
-        try {
-            const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-                detectedPatterns = JSON.parse(jsonMatch[0]);
-            }
-        } catch (e) {
-            console.error("Failed to parse patterns", responseText);
-        }
+        // Use LlmJsonParser for resilient parsing (Rule #4 Governance)
+        const detectedPatterns = LlmJsonParser.parse({
+            raw: responseText,
+            schema: z.array(DetectedPatternSchema),
+            source: 'TECHNICAL_ENTITY_SERVICE_PATTERNS',
+            correlationId,
+            tenantId
+        });
 
         // 2. RAG: For each pattern, search relevant context
         const resultsWithContext = await Promise.all(
-            detectedPatterns.map(async (m: { type: string; model: string }) => {
+            detectedPatterns.map(async (m) => {
                 const query = `${m.type} model ${m.model}`;
                 const context = await RagService.performTechnicalSearch(query, tenantId, correlationId, 2, industry);
                 return {
@@ -50,7 +57,7 @@ export class TechnicalEntityService {
 
         // 3. Federated Discovery
         const federatedInsights = await FederatedKnowledgeService.searchGlobalPatterns(
-            detectedPatterns.map((m: any) => `${m.type} ${m.model}`).join(' '),
+            detectedPatterns.map((m) => `${m.type} ${m.model}`).join(' '),
             tenantId,
             correlationId,
             3
@@ -58,7 +65,7 @@ export class TechnicalEntityService {
 
         // 4. Risk Detection
         const consolidatedContext = resultsWithContext
-            .map(r => `Component ${r.model}: ${r.ragContext.map((c: any) => c.text).join(' ')}`)
+            .map(r => `Component ${r.model}: ${r.ragContext.map((c) => c.text).join(' ')}`)
             .join('\n');
 
         const detectedRisks = await RiskService.analyzeRisks(
@@ -83,7 +90,7 @@ export class TechnicalEntityService {
     /**
      * Checks if an entity already exists (Deduplication)
      */
-    static async findExistingByHash(md5Hash: string, tenantId: string) {
+    static async findExistingByHash(md5Hash: string, tenantId: string): Promise<Entity | null> {
         return await technicalEntityRepository.findByHash(md5Hash, tenantId);
     }
 }

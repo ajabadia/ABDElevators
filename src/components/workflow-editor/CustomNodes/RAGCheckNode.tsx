@@ -5,7 +5,9 @@ import { ShieldCheck, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-export const RAGCheckNode = memo(({ data, selected }: { data: any, selected: boolean }) => {
+import { WorkflowNodeData } from '../types';
+
+export const RAGCheckNode = memo(({ data, selected }: { data: WorkflowNodeData, selected: boolean }) => {
     const accuracy = data.accuracy || 1.0;
 
     return (

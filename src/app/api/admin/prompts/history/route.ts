@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -12,14 +12,14 @@ import { UserRole } from '@/types/roles';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
         const tenantId = session.user.tenantId;
 
         const history = await PromptService.getGlobalHistory(isSuperAdmin ? null : tenantId);
 
         return NextResponse.json({ success: true, history });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_HISTORY', correlacion_id);
     }
 }

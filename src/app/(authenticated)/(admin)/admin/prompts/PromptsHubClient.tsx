@@ -44,6 +44,22 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 import { useEnvironmentStore } from '@/store/environment-store';
 
+/**
+ * 📦 Extended Prompt Type with API metadata
+ */
+type PromptWithInfo = Prompt & {
+    _id?: string;
+    tenantInfo?: {
+        name: string;
+        branding?: {
+            logo?: {
+                url: string;
+            };
+        };
+    };
+    _validationError?: boolean;
+};
+
 // Hooks y componentes genéricos
 import { useApiList } from '@/hooks/useApiList';
 import { useApiMutation } from '@/hooks/useApiMutation';
@@ -54,7 +70,7 @@ import { useFormModal } from '@/hooks/useFormModal';
  */
 export function PromptsHubClient() {
     const t = useTranslations('admin.prompts');
-    const modal = useFormModal<any>();
+    const modal = useFormModal<PromptWithInfo>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -73,18 +89,18 @@ export function PromptsHubClient() {
         data: prompts = [],
         isLoading: loading,
         refresh: fetchPrompts
-    } = useApiList<any>({
+    } = useApiList<PromptWithInfo>({
         endpoint: '/api/admin/prompts',
         filters: { environment },
         autoFetch: true,
         dataKey: 'prompts',
         onSuccess: (data) => {
             if (data && data.length > 0) {
-                const tenantsList = data.map((p: any) => ({
+                const tenantsList = data.map((p: PromptWithInfo) => ({
                     id: p.tenantId,
                     name: p.tenantInfo?.name || p.tenantId
                 }));
-                const unique = Array.from(new Map(tenantsList.map((item: any) => [item.id, item])).values()) as any[];
+                const unique = Array.from(new Map(tenantsList.map((item: { id: string, name: string }) => [item.id, item])).values()) as { id: string, name: string }[];
                 setUniqueTenants(unique);
             }
         }
@@ -102,9 +118,9 @@ export function PromptsHubClient() {
         const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter;
 
         return matchesSearch && matchesTenant && matchesCategory && matchesIndustry;
-    });
+    }) as PromptWithInfo[];
 
-    const categoryCounts = filteredPrompts.reduce((acc: any, p: any) => {
+    const categoryCounts = filteredPrompts.reduce((acc: Record<string, number>, p: PromptWithInfo) => {
         const cat = p.category || 'GENERAL';
         acc[cat] = (acc[cat] || 0) + 1;
         return acc;
@@ -137,8 +153,12 @@ export function PromptsHubClient() {
             // Actualizar lista
             fetchPrompts();
 
-            toast.success("Gobernanza Actualizada", {
-                description: `Sincronización completada. Creados: ${json.stats?.created ?? json.results?.created}, Actualizados: ${json.stats?.updated ?? json.results?.updated}.`
+            toast.success(t('messages.sync_success_title'), {
+                description: t('messages.sync_success', {
+                    created: json.stats?.created ?? json.results?.created ?? 0,
+                    updated: json.stats?.updated ?? json.results?.updated ?? 0,
+                    errors: json.stats?.errors ?? 0
+                })
             });
         } catch (error: any) {
             console.error('Sync Error:', error);
@@ -158,7 +178,7 @@ export function PromptsHubClient() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'PROMPT',
-                    id: (modal.data as any)._id
+                    id: modal.data?._id
                 })
             });
             const json = await res.json();
@@ -349,7 +369,7 @@ export function PromptsHubClient() {
                                 <div className="space-y-1">
                                     {filteredPrompts.map(p => (
                                         <div
-                                            key={(p as any)._id}
+                                            key={p._id || p.key}
                                             onClick={() => modal.openEdit(p)}
                                             className={cn(
                                                 "p-4 rounded-2xl cursor-pointer transition-all group relative flex items-center justify-between",
@@ -378,7 +398,7 @@ export function PromptsHubClient() {
                                                     <div className="flex items-center gap-2">
                                                         <h3 className={cn("text-xs font-black tracking-tight flex items-center gap-1", modal.data === p && modal.isOpen ? "text-white" : "text-slate-900 dark:text-white")}>
                                                             {p.name}
-                                                            {(p as any)._validationError && (
+                                                            {p._validationError && (
                                                                 <AlertTriangle className="w-3 h-3 text-amber-500" />
                                                             )}
                                                         </h3>
@@ -440,7 +460,7 @@ export function PromptsHubClient() {
                         {modal.isOpen ? (
                             <div className="h-full">
                                 <PromptEditor
-                                    key={modal.data ? (modal.data as any)._id || modal.data.key : 'new-prompt'}
+                                    key={modal.data ? modal.data._id || modal.data.key : 'new-prompt'}
                                     initialPrompt={modal.data || undefined}
                                     onSaved={handleSaved}
                                     onCancel={() => modal.close()}

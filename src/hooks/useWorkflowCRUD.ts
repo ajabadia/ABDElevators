@@ -3,21 +3,22 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { ReactFlowInstance } from "@xyflow/react";
+import { ReactFlowInstance, Edge } from "@xyflow/react";
+import { WorkflowNode, WorkflowInstance } from "@/components/workflow-editor/types";
 
 interface UseWorkflowCRUDProps {
     environment: string;
-    nodes: any[];
-    edges: any[];
+    nodes: WorkflowNode[];
+    edges: Edge[];
     workflowName: string;
     activeWorkflowId: string | null;
     currentIndustry: string;
     currentVersion: number;
-    setWorkflows: (workflows: any[]) => void;
+    setWorkflows: (workflows: WorkflowInstance[]) => void;
     setActiveWorkflowId: (id: string | null) => void;
     setWorkflowName: (name: string) => void;
-    setNodes: (nodes: any[]) => void;
-    setEdges: (edges: any[]) => void;
+    setNodes: (nodes: WorkflowNode[]) => void;
+    setEdges: (edges: Edge[]) => void;
     setCurrentVersion: (version: number | ((v: number) => number)) => void;
     setCurrentIndustry: (industry: string) => void;
     reactFlowInstance: ReactFlowInstance | null;
@@ -68,7 +69,7 @@ export function useWorkflowCRUD({
         }
     }, [environment, activeWorkflowId, nodes.length, setWorkflows, setActiveWorkflowId, setWorkflowName, setCurrentVersion, setCurrentIndustry, setNodes, setEdges]);
 
-    const handleWorkflowChange = useCallback((id: string, workflows: any[]) => {
+    const handleWorkflowChange = useCallback((id: string, workflows: WorkflowInstance[]) => {
         const selected = workflows.find(w => (w._id || w.id) === id);
         if (selected) {
             setActiveWorkflowId(id);

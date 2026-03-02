@@ -1,9 +1,11 @@
-import { auth } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
 import { redirect } from 'next/navigation';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 import { MetricCard } from '@/components/ui/metric-card';
 import { NotificationService } from '@/services/admin/NotificationService';
+import { Notification } from '@/lib/schemas/notifications';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
@@ -18,27 +20,26 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, FileText, Settings, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { getTranslations } from 'next-intl/server';
+import { es, enUS } from 'date-fns/locale';
+import { getTranslations, getLocale } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationsDashboardPage() {
-    const session = await auth();
-
-    if (session?.user?.role !== 'SUPER_ADMIN') {
-        redirect('/dashboard');
-    }
+    await requireRole([UserRole.SUPER_ADMIN]);
 
     const t = await getTranslations('admin.notifications.page');
     const tKpi = await getTranslations('admin.notifications.kpi');
     const tTable = await getTranslations('admin.notifications.table');
     const tStatus = await getTranslations('admin.notifications.status');
     const tValidation = await getTranslations('admin.notifications.validation');
+    const activeLocale = await getLocale();
 
-    // Fetch data via Service (Rule 11/12 Alignment)
-    const stats = await NotificationService.getStats();
-    const recentLogs = await NotificationService.getRecentLogs(10);
+    // Fetch data via Service (Rule 11/12 Alignment) - Parallelized (Rule 8)
+    const [stats, recentLogs] = await Promise.all([
+        NotificationService.getStats(),
+        NotificationService.getRecentLogs(10)
+    ]);
 
     return (
         <PageContainer>
@@ -110,7 +111,7 @@ export default async function NotificationsDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {recentLogs.map((log: any) => (
+                                {recentLogs.map((log: Notification) => (
                                     <TableRow key={log._id.toString()} className="hover:bg-muted/30 transition-colors border-border/50">
                                         <TableCell className="pl-6">
                                             {log.level === 'ERROR' ? (
@@ -132,19 +133,24 @@ export default async function NotificationsDashboardPage() {
                                             {log.createdAt ? (
                                                 (() => {
                                                     try {
-                                                        return formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: es });
-                                                    } catch (e) {
+                                                        const date = log.createdAt instanceof Date ? log.createdAt : new Date(log.createdAt);
+                                                        return formatDistanceToNow(date, {
+                                                            addSuffix: true,
+                                                            locale: activeLocale === 'es' ? es : enUS
+                                                        });
+                                                    } catch (err: unknown) {
+                                                        console.error('[NotificationsUI] Date formatting error:', err);
                                                         return tValidation('invalidDate');
                                                     }
                                                 })()
-                                            ) : 'N/A'}
+                                            ) : t('notAvailable')}
                                         </TableCell>
                                     </TableRow>
                                 ))}
                                 {recentLogs.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-20 text-muted-foreground/50 italic text-sm">
-                                            No recent notifications found.
+                                            {tTable('empty')}
                                         </TableCell>
                                     </TableRow>
                                 )}

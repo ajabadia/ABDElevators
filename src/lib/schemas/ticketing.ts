@@ -42,6 +42,22 @@ export const TicketSchema = z.object({
 
     tags: z.array(z.string()).default([]),
 
+    messages: z.array(z.object({
+        id: z.string(),
+        author: z.string(),
+        authorType: z.enum(['User', 'Support']),
+        authorName: z.string(),
+        content: z.string(),
+        timestamp: z.date(),
+        isInternal: z.boolean().default(false),
+    })).default([]),
+    internalNotes: z.array(z.object({
+        id: z.string(),
+        author: z.string(),
+        content: z.string(),
+        timestamp: z.date(),
+    })).default([]),
+
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
     resolvedAt: z.date().optional(),

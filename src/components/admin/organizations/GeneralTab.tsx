@@ -48,7 +48,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
                     <Label htmlFor="industry">{t('industry')}</Label>
                     <Select
                         value={config?.industry}
-                        onValueChange={(val: any) => setConfig(prev => prev ? { ...prev, industry: val } : null)}
+                        onValueChange={(val: string) => setConfig(prev => prev ? { ...prev, industry: val as TenantConfig['industry'] } : null)}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder={t('industryPlaceholder')} />

@@ -7,15 +7,15 @@ import crypto from 'crypto';
  * Automatiza la medición de performance y detección de violaciones de SLA.
  * Phase 132.4
  */
-export function withPerformanceSLA(
-    handler: (req: NextRequest, context: any) => Promise<NextResponse>,
+export function withPerformanceSLA<T = unknown>(
+    handler: (req: NextRequest, context: T) => Promise<NextResponse>,
     config: {
         endpoint: string;
         thresholdMs: number;
         source?: string;
     }
 ) {
-    return async (req: NextRequest, context: any) => {
+    return async (req: NextRequest, context: T) => {
         const start = Date.now();
         const correlationId = req.headers.get('x-correlation-id') || crypto.randomUUID();
         // Inyectar correlationId en los headers de la request si no existe para que los servicios lo usen

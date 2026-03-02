@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
-import { connectLogsDB } from '@/lib/db';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { handleApiError } from '@/lib/errors';
 import crypto from 'crypto';
@@ -14,7 +13,7 @@ export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
         // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('audit:logs', 'read');
 
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get('limit') || '100');
@@ -84,7 +83,7 @@ export async function GET(req: NextRequest) {
             meta: { errorCount, warnCount }
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_LOGS', correlacion_id);
     }
 }

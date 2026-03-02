@@ -9,6 +9,7 @@ import { IngestStrategyService } from './IngestStrategyService';
 import { GraphExtractionService } from '@/services/core/graph-extraction-service';
 import { IngestOptions, IngestResult } from './types';
 import { StateTransitionValidator, IngestState } from './core/StateTransitionValidator';
+import { UserRole } from '@/types/roles';
 
 export interface EnrichmentOptions extends Partial<IngestOptions> {
     isEnrichment: boolean;
@@ -18,6 +19,7 @@ export interface EnrichmentOptions extends Partial<IngestOptions> {
 /**
  * IngestService: Orchestrator for the RAG ingestion pipeline.
  * Refactored Phase 213: Delegating logic to specialized modules.
+ * Hardened Era 8: Strict types and centralized repository.
  */
 export class IngestService {
 
@@ -35,9 +37,9 @@ export class IngestService {
         const workerSession = {
             user: {
                 id: 'system_worker',
-                email: options.userEmail || asset.uploadedBy || 'system@abd.com',
+                email: options.userEmail || (asset as any).uploadedBy || 'system@abd.com',
                 tenantId: asset.tenantId || 'platform_master',
-                role: 'ADMIN'
+                role: UserRole.ADMIN
             }
         };
 
@@ -75,16 +77,16 @@ export class IngestService {
                     if (analysis.visualFindings.length > 0) {
                         processedChunks = await IngestIndexer.index(
                             "", analysis.visualFindings, asset, analysis.documentContext,
-                            analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession,
-                            updateProgress, asset.chunkingLevel,
+                            analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession as any,
+                            updateProgress, asset.chunkingLevel as any,
                             { size: options.chunkSize, overlap: options.chunkOverlap, threshold: options.chunkThreshold }
                         );
                     }
                 } else {
                     processedChunks = await IngestIndexer.index(
                         analysis.rawText, analysis.visualFindings, asset, analysis.documentContext,
-                        analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession,
-                        updateProgress, asset.chunkingLevel,
+                        analysis.detectedIndustry, analysis.detectedLang, correlationId, workerSession as any,
+                        updateProgress, asset.chunkingLevel as any,
                         { size: options.chunkSize, overlap: options.chunkOverlap, threshold: options.chunkThreshold }
                     );
                 }
@@ -94,11 +96,11 @@ export class IngestService {
             if (IngestStrategyService.shouldExecuteGraphRag(asset)) {
                 await GraphExtractionService.extractAndPersist(
                     analysis.rawText, asset.tenantId, correlationId, { sourceDoc: asset.filename }
-                ).catch((e: any) => console.error('[GRAPH_ERROR]', e));
+                ).catch((e: unknown) => console.error('[GRAPH_ERROR]', e));
             }
 
             // 5. Finalize
-            await StateTransitionValidator.transition('PROCESSING', 'COMPLETED', {
+            await StateTransitionValidator.transition('PROCESSING' as IngestState, 'COMPLETED', {
                 docId, correlationId, tenantId: asset.tenantId, userId: workerSession.user.email
             });
 
@@ -118,7 +120,7 @@ export class IngestService {
 
             await IngestAuditService.logEvent({
                 tenantId: asset.tenantId, performedBy: workerSession.user.email, filename: asset.filename,
-                sizeBytes: asset.sizeBytes || 0, md5: asset.fileMd5, docId, correlationId, status: 'SUCCESS',
+                sizeBytes: asset.sizeBytes || 0, md5: asset.fileMd5 || '', docId, correlationId, status: 'SUCCESS',
                 details: { source: 'ASYNC_WORKER', chunks: processedChunks, duration_ms: Date.now() - start }
             });
 
@@ -135,9 +137,10 @@ export class IngestService {
 
             return { success: true, correlationId, message: "Processed", chunks: processedChunks };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             await knowledgeAssetRepository.update(docId, {
-                $set: { ingestionStatus: 'FAILED', error: error.message, updatedAt: new Date() }
+                $set: { ingestionStatus: 'FAILED', error: errorMessage, updatedAt: new Date() }
             });
             throw error;
         }

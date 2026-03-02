@@ -1,98 +1,103 @@
-import { getTenantCollection } from '@/lib/db-tenant';
-import { WorkflowDefinitionSchema, WorkflowDefinition } from '@/lib/schemas';
-import { AppError, ValidationError } from '@/lib/errors';
+import { workflowDefinitionRepository } from '@/lib/repositories/WorkflowDefinitionRepository';
+import { WorkflowDefinitionSchema, type WorkflowDefinition } from '@/lib/schemas';
+import { AppError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
-import { ObjectId } from 'mongodb';
+import { type ClientSession } from 'mongodb';
+import { type TenantSession } from '@/lib/db-tenant';
 
 /**
- * Servicio de Gestión de Workflows (Fase 7.2)
+ * Servicio de Gestión de Workflows (Era 8 Hardened)
  * Permite a los administradores configurar sus propios procesos.
  */
 export class WorkflowService {
     /**
      * Crea o actualiza una definición de workflow.
      */
-    /**
-     * Crea o actualiza una definición de workflow.
-     */
-    static async createOrUpdateDefinition(definition: Partial<WorkflowDefinition>, correlationId: string) {
+    static async createOrUpdateDefinition(
+        definition: Partial<WorkflowDefinition>,
+        correlationId: string,
+        session?: TenantSession | null,
+        mongoSession?: ClientSession
+    ): Promise<string> {
         const validated = WorkflowDefinitionSchema.parse(definition);
-        const collection = await getTenantCollection('workflow_definitions');
-        const tenantId = collection.tenantId;
-        const environment = validated.environment;
+        const environment = validated.environment || 'PRODUCTION';
 
-        // Solo un workflow por tipo de entidad puede ser default
-        if (validated.is_default) {
-            await collection.updateMany(
-                { tenantId, entityType: validated.entityType, environment },
-                { $set: { is_default: false } }
+        // Workflow atomic update with session support
+        const runWithTransaction = async (s: ClientSession) => {
+            // Solo un workflow por tipo de entidad puede ser default
+            if (validated.is_default) {
+                await workflowDefinitionRepository.unsetDefaults(validated.entityType, session, s);
+            }
+
+            const query = {
+                tenantId: validated.tenantId,
+                entityType: validated.entityType,
+                name: validated.name,
+                environment
+            };
+
+            const collection = await (workflowDefinitionRepository as any).getCollection(session);
+            const result = await collection.updateOne(
+                query,
+                { $set: { ...validated, updatedAt: new Date() } },
+                { upsert: true, session: s }
             );
-        }
 
-        const query = {
-            tenantId,
-            entityType: validated.entityType,
-            name: validated.name,
-            environment
+            return result.upsertedId?.toString() || 'updated';
         };
 
-        const result = await collection.updateOne(
-            query,
-            { $set: { ...validated, updatedAt: new Date() } },
-            { upsert: true }
-        );
+        let resultId: string;
+        if (mongoSession) {
+            resultId = await runWithTransaction(mongoSession);
+        } else {
+            const { connectDB } = await import('@/lib/db');
+            const db = await connectDB();
+            const client = (db as any).client;
+            const s = client.startSession();
+            try {
+                resultId = await s.withTransaction(async () => await runWithTransaction(s));
+            } finally {
+                await s.endSession();
+            }
+        }
 
         await logEvento({
             level: 'INFO',
             source: 'WORKFLOW_SERVICE',
             action: 'UPSERT_DEFINITION',
-            message: `Workflow '${validated.name}' actualizado para tenant ${tenantId} en ${environment}`, correlationId,
+            message: `Workflow '${validated.name}' actualizado para tenant ${validated.tenantId} en ${environment}`,
+            correlationId,
             details: { name: validated.name, entity_type: validated.entityType, environment }
         });
 
-        return result.upsertedId || result.matchedCount;
+        return resultId;
     }
 
     /**
      * Lista todas las definiciones para un tenant y tipo.
      */
-    static async listDefinitions(
-        optionsOrTenantId: { tenantId?: string, entityType?: 'ENTITY' | 'EQUIPMENT' | 'USER', environment?: string, limit?: number, after?: string | null } | string,
-        legacyEntityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY',
-        legacyEnvironment: string = 'PRODUCTION'
-    ): Promise<WorkflowDefinition[] & { nextCursor?: string | null }> {
-        let tenantId: string;
-        let entityType = legacyEntityType;
-        let environment = legacyEnvironment;
-        let limit = 100;
-        let after: string | null = null;
+    static async listDefinitions(options: {
+        tenantId: string,
+        entityType?: 'ENTITY' | 'EQUIPMENT' | 'USER',
+        environment?: string,
+        limit?: number,
+        after?: string | null
+    }, session?: TenantSession | null): Promise<WorkflowDefinition[] & { nextCursor?: string | null }> {
+        const { tenantId, entityType = 'ENTITY', environment = 'PRODUCTION', limit = 100, after = null } = options;
 
-        if (typeof optionsOrTenantId === 'object' && optionsOrTenantId !== null && !Array.isArray(optionsOrTenantId)) {
-            const opts = optionsOrTenantId as any;
-            tenantId = opts.tenantId;
-            entityType = opts.entityType ?? 'ENTITY';
-            environment = opts.environment ?? 'PRODUCTION';
-            limit = opts.limit ?? 100;
-            after = opts.after ?? null;
-        } else {
-            tenantId = optionsOrTenantId as string;
-        }
-
-        const collection = await getTenantCollection('workflow_definitions');
         const filter: any = { tenantId, entityType, environment };
-
         if (after) {
-            filter._id = { $lt: new ObjectId(after) };
+            filter._id = { $lt: workflowDefinitionRepository.toObjectId(after) };
         }
 
-        const docs = await collection.find(filter, {
+        const docs = await workflowDefinitionRepository.list(filter, {
             sort: { _id: -1 },
             limit: limit + 1
-        });
+        }, session);
 
         const items = docs.slice(0, limit) as unknown as WorkflowDefinition[] & { nextCursor?: string | null };
         const hasNextPage = docs.length > limit;
-        items.nextCursor = hasNextPage ? ((docs[limit - 1] as any)._id.toString()) : null;
+        items.nextCursor = hasNextPage ? (docs[limit - 1] as any)._id.toString() : null;
 
         return items;
     }
@@ -100,35 +105,29 @@ export class WorkflowService {
     /**
      * Obtiene el workflow activo para una entidad.
      */
-    static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION') {
-        const collection = await getTenantCollection('workflow_definitions');
-        return await collection.findOne({ tenantId, entityType, active: true, environment }) as WorkflowDefinition | null;
+    static async getActiveWorkflow(tenantId: string, entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY', environment: string = 'PRODUCTION', session?: TenantSession | null) {
+        return await workflowDefinitionRepository.findOne({ tenantId, entityType, active: true, environment } as any, session);
     }
 
     /**
      * Obtiene una definición por ID.
      */
-    static async getDefinitionById(id: string) {
-        const collection = await getTenantCollection('workflow_definitions');
-        try {
-            return await collection.findOne({ _id: new ObjectId(id) }) as WorkflowDefinition | null;
-        } catch {
-            return null;
-        }
+    static async getDefinitionById(id: string, session?: TenantSession | null) {
+        return await workflowDefinitionRepository.findById(id, session);
     }
 
     /**
      * Inicializa un workflow por defecto para un nuevo Tenant (Seeding).
      */
-    static async seedDefaultWorkflow(tenantId: string, industry: any, correlationId: string) {
+    static async seedDefaultWorkflow(tenantId: string, industry: string, correlationId: string, session?: TenantSession | null) {
         const defaultWorkflow: Partial<WorkflowDefinition> = {
             tenantId,
-            industry,
+            industry: industry as any,
             name: 'Flujo Estándar',
             entityType: 'ENTITY',
             is_default: true,
             active: true,
-            environment: 'PRODUCTION', // Default for seeding
+            environment: 'PRODUCTION',
             initial_state: 'ingresado',
             states: [
                 { id: 'ingresado', label: 'Ingresado', color: '#64748b', icon: 'FileText', can_edit: true, is_initial: true, is_final: false, requires_validation: false, roles_allowed: ['ADMIN', 'TECHNICAL', 'ENGINEERING'] },
@@ -144,6 +143,6 @@ export class WorkflowService {
             ]
         };
 
-        return await this.createOrUpdateDefinition(defaultWorkflow, correlationId);
+        return await this.createOrUpdateDefinition(defaultWorkflow, correlationId, session);
     }
 }

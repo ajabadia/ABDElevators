@@ -17,7 +17,7 @@ export class RagEvaluationDatasetService {
     /**
      * Create a new evaluation dataset.
      */
-    static async createDataset(session: TenantSession, data: any): Promise<string> {
+    static async createDataset(session: TenantSession, data: Record<string, unknown>): Promise<string> {
         const validated = CreateRagEvaluationDatasetSchema.parse(data);
         const collection = await getTenantCollection<Document>('rag_evaluation_datasets', session);
 
@@ -27,9 +27,9 @@ export class RagEvaluationDatasetService {
             createdAt: new Date(),
             updatedAt: new Date(),
             active: true
-        } as any;
+        } as unknown as RagEvaluationDataset;
 
-        const result = await collection.insertOne(dataset as any);
+        const result = await collection.insertOne(dataset as unknown as Document);
 
         await logEvento({
             level: 'INFO',
@@ -63,7 +63,7 @@ export class RagEvaluationDatasetService {
      */
     static async listDatasets(session: TenantSession): Promise<RagEvaluationDataset[]> {
         const collection = await getTenantCollection<RagEvaluationDataset>('rag_evaluation_datasets', session);
-        return collection.find({});
+        return collection.find({}) as unknown as Promise<RagEvaluationDataset[]>;
     }
 
     /**
@@ -72,7 +72,7 @@ export class RagEvaluationDatasetService {
     static async updateTestResults(
         session: TenantSession,
         datasetId: string,
-        results: Record<string, any>
+        results: Record<string, unknown>
     ): Promise<void> {
         const collection = await getTenantCollection<Document>('rag_evaluation_datasets', session);
 
@@ -83,7 +83,7 @@ export class RagEvaluationDatasetService {
                 return {
                     ...tc,
                     lastEvaluation: {
-                        ...results[tc.id],
+                        ...(results[tc.id] as Record<string, unknown>),
                         evaluatedAt: new Date()
                     }
                 };

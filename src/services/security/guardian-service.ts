@@ -1,7 +1,10 @@
 import {
     PermissionPolicy,
-    PermissionGroup
+    PermissionGroup,
+    PermissionPolicySchema,
+    PermissionGroupSchema
 } from '@/lib/schemas';
+import { z } from 'zod';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { logEvento } from '@/lib/logger';
@@ -19,7 +22,7 @@ export class GuardianService {
     static async listPolicies(tenantId: string): Promise<PermissionPolicy[]> {
         const collection = await getTenantCollection('policies');
         const docs = await collection.find({ tenantId });
-        return docs as unknown as PermissionPolicy[];
+        return z.array(PermissionPolicySchema).parse(docs);
     }
 
     static async createPolicy(tenantId: string, data: Omit<PermissionPolicy, '_id' | 'tenantId' | 'createdAt' | 'updatedAt'>, userId: string): Promise<string> {
@@ -114,7 +117,7 @@ export class GuardianService {
     static async listGroups(tenantId: string): Promise<PermissionGroup[]> {
         const collection = await getTenantCollection('permission_groups', undefined, 'AUTH');
         const docs = await collection.find({ tenantId });
-        return docs as unknown as PermissionGroup[];
+        return z.array(PermissionGroupSchema).parse(docs);
     }
 
     static async createGroup(tenantId: string, data: Omit<PermissionGroup, '_id' | 'tenantId' | 'createdAt' | 'updatedAt'>, userId: string): Promise<string> {

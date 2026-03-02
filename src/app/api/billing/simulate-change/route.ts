@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { BillingService } from '@/services/admin/BillingService';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { PlanTier } from '@/lib/plans';
 
@@ -13,61 +14,27 @@ const SimulateChangeSchema = z.object({
 /**
  * POST /api/billing/simulate-change
  * Simula el impacto financiero de cambiar de plan (prorrateo).
+ * SLA: P95 < 1000ms
  */
-export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
-
-        const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
+        const session = await enforcePermission('billing:subscription', 'read');
 
         const body = await req.json();
         const { newTier } = SimulateChangeSchema.parse(body);
 
+        const tenantId = session.user.tenantId;
+
         // Llamar al servicio de simulación
         const simulation = await BillingService.simulatePlanChange(tenantId, newTier as PlanTier);
 
-        await logEvento({
-            level: 'INFO',
-            source: 'BILLING_API',
-            action: 'PLAN_CHANGE_SIMULATED',
-            message: `Plan change simulated for tenant ${tenantId} to ${newTier}`,
-            correlationId: correlacion_id,
-            details: {
-                tenantId,
-                newTier,
-                simulation
-            },
-        });
-
         return NextResponse.json({
             success: true,
-            simulation
+            simulation,
+            correlationId
         });
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'BILLING_API',
-            action: 'SIMULATION_ERROR',
-            message: `Error simulating plan change: ${error.message}`,
-            correlationId: correlacion_id,
-            stack: error.stack,
-        });
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
-            { status: 500 }
-        );
+    } catch (error) {
+        return handleApiError(error, 'API_BILLING_SIMULATE_CHANGE_POST', correlationId);
     }
-}
+}, { p95: 1000, max: 2000 });

@@ -1,41 +1,39 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkflowService } from '@/services/ops/WorkflowService';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
-import { UserRole } from '@/types/roles';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { WorkflowDefinitionSchema } from '@/lib/schemas/workflow';
+import { z } from 'zod';
+import crypto from 'crypto';
+
+const ListDefinitionsSchema = z.object({
+    environment: z.enum(['PRODUCTION', 'STAGING', 'SANDBOX']).default('PRODUCTION'),
+    entityType: z.enum(['ENTITY', 'EQUIPMENT', 'USER']).optional().default('ENTITY'),
+    limit: z.coerce.number().min(1).max(100).default(50),
+    after: z.string().optional().nullable()
+});
 
 /**
- * API para gestionar definiciones de workflow (Phase 70 compliance).
- * Fase 7.2: Motor de Workflows Multinivel.
+ * GET /api/admin/workflow-definitions
+ * Lista definiciones con validación robusta y SLA.
  */
-export async function GET(request: Request) {
-    const correlationId = uuidv4();
+export const GET = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
+
     try {
-        // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('ai_governance', 'read');
 
-        const { searchParams } = new URL(request.url);
-        const environment = searchParams.get('environment') || 'PRODUCTION';
-        const rawType = searchParams.get('entityType') || searchParams.get('entity_type');
-        let entityType: 'ENTITY' | 'EQUIPMENT' | 'USER' = 'ENTITY';
-
-        if (rawType === 'PEDIDO') entityType = 'ENTITY';
-        else if (rawType === 'EQUIPO') entityType = 'EQUIPMENT';
-        else if (rawType === 'USUARIO') entityType = 'USER';
-        else if (['ENTITY', 'EQUIPMENT', 'USER'].includes(rawType || '')) entityType = rawType as any;
-
-        const limit = parseInt(searchParams.get('limit') || '50');
-        const after = searchParams.get('after');
+        const { searchParams } = new URL(req.url);
+        const validated = ListDefinitionsSchema.parse(Object.fromEntries(searchParams));
 
         const definitions = await WorkflowService.listDefinitions({
             tenantId: session.user.tenantId,
-            entityType,
-            environment,
-            limit,
-            after
-        });
+            entityType: validated.entityType,
+            environment: validated.environment,
+            limit: validated.limit,
+            after: validated.after
+        }, session as any);
 
         const nextCursor = (definitions as any).nextCursor;
         return NextResponse.json({ definitions, nextCursor });
@@ -43,20 +41,28 @@ export async function GET(request: Request) {
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_WORKFLOW_LIST', correlationId);
     }
-}
+}, { endpoint: 'API_ADMIN_WORKFLOW_LIST', thresholdMs: 500 });
 
-export async function POST(request: Request) {
-    const correlationId = uuidv4();
+/**
+ * POST /api/admin/workflow-definitions
+ * Crea o actualiza definiciones con validación robusta.
+ */
+export async function POST(req: NextRequest) {
+    const correlationId = crypto.randomUUID();
+
     try {
-        // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('ai_governance', 'write');
+        const body = await req.json();
 
-        const body = WorkflowDefinitionSchema.parse(await request.json());
+        const validated = WorkflowDefinitionSchema.parse({
+            ...body,
+            tenantId: session.user.tenantId
+        });
 
-        // El WorkflowService ya maneja la lógica de negocio, pero aquí forzamos validación en el borde
-        const result = await WorkflowService.createOrUpdateDefinition(body, correlationId);
+        // El WorkflowService ya maneja la lógica de negocio y transacciones
+        const resultId = await WorkflowService.createOrUpdateDefinition(validated, correlationId, session as any);
 
-        return NextResponse.json({ success: true, definitionId: result });
+        return NextResponse.json({ success: true, definitionId: resultId });
 
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_WORKFLOW_SAVE', correlationId);

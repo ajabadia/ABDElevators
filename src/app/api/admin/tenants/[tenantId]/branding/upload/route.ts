@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { uploadBrandingAsset, deleteFromCloudinary } from '@/lib/cloudinary';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -16,7 +16,7 @@ export async function POST(
 ) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('tenant:branding', 'update');
         const { tenantId } = await params;
 
         // El ADMIN solo puede subir a su propio tenant. 
@@ -71,7 +71,7 @@ export async function POST(
             asset: { url: result.secureUrl, publicId: result.publicId }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_BRANDING_UPLOAD', correlacion_id);
     }
 }

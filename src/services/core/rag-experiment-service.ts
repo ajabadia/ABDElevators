@@ -1,7 +1,11 @@
-import { getTenantCollection } from '@/lib/db-tenant';
+import { ragExperimentRepository } from '@/lib/repositories/RagExperimentRepository';
 import { logEvento } from '@/lib/logger';
 import { RagEvaluationService } from './rag-evaluation-service';
+import { RagExperiment } from '@/lib/schemas/rag-experiment';
+import { TenantSession } from '@/lib/db-tenant';
+import { ClientSession } from 'mongodb';
 import crypto from 'crypto';
+import { AppError } from '@/lib/errors';
 
 export interface RagExperimentConfig {
     model: string;
@@ -20,8 +24,9 @@ export class RagExperimentService {
         tenantId: string,
         query: string,
         config: RagExperimentConfig,
-        userId: string
-    ): Promise<any> {
+        userId: string,
+        session?: TenantSession | null
+    ): Promise<RagExperiment> {
         const correlationId = `exp_${crypto.randomBytes(8).toString('hex')}`;
 
         try {
@@ -35,10 +40,7 @@ export class RagExperimentService {
                 details: config
             });
 
-            // 1. Simular ejecución de RAG (Aquí se integraría con el motor RAG real)
-            // Por ahora usamos el EvaluationService para simular el ciclo completo
-            // TODO: Integrar con RagService.query() real cuando esté optimizado
-
+            // 1. Simular ejecución de RAG
             const dummyContexts = [
                 "Fragmento de prueba 1 sobre ascensores...",
                 "Manual técnico sección 4.2: Mantenimiento preventivo."
@@ -53,7 +55,7 @@ export class RagExperimentService {
                 tenantId
             );
 
-            const experiment = {
+            const experiment: Omit<RagExperiment, '_id'> = {
                 tenantId,
                 userId,
                 correlationId,
@@ -61,35 +63,47 @@ export class RagExperimentService {
                 config,
                 result: dummyResponse,
                 contexts: dummyContexts,
-                evaluation: evaluation.metrics,
+                evaluation: evaluation.metrics as Record<string, number>,
                 timestamp: new Date()
             };
 
-            const session = { user: { id: userId, tenantId, role: 'USER' } } as any;
-            const collection = await getTenantCollection('rag_experiments', session);
-            await collection.insertOne(experiment);
+            // Transactional integrity
+            const { connectDB } = await import('@/lib/db');
+            const db = await connectDB();
+            const client = (db as unknown as { client: { startSession: () => ClientSession } }).client;
+            const mongoSession = client.startSession();
 
-            return experiment;
+            try {
+                await mongoSession.withTransaction(async () => {
+                    await ragExperimentRepository.create(experiment, session, mongoSession);
+                });
+            } finally {
+                await mongoSession.endSession();
+            }
+
+            return { ...experiment, _id: 'generated' } as RagExperiment;
 
         } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
             await logEvento({
                 level: 'ERROR',
                 source: 'RAG_EXPERIMENT',
                 action: 'FAILED',
-                message: error instanceof Error ? error.message : 'Unknown error',
+                message,
                 correlationId,
                 tenantId
             });
-            throw error;
+            throw new AppError('DATABASE_ERROR', 500, `Experiment execution failed: ${message}`);
         }
     }
 
     /**
      * Lists recent experiments
      */
-    static async listExperiments(tenantId: string, limit = 10): Promise<any[]> {
-        const session = { user: { id: 'system', tenantId, role: 'SYSTEM' } } as any;
-        const collection = await getTenantCollection('rag_experiments', session);
-        return await collection.find({}, { sort: { timestamp: -1 }, limit } as any);
+    static async listExperiments(tenantId: string, session?: TenantSession | null, limit = 10): Promise<RagExperiment[]> {
+        return await ragExperimentRepository.list({ tenantId }, {
+            sort: { timestamp: -1 },
+            limit
+        }, session);
     }
 }

@@ -52,7 +52,7 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
         }
     };
 
-    const updateReportConfig = (field: string, value: any) => {
+    const updateReportConfig = (field: string, value: string | boolean) => {
         if (!config) return;
         setConfig({
             ...config,
@@ -124,8 +124,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                         });
                                                         toast.success(tLogo('success'), { description: tLogo('successDesc') });
                                                     }
-                                                } catch (err) {
-                                                    toast.error(tLogo('error'), { description: tLogo('errorDesc') });
+                                                } catch (err: unknown) {
+                                                    toast.error(tLogo('error'), {
+                                                        description: err instanceof Error ? err.message : tLogo('errorDesc')
+                                                    });
                                                 } finally {
                                                     setIsUploadingLogo(false);
                                                 }
@@ -205,8 +207,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                         });
                                                         toast.success(tDocumentLogo('success'), { description: tDocumentLogo('successDesc') });
                                                     }
-                                                } catch (err) {
-                                                    toast.error(tDocumentLogo('error'), { description: tDocumentLogo('errorDesc') });
+                                                } catch (err: unknown) {
+                                                    toast.error(tDocumentLogo('error'), {
+                                                        description: err instanceof Error ? err.message : tDocumentLogo('errorDesc')
+                                                    });
                                                 } finally {
                                                     setIsUploadingDocumentLogo(false);
                                                 }
@@ -285,8 +289,10 @@ export function BrandingTab({ config, setConfig }: BrandingTabProps) {
                                                         });
                                                         toast.success(tFavicon('success'), { description: tFavicon('successDesc') });
                                                     }
-                                                } catch (err) {
-                                                    toast.error(tFavicon('error'), { description: tFavicon('errorDesc') });
+                                                } catch (err: unknown) {
+                                                    toast.error(tFavicon('error'), {
+                                                        description: err instanceof Error ? err.message : tFavicon('errorDesc')
+                                                    });
                                                 } finally {
                                                     setIsUploadingFavicon(false);
                                                 }

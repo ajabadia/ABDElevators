@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { UserRole } from '@/types/roles';
 import { ExportParamsSchema } from '@/lib/schemas/export';
 import { ExportService } from '@/services/ops/export-service';
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     try {
         // 1. Authorize: Only Admins can export data
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('export', 'read');
 
         // 2. Validate Parameters
         const { searchParams } = new URL(req.url);
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
             }
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_EXPORT', correlationId);
     }
 }

@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
 import { BillingService } from '@/services/admin/BillingService';
 import { handleApiError, AppError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import { UserRole } from '@/types/roles';
-import { TenantSubscriptionSchema } from '@/lib/schemas/billing';
 import crypto from 'crypto';
 
 /**
  * POST /api/admin/billing/manual-change
  * Permite a un administrador cambiar manualmente la suscripción de un tenant.
+ * SLA: P95 < 1000ms
  */
-export async function POST(req: NextRequest) {
-    const correlationId = `manual_sub_${crypto.randomUUID()}`;
-
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
     try {
-        // Solo SuperAdmin puede cambiar planes manualmente por ahora (Seguridad)
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('billing:plan', 'update');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
-        const { tenantId: rawTenantId, subscriptionData } = await req.json();
+        const body = await req.json();
+        const { tenantId: rawTenantId, subscriptionData } = body;
 
         if (!rawTenantId) {
             throw new AppError('VALIDATION_ERROR', 400, 'tenantId es requerido');
@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
             subscription: result,
             correlationId
         });
-
-    } catch (error: any) {
-        return handleApiError(error, 'API_ADMIN_BILLING_MANUAL_CHANGE', correlationId);
+    } catch (error) {
+        return handleApiError(error, 'API_ADMIN_BILLING_MANUAL_CHANGE_POST', correlationId);
     }
-}
+}, { p95: 1000, max: 2000 });

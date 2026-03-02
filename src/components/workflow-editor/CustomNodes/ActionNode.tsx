@@ -12,10 +12,12 @@ const LABELS = {
     EXECUTIONS: "executions"
 };
 
-export const ActionNode = memo(({ data, selected }: { data: any, selected: boolean }) => {
+import { WorkflowNodeData } from '../types';
+
+export const ActionNode = memo(({ data, selected }: { data: WorkflowNodeData, selected: boolean }) => {
     const analytics = data.analytics || { count: 0, avgDuration: 0, errorRate: 0 };
-    const hasData = analytics.count > 0;
-    const isHighError = analytics.errorRate > 0.15; // Phase 54 Threshold
+    const hasData = (analytics.count || 0) > 0;
+    const isHighError = (analytics.errorRate || 0) > 0.15; // Phase 54 Threshold
 
     return (
         <div className={cn(
@@ -72,13 +74,13 @@ export const ActionNode = memo(({ data, selected }: { data: any, selected: boole
                 <div className="mt-3 pt-2 border-t border-primary/20 space-y-1">
                     <div className="flex justify-between text-[10px] text-muted-foreground">
                         <span>{LABELS.LATENCY}</span>
-                        <span className="font-bold text-foreground">{Math.round(analytics.avgDuration)}ms</span>
+                        <span className="font-bold text-foreground">{Math.round(analytics.avgDuration || 0)}ms</span>
                     </div>
-                    {analytics.errorRate > 0 && (
+                    {analytics.errorRate !== undefined && analytics.errorRate > 0 && (
                         <div className="flex justify-between text-[10px]">
                             <span className="text-muted-foreground">{LABELS.ERROR_RATE}</span>
                             <span className={cn("font-bold", isHighError ? "text-destructive" : "text-amber-600")}>
-                                {(analytics.errorRate * 100).toFixed(1)}%
+                                {((analytics.errorRate || 0) * 100).toFixed(1)}%
                             </span>
                         </div>
                     )}

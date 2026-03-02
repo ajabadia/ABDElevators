@@ -20,7 +20,9 @@
     "mark_reviewed": "Marcar como Revisado",
     "snooze_review": "Posponer Revisión",
     "analyze": "Analizar / Consultar",
-    "view_chunks": "Ver Chunks Ingestados"
+    "view_chunks": "Ver Chunks Ingestados",
+    "enrich": "Enriquecer Documento",
+    "upload_first": "Subir mi Primer Documento"
   },
   "table": {
     "document": "Documento",
@@ -31,7 +33,9 @@
     "loading": "Cargando documentos...",
     "empty": "No se encontraron documentos.",
     "uploaded": "Subido el",
-    "cost_tooltip": "Coste estimado de procesamiento (tokens/visión)"
+    "cost_tooltip": "Coste estimado de procesamiento (tokens/visión)",
+    "empty_title": "Tu Corpus está Vacío",
+    "empty_description": "Comienza subiendo especificaciones técnicas o manuales para que la IA pueda empezar a aprender de tu conocimiento."
   },
   "status": {
     "pending": "Pendiente",
@@ -42,7 +46,9 @@
     "processing": "Procesando",
     "reviewed": "Revisado",
     "expired": "Caducado",
-    "snoozed": "Pospuesto"
+    "snoozed": "Pospuesto",
+    "stuck": "Atascado",
+    "dead": "Mortal"
   },
   "review": {
     "next_date": "Próxima Revisión",
@@ -51,8 +57,10 @@
     "dialog_desc": "Establece la fecha para la próxima revisión técnica de este manual.",
     "success": "Documento marcado como revisado",
     "error": "Error al actualizar la revisión",
-    "filter_all": "Revisiones: Todas"
+    "filter_all": "Revisiones: Todas",
+    "imminent": "PRÓXIMA"
   },
+  "snooze_success": "Revisión pospuesta",
   "retry_success": "Reintento iniciado",
   "retry_desc": "El documento se está procesando nuevamente.",
   "title": "Gestión del Corpus Técnico",

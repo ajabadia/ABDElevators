@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GuardianEngine } from '@/core/guardian/GuardianEngine';
-import { AppError, handleApiError } from '@/lib/errors';
+import { handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { enforcePermission } from '@/lib/guardian-guard';
 import { z } from 'zod';
@@ -16,18 +16,13 @@ const CheckSchema = z.union([
     z.array(CheckItemSchema)
 ]);
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
 
     try {
-        // ERA 8: Guardian Oracle Pattern. 
-        // We only require authentication, not restricted administrative permissions to check one's own rights.
-        const { auth } = await import('@/lib/auth');
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'Authentication required');
-        }
+        // [SECURITY] Protect the oracle itself (Phase 97+ Compliance)
+        const session = await enforcePermission('system:security', 'read');
         const user = session.user;
 
         const body = await req.json();
@@ -69,7 +64,7 @@ export async function POST(req: Request) {
         const isBulk = Array.isArray(validated);
         return NextResponse.json(isBulk ? { results } : results[0]);
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_PERMISSIONS_CHECK_POST', correlationId);
     } finally {
         const duration = Date.now() - start;

@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
 import { logEvento } from '@/lib/logger';
 import { ObjectId } from 'mongodb';
 import { SecurityService } from '@/services/security/security-service';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 /**
- * GET | PATCH | DELETE /api/core/entities/[type]/[id]
+ * GET | PATCH /api/core/entities/[type]/[id]
  * Endpoint universal para gestión de entidades vía System Engine.
+ * SLA: P95 < 2000ms
  */
-export async function GET(
+export const GET = withPerformanceSLA(async (
     req: NextRequest,
     { params }: { params: Promise<{ type: string; id: string }> }
-) {
+) => {
     const { type, id } = await params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
 
     try {
+        await enforcePermission('technical:entities', 'read');
+
         const entityDef = EntityEngine.getInstance().getEntity(type);
         if (!entityDef) {
             throw new AppError('NOT_FOUND', 404, `Entidad '${type}' no reconocida`);
@@ -27,7 +32,7 @@ export async function GET(
         const collection = await getTenantCollection(entityDef.slug);
 
         // Intentar buscar por ObjectId si el formato es válido, sino como string
-        let query: any = { _id: id };
+        let query: Record<string, unknown> = { _id: id };
         if (ObjectId.isValid(id)) {
             query = { _id: new ObjectId(id) };
         }
@@ -47,28 +52,25 @@ export async function GET(
 
         return NextResponse.json({
             success: true,
-            entity, correlationId: correlacion_id
+            entity,
+            correlationId
         });
 
-    } catch (error: any) {
-        console.error(`[ENTITY_CORE_GET] Error (${type}/${id}):`, error);
-        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error recuperando entidad').toJSON(),
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleApiError(error, `API_CORE_ENTITIES_GET_${type}_${id}`, correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });
 
-export async function PATCH(
+export const PATCH = withPerformanceSLA(async (
     req: NextRequest,
     { params }: { params: Promise<{ type: string; id: string }> }
-) {
+) => {
     const { type, id } = await params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
 
     try {
+        await enforcePermission('technical:entities', 'update');
+
         const entityDef = EntityEngine.getInstance().getEntity(type);
         if (!entityDef) throw new AppError('NOT_FOUND', 404, 'Entidad no reconocida');
 
@@ -82,7 +84,7 @@ export async function PATCH(
             }
         });
 
-        let query: any = { _id: id };
+        let query: Record<string, unknown> = { _id: id };
         if (ObjectId.isValid(id)) {
             query = { _id: new ObjectId(id) };
         }
@@ -97,13 +99,13 @@ export async function PATCH(
             level: 'INFO',
             source: 'CORE_ENTITY_UPDATE',
             action: 'UPDATE',
-            message: `${entityDef.name} actualizado: ${id}`, correlationId: correlacion_id
+            message: `${entityDef.name} actualizado: ${id}`,
+            correlationId
         });
 
-        return NextResponse.json({ success: true, correlationId: correlacion_id });
+        return NextResponse.json({ success: true, correlationId });
 
-    } catch (error: any) {
-        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, `API_CORE_ENTITIES_PATCH_${type}_${id}`, correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

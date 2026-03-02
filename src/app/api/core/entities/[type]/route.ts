@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EntityEngine } from '@/core/engine/EntityEngine';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { AppError } from '@/lib/errors';
+import { AppError, handleApiError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
 import crypto from 'crypto';
 
 /**
  * GET /api/core/entities/[type]
  * Lista universal de entidades vía System Engine.
+ * SLA: P95 < 2000ms
  */
-export async function GET(
+export const GET = withPerformanceSLA(async (
     req: NextRequest,
     { params }: { params: Promise<{ type: string }> }
-) {
+) => {
     const { type } = await params;
-    const correlacion_id = crypto.randomUUID();
+    const correlationId = crypto.randomUUID();
     const { searchParams } = new URL(req.url);
 
     const page = parseInt(searchParams.get('page') || '1');
@@ -21,15 +24,17 @@ export async function GET(
     const search = searchParams.get('search') || '';
 
     try {
+        const session = await enforcePermission('technical:entities', 'read');
+
         const entityDef = EntityEngine.getInstance().getEntity(type);
         if (!entityDef) {
             throw new AppError('NOT_FOUND', 404, `Entidad '${type}' no reconocida`);
         }
 
-        const collection = await getTenantCollection(entityDef.slug);
+        const collection = await getTenantCollection(entityDef.slug, session);
 
         // Construir filtro basado en campos 'searchable' de la ontología
-        const filter: any = {};
+        const filter: Record<string, unknown> = {};
         if (search) {
             const searchableFields = entityDef.fields.filter(f => f.searchable).map(f => f.key);
             if (searchableFields.length > 0) {
@@ -42,14 +47,15 @@ export async function GET(
         const minConfidence = searchParams.get('minConfidence');
         const maxConfidence = searchParams.get('maxConfidence');
         if (minConfidence !== null || maxConfidence !== null) {
-            filter.confidence_score = {};
-            if (minConfidence !== null) filter.confidence_score.$gte = parseFloat(minConfidence);
-            if (maxConfidence !== null) filter.confidence_score.$lte = parseFloat(maxConfidence);
+            filter.confidence_score = {} as Record<string, number>;
+            if (minConfidence !== null) (filter.confidence_score as Record<string, number>).$gte = parseFloat(minConfidence);
+            if (maxConfidence !== null) (filter.confidence_score as Record<string, number>).$lte = parseFloat(maxConfidence);
         }
 
         const skip = (page - 1) * limit;
         const [items, total] = await Promise.all([
-            collection.find(filter, { sort: { creado: -1, createdAt: -1 } as any, skip, limit }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (collection as any).find(filter, { sort: { creado: -1, createdAt: -1 }, skip, limit }),
             collection.countDocuments(filter)
         ]);
 
@@ -61,12 +67,11 @@ export async function GET(
                 page,
                 limit,
                 pages: Math.ceil(total / limit)
-            }, correlationId: correlacion_id
+            },
+            correlationId
         });
 
-    } catch (error: any) {
-        console.error(`[ENTITY_CORE_LIST] Error (${type}):`, error);
-        if (error instanceof AppError) return NextResponse.json(error.toJSON(), { status: error.status });
-        return NextResponse.json(new AppError('INTERNAL_ERROR', 500, error.message).toJSON(), { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, `API_CORE_ENTITIES_LIST_${type}`, correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

@@ -29,6 +29,27 @@ import { AI_MODELS } from "@abd/platform-core";
 import { useTranslations } from "next-intl";
 
 /**
+ * 🛠️ Configuration Interface for AI Governance
+ */
+export interface AiGovernanceConfig {
+    defaultModel: string;
+    embeddingModel: string;
+    fallbackModel: string;
+    ragGeneratorModel: string;
+    ragQueryRewriterModel: string;
+    workflowRouterModel: string;
+    workflowNodeAnalyzerModel: string;
+    ontologyRefinerModel: string;
+    reportGeneratorModel: string;
+    queryEntityExtractorModel: string;
+    maxTokensPerRequest: number;
+    dailyTokenLimit: number;
+    dailyBudgetLimit: number;
+    piiMaskingEnabled: boolean;
+    explainabilityEnabled: boolean;
+}
+
+/**
  * 🛠️ Helper Component for Model Selectors
  */
 function ModelSelector({ label, value, onChange, description }: {
@@ -67,11 +88,11 @@ export function AiGovernanceClient() {
     const t = useTranslations("admin.governance");
 
     // 📡 Data Fetching (Phase 222B Alignment)
-    const { data: configData, isLoading: loading, refresh } = useApiItem<any>({
+    const { data: configData, isLoading: loading, refresh } = useApiItem<AiGovernanceConfig>({
         endpoint: "/api/admin/ai/governance",
     });
 
-    const [localConfig, setLocalConfig] = useState<any>(null);
+    const [localConfig, setLocalConfig] = useState<AiGovernanceConfig | null>(null);
 
     // Sync local state when data loads
     useEffect(() => {

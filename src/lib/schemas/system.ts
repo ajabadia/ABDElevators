@@ -119,3 +119,15 @@ export const UsageSummarySchema = z.object({
 });
 export type UsageSummary = z.infer<typeof UsageSummarySchema>;
 
+export const HumanValidationSchema = z.object({
+    _id: z.any().optional(),
+    entityId: z.string(),
+    tenantId: z.string(),
+    userId: z.string().optional(),
+    validatedBy: z.string().optional(),
+    status: z.string(),
+    details: z.record(z.string(), z.any()).optional(),
+    timestamp: z.date().default(() => new Date()),
+    createdAt: z.date().optional(),
+});
+export type HumanValidation = z.infer<typeof HumanValidationSchema>;

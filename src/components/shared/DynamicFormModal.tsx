@@ -14,7 +14,7 @@ interface DynamicFormModalProps {
     open: boolean;
     entitySlug: string;
     mode: 'create' | 'edit';
-    initialData?: any;
+    initialData?: Record<string, any>;
     onClose: () => void;
     onSuccess: (result: any) => void;
 }

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { UserRole } from '@/types/roles';
 import { logEvento } from '@/lib/logger';
-import { AppError, handleApiError } from '@/lib/errors';
+import { AppError, handleApiError, ValidationError } from '@/lib/errors';
 import { NotificationTypeSchema } from '@/lib/schemas';
+import { getMongoClient } from '@/lib/db';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -29,17 +31,19 @@ export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
-        const session = await auth();
-        if (!session?.user?.tenantId) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        const session = await enforcePermission('notification:config', 'read');
+        const tenantId = session.user.tenantId;
+
+        if (!tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'Tenant ID not found in session');
         }
 
         const collection = await getTenantCollection('notification_configs', session, 'LOGS');
-        const config = await collection.findOne({ tenantId: session.user.tenantId });
+        const config = await collection.findOne({ tenantId });
 
         // Si no existe, devolvemos un objeto base con los tipos conocidos
         if (!config) {
-            const defaultEvents: Record<string, any> = {};
+            const defaultEvents: any = {};
             NotificationTypeSchema.options.forEach(type => {
                 defaultEvents[type] = {
                     enabled: true,
@@ -51,7 +55,7 @@ export async function GET(req: NextRequest) {
             });
 
             return NextResponse.json({
-                tenantId: session.user.tenantId,
+                tenantId,
                 events: defaultEvents,
                 fallbackEmail: session.user?.email || ''
             });
@@ -59,7 +63,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(config);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, API_SOURCE, correlacion_id);
     } finally {
         const duration = Date.now() - start;
@@ -84,63 +88,75 @@ export async function PUT(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     const start = Date.now();
     try {
-        const session = await auth();
-        const tenantId = session?.user?.tenantId;
-        const userId = session?.user?.id;
+        const session = await enforcePermission('notification:config', 'manage');
+        const tenantId = session.user.tenantId;
+        const userId = session.user.id;
 
-        if (!session || !tenantId || !userId || (session.user?.role !== 'ADMIN' && session.user?.role !== 'SUPER_ADMIN')) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
+        if (!tenantId || !userId) {
+            throw new AppError('FORBIDDEN', 403, 'Context information missing in session');
         }
 
         const body = await req.json();
         const validated = UpdateConfigBodySchema.parse(body);
 
-        const collection = await getTenantCollection('notification_configs', session, 'LOGS');
-        const historyCollection = await getTenantCollection('notification_tenant_configs_history', session, 'LOGS');
+        const client = await getMongoClient();
+        const mongoSession = client.startSession();
 
-        const currentConfig = await collection.findOne({ tenantId });
+        try {
+            await mongoSession.withTransaction(async () => {
+                const collection = await getTenantCollection('notification_configs', session, 'LOGS');
+                const historyCollection = await getTenantCollection('notification_tenant_configs_history', session, 'LOGS');
 
-        const updateData = {
-            tenantId,
-            events: validated.events,
-            fallbackEmail: validated.fallbackEmail,
-            updatedAt: new Date(),
-            updatedBy: userId
-        };
+                const currentConfig = await collection.findOne({ tenantId }, { session: mongoSession });
 
-        // 1. Guardar en histórico
-        await historyCollection.insertOne({
-            tenantId,
-            configId: currentConfig?._id,
-            eventsSnapshot: validated.events,
-            action: 'UPDATE_SETTINGS',
-            performedBy: userId,
-            timestamp: new Date()
-        });
+                const updateData = {
+                    tenantId,
+                    events: validated.events,
+                    fallbackEmail: validated.fallbackEmail,
+                    updatedAt: new Date(),
+                    updatedBy: userId
+                };
 
-        // 2. Upsert de la configuración
-        await collection.updateOne(
-            { tenantId },
-            { $set: updateData },
-            { upsert: true }
-        );
+                // 1. Guardar en histórico
+                await historyCollection.insertOne({
+                    tenantId,
+                    configId: currentConfig?._id,
+                    eventsSnapshot: validated.events,
+                    action: 'UPDATE_SETTINGS',
+                    performedBy: userId,
+                    timestamp: new Date()
+                }, { session: mongoSession });
+
+                // 2. Upsert de la configuración
+                await collection.updateOne(
+                    { tenantId },
+                    { $set: updateData },
+                    { upsert: true, session: mongoSession }
+                );
+            });
+        } finally {
+            await mongoSession.endSession();
+        }
 
         await logEvento({
             level: 'INFO',
             source: 'TENANT_NOTIFICATIONS',
             action: 'UPDATE_CONFIG',
-            message: `Configuración de notificaciones actualizada por ${session.user?.email}`,
+            message: `Configuración de notificaciones actualizada por ${session.user.email}`,
             correlationId: correlacion_id,
             details: { tenantId, userId, duration_ms: Date.now() - start }
         });
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
+            throw new ValidationError('Validation Failed', error.issues);
+        }
         return handleApiError(error, API_SOURCE, correlacion_id);
     } finally {
         const duration = Date.now() - start;
-        if (duration > SLA_THRESHOLD * 2) { // Mas margen para escritura
+        if (duration > SLA_THRESHOLD * 2) {
             await logEvento({
                 level: 'WARN',
                 source: API_SOURCE,

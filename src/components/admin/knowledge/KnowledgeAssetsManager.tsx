@@ -164,8 +164,10 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         updateOptimistic(documentId, { status: newStatus });
         try {
             await statusMutation.mutate({ documentId, status: newStatus });
-        } catch (error) {
+            toast.success(tCommon('success.update_status') || 'Estado actualizado');
+        } catch (error: unknown) {
             refresh();
+            toast.error(tCommon('errors.update_failed') || 'Error al actualizar');
         }
     };
 
@@ -174,8 +176,10 @@ export function KnowledgeAssetsManager({ scope = 'all', userId }: KnowledgeAsset
         deleteOptimistic(documentId);
         try {
             await deleteMutation.mutate(documentId);
-        } catch (error) {
+            toast.success(tCommon('success.delete') || 'Documento eliminado');
+        } catch (error: unknown) {
             setData(originalData);
+            toast.error(tCommon('errors.delete_failed') || 'Error al eliminar');
         }
     };
 
@@ -618,7 +622,7 @@ function ActionsMenu({ doc, t, handleStatusChange, handleDelete, onPreview, onMa
                     onClick={onEnrich}
                     disabled={doc.ingestionStatus !== 'COMPLETED'}
                 >
-                    <Zap size={14} /> Enriquecer Documento
+                    <Zap size={14} /> {t('actions.enrich')}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

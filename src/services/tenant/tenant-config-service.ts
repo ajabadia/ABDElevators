@@ -1,12 +1,12 @@
 import { getTenantCollection } from "@/lib/db-tenant";
-import { TenantConfigSchema } from "@/lib/schemas";
+import { TenantConfigSchema, TenantConfig } from "@/lib/schemas";
 import { AppError, NotFoundError } from "@/lib/errors";
 import { logEvento } from "@/lib/logger";
 import crypto from 'crypto';
 import { ClientSession } from 'mongodb';
 
 export class TenantConfigService {
-    private static cache = new Map<string, { data: any, timestamp: number }>();
+    private static cache = new Map<string, { data: TenantConfig, timestamp: number }>();
     private static CACHE_TTL = 5 * 60 * 1000;
 
     static async getConfig(tenantId: string) {
@@ -25,7 +25,7 @@ export class TenantConfigService {
             this.cache.set(tenantId, { data: validated, timestamp: Date.now() });
 
             return validated;
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (error instanceof NotFoundError) throw error;
             throw new AppError('TENANT_CONFIG_ERROR', 500, 'Error al recuperar configuración del tenant');
         }
@@ -33,18 +33,18 @@ export class TenantConfigService {
 
     static async updateConfig(
         tenantId: string,
-        data: any,
+        data: Partial<TenantConfig>,
         metadata?: { performedBy: string, correlationId?: string, session?: ClientSession }
-    ): Promise<any> {
+    ): Promise<TenantConfig> {
         const correlationId = metadata?.correlationId || crypto.randomUUID();
 
         try {
             const validated = TenantConfigSchema.partial().parse(data);
             const session = { user: { id: metadata?.performedBy || 'SYSTEM', tenantId, role: 'USER' } } as any;
-            const collection = await getTenantCollection('tenants', session);
+            const collection = await getTenantCollection<TenantConfig>('tenants', session);
             const previousState = await collection.findOne({ tenantId });
 
-            const { _id, tenantId: _ign, ...updateData } = validated as any;
+            const { _id, tenantId: _ign, ...updateData } = validated;
             await collection.updateOne(
                 { tenantId },
                 { $set: { ...updateData, updatedAt: new Date() } },
@@ -65,8 +65,8 @@ export class TenantConfigService {
                 } as any);
             }
 
-            return validated;
-        } catch (error: any) {
+            return validated as TenantConfig;
+        } catch (error: unknown) {
             throw error;
         }
     }

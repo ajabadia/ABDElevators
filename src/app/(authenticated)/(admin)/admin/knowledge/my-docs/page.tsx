@@ -1,20 +1,21 @@
-'use client';
-
 import React from 'react';
-import { useSession } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { PageContainer } from '@/components/ui/page-container';
 import { PageHeader } from '@/components/ui/page-header';
 import { KnowledgeAssetsManager } from '@/components/admin/knowledge/KnowledgeAssetsManager';
 import { FolderOpen } from 'lucide-react';
+import { auth, requireRole } from '@/lib/auth';
+import { UserRole } from '@/types/roles';
 
 /**
- * 📁 Admin Personal Docs (ERA 8 Canonical)
+ * 📁 Admin Personal Docs (ERA 8 Canonical - Phase 233)
  * Centralized document management for admins/technicians.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function MyDocsAdminPage() {
-    const t = useTranslations('knowledge_hub');
-    const { data: session } = useSession();
+export default async function MyDocsAdminPage() {
+    await requireRole([UserRole.SUPER_ADMIN]);
+    const session = await auth();
+    const t = await getTranslations('knowledge_hub');
 
     return (
         <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -129,7 +129,12 @@ export class SovereignOntologyService {
                 });
 
                 // Aplicar actualización vía batch
-                await TaxonomyService.batchUpdateTaxonomies(highConfidence, tenantId, correlationId);
+                await TaxonomyService.batchUpdateTaxonomies(highConfidence.map(p => ({
+                    targetKey: p.targetKey,
+                    newName: p.newName || p.targetKey, // Fallback si es undefined
+                    newDescription: p.newDescription,
+                    action: p.action
+                })), tenantId, correlationId);
             }
         }
 

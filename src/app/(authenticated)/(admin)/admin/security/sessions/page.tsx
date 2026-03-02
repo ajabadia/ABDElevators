@@ -1,18 +1,18 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { UserCog } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { enforcePermission } from "@/lib/guardian-guard";
 
 /**
- * 👤 Active Sessions Module
+ * 👤 Active Sessions Module (Phase 233)
  * Management and monitoring of active user sessions.
- * UI Standardized with PageContainer/Header pattern.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function SecuritySessionsPage() {
-    const t = useTranslations("security_hub");
+export default async function SecuritySessionsPage() {
+    await enforcePermission('admin:security:sessions', 'read');
+    const t = await getTranslations("security_hub");
 
     return (
         <PageContainer className="animate-in fade-in slide-in-from-bottom-4 duration-500">

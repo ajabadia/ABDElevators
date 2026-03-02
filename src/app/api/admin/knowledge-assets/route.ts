@@ -1,124 +1,76 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import { getTenantCollection } from '@/lib/db-tenant';
-import { logEvento } from '@/lib/logger';
-import { AppError } from '@/lib/errors';
 import { enforcePermission } from '@/lib/guardian-guard';
+import { handleApiError } from '@/lib/errors';
 import { z } from 'zod';
-import crypto from 'crypto';
+import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
+import { type KnowledgeAsset } from '@/lib/schemas';
+import { type Filter } from 'mongodb';
 
-const QuerySchema = z.object({
+const ListAssetsSchema = z.object({
+    page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(100).default(20),
-    skip: z.coerce.number().min(0).default(0),
-    search: z.string().optional(),
-    spaceId: z.string().optional(), // 🌌 Phase 125.2
     status: z.string().optional(),
-    reviewStatus: z.string().optional()
+    q: z.string().optional(),
+    spaceId: z.string().optional(),
 });
 
 /**
- * List Knowledge Assets
- * SLA: P95 < 500ms
+ * GET /api/admin/knowledge-assets
+ * Proposito: Listado avanzado de activos con filtros y paginación.
+ * REGLA #8: P95 < 500ms
  */
-export async function GET(req: NextRequest) {
-    const start = Date.now();
+export const GET = withPerformanceSLA(async (req: Request) => {
     const correlationId = crypto.randomUUID();
 
     try {
-        // 1. Enforce specific permission (instead of role-based check)
         const session = await enforcePermission('knowledge', 'read');
 
-        // 2. Validate inputs
         const { searchParams } = new URL(req.url);
-        const { limit, skip, search, spaceId, status, reviewStatus } = QuerySchema.parse(Object.fromEntries(searchParams));
+        const validated = ListAssetsSchema.parse(Object.fromEntries(searchParams));
 
-        // 3. SECURE COLLECTION: Multi-tenant Isolation
-        const collection = await getTenantCollection('knowledge_assets', session);
+        const collection = await getTenantCollection<KnowledgeAsset>('knowledge_assets', session as any);
 
-        // 4. Build filter
-        const filter: any = {};
-        if (search) {
+        // Build filter
+        const filter: Filter<KnowledgeAsset> = {};
+
+        if (validated.status) {
+            filter.status = validated.status as any;
+        }
+        if (validated.spaceId) {
+            filter.spaceId = validated.spaceId;
+        }
+        if (validated.q) {
             filter.$or = [
-                { filename: { $regex: search, $options: 'i' } },
-                { componentType: { $regex: search, $options: 'i' } },
-                { model: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { filename: { $regex: validated.q, $options: 'i' } },
+                { description: { $regex: validated.q, $options: 'i' } } as any
             ];
         }
 
-        if (spaceId) {
-            filter.spaceId = spaceId;
-        }
+        const skip = (validated.page - 1) * validated.limit;
 
-        if (status) {
-            filter.status = status;
-        }
-
-        if (reviewStatus) {
-            filter.reviewStatus = reviewStatus;
-        }
-
-        const assets = await collection.find(filter, {
-            sort: { createdAt: -1 } as any,
-            skip,
-            limit
-        });
-
-        const total = await collection.countDocuments(filter);
-
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_KNOWLEDGE_ASSETS',
-                action: 'LIST_ASSETS_SLOW',
-                message: `Slow query detected: ${duration}ms`,
-                correlationId,
-                details: { duration, tenantId: session.user.tenantId }
-            });
-        }
+        const [assets, total] = await Promise.all([
+            (collection as any).find(filter, {
+                sort: { createdAt: -1 },
+                skip,
+                limit: validated.limit
+            }).toArray(),
+            collection.countDocuments(filter)
+        ]);
 
         return NextResponse.json({
             success: true,
-            assets,
-            pagination: { total, limit, skip }
+            data: assets,
+            pagination: {
+                total,
+                page: validated.page,
+                limit: validated.limit,
+                pages: Math.ceil(total / validated.limit)
+            }
         });
 
-    } catch (error: any) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({
-                code: 'VALIDATION_ERROR',
-                message: 'Parámetros de consulta inválidos',
-                details: error.issues
-            }, { status: 400 });
-        }
-        if (error instanceof AppError) {
-            return NextResponse.json({ success: false, code: error.code, message: error.message }, { status: error.status });
-        }
-
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_KNOWLEDGE_ASSETS',
-            action: 'LIST_ASSETS_ERROR',
-            message: error.message,
-            correlationId,
-            stack: error.stack
-        });
-
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, 'Error listing assets').toJSON(),
-            { status: 500 }
-        );
-    } finally {
-        const duration = Date.now() - start;
-        if (duration > 500) {
-            await logEvento({
-                level: 'WARN',
-                source: 'API_ASSETS_LIST',
-                action: 'SLA_VIOLATION',
-                message: `Asset list slow: ${duration}ms`,
-                correlationId,
-                details: { durationMs: duration }
-            });
-        }
+    } catch (error) {
+        return handleApiError(error, 'API_KNOWLEDGE_LIST', correlationId);
     }
-}
+}, { endpoint: 'API_KNOWLEDGE_LIST', thresholdMs: 500 });

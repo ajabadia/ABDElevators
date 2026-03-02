@@ -1,28 +1,33 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { TenantService } from '@/services/tenant/tenant-service';
 import { logEvento } from '@/lib/logger';
-import crypto from 'crypto';
+import { handleApiError, AppError } from '@/lib/errors';
+import { getMongoClient } from '@/lib/db';
 import { UserRole } from '@/types/roles';
+import crypto from 'crypto';
+
+const API_SOURCE = 'API_ADMIN_TENANTS';
+const SLA_THRESHOLD = 500;
 
 /**
  * GET /api/admin/tenants
  * Lista todos los tenants a los que el usuario tiene acceso
  */
 export async function GET() {
+    const correlationId = crypto.randomUUID();
+    const start = Date.now();
     try {
-        // Phase 70: Centralized typed role check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('tenant', 'read');
+        const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
 
         let tenants = [];
-        if (session.user.role === UserRole.SUPER_ADMIN) {
+        if (isSuperAdmin) {
             tenants = await TenantService.getAllTenants();
         } else {
-            // ADMIN normal: solo su tenant y los delegados
             const allowedIds = [
                 session.user.tenantId,
-                ...(session.user.tenantAccess || []).map((t: any) => t.tenantId)
+                ...(session.user.tenantAccess || []).map(t => t.tenantId)
             ].filter(Boolean);
 
             const all = await TenantService.getAllTenants();
@@ -39,101 +44,85 @@ export async function GET() {
                 }
             }
         );
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > SLA_THRESHOLD) {
+            await logEvento({
+                level: 'WARN',
+                source: API_SOURCE,
+                action: 'SLA_BREACH_GET',
+                correlationId,
+                message: `GET Tenants excedió SLA`,
+                details: { duration_ms: duration }
+            });
+        }
     }
 }
 
 /**
  * POST /api/admin/tenants
  * Crea o actualiza la configuración de un tenant
- * INSTRUMENTADO PARA DIAGNOSTICO DE SILENT FAILURE
  */
 export async function POST(req: NextRequest) {
     const correlationId = crypto.randomUUID();
+    const start = Date.now();
 
     try {
-        // 1. Auth Check
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-
-        // 2. Parse Body safely
-        const bodyText = await req.text();
-        if (!bodyText) {
-            return NextResponse.json({ success: false, error: 'Empty request body' }, { status: 400 });
-        }
-
-        let body;
-        try {
-            body = JSON.parse(bodyText);
-        } catch (e) {
-            return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
-        }
-
+        const session = await enforcePermission('tenant', 'manage');
+        const body = await req.json();
         const { tenantId, ...config } = body;
 
-        // LOGGING ENTRADA
-        await logEvento({
-            level: 'INFO',
-            source: 'API_ADMIN_TENANTS',
-            action: 'SAVE_ATTEMPT_RECEIVED',
-            correlationId,
-            message: `Save attempt for tenant ${tenantId} by ${session.user.email}`,
-            details: {
-                payloadKeys: Object.keys(config),
-                hasBranding: !!config.branding,
-                hasColors: !!config.branding?.colors,
-                colorValue: config.branding?.colors?.primary // Log specific value to verify change
-            }
-        });
-
         if (!tenantId) {
-            return NextResponse.json({ success: false, error: 'tenantId is required' }, { status: 400 });
+            throw new AppError('VALIDATION_ERROR', 400, 'tenantId is required');
         }
 
-        // 3. Update Service
-        const updated = await TenantService.updateConfig(tenantId, config, {
-            performedBy: session.user.id || 'system', correlationId
-        });
+        // Security check: Admins can only update their own tenant
+        if (session.user.role === UserRole.ADMIN && tenantId !== session.user.tenantId) {
+            throw new AppError('FORBIDDEN', 403, 'No tienes permiso para modificar este tenant');
+        }
 
-        // LOGGING SALIDA EXITOSA
+        const client = await getMongoClient();
+        const mongoSession = client.startSession();
+
+        let updated;
+        try {
+            await mongoSession.withTransaction(async () => {
+                updated = await TenantService.updateConfig(tenantId, config, {
+                    performedBy: session.user.id || 'system',
+                    correlationId,
+                    session: mongoSession
+                });
+            });
+        } finally {
+            await mongoSession.endSession();
+        }
+
         await logEvento({
             level: 'INFO',
-            source: 'API_ADMIN_TENANTS',
-            action: 'SAVE_SUCCESS_RESPONSE',
+            source: API_SOURCE,
+            action: 'UPDATE_CONFIG_SUCCESS',
+            message: `Configuración del tenant ${tenantId} actualizada por ${session.user.email}`,
             correlationId,
-            message: `Config saved successfully for ${tenantId}`,
-            details: {
-                updatedId: updated._id,
-                updatedColors: updated.branding?.colors
-            }
+            details: { tenantId, userId: session.user.id }
         });
 
-        // 4. Success
         return NextResponse.json({ success: true, config: updated });
 
-    } catch (error: any) {
-
-        // LOGGING ERROR EXPLICITO
-        await logEvento({
-            level: 'ERROR',
-            source: 'API_ADMIN_TENANTS',
-            action: 'SAVE_ERROR',
-            correlationId,
-            message: error.message || 'Unknown Error',
-            details: {
-                stack: error.stack,
-                validationErrors: error.errors
-            }
-        });
-
-        // Retornar JSON explicito para debug del usuario (bypass 500 page)
-        return NextResponse.json({
-            success: false,
-            error: error.message || 'Unknown Error',
-            details: error.details || null,
-            // stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-            type: error.constructor.name,
-            validationErrors: error.errors || undefined // Zod errors
-        }, { status: 200 }); // Status 200 forced to ensure client reads JSON
+    } catch (error: unknown) {
+        return handleApiError(error, API_SOURCE, correlationId);
+    } finally {
+        const duration = Date.now() - start;
+        if (duration > SLA_THRESHOLD * 2) {
+            await logEvento({
+                level: 'WARN',
+                source: API_SOURCE,
+                action: 'SLA_BREACH_POST',
+                correlationId,
+                message: `POST Tenants excedió SLA`,
+                details: { duration_ms: duration }
+            });
+        }
     }
 }

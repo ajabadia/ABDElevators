@@ -4,6 +4,7 @@ import { PromptService } from '@/services/llm/prompt-service';
 import { PROMPTS } from '@/lib/prompts';
 import { DEFAULT_MODEL } from '@/lib/constants/ai-models';
 import { LlmJsonUtils } from '@/services/llm/json-utils';
+import { AnyBulkWriteOperation, Document } from 'mongodb';
 import { TranslationRepository } from './TranslationRepository';
 import { TranslationCache } from './TranslationCache';
 
@@ -73,7 +74,7 @@ export class TranslationLLMService {
                     upsert: true
                 }
             };
-        }).filter(Boolean);
+        }).filter(Boolean) as AnyBulkWriteOperation<Document>[];
 
         if (operations.length > 0) {
             await TranslationRepository.bulkUpdate(operations, tenantId || 'platform_master');

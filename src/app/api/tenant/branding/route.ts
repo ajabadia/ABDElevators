@@ -42,10 +42,11 @@ export async function GET() {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof AppError) {
             return NextResponse.json(error.toJSON(), { status: error.status });
         }
+        console.error('[API_BRANDING_ERROR]', error);
         return NextResponse.json(
             { success: false, message: 'Internal Server Error' },
             { status: 500 }

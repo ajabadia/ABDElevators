@@ -1,21 +1,22 @@
-"use client";
-
 import React from 'react';
 import { ChecklistConfigList } from '@/components/admin/ChecklistConfigList';
-import { LayoutGrid, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 
 import { PageContainer } from "@/components/ui/page-container";
 import { PageHeader } from "@/components/ui/page-header";
 import { ContentCard } from "@/components/ui/content-card";
 
 /**
- * Page: /admin/configs-checklist
+ * Page: /admin/configs-checklist (Phase 233)
  * Dashboard principal para gestionar las reglas de negocio de los checklists.
+ * Refactored to Server Component for Security Rule #12.
  */
-export default function ConfigsChecklistPage() {
-    const t = useTranslations('admin.checklists');
+export default async function ConfigsChecklistPage() {
+    await enforcePermission('admin:checklist-configs', 'manage');
+    const t = await getTranslations('admin.checklists');
 
     return (
         <PageContainer>

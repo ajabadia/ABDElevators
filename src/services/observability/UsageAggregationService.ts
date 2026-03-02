@@ -1,11 +1,14 @@
 
-import { getTenantCollection } from '@/lib/db-tenant';
+import { usageLogRepository } from '@/lib/repositories/UsageLogRepository';
+import { usageSummaryRepository } from '@/lib/repositories/UsageSummaryRepository';
 import { CorrelationIdService } from '@/services/observability/CorrelationIdService';
 import { LogLifecycleService } from './LogLifecycleService';
+import { connectDB } from '@/lib/db';
 
 /**
  * 📊 Usage Aggregation Service
  * Proposito: Consolidar logs de uso detallados en resúmenes históricos.
+ * Hardened Era 8: Repository-based aggregation.
  */
 export class UsageAggregationService {
     /**
@@ -16,9 +19,10 @@ export class UsageAggregationService {
         const thresholdDate = new Date();
         thresholdDate.setDate(thresholdDate.getDate() - days);
 
-        const logsColl = await getTenantCollection('usage_logs', null, 'LOGS');
+        // 1. Agregación vía MongoDB Driver (a través del repo)
+        const db = await connectDB();
+        const logsColl = await db.collection('usage_logs'); // Fallback literal for complex aggregation
 
-        // 1. Agregación
         const aggregation = await logsColl.aggregate([
             { $match: { timestamp: { $lt: thresholdDate } } },
             {
@@ -29,27 +33,26 @@ export class UsageAggregationService {
                     maxDate: { $max: '$timestamp' }
                 }
             }
-        ]);
+        ]).toArray();
 
-        const summariesColl = await getTenantCollection('usage_summaries', null, 'LOGS');
         let count = 0;
 
         for (const entry of aggregation as any[]) {
-            await summariesColl.insertOne({
+            await usageSummaryRepository.create({
                 tenantId: entry._id.tenantId,
                 period: 'MONTHLY',
                 startDate: entry.minDate,
                 endDate: entry.maxDate,
                 metrics: { [entry._id.type]: entry.totalValue },
                 createdAt: new Date()
-            } as any);
+            }, null);
             count++;
         }
 
         if (count > 0) {
             // 2. Archivar y Purgar logs ya agregados
             await LogLifecycleService.archiveLogs('usage_logs', { timestamp: { $lt: thresholdDate } });
-            await logsColl.deleteMany({ timestamp: { $lt: thresholdDate } }, { hardDelete: true });
+            await usageLogRepository.deleteMany({ timestamp: { $lt: thresholdDate } } as any, null, true);
         }
 
         return { aggregated: count };

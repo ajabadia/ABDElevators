@@ -1,6 +1,6 @@
 
 import { ChunkingOrchestrator } from '@/services/infra/chunking/ChunkingOrchestrator';
-import { DocumentChunkRepository } from './DocumentChunkRepository';
+import { documentChunkRepository } from '@/lib/repositories/DocumentChunkRepository';
 import { IngestEmbeddingService } from './IngestEmbeddingService';
 import { logEvento } from '@/lib/logger';
 import { IngestTracer } from '@/services/ingest/observability/IngestTracer';
@@ -56,9 +56,9 @@ export class IngestIndexer {
                         IngestEmbeddingService.generateBGEEmbedding(contextualizedText)
                     ]);
 
-                    await DocumentChunkRepository.insertOne({
+                    await documentChunkRepository.create({
                         tenantId: asset.tenantId,
-                        industry,
+                        industry: industry as any,
                         componentType: asset.componentType || 'DOCUMENT',
                         model: asset.model || 'UNKNOWN',
                         sourceDoc: asset.filename,

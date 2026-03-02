@@ -46,8 +46,11 @@ export function EntityTimeline({ entityId, className }: EntityTimelineProps) {
                 if (!res.ok) throw new Error('Failed to fetch timeline');
                 const data = await res.json();
                 setEvents(data.data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Unknown error';
+                setError(message);
+                const { toast } = await import('sonner');
+                toast.error(message);
             } finally {
                 setLoading(false);
             }

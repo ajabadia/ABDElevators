@@ -11,10 +11,10 @@ export class TranslationCache {
     /**
      * Obtiene mensajes cacheados.
      */
-    static async getCachedMessages(locale: string, tenantId: string): Promise<Record<string, any> | null> {
+    static async getCachedMessages(locale: string, tenantId: string): Promise<Record<string, unknown> | null> {
         const cacheKey = `i18n:${tenantId}:${locale}`;
         try {
-            return await redis.get(cacheKey) as Record<string, any> | null;
+            return await redis.get(cacheKey) as Record<string, unknown> | null;
         } catch (e) {
             console.error('[TranslationCache] Redis get error:', e);
             return null;
@@ -24,7 +24,7 @@ export class TranslationCache {
     /**
      * Guarda mensajes en caché.
      */
-    static async setCachedMessages(locale: string, tenantId: string, messages: Record<string, any>) {
+    static async setCachedMessages(locale: string, tenantId: string, messages: Record<string, unknown>) {
         const cacheKey = `i18n:${tenantId}:${locale}`;
         try {
             await redis.set(cacheKey, messages, { ex: this.TTL });

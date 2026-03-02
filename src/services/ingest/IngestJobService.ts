@@ -1,8 +1,6 @@
-
-import { KnowledgeAssetRepository } from './KnowledgeAssetRepository';
+import { knowledgeAssetRepository } from '@/lib/repositories/KnowledgeAssetRepository';
 import { IngestAuditService } from './IngestAuditService';
 import { AppError } from '@/lib/errors';
-import { ObjectId } from 'mongodb';
 
 /**
  * 📋 Ingest Job Service
@@ -13,16 +11,16 @@ export class IngestJobService {
      * Obtiene el estado actual de un trabajo de ingestión.
      */
     static async getJobStatus(assetId: string, tenantId: string) {
-        const asset = await KnowledgeAssetRepository.findById(assetId);
+        const asset = await knowledgeAssetRepository.findById(assetId);
         if (!asset) throw new AppError('NOT_FOUND', 404, 'Ingest job not found');
 
         return {
             assetId,
-            status: asset.status, // PENDING | PROCESSING | COMPLETED | FAILED
-            originalName: asset.originalName,
-            progress: asset.progress || 0,
-            error: asset.error,
-            updatedAt: asset.updatedAt
+            status: asset.ingestionStatus || 'PENDING', // PENDING | PROCESSING | COMPLETED | FAILED
+            originalName: (asset as any).originalName || asset.filename,
+            progress: (asset as any).progress || 0,
+            error: (asset as any).error,
+            updatedAt: (asset as any).updatedAt || new Date()
         };
     }
 

@@ -9,11 +9,12 @@ import { auth } from "@/lib/auth";
 
 import { extractChecklist } from "@/services/ingest/ChecklistExtractor";
 import { autoClassify, smartSort } from '@/services/core/checklist-classifier';
-import { ChecklistItem, ChecklistConfig, Entity } from "@/lib/schemas";
+import { ChecklistItem, ChecklistConfig, Entity, ItemValidation } from "@/lib/schemas";
 import { logEvento } from "@/lib/logger";
 import { AppError, ValidationError, ExternalServiceError, DatabaseError, NotFoundError, handleApiError } from "@/lib/errors";
 import { RagService } from "@/services/core/RagService";
 import { getChecklistConfigById } from "@/lib/configs";
+import { ObjectId } from "mongodb";
 
 // ----- Input validation schema -----
 const ParamsSchema = z.object({
@@ -35,7 +36,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     try {
         const session = await auth();
         if (!session) throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        const tenantId = session.user.tenantId;
+        const user = session.user as { tenantId: string, id: string, name?: string };
+        const tenantId = user.tenantId;
         if (!tenantId) {
             throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
         }
@@ -57,7 +59,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         // 🛡️ Tenant Isolation Check
         const db = await (await import("@/lib/db")).connectDB();
         const entity = await db.collection('entities').findOne({
-            _id: new (await import("mongodb")).ObjectId(entityId)
+            _id: new ObjectId(entityId)
         });
 
         if (!entity) {
@@ -88,8 +90,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
         if (existingChecklist && !refresh) {
             // Return existing items merged with current validations
-            finalItems = existingChecklist.items.map((item: any) => {
-                const validation = existingChecklist.validations?.[item.id];
+            finalItems = existingChecklist.items.map((item: ChecklistItem) => {
+                const validation = (existingChecklist.validations as Record<string, ItemValidation> | undefined)?.[item.id];
                 return { ...item, ...validation };
             });
         } else {
@@ -97,11 +99,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             const docs = await RagService.getRelevantDocuments(entityId, tenantId, correlationId, 15);
 
             // ----- 4️⃣ Extract checklist items using LLM mini‑prompt (top 5 docs) -----
-            const checklistItemsRaw = await extractChecklist(docs.slice(0, 5), tenantId, correlationId);
+            const checklistItemsRaw: Partial<ChecklistItem>[] = await extractChecklist(docs.slice(0, 5), tenantId, correlationId);
 
             // ----- 5️⃣ Auto‑classify items -----
-            const classifiedItems: ChecklistItem[] = checklistItemsRaw.map((item: any) => {
-                const categoryId = autoClassify(item, config, correlationId);
+            const classifiedItems: ChecklistItem[] = checklistItemsRaw.map((item) => {
+                const categoryId = autoClassify(item as ChecklistItem, config, correlationId);
                 return { ...item, categoryId } as ChecklistItem;
             });
 
@@ -113,7 +115,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
                 finalItems = finalItems.map(item => {
                     // Match by description hash to maintain validation on similar items
                     const existingValidation = Object.values(existingChecklist.validations || {}).find((v: any) => v.itemId === item.id);
-                    if (existingValidation) return { ...item, ...existingValidation };
+                    if (existingValidation) return { ...item, ...existingValidation as any };
                     return item;
                 });
             }
@@ -165,17 +167,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         }
 
         return NextResponse.json({ success: true, items: finalItems }, { status: 200 });
-    } catch (error) {
+    } catch (error: unknown) {
         // ----- Error handling & logging -----
         const durationMs = Date.now() - start;
+        const message = error instanceof Error ? error.message : "Failed to generate checklist";
+        const stack = error instanceof Error ? error.stack : undefined;
+
         await logEvento({
             level: "ERROR",
             source: "CHECKLIST_ENDPOINT",
             action: "GET",
-            message: "Failed to generate checklist",
+            message,
             correlationId,
-            details: { durationMs, error: (error as Error).message },
-            stack: (error as Error).stack
+            details: { durationMs, error: message },
+            stack
         });
 
         if (error instanceof AppError) {
@@ -207,11 +212,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
         // Actualizamos en la colección de entidades (Fase 82)
         const result = await db.collection('entities').updateOne(
-            { _id: new (await import("mongodb")).ObjectId(id), tenantId },
+            { _id: new ObjectId(id), tenantId },
             {
                 $set: {
                     "metadata.checklist.$[item].completed": completed,
-                    "metadata.checklist.$[item].completedBy": session.user.name,
+                    "metadata.checklist.$[item].completedBy": session.user?.name || 'System',
                     "metadata.checklist.$[item].completedAt": new Date(),
                     updatedAt: new Date()
                 }

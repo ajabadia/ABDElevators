@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { PromptSchema } from '@/lib/schemas';
 import { handleApiError, AppError } from '@/lib/errors';
@@ -14,7 +14,7 @@ import { UserRole } from '@/types/roles';
 export async function GET(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('prompt', 'read');
         const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
         const tenantId = session.user.tenantId;
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, prompts, nextCursor });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_GET', correlacion_id);
     }
 }
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const correlacion_id = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('prompt', 'manage');
         const tenantId = session.user.tenantId;
 
         const body = await req.json();
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ success: true, prompt: validated });
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_ADMIN_PROMPTS_POST', correlacion_id);
     }
 }

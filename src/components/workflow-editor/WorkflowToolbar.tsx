@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useWorkflow } from './WorkflowContext';
+import { WorkflowNode, WorkflowInstance } from './types';
 
 export function WorkflowToolbar() {
     const t = useTranslations('admin.workflows.canvas');
@@ -57,7 +58,7 @@ export function WorkflowToolbar() {
         isSimulating
     } = useWorkflow();
 
-    const selectedCount = nodes.filter((n: any) => n.selected).length;
+    const selectedCount = nodes.filter((n: WorkflowNode) => n.selected).length;
 
     return (
         <div className="contents">
@@ -100,8 +101,8 @@ export function WorkflowToolbar() {
                         <SelectValue placeholder={t('select_process')} />
                     </SelectTrigger>
                     <SelectContent>
-                        {(workflows || []).map((w: any) => (
-                            <SelectItem key={w._id || w.id} value={w._id || w.id} className="text-xs font-medium">
+                        {(workflows || []).map((w: WorkflowInstance) => (
+                            <SelectItem key={(w._id || w.id) as string} value={(w._id || w.id) as string} className="text-xs font-medium">
                                 {w.name}
                             </SelectItem>
                         ))}

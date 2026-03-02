@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { createCheckoutSession, getOrCreateStripeCustomer } from '@/lib/stripe';
-import { TenantService } from '@/services/tenant/tenant-service';
-import { AppError } from '@/lib/errors';
-import { logEvento } from '@/lib/logger';
+import { BillingService } from '@/services/admin/BillingService';
+import { handleApiError, ValidationError } from '@/lib/errors';
+import { enforcePermission } from '@/lib/guardian-guard';
+import { withPerformanceSLA } from '@/lib/performance-sla';
+import crypto from 'crypto';
 import { z } from 'zod';
+import { PLANS } from '@/lib/plans';
 
 const CreateCheckoutSchema = z.object({
     priceId: z.string().min(1),
@@ -13,86 +14,44 @@ const CreateCheckoutSchema = z.object({
 
 /**
  * POST /api/billing/create-checkout
- * Crea una sesión de Stripe Checkout para upgrade de plan
+ * Inicia el flujo de pago de Stripe
+ * SLA: P95 < 2000ms
  */
-export async function POST(req: NextRequest) {
-    const correlacion_id = crypto.randomUUID();
-
+export const POST = withPerformanceSLA(async (req: NextRequest) => {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await auth();
-        if (!session?.user) {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado');
-        }
+        const session = await enforcePermission('billing:subscription', 'manage');
+
+        const body = await req.json();
+        const { priceId } = CreateCheckoutSchema.parse(body);
 
         const tenantId = session.user.tenantId;
-        if (!tenantId) {
-            throw new AppError('FORBIDDEN', 403, 'Tenant ID no encontrado en la sesión');
-        }
-        const body = await req.json();
-        const { priceId, billingPeriod } = CreateCheckoutSchema.parse(body);
+        const email = session.user.email;
 
-        // Obtener configuración del tenant
-        const tenantConfig = await TenantService.getConfig(tenantId);
-
-        // Crear o recuperar customer de Stripe
-        const customerId = await getOrCreateStripeCustomer(
-            tenantId,
-            session.user.email || '',
-            tenantConfig.name
-        );
-
-        // Actualizar tenant con stripeCustomerId si no lo tenía
-        if (!tenantConfig.subscription?.stripeCustomerId) {
-            await TenantService.updateConfig(tenantId, {
-                subscription: {
-                    ...tenantConfig.subscription,
-                    stripeCustomerId: customerId,
-                },
-            });
+        if (!email) {
+            throw new ValidationError('El usuario no tiene una dirección de email asociada');
         }
 
-        // Crear sesión de checkout
+        // Find tier by priceId
+        const tier = Object.values(PLANS).find(p => p.stripePriceId === priceId)?.tier;
+        if (!tier) {
+            throw new ValidationError(`Price ID no reconocido: ${priceId}`);
+        }
+
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const checkoutSession = await createCheckoutSession({
-            customerId,
-            priceId,
+        const { url } = await BillingService.startSubscriptionFlow(
             tenantId,
-            successUrl: `${baseUrl}/admin/billing?success=true`,
-            cancelUrl: `${baseUrl}/upgrade?cancelled=true`,
-        });
-
-        await logEvento({
-            level: 'INFO',
-            source: 'BILLING_API',
-            action: 'CHECKOUT_CREATED',
-            message: `Checkout session created for tenant ${tenantId}`, correlationId: correlacion_id,
-            details: {
-                tenantId,
-                priceId,
-                billingPeriod,
-                sessionId: checkoutSession.id,
-            },
-        });
+            tier,
+            email,
+            `${baseUrl}/admin/billing`
+        );
 
         return NextResponse.json({
             success: true,
-            checkoutUrl: checkoutSession.url,
+            checkoutUrl: url,
+            correlationId
         });
-    } catch (error: any) {
-        await logEvento({
-            level: 'ERROR',
-            source: 'BILLING_API',
-            action: 'CHECKOUT_ERROR',
-            message: `Error creating checkout: ${error.message}`, correlationId: correlacion_id,
-            stack: error.stack,
-        });
-
-        if (error instanceof AppError) {
-            return NextResponse.json(error.toJSON(), { status: error.status });
-        }
-        return NextResponse.json(
-            new AppError('INTERNAL_ERROR', 500, error.message).toJSON(),
-            { status: 500 }
-        );
+    } catch (error) {
+        return handleApiError(error, 'API_BILLING_CHECKOUT_POST', correlationId);
     }
-}
+}, { p95: 2000, max: 5000 });

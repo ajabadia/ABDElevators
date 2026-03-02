@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { getTenantCollection } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
 import { AppError, handleApiError, NotFoundError } from '@/lib/errors';
 import { WorkflowService } from '@/services/ops/WorkflowService';
 import { WorkflowLLMNodeService } from '@/services/ops/WorkflowLLMNodeService';
 import { CaseWorkflowEngine as WorkflowEngine } from '@abd/workflow-engine/server';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 import { z } from 'zod';
 
@@ -18,9 +18,9 @@ export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER]);
+        const session = await enforcePermission('case', 'read');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;
@@ -46,7 +46,7 @@ export async function GET(
             lastAnalysis: caso.metadata?.ai_analysis
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_CASE_WORKFLOW_GET', correlationId);
     }
 }
@@ -59,9 +59,9 @@ export async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER]);
+        const session = await enforcePermission('case', 'manage');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;
@@ -100,7 +100,7 @@ export async function PATCH(
 
         return NextResponse.json({ success: true, analysis });
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_CASE_WORKFLOW_ANALYZE', correlationId);
     }
 }
@@ -113,9 +113,9 @@ export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const correlationId = uuidv4();
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TECHNICAL, UserRole.REVIEWER]);
+        const session = await enforcePermission('case', 'manage');
 
         const { id } = await params;
         const tenantId = session.user.tenantId;
@@ -137,7 +137,7 @@ export async function POST(
 
         return NextResponse.json(result);
 
-    } catch (error) {
+    } catch (error: unknown) {
         return handleApiError(error, 'API_CASE_WORKFLOW_TRANSITION', correlationId);
     }
 }

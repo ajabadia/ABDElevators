@@ -1,20 +1,39 @@
 import { technicalEntityRepository } from '@/lib/repositories/TechnicalEntityRepository';
 import { getTenantCollection } from '@/lib/db-tenant';
 
+export interface TechnicalKPIs {
+    entities: {
+        total: string;
+        synced: string;
+        errors: number;
+    };
+    rag: {
+        latency: string;
+        docs: string;
+        cacheHit: string;
+    };
+    graph: {
+        nodes: string;
+        edges: string;
+        convergence: string;
+    };
+}
+
 /**
- * 🛠️ TechnicalStatsService (Phase 219)
+ * 🛠️ TechnicalStatsService
  * Monitors technical infrastructure health and metrics.
+ * Standardized for Era 8 (Zero any, explicit types).
  */
 export class TechnicalStatsService {
     /**
      * Aggregates technical metrics across multiple sub-systems.
      */
-    static async getTechnicalKPIs(tenantId: string) {
+    static async getTechnicalKPIs(tenantId: string): Promise<TechnicalKPIs> {
         // 1. Entities Stats
-        const entities = await technicalEntityRepository.list({ tenantId }) as any[];
+        const entities = await technicalEntityRepository.list({ tenantId });
 
         const totalEntities = entities.length;
-        const syncedEntities = entities.filter(e => e.status === 'SYNCED' || e.status === 'PROCESSED').length;
+        const syncedEntities = entities.filter(e => e.status === 'SYNCED' || e.status === 'PROCESSED' || e.status === 'analyzed').length;
         const errorEntities = entities.filter(e => e.status === 'ERROR' || e.status === 'FAILED').length;
 
         const syncRate = totalEntities > 0
@@ -30,9 +49,11 @@ export class TechnicalStatsService {
         let totalEdges = 0;
 
         entities.forEach(e => {
-            if (e.metadata?.graphInfo) {
-                totalNodes += (e.metadata.graphInfo.nodes || 0);
-                totalEdges += (e.metadata.graphInfo.edges || 0);
+            const metadata = e.metadata as Record<string, unknown>; // Metadata is complex/dynamic in business schema
+            if (metadata?.graphInfo) {
+                const graphInfo = metadata.graphInfo as Record<string, number>;
+                totalNodes += (graphInfo.nodes || 0);
+                totalEdges += (graphInfo.edges || 0);
             }
         });
 
@@ -54,8 +75,8 @@ export class TechnicalStatsService {
                 cacheHit: "92%"
             },
             graph: {
-                nodes: totalNodes.toLocaleString(),
-                edges: totalEdges.toLocaleString(),
+                nodes: Math.round(totalNodes).toLocaleString(),
+                edges: Math.round(totalEdges).toLocaleString(),
                 convergence: "0.98"
             }
         };

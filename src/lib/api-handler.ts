@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiKeyService } from '@/services/tenant/api-key-service';
 import { ApiKeyPermission } from '@/lib/schemas';
 import { AppError } from '@/lib/errors';
+import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
 
 type ApiHandlerFunction = (
     req: NextRequest,
-    context: { tenantId: string; apiKeyId: any; correlationId: string; spaceId?: string }
+    context: { tenantId: string; apiKeyId: string | ObjectId; correlationId: string; spaceId?: string }
 ) => Promise<NextResponse>;
 
 /**
@@ -43,14 +44,14 @@ export function publicApiHandler(
             // 3. Ejecutar Lógica
             const response = await handler(req, {
                 tenantId: validKey.tenantId,
-                apiKeyId: validKey._id,
+                apiKeyId: validKey._id!,
                 correlationId,
                 spaceId: validKey.spaceId
             });
 
             // 4. Log Success
             await ApiKeyService.logUsage({
-                apiKeyId: validKey._id,
+                apiKeyId: validKey._id!,
                 tenantId: validKey.tenantId,
                 endpoint: req.nextUrl.pathname,
                 method: req.method,
@@ -64,14 +65,14 @@ export function publicApiHandler(
             response.headers.set('X-Correlation-ID', correlationId);
             return response;
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             // 5. Manejo de Errores
-            const status = (error instanceof AppError || error?.name === 'AppError') ? (error.status || 500) : 500;
-            const message = error.message || 'Internal Server Error';
-            const code = (error instanceof AppError || error?.name === 'AppError') ? error.code : 'INTERNAL_ERROR';
+            const status = (error instanceof AppError) ? (error.status || 500) : 500;
+            const message = error instanceof Error ? error.message : 'Internal Server Error';
+            const code = (error instanceof AppError) ? error.code : 'INTERNAL_ERROR';
 
             // Log de fallo si tenemos contexto de key
-            if (apiKeyDetails) {
+            if (apiKeyDetails && apiKeyDetails._id) {
                 await ApiKeyService.logUsage({
                     apiKeyId: apiKeyDetails._id,
                     tenantId: apiKeyDetails.tenantId,

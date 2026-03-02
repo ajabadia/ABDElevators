@@ -14,10 +14,11 @@ import {
 import { Settings, X, Plus, Trash2, Clock, GitBranch, Repeat, GitFork, Activity } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkflow } from './WorkflowContext';
+import { WorkflowNode, WorkflowNodeData } from './types';
 
 interface NodePropertiesEditorProps {
-    node: Node | null;
-    onUpdate: (nodeId: string, newData: any) => void;
+    node: WorkflowNode | null;
+    onUpdate: (nodeId: string, newData: WorkflowNodeData) => void;
     onClose: () => void;
 }
 
@@ -32,7 +33,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
             const nodeLabel = node.data?.label;
             setLabel(typeof nodeLabel === 'string' ? nodeLabel : "");
             // Extract all non-label, non-analytics, non-orphan data as metadata
-            const { label: _, analytics: __, isOrphan: ___, ...rest } = node.data as any;
+            const { label: _, analytics: __, isOrphan: ___, ...rest } = node.data;
             setMetadata((rest || {}) as Record<string, any>);
         }
     }, [node]);
@@ -55,7 +56,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
         setMetadata(newMeta);
     };
 
-    const updateMeta = (oldKey: string, newKey: string, value: any) => {
+    const updateMeta = (oldKey: string, newKey: string, value: unknown) => {
         const newMeta = { ...metadata };
         if (oldKey !== newKey) {
             delete newMeta[oldKey];
@@ -66,7 +67,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
         setMetadata(newMeta);
     };
 
-    const updateWaitProp = (prop: string, value: any) => {
+    const updateWaitProp = (prop: string, value: unknown) => {
         setMetadata({ ...metadata, [prop]: value });
     };
 
@@ -193,7 +194,7 @@ export const NodePropertiesEditor = ({ node, onUpdate, onClose }: NodeProperties
                             </Button>
                         </div>
                         <div className="space-y-3">
-                            {(metadata.paths || []).map((path: any, idx: number) => (
+                            {(metadata.paths || []).map((path: { condition: string; label: string }, idx: number) => (
                                 <div key={idx} className="p-2 border border-border rounded bg-muted/30 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-bold text-purple-600">{t('branch')} #{idx + 1}</span>

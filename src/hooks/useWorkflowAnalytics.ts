@@ -3,14 +3,14 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { Node } from "@xyflow/react";
+import { WorkflowNode, WorkflowNodeData } from "@/components/workflow-editor/types";
 
 interface UseWorkflowAnalyticsProps {
     activeWorkflowId: string | null;
     isAnalysisMode: boolean;
     setIsAnalysisMode: (mode: boolean) => void;
     setIsAnalyticsLoading: (loading: boolean) => void;
-    setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;
 }
 
 export function useWorkflowAnalytics({
@@ -30,7 +30,7 @@ export function useWorkflowAnalytics({
                 const stats = await res.json();
 
                 if (stats.nodes) {
-                    const analyticsMap = stats.nodes.reduce((acc: any, curr: any) => {
+                    const analyticsMap = stats.nodes.reduce((acc: Record<string, NonNullable<WorkflowNodeData['analytics']>>, curr: NonNullable<WorkflowNodeData['analytics']> & { nodeId: string }) => {
                         acc[curr.nodeId] = curr;
                         return acc;
                     }, {});
@@ -55,8 +55,8 @@ export function useWorkflowAnalytics({
         } else {
             setNodes((nds) =>
                 nds.map((node) => {
-                    const { analytics, ...cleanData } = node.data as any;
-                    return { ...node, data: cleanData };
+                    const { analytics: _, ...cleanData } = node.data;
+                    return { ...node, data: cleanData as WorkflowNodeData };
                 })
             );
             setIsAnalysisMode(false);

@@ -1,6 +1,7 @@
 import { getTenantCollection } from '@/lib/db-tenant';
 import { AppEvent } from './schemas/EventSchema';
 import { AuditEntry } from './schemas/AuditSchema';
+import { type ClientSession } from 'mongodb';
 
 /**
  * 🗄️ Observability Repository
@@ -13,9 +14,9 @@ export class ObservabilityRepository {
     /**
      * Stores a technical application log.
      */
-    static async saveLog(event: AppEvent): Promise<void> {
+    static async saveLog(event: AppEvent, session?: ClientSession): Promise<void> {
         const collection = await getTenantCollection<AppEvent>('application_logs', null, this.LOGS_DB);
-        await collection.insertOne(event as any);
+        await collection.insertOne(event as any, { session });
     }
 
     /**
@@ -23,10 +24,11 @@ export class ObservabilityRepository {
      */
     static async saveAudit(
         collectionName: 'audit_config_changes' | 'audit_admin_ops' | 'audit_data_access' | 'audit_trails' | 'audit_security_events' | 'audit_billing',
-        entry: AuditEntry
+        entry: AuditEntry,
+        session?: ClientSession
     ): Promise<void> {
         const collection = await getTenantCollection<AuditEntry>(collectionName, null, this.LOGS_DB);
-        await collection.insertOne(entry as any);
+        await collection.insertOne(entry as any, { session });
     }
 
     /**

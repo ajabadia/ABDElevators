@@ -1,18 +1,18 @@
-import { NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { UsageService } from '@/services/ops/usage-service';
 import { AppError, handleApiError } from '@/lib/errors';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { UserRole } from '@/types/roles';
 
 /**
  * Endpoint para obtener métricas de ROI y Ahorro del Tenant (Phase 70 compliance).
  * - Accesible para ADMIN (su propio tenant) y SUPER_ADMIN (cualquier tenant).
  */
-export async function GET(request: Request) {
-    const correlacion_id = uuidv4();
+export async function GET(request: NextRequest) {
+    const correlationId = crypto.randomUUID();
     try {
-        const session = await requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+        const session = await enforcePermission('usage', 'read');
 
         const { searchParams } = new URL(request.url);
         const requestedTenantId = searchParams.get('tenantId');
@@ -26,7 +26,8 @@ export async function GET(request: Request) {
                 targetTenantId = requestedTenantId;
             }
         } else {
-            // Admin solo puede ver el suyo (requireRole ya filtró otros roles)
+            // Admin solo puede ver el suyo (ABAC ya filtró en enforcePermission si fuera otro recurso,
+            // pero aquí 'usage' es a nivel de tenant).
             if (requestedTenantId && requestedTenantId !== session.user.tenantId) {
                 throw new AppError('FORBIDDEN', 403, 'No tienes permiso para ver métricas de otro tenant');
             }
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
             ...roiStats
         });
 
-    } catch (error) {
-        return handleApiError(error, 'API_USAGE_ROI', correlacion_id);
+    } catch (error: unknown) {
+        return handleApiError(error, 'API_USAGE_ROI', correlationId);
     }
 }

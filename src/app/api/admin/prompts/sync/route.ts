@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { enforcePermission } from '@/lib/guardian-guard';
 import { PromptService } from '@/services/llm/prompt-service';
 import { logEvento } from '@/lib/logger';
 import { AppError, handleApiError } from '@/lib/errors';
@@ -14,13 +14,7 @@ export async function POST(req: NextRequest) {
     const start = Date.now();
 
     try {
-        const session = await auth();
-
-        // Estricta validación de rol ADMIN
-        if (!session?.user || session.user.role !== 'ADMIN') {
-            throw new AppError('UNAUTHORIZED', 401, 'No autorizado para realizar sincronización');
-        }
-
+        const session = await enforcePermission('prompt', 'manage');
         const tenantId = session.user.tenantId || 'abd_global';
 
         await logEvento({
@@ -51,7 +45,7 @@ export async function POST(req: NextRequest) {
             correlationId
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleApiError(error, 'ADMIN_PROMPT_SYNC_API', correlationId);
     } finally {
         const durationMs = Date.now() - start;
