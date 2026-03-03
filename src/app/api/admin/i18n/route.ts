@@ -22,6 +22,8 @@ async function GET_internal(req: NextRequest) {
         const namespace = searchParams.get('namespace') || '';
         const search = searchParams.get('search') || '';
         const detailed = searchParams.get('detailed') === 'true';
+        const missingOnly = searchParams.get('missingOnly') === 'true';
+        const secondaryLocale = searchParams.get('secondaryLocale') || '';
 
         // Paginación
         const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 250);
@@ -46,6 +48,12 @@ async function GET_internal(req: NextRequest) {
             filteredMessages = filterBySearch(filteredMessages, search, detailed);
         }
 
+        if (missingOnly && secondaryLocale) {
+            // Para filtrar faltantes, necesitamos comparar con el idioma secundario
+            const secondaryMessages = await TranslationService.getDetailedMessages(secondaryLocale);
+            filteredMessages = filterMissingKeys(filteredMessages, secondaryMessages);
+        }
+
         // Aplicar Paginación sobre el set filtrado
         const keys = Object.keys(filteredMessages);
         const total = keys.length;
@@ -67,11 +75,26 @@ async function GET_internal(req: NextRequest) {
                 offset,
                 hasMore: offset + limit < total
             },
-            filters: { namespace, search }
+            filters: { namespace, search, missingOnly }
         });
     } catch (error) {
         return handleApiError(error, 'API_ADMIN_I18N_GET', correlationId);
     }
+}
+
+/**
+ * Filtra llaves que NO tienen valor en el idioma secundario.
+ */
+function filterMissingKeys(primaryMessages: any, secondaryMessages: any): any {
+    const result: any = {};
+    for (const [key, details] of Object.entries(primaryMessages)) {
+        // Si no existe en el secundario o su valor es falsy
+        const sValue = (secondaryMessages[key] as any)?.value;
+        if (!sValue) {
+            result[key] = details;
+        }
+    }
+    return result;
 }
 
 // Helper: Filtrar por namespace

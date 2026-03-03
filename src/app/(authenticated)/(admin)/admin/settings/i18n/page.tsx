@@ -78,7 +78,7 @@ export default function AdminI18nPage() {
         isLoading: loadingPrimary,
         refresh: refetchPrimary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${debouncedSearch}&limit=${pageSize}&offset=${offset}&detailed=true`,
+        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${debouncedSearch}&limit=${pageSize}&offset=${offset}&detailed=true&missingOnly=${showMissingOnly}&secondaryLocale=${secondaryLocale}`,
         autoFetch: true
     });
 
