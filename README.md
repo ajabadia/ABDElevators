@@ -179,6 +179,7 @@ src/
 - ✅ **SSE Heartbeat & Connection Recovery (Phase 84)**: Sistema robusto de mantenimiento de conexiones Server-Sent Events con reintentos exponenciales y recuperación automática para streams RAG de larga duración.
 - ✅ **HITL Learning Loop (Phase 82)**: Captura estructurada de feedback humano (categoría de error, corrección) para la mejora continua del motor agéntico.
 - ✅ **Self-Healing Knowledge (Phase 110)**: Auditoría automática de activos expirados y marcado de obsolescencia para garantizar la frescura del RAG.
+- ✅ **Self-Healing RAG (Phase 254)**: Detección de alucinaciones (Fact-Checking) y reparación automática de respuestas RAG con inyección de claims fallidos en reintentos.
 - ✅ **Global SuperAdmin Dashboard (Phase 110)**: Consola centralizada para monitoreo de métricas multi-tenant, precisión de IA y salud del cluster.
 - ✅ **Causal AI Simulation Engine (Phase 86)**: Análisis de impacto 'What-If' integrado en Digital Twins para predecir consecuencias en cascada y sugerir planes de mitigación técnica.
 - ✅ **Industrial Stability Cleanup (Era 5)**: Erradicación de +140 errores estructurales de TypeScript, normalización de sesiones multi-tenant y gobernanza estricta de Enums.
@@ -205,6 +206,7 @@ src/
 - ✅ **Guardian Enforcement Sweep (Phase 244)**: Blindaje sistemático y monitoreo de performance del 100% de la superficie de la API (195 rutas). Asegura que cada endpoint cumple con los estándares de seguridad ABAC V3 y observabilidad industrial.
 - ✅ **Systematic Hygiene & Zero-Any Core (Phase 233)**: Barrido fundacional de todas las rutas de la plataforma uniendo (1) Aislamiento Multi-tenant DB, (2) UI/UX Hub Consolidation, (3) i18n Hardcode Purge, y (4) Strict Typing de la suite completa. El sistema compila con `tsc --noEmit` a cero errores.
 - ✅ **Architecture Hardening Tier 1 (Phase 249)**: Implementación de `PartialStateRecoveryWorker` para recuperación automática de estados parciales, evolución de la DLQ con auto-retry funcional y robustecimiento del `IngestOrchestrator`.
+- ✅ **Operational Autopilot (Phase 251)**: Conexión de `AnomalyDetectionService` con playbooks operativos automatizados. Incluye visibilidad en tiempo real de ejecuciones de playbooks en el SuperAdmin Hub.
 
 ## 🔧 Scripts Disponibles
 

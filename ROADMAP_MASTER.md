@@ -13,9 +13,10 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 248: UX MICRO-SURGERY & SUPPORT i18n**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**, **FASE 242: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING**, **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
-- **Project Status**: **ERA 9: SYMPHONY** in progress. Tier 1 Hardening (FASE 249) COMPLETED.
-- **Recent Context**: ✅ Architecture Hardening Tier 1 verified 2026-03-03.
+- **Recent Ship**: **FASE 252: HITL FEEDBACK** (COMPLETED), **FASE 249: ARCHITECTURE HARDENING TIER 1** (COMPLETED), **FASE 248: UX MICRO-SURGERY**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**.
+- **Project Status**: **ERA 9: SYMPHONY** in progress. **FASE 251: OPERATIONAL AUTOPILOT** starting.
+- **Active Track**: 🚀 **FASES 250-255: HARDENING & INTELLIGENCE** (Auto-repair, Playbooks, HITL Feedback, UX Mode).
+- **Recent Context**: ✅ HITL Feedback Loop implemented and verified 2026-03-03.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -796,15 +797,16 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-#### 🚀 FASE 248: UX MICRO-SURGERY & SUPPORT i18n
-**Status:** `[COMPLETED ✅]` | **Prioridad:** ALTA | **Estimación:** 2 días
+#### 🚀 FASE 247: TESTING INFRASTRUCTURE & SUITES (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** MEDIA | **Completado:** 2026-03-03
 
-**Objetivo:** Mejorar la experiencia de usuario en puntos críticos y completar la internacionalización del módulo de soporte.
+**Objetivo:** Establecer una base de pruebas robusta con Jest 30 para lógica y Playwright para E2E.
 
-- [X] **248.1: Unified Empty States**: Rediseño de vistas vacías en `KnowledgeAssetsManager` y `TicketsDashboard` con CTAs claros. ✅
-- [X] **248.2: Contextual Tooltips**: Implementación de tooltips informativos en campos clave de formularios de ingesta y creación de tickets. ✅
-- [X] **248.3: Support Module i18n**: Internacionalización completa de todos los textos visibles en `/support` y `/admin/support`. ✅
-- [X] **248.4: Loading Skeletons**: Añadir esqueletos de carga en tablas y dashboards para mejorar la percepción de rendimiento. ✅
+- [X] **247.1: Configuration Setup**: Migrar a `jest.config.ts` y crear `tests/setup/jest.setup.ts`. ✅
+- [X] **247.2: Auth Unit Tests**: Cobertura de `authorizeCredentials` y callbacks de sesión. ✅
+- [X] **247.3: RAG & Worker Tests**: Validar el pipeline de análisis y sincronización de entidades. ✅
+- [X] **247.4: Audit & Sanitizer Tests**: Cobertura de PDF Layout y MongoSanitizer. ✅
+- [X] **247.5: E2E Smoke Tests**: Flujos críticos de Login y RAG con Playwright. ✅
 
 ---
 
@@ -817,6 +819,90 @@ CONFIGURACIÓN (Admin Hub):
 - [X] **249.2: DLQ Auto-Retry**: Evolucionar `retryJob` para encolado real y añadir auto-retry programado. ✅
 - [X] **249.3: IngestOrchestrator Integration**: Unificar la lógica de detección de stuck y recuperación parcial. ✅
 - [X] **249.4: Idempotency Audit**: Asegurar que re-indexación y re-upload son safe-upserts. ✅
+
+---
+
+#### 🚀 FASE 250: INGEST AUTO-REPAIR EVOLUTION (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Completado:** 2026-03-03
+
+**Objetivo:** Evolucionar `PartialStateRecoveryWorker` (FASE 249) con campos de trazabilidad y métricas de reparación.
+
+**Contexto:** El worker ya recupera STORED_NO_INDEX/INDEXED_NO_STORAGE/PARTIAL con límite de 3 intentos. Se han añadido métricas y visibilidad en UI.
+
+- [X] **250.1: Schema Evolution**: Añadir `repairPhase` y `repairErrorCode` a `KnowledgeAssetSchema`. ✅
+- [X] **250.2: Worker Update**: Actualizar `PartialStateRecoveryWorker` para trackeo detallado. ✅
+- [X] **250.3: Repair Metrics**: Exponer métricas en `api/admin/ingest/metrics`. ✅
+- [X] **250.4: UI Labels**: Mostrar badges de reparación en Knowledge Assets. ✅
+
+---
+
+####- [x] **FASE 251: OPERATIONAL AUTOPILOT (PLAYBOOKS)** (Hardening & Intelligence)
+**Status:** `[COMPLETED ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 2-3 días
+
+**Objetivo:** Conectar `AnomalyDetectionService` con playbooks operativos automatizados, controlados por feature flags por tenant.
+
+**Contexto:** La observabilidad existe (Z-score, PlatformOps, AI telemetry) pero es solo diagnóstica. Esta fase la convierte en accionable.
+
+- [x] **251.1: Feature Flags**: Extender `TenantConfigSchema` with `autoOps: { autoRepairIngest, autoPauseOverQuota, autoLlmFallback }`. ✅
+- [x] **251.2: OpsPlaybookService**: Crear servicio que consume anomalías y ejecuta playbooks: pausa de ingestas, cambio de modelo LLM. ✅
+- [x] **251.3: Cron Integration**: Integrar con el job de self-healing (cada 5-10 min). ✅
+- [x] **251.4: UI Visibility**: Sección "Playbooks recientes" en SuperAdmin con `PlaybookExecutionsWidget`. ✅
+
+---
+
+#### 📊 FASE 252: HITL FEEDBACK → RAG RANKING & EVAL DATASET
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 1.5-2 días
+
+**Objetivo:** Usar el feedback humano (FASE 195) para ajustar scoring de chunks y generar datasets de evaluación RAG.
+
+**Contexto:** `RagFeedbackSchema` ya captura thumbs + categorías, pero el feedback no retroalimenta el ranking ni genera datasets.
+
+- [ ] **252.1: Schema Extension**: Añadir `chunkId`, `answer`, `label: correct|incorrect|irrelevant` a `RagFeedbackSchema`.
+- [ ] **252.2: RagFeedbackProcessor**: Job nocturno que calcula `feedbackScore` (-1..1) por chunk y lo persiste en `document_chunks`.
+- [ ] **252.3: RagEvalDatasetBuilder**: Extractor de triples (query, expectedAnswer, contextChunks) desde feedback positivo → colección `rag_eval_dataset`.
+- [ ] **252.4: Cron/Script**: Script `run-rag-feedback-processor.ts` para ejecución nocturna.
+
+---
+
+#### 🎨 FASE 253: UX MODE SIMPLE/EXPERT
+**Status:** `[PENDIENTE]` | **Prioridad:** ALTA | **Estimación:** 1.5-2 días
+
+**Objetivo:** Persistir modo UX por usuario y aplicarlo sistemáticamente para reducir complejidad percibida en modo simple.
+
+**Contexto:** `UserSchema.preferences` tiene `theme`/`language`/`onboarding` pero no `uxMode`. Las opciones avanzadas siempre están visibles.
+
+- [ ] **253.1: Schema**: Añadir `uxMode: "simple" | "expert"` a `UserSchema.preferences` (default: `"simple"`).
+- [ ] **253.2: UxModeProvider**: Context provider + hook `useUxMode()` (React Context, NO localStorage — Regla #5).
+- [ ] **253.3: API Endpoint**: `POST /api/profile/ux-mode` para persistir el modo.
+- [ ] **253.4: Knowledge Hub**: Ocultar en simple: selector de modelo, chunking avanzado, max context tokens. Mostrar resumen de Smart Config.
+- [ ] **253.5: Tenant Settings**: En simple: solo branding, módulos, límites básicos. En expert: AI Governance, Guardian avanzado, billing detallado.
+- [ ] **253.6: Graph Explorer**: En simple: vista lectura, filtros básicos. En expert: crear/fusionar nodos, edición de propiedades.
+
+---
+
+#### ⚡ FASE 254: PERFORMANCE SKELETONS & SAFE LIMITS
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 1 día
+
+**Objetivo:** Sistematizar skeletons de carga en segmentos pesados y forzar ventanas temporales seguras en APIs de logs/observabilidad.
+
+- [ ] **254.1: loading.tsx**: Crear skeletons agresivos para `/knowledge`, `/graph`, `/profile`, `/search` (header + cards + tabla).
+- [ ] **254.2: Query Limits**: Asegurar `limit` max=100, default=50 en esquemas Zod de AuditLog, ApplicationLogs, Observability.
+- [ ] **254.3: Default Time Windows**: APIs de logs con ventana por defecto "última 1h" (no rango abierto).
+- [ ] **254.4: UI Controls**: Botón "Ampliar rango" que dispara nuevo fetch en vez de cargar todo de golpe.
+
+---
+
+#### 🧹 FASE 255: BRIDGE CLEANUP & STUB CONSOLIDATION
+**Status:** `[PENDIENTE]` | **Prioridad:** MEDIA | **Estimación:** 1 día
+
+**Objetivo:** Consolidar los 12 archivos de compatibilidad bridge y reemplazar stubs ambiguos por adaptadores claros.
+
+**Contexto:** Existen bridges a `@abd/platform-core`, `@abd/workflow-engine`, `@abd/rag-engine` y un `JobSchedulerService` stub en `PlatformOpsService`.
+
+- [ ] **255.1: Bridge Audit**: Clasificar 12 bridges como KEEP/REMOVE/CONSOLIDATE. Documentar en `docs/bridge-audit.md`.
+- [ ] **255.2: JobSchedulerService**: Reemplazar stub por adaptador explícito con TODO único y claro.
+- [ ] **255.3: Bridge Headers**: Añadir `// ERA 8 Compatibility Bridge: do not add new exports` a bridges definitivos.
+- [ ] **255.4: Dead Export Purge**: Eliminar re-exports no usados (verificar con grep de imports).
 
 ---
 
@@ -1159,18 +1245,12 @@ CONFIGURACIÓN (Admin Hub):
 **Objetivo:** Cerrar definitivamente las brechas de seguridad, tipado y observabilidad detectadas en la auditoría de marzo 2026.
 
 **Tareas de Seguridad (Guardian Sweep):**
-- [ ] **244.1: Cobertura 100% enforcePermission**: Implementar en las 88 rutas restantes (Analytics, Billing Admin, Audit, Core/User residuales).
-- [ ] **244.2: Auditoría de Aislamiento**: Validar que `getTenantCollection` se usa en conjunción con `enforcePermission` en todas las nuevas rutas.
-
-**Tareas de Tipado (Any-Purge):**
-- [ ] **244.3: Limpieza `src/lib`**: Eliminar `: any` en los ~25 archivos identificados (Workflow, Tracing, SSE, etc.).
-- [ ] **244.4: Limpieza `src/services`**: Eliminar `: any` en los ~27 archivos identificados (Ingest, Vision, Extraction, etc.).
-
-**Tareas de Observability (SLA Expansion):**
-- [ ] **244.5: RAG v1 SLA**: Aplicar `withPerformanceSLA` a las 4 rutas críticas de RAG v1 faltantes.
-
-**Tareas de i18n (Deep Polish):**
-- [ ] **244.6: Resolución de Deuda**: Implementar los puntos de `docs/i18n-debt.md` (Dashboard hooks, AppError strings, Placeholders).
+- [x] **244.1: Cobertura 100% enforcePermission**: Implementar en las 88 rutas restantes (Analytics, Billing Admin, Audit, Core/User residuales). ✅
+- [x] **244.2: Auditoría de Aislamiento**: Validar que `getTenantCollection` se usa en conjunción con `enforcePermission`. ✅
+- [x] **244.3: Limpieza `src/lib`**: Eliminar `: any` en los archivos identificados. ✅
+- [x] **244.4: Limpieza `src/services`**: Eliminar `: any` en los archivos de servicios. ✅
+- [x] **244.5: RAG v1 SLA**: Aplicar `withPerformanceSLA` a las rutas críticas. ✅
+- [x] **244.6: Resolución de Deuda i18n**: Implementar puntos de `docs/i18n-debt.md`. ✅
 
 **Criterio de Aceptación GLOBAL:**
 - `grep -r ": any" src/lib src/services` == 0.
@@ -1218,8 +1298,8 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
-#### 🎨 FASE 248: UX MICRO-SURGERY (Post ERA 6 Polish)
-**Status:** `[EJECUCIÓN 🔵]` | **Prioridad:** ALTA | **Completado:** 40%
+#### 🎨 FASE 248: UX MICRO-SURGERY (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** ALTA | **Completado:** 2026-03-03
 
 **Objetivo:** Cirugía fina de usabilidad post ERA-6. La macroestructura (navegación, flujos, feedback) ya está resuelta. Esta fase se centra en microdetalles: densidad visual, microcopys orientados a tarea, guía contextual consistente, accesibilidad de teclado y aislamiento de demos.
 
@@ -1235,8 +1315,8 @@ CONFIGURACIÓN (Admin Hub):
 - [x] **248.0.2: CMD+K Consistency** (Refactorizado CommandMenu para incluir temas y navegación completa)
 - [x] **248.0.3: Confirmaciones destructivas** (Añadido window.confirm en MyDocuments delete)
 
-##### 248.1: DENSIDAD VISUAL (P1)
-**Status:** `[EJECUCIÓN 🔵]`
+##### 248.1: DENSIDAD VISUAL (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]`
 **Objetivo:** Optimizar el espacio en pantalla para usuarios expertos, reduciendo tamaños de fuente secundarios y estandarizando componentes de baja densidad.
   - **Fix:** Añadir `aria-label` descriptivo en cada caso (ej: `aria-label={t('download_document', { name: doc.name })}`).
   - **Archivos probables:** `src/components/shared/`, `src/app/(protected)/my-documents/`, `src/app/(protected)/admin/knowledge/assets/`.
@@ -1364,3 +1444,61 @@ CONFIGURACIÓN (Admin Hub):
 - Componentes existentes: `DashboardTabs`, `HubPage`, `MetricCard`, `PageHeader`, `Collapsible`.
 
 **Estimación:** ~3-4 horas de ejecución distribuidas en 5 sub-fases.
+
+---
+
+### 🚀 ERA 9: SYMPHONY - CAPÍTULO 2: HARDENING & INTELLIGENCE (PHASES 250-255)
+
+##### 252: HITL FEEDBACK → RAG RANKING & EVAL DATASET (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]`
+**Fecha:** 2026-03-03
+**Objetivo:** Implementar un bucle de retroalimentación humana que optimice el ranking de fragmentos (FAISS/Atlas) y genere un "Golden Dataset" para evaluación continua.
+
+- [x] **252.1: Schema Extension & API**
+  - **Qué hacer:** Extender `RagFeedbackSchema` para capturar `chunkIds`, `answer` y `label`.
+  - **Archivos:** `src/lib/schemas/feedback.ts`, `src/app/api/feedback/answer/route.ts`.
+- [x] **252.2: Search Engine Upgrade**
+  - **Qué hacer:** Modificar `rag-engine` para proyectar y devolver `chunkId` en todos los modos de búsqueda.
+  - **Archivos:** `packages/rag-engine/src/rag-service.ts`, `packages/rag-engine/src/keyword-search.ts`, `packages/rag-engine/src/multilingual-search.ts`.
+- [x] **252.3: RagFeedbackProcessor**
+  - **Qué hacer:** Implementar servicio que procesa feedback asíncrono y actualiza `feedbackScore` en `document_chunks`.
+  - **Archivos nuevos:** `src/services/core/rag/rag-feedback-processor.ts`.
+- [x] **252.4: RagEvalDatasetBuilder**
+  - **Qué hacer:** Implementar generador de triplas (Q, A, Chunks) para el dataset de evaluación basado en feedback positivo.
+  - **Archivos nuevos:** `src/services/core/rag/rag-eval-dataset-builder.ts`, `scripts/run-rag-feedback-processor.ts`.
+- [x] **252.5: Verificación End-to-End**
+  - **Pruebas:** `tests/verify-phase-252.ts`.
+
+---
+
+##### 253: UX MODE SIMPLE vs EXPERT (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]`
+**Fecha:** 2026-03-03
+**Objetivo:** Implementar un toggle global de UX que oculte/muestre detalles técnicos (prompts, scores, traces) según el perfil del usuario.
+
+- [x] **253.1: Global ExpertMode State** (Zustand + Persistence en Cookies)
+- [x] **253.2: Conditional Technical Views** (Search, Analysis, Ingest Modal)
+- [x] **253.3: Keyboard Shortcut (Shift+X) for Toggle**
+
+---
+
+##### 254: SELF-HEALING RAG (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]`
+**Fecha:** 2026-03-03
+**Objetivo:** Implementar el cierre de bucle entre detección de alucinaciones (Fact-Checking) y reparación automática de respuestas RAG.
+
+- [x] **254.1: Hallucination Guard Integration**
+  - **Qué hacer:** Integrar `FactCheckerService.verify()` en el flujo post-generación de `RagService`.
+- [x] **254.2: Self-Correction Loop (Retry with Correction)**
+  - **Qué hacer:** Si se detecta alucinación (High Hallucination Score), realizar un re-intento automático inyectando los "failed claims" como restricciones negativas en el prompt.
+- [x] **254.3: Hallucination Dashboard & Playbook**
+  - **Qué hacer:** Registrar eventos de auto-reparación en `OpsPlaybookService` y visualizar métricas en `/admin/ai/rag-quality`.
+
+---
+
+##### 255: INTEL-DRIVEN KNOWLEDGE Curation (PENDIENTE 🗓️)
+**Objetivo:** Automatizar la maduración de activos de conocimiento basados en el uso real.
+
+- [ ] **255.1: Autonomous FAQ Generation** (via IntelligenceWorker)
+- [ ] **255.2: Retrieval Quality Monitoring** (Predictive Maintenance for Index)
+
