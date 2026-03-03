@@ -1,0 +1,336 @@
+{
+  "audit": {
+    "title": "Auditoría de Guardian",
+    "highlight": "Seguridad",
+    "subtitle": "Pista de auditoría inmutable de decisiones de acceso y cambios de política.",
+    "export": "Exportar Audit",
+    "search_placeholder": "Buscar por usuario, recurso o política...",
+    "table": {
+      "title": "Registro de Decisiones",
+      "desc": "Historial de evaluaciones de políticas ABAC en tiempo real.",
+      "timestamp": "Fecha/Hora",
+      "user": "Usuario",
+      "action_resource": "Acción > Recurso",
+      "decision": "Decisión",
+      "policy": "Política Aplicada",
+      "loading": "Cargando auditoría de seguridad...",
+      "empty": "No hay intentos de acceso registrados.",
+      "last_24h": "Últimas 24h",
+      "end_of_trail": "FIN DE LA PISTA DE AUDITORÍA"
+    }
+  },
+  "title": "Consola de Plataforma",
+  "subtitle": "Observabilidad multi-tenant y salud del motor agentico.",
+  "actions": {
+    "predictive_audit": "Auditoría Predictiva",
+    "self_healing": "Ejecutar Auto-Curación"
+  },
+  "metrics": {
+    "tenants": "Clientes Activos",
+    "tenants_cluster": "{total} registrados en el cluster AUTH",
+    "cases": "Casos Procesados",
+    "ai_accuracy": "Precisión de IA (HITL)",
+    "ai_validations": "{count} validaciones humanas registradas",
+    "ai_health": "Salud del Motor IA",
+    "latency": "Latencia Media (LLM)",
+    "latency_desc": "Media global de respuesta de Gemini",
+    "consumption": "Consumo Proyectado",
+    "consumption_desc": "Estimación de coste a 30 días",
+    "health_stat": "{success} sucesos vs {failure} errores"
+  },
+  "financials": {
+    "title": "Finanzas de Plataforma",
+    "desc": "Economía de operación global y licenciamiento.",
+    "expenditure": "Gasto Operativo",
+    "prediction_title": "Proyección Predictiva",
+    "platform_value": "Valor Total de Plataforma",
+    "roi": "ROI",
+    "confidence": "{percentage}% Conf.",
+    "projection_30d": "Proyección 30d",
+    "currency": "$",
+    "tokens": "tokens"
+  },
+  "usage": {
+    "title": "Consumo por Tenant",
+    "desc": "Extracción de recursos y consumo de tokens por organización.",
+    "tokens": "Tokens",
+    "storage": "Almacenamiento",
+    "savings": "Ahorros",
+    "no_data": "No hay datos de consumo disponibles."
+  },
+  "knowledge": {
+    "title": "Estado del Motor Knowledge",
+    "desc": "Auditoría de activos y ciclo de vida de documentos.",
+    "obsolete": "Documentos Obsoletos",
+    "obsolete_desc": "Activos cuya fecha de revisión ha expirado y requieren curación.",
+    "pending": "{count} Pendientes",
+    "cluster_health": "Salud del Cluster",
+    "db_status": "Estado de conexión con MongoDB Atlas y Neo4j."
+  },
+  "anomalies": {
+    "title": "Anomalías Detectadas",
+    "desc": "Eventos estadísticamente inusuales (Z-score > 2.0).",
+    "no_anomalies": "No se han detectado anomalías en las últimas 48 horas.",
+    "alerts": "{count} ALERTAS"
+  },
+  "infra": {
+    "title": "Infraestructura Pro",
+    "desc": "Detalle de recursos asignados al cluster.",
+    "environment": "Entorno",
+    "db_tier": "Capa de Base de Datos",
+    "ai_engine": "Motor de IA"
+  },
+  "knowledge_health": {
+    "auth_ok": "AUTH: OK"
+  },
+  "evolution": {
+    "title": "Sovereign Engine: Evolución de Ontología",
+    "subtitle": "Refinamiento autónomo de taxonomías basado en deriva de feedback humano.",
+    "improvements": "{count} MEJORAS",
+    "drift_label": "Deriva de Feedback Detectada",
+    "drift_target": "En categoría: {category}",
+    "drift_frequency": "{count} veces",
+    "drift_summary": "El sistema ha detectado {driftPoints} puntos de divergencia. Se han generado {proposals} propuestas de refinamiento.",
+    "stable": "Ontología estable. No se requiere refinamiento por el momento.",
+    "proposals_title": "Propuestas de Refinamiento LLM",
+    "proposals_desc": "Visualización de cambios propuestos por el modelo antes de su aplicación.",
+    "no_proposals": "Sin propuestas activas",
+    "view_more": "Ver {count} propuestas adicionales",
+    "confidence": "Confianza: {percentage}%"
+  },
+  "toasts": {
+    "audit_success_title": "Auditoría Completada",
+    "audit_success_desc": "Se han procesado {processed} activos y actualizado {updated}.",
+    "audit_error_title": "Error de Auditoría",
+    "audit_error_desc": "No se pudo ejecutar la auto-curación",
+    "predictive_success_title": "Auditoría Predictiva Completada",
+    "predictive_success_desc": "Se han detectado {count} anomalías.",
+    "predictive_error_title": "Error de Auditoría",
+    "predictive_error_desc": "La auditoría de inteligencia predictiva ha fallado"
+  },
+  "governance": {
+    "title": "Gobernanza de IA",
+    "subtitle": "Gestión centralizada de modelos, límites y políticas de seguridad.",
+    "actions": {
+      "discard": "Descartar",
+      "save": "Guardar Gobernanza"
+    }
+  },
+  "success": "Gobernanza de IA actualizada correctamente",
+  "error": "Error guardando cambios",
+  "models": {
+    "title": "Modelos Contractuales",
+    "description": "Configura los modelos por defecto y fallback para toda la plataforma.",
+    "default": {
+      "label": "Modelo Principal (Default)",
+      "desc": "Usado para el 90% de las operaciones de Inteligencia Técnica y análisis."
+    },
+    "embeddings": {
+      "label": "Modelo de Embeddings (Vectores)",
+      "desc": "Determina la calidad de la búsqueda vectorial."
+    },
+    "fallback": {
+      "label": "Modelo de Respaldo (Fallback)"
+    },
+    "select_placeholder": "Selecciona modelo",
+    "default_option": "Default (Gobernanza)"
+  },
+  "mapping": {
+    "title": "Mapeo Funcional por Tarea",
+    "description": "Define qué modelo específico debe realizar cada tarea crítica del sistema.",
+    "rag": {
+      "title": "Inteligencia Técnica & Búsqueda de Documentos",
+      "generator": "Generador de Respuestas",
+      "rewriter": "Re-escritor de Consultas"
+    },
+    "workflows": {
+      "title": "Orquestación & Workflows",
+      "router": "Enrutador de Workflows",
+      "analyzer": "Analista de Nodos"
+    },
+    "extraction": {
+      "title": "Extracción & Análisis Técnico",
+      "graph": "Extractor de Grafos",
+      "report": "Generador de Informes",
+      "query": "Extractor de Consultas"
+    }
+  },
+  "limits": {
+    "title": "Límites & Cuotas",
+    "max_tokens": "Max Tokens por Request",
+    "daily_tokens": "Límite Diario de Tokens",
+    "daily_budget": "Límite Diario ($ USD)",
+    "pii": {
+      "label": "Anonimización PII",
+      "desc": "Masking automático"
+    },
+    "explain": {
+      "label": "Explicabilidad",
+      "desc": "Incluir \"Thought Process\""
+    },
+    "warning": "Prevención de desbordamiento de costos activo."
+  },
+  "compliance": {
+    "title": "Cumplimiento & Normativa",
+    "subtitle": "Gestión del registro de modelos (EU AI Act), portabilidad y derechos GDPR.",
+    "toasts": {
+      "backupDownloaded": "Backup iniciado",
+      "backupSuccess": "El archivo se ha generado con éxito.",
+      "backupError": "No se pudo generar el backup.",
+      "certificateGenerated": "Certificado generado",
+      "certificateSuccess": "El documento legal ha sido firmado y descargado.",
+      "certificateError": "Error al generar el certificado legal.",
+      "error": "Error de Compliance"
+    }
+  },
+  "highlight": "Compliance",
+  "aiGovernance": {
+    "registryTitle": "Registro de Modelos IA (EU AI Act)",
+    "registryDesc": "Inventario oficial de modelos de IA utilizados por la organización y su nivel de riesgo.",
+    "model": "Modelo",
+    "provider": "Proveedor",
+    "status": "Estado",
+    "euRisk": "Riesgo EU",
+    "governed": "Gobernado",
+    "riskTitle": "Resumen de Riesgo Operativo",
+    "riskDesc": "Distribución del corpus técnico según categorías de la EU AI Act.",
+    "riskLevels": {
+      "minimal": "Riesgo Mínimo",
+      "high": "Alto Riesgo",
+      "unacceptable": "Inaceptable"
+    },
+    "complianceNoteHtml": "Todos los modelos operan bajo la categoría de <b>{risk}</b> al ser herramientas de asistencia técnica RAG sin toma de decisiones autónoma sobre personas."
+  },
+  "dataPortability": {
+    "title": "Portabilidad de Datos",
+    "description": "Descarga una copia completa de tus activos de conocimiento en un formato estándar.",
+    "whatsIncluded": "¿Qué incluye el backup?",
+    "item1": "Manuales originales (PDF/Planos)",
+    "item2": "Fragmentos (Chunks) e índices vectoriales",
+    "item3": "Grafos de ontología personalizados",
+    "item4": "Metadatos y logs de ingesta"
+  },
+  "rightToBeForgotten": {
+    "title": "Derecho al Olvido (GDPR)",
+    "description": "Solicita la eliminación permanente de datos PII o la destrucción total del tenant.",
+    "alertTitle": "Zona de Peligro",
+    "alertDescription": "Esta acción es irreversible. Se eliminarán permanentemente todos los vectores, documentos y copias de seguridad."
+  },
+  "buttons": {
+    "downloadBackup": "Descargar Backup Completo",
+    "generatingZip": "Generando ZIP...",
+    "generateCertificate": "Generar Certificado de Destrucción",
+    "signingPdf": "Firmando PDF...",
+    "requestDeletion": "Solicitar borrado total de datos",
+    "manualAdminRequest": "Solicitud Manual de Administrador"
+  },
+  "reliability": {
+    "title": "Resilience & Global Delivery Monitor",
+    "subtitle": "Monitorización de carga extrema y replicación geográfica del Grafo."
+  },
+  "run_test": "Ejecutar Stress Test (500% Load)",
+  "cdn_title": "CDN de Conocimiento Global",
+  "latency": "Latencia",
+  "status": "Estado",
+  "last_test": "Último Stress Test",
+  "success_rate": "Tasa de í‰xito",
+  "cpu_peak": "CPU Peak",
+  "reqs_sec": "Reqs/Sec",
+  "validation_success": "ReliabilityEngine validado bajo carga pico.",
+  "no_data": "Sin datos de estrés.",
+  "scaling": {
+    "title": "AI Infrastructure Scaling",
+    "desc": "Auto-optimización de recursos dirigida por el Sistema.",
+    "badge": "AI-MANAGED",
+    "infra_label": "Estado Actual de Infraestructura",
+    "optimization": "Optimización",
+    "compute_load": "Carga de Computación",
+    "dynamic_reserve": "Reserva Dinámica Activa",
+    "dynamic_reserve_desc": "El sistema está ajustando los nodos de red basándose en el tráfico semántico global."
+  },
+  "security_autoscale": {
+    "audit": {
+      "title": "Universal Security Audit",
+      "desc": "Verificación inmutable de blindaje y gobierno.",
+      "health_score": "Health Score",
+      "encrypted_fields": "Campos Cifrados",
+      "active_policies": "Políticas Activas",
+      "findings": {
+        "encryption": "Cifrado AES-256-GCM validado en todos los campos sensibles.",
+        "governance": "Motor de Gobierno operando bajo política 'Strict Compliance'.",
+        "traceability": "Trazabilidad de auditoría inmutable activa."
+      },
+      "next_audit": "Próxima auditoría completa programada en 24 horas."
+    }
+  },
+  "resources": {
+    "tokens": "Tokens de IA",
+    "storage": "Almacenamiento",
+    "searches": "Búsquedas Vectoriales",
+    "api_requests": "Llamadas API"
+  },
+  "exceeded_title": "Límite Excedido",
+  "warning_title": "Alerta de Consumo",
+  "exceeded_msg": "Has alcanzado el 100% de tu límite de {resource}.",
+  "warning_msg": "Has consumido el {percentage}% de tu límite de {resource}.",
+  "suspended": "Tu cuenta ha sido suspendida. Por favor, actualiza tu plan.",
+  "upgrade": "Actualizar Plan",
+  "dismiss": "Entendido",
+  "modal": {
+    "title": "Límite Excedido",
+    "desc": "Has alcanzado el límite de tu plan actual. Para continuar usando la plataforma, por favor actualiza a un plan superior.",
+    "view_plans": "Ver Planes",
+    "close": "Cerrar"
+  },
+  "dialog_desc": "Estado técnico y overrides en base de datos.",
+  "loading": "Consultando capas de traducción...",
+  "key_debug": {
+    "error": "Error al cargar info de debug"
+  },
+  "json_section": "Archivo JSON Local (mensajes/{locale}/...)",
+  "key_not_found": "Llave no encontrada en archivos locales",
+  "db_section": "Overrides en Base de Datos (MongoDB)",
+  "no_overrides": "No hay overrides para esta llave en la DB",
+  "obsolete": "OBSOLETO",
+  "cache_label": "Master Cache Existe",
+  "cache_active": "ACTIVA",
+  "cache_inactive": "INACTIVA",
+  "onboarding": {
+    "title": "Bienvenido a ABDElevators",
+    "actions": {
+      "next": "Continuar",
+      "back": "Atrás",
+      "finish": "Finalizar Configuración",
+      "skip": "Omitir por ahora"
+    },
+    "toasts": {
+      "completed": "¡Onboarding completado con éxito!",
+      "reset": "Onboarding reiniciado para este usuario."
+    }
+  },
+  "description": "Vamos a configurar el espacio de trabajo de tu organización en pocos pasos.",
+  "steps": {
+    "welcome": {
+      "title": "Bienvenido al Ecosistema ABD",
+      "content": "La IA que entiende tu documentación técnica. Para empezar, selecciona tu rol principal para personalizar las herramientas."
+    },
+    "upload": {
+      "title": "Sube tu primer documento",
+      "content": "Arrastra un PDF técnico o plano. Si no tienes uno a mano, prueba con nuestro documento de ejemplo sobre ITC AEM 1."
+    },
+    "ask": {
+      "title": "Haz tu primera consulta",
+      "content": "Prueba a preguntar algo técnico basado en el documento. La IA responderá con citas directas al manual original."
+    },
+    "explore": {
+      "title": "Descubre tu entorno",
+      "content": "Hemos configurado accesos rápidos según tu especialidad. ¡Todo listo para optimizar tu trabajo!"
+    },
+    "identity": "Identidad",
+    "branding": "Branding",
+    "storage": "Almacenamiento",
+    "features": "Funcionalidades",
+    "billing": "Facturación"
+  },
+  "operations": "Centro de Operaciones"
+}

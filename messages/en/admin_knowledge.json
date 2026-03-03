@@ -1,0 +1,303 @@
+{
+  "title": "Knowledge Search",
+  "highlight": "Intelligence",
+  "subtitle": "Inquiry and visualization of technical data linked in the document library.",
+  "analyzeFlow": {
+    "suggestionsLabel": "Smart Suggestions",
+    "generatingSuggestions": "Generating smart suggestions...",
+    "analyzing": "Analyzing...",
+    "analyzeWait": "This might take a few seconds.",
+    "sourcesLabel": "Technical Sources Used"
+  },
+  "expertMode": {
+    "generatingSuggestions": "Generating smart suggestions...",
+    "moreContext": "See more context"
+  },
+  "explorer_h2": "Technical Documentation",
+  "explorer_subtitle": "Explore the document library or perform queries to the Artificial Intelligence.",
+  "tabs": {
+    "explorer": "Explorer",
+    "ai": "AI Query",
+    "assets": "[TRANSLATE] Gestión de Activos",
+    "audit": "[TRANSLATE] Auditoría de Ingesta"
+  },
+  "actions": {
+    "export": "Export Chunks",
+    "refresh": "Refresh",
+    "sim_btn": "Simulate Search",
+    "upload": "[TRANSLATE] Ingestar Documento"
+  },
+  "stats": {
+    "total": "Total Chunks",
+    "arch": "Architecture",
+    "langs": "Indexed Languages",
+    "backend": "Backend Status",
+    "synced": "Synced with Atlas"
+  },
+  "simulator": {
+    "title": "Analysis Simulator / Debugger",
+    "subtitle": "Simulate a real query to see what information the hybrid engine would retrieve and with what degree of relevance.",
+    "placeholder": "Type a technical query (e.g., 'safety circuit failure A3')..."
+  },
+  "filters": {
+    "title": "Exploration Filters",
+    "query_placeholder": "Search text, model or file...",
+    "lang_label": "Language",
+    "lang_all": "All languages",
+    "type_label": "Indexing Type",
+    "type_all": "All content",
+    "type_original": "Originals",
+    "type_shadow": "Shadow Chunks (Translations)",
+    "method_label": "Retrieval Method",
+    "method_exact": "Exact Search",
+    "method_semantic": "Semantic (AI)"
+  },
+  "view": {
+    "showing": "Showing {count} of {total} technical fragments",
+    "loading": "Loading technical insights...",
+    "empty_title": "No chunks found",
+    "empty_subtitle": "Try adjusting search filters.",
+    "chunk_shadow": "Shadow",
+    "chunk_original": "Original",
+    "chunk_model": "Model",
+    "chunk_type": "Type",
+    "auto_trans": "Automatic Translation",
+    "dual_mechanism": "Dual-Index Mechanism",
+    "dual_desc": "This chunk allows finding the original document by searching in Spanish, even if the manual is German/English.",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "brain": {
+    "title": "Technical Intelligence Assistant",
+    "description": "Perform complex technical queries. Our AI will search manuals, verify the accuracy of the information and give you a high-fidelity response.",
+    "placeholder": "e.g., Rescue protocol in Otis 2000 manual?",
+    "thinking": "Thinking...",
+    "submit": "Query",
+    "investigating": "The agent is investigating...",
+    "investigating_desc": "Retrieving documents, validating against hallucinations and drafting a solution.",
+    "verified_badge": "Verified Response",
+    "hide_trace": "Hide process",
+    "show_trace": "Show IA reasoning",
+    "trace_title": "Agentic Thought Process",
+    "trace_footer": "Conclusion generated after multi-stage verification.",
+    "sources_title": "Technical Sources Used",
+    "manual_label": "Technical Manual",
+    "score_label": "Score",
+    "examples": {
+      "torque": {
+        "title": "Query Torque",
+        "desc": "Verify official values from manuals.",
+        "query": "What is the tightening torque for Otis traction ropes?"
+      },
+      "safety": {
+        "title": "Pit Safety",
+        "desc": "Critical safety protocols.",
+        "query": "Schindler pit door bypass procedure"
+      },
+      "quantum": {
+        "title": "Quantum Doors",
+        "desc": "Precise component adjustments.",
+        "query": "Quantum P1 potentiometer configuration"
+      }
+    }
+  },
+  "brain_federated": {
+    "title": "Collective Intelligence Suggestions",
+    "investigating": "Querying federated sources...",
+    "match": "Match"
+  },
+  "assets": {
+    "table": {
+      "file": "[TRANSLATE] Documento",
+      "type": "[TRANSLATE] Tipo / Industria",
+      "status": "[TRANSLATE] Estado Ingesta",
+      "date": "[TRANSLATE] Fecha",
+      "actions": "[TRANSLATE] Acciones"
+    },
+    "status": {
+      "pending": "[TRANSLATE] Pendiente",
+      "processing": "[TRANSLATE] Procesando",
+      "completed": "[TRANSLATE] Completado",
+      "failed": "[TRANSLATE] Fallido"
+    },
+    "actions": {
+      "retry": "[TRANSLATE] Reintentar Ingesta",
+      "delete": "[TRANSLATE] Eliminar Activo",
+      "view_chunks": "[TRANSLATE] Ver Fragmentos"
+    }
+  },
+  "federated": {
+    "investigating": "Investigating...",
+    "match": "Match",
+    "title": "Federated Search"
+  },
+  "dashboard_title": "RAG Quality Governance",
+  "dashboard_desc": "Monitor faithfulness, relevance, and precision of agentic engine responses.",
+  "loading": "Loading quality metrics...",
+  "latest_sessions": "Based on last {count} sessions",
+  "critical_count": "{count} Critical Analyses",
+  "critical_warning": {
+    "title": "Technical Attention Required (Low Confidence)",
+    "desc": "The following orders have been flagged with confidence below 70%. Human validation required."
+  },
+  "default_filename": "PDF Analysis",
+  "review": "Review",
+  "metrics": {
+    "faithfulness": {
+      "label": "Faithfulness",
+      "desc": "Is the response based on the documents?"
+    },
+    "relevance": {
+      "label": "Answer Relevance",
+      "desc": "Does the response actually resolve the doubt?"
+    },
+    "precision": {
+      "label": "Context Precision",
+      "desc": "Quality of the retrieved fragments."
+    }
+  },
+  "charts": {
+    "evolution_title": "Quality Evolution",
+    "evolution_desc": "Historical trend of RAG metrics in recent analyses."
+  },
+  "history": {
+    "title": "Evaluation History",
+    "desc": "Detailed record of generation quality.",
+    "show_trace": "View Trace",
+    "hide_trace": "Hide Trace",
+    "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
+    "trace_end": "--- END OF TRACE ---",
+    "empty": "No evaluations recorded yet.",
+    "empty_desc": "Use the RAG search to generate data."
+  },
+  "trace": {
+    "actions": {
+      "audit": "Audit Decision"
+    }
+  },
+  "page": {
+    "title": "i18n Governance",
+    "highlight": "Internationalization",
+    "subtitle": "Master translation management and AI-assisted localization.",
+    "syncBtn": "Sync L4 → DB",
+    "newKeyBtn": "New Key",
+    "searchPlaceholder": "Search by key or text...",
+    "syncAllBtn": "Sync all languages",
+    "allFilter": "ALL",
+    "filterMissing": "Show only missing",
+    "exportBtn": "Exportar a JSON",
+    "exportSuccessTitle": "[PENDING_TRANSLATION]",
+    "exportSuccessDesc": "[PENDING_TRANSLATION]",
+    "syncToDbBtn": "[PENDING_TRANSLATION]",
+    "syncToFileBtn": "[PENDING_TRANSLATION]"
+  },
+  "languages": {
+    "es": "Spanish",
+    "en": "English"
+  },
+  "table": {
+    "keyHeader": "Key (i18n ID)",
+    "primaryLabel": "Primary",
+    "secondaryLabel": "Secondary",
+    "autoTranslateBtn": "AUTO-TRANSLATE MISSING",
+    "save": "Save",
+    "cancel": "Cancel",
+    "empty": "Empty",
+    "missing": "Missing",
+    "noResults": "No translation keys found",
+    "searchEmptyTitle": "Search or filter to begin",
+    "searchEmptyDesc": "Use namespace filters or the search bar to load translations",
+    "info_tooltip": "View technical details and key origin",
+    "noMatch": "No match",
+    "notifications": {
+      "aiSuccessDesc": "All missing translations have been generated",
+      "aiSuccessTitle": "Auto-translation completed",
+      "upToDateDesc": "No missing keys in this language.",
+      "syncCompletedTitle": "Sync completed",
+      "syncNoChanges": "No discrepancies detected between JSON and DB.",
+      "syncSuccessTitle": "Sync Successful",
+      "syncSuccessDetail": "{added} new, {updated} updated.",
+      "syncErrorTitle": "Sync error",
+      "syncErrorDesc": "Error syncing with database",
+      "exportCompletedTitle": "Export completed",
+      "exportNoChanges": "JSON files are already synced with DB.",
+      "exportSuccessDetail": "{added} new, {updated} updated in JSON.",
+      "exportErrorTitle": "Export error",
+      "exportErrorDesc": "Error exporting to local files",
+      "syncSuccessDesc": "Local files have been dumped to the database.",
+      "saveSuccess": "Translation updated successfully.",
+      "batch_translate_progress": "Starting AI: {current}/{total}...",
+      "batch_translate_chunk": "Translating batch {current}/{total} ({count} keys)...",
+      "batch_success_title": "Translation completed",
+      "batch_success_desc": "{count} keys were successfully translated.",
+      "batch_error_title": "Bulk translation error",
+      "batch_error_interrupted": "Process interrupted: Batch {batch} failed.",
+      "batch_error_generic": "Error during bulk translation"
+    }
+  },
+  "complianceNoteHtml": "<strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{risk} risk</strong> as it provides technical assistance and information retrieval without automated decision-making.",
+  "toast": {
+    "updated": "Document type updated successfully",
+    "created": "Document type created successfully",
+    "deleted": "Document type deleted"
+  },
+  "deleteConfirm": "Are you sure you want to delete this document type?",
+  "all": "All",
+  "documentTypes": {
+    "page": {
+      "title": "Document Types",
+      "subtitle": "Configure technical document categories for RAG."
+    },
+    "table": {
+      "name": "Name",
+      "scope": "Scope",
+      "description": "Description",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions",
+      "industries": "Industries"
+    }
+  },
+  "empty": "No document types configured.",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "scope": {
+    "GLOBAL": "Global (All Tenants)",
+    "INDUSTRY": "Industry Specific",
+    "TENANT": "Tenant Specific"
+  },
+  "form": {
+    "newType": "New Type",
+    "editTitle": "Edit Document Type",
+    "createTitle": "Create New Document Type",
+    "name": "Name",
+    "namePlaceholder": "Ex: Controller, Motor, etc.",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional",
+    "scope": "Scope (SuperAdmin)",
+    "scopeTenant": "Tenant Specific",
+    "scopeGlobal": "Global (All Tenants)",
+    "scopeIndustry": "Industry Specific",
+    "industries": "Industries (Multi-select)",
+    "industriesHelp": "Hold Ctrl/Cmd to select multiple.",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "create": "Create",
+    "saving": "Saving...",
+    "creating": "Creating..."
+  },
+  "multilingual": {
+    "title": "Multilingual Searches"
+  },
+  "label": "Latent Vectors (Shadow)",
+  "knowledge_governance": {
+    "title": "Knowledge & AI Governance"
+  },
+  "desc": "Audit and policy control over autonomous decisions.",
+  "empty_title": "No recent activity",
+  "empty_desc": "No AI actions under governance supervision have been recorded.",
+  "confidence": "Confidence",
+  "in_entity": "on"
+}

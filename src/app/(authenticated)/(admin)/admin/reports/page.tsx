@@ -70,7 +70,7 @@ interface ReportRecord {
  * and one-click actions.
  */
 function ReportHubContent() {
-    const t = useTranslations('admin');
+    const t = useTranslations('admin_reports');
     const searchParams = useSearchParams();
 
     // State

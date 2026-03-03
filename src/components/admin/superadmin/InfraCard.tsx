@@ -6,7 +6,7 @@ import { Server } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export function InfraCard() {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <Card className="rounded-3xl border-none shadow-sm bg-indigo-900 text-white overflow-hidden relative h-full">

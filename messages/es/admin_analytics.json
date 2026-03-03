@@ -1,0 +1,206 @@
+{
+  "title": "Control Global",
+  "subtitle": "Visión consolidada de toda la infraestructura.",
+  "search": {
+    "title": "Búsqueda",
+    "highlight": "Inteligente",
+    "subtitle": "Accede a la red de activos de conocimiento técnico de tu organización.",
+    "engine_title": "Motor RAG Industrial",
+    "engine_desc": "Nuestro sistema procesa miles de fragmentos de documentación técnica de forma privada para tu organización. Utilizamos Gemini 2.0 para sintetizar respuestas basadas exclusivamente en tus activos, manteniendo la trazabilidad total a la fuente original.",
+    "privacy_title": "Privacidad Garantizada",
+    "privacy_desc": "Tus búsquedas y documentos están aislados por Tenant. Ninguna otra organización puede acceder a tus consultas ni a los resultados generados por el motor de IA."
+  },
+  "tabs": {
+    "overview": "Vista General",
+    "intelligence": "Inteligencia",
+    "automation": "Automation",
+    "governance": "Governance",
+    "search": "Semantic",
+    "reliability": "Resilience",
+    "security": "Security",
+    "workflows": "Workflows"
+  },
+  "userDashboardTitle": "Dashboard",
+  "userDashboardSubtitle": "Métricas de rendimiento y consumo de tu organización.",
+  "warRoomToggle": "Toggle War Room Mode",
+  "liveFeed": "Live Feed",
+  "metrics": {
+    "tenants": "Total Tenants",
+    "activeUsers": "Usuarios Activos",
+    "documents": "Documentos",
+    "cases": "Pedidos / Casos",
+    "iaSearches": "IA Searches",
+    "search": {
+      "label": "RAG Search",
+      "desc": "Búsquedas vectoriales"
+    }
+  },
+  "charts": {
+    "consumptionTitle": "Consumo de IA y Almacenamiento",
+    "labels": {
+      "tokens": "Tokens Gemini (Input/Output)",
+      "storage": "Espacio en Disco (Cloudinary/S3)",
+      "searches": "Búsquedas Vectoriales"
+    }
+  },
+  "distribution": {
+    "title": "Distribución por Sector"
+  },
+  "plan": {
+    "title": "Estado del Plan",
+    "active": "ACTIVE",
+    "renewal": "Renovación automática",
+    "manageBtn": "Gestionar Suscripción"
+  },
+  "activity": {
+    "title": "Actividad Reciente del Sistema",
+    "empty": "No hay actividad reciente registrada."
+  },
+  "timeline": {
+    "loading": "Cargando historial...",
+    "error": "Error al cargar historial: {message}",
+    "empty": "No hay eventos registrados.",
+    "title": "Historial del Caso",
+    "actor": "Actor",
+    "types": {
+      "IA": "Inteligencia Artificial",
+      "HUMAN": "Operador Humano",
+      "INGEST": "Motor de Ingesta",
+      "SYSTEM": "Sistema"
+    }
+  },
+  "workflows_dashboard": {
+    "title": "Workflow Designer",
+    "subtitle": "Gestión de flujos industriales."
+  },
+  "caseWorkflow": {
+    "currentStatus": "Estado Actual",
+    "pending": "Pendiente",
+    "iaIntelligence": "Inteligencia de Proceso",
+    "recommended": "RECOMENDADO",
+    "risk": "Riesgo: {level}",
+    "confidence": "{value}% Confianza",
+    "iaDescription": "El sistema puede analizar automáticamente la documentación para este estado.",
+    "runAnalysis": "Ejecutar Análisis Inteligente",
+    "availableActions": "Acciones Disponibles",
+    "analysisComplete": "Análisis IA Completado",
+    "statusUpdatedDesc": "El caso ha avanzado a: {to}",
+    "riskDetected": "Riesgo detectado: {level}",
+    "statusUpdated": "Fase Actualizada"
+  },
+  "workflows": {
+    "syncing": "Sincronizando Motor de Workflows...",
+    "title": "Diseñador de Workflows",
+    "loadError": "Error de Carga",
+    "backToHub": "Volver al Hub de IA",
+    "loadErrorDesc": "No se pudo recuperar la definición del workflow: {error}",
+    "saveSuccess": "Configuración Guardada",
+    "back": "Volver",
+    "publish": "Publicar Workflow",
+    "tabs": {
+      "transitions": "Transiciones",
+      "states": "Estados",
+      "config": "Master Config"
+    },
+    "saveSuccessDesc": "El workflow ha sido actualizado con éxito.",
+    "states": {
+      "title": "Estados de Proceso",
+      "id": "ID del Estado",
+      "label": "Etiqueta",
+      "color": "Color (Hex)",
+      "newState": "Nuevo Estado",
+      "iaLayer": "Capa de Inteligencia (LLM)",
+      "promptKey": "Prompt Key",
+      "schemaKey": "Output Schema"
+    },
+    "transitions": {
+      "title": "Configuración de Transiciones",
+      "to": "Hacia",
+      "from": "Desde",
+      "strategy": "Estrategia de Decisión",
+      "add": "Añadir Transición",
+      "label": "Acción / Etiqueta",
+      "strategies": {
+        "human": "ðŸ›¡ï¸ Solo Humana",
+        "llm_suggest": "🧠 IA + HITL (Sugerida)",
+        "user": "ðŸ‘¤ Usuario (Manual)",
+        "llm_direct": "🤖 LLM Directa (Auto)"
+      },
+      "routing": {
+        "branches": "{count} Ramas Configuradas",
+        "promptKey": "Routing Prompt Key"
+      }
+    },
+    "config": {
+      "global": "Estrategia Global",
+      "identity": "Identidad del Workflow",
+      "active": "Estado Activo",
+      "activeDesc": "Disponible para nuevos casos",
+      "publication": "Parámetros de Publicación",
+      "environment": "Entorno",
+      "defaultDesc": "Asignado automáticamente",
+      "version": "Versión",
+      "default": "Workflow por Defecto",
+      "name": "Nombre Interno"
+    }
+  },
+  "roi": {
+    "title": "Retorno de Inversión (ROI)",
+    "subtitle": "Impacto operativo en los últimos 30 días"
+  },
+  "efficiency": "Efficiency Score",
+  "efficiency_desc": "Aumento en la velocidad de revisión técnica por pedido.",
+  "time_saved": "Tiempo Ahorrado",
+  "time_saved_desc": "Horas totales liberadas de tareas de búsqueda manual.",
+  "compliance": "Cumplimiento EN 81-20",
+  "compliance_desc": "Pedidos que cumplen 100% con la normativa vigente.",
+  "accuracy": "Precisión de la IA",
+  "accuracy_desc": "Fidelidad de las extracciones frente a revisiones manuales.",
+  "hours": "horas",
+  "cost_savings": "Equivalente en Coste Operativo",
+  "cost_basis": "*Basado en un coste promedio de $50/hora por técnico e ingeniero.",
+  "breakdown": "Desglose",
+  "ai_analysis": "Análisis IA",
+  "docs": "docs",
+  "searches": "Búsquedas",
+  "ops": "ops",
+  "dedup": "Smart Dedup",
+  "files": "files",
+  "calculating": "Calculando ahorros...",
+  "no_data": "No hay datos de ROI disponibles para este periodo.",
+  "info": "Info",
+  "storage": {
+    "label": "Almacenamiento",
+    "desc": "Espacio en Cloudinary"
+  },
+  "tokens": {
+    "label": "IA Generativa",
+    "desc": "Tokens Gemini consumidos"
+  },
+  "reports": {
+    "label": "Informes / Pedidos",
+    "desc": "Informes generados"
+  },
+  "savings": {
+    "title": "Ahorro Inteligente por Deduplicación",
+    "tokens": "Tokens Ahorrados",
+    "efficiency": "Eficiencia de Ingesta"
+  },
+  "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
+  "tokens_title": "Tendencia de Consumo AI",
+  "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días.",
+  "quick_nav": {
+    "workflows": {
+      "title": "Workflows",
+      "subtitle": "Automatización"
+    },
+    "checklists": {
+      "title": "Checklists",
+      "subtitle": "Cumplimiento"
+    },
+    "intelligence": {
+      "title": "Intelligence",
+      "subtitle": "IA Hub"
+    }
+  }
+}

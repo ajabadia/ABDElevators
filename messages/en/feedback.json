@@ -1,14 +1,14 @@
 {
-    "question": "Was this answer helpful?",
-    "thanks_positive": "✓ Thanks for your feedback",
-    "thanks_negative": "Thanks, we'll take it into account",
-    "categories": {
-        "incorrect": "Incorrect",
-        "incomplete": "Incomplete",
-        "irrelevant": "Irrelevant",
-        "source_wrong": "Wrong source"
-    },
-    "placeholder": "What information were you expecting?",
-    "submit": "Submit",
-    "submitting": "Submitting..."
+  "question": "Was this answer helpful?",
+  "thanks_positive": "✓ Thanks for your feedback",
+  "thanks_negative": "Thanks, we'll take it into account",
+  "categories": {
+    "incorrect": "Incorrect",
+    "incomplete": "Incomplete",
+    "irrelevant": "Irrelevant",
+    "source_wrong": "Wrong source"
+  },
+  "placeholder": "What information were you expecting?",
+  "submit": "Submit",
+  "submitting": "Submitting..."
 }

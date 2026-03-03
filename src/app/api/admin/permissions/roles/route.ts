@@ -14,13 +14,13 @@ const SLA_WRITE = 1000;
  * GET /api/admin/permissions/roles
  * Lista todos los grupos (roles) de permiso del tenant
  */
-async function GET_internal () {
+async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const user = await enforcePermission('permission:role', 'read');
         const groupsCollection = await getTenantCollection<PermissionGroup>('permission_groups', user);
-        const roles = await (groupsCollection.find({}) as any).toArray();
+        const roles = await groupsCollection.find({});
 
         return NextResponse.json({ success: true, roles });
     } catch (error: unknown) {
@@ -44,7 +44,7 @@ async function GET_internal () {
  * POST /api/admin/permissions/roles
  * Crea un nuevo grupo (role) de permiso
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {

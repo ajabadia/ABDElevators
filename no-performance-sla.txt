@@ -1,4 +1,0 @@
-﻿D:\desarrollos\ABDElevators\src\app\api\auth\[...nextauth]\route.ts
-D:\desarrollos\ABDElevators\src\app\api\v1\analysis\extract\route.ts
-D:\desarrollos\ABDElevators\src\app\api\v1\documents\ingest\route.ts
-D:\desarrollos\ABDElevators\src\app\api\v1\rag\query\route.ts

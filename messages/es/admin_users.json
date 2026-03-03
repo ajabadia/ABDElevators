@@ -1,0 +1,109 @@
+{
+  "title": "Gestión de Usuarios",
+  "highlight": "Usuarios",
+  "subtitle_org": "Administra usuarios y permisos de tu organización",
+  "subtitle_global": "Administra usuarios y permisos globales",
+  "invite": "Invitar Usuario",
+  "bulk_invite": "Invitación Masiva",
+  "create_manual": "Crear Manualmente",
+  "registered_title": "Usuarios Registrados",
+  "registered_desc": "{count} usuario{suffix} en tu entidad",
+  "registered_desc_global": "{count} usuario{suffix} accesibles",
+  "empty_message": "No se encontraron usuarios registrados.",
+  "table": {
+    "security": "Seguridad",
+    "actions": "Acciones",
+    "mfa_active": "MFA Activo",
+    "no_mfa": "Sin MFA"
+  },
+  "fields": {
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "email": "Email",
+    "jobTitle": "Puesto/Cargo",
+    "tenantId": "Tenant",
+    "role": "Rol",
+    "isActive": "Estado"
+  },
+  "bulk": {
+    "title": "Invitación Masiva",
+    "desc": "Sube un archivo CSV o Excel con columnas \"email\" y opcionalmente \"role\".",
+    "instructions": "Instrucciones",
+    "hide_help": "Ocultar Ayuda",
+    "format": "Formato de Importación",
+    "columns_help": "El archivo debe contener al menos la columna email. Opcionalmente role.",
+    "roles_help": "Puede usar los valores en inglés: TECHNICAL, ENGINEERING, ADMIN, ADMINISTRATIVE",
+    "default_help": "Si no especifica el rol, se asignará TECHNICAL automáticamente.",
+    "encoding_help": "Asegúrese de que el archivo CSV use codificación UTF-8.",
+    "drop_active": "Suelta el archivo aquí...",
+    "drop_idle": "Arrastra un archivo o haz clic para subir",
+    "file_hint": "CSV, XLSX hasta 5MB",
+    "detected_rows": "{count} filas detectadas",
+    "more_rows": "Y {count} filas más...",
+    "valid_to_send": "Válidos para enviar",
+    "with_errors": "Con errores (se omitirán)",
+    "invite_button": "Invitar {count}",
+    "parsing": "Procesando...",
+    "sending": "Enviando...",
+    "success_title": "Procesamiento completado",
+    "success_desc": "í‰xito: {success}, Fallidos: {failed}",
+    "error_no_valid": "No hay invitaciones válidas para enviar",
+    "excel_read_error": "Error al leer Excel",
+    "csv_read_error": "Error al leer CSV",
+    "table": {
+      "email": "Email",
+      "role": "Rol",
+      "status": "Estado",
+      "no_email": "Sin email",
+      "missing_email": "Falta email",
+      "invalid_email": "Email inválido"
+    },
+    "cancel": "Cancelar importación",
+    "error": "Error en la importación masiva"
+  },
+  "tabs": {
+    "active": "Usuarios Activos",
+    "invitations": "Gestión de Invitaciones"
+  },
+  "invitations": {
+    "title": "Invitaciones Pendientes",
+    "desc": "Gestiona y revoca invitaciones que aún no han sido aceptadas.",
+    "empty": "No hay invitaciones pendientes.",
+    "table": {
+      "email": "Email",
+      "role": "Rol",
+      "status": "Estado",
+      "expiry": "Expiración"
+    }
+  },
+  "invite_modal": {
+    "success_title": "¡Invitación Enviada!",
+    "success_description": "Hemos enviado un enlace de registro seguro a",
+    "title": "Invitar Colaborador",
+    "description": "Envía una invitación segura por correo electrónico. El usuario podrá configurar su propio nombre y contraseña.",
+    "success_validity": "El enlace es válido por 7 días.",
+    "understood": "Entendido",
+    "email_label": "Correo Electrónico",
+    "email_placeholder": "usuario@empresa.com",
+    "role_label": "Rol Asignado",
+    "roles": {
+      "super_admin": "Super Administrador",
+      "admin": "Administrador de Organización",
+      "technical": "Técnico Operativo",
+      "engineering": "Ingeniería de Proyectos"
+    },
+    "tenant_label": "Tenant ID (Solo SuperAdmin)",
+    "tenant_placeholder": "ej: tenant-xxxx",
+    "cancel": "Cancelar",
+    "sending": "Enviando...",
+    "submit": "Enviar Invitación"
+  },
+  "active": {
+    "reset_password_success": "Nueva contraseña temporal: {password}",
+    "reset_password_confirm": "¿Resetear contraseña para {email}?"
+  },
+  "reset_password": {
+    "confirm": "¿Resetear contraseña para {email}?",
+    "success": "Nueva contraseña temporal: {password}"
+  }
+}

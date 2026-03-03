@@ -1,0 +1,77 @@
+{
+  "hub": {
+    "title": "Centro de Informes",
+    "subtitle": "Generación y gestión de informes técnicos industriales",
+    "generateNew": "Generar Nuevo Informe",
+    "noReports": "No hay informes generados recientemente.",
+    "download": "Descargar PDF",
+    "tableHeaders": {
+      "name": "Nombre del Informe",
+      "type": "Tipo",
+      "date": "Fecha",
+      "technician": "Técnico",
+      "actions": "Acciones"
+    },
+    "share": "Compartir",
+    "recordsFound": "{count} informes encontrados",
+    "searchPlaceholder": "Buscar por nombre de informe..."
+  },
+  "templates": {
+    "audit": "Auditoría de Cumplimiento",
+    "inspection": "Inspección Técnica",
+    "ragQuality": "Calidad RAG",
+    "entityLlm": "Análisis de Entidad (LLM)",
+    "workflow": "Rendimiento de Workflow",
+    "auditDesc": "Verifica normativas y estándares de seguridad",
+    "inspectionDesc": "Detalle técnico de componentes y estado",
+    "ragQualityDesc": "Evaluación de fiabilidad y contexto",
+    "entityLlmDesc": "Análisis profundo de activos específicos",
+    "workflowDesc": "Eficiencia y cuellos de botella"
+  },
+  "generate": {
+    "title": "Configurar Nuevo Informe",
+    "selectTemplate": "Seleccionar Plantilla",
+    "dateRange": "Rango de Fechas",
+    "includeSources": "Incluir Fuentes",
+    "generating": "Generando Informe...",
+    "error": "Error al generar el informe",
+    "success": "Informe generado exitosamente",
+    "downloadPdf": "Descargar PDF",
+    "sendEmail": "Enviar por Email"
+  },
+  "schedules": {
+    "title": "Programación de Informes",
+    "subtitle": "Automatice la generación y envío de informes periódicos.",
+    "create": "Nueva Programación",
+    "edit": "Editar Programación",
+    "list": {
+      "name": "Nombre",
+      "template": "Plantilla",
+      "frequency": "Frecuencia",
+      "nextRun": "Próxima Ejecución",
+      "enabled": "Activo",
+      "disabled": "Inactivo",
+      "status": "Estado",
+      "recipients": "Destinatarios"
+    },
+    "form": {
+      "template": "Tipo de Informe",
+      "name": "Nombre de la Tarea",
+      "recipients": "Correos Destinatarios (separar por comas)",
+      "frequency": "Frecuencia de Envío",
+      "cron": "Expresión Cron Personalizada",
+      "cron_help": "Ejemplo: 0 8 * * 1 (Lunes a las 8:00)",
+      "freq_options": {
+        "daily": "Diario (08:00)",
+        "weekly": "Semanal (Lunes 08:00)",
+        "monthly": "Mensual (Día 1 08:00)",
+        "custom": "Personalizado"
+      }
+    },
+    "toast": {
+      "created": "Programación creada correctamente",
+      "deleted": "Programación eliminada",
+      "updated": "Programación actualizada"
+    }
+  }
+}

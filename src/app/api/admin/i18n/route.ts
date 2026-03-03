@@ -12,7 +12,7 @@ import { z } from 'zod';
  * Lista traducciones del sistema con soporte para filtros (lazy loading).
  * Query params: locale, namespace, search
  */
-async function GET_internal (req: NextRequest) {
+async function GET_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         await enforcePermission('i18n', 'read');
@@ -21,19 +21,11 @@ async function GET_internal (req: NextRequest) {
         const locale = z.string().min(2).max(5).parse(searchParams.get('locale') || 'es');
         const namespace = searchParams.get('namespace') || '';
         const search = searchParams.get('search') || '';
-        const loadAll = searchParams.get('all') === 'true';
         const detailed = searchParams.get('detailed') === 'true';
 
-        // Lazy Loading: Si no hay filtros activos Y no se solicita "todos", retornar objeto vacío
-        const hasActiveFilters = namespace || search || loadAll;
-        if (!hasActiveFilters) {
-            return NextResponse.json({
-                success: true,
-                locale,
-                messages: {},
-                info: 'No filters applied. Use namespace or search parameters to load data.'
-            });
-        }
+        // Paginación
+        const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 250);
+        const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
         // Cargar mensajes (Estructurados o Detallados/Planos)
         let allMessages: any;
@@ -47,20 +39,34 @@ async function GET_internal (req: NextRequest) {
         let filteredMessages = allMessages;
 
         if (namespace) {
-            // Filtrar por namespace (e.g., "common" filtra "common.*")
             filteredMessages = filterByNamespace(allMessages, namespace, detailed);
         }
 
         if (search) {
-            // Filtrar por búsqueda en claves y valores
             filteredMessages = filterBySearch(filteredMessages, search, detailed);
         }
+
+        // Aplicar Paginación sobre el set filtrado
+        const keys = Object.keys(filteredMessages);
+        const total = keys.length;
+        const paginatedKeys = keys.slice(offset, offset + limit);
+        const paginatedMessages: any = {};
+
+        paginatedKeys.forEach(key => {
+            paginatedMessages[key] = filteredMessages[key];
+        });
 
         return NextResponse.json({
             success: true,
             locale,
             detailed,
-            messages: filteredMessages,
+            messages: paginatedMessages,
+            pagination: {
+                total,
+                limit,
+                offset,
+                hasMore: offset + limit < total
+            },
             filters: { namespace, search }
         });
     } catch (error) {
@@ -76,7 +82,8 @@ function filterByNamespace(messages: any, namespace: string, detailed: boolean):
     const flatMessages = detailed ? messages : nestToFlat(messages);
 
     for (const [key, value] of Object.entries(flatMessages)) {
-        if (key.startsWith(`${namespace}.`)) {
+        // Mejorado: exacto o prefijo punto
+        if (key === namespace || key.startsWith(`${namespace}.`)) {
             result[key] = value;
         }
     }
@@ -138,7 +145,7 @@ function flatToNest(flat: Record<string, string>): any {
  * POST /api/admin/i18n
  * Crea una nueva llave de traducción.
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('i18n', 'manage');

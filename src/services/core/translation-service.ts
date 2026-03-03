@@ -211,7 +211,8 @@ export class TranslationService {
     static async forceSyncAllLocales(tenantId = 'platform_master') {
         const results: Record<string, unknown> = {};
         for (const locale of SUPPORTED_LOCALES) {
-            results[locale] = await this.forceSyncFromLocal(locale, tenantId);
+            const { added, updated } = await this.forceSyncFromLocal(locale, tenantId);
+            results[locale] = { added, updated };
         }
         return results;
     }

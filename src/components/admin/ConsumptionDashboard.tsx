@@ -73,7 +73,7 @@ interface InvoicePreview {
 }
 
 export function ConsumptionDashboard() {
-    const t = useTranslations('admin.consumption');
+    const t = useTranslations('admin_billing');
     const [isMounted, setIsMounted] = useState(false);
 
     // 1. Carga de estadísticas con hook genérico

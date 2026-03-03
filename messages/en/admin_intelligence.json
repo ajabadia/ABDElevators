@@ -1,0 +1,57 @@
+{
+  "title": "Sovereign Intelligence",
+  "highlight": "Intelligence",
+  "subtitle": "Monitor the autonomous discovery of patterns and govern the federated knowledge network.",
+  "loading": "Initializing Sovereign Engine...",
+  "dashboard": {
+    "no_data_title": "Intelligence Data Unavailable",
+    "no_data_desc": "It seems there are not enough interactions yet to generate collective metrics or there is a connection issue.",
+    "retry": "Retry Connection",
+    "semantic_density": "Semantic Density",
+    "nodes_relations": "Nodes + Relations",
+    "learnings": "Learnings",
+    "corrections": "Corrections",
+    "precision": "{val}% Precision",
+    "automated_tasks": "Auto Tasks",
+    "no_intervention": "No intervention",
+    "mins_per_order": "{val}min/req",
+    "estimated_roi": "Estimated ROI",
+    "accumulated_savings": "Accumulated savings",
+    "optimization": "Optimization",
+    "accuracy_evolution_title": "Accuracy Evolution (System Agent)",
+    "accuracy_evolution_desc": "Continuous learning based on human feedback.",
+    "learning_focus_title": "Learning Focus",
+    "learning_focus_desc": "Entities with the most corrections."
+  },
+  "metrics": {
+    "total_patterns": "Total Patterns",
+    "total_patterns_trend": "+5 (simulated)",
+    "validated_insights": "Validated Insights",
+    "avg_confidence": "{percent}% avg confidence",
+    "network_reach": "Network Reach",
+    "network_reach_value": "Global",
+    "network_reach_desc": "Cross-tenant sharing active"
+  },
+  "charts": {
+    "discovery_title": "Discovery Trends",
+    "discovery_desc": "New autonomously discovered patterns over time.",
+    "topics_title": "Trending Topics",
+    "topics_desc": "Most frequent technical keywords.",
+    "no_topics": "No trending topics yet."
+  },
+  "table": {
+    "title": "Global Knowledge Registry",
+    "desc": "Moderate and review patterns discovered by the Sovereign Engine.",
+    "archive_success": "Pattern archived successfully",
+    "archive_error": "Failed to archive pattern",
+    "fetch_error": "Failed to load intelligence data",
+    "archive_confirm": "Are you sure you want to archive this pattern? It will no longer appear in RAG searches.",
+    "problemVector": "Problem Vector",
+    "solutionVector": "Solution Vector",
+    "confidence": "Confidence",
+    "validations": "Validations",
+    "keywords": "Keywords",
+    "actions": "Actions",
+    "empty": "No autonomous patterns discovered yet."
+  }
+}

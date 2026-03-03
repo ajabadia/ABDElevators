@@ -13,7 +13,7 @@ interface StatsGridProps {
  * Quick Stats Grid for Admin Dashboard (Phase 105 Hygiene)
  */
 export const StatsGrid: React.FC<StatsGridProps> = ({ stats, isSuperAdmin, isCompact }) => {
-    const t = useTranslations('admin.dashboard');
+    const t = useTranslations('admin_analytics');
 
     return (
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-${isCompact ? '3' : '6'}`}>

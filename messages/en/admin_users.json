@@ -1,0 +1,105 @@
+{
+  "title": "User Management",
+  "highlight": "Users",
+  "subtitle_org": "Manage users and permissions for your organization",
+  "subtitle_global": "Manage global users and permissions",
+  "invite": "Invite User",
+  "bulk_invite": "Bulk Invite",
+  "create_manual": "Create Manually",
+  "registered_title": "Registered Users",
+  "registered_desc": "{count} user{suffix} in your entity",
+  "registered_desc_global": "{count} accessible user{suffix}",
+  "empty_message": "No registered users found.",
+  "table": {
+    "security": "Security",
+    "actions": "Actions",
+    "mfa_active": "MFA Active",
+    "no_mfa": "No MFA"
+  },
+  "fields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "jobTitle": "Job Title",
+    "tenantId": "Tenant",
+    "role": "Role",
+    "isActive": "Status"
+  },
+  "bulk": {
+    "title": "Bulk Invitation",
+    "desc": "Upload a CSV or Excel file with \"email\" and optionally \"role\" columns.",
+    "instructions": "Instructions",
+    "hide_help": "Hide Help",
+    "format": "Import Format",
+    "columns_help": "The file must contain at least the email column. Optionally role.",
+    "roles_help": "You can use English values: TECHNICAL, ENGINEERING, ADMIN, ADMINISTRATIVE",
+    "default_help": "If no role is specified, TECHNICAL will be assigned automatically.",
+    "encoding_help": "Ensure the CSV file uses UTF-8 encoding.",
+    "drop_active": "Drop file here...",
+    "drop_idle": "Drag a file or click to upload",
+    "file_hint": "CSV, XLSX up to 5MB",
+    "detected_rows": "{count} rows detected",
+    "more_rows": "And {count} more rows...",
+    "valid_to_send": "Valid to send",
+    "with_errors": "With errors (will be skipped)",
+    "invite_button": "Invite {count}",
+    "parsing": "Processing...",
+    "sending": "Sending...",
+    "success_title": "Processing completed",
+    "success_desc": "Success: {success}, Failed: {failed}",
+    "error_no_valid": "No valid invitations to send",
+    "excel_read_error": "Error reading Excel",
+    "csv_read_error": "Error reading CSV",
+    "table": {
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "no_email": "No email",
+      "missing_email": "Missing email",
+      "invalid_email": "Invalid email"
+    },
+    "cancel": "Cancel import",
+    "error": "Bulk import error"
+  },
+  "tabs": {
+    "active": "Active Users",
+    "invitations": "Manage Invitations"
+  },
+  "invitations": {
+    "title": "Pending Invitations",
+    "desc": "Manage and revoke invitations that haven't been accepted yet.",
+    "empty": "No pending invitations found.",
+    "table": {
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "expiry": "Expiry"
+    }
+  },
+  "invite_modal": {
+    "success_title": "Invitation Sent!",
+    "success_description": "We've sent a secure registration link to",
+    "title": "Invite Collaborator",
+    "description": "Send a secure invitation via email. The user will be able to set their own name and password.",
+    "success_validity": "The link is valid for 7 days.",
+    "understood": "Got it",
+    "email_label": "Email Address",
+    "email_placeholder": "user@company.com",
+    "role_label": "Assigned Role",
+    "roles": {
+      "super_admin": "Super Administrator",
+      "admin": "Organization Administrator",
+      "technical": "Operational Technician",
+      "engineering": "Project Engineering"
+    },
+    "tenant_label": "Tenant ID (SuperAdmin only)",
+    "tenant_placeholder": "e.g: tenant-xxxx",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "submit": "Send Invitation"
+  },
+  "reset_password": {
+    "confirm": "Reset password for {email}?",
+    "success": "New temporary password: {password}"
+  }
+}

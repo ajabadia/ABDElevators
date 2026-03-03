@@ -39,7 +39,7 @@ interface PromptVersion {
 }
 
 export const PromptEditor: React.FC<PromptEditorProps> = ({ initialPrompt, onSaved, onCancel }) => {
-    const t = useTranslations('admin.prompts');
+    const t = useTranslations('admin_prompts');
     const isEdit = Boolean(initialPrompt);
 
     const [formData, setFormData] = useState({

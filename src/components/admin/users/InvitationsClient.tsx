@@ -14,7 +14,7 @@ import { useFormModal } from "@/hooks/useFormModal";
 import { InvitationsTable } from "@/components/admin/InvitationsTable";
 
 export function InvitationsClient() {
-    const t = useTranslations("admin.users");
+    const t = useTranslations('admin_users');
     const [isMounted, setIsMounted] = useState(false);
 
     // Modales para invitaciones

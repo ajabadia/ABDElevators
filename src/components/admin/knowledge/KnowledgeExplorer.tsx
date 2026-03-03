@@ -41,7 +41,7 @@ interface Chunk {
 }
 
 export const KnowledgeExplorer: React.FC = () => {
-    const t = useTranslations('admin.knowledge');
+    const t = useTranslations('admin_knowledge');
     const { environment } = useEnvironmentStore();
     // 1. Gestión de Estado de Filtros Centralizada
     const {

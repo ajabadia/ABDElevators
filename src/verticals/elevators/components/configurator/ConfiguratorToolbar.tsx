@@ -85,14 +85,14 @@ export function ConfiguratorToolbar() {
                         className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'editor' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        <Monitor size={14} /> {useTranslations('admin.configurator')('editor_tab')}
+                        <Monitor size={14} /> {useTranslations('admin_configurator')('editor_tab')}
                     </button>
                     <button
                         onClick={() => setActiveTab('preview')}
                         className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'preview' ? 'bg-secondary text-secondary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        <Eye size={14} /> {useTranslations('admin.configurator')('preview_tab')}
+                        <Eye size={14} /> {useTranslations('admin_configurator')('preview_tab')}
                     </button>
                 </div>
 

@@ -121,10 +121,10 @@
       "profile": "Profile",
       "settings": "Settings",
       "i18n": "i18n Governance",
+      "contracts": "Contracts / Cases",
       "spaces": "My Spaces",
       "admin_spaces": "Spaces Management",
-      "document_library": "Document Library",
-      "contracts": "Contracts / Cases"
+      "document_library": "Document Library"
     },
     "search": {
       "title": "Technical Assistant",
@@ -183,12 +183,12 @@
         "title": "Upload Technical Documents",
         "content": "You can upload PDFs, images, and Word documents. The system will automatically analyze the content and index it for future searches.",
         "example": "Ex: Manual ARCA II, wiring diagrams, maintenance procedures",
-        "tips": [
-          "Use files in good condition (legible, well-scanned)",
-          "Descriptive names help searching (ex: 'Manual_ARCA2_v3.pdf')",
-          "Max 50MB per file",
-          "PDFs with OCR text index better"
-        ],
+        "tips": {
+          "0": "Use files in good condition (legible, well-scanned)",
+          "1": "Descriptive names help searching (ex: 'Manual_ARCA2_v3.pdf')",
+          "2": "Max 50MB per file",
+          "3": "PDFs with OCR text index better"
+        },
         "learnMore": {
           "label": "View format guide",
           "href": "/help/supported-formats"
@@ -198,12 +198,12 @@
         "title": "How to Search Better",
         "content": "Write questions in natural language, as if talking to a technician. The system will search all your documents automatically.",
         "example": "✅ Good examples:\n• What is the main motor torque?\n• Door calibration procedure\n• What does code E07 mean?",
-        "tips": [
-          "Be specific: include the model if important",
-          "Use exact technical terms",
-          "You can follow up: 'And the wait time?'",
-          "If you don't find an answer, try rephrasing"
-        ],
+        "tips": {
+          "0": "Be specific: include the model if important",
+          "1": "Use exact technical terms",
+          "2": "You can follow up: 'And the wait time?'",
+          "3": "If you don't find an answer, try rephrasing"
+        },
         "learnMore": {
           "label": "Advanced search tips",
           "href": "/help/advanced-search"
@@ -212,36 +212,36 @@
       "report-hub": {
         "title": "Report Generation",
         "content": "Create technical PDF documents based on the analysis of your knowledge assets.",
-        "tips": [
-          "Choose a template according to the type of analysis you need",
-          "Filter by date to analyze specific periods",
-          "Reports include direct citations to the manuals"
-        ]
+        "tips": {
+          "0": "Choose a template according to the type of analysis you need",
+          "1": "Filter by date to analyze specific periods",
+          "2": "Reports include direct citations to the manuals"
+        }
       },
       "upload-dropzone": {
         "title": "Document Vault",
         "content": "Drag files here for the RAG to process so you can query them.",
-        "tips": [
-          "We support technical PDFs, blueprints, and manuals",
-          "Processing usually takes between 30 and 90 seconds"
-        ]
+        "tips": {
+          "0": "We support technical PDFs, blueprints, and manuals",
+          "1": "Processing usually takes between 30 and 90 seconds"
+        }
       },
       "confidence-scores": {
         "title": "Confidence Levels",
         "content": "Indicates how sure the system is that the answer is accurate according to the documents.",
-        "tips": [
-          "High: Found literally in the text",
-          "Medium: Inferred from multiple fragments",
-          "Low: Vague or missing information"
-        ]
+        "tips": {
+          "0": "High: Found literally in the text",
+          "1": "Medium: Inferred from multiple fragments",
+          "2": "Low: Vague or missing information"
+        }
       },
       "audit-logs": {
         "title": "Audit Trail",
         "content": "Full traceability of every action performed on the platform for regulatory compliance.",
-        "tips": [
-          "Filter by 'ERROR' for critical problems",
-          "Use the correlationId to track actions end-to-end"
-        ]
+        "tips": {
+          "0": "Filter by 'ERROR' for critical problems",
+          "1": "Use the correlationId to track actions end-to-end"
+        }
       }
     }
   },
@@ -544,6 +544,7 @@
     "sourcesLabel": "Consulted sources"
   },
   "breadcrumbs": {
+    "ai": "AI Hub",
     "admin": "Administration",
     "users": "Users",
     "prompts": "Prompts",
@@ -569,6 +570,8 @@
     "operations": "Operations",
     "observability": "Observability",
     "ingest": "Ingestion Engine",
+    "settings": "Settings",
+    "i18n": "Internationalization",
     "status": "System Status",
     "trace": "Trace",
     "tasks": "Tasks"

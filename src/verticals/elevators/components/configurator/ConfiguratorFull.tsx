@@ -17,7 +17,7 @@ interface ConfiguratorFullProps {
 }
 
 export function ConfiguratorFull({ initialConfig, isNew = false }: ConfiguratorFullProps) {
-    const t = useTranslations('admin.configurator');
+    const t = useTranslations('admin_configurator');
     const { init, activeTab } = useConfiguratorStore();
 
     useEffect(() => {

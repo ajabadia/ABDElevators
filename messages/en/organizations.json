@@ -1,0 +1,306 @@
+{
+  "page": {
+    "title": "Organization Configuration",
+    "subtitle": "Manage data isolation, visual identity, and storage quotas.",
+    "refresh": "Refresh",
+    "save": "Save Changes",
+    "error": "Error",
+    "errorTenantId": "Missing tenantId",
+    "saveSuccess": "Organization configuration updated successfully.",
+    "saveError": "Could not save configuration."
+  },
+  "tabs": {
+    "general": "General",
+    "branding": "Identity & Branding",
+    "storage": "Storage",
+    "features": "Modules",
+    "billing": "Billing",
+    "reports": "Reports"
+  },
+  "general": {
+    "tenantId": "Organization ID",
+    "name": "Commercial Name",
+    "defaultName": "My Organization",
+    "industry": "Industry / Domain",
+    "industryPlaceholder": "Select industry",
+    "compliance": {
+      "title": "Compliance Status",
+      "dataIsolation": "Data Isolation",
+      "dataRegion": "Data Region",
+      "encryption": "Encryption",
+      "active": "Active",
+      "regionValue": "EU-West (Zaragoza/Frankfurt)",
+      "encryptionValue": "AES-256"
+    },
+    "industries": {
+      "ELEVATORS": "Elevators & Lifting",
+      "LEGAL": "Legal / Firms",
+      "MEDICAL": "Medical / Health",
+      "IT": "Technology / IT",
+      "GENERIC": "Generic / Others"
+    }
+  },
+  "storage": {
+    "provider": "Infrastructure Provider",
+    "cloudinary": "Cloudinary",
+    "cloudinaryDesc": "Optimal for PDFs and images with CDN.",
+    "awsS3": "AWS S3",
+    "comingSoon": "COMING SOON",
+    "folderPrefix": "Root Directory (Storage Isolation)",
+    "folderPrefixDesc": "Determines the base folder in the cloud for this tenant.",
+    "quota": {
+      "title": "Maximum Disk Quota",
+      "desc": "Limit of processed documents.",
+      "currentUsage": "Current Usage (Cloudinary / Storage)",
+      "warning": "When exceeding the quota, access to new analysis requests will be blocked."
+    }
+  },
+  "storageUsage": {
+    "metric": "Metric calculated on total quota",
+    "used": "used",
+    "mb": "MB"
+  },
+  "features": {
+    "features": {
+      "ragSearch": "RAG Semantic Search",
+      "geminiAnalysis": "Intelligent Analysis (Gemini)",
+      "auditReviews": "Audit Reviews",
+      "whiteLabel": "White Label Branding",
+      "multiLanguage": "Advanced Multi-language",
+      "customAgents": "Custom Agents"
+    },
+    "status": {
+      "active": "Active",
+      "locked": "Locked",
+      "planned": "Planned"
+    }
+  },
+  "branding": {
+    "title": "Brand Personalization",
+    "subtitle": "Define corporate colors and visual assets.",
+    "logo": {
+      "title": "Organization Logo",
+      "upload": "Upload Logo",
+      "uploadButton": "Upload Logo",
+      "remove": "Remove",
+      "dimensions": "Min dimensions: 400x400px. Transparent background recommended (PNG).",
+      "success": "Logo updated",
+      "successDesc": "Branding has been saved successfully.",
+      "error": "Error",
+      "errorDesc": "Failed to upload logo"
+    },
+    "documentLogo": {
+      "title": "Logo for Documents/Emails",
+      "upload": "Upload Document Logo",
+      "uploadButton": "Upload Doc Logo",
+      "dimensions": "Recommended: 800x200px (Landscape). General logo will be used if this is not defined.",
+      "success": "Document logo updated",
+      "successDesc": "The notification logo has been saved successfully.",
+      "error": "Error",
+      "errorDesc": "Failed to upload document logo"
+    },
+    "favicon": {
+      "title": "Favicon",
+      "upload": "Upload Favicon",
+      "uploadButton": "Upload Favicon",
+      "dimensions": ".ico, .png, or .svg files. Recommended 32x32px.",
+      "success": "Favicon updated",
+      "successDesc": "Tab icon has been saved successfully.",
+      "error": "Error",
+      "errorDesc": "Failed to upload favicon"
+    },
+    "colors": {
+      "primary": "Primary Color (Light Mode)",
+      "accent": "Accent Color (Light Mode)",
+      "primaryDark": "Primary (Dark Mode Override)",
+      "accentDark": "Accent (Dark Mode Override)"
+    },
+    "autoDarkMode": {
+      "title": "Automatic Dark Mode",
+      "desc": "Automatically calculates readable variants for the dark theme."
+    },
+    "preview": {
+      "title": "App Preview",
+      "light": "LIGHT",
+      "dark": "DARK",
+      "lightDesc": "Preview in Light Mode (original colors).",
+      "darkDesc": "Preview in Dark Mode (auto-optimized colors)."
+    }
+  },
+  "notifications": {
+    "editor": {
+      "title": "System Template Editor",
+      "subtitle": "Define the global content for notifications.",
+      "contentCard": "Content Editor",
+      "contentDesc": "Define the email subject and HTML. You can use dynamic variables.",
+      "es": "Spanish (ES)",
+      "en": "English (EN)",
+      "subject": "Email Subject",
+      "subjectPlaceholder": "Ex: Your order {{orderId}} is ready",
+      "body": "HTML Body",
+      "bodyDesc": "Supports basic HTML and Handlebars. Ensure you include {{{tenant_custom_note}}} if you want to allow customization.",
+      "audit": {
+        "title": "Change Audit",
+        "reason": "Update Reason",
+        "reasonPlaceholder": "Ex: Legal terms update 2026...",
+        "save": "Save Version v{version}",
+        "reasonRequired": "Reason required",
+        "reasonRequiredDesc": "Please indicate the reason for the change for the audit trail."
+      },
+      "variables": {
+        "title": "Available Variables",
+        "copy": "Click to copy. These variables will be filled automatically when sending."
+      },
+      "version": {
+        "title": "Version Information",
+        "current": "Current Version:",
+        "lastUpdate": "Last Modified:",
+        "modifiedBy": "Modified By:",
+        "history": "View Full History"
+      },
+      "toast": {
+        "success": "Changes saved",
+        "successDesc": "The template has been updated and versioned successfully.",
+        "error": "Error",
+        "errorDesc": "Could not save the template."
+      }
+    },
+    "settings": {
+      "title": "Tenant Notification Settings",
+      "subtitle": "Customize which notifications your team and clients receive.",
+      "events": "Notification Events",
+      "enabled": "Enabled",
+      "channels": "Channels",
+      "recipients": "Recipients (Comma-separated emails)",
+      "customNote": "Custom Note (Optional)",
+      "customNoteDesc": "Add an extra message that will be injected into the global template.",
+      "includeNote": "Include note in Emails",
+      "fallback": "Fallback Email (If no specific recipients)",
+      "save": "Save Settings",
+      "toast": {
+        "success": "Settings updated",
+        "successDesc": "Your notification preferences have been saved.",
+        "error": "Error saving settings"
+      }
+    }
+  },
+  "billing": {
+    "currentPlan": "Current Plan",
+    "planActive": "Active",
+    "freeTrial": "You are enjoying the free trial period.",
+    "subscription": "Subscription renewed monthly.",
+    "changePlan": "Change Plan",
+    "plansTitle": "Plans & Pricing",
+    "plansDesc": "Select the plan that best suits your needs.",
+    "planCurrent": "Current Plan",
+    "contactSupport": "Contact Support",
+    "selectPlan": "Select",
+    "perMonth": "/month",
+    "usage": {
+      "tokens": "AI Tokens (Generative)",
+      "storage": "Storage (RAG)",
+      "searches": "Vector Searches",
+      "apiCalls": "API Calls"
+    },
+    "fiscal": {
+      "title": "Fiscal Identity",
+      "name": "Social Reason / Fiscal Name",
+      "namePlaceholder": "Ex: ABD Elevators S.L.",
+      "taxId": "CIF / NIF / VAT ID",
+      "taxIdPlaceholder": "Ex: B12345678"
+    },
+    "reception": {
+      "title": "Invoice Reception",
+      "channel": "Preferred Channel",
+      "channelEmail": "Email",
+      "channelPostal": "Postal Mail",
+      "channelInApp": "App download only",
+      "channelXmlEdi": "XML / EDI Exchange",
+      "email": "Billing Email",
+      "emailPlaceholder": "billing@company.com",
+      "format": "File Format",
+      "formatPdf": "PDF (Digitally Signed)",
+      "formatXml": "XML Facturae",
+      "formatCsv": "CSV / Excel",
+      "formatPaper": "Paper (Physical)"
+    },
+    "shippingAddress": {
+      "title": "Shipping Address",
+      "line1": "Street and Number",
+      "city": "City",
+      "postalCode": "Postal Code",
+      "country": "Country"
+    },
+    "billingAddress": {
+      "title": "Billing Address",
+      "sameAsShipping": "Same as active shipping address."
+    },
+    "edi": {
+      "title": "Electronic Invoice Certification",
+      "desc": "We comply with the Crea y Crece Law for secure XML invoice exchange.",
+      "button": "EDI Information"
+    },
+    "usageStatus": {
+      "limit": "Limit",
+      "overage": "Overage"
+    },
+    "simulation": {
+      "title": "Plan Change Simulation",
+      "creditApplied": "Credit applied for current plan",
+      "newPlanCost": "Cost of new plan (prorated)",
+      "totalDueNow": "Total due today",
+      "currency": "Currency",
+      "nextBillingDate": "Next Billing"
+    }
+  },
+  "security": {
+    "title": "Security & Trust Center",
+    "subtitle": "Tenant isolation validated through continuous synthetic auditing.",
+    "auditLink": "View Chunks Audit",
+    "certify": "GDPR Certification",
+    "certTitle": "GDPR Compliance Certificate",
+    "certDesc": "Normative conformity report for {organization}.",
+    "status": {
+      "title": "Processing Status",
+      "value": "COMPLIANT"
+    },
+    "dataLocation": {
+      "title": "Data Location",
+      "value": "EU-WEST-1 (Frankfurt)"
+    },
+    "encryption": {
+      "title": "Encryption at Rest",
+      "value": "AES-256-GCM"
+    },
+    "logRetention": {
+      "title": "Log Retention",
+      "value": "90 Days (Anonymized)"
+    },
+    "gdprNote": "This tenant complies with the requirements of the General Data Protection Regulation (GDPR) EU 2016/679.",
+    "downloadBtn": "Download PDF Report"
+  },
+  "reports": {
+    "title": "Industrial Reports Configuration",
+    "subtitle": "Personalize legal disclaimers, signatures, and appearance of generated reports.",
+    "preview": "REPORT PREVIEW",
+    "printColor": "PDF Print Color",
+    "pageCount": "Page {current} of {total}",
+    "includeSources": {
+      "title": "Include Technical Sources",
+      "desc": "Automatically attach knowledge base references at the end of the PDF."
+    },
+    "disclaimer": {
+      "title": "Legal Disclaimer",
+      "placeholder": "Report legal disclaimer...",
+      "desc": "Will be included at the end of each generated report."
+    },
+    "signature": {
+      "title": "Signature Text",
+      "placeholder": "Signature line..."
+    },
+    "footer": {
+      "title": "Footer Text",
+      "placeholder": "ABD Engine v1.0..."
+    }
+  }
+}

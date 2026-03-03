@@ -1,0 +1,239 @@
+--- TOP LEVEL KEYS OF admin.json ---
+configurator, dashboard, roi, automation, checklists, consumption, logs, knowledge, workflows, rag_quality, guardian, intelligence, users, i18n, jobs, prompts, support, workflow_tasks, api_keys, billing, billing_hub, documentTypes, organizations, user_dashboard, metrics, savings, multilingual, charts, spaces, reports, billing_usage, superadmin, governance, audit, compliance, observability, reliability, security_autoscale, limit_alert, quick_nav, knowledge_governance, key_debug, onboarding, operations
+
+--- DUPLICATE KEYS ACROSS FILES ---
+Key "i18n.page.title" found in: admin.json, profile.json
+Key "i18n.page.highlight" found in: admin.json, profile.json
+Key "i18n.page.subtitle" found in: admin.json, profile.json
+Key "i18n.page.syncBtn" found in: admin.json, profile.json
+Key "i18n.page.newKeyBtn" found in: admin.json, profile.json
+Key "i18n.page.searchPlaceholder" found in: admin.json, profile.json
+Key "i18n.languages.es" found in: admin.json, profile.json
+Key "i18n.languages.en" found in: admin.json, profile.json
+Key "i18n.table.keyHeader" found in: admin.json, profile.json
+Key "i18n.table.primaryLabel" found in: admin.json, profile.json
+Key "i18n.table.secondaryLabel" found in: admin.json, profile.json
+Key "i18n.table.autoTranslateBtn" found in: admin.json, profile.json
+Key "i18n.table.save" found in: admin.json, profile.json
+Key "i18n.table.cancel" found in: admin.json, profile.json
+Key "support.priority.HIGH" found in: admin.json, profile.json
+Key "support.priority.LOW" found in: admin.json, profile.json
+Key "support.priority.MEDIUM" found in: admin.json, profile.json
+Key "organizations.page.title" found in: admin.json, spaces.json
+Key "organizations.page.subtitle" found in: admin.json, spaces.json
+Key "organizations.page.refresh" found in: admin.json, spaces.json
+Key "organizations.page.save" found in: admin.json, spaces.json
+Key "organizations.page.error" found in: admin.json, spaces.json
+Key "organizations.page.errorTenantId" found in: admin.json, spaces.json
+Key "organizations.page.saveSuccess" found in: admin.json, spaces.json
+Key "organizations.page.saveError" found in: admin.json, spaces.json
+Key "organizations.tabs.general" found in: admin.json, spaces.json
+Key "organizations.tabs.branding" found in: admin.json, spaces.json
+Key "organizations.tabs.storage" found in: admin.json, spaces.json
+Key "organizations.tabs.features" found in: admin.json, spaces.json
+Key "organizations.tabs.billing" found in: admin.json, spaces.json
+Key "organizations.tabs.reports" found in: admin.json, spaces.json
+Key "organizations.general.tenantId" found in: admin.json, spaces.json
+Key "organizations.general.name" found in: admin.json, spaces.json
+Key "organizations.general.industry" found in: admin.json, spaces.json
+Key "organizations.general.industryPlaceholder" found in: admin.json, spaces.json
+Key "organizations.general.compliance.title" found in: admin.json, spaces.json
+Key "organizations.general.compliance.dataIsolation" found in: admin.json, spaces.json
+Key "organizations.general.compliance.dataRegion" found in: admin.json, spaces.json
+Key "organizations.general.compliance.encryption" found in: admin.json, spaces.json
+Key "organizations.general.compliance.active" found in: admin.json, spaces.json
+Key "organizations.general.compliance.regionValue" found in: admin.json, spaces.json
+Key "organizations.general.compliance.encryptionValue" found in: admin.json, spaces.json
+Key "organizations.general.industries.ELEVATORS" found in: admin.json, spaces.json
+Key "organizations.general.industries.LEGAL" found in: admin.json, spaces.json
+Key "organizations.general.industries.MEDICAL" found in: admin.json, spaces.json
+Key "organizations.general.industries.IT" found in: admin.json, spaces.json
+Key "organizations.general.industries.GENERIC" found in: admin.json, spaces.json
+Key "organizations.storage.provider" found in: admin.json, spaces.json
+Key "organizations.storage.cloudinary" found in: admin.json, spaces.json
+Key "organizations.storage.cloudinaryDesc" found in: admin.json, spaces.json
+Key "organizations.storage.awsS3" found in: admin.json, spaces.json
+Key "organizations.storage.comingSoon" found in: admin.json, spaces.json
+Key "organizations.storage.folderPrefix" found in: admin.json, spaces.json
+Key "organizations.storage.folderPrefixDesc" found in: admin.json, spaces.json
+Key "organizations.storage.quota.title" found in: admin.json, spaces.json
+Key "organizations.storage.quota.desc" found in: admin.json, spaces.json
+Key "organizations.storage.quota.currentUsage" found in: admin.json, spaces.json
+Key "organizations.storage.quota.warning" found in: admin.json, spaces.json
+Key "organizations.features.features.ragSearch" found in: admin.json, spaces.json
+Key "organizations.features.features.geminiAnalysis" found in: admin.json, spaces.json
+Key "organizations.features.features.auditReviews" found in: admin.json, spaces.json
+Key "organizations.features.features.whiteLabel" found in: admin.json, spaces.json
+Key "organizations.features.features.multiLanguage" found in: admin.json, spaces.json
+Key "organizations.features.features.customAgents" found in: admin.json, spaces.json
+Key "organizations.features.status.active" found in: admin.json, spaces.json
+Key "organizations.features.status.locked" found in: admin.json, spaces.json
+Key "organizations.features.status.planned" found in: admin.json, spaces.json
+Key "organizations.branding.title" found in: admin.json, spaces.json
+Key "organizations.branding.subtitle" found in: admin.json, spaces.json
+Key "organizations.branding.logo.title" found in: admin.json, spaces.json
+Key "organizations.branding.logo.upload" found in: admin.json, spaces.json
+Key "organizations.branding.logo.uploadButton" found in: admin.json, spaces.json
+Key "organizations.branding.logo.remove" found in: admin.json, spaces.json
+Key "organizations.branding.logo.dimensions" found in: admin.json, spaces.json
+Key "organizations.branding.logo.success" found in: admin.json, spaces.json
+Key "organizations.branding.logo.successDesc" found in: admin.json, spaces.json
+Key "organizations.branding.logo.error" found in: admin.json, spaces.json
+Key "organizations.branding.logo.errorDesc" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.title" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.upload" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.uploadButton" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.dimensions" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.success" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.successDesc" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.error" found in: admin.json, spaces.json
+Key "organizations.branding.favicon.errorDesc" found in: admin.json, spaces.json
+Key "organizations.branding.colors.primary" found in: admin.json, spaces.json
+Key "organizations.branding.colors.accent" found in: admin.json, spaces.json
+Key "organizations.branding.colors.primaryDark" found in: admin.json, spaces.json
+Key "organizations.branding.colors.accentDark" found in: admin.json, spaces.json
+Key "organizations.branding.autoDarkMode.title" found in: admin.json, spaces.json
+Key "organizations.branding.autoDarkMode.desc" found in: admin.json, spaces.json
+Key "organizations.branding.preview.title" found in: admin.json, spaces.json
+Key "organizations.branding.preview.light" found in: admin.json, spaces.json
+Key "organizations.branding.preview.dark" found in: admin.json, spaces.json
+Key "organizations.branding.preview.lightDesc" found in: admin.json, spaces.json
+Key "organizations.branding.preview.darkDesc" found in: admin.json, spaces.json
+Key "organizations.billing.currentPlan" found in: admin.json, spaces.json
+Key "organizations.billing.planActive" found in: admin.json, spaces.json
+Key "organizations.billing.freeTrial" found in: admin.json, spaces.json
+Key "organizations.billing.subscription" found in: admin.json, spaces.json
+Key "organizations.billing.changePlan" found in: admin.json, spaces.json
+Key "organizations.billing.plansTitle" found in: admin.json, spaces.json
+Key "organizations.billing.plansDesc" found in: admin.json, spaces.json
+Key "organizations.billing.planCurrent" found in: admin.json, spaces.json
+Key "organizations.billing.contactSupport" found in: admin.json, spaces.json
+Key "organizations.billing.selectPlan" found in: admin.json, spaces.json
+Key "organizations.billing.perMonth" found in: admin.json, spaces.json
+Key "organizations.billing.usage.tokens" found in: admin.json, spaces.json
+Key "organizations.billing.usage.storage" found in: admin.json, spaces.json
+Key "organizations.billing.usage.searches" found in: admin.json, spaces.json
+Key "organizations.billing.usage.apiCalls" found in: admin.json, spaces.json
+Key "organizations.billing.fiscal.title" found in: admin.json, spaces.json
+Key "organizations.billing.fiscal.name" found in: admin.json, spaces.json
+Key "organizations.billing.fiscal.namePlaceholder" found in: admin.json, spaces.json
+Key "organizations.billing.fiscal.taxId" found in: admin.json, spaces.json
+Key "organizations.billing.fiscal.taxIdPlaceholder" found in: admin.json, spaces.json
+Key "organizations.billing.reception.title" found in: admin.json, spaces.json
+Key "organizations.billing.reception.channel" found in: admin.json, spaces.json
+Key "organizations.billing.reception.channelEmail" found in: admin.json, spaces.json
+Key "organizations.billing.reception.channelPostal" found in: admin.json, spaces.json
+Key "organizations.billing.reception.channelInApp" found in: admin.json, spaces.json
+Key "organizations.billing.reception.channelXmlEdi" found in: admin.json, spaces.json
+Key "organizations.billing.reception.email" found in: admin.json, spaces.json
+Key "organizations.billing.reception.emailPlaceholder" found in: admin.json, spaces.json
+Key "organizations.billing.reception.format" found in: admin.json, spaces.json
+Key "organizations.billing.reception.formatPdf" found in: admin.json, spaces.json
+Key "organizations.billing.reception.formatXml" found in: admin.json, spaces.json
+Key "organizations.billing.reception.formatCsv" found in: admin.json, spaces.json
+Key "organizations.billing.reception.formatPaper" found in: admin.json, spaces.json
+Key "organizations.billing.shippingAddress.title" found in: admin.json, spaces.json
+Key "organizations.billing.shippingAddress.line1" found in: admin.json, spaces.json
+Key "organizations.billing.shippingAddress.city" found in: admin.json, spaces.json
+Key "organizations.billing.shippingAddress.postalCode" found in: admin.json, spaces.json
+Key "organizations.billing.shippingAddress.country" found in: admin.json, spaces.json
+Key "organizations.billing.billingAddress.title" found in: admin.json, spaces.json
+Key "organizations.billing.billingAddress.sameAsShipping" found in: admin.json, spaces.json
+Key "organizations.billing.edi.title" found in: admin.json, spaces.json
+Key "organizations.billing.edi.desc" found in: admin.json, spaces.json
+Key "organizations.billing.edi.button" found in: admin.json, spaces.json
+Key "organizations.billing.usageStatus.limit" found in: admin.json, spaces.json
+Key "organizations.billing.usageStatus.overage" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.title" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.creditApplied" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.newPlanCost" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.totalDueNow" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.currency" found in: admin.json, spaces.json
+Key "organizations.billing.simulation.nextBillingDate" found in: admin.json, spaces.json
+Key "organizations.security.title" found in: admin.json, spaces.json
+Key "organizations.security.subtitle" found in: admin.json, spaces.json
+Key "organizations.security.auditLink" found in: admin.json, spaces.json
+Key "organizations.security.certify" found in: admin.json, spaces.json
+Key "organizations.security.certTitle" found in: admin.json, spaces.json
+Key "organizations.security.certDesc" found in: admin.json, spaces.json
+Key "organizations.security.status.title" found in: admin.json, spaces.json
+Key "organizations.security.status.value" found in: admin.json, spaces.json
+Key "organizations.security.dataLocation.title" found in: admin.json, spaces.json
+Key "organizations.security.dataLocation.value" found in: admin.json, spaces.json
+Key "organizations.security.encryption.title" found in: admin.json, spaces.json
+Key "organizations.security.encryption.value" found in: admin.json, spaces.json
+Key "organizations.security.logRetention.title" found in: admin.json, spaces.json
+Key "organizations.security.logRetention.value" found in: admin.json, spaces.json
+Key "organizations.security.gdprNote" found in: admin.json, spaces.json
+Key "organizations.security.downloadBtn" found in: admin.json, spaces.json
+Key "organizations.security.downloadSuccess.title" found in: admin.json, spaces.json
+Key "organizations.security.downloadSuccess.desc" found in: admin.json, spaces.json
+Key "organizations.reports.title" found in: admin.json, spaces.json
+Key "organizations.reports.subtitle" found in: admin.json, spaces.json
+Key "organizations.reports.preview" found in: admin.json, spaces.json
+Key "organizations.reports.includeSources.title" found in: admin.json, spaces.json
+Key "organizations.reports.includeSources.desc" found in: admin.json, spaces.json
+Key "organizations.reports.disclaimer.title" found in: admin.json, spaces.json
+Key "organizations.reports.disclaimer.placeholder" found in: admin.json, spaces.json
+Key "organizations.reports.disclaimer.desc" found in: admin.json, spaces.json
+Key "organizations.reports.signature.title" found in: admin.json, spaces.json
+Key "organizations.reports.signature.placeholder" found in: admin.json, spaces.json
+Key "organizations.reports.footer.title" found in: admin.json, spaces.json
+Key "organizations.reports.footer.placeholder" found in: admin.json, spaces.json
+Key "spaces.title" found in: admin.json, common.json, knowledge_assets.json, profile.json
+Key "spaces.subtitle" found in: admin.json, common.json, knowledge_assets.json, profile.json
+Key "audit.title" found in: admin.json, observability.json, security_hub.json
+Key "audit.subtitle" found in: admin.json, observability.json
+Key "audit.table.action" found in: admin.json, observability.json, security_hub.json
+Key "audit.table.level" found in: admin.json, security_hub.json
+Key "compliance.title" found in: admin.json, feature_pages.json
+Key "compliance.subtitle" found in: admin.json, feature_pages.json
+
+--- FILE STATS ---
+about.json: 8 keys
+accessibility.json: 15 keys
+admin.json: 1987 keys
+aiHub.json: 25 keys
+auth.json: 34 keys
+billing_hub.json: 21 keys
+common.json: 446 keys
+components.json: 16 keys
+contact.json: 11 keys
+cta.json: 6 keys
+dashboard.json: 71 keys
+enterprise.json: 12 keys
+error.json: 9 keys
+faq.json: 10 keys
+features.json: 55 keys
+feature_pages.json: 168 keys
+feedback.json: 10 keys
+hero.json: 9 keys
+ingest.json: 44 keys
+knowledge_assets.json: 117 keys
+knowledge_graph.json: 58 keys
+knowledge_hub.json: 46 keys
+Landing.json: 27 keys
+login.json: 23 keys
+myDocuments.json: 41 keys
+nav.json: 8 keys
+observability.json: 34 keys
+operations_hub.json: 34 keys
+organizations_hub.json: 12 keys
+pricing.json: 15 keys
+privacy.json: 54 keys
+profile.json: 253 keys
+rag_eval.json: 32 keys
+search.json: 35 keys
+security.json: 8 keys
+security_hub.json: 59 keys
+settings.json: 41 keys
+settings_hub.json: 14 keys
+solutions.json: 9 keys
+spaces.json: 397 keys
+stats.json: 6 keys
+support.json: 2 keys
+technical.json: 66 keys
+terms.json: 42 keys
+upgrade.json: 22 keys
+users_hub.json: 8 keys
+workshop.json: 66 keys

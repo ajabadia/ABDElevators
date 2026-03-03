@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { AIWorkflow } from '@/types/workflow';
 
 export function AutomationStudio() {
-    const t = useTranslations('admin.automation');
+    const t = useTranslations('admin_workflows');
     const router = useRouter();
     const [workflows, setWorkflows] = useState<AIWorkflow[]>([]);
     const [isLoading, setIsLoading] = useState(true);

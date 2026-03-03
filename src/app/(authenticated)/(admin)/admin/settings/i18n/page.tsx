@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Languages,
     Search,
@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useApiItem } from '@/hooks/useApiItem';
 import { useApiMutation } from '@/hooks/useApiMutation';
+import { useDebounce } from '@/hooks/useDebounce';
 import { TranslationTable } from '../../../../../../components/admin/TranslationTable';
 import { CreateI18nKeyModal } from '@/components/admin/CreateI18nKeyModal';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +33,7 @@ import { toast } from 'sonner';
  * Permite editar, comparar y traducir con IA todos los mensajes del sistema.
  */
 export default function AdminI18nPage() {
-    const t = useTranslations('admin.i18n');
+    const t = useTranslations('admin_knowledge');
     const [searchQuery, setSearchQuery] = useState('');
     const [primaryLocale, setPrimaryLocale] = useState('es');
     const [secondaryLocale, setSecondaryLocale] = useState('en');
@@ -40,8 +41,20 @@ export default function AdminI18nPage() {
     const [namespaceFilter, setNamespaceFilter] = useState('');
     const [showMissingOnly, setShowMissingOnly] = useState(false);
 
-    // Determinar si hay filtros activos (para lazy loading)
-    // '__ALL__' es un valor especial que significa "cargar todos"
+    // Estado de paginación
+    const [pageSize, setPageSize] = useState(50);
+    const [offset, setOffset] = useState(0);
+
+    // Debouncing para evitar ráfagas de fetch
+    const debouncedSearch = useDebounce(searchQuery, 600);
+    const debouncedNamespace = useDebounce(namespaceFilter, 300);
+
+    // Resetear página cuando cambian los filtros
+    useEffect(() => {
+        setOffset(0);
+    }, [debouncedSearch, debouncedNamespace, showMissingOnly, primaryLocale]);
+
+    // Determinar si hay filtros activos (para UI)
     const hasActiveFilters = Boolean(namespaceFilter || searchQuery || showMissingOnly);
 
     // Cargar estadísticas de namespaces
@@ -57,31 +70,31 @@ export default function AdminI18nPage() {
     const namespaceCounts = stats?.namespaces || {};
     const namespaces = Object.keys(namespaceCounts).sort();
 
-    // 1. Cargar mensajes del idioma primario (con filtros)
-    // Si namespaceFilter es '__ALL__', enviar all=true para cargar todos
-    const actualNamespace = namespaceFilter === '__ALL__' ? '' : namespaceFilter;
-    const allParam = namespaceFilter === '__ALL__' ? '&all=true' : '';
+    // 1. Cargar mensajes del idioma primario (con filtros y paginación)
+    const actualNamespace = debouncedNamespace === '__ALL__' ? '' : debouncedNamespace;
 
     const {
-        data: messagesPrimary,
+        data: dataPrimary,
         isLoading: loadingPrimary,
         refresh: refetchPrimary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}&detailed=true`,
-        dataKey: 'messages',
-        autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
+        endpoint: `/api/admin/i18n?locale=${primaryLocale}&namespace=${actualNamespace}&search=${debouncedSearch}&limit=${pageSize}&offset=${offset}&detailed=true`,
+        autoFetch: true
     });
 
     // 2. Cargar mensajes del idioma secundario (Comparación)
     const {
-        data: messagesSecondary,
+        data: dataSecondary,
         isLoading: loadingSecondary,
         refresh: refetchSecondary
     } = useApiItem<any>({
-        endpoint: `/api/admin/i18n?locale=${secondaryLocale}&namespace=${actualNamespace}&search=${searchQuery}${allParam}&detailed=true`,
-        dataKey: 'messages',
-        autoFetch: hasActiveFilters // Solo cargar si hay filtros activos
+        endpoint: `/api/admin/i18n?locale=${secondaryLocale}&namespace=${actualNamespace}&search=${debouncedSearch}&limit=${pageSize}&offset=${offset}&detailed=true`,
+        autoFetch: true
     });
+
+    const messagesPrimary = dataPrimary?.messages || {};
+    const messagesSecondary = dataSecondary?.messages || {};
+    const pagination = dataPrimary?.pagination;
 
     const syncMutation = useApiMutation({
         endpoint: '/api/admin/i18n/sync',
@@ -95,18 +108,18 @@ export default function AdminI18nPage() {
             const total = added + updated;
 
             if (total === 0) {
-                toast.info(t('notifications.syncCompletedTitle'), {
-                    description: t('notifications.syncNoChanges')
+                toast.info(t('table.notifications.syncCompletedTitle'), {
+                    description: t('table.notifications.syncNoChanges')
                 });
             } else {
-                toast.success(t('notifications.syncSuccessTitle'), {
-                    description: `${t('notifications.syncSuccessDetail', { added, updated })}`
+                toast.success(t('table.notifications.syncSuccessTitle'), {
+                    description: `${t('table.notifications.syncSuccessDetail', { added, updated })}`
                 });
             }
         },
         onError: (err) => {
-            toast.error(t('notifications.syncErrorTitle'), {
-                description: typeof err === 'string' ? err : 'Error en sincronización'
+            toast.error(t('table.notifications.syncErrorTitle'), {
+                description: typeof err === 'string' ? err : t('table.notifications.syncErrorDesc') || 'Error en sincronización'
             });
         }
     });
@@ -118,7 +131,6 @@ export default function AdminI18nPage() {
             refetchPrimary();
             refetchSecondary();
 
-            // For 'all', data.result is a map { es: {count, added, updated}, ... }
             const results = data.result || {};
             let totalAdded = 0;
             let totalUpdated = 0;
@@ -153,8 +165,6 @@ export default function AdminI18nPage() {
         }
     });
 
-
-    // Simplificamos acceso ya que dataKey: 'messages' nos da el objeto directamente
     const safeMessagesPrimary = messagesPrimary || {};
     const safeMessagesSecondary = messagesSecondary || {};
 
@@ -205,10 +215,8 @@ export default function AdminI18nPage() {
             />
 
             <div className="grid grid-cols-1 gap-6">
-                {/* Panel de Control y Filtros */}
                 <ContentCard className="bg-white dark:bg-slate-950 border-slate-200/60 shadow-xl shadow-slate-200/10">
                     <div className="flex flex-col gap-4">
-                        {/* Search Bar - Full Width Row */}
                         <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
@@ -219,7 +227,6 @@ export default function AdminI18nPage() {
                             />
                         </div>
 
-                        {/* Namespace Filters - Separate Row */}
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => setNamespaceFilter('__ALL__')}
@@ -285,16 +292,21 @@ export default function AdminI18nPage() {
                     </div>
                 </ContentCard>
 
-                {/* Tabla de Traducciones */}
                 <TranslationTable
                     primaryLocale={primaryLocale}
                     secondaryLocale={secondaryLocale}
-                    primaryMessages={safeMessagesPrimary}
-                    secondaryMessages={safeMessagesSecondary}
+                    primaryMessages={messagesPrimary}
+                    secondaryMessages={messagesSecondary}
                     searchQuery={searchQuery}
                     showMissingOnly={showMissingOnly}
                     loading={loadingPrimary || loadingSecondary}
-                    hasActiveFilters={hasActiveFilters}
+                    hasActiveFilters={true}
+                    pagination={pagination}
+                    onPageChange={(newOffset) => setOffset(newOffset)}
+                    onLimitChange={(newLimit) => {
+                        setPageSize(newLimit);
+                        setOffset(0);
+                    }}
                     onRefresh={() => {
                         refetchPrimary();
                         refetchSecondary();

@@ -13,7 +13,7 @@ export interface OnboardingStep {
 }
 
 export function useOnboarding() {
-    const t = useTranslations('admin.onboarding');
+    const t = useTranslations('admin_superadmin');
     const [currentStep, setCurrentStepState] = useState(0);
     const [isCompleted, setIsCompletedState] = useState(true);
     const [isVisible, setIsVisible] = useState(false);

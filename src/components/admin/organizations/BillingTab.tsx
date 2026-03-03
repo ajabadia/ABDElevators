@@ -60,7 +60,7 @@ interface SimulationResult {
 }
 
 export function BillingTab({ config, setConfig, usageStats }: BillingTabProps) {
-    const t = useTranslations('admin.billing');
+    const t = useTranslations('admin_billing');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
     // Estados para la simulación de precio
@@ -610,7 +610,7 @@ interface UsageCardProps {
 
 // Sub-componente para tarjetas de uso
 function UsageCard({ title, icon, current, limit, format, status }: UsageCardProps) {
-    const t = useTranslations('admin.billing');
+    const t = useTranslations('admin_billing');
     const isInfinity = limit === Infinity || limit === null;
     const percentage = isInfinity ? 0 : Math.min(100, (current / limit) * 100);
 

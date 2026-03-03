@@ -39,6 +39,15 @@ interface TranslationTableProps {
     loading: boolean;
     hasActiveFilters: boolean;
     onRefresh: () => void;
+    // Paginación
+    pagination?: {
+        total: number;
+        limit: number;
+        offset: number;
+        hasMore: boolean;
+    };
+    onPageChange: (offset: number) => void;
+    onLimitChange: (limit: number) => void;
 }
 
 export function TranslationTable({
@@ -50,10 +59,13 @@ export function TranslationTable({
     showMissingOnly,
     loading,
     hasActiveFilters,
-    onRefresh
+    onRefresh,
+    pagination,
+    onPageChange,
+    onLimitChange
 }: TranslationTableProps) {
-    const tTable = useTranslations('admin.i18n.table');
-    const tNotif = useTranslations('admin.i18n.notifications');
+    const tTable = useTranslations('admin_knowledge.table');
+    const tNotif = useTranslations('admin_knowledge.table.notifications');
     const [editingKey, setEditingKey] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState('');
     const [editingLocale, setEditingLocale] = useState<string | null>(null);
@@ -91,7 +103,7 @@ export function TranslationTable({
         }
     });
 
-    // Aplanar mensajes para la tabla (Ya vienen detallados de la API)
+    // Las llaves ya vienen paginadas y filtradas del backend
     const flatKeys = useMemo(() => {
         const keys = new Set([
             ...Object.keys(primaryMessages),
@@ -100,25 +112,8 @@ export function TranslationTable({
         return Array.from(keys).sort();
     }, [primaryMessages, secondaryMessages]);
 
-    const filteredKeys = flatKeys.filter(key => {
-        const lowerSearch = searchQuery.toLowerCase();
-        const pVal = primaryMessages[key]?.value?.toLowerCase() || '';
-        const sVal = secondaryMessages[key]?.value?.toLowerCase() || '';
-
-        // Filtro por búsqueda
-        const matchesSearch = key.toLowerCase().includes(lowerSearch) ||
-            pVal.includes(lowerSearch) ||
-            sVal.includes(lowerSearch);
-
-        if (!matchesSearch) return false;
-
-        // Filtro por faltantes (si está activo, solo mostrar las que no existen en el idioma secundario)
-        if (showMissingOnly) {
-            return !secondaryMessages[key]?.value;
-        }
-
-        return true;
-    });
+    // Eliminar el filtrado local redundante que colapsaba el navegador
+    const filteredKeys = flatKeys;
 
     const handleEdit = (key: string, value: string, locale: string) => {
         setEditingKey(key);
@@ -389,6 +384,59 @@ export function TranslationTable({
                     </tbody>
                 </table>
             </div>
+
+            {/* Paginador */}
+            {pagination && (
+                <div className="p-4 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/30">
+                    <div className="flex items-center gap-4">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground whitespace-nowrap">
+                            {tTable('totalLabels', { count: pagination.total })}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-muted-foreground">MOSTRAR:</span>
+                            {[10, 25, 50, 100, 250].map(limit => (
+                                <button
+                                    key={limit}
+                                    onClick={() => onLimitChange(limit)}
+                                    className={cn(
+                                        "w-8 h-8 rounded-lg text-[10px] font-black transition-all border",
+                                        pagination.limit === limit
+                                            ? "bg-teal-600 border-teal-600 text-white shadow-sm"
+                                            : "bg-white border-slate-200 text-slate-500 hover:border-teal-500/50"
+                                    )}
+                                >
+                                    {limit}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-xl text-[10px] font-bold"
+                            disabled={pagination.offset === 0 || loading}
+                            onClick={() => onPageChange(Math.max(0, pagination.offset - pagination.limit))}
+                        >
+                            Anterior
+                        </Button>
+                        <div className="px-4 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-teal-600">
+                            PÁGINA {Math.floor(pagination.offset / pagination.limit) + 1} / {Math.max(1, Math.ceil(pagination.total / pagination.limit))}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-xl text-[10px] font-bold"
+                            disabled={!pagination.hasMore || loading}
+                            onClick={() => onPageChange(pagination.offset + pagination.limit)}
+                        >
+                            Siguiente
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {debugKey && (
                 <KeyDebugModal
                     isOpen={!!debugKey}

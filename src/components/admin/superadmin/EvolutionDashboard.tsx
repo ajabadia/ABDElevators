@@ -13,7 +13,7 @@ interface EvolutionDashboardProps {
 }
 
 export function EvolutionDashboard({ evolutionData, isLoadingEvolution }: EvolutionDashboardProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">

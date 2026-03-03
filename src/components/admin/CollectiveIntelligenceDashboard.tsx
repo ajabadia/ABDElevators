@@ -22,7 +22,7 @@ import { ProactiveInsightsSection } from './intelligence/ProactiveInsightsSectio
 import { useTranslations } from 'next-intl';
 
 export function CollectiveIntelligenceDashboard() {
-    const t = useTranslations('admin.intelligence');
+    const t = useTranslations('admin_intelligence');
     const [metrics, setMetrics] = useState<IntelligenceMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 

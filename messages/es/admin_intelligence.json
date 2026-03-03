@@ -1,0 +1,57 @@
+{
+  "title": "Inteligencia",
+  "highlight": "Soberana",
+  "subtitle": "Monitoriza el descubrimiento autónomo de patrones y gobierna la red de conocimiento federado.",
+  "loading": "Iniciando Motor Soberano...",
+  "dashboard": {
+    "no_data_title": "Datos de Inteligencia No Disponibles",
+    "no_data_desc": "Parece que aún no hay suficientes interacciones para generar métricas colectivas o hay un problema de conexión.",
+    "retry": "Reintentar Conexión",
+    "semantic_density": "Densidad Semántica",
+    "nodes_relations": "Nodos + Relaciones",
+    "learnings": "Aprendizajes",
+    "corrections": "Correcciones",
+    "precision": "{val}% Precisión",
+    "automated_tasks": "Tareas Auto",
+    "no_intervention": "Sin intervención",
+    "mins_per_order": "{val}min/ped",
+    "estimated_roi": "ROI Estimado",
+    "accumulated_savings": "Ahorro acumulado",
+    "optimization": "Optimización",
+    "accuracy_evolution_title": "Evolución de Precisión (System Agent)",
+    "accuracy_evolution_desc": "Aprendizaje continuo basado en feedback humano.",
+    "learning_focus_title": "Enfoque de Aprendizaje",
+    "learning_focus_desc": "Entidades con más correcciones."
+  },
+  "metrics": {
+    "total_patterns": "Total Patrones",
+    "total_patterns_trend": "+5 (simulado)",
+    "validated_insights": "Hallazgos Validados",
+    "avg_confidence": "{percent}% confianza media",
+    "network_reach": "Alcance de Red",
+    "network_reach_value": "Global",
+    "network_reach_desc": "Compartición cross-tenant activa"
+  },
+  "charts": {
+    "discovery_title": "Tendencias de Descubrimiento",
+    "discovery_desc": "Nuevos patrones descubiertos autónomamente en el tiempo.",
+    "topics_title": "Temas en Tendencia",
+    "topics_desc": "Palabras clave técnicas más frecuentes.",
+    "no_topics": "Aún no hay temas en tendencia."
+  },
+  "table": {
+    "title": "Registro Global de Conocimiento",
+    "desc": "Modera y revisa los patrones descubiertos por el Motor Soberano.",
+    "archive_success": "Patrón archivado correctamente",
+    "archive_error": "Error al archivar el patrón",
+    "fetch_error": "Error al cargar datos de inteligencia",
+    "problemVector": "Vector Problema",
+    "solutionVector": "Vector Solución",
+    "confidence": "Confianza",
+    "validations": "Validaciones",
+    "keywords": "Palabras Clave",
+    "actions": "Acciones",
+    "archive_confirm": "¿Estás seguro de que quieres archivar este patrón? Ya no aparecerá en las búsquedas RAG.",
+    "empty": "Aún no se han descubierto patrones autónomos."
+  }
+}

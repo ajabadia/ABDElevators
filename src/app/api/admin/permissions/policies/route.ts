@@ -14,13 +14,13 @@ const SLA_WRITE = 1000;
  * GET /api/admin/permissions/policies
  * Lista todas las políticas de permiso del tenant
  */
-async function GET_internal () {
+async function GET_internal() {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {
         const user = await enforcePermission('permission:policy', 'read');
         const policiesCollection = await getTenantCollection<PermissionPolicy>('policies', user);
-        const policies = await (policiesCollection.find({}) as any).toArray();
+        const policies = await policiesCollection.find({});
 
         return NextResponse.json({ success: true, policies });
     } catch (error: unknown) {
@@ -44,7 +44,7 @@ async function GET_internal () {
  * POST /api/admin/permissions/policies
  * Crea una nueva política de permiso
  */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
     const start = Date.now();
     try {

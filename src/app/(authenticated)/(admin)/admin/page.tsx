@@ -64,7 +64,7 @@ const SecurityAutoscaleMonitor = dynamic(
 );
 
 export default function AdminDashboardPage() {
-    const t = useTranslations('admin.dashboard');
+    const t = useTranslations('admin_analytics');
     const { data: session } = useSession();
     const isSuperAdmin = session?.user?.role === UserRole.SUPER_ADMIN;
 

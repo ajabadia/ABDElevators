@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowRight, Calculator, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
 
 export default function PriceSimulator() {
-    const t = useTranslations('admin.billing');
+    const t = useTranslations('admin_billing');
     const [currentPlan, setCurrentPlan] = useState<PlanTier>('FREE');
     const [newPlan, setNewPlan] = useState<PlanTier>('PRO');
     const [cycle, setCycle] = useState<'monthly' | 'yearly'>('monthly');

@@ -38,7 +38,7 @@ export function LogExplorer() {
     const t = useTranslations('admin.logs.explorer');
     const tDetail = useTranslations('admin.logs.detail');
     const tLevels = useTranslations('admin.logs.explorer.levels');
-    const tLogs = useTranslations('admin.logs');
+    const tLogs = useTranslations('admin_logs');
 
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);

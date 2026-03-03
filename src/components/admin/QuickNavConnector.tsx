@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
 export function QuickNavConnector() {
-    const t = useTranslations('admin.quick_nav');
+    const t = useTranslations('admin_analytics.quick_nav');
     const connectors = [
         {
             title: t('workflows.title'),
@@ -28,7 +28,7 @@ export function QuickNavConnector() {
         {
             title: t('intelligence.title'),
             subtitle: t('intelligence.subtitle'),
-            href: "/admin/intelligence",
+            href: "/admin/intelligence/trends",
             icon: <BrainCircuit className="text-purple-500" />,
             color: "from-purple-500/20 to-purple-500/5",
             borderColor: "group-hover:border-purple-500/50"

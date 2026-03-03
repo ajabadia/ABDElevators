@@ -36,4 +36,4 @@ description: Skill para gestionar y resolver errores recurrentes consultando una
 ## Recursos
 - **Base de Conocimientos**: `recursos/known_errors.md`
 - **Estadísticas**: `recursos/error_stats.json`
-- **Scripts de Solución**: `scripts/` (e.g., `force-sync-i18n.ts`)
+- **Scripts de Solución**: `scripts/migrations/` (e.g., `sync-all-i18n.ts`)

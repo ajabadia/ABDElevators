@@ -8,6 +8,9 @@ import { getTenantCollection } from '@/lib/db-tenant';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 import { executeWithResilience } from '@/lib/resilience';
 
+import { DEFAULT_MODEL, AI_MODEL_IDS } from "@/lib/constants/ai-models";
+import { AiModelManager } from '@/services/core/ai-model-manager';
+
 const tracer = trace.getTracer('abd-rag-platform');
 
 /**
@@ -165,5 +168,32 @@ export class PromptRunner {
                 span.end();
             }
         });
+    }
+
+    /**
+     * Low-level call for when the prompt is already resolved.
+     * Replaces callGemini from llm-service.
+     */
+    static async call(params: {
+        prompt: string;
+        tenantId: string;
+        correlationId: string;
+        options?: {
+            temperature?: number;
+            maxTokens?: number;
+            model?: string;
+        }
+    }): Promise<string> {
+        const { prompt, tenantId, correlationId, options } = params;
+
+        // Resolve model using Tenant Config
+        const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
+        const resolvedOptions = {
+            ...options,
+            model: options?.model || config.defaultModel || DEFAULT_MODEL
+        };
+
+        const response = await callGeminiExtended(prompt, tenantId, correlationId, resolvedOptions);
+        return response.text;
     }
 }

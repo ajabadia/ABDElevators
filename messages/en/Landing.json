@@ -20,61 +20,61 @@
     "badge": "INDUSTRIAL REPORTING",
     "title": "Corporate PDF Generation",
     "description": "Transform AI analysis into professional deliverables. Inspection, Audit, and Quality templates with your branding.",
-    "features": [
-      "Customizable Templates",
-      "Generation History",
-      "Digital Signature"
-    ]
+    "features": {
+      "0": "Customizable Templates",
+      "1": "Generation History",
+      "2": "Digital Signature"
+    }
   },
   "AI_VISION": {
     "badge": "AI GOVERNANCE",
     "title": "Total Industrial Control",
     "description": "Centralized model management, Guardian V3 ABAC shielding and high-performance architecture for critical environments.",
-    "features": [
-      "Single Model Registry",
-      "RAG Playground",
-      "Prompt Governance",
-      "HITL Feedback Loop",
-      "High-Integrity Ingestion (Ph 199)",
-      "Persistent Cost Traceability",
-      "Industrial Grade Stability",
-      "Multi-product Suite Architecture",
-      "Decoupled Domain Architecture",
-      "Independent Support Hub (Ph 200)",
-      "Observability & Audit Hub (Ph 201)",
-      "Unified LLM Core (Ph 210)",
-      "Multi-tenant Observability (Ph 213)",
-      "Post-ingestion Enrichment (Ph 198)",
-      "Dynamic AI Suggestions (Ph 216)",
-      "Unified Service Layer (Ph 222)",
-      "Guardian Permission Alignment (Ph 220)",
-      "Guardian ABAC Enforcement Sweep (Ph 236)",
-      "Middleware Security Hardening (Ph 234)",
-      "Structured API Logging (logEvento)",
-      "Standardized Vertical Architecture (Ph 232)",
-      "Strict Typing Sweep (Ph 238)",
-      "Testing Infrastructure & Core Unit Tests (Ph 239)",
-      "Edge Runtime Compatibility (Ph 240)",
-      "High Availability i18n Governance (Ph 241)"
-    ]
+    "features": {
+      "0": "Single Model Registry",
+      "1": "RAG Playground",
+      "2": "Prompt Governance",
+      "3": "HITL Feedback Loop",
+      "4": "High-Integrity Ingestion (Ph 199)",
+      "5": "Persistent Cost Traceability",
+      "6": "Industrial Grade Stability",
+      "7": "Multi-product Suite Architecture",
+      "8": "Decoupled Domain Architecture",
+      "9": "Independent Support Hub (Ph 200)",
+      "10": "Observability & Audit Hub (Ph 201)",
+      "11": "Unified LLM Core (Ph 210)",
+      "12": "Multi-tenant Observability (Ph 213)",
+      "13": "Post-ingestion Enrichment (Ph 198)",
+      "14": "Dynamic AI Suggestions (Ph 216)",
+      "15": "Unified Service Layer (Ph 222)",
+      "16": "Guardian Permission Alignment (Ph 220)",
+      "17": "Guardian ABAC Enforcement Sweep (Ph 236)",
+      "18": "Middleware Security Hardening (Ph 234)",
+      "19": "Structured API Logging (logEvento)",
+      "20": "Standardized Vertical Architecture (Ph 232)",
+      "21": "Strict Typing Sweep (Ph 238)",
+      "22": "Testing Infrastructure & Core Unit Tests (Ph 239)",
+      "23": "Edge Runtime Compatibility (Ph 240)",
+      "24": "High Availability i18n Governance (Ph 241)"
+    }
   },
   "UX_REVOLUTION": {
     "badge": "UNIFIED EXPERIENCE",
     "title": "Cutting-Edge Agentic Design",
     "description": "An interface reimagined for technical efficiency. Simplified navigation, native dark mode, and absolute visual consistency.",
-    "features": [
-      "Hybrid Dashboard",
-      "Navigation Hub",
-      "Dark Mode",
-      "Semantic Design Tokens",
-      "Progressive Onboarding",
-      "WorkContext Engine",
-      "Integrated Contextual Help",
-      "Advanced Key-Nav (CMD+K)",
-      "Predictive Ingestion ETA",
-      "RAG Metrics Tooltips",
-      "Unified Sonner Notifications",
-      "Atomic Admin Hubs"
-    ]
+    "features": {
+      "0": "Hybrid Dashboard",
+      "1": "Navigation Hub",
+      "2": "Dark Mode",
+      "3": "Semantic Design Tokens",
+      "4": "Progressive Onboarding",
+      "5": "WorkContext Engine",
+      "6": "Integrated Contextual Help",
+      "7": "Advanced Key-Nav (CMD+K)",
+      "8": "Predictive Ingestion ETA",
+      "9": "RAG Metrics Tooltips",
+      "10": "Unified Sonner Notifications",
+      "11": "Atomic Admin Hubs"
+    }
   }
 }

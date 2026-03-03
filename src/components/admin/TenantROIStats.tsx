@@ -6,7 +6,7 @@ import { TrendingUp, Clock, ShieldCheck, Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export function TenantROIStats() {
-    const t = useTranslations('admin.roi')
+    const t = useTranslations('admin_analytics')
 
     const stats = [
         {

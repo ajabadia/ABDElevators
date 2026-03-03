@@ -36,7 +36,7 @@ interface ActiveUsersClientProps {
 }
 
 export function ActiveUsersClient({ isSuperAdmin }: ActiveUsersClientProps) {
-    const t = useTranslations("admin.users");
+    const t = useTranslations('admin_users');
     const tf = useTranslations("admin.users.fields");
     const [isMounted, setIsMounted] = useState(false);
 

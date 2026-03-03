@@ -11,7 +11,7 @@ export default function GuardianLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const t = useTranslations('admin.guardian');
+    const t = useTranslations('admin_superadmin');
     const pathname = usePathname();
 
     const tabs = [

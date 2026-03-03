@@ -11,7 +11,7 @@ interface TopTenantsCardProps {
 }
 
 export function TopTenantsCard({ usage }: TopTenantsCardProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden h-full">

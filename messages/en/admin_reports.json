@@ -1,0 +1,77 @@
+{
+  "hub": {
+    "title": "Reports Hub",
+    "subtitle": "Generation and management of industrial technical reports",
+    "generateNew": "Generate New Report",
+    "noReports": "No reports generated recently.",
+    "download": "Download PDF",
+    "tableHeaders": {
+      "name": "Report Name",
+      "type": "Type",
+      "date": "Date",
+      "technician": "Technician",
+      "actions": "Actions"
+    },
+    "share": "Share",
+    "recordsFound": "{count} reports found",
+    "searchPlaceholder": "Search by report name..."
+  },
+  "templates": {
+    "audit": "Compliance Audit",
+    "inspection": "Technical Inspection",
+    "ragQuality": "RAG Quality",
+    "entityLlm": "Entity Analysis (LLM)",
+    "workflow": "Workflow Performance",
+    "auditDesc": "Verifies regulations and safety standards",
+    "inspectionDesc": "Technical detail of components and status",
+    "ragQualityDesc": "Reliability and context evaluation",
+    "entityLlmDesc": "Deep analysis of specific assets",
+    "workflowDesc": "Efficiency and bottlenecks"
+  },
+  "generate": {
+    "title": "Configure New Report",
+    "selectTemplate": "Select Template",
+    "dateRange": "Date Range",
+    "includeSources": "Include Sources",
+    "generating": "Generating Report...",
+    "error": "Error generating report",
+    "success": "Report generated successfully",
+    "downloadPdf": "Download PDF",
+    "sendEmail": "Send by Email"
+  },
+  "schedules": {
+    "title": "Report Scheduling",
+    "subtitle": "Automate the generation and sending of periodic reports.",
+    "create": "New Schedule",
+    "edit": "Edit Schedule",
+    "list": {
+      "name": "Name",
+      "template": "Template",
+      "frequency": "Frequency",
+      "nextRun": "Next Run",
+      "enabled": "Active",
+      "disabled": "Inactive",
+      "status": "Status",
+      "recipients": "Recipients"
+    },
+    "form": {
+      "template": "Report Type",
+      "name": "Task Name",
+      "recipients": "Recipient Emails (comma separated)",
+      "frequency": "Sending Frequency",
+      "cron": "Custom Cron Expression",
+      "cron_help": "Example: 0 8 * * 1 (Monday at 8:00)",
+      "freq_options": {
+        "daily": "Daily (08:00)",
+        "weekly": "Weekly (Monday 08:00)",
+        "monthly": "Monthly (Day 1 08:00)",
+        "custom": "Custom"
+      }
+    },
+    "toast": {
+      "created": "Schedule created successfully",
+      "deleted": "Schedule deleted",
+      "updated": "Schedule updated"
+    }
+  }
+}

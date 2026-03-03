@@ -1,0 +1,371 @@
+{
+  "page": {
+    "title": "Configuración de Organización",
+    "subtitle": "Gestiona el aislamiento de datos, identidad visual y cuotas de almacenamiento.",
+    "refresh": "Refrescar",
+    "save": "Guardar Cambios",
+    "error": "Error",
+    "errorTenantId": "Falta tenantId",
+    "saveSuccess": "Configuración de la organización actualizada correctamente.",
+    "saveError": "No se pudo guardar la configuración."
+  },
+  "tabs": {
+    "general": "General",
+    "branding": "Identidad y Branding",
+    "storage": "Almacenamiento",
+    "features": "Módulos",
+    "billing": "Facturación",
+    "reports": "Reportes"
+  },
+  "general": {
+    "tenantId": "ID de Organización",
+    "name": "Nombre Comercial",
+    "defaultName": "Mi Organización",
+    "industry": "Industria / Dominio",
+    "industryPlaceholder": "Selecciona industria",
+    "compliance": {
+      "title": "Estado de Cumplimiento",
+      "dataIsolation": "Aislamiento de Datos",
+      "dataRegion": "Región de Datos",
+      "encryption": "Cifrado",
+      "active": "Activo",
+      "regionValue": "EU-West (Zaragoza/Frankfurt)",
+      "encryptionValue": "AES-256"
+    },
+    "industries": {
+      "ELEVATORS": "Elevadores y Elevación",
+      "LEGAL": "Legal / Despachos",
+      "MEDICAL": "Médico / Salud",
+      "IT": "Tecnología / IT",
+      "GENERIC": "Genérico / Otros"
+    }
+  },
+  "storage": {
+    "provider": "Proveedor de Infraestructura",
+    "cloudinary": "Cloudinary",
+    "cloudinaryDesc": "Óptimo para PDFs e imágenes con CDN.",
+    "awsS3": "AWS S3",
+    "comingSoon": "PRÓXIMAMENTE",
+    "folderPrefix": "Directorio Raíz (Storage Isolation)",
+    "folderPrefixDesc": "Determina la carpeta base en el cloud para este tenant.",
+    "quota": {
+      "title": "Cuota Máxima de Disco",
+      "desc": "Límite de documentos procesados.",
+      "currentUsage": "Uso Actual (Cloudinary / Storage)",
+      "warning": "Al superar la cuota, se bloqueará el acceso a nuevas peticiones de análisis."
+    },
+    "storageUsage": {
+      "metric": "Métrica calculada s/ cuota total",
+      "used": "usado",
+      "mb": "MB"
+    }
+  },
+  "features": {
+    "features": {
+      "ragSearch": "Búsqueda Semántica RAG",
+      "geminiAnalysis": "Análisis Inteligente (Gemini)",
+      "auditReviews": "Revisiones de Auditoría",
+      "whiteLabel": "White Label Branding",
+      "multiLanguage": "Multi-idioma Avanzado",
+      "customAgents": "Custom Agents"
+    },
+    "status": {
+      "active": "Active",
+      "locked": "Locked",
+      "planned": "Planned"
+    }
+  },
+  "branding": {
+    "title": "Personalización de Marca",
+    "subtitle": "Define los colores corporativos y activos visuales.",
+    "logo": {
+      "title": "Logotipo de Organización",
+      "upload": "Subir Logotipo",
+      "uploadButton": "Subir Logo",
+      "remove": "Eliminar",
+      "dimensions": "Dimensiones mín: 400x400px. Fondo transparente recomendado (PNG).",
+      "success": "Logo actualizado",
+      "successDesc": "El branding se ha guardado correctamente.",
+      "error": "Error",
+      "errorDesc": "Fallo al subir el logo"
+    },
+    "documentLogo": {
+      "title": "Logotipo para Documentos/Emails",
+      "upload": "Subir Logotipo de Documentos",
+      "uploadButton": "Subir Logo Doc",
+      "dimensions": "Recomendado: 800x200px (Horizontal). Se usará el logo general si este no se define.",
+      "success": "Logo de documentos actualizado",
+      "successDesc": "El logo para notificaciones se ha guardado correctamente.",
+      "error": "Error",
+      "errorDesc": "Fallo al subir el logo de documentos"
+    },
+    "favicon": {
+      "title": "Favicon",
+      "upload": "Subir Favicon",
+      "uploadButton": "Subir Favicon",
+      "dimensions": "Archivos .ico, .png o .svg. Recomendado 32x32px.",
+      "success": "Favicon actualizado",
+      "successDesc": "El icono de pestaña se ha guardado correctamente.",
+      "error": "Error",
+      "errorDesc": "Fallo al subir el favicon"
+    },
+    "colors": {
+      "primary": "Color Primario (Light Mode)",
+      "accent": "Color Acento (Light Mode)",
+      "primaryDark": "Primario (Dark Mode Override)",
+      "accentDark": "Acento (Dark Mode Override)"
+    },
+    "autoDarkMode": {
+      "title": "Modo Oscuro Automático",
+      "desc": "Calcula automáticamente variantes legibles para el tema oscuro."
+    },
+    "preview": {
+      "title": "Vista Previa App",
+      "light": "CLARO",
+      "dark": "OSCURO",
+      "lightDesc": "Vista previa en Modo Claro (colores originales).",
+      "darkDesc": "Vista previa en Modo Oscuro (colores auto-optimizados)."
+    }
+  },
+  "notifications": {
+    "editor": {
+      "title": "Editor de Plantillas de Sistema",
+      "subtitle": "Define el contenido global de las notificaciones.",
+      "contentCard": "Editor de Contenido",
+      "contentDesc": "Define el asunto y el HTML del email. Puedes usar variables dinámicas.",
+      "es": "Español (ES)",
+      "en": "Inglés (EN)",
+      "subject": "Asunto del Email",
+      "subjectPlaceholder": "Ej: Su pedido {{orderId}} está listo",
+      "body": "Cuerpo HTML",
+      "bodyDesc": "Soporta HTML básico y Handlebars. Asegúrate de incluir {{{tenant_custom_note}}} si deseas permitir personalización.",
+      "audit": {
+        "title": "Auditoría de Cambios",
+        "reason": "Motivo de la actualización",
+        "reasonPlaceholder": "Ej: Actualización de términos legales 2026...",
+        "save": "Guardar Versión v{version}",
+        "reasonRequired": "Motivo requerido",
+        "reasonRequiredDesc": "Por favor indica el motivo del cambio para la auditoría."
+      },
+      "variables": {
+        "title": "Variables Disponibles",
+        "copy": "Haz clic para copiar. Estas variables se rellenarán automáticamente al enviar.",
+        "copied": "Copiada",
+        "copiedDesc": "Variable {v} copiada al portapapeles"
+      },
+      "version": {
+        "title": "Información de Versión",
+        "current": "Versión Actual:",
+        "lastUpdate": "Última Modificación:",
+        "modifiedBy": "Modificado Por:",
+        "history": "Ver Historial Completo"
+      },
+      "toast": {
+        "success": "Cambios guardados",
+        "successDesc": "La plantilla se ha actualizado y versionado correctamente.",
+        "error": "Error",
+        "errorDesc": "No se pudo guardar la plantilla."
+      }
+    },
+    "settings": {
+      "title": "Configuración de Notificaciones del Tenant",
+      "subtitle": "Personaliza qué notificaciones recibe tu equipo y clientes.",
+      "events": "Eventos de Notificación",
+      "enabled": "Habilitado",
+      "channels": "Canales",
+      "recipients": "Destinatarios (Emails separados por coma)",
+      "customNote": "Nota Personalizada (Opcional)",
+      "customNoteDesc": "Añade un mensaje extra que se inyectará en la plantilla global.",
+      "includeNote": "Incluir nota en Emails",
+      "fallback": "Email de Fallback (Si no hay destinatarios específicos)",
+      "save": "Guardar Configuración",
+      "toast": {
+        "success": "Configuración actualizada",
+        "successDesc": "Tus preferencias de notificación se han guardado.",
+        "error": "Error al guardar"
+      }
+    }
+  },
+  "billing": {
+    "currentPlan": "Plan Actual",
+    "planActive": "Activo",
+    "freeTrial": "Estás disfrutando del periodo de prueba gratuito.",
+    "subscription": "Suscripción renovada mensualmente.",
+    "changePlan": "Cambiar Plan",
+    "plansTitle": "Planes y Precios",
+    "plansDesc": "Selecciona el plan que mejor se adapte a tus necesidades.",
+    "planCurrent": "Plan Actual",
+    "contactSupport": "Contactar Soporte",
+    "selectPlan": "Seleccionar",
+    "perMonth": "/mes",
+    "tab": {
+      "plan_current": "Plan Actual",
+      "plan_active": "Activo",
+      "free_trial_desc": "Estás disfrutando del periodo de prueba gratuito.",
+      "subscription_renewed": "Suscripción renovada mensualmente.",
+      "change_plan": "Cambiar Plan",
+      "plans_and_prices": "Planes y Precios",
+      "plans_select_desc": "Selecciona el plan que se adapte a tus necesidades.",
+      "calculating_stripe": "Calculando prorrateo en Stripe...",
+      "processing": "Procesando...",
+      "confirm_subscribe": "Confirmar Suscripción",
+      "tokens_ia": "Tokens IA (Generativo)",
+      "storage_rag": "Almacenamiento (RAG)",
+      "vector_searches": "Búsquedas Vectoriales",
+      "api_calls": "Llamadas API",
+      "fiscal_identity": "Identidad Fiscal",
+      "fiscal_name_label": "Razón Social / Nombre Fiscal",
+      "fiscal_name_placeholder": "Ej: ABD Elevadores S.L.",
+      "tax_id_label": "CIF / NIF / VAT ID",
+      "tax_id_placeholder": "Ej: B12345678",
+      "invoice_reception": "Recepción de Facturas",
+      "channel_label": "Canal Preferente",
+      "channel_email": "Correo Electrónico",
+      "channel_postal": "Correo Postal",
+      "channel_in_app": "Sóla descarga en App",
+      "channel_xml_edi": "Intercambio XML / EDI",
+      "billing_email_label": "Email de Facturación",
+      "billing_email_placeholder": "facturacion@empresa.com",
+      "file_format_label": "Formato de Archivo",
+      "format_pdf": "PDF (Firmado Digitalmente)",
+      "format_xml": "XML Facturae",
+      "format_csv": "CSV / Excel",
+      "format_paper": "Papel (Físico)",
+      "shipping_address": "Dirección de Envío",
+      "street_label": "Calle y Número",
+      "city_label": "Ciudad",
+      "postal_code_label": "Cód. Postal",
+      "country_label": "País",
+      "billing_address": "Dirección de Facturación",
+      "billing_address_same": "Igual que la dirección de envío activo.",
+      "billing_street_label": "Calle y Número (Facturación)",
+      "e_invoice_cert": "Certificación de Factura Electrónica",
+      "e_invoice_compliance": "Cumplimos con la Ley Crea y Crece.",
+      "edi_info": "Información EDI",
+      "limit_badge": "LÍMITE ALCANZADO",
+      "overage_badge": "EXCESO",
+      "simulation_error": "Error en la simulación",
+      "checkout_error": "Error iniciando checkout",
+      "error_sim_title": "Error de Simulación",
+      "default_country": "España",
+      "units": {
+        "bytes": "B",
+        "kb": "KB",
+        "mb": "MB",
+        "gb": "GB",
+        "tb": "TB"
+      }
+    },
+    "usage": {
+      "tokens": "Tokens IA (Generativo)",
+      "storage": "Almacenamiento (RAG)",
+      "searches": "Búsquedas Vectoriales",
+      "apiCalls": "Llamadas API"
+    },
+    "fiscal": {
+      "title": "Identidad Fiscal",
+      "name": "Razón Social / Nombre Fiscal",
+      "namePlaceholder": "Ej: ABD Elevadores S.L.",
+      "taxId": "CIF / NIF / VAT ID",
+      "taxIdPlaceholder": "Ej: B12345678"
+    },
+    "reception": {
+      "title": "Recepción de Facturas",
+      "channel": "Canal Preferente",
+      "channelEmail": "Correo Electrónico",
+      "channelPostal": "Correo Postal",
+      "channelInApp": "Sóla descarga en App",
+      "channelXmlEdi": "Intercambio XML / EDI",
+      "email": "Email de Facturación",
+      "emailPlaceholder": "facturacion@empresa.com",
+      "format": "Formato de Archivo",
+      "formatPdf": "PDF (Firmado Digitalmente)",
+      "formatXml": "XML Facturae",
+      "formatCsv": "CSV / excel",
+      "formatPaper": "Papel (Físico)"
+    },
+    "shippingAddress": {
+      "title": "Dirección de Envío",
+      "line1": "Calle y Número",
+      "city": "Ciudad",
+      "postalCode": "Cód. Postal",
+      "country": "País"
+    },
+    "billingAddress": {
+      "title": "Dirección de Facturación",
+      "sameAsShipping": "Igual que la dirección de envío activo."
+    },
+    "edi": {
+      "title": "Certificación de Factura Electrónica",
+      "desc": "Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.",
+      "button": "Información EDI"
+    },
+    "usageStatus": {
+      "limit": "Límite",
+      "overage": "Exceso"
+    },
+    "simulation": {
+      "title": "Simulación de Cambio de Plan",
+      "creditApplied": "Crédito aplicado por plan actual",
+      "newPlanCost": "Costo del nuevo plan (prorrateado)",
+      "totalDueNow": "Total a pagar hoy",
+      "currency": "Moneda",
+      "nextBillingDate": "Próxima Facturación"
+    }
+  },
+  "security": {
+    "title": "Centro de Seguridad y Confianza",
+    "subtitle": "Aislamiento por Tenant validado mediante auditoría sintética continua.",
+    "auditLink": "Ver Auditoría Chunks",
+    "certify": "Certificar GDPR",
+    "certTitle": "Certificado de Cumplimiento GDPR",
+    "certDesc": "Informe de conformidad normativa para {organization}.",
+    "status": {
+      "title": "Estado del Procesamiento",
+      "value": "CONFORME"
+    },
+    "dataLocation": {
+      "title": "Ubicación de Datos",
+      "value": "EU-WEST-1 (Frankfurt)"
+    },
+    "encryption": {
+      "title": "Cifrado en Reposo",
+      "value": "AES-256-GCM"
+    },
+    "logRetention": {
+      "title": "Retención de Logs",
+      "value": "90 Días (Anonimizado)"
+    },
+    "gdprNote": "Este tenant cumple con los requisitos del Reglamento General de Protección de Datos (RGPD) UE 2016/679.",
+    "downloadBtn": "Descargar Informe PDF",
+    "orgDefault": "la organización",
+    "downloadSuccess": {
+      "title": "Informe Generado",
+      "desc": "El certificado de cumplimiento se ha descargado correctamente."
+    }
+  },
+  "reports": {
+    "title": "Configuración de Reportes Industriales",
+    "subtitle": "Personaliza los avisos legales, firmas y apariencia de los reportes generados.",
+    "preview": "VISTA PREVIA DE REPORTE",
+    "printColor": "Color Impresión PDF",
+    "pageCount": "Página {current} de {total}",
+    "includeSources": {
+      "title": "Incluir Fuentes Técnicas",
+      "desc": "Adjunta automáticamente las referencias de la base de conocimientos al final del PDF."
+    },
+    "disclaimer": {
+      "title": "Aviso Legal / Disclaimer",
+      "placeholder": "Aviso legal del reporte...",
+      "desc": "Se incluirá al final de cada reporte generado."
+    },
+    "signature": {
+      "title": "Texto de Firma",
+      "placeholder": "Línea de firma..."
+    },
+    "footer": {
+      "title": "Texto de Pie de Página",
+      "placeholder": "ABD Engine v1.0..."
+    }
+  }
+}

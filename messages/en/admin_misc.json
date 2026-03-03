@@ -1,0 +1,484 @@
+{
+  "title": "Sovereign",
+  "highlight": "Intelligence",
+  "subtitle": "Monitor the autonomous discovery of patterns and govern the federated knowledge network.",
+  "loading": "Initializing Sovereign Engine...",
+  "dashboard": {
+    "no_data_title": "Intelligence Data Unavailable",
+    "no_data_desc": "It seems there are not enough interactions yet to generate collective metrics or there is a connection issue.",
+    "retry": "Retry Connection",
+    "semantic_density": "Semantic Density",
+    "nodes_relations": "Nodes + Relations",
+    "learnings": "Learnings",
+    "corrections": "Corrections",
+    "precision": "{val}% Precision",
+    "automated_tasks": "Auto Tasks",
+    "no_intervention": "No intervention",
+    "mins_per_order": "{val}min/req",
+    "estimated_roi": "Estimated ROI",
+    "accumulated_savings": "Accumulated savings",
+    "optimization": "Optimization",
+    "accuracy_evolution_title": "Accuracy Evolution (System Agent)",
+    "accuracy_evolution_desc": "Continuous learning based on human feedback.",
+    "learning_focus_title": "Learning Focus",
+    "learning_focus_desc": "Entities with the most corrections."
+  },
+  "metrics": {
+    "total_patterns": "Total Patterns",
+    "total_patterns_trend": "+5 (simulado)",
+    "validated_insights": "Validated Insights",
+    "avg_confidence": "{percent}% avg confidence",
+    "network_reach": "Network Reach",
+    "network_reach_value": "Global",
+    "network_reach_desc": "Cross-tenant sharing active"
+  },
+  "charts": {
+    "discovery_title": "Discovery Trends",
+    "discovery_desc": "New autonomously discovered patterns over time.",
+    "topics_title": "Trending Topics",
+    "topics_desc": "Most frequent technical keywords.",
+    "no_topics": "No trending topics yet."
+  },
+  "table": {
+    "title": "Global Knowledge Registry",
+    "desc": "Moderate and review patterns discovered by the Sovereign Engine.",
+    "archive_success": "Pattern archived successfully",
+    "archive_error": "Failed to archive pattern",
+    "fetch_error": "Failed to load intelligence data",
+    "archive_confirm": "Are you sure you want to archive this pattern? It will no longer appear in RAG searches.",
+    "problemVector": "Problem Vector",
+    "solutionVector": "Solution Vector",
+    "confidence": "Confidence",
+    "validations": "Validations",
+    "keywords": "Keywords",
+    "actions": "Actions",
+    "empty": "No autonomous patterns discovered yet."
+  },
+  "api_docs": {
+    "loading": "Starting Technical Portal...",
+    "title": "API Documentation Portal",
+    "subtitle": "Interactive technical specification (OAS 3.0) for integrators."
+  },
+  "card_title": "ABD RAG Platform Specification",
+  "error_loading": "Failed to load API definition.",
+  "messages": {
+    "retry_success": "Relocation to active queue successful.",
+    "delete_success": "Job purged from the system."
+  },
+  "jobs": {
+    "title": "Reliability Dashboard",
+    "subtitle": "BullMQ Infrastructure & Dead Letter Queue (DLQ) Management.",
+    "table": {
+      "id": "Job ID",
+      "type": "Process Type",
+      "status": "Current State",
+      "duration": "Execution Time",
+      "failed_reason": "Error Trace",
+      "actions": "Actions"
+    }
+  },
+  "actions": {
+    "retry": "Manual Retry",
+    "delete": "Purge from Queue",
+    "details": "View Stack Trace",
+    "refresh": "Refresh List"
+  },
+  "monitor": "Agent Monitor",
+  "status": {
+    "active": "Active",
+    "waiting": "Waiting",
+    "completed": "Completed",
+    "failed": "Failed (DLQ)",
+    "delayed": "Delayed"
+  },
+  "support": {
+    "title": "Industrial Support Console",
+    "subtitle": "Manage technical inquiries and system escalations.",
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In Progress",
+      "RESOLVED": "Resolved",
+      "CLOSED": "Closed"
+    },
+    "actions": {
+      "assign": "Assign to...",
+      "reply": "Reply to Client",
+      "resolve": "Mark as Resolved",
+      "close": "Close Permanently",
+      "refresh": "Refrescar"
+    }
+  },
+  "stats": {
+    "open": "Open Tickets",
+    "pending": "Awaiting Response",
+    "resolved": "Resolved (30d)"
+  },
+  "priority": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "Critical",
+    "URGENT": "Urgent"
+  },
+  "placeholder_desc": "--xxx---xxx--",
+  "no_keys": "No active keys",
+  "no_keys_desc": "Create a new API Key to start integrating your external systems with our platform.",
+  "revoke_confirm": "Are you sure you want to revoke this key? Applications using it will stop working immediately.",
+  "revoke_success": "Key revoked successfully",
+  "created": "Created {distance}",
+  "last_used": "Last used: {distance}",
+  "revoke_btn": "Revoke Key",
+  "error_name": "Assign a name to the key",
+  "error_permissions": "Select at least one permission",
+  "copied": "Copied",
+  "create_success": "API Key created successfully",
+  "new_key": "Generate New Key",
+  "api_keys": {
+    "title": "API Access Management",
+    "subtitle": "Manage API Keys for external integrations (ERP, CRM, IoT)."
+  },
+  "space_restriction": "Knowledge Space Restriction (Optional)",
+  "select_space": "Select a space (Global by default)",
+  "global_space": "Global (All Accessible Spaces)",
+  "space_restriction_desc": "Restricted keys can only perform RAG queries within the selected space.",
+  "scopes": "Scopes (Permissions)",
+  "save_warning": "Save this key now!",
+  "save_warning_desc": "This is the only time we will show you the full API key. If you lose it, you will need to generate a new one.",
+  "copy_toast": "Copied to clipboard",
+  "active_keys": "Active Keys",
+  "events": {
+    "SYSTEM": "System Messages",
+    "ANALYSIS_COMPLETE": "Analysis Completed",
+    "RISK_ALERT": "Risk Alerts",
+    "BILLING_EVENT": "Billing and Quotas",
+    "SECURITY_ALERT": "Security and Access"
+  },
+  "page": {
+    "title": "Notification Center",
+    "subtitle": "Manage communications, templates, and system status.",
+    "manageTemplates": "Manage Templates",
+    "channelSettings": "Channel Settings"
+  },
+  "kpi": {
+    "totalSent": "Total Sent",
+    "totalSentDesc": "Successful notifications",
+    "billing": "Billing",
+    "billingDesc": "Limit/payment alerts",
+    "errors": "Errors",
+    "errorsDesc": "Send or system failures"
+  },
+  "notifications": {
+    "table": {
+      "recent": "Recent Notifications",
+      "status": "Status",
+      "type": "Type",
+      "title": "Title",
+      "recipient": "Recipient",
+      "ago": "Ago"
+    },
+    "status": {
+      "error": "Error",
+      "sent": "Sent",
+      "inApp": "In-App"
+    }
+  },
+  "templates": {
+    "title": "Email Templates",
+    "subtitle": "Customize the base HTML and legal texts for each notification type.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "languagesConfigured": "languages configured",
+    "updated": "Updated:",
+    "configure": "Configure",
+    "fallbackMessage": "This notification uses the system generic fallback. Configure it to customize it.",
+    "createTemplate": "Create Template"
+  },
+  "editor": {
+    "title": "System Template Editor",
+    "subtitle": "Define the global content for notifications.",
+    "contentCard": "Content Editor",
+    "contentDesc": "Define the subject and HTML body. You can use dynamic variables.",
+    "es": "Spanish (ES)",
+    "en": "English (EN)",
+    "subject": "Email Subject",
+    "subjectPlaceholder": "e.g., Your order {{orderId}} is ready",
+    "body": "HTML Body",
+    "bodyDesc": "Supports basic HTML and Handlebars. Be sure to include {{{tenant_custom_note}}} if you want to allow customization.",
+    "audit": {
+      "title": "Changes Audit",
+      "reason": "Update reason",
+      "reasonPlaceholder": "e.g., Legal terms update 2026...",
+      "save": "Save Version v{version}",
+      "reasonRequired": "Reason required",
+      "reasonRequiredDesc": "Please indicate the reason for the change for auditing purposes."
+    },
+    "variables": {
+      "title": "Available Variables",
+      "copy": "Click to copy. These variables will be filled automatically when sending.",
+      "copied": "Copied",
+      "copiedDesc": "Variable {v} copied to clipboard"
+    },
+    "version": {
+      "title": "Version Information",
+      "current": "Current Version:",
+      "lastUpdate": "Last Modified:",
+      "modifiedBy": "Modified By:",
+      "history": "View Full History"
+    },
+    "toast": {
+      "success": "Changes saved",
+      "successDesc": "The template has been successfully updated and versioned.",
+      "error": "Error",
+      "errorDesc": "Could not save the template."
+    }
+  },
+  "settings": {
+    "form": {
+      "title": "Communication Preferences",
+      "subtitle": "Configure how and what notifications your organization receives.",
+      "saveBtn": "Save Changes",
+      "saving": "Saving...",
+      "saveSuccess": "Configuration saved",
+      "saveSuccessDesc": "Your notification preferences have been updated successfully.",
+      "saveError": "Error saving",
+      "saveErrorDesc": "Could not update the configuration. Please check the data.",
+      "connectionError": "Connection error",
+      "connectionErrorDesc": "A problem occurred while trying to connect to the server.",
+      "loading": "Loading configuration...",
+      "loadError": "Error loading configuration",
+      "generalTitle": "General Settings",
+      "generalDesc": "Global settings for the notification system.",
+      "fallbackEmail": "Fallback Email (Default)",
+      "fallbackPlaceholder": "alerts@yourcompany.com",
+      "fallbackHelp": "This email will receive notifications if there are no specific recipients defined for an event.",
+      "channelsTitle": "Channels and Status",
+      "eventActive": "Active Event",
+      "eventActiveDesc": "Enable/disable this type of notification.",
+      "enabledChannels": "Enabled channels",
+      "emailChannel": "Email",
+      "inAppChannel": "In-App Notifications (Bell)",
+      "recipientsTitle": "Specific Recipients",
+      "recipientsDesc": "Who will receive alerts for this specific event.",
+      "newEmailPlaceholder": "new@email.com",
+      "emailCol": "Email",
+      "actionCol": "Action",
+      "noRecipients": "No specific recipients. The tenant fallback or affected user will be used.",
+      "customNoteTitle": "Text Injection (Optional)",
+      "customNoteDesc": "This text will appear in the footer of emails of this type for all your users.",
+      "customNotePlaceholder": "E.g.: Remember to upload the payment receipt to the HR shared folder."
+    }
+  },
+  "validation": {
+    "invalidDate": "Invalid date"
+  },
+  "explorer": {
+    "loading": "Synchronizing Global Metrics...",
+    "title": "Platform Insights",
+    "subtitle": "Real-time analysis of infrastructure and RAG ecosystem.",
+    "liveStatus": "Live Status: OK",
+    "growth": "+14.2% vs last month",
+    "sla": "SLA Violations (30d)",
+    "slaUnit": "Incidents",
+    "errors": "Critical Errors (30d)",
+    "errorsUnit": "Logs",
+    "anomaly": {
+      "title": "Anomaly Detected",
+      "desc": "12% latency increase in Tier 2 (US-East)"
+    },
+    "industrial": {
+      "title": "Industrial Distribution"
+    },
+    "kpi": {
+      "activeTenants": "Active Tenants",
+      "uniqueUsers": "Unique Users",
+      "mau": "MAU (30d)",
+      "mrr": "Estimated MRR"
+    },
+    "quality": {
+      "title": "RAG Performance Quality (P100)",
+      "subtitle": "Automated heuristic evaluation on the last 100 inferences.",
+      "faithfulness": "Faithfulness",
+      "relevance": "Relevance",
+      "precision": "Precision",
+      "noData": "Insufficient data to generate quality report."
+    },
+    "system": {
+      "title": "System Load",
+      "totalOrders": "Total Orders",
+      "ragSearch": "RAG Searches",
+      "deduplication": "Deduplication Savings"
+    },
+    "adopters": {
+      "title": "New Adopters",
+      "onboarding": "Onboarding",
+      "viewAll": "View All Tenants"
+    }
+  },
+  "analytics": {
+    "page": {
+      "title": "Global Metrics",
+      "subtitle": "Analytical perspective on platform performance and RAG ecosystem."
+    }
+  },
+  "spaces": {
+    "title": "Spaces Management",
+    "highlight": "Hierarchical",
+    "subtitle": "Configure your knowledge base organization by industries, teams and tenants.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "new": "New Space",
+  "search_placeholder": "Search spaces...",
+  "types": {
+    "GLOBAL": "Global",
+    "INDUSTRY": "Industry",
+    "TENANT": "Tenant",
+    "TEAM": "Team",
+    "PERSONAL": "Personal"
+  },
+  "visibility": {
+    "PUBLIC": "Public",
+    "INTERNAL": "Internal",
+    "PRIVATE": "Private",
+    "RESTRICTED": "Restricted"
+  },
+  "welcome": "Welcome, {name}",
+  "user_dashboard": {
+    "subtitle": "What would you like to do today?",
+    "stats": {
+      "accuracy": "Precise Answers",
+      "documents": "Uploaded Documents",
+      "queries": "Queries Performed",
+      "time": "Average Time",
+      "change_week": "+{count} this week",
+      "change_month": "+{percent}% vs. last month",
+      "change_today": "+{count} today",
+      "change_faster": "-{time} faster"
+    },
+    "actions": {
+      "upload": {
+        "desc": "Add PDFs, diagrams, or maintenance documents",
+        "title": "Upload Technical Manual"
+      },
+      "search": {
+        "title": "Search Information",
+        "desc": "Ask about procedures, error codes, or specifications"
+      },
+      "history": {
+        "title": "Inquiry History",
+        "desc": "Review your previous searches and saved answers"
+      }
+    }
+  },
+  "sections": {
+    "view_all": "View all history",
+    "contact": "Contact Support",
+    "activity": "Recent Activity",
+    "help": "Help Center"
+  },
+  "empty": {
+    "title": "No activity yet",
+    "desc": "Upload your first document or perform a query to get started."
+  },
+  "help": {
+    "search": {
+      "desc": "Tips for more accurate queries",
+      "title": "Asking better questions"
+    },
+    "upload": {
+      "title": "How do I upload documents?",
+      "desc": "Step-by-step guide to uploading PDFs"
+    }
+  },
+  "hub": {
+    "title": "Report Hub",
+    "subtitle": "Generation and management of industrial technical reports",
+    "generateNew": "Generate New Report",
+    "noReports": "No reports generated recently.",
+    "recordsFound": "{count} reports found",
+    "searchPlaceholder": "Search by report name...",
+    "download": "Download PDF",
+    "share": "Share",
+    "tableHeaders": {
+      "name": "Report Name",
+      "type": "Type",
+      "date": "Date",
+      "technician": "Technician",
+      "actions": "Actions"
+    }
+  },
+  "reports": {
+    "templates": {
+      "audit": "Compliance Audit",
+      "auditDesc": "Verify regulations and safety standards",
+      "inspection": "Technical Inspection",
+      "inspectionDesc": "Technical detail of components and status",
+      "ragQuality": "Technical Intelligence Quality",
+      "ragQualityDesc": "Reliability and context evaluation",
+      "entityLlm": "Entity Analysis (LLM)",
+      "entityLlmDesc": "Deep analysis of specific assets",
+      "workflow": "Workflow Performance",
+      "workflowDesc": "Efficiency and bottlenecks"
+    }
+  },
+  "generate": {
+    "title": "Configure New Report",
+    "selectTemplate": "Select Template",
+    "dateRange": "Date Range",
+    "includeSources": "Include Sources",
+    "generating": "Generating Report...",
+    "downloadPdf": "Download PDF",
+    "sendEmail": "Send via Email",
+    "success": "Report generated successfully",
+    "error": "Error generating report"
+  },
+  "schedules": {
+    "title": "Report Schedules",
+    "subtitle": "Automate the generation and delivery of recurring reports.",
+    "create": "New Schedule",
+    "edit": "Edit Schedule",
+    "list": {
+      "name": "Name",
+      "template": "Template",
+      "frequency": "Frequency",
+      "nextRun": "Next Run",
+      "recipients": "Recipients",
+      "status": "Status",
+      "enabled": "Active",
+      "disabled": "Inactive"
+    },
+    "form": {
+      "name": "Task Name",
+      "template": "Report Type",
+      "recipients": "Recipient Emails (comma separated)",
+      "frequency": "Delivery Frequency",
+      "cron": "Custom Cron Expression",
+      "cron_help": "Example: 0 8 * * 1 (Monday at 8:00)",
+      "freq_options": {
+        "daily": "Daily (08:00)",
+        "weekly": "Weekly (Mon 08:00)",
+        "monthly": "Monthly (1st 08:00)",
+        "custom": "Custom"
+      }
+    },
+    "toast": {
+      "created": "Schedule created successfully",
+      "updated": "Schedule updated",
+      "deleted": "Schedule deleted"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Automation"
+  },
+  "checklists": {
+    "title": "Checklists",
+    "subtitle": "Compliance"
+  },
+  "intelligence": {
+    "title": "Intelligence",
+    "subtitle": "AI Hub"
+  }
+}

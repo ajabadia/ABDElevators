@@ -114,13 +114,13 @@
       "template": "Template",
       "variables": "System Variables",
       "change_reason": "Reason for change",
-      "template_title": "Plantilla de IngenierÃ­a",
+      "template_title": "TBD (Auto-translated from original Spanish)",
       "load_example": "Cargar Ejemplo",
       "chars": "chars",
       "tips_title": "Consejos de Prompting:",
-      "tip_1": "Usa doble llave {{variable}} para inyectar datos dinÃ¡micos.",
-      "tip_2": "Define claramente el rol de la IA (ej: \"ActÃºa como un experto en...\") al inicio.",
-      "tip_3": "Solicita el formato de salida deseado de forma explÃ­cita (JSON, Markdown, etc)."
+      "tip_1": "TBD (Auto-translated from original Spanish)",
+      "tip_2": "TBD (Auto-translated from original Spanish)",
+      "tip_3": "TBD (Auto-translated from original Spanish)"
     },
     "history": {
       "title": "Global Audit Log",
@@ -254,11 +254,11 @@
     },
     "workflows": {
       "syncing": "Sincronizando Motor de Workflows...",
-      "title": "DiseÃ±ador de Workflows",
+      "title": "[PENDING_TRANSLATION]",
       "loadError": "Error de Carga",
       "backToHub": "Volver al Hub de IA",
-      "loadErrorDesc": "No se pudo recuperar la definiciÃ³n del workflow: {error}",
-      "saveSuccess": "ConfiguraciÃ³n Guardada",
+      "loadErrorDesc": "[PENDING_TRANSLATION]",
+      "saveSuccess": "[PENDING_TRANSLATION]",
       "back": "Volver",
       "publish": "Publicar Workflow",
       "tabs": {
@@ -266,7 +266,7 @@
         "states": "Estados",
         "config": "Master Config"
       },
-      "saveSuccessDesc": "El workflow ha sido actualizado con Ã©xito.",
+      "saveSuccessDesc": "[PENDING_TRANSLATION]",
       "states": {
         "title": "Estados de Proceso",
         "id": "ID del Estado",
@@ -278,17 +278,17 @@
         "schemaKey": "Output Schema"
       },
       "transitions": {
-        "title": "ConfiguraciÃ³n de Transiciones",
-        "to": "Hacia",
-        "from": "Desde",
-        "strategy": "Estrategia de DecisiÃ³n",
-        "add": "AÃ±adir TransiciÃ³n",
-        "label": "AcciÃ³n / Etiqueta",
+        "title": "[PENDING_TRANSLATION]",
+        "to": "[PENDING_TRANSLATION]",
+        "from": "[PENDING_TRANSLATION]",
+        "strategy": "[PENDING_TRANSLATION]",
+        "add": "[PENDING_TRANSLATION]",
+        "label": "[PENDING_TRANSLATION]",
         "strategies": {
           "human": "ðŸ›¡ï¸ Solo Humana",
-          "llm_suggest": "ðŸ§  IA + HITL (Sugerida)",
+          "llm_suggest": "🧠 IA + HITL (Sugerida)",
           "user": "ðŸ‘¤ Usuario (Manual)",
-          "llm_direct": "ðŸ¤– LLM Directa (Auto)"
+          "llm_direct": "🤖 LLM Directa (Auto)"
         },
         "routing": {
           "branches": "{count} Ramas Configuradas",
@@ -299,12 +299,12 @@
         "global": "Estrategia Global",
         "identity": "Identidad del Workflow",
         "active": "Estado Activo",
-        "activeDesc": "Disponible para nuevos casos",
-        "publication": "ParÃ¡metros de PublicaciÃ³n",
+        "activeDesc": "[PENDING_TRANSLATION]",
+        "publication": "[PENDING_TRANSLATION]",
         "environment": "Entorno",
-        "defaultDesc": "Asignado automÃ¡ticamente",
-        "version": "VersiÃ³n",
-        "default": "Workflow por Defecto",
+        "defaultDesc": "[PENDING_TRANSLATION]",
+        "version": "[PENDING_TRANSLATION]",
+        "default": "[PENDING_TRANSLATION]",
         "name": "Nombre Interno"
       }
     }
@@ -530,28 +530,28 @@
     },
     "charts": {
       "tokens_title": "AI Consumption Trends",
-      "tokens_desc": "VisualizaciÃ³n del consumo de tokens y eficiencia de cachÃ© en los Ãºltimos 15 dÃ­as."
+      "tokens_desc": "[PENDING_TRANSLATION]"
     },
     "contracts": {
       "edit": {
         "warning_title": "Atention",
         "title": "Editar Contrato",
         "plan_label": "Plan Base",
-        "overrides_title": "Overrides (LÃ­mites Personalizados)",
-        "description": "ConfiguraciÃ³n personalizada para {name} ({id})",
-        "plan_desc": "El plan define las tarifas base y funcionalidades.",
+        "overrides_title": "[PENDING_TRANSLATION]",
+        "description": "[PENDING_TRANSLATION]",
+        "plan_desc": "[PENDING_TRANSLATION]",
         "storage_desc": "1 GB = 1073741824 Bytes.",
         "save": "Guardar Cambios",
-        "success_desc": "Se han aplicado los cambios para {name}",
-        "tokens_desc": "0 o vacÃ­o = Sin lÃ­mite (Enterprise). Ej: 1000000",
+        "success_desc": "[PENDING_TRANSLATION]",
+        "tokens_desc": "[PENDING_TRANSLATION]",
         "cancel": "cancelar",
-        "warning_desc": "Modificar estos lÃ­mites afectarÃ¡ inmediatamente a la capacidad de operaciÃ³n del inquilino.",
-        "storage_label": "LÃ­mite Almacenamiento (Bytes)",
-        "tokens_label": "LÃ­mite Tokens Mensuales",
+        "warning_desc": "[PENDING_TRANSLATION]",
+        "storage_label": "[PENDING_TRANSLATION]",
+        "tokens_label": "[PENDING_TRANSLATION]",
         "success": "Contrato actualizado"
       },
-      "subtitle": "Configura planes, lÃ­mites personalizados (overrides) y reglas de facturaciÃ³n para cada tenant.",
-      "title": "GestiÃ³n de Contratos ('Casos')",
+      "subtitle": "[PENDING_TRANSLATION]",
+      "title": "[PENDING_TRANSLATION]",
       "table": {
         "override": "Override",
         "plan": "Plan Base",
@@ -716,8 +716,8 @@
       "add": "Add Transition",
       "strategies": {
         "user": "ðŸ‘¤ User (Manual)",
-        "llm_direct": "ðŸ¤– LLM Direct (Auto)",
-        "llm_suggest": "ðŸ§  IA + HITL (Suggested)",
+        "llm_direct": "🤖 LLM Direct (Auto)",
+        "llm_suggest": "🧠 IA + HITL (Suggested)",
         "human": "ðŸ›¡ï¸ Human Only"
       },
       "routing": {
@@ -798,7 +798,7 @@
         "sovereign_tool": "Sovereign Tool",
         "simple_if": "IF Simple",
         "switch": "Switch / Case",
-        "multi_path": "Ruta de MÃºltiples Caminos",
+        "multi_path": "[PENDING_TRANSLATION]",
         "wait": "Espera / Delay",
         "wait_5s": "Esperar 5s"
       },
@@ -884,8 +884,8 @@
     "tabs": {
       "explorer": "Explorer",
       "ai": "AI Query",
-      "assets": "[TRANSLATE] GestiÃ³n de Activos",
-      "audit": "[TRANSLATE] AuditorÃ­a de Ingesta"
+      "assets": "[TRANSLATE] Gestión de Activos",
+      "audit": "[TRANSLATE] Auditoría de Ingesta"
     },
     "actions": {
       "export": "Export Chunks",
@@ -1368,17 +1368,17 @@
       "title": "i18n Governance",
       "highlight": "Internationalization",
       "subtitle": "Master translation management and AI-assisted localization.",
-      "syncBtn": "Sync L4 â†’ DB",
+      "syncBtn": "Sync L4 → DB",
       "newKeyBtn": "New Key",
       "searchPlaceholder": "Search by key or text...",
       "syncAllBtn": "Sync all languages",
       "allFilter": "ALL",
       "filterMissing": "Show only missing",
       "exportBtn": "Exportar a JSON",
-      "exportSuccessTitle": "ExportaciÃ³n Exitosa",
-      "exportSuccessDesc": "Las traducciones se han persistido en los archivos locales.",
-      "syncToDbBtn": "SincronizaciÃ³n hacia BD",
-      "syncToFileBtn": "SincronizaciÃ³n hacia archivos JSON"
+      "exportSuccessTitle": "[PENDING_TRANSLATION]",
+      "exportSuccessDesc": "[PENDING_TRANSLATION]",
+      "syncToDbBtn": "[PENDING_TRANSLATION]",
+      "syncToFileBtn": "[PENDING_TRANSLATION]"
     },
     "languages": {
       "es": "Spanish",
@@ -1701,32 +1701,32 @@
         "upcoming_desc": "This feature will be available soon."
       },
       "edit": {
-        "title": "Editar ConfiguraciÃ³n de Contrato",
-        "description": "Ajusta el plan y lÃ­mites personalizados para {name} (ID: {id})",
-        "plan_label": "Plan de SuscripciÃ³n",
-        "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+        "title": "[PENDING_TRANSLATION]",
+        "description": "[PENDING_TRANSLATION]",
+        "plan_label": "[PENDING_TRANSLATION]",
+        "plan_desc": "[PENDING_TRANSLATION]",
         "plans": {
-          "basic": "BÃ¡sico Business",
+          "basic": "[PENDING_TRANSLATION]",
           "free": "Prueba Gratuita",
           "enterprise": "Corporativo",
           "pro": "Profesional"
         },
-        "tokens_desc": "0 para usar el valor por defecto del plan.",
-        "warning_desc": "Modificar estos lÃ­mites afecta directamente a la capacidad operativa del cliente y a su prÃ³xima factura.",
+        "tokens_desc": "[PENDING_TRANSLATION]",
+        "warning_desc": "[PENDING_TRANSLATION]",
         "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
-        "warning_title": "Cambio CrÃ­tico de Cuotas",
-        "overrides_title": "LÃ­mites Personalizados (Overrides)",
-        "tokens_label": "LÃ­mite de Tokens (Mes)",
-        "storage_label": "LÃ­mite de Almacenamiento (Bytes)",
-        "success_desc": "Se ha guardado la configuraciÃ³n para {name}",
+        "warning_title": "[PENDING_TRANSLATION]",
+        "overrides_title": "[PENDING_TRANSLATION]",
+        "tokens_label": "[PENDING_TRANSLATION]",
+        "storage_label": "[PENDING_TRANSLATION]",
+        "success_desc": "[PENDING_TRANSLATION]",
         "success": "Contrato Actualizado",
         "cancel": "Cancelar",
         "save": "Guardar Cambios",
-        "error_updating": "Error al actualizar el contrato",
-        "spaces_tenant_label": "LÃ­mite Espacios (Tenant)",
-        "spaces_tenant_desc": "LÃ­mite TOTAL de espacios en el tenant (0 = default del plan)",
-        "spaces_user_label": "LÃ­mite Espacios (Usuario)",
-        "spaces_user_desc": "LÃ­mite de espacios por cada usuario (0 = default del plan)"
+        "error_updating": "[PENDING_TRANSLATION]",
+        "spaces_tenant_label": "[PENDING_TRANSLATION]",
+        "spaces_tenant_desc": "[PENDING_TRANSLATION]",
+        "spaces_user_label": "[PENDING_TRANSLATION]",
+        "spaces_user_desc": "[PENDING_TRANSLATION]"
       }
     },
     "title": "Billing Data",
@@ -1903,10 +1903,10 @@
       "nextBillingDate": "Next billing date"
     },
     "page": {
-      "title": "FacturaciÃ³n & Consumo",
-      "subtitle": "Control centralizado de recursos industriales y mÃ©tricas de plataforma.",
-      "metadata_title": "FacturaciÃ³n y Consumo | ABD RAG Platform",
-      "metadata_desc": "GestiÃ³n de recursos y facturaciÃ³n SaaS."
+      "title": "[PENDING_TRANSLATION]",
+      "subtitle": "[PENDING_TRANSLATION]",
+      "metadata_title": "[PENDING_TRANSLATION]",
+      "metadata_desc": "[PENDING_TRANSLATION]"
     }
   },
   "billing_hub": {

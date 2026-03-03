@@ -1,8 +1,0 @@
-﻿D:\desarrollos\ABDElevators\src\app\api\core\agents\correct\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\automation\workflows\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\collaboration\presence\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\dashboard\intelligence\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\governance\audit\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\graph\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\insights\route.ts
-D:\desarrollos\ABDElevators\src\app\api\core\predictive\maintenance\route.ts

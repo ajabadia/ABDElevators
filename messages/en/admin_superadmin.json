@@ -1,0 +1,472 @@
+{
+  "title": "Welcome to ABDElevators",
+  "description": "Let's set up your organization workspace in a few steps.",
+  "steps": {
+    "welcome": {
+      "title": "Welcome to the ABD Ecosystem",
+      "content": "The AI that understands your technical documentation. To start, select your primary role to customize the tools."
+    },
+    "upload": {
+      "title": "Upload your first document",
+      "content": "Drag a technical PDF or schematic. If you don't have one handy, try our demo document on ITC AEM 1."
+    },
+    "ask": {
+      "title": "Ask your first question",
+      "content": "Try asking something technical based on the document. The AI will respond with direct citations to the original manual."
+    },
+    "explore": {
+      "title": "Discover your environment",
+      "content": "We've configured quick access based on your specialty. All set to optimize your work!"
+    },
+    "identity": "Identity",
+    "branding": "Branding",
+    "storage": "Storage",
+    "features": "Features",
+    "billing": "Billing"
+  },
+  "actions": {
+    "next": "Continue",
+    "back": "Back",
+    "finish": "Finish Setup",
+    "skip": "Skip for now"
+  },
+  "toasts": {
+    "completed": "Onboarding successfully completed!",
+    "reset": "Onboarding has been reset for this user."
+  },
+  "console": "Guardian Console",
+  "governance_desc": "Enterprise Governance: Manage ABAC policies, group hierarchy, and security simulations.",
+  "tabs": {
+    "matrix": "Permission Matrix",
+    "groups": "Groups & Hierarchy",
+    "simulator": "Simulator",
+    "audit": "Access Logs"
+  },
+  "cards": {
+    "matrix": {
+      "title": "Permission Matrix",
+      "description": "Manage ABAC policies and granular access rules."
+    },
+    "groups": {
+      "title": "Groups & Hierarchy",
+      "description": "Organize users and manage permission inheritance."
+    },
+    "simulator": {
+      "title": "Security Simulator",
+      "description": "Test and validate policies in real-time without risk."
+    },
+    "audit": {
+      "title": "Audit Trail",
+      "description": "Detailed logs of access and security changes."
+    }
+  },
+  "matrix": {
+    "title": "Permission Matrix",
+    "highlight": "Guardian V3",
+    "subtitle": "Centralized management of access policies and security control.",
+    "new_policy": "New Policy",
+    "stats": {
+      "total": "Total Policies",
+      "total_desc": "Active policies in the system",
+      "active": "Active",
+      "deny": "Denials",
+      "global": "Global Access"
+    },
+    "search_placeholder": "Search policies by name or resource...",
+    "table": {
+      "title": "Security Policies",
+      "desc": "Detailed list of defined access rules.",
+      "name": "Name / ID",
+      "resources": "Resources",
+      "actions": "Actions",
+      "effect": "Effect",
+      "status": "Status",
+      "loading": "Loading security matrix...",
+      "empty": "No policies found.",
+      "active": "ACTIVE",
+      "inactive": "INACTIVE",
+      "loading_error": "Error loading permission matrix",
+      "loading_error_title": "Loading Error",
+      "network_error": "Network error connecting to Guardian service",
+      "network_error_title": "Network Error",
+      "details_aria": "Policy details"
+    },
+    "grid": {
+      "empty": "No active security policies have been detected in this environment.",
+      "resources_actions": "Resources \\ Actions",
+      "policies_count": "{count} Policies",
+      "inherited_deny": "Access not defined (Inherited DENY)",
+      "allow_access": "Allow Access",
+      "deny_access": "Deny Access",
+      "inherited_def": "Inherited Def."
+    },
+    "filter": "Filter",
+    "metadata": {
+      "title": "Permission Matrix | Guardian V3",
+      "description": "Centralized management of access policies and industrial security control."
+    }
+  },
+  "groups": {
+    "title": "Group Hierarchy",
+    "highlight": "Org. Structure",
+    "subtitle": "Organize users into roles and groups with permission inheritance.",
+    "new_root": "New Root Group",
+    "stats": {
+      "total": "Total Groups",
+      "depth": "Max Depth",
+      "depth_desc": "Active inheritance levels",
+      "orphan": "Orphan Groups",
+      "orphan_desc": "No connection to root"
+    },
+    "tree": {
+      "title": "Inheritance Tree",
+      "loading": "Loading group structure...",
+      "empty": "No groups defined.",
+      "policies": "{count} associated policies",
+      "loading_error": "Error loading group hierarchy",
+      "network_error": "Network error connecting to Identity service",
+      "details_aria": "Group details"
+    },
+    "sidebar": {
+      "engine_title": "Inheritance Engine",
+      "effective_title": "Effective Permissions",
+      "effective_desc": "Calculates final permissions by summing all user groups.",
+      "bulk_assign": "Bulk Assignment",
+      "health_title": "Structure Health",
+      "circular_title": "Circular Detection",
+      "circular_desc": "No infinite inheritance loops detected."
+    }
+  },
+  "simulator": {
+    "title": "Simulador",
+    "highlight": "ABAC",
+    "subtitle": "Test policies in real-time. Select a user and define a dynamic context.",
+    "form": {
+      "title": "Simulation Parameters",
+      "desc": "Define the scenario of access to evaluate.",
+      "user_id": "User to Simulate",
+      "action": "Action",
+      "resource": "Target Resource",
+      "context_title": "Dynamic Context (ABAC Attributes)",
+      "ip_address": "Source IP",
+      "time": "Simulated Time",
+      "run_button": "Run Evaluation"
+    },
+    "results": {
+      "title": "Guardian Decision",
+      "waiting_title": "Waiting for execution",
+      "waiting_desc": "Configure the parameters on the left to see the result.",
+      "allowed_status": "Access ALLOWED",
+      "denied_status": "Access DENIED",
+      "allow": "Permission Granted",
+      "deny": "Access Denied",
+      "error": "Simulation error",
+      "network_error": "Network error",
+      "details_title": "Diagnosis Details",
+      "matched_policy": "Matched Policy",
+      "no_policy": "None (Implicit Deny)",
+      "latency": "Engine Latency"
+    }
+  },
+  "audit": {
+    "title": "Audit",
+    "highlight": "Logs",
+    "subtitle": "Historical record of all access decisions made by Guardian.",
+    "search_placeholder": "Filter logs by user, resource or policy...",
+    "last_24h": "Last 24h",
+    "export": "Export Logs",
+    "table": {
+      "title": "Guardian Activity",
+      "desc": "Real-time access decisions.",
+      "timestamp": "Timestamp",
+      "user": "User",
+      "action_resource": "Action & Resource",
+      "decision": "Decision",
+      "policy": "Matched Policy",
+      "loading": "Loading logs...",
+      "empty": "No logs available.",
+      "end_of_trail": "End of audit trail",
+      "last_24h": "Last 24 hours"
+    }
+  },
+  "compliance": {
+    "title": "Compliance Center",
+    "toasts": {
+      "backupDownloaded": "Backup Downloaded",
+      "backupSuccess": "Your knowledge package has been successfully exported.",
+      "certificateGenerated": "Certificate Generated",
+      "certificateSuccess": "The legal evidence PDF has been downloaded.",
+      "error": "Error",
+      "backupError": "Could not generate backup.",
+      "certificateError": "Could not generate certificate."
+    }
+  },
+  "highlight": "GDPR and Data",
+  "subtitle": "Manage data portability, backups, and legal destruction evidence.",
+  "dataPortability": {
+    "title": "Data Portability (Backup)",
+    "description": "Download a full copy of your organization's knowledge assets, including metadata and logs, in a portable JSON format.",
+    "whatsIncluded": "What's included?",
+    "item1": "Users and Profiles",
+    "item2": "Knowledge Assets Metadata",
+    "item3": "Ingestion and RAG Configs",
+    "item4": "Audit Logs"
+  },
+  "rightToBeForgotten": {
+    "title": "Right to be Forgotten",
+    "description": "Tools for GDPR compliance and permanent data destruction evidence.",
+    "alertTitle": "Permanent Destruction",
+    "alertDescription": "Deleting a tenant is irreversible. Use the Ephemeral Clean-up script for bulk deletions. This tool generates the Legal Certificate required for GDPR audits."
+  },
+  "buttons": {
+    "downloadBackup": "Download Full Backup (.zip)",
+    "generatingZip": "Generating ZIP...",
+    "generateCertificate": "Generate Deletion Certificate (PDF)",
+    "signingPdf": "Signing PDF...",
+    "requestDeletion": "Request Permanent Tenant Deletion",
+    "manualAdminRequest": "Manual Admin Request"
+  },
+  "aiGovernance": {
+    "title": "AI Governance (EU AI Act)",
+    "description": "Model oversight, risk categorization, and transparency according to European regulations.",
+    "registryTitle": "Model Registry",
+    "registryDesc": "List of authorized LLMs and embedding services.",
+    "riskTitle": "Risk Categorization",
+    "riskDesc": "Criticality level of AI implementations.",
+    "auditTitle": "Transparency Metrics",
+    "auditDesc": "Evidence of response quality and fidelity.",
+    "model": "Model",
+    "provider": "Provider",
+    "status": "Audit Status",
+    "lastUpdate": "Last Validation",
+    "riskLevels": {
+      "unacceptable": "Unacceptable",
+      "high": "High",
+      "limited": "Limited",
+      "minimal": "Minimal"
+    },
+    "euRisk": "EU Risk",
+    "governed": "Governed",
+    "complianceNoteHtml": "<strong>Compliance Note:</strong> This RAG implementation is categorized as <strong>{risk} risk</strong> as it provides technical assistance and information retrieval without automated decision-making."
+  },
+  "superadmin": {
+    "title": "Platform Console",
+    "subtitle": "Multi-tenant observability and agentic engine health.",
+    "actions": {
+      "predictive_audit": "Predictive Audit",
+      "self_healing": "Execute Self-Healing"
+    },
+    "toasts": {
+      "audit_success_title": "Audit Completed",
+      "audit_success_desc": "{processed} assets processed and {updated} updated.",
+      "audit_error_title": "Audit Error",
+      "audit_error_desc": "Self-healing could not be executed",
+      "predictive_success_title": "Predictive Audit Complete",
+      "predictive_success_desc": "Detected {count} anomalies.",
+      "predictive_error_title": "Audit Failed",
+      "predictive_error_desc": "Predictive intelligence audit failed"
+    }
+  },
+  "metrics": {
+    "tenants": "Active Clients",
+    "tenants_cluster": "{total} registered in the AUTH cluster",
+    "cases": "Cases Processed",
+    "ai_accuracy": "AI Accuracy (HITL)",
+    "ai_validations": "{count} human validations registered",
+    "ai_health": "AI Engine Health",
+    "latency": "Average Latency (LLM)",
+    "latency_desc": "Global average Gemini response time",
+    "consumption": "Projected Consumption",
+    "consumption_desc": "30-day cost estimation",
+    "health_stat": "{success} successes vs {failure} errors"
+  },
+  "financials": {
+    "title": "Platform Financials",
+    "desc": "Global operation and licensing economics.",
+    "expenditure": "Operational Expenditure",
+    "prediction_title": "Predictive Projection",
+    "platform_value": "Total Platform Value",
+    "roi": "ROI 150%",
+    "confidence": "{percentage}% Conf.",
+    "projection_30d": "30d Project."
+  },
+  "usage": {
+    "title": "Consumption by Tenant",
+    "desc": "Resource extraction and token consumption by organization.",
+    "tokens": "Tokens",
+    "storage": "Storage",
+    "savings": "Savings",
+    "no_data": "No usage data available."
+  },
+  "knowledge": {
+    "title": "Knowledge Engine Status",
+    "desc": "Asset audit and document lifecycle.",
+    "obsolete": "Obsolete Documents",
+    "obsolete_desc": "Assets whose review date has expired and require curation.",
+    "pending": "{count} Pending",
+    "cluster_health": "Cluster Health",
+    "db_status": "Status of connection with MongoDB Atlas and Neo4j."
+  },
+  "anomalies": {
+    "title": "Detected Anomalies",
+    "desc": "Statistically unusual events (Z-score > 2.0).",
+    "no_anomalies": "No anomalies detected in the last 48 hours.",
+    "alerts": "{count} ALERTS"
+  },
+  "infra": {
+    "title": "Pro Infrastructure",
+    "desc": "Detail of resources assigned to the cluster.",
+    "environment": "Environment",
+    "db_tier": "Database Tier",
+    "ai_engine": "AI Engine"
+  },
+  "evolution": {
+    "title": "Sovereign Engine: Ontology Evolution",
+    "subtitle": "Autonomous refinement of taxonomies based on human feedback drift.",
+    "improvements": "{count} IMPROVEMENTS",
+    "drift_label": "Detected Feedback Drift",
+    "drift_target": "In category: {category}",
+    "drift_frequency": "{count} times",
+    "drift_summary": "The system has detected {driftPoints} points of divergence. {proposals} refinement proposals have been generated.",
+    "stable": "Stable ontology. No refinement required at the moment.",
+    "proposals_title": "LLM Refinement Proposals",
+    "proposals_desc": "Visualization of changes proposed by the model before application.",
+    "no_proposals": "No active proposals",
+    "view_more": "View {count} more proposals",
+    "confidence": "Confidence: {percentage}%"
+  },
+  "governance": {
+    "title": "AI Governance",
+    "subtitle": "Centralized management of models, limits, and security policies.",
+    "actions": {
+      "discard": "Discard",
+      "save": "Save Governance"
+    }
+  },
+  "success": "AI Governance updated successfully",
+  "error": "Error saving changes",
+  "models": {
+    "title": "Contractual Models",
+    "description": "Configure default and fallback models for the entire platform.",
+    "default": {
+      "label": "Primary Model (Default)",
+      "desc": "Used for 90% of Technical Intelligence and analysis operations."
+    },
+    "embeddings": {
+      "label": "Embeddings Model (Vectors)",
+      "desc": "Determines the quality of technical search."
+    },
+    "fallback": {
+      "label": "Fallback Model"
+    },
+    "select_placeholder": "Select a model",
+    "default_option": "Default (Governance)"
+  },
+  "mapping": {
+    "title": "Task-Based Functional Mapping",
+    "description": "Define which specific model should perform each critical system task.",
+    "rag": {
+      "title": "Technical Intelligence & Document Search",
+      "generator": "Response Generator",
+      "rewriter": "Query Rewriter"
+    },
+    "workflows": {
+      "title": "Orchestration & Workflows",
+      "router": "Workflow Router",
+      "analyzer": "Node Analyzer"
+    },
+    "extraction": {
+      "title": "Technical Extraction & Analysis",
+      "graph": "Graph Extractor",
+      "report": "Report Generator",
+      "query": "Query Extractor"
+    }
+  },
+  "limits": {
+    "title": "Limits & Quotas",
+    "max_tokens": "Max Tokens per Request",
+    "daily_tokens": "Daily Token Limit",
+    "daily_budget": "Daily Budget Limit ($ USD)",
+    "pii": {
+      "label": "PII Anonymization",
+      "desc": "Automatic masking"
+    },
+    "explain": {
+      "label": "Explainability",
+      "desc": "Include \"Thought Process\""
+    },
+    "warning": "Cost overrun prevention active."
+  },
+  "reliability": {
+    "title": "Resilience & Global Delivery Monitor",
+    "subtitle": "Extreme load monitoring and geographic replication of the Graph."
+  },
+  "run_test": "Run Stress Test (500% Load)",
+  "cdn_title": "Global Knowledge CDN",
+  "latency": "Latency",
+  "status": "Status",
+  "last_test": "Last Stress Test",
+  "success_rate": "Success Rate",
+  "cpu_peak": "CPU Peak",
+  "reqs_sec": "Reqs/Sec",
+  "validation_success": "ReliabilityEngine validated under peak load.",
+  "no_data": "No stress data.",
+  "scaling": {
+    "title": "AI Infrastructure Scaling",
+    "desc": "System-driven resource auto-optimization.",
+    "badge": "AI-MANAGED",
+    "infra_label": "Current Infrastructure Status",
+    "optimization": "Optimization",
+    "compute_load": "Compute Load",
+    "dynamic_reserve": "Dynamic Reserve Active",
+    "dynamic_reserve_desc": "The system is adjusting network nodes based on global semantic traffic."
+  },
+  "security_autoscale": {
+    "audit": {
+      "title": "Universal Security Audit",
+      "desc": "Immutable shielding and governance verification.",
+      "health_score": "Health Score",
+      "encrypted_fields": "Encrypted Fields",
+      "active_policies": "Active Policies",
+      "findings": {
+        "encryption": "AES-256-GCM encryption validated on all sensitive fields.",
+        "governance": "Governance engine operating under 'Strict Compliance' policy.",
+        "traceability": "Immutable audit traceability active."
+      },
+      "next_audit": "Next complete audit scheduled in 24 hours."
+    }
+  },
+  "resources": {
+    "tokens": "AI Tokens",
+    "storage": "Storage",
+    "searches": "Vector Searches",
+    "api_requests": "API Calls"
+  },
+  "exceeded_title": "Limit Exceeded",
+  "warning_title": "Consumption Alert",
+  "exceeded_msg": "You have reached 100% of your {resource} limit.",
+  "warning_msg": "You have consumed {percentage}% of your {resource} limit.",
+  "suspended": "Your account has been suspended. Please upgrade your plan.",
+  "upgrade": "Upgrade Plan",
+  "dismiss": "Understood",
+  "modal": {
+    "title": "Limit Exceeded",
+    "desc": "You have reached the limit of your current plan. To continue using the platform, please upgrade to a higher plan.",
+    "view_plans": "View Plans",
+    "close": "Close"
+  },
+  "dialog_desc": "Technical status and database overrides.",
+  "loading": "Querying translation layers...",
+  "key_debug": {
+    "error": "Error loading debug info"
+  },
+  "json_section": "Local JSON File (messages/{locale}/...)",
+  "key_not_found": "Key not found in local files",
+  "db_section": "Database Overrides (MongoDB)",
+  "no_overrides": "No overrides for this key in the DB",
+  "obsolete": "OBSOLETE",
+  "cache_label": "Master Cache Exists",
+  "cache_active": "ACTIVE",
+  "cache_inactive": "INACTIVE",
+  "operations": "Operations Center"
+}

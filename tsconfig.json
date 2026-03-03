@@ -77,7 +77,6 @@
   "exclude": [
     "node_modules",
     "scripts",
-    "src/scripts",
     "tests",
     "test-prompt-tester.ts",
     "jest.setup.ts",

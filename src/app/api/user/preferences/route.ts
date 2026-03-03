@@ -19,15 +19,44 @@ const PreferencesUpdateSchema = z.object({
     language: z.string().optional()
 });
 
-async function GET_internal () {
+async function GET_internal() {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('user:profile', 'read');
 
         const userCollection = await getTenantCollection<User>('v2_users', session, 'AUTH');
-        const user = await userCollection.findOne({ email: session.user.email as string });
+        let user = await userCollection.findOne({ email: session.user.email as string });
 
-        if (!user) throw new AppError('NOT_FOUND', 404, 'User not found');
+        if (!user) {
+            // Auto-create basic preferences for valid session user if not found in v2_users (ERA 8 Migration)
+            const defaultUser: User = {
+                email: session.user.email as string,
+                tenantId: session.user.tenantId as string,
+                role: session.user.role as any,
+                preferences: {
+                    onboarding: { completed: false, currentStep: 0 },
+                    theme: 'system',
+                    language: 'en'
+                },
+                updatedAt: new Date(),
+                createdAt: new Date()
+            };
+
+            await userCollection.insertOne(defaultUser);
+            user = defaultUser;
+
+            await AuditService.record({
+                actorType: 'SYSTEM',
+                actorId: 'ERA8_MIGRATOR',
+                tenantId: session.user.tenantId as string,
+                source: 'API_USER_PREFERENCES',
+                action: 'AUTO_CREATE_PREFERENCES',
+                entityType: 'USER',
+                entityId: session.user.id,
+                details: { message: 'User moved to v2_users automatically' },
+                correlationId
+            });
+        }
 
         return NextResponse.json({
             success: true,
@@ -38,7 +67,7 @@ async function GET_internal () {
     }
 }
 
-async function POST_internal (req: Request) {
+async function POST_internal(req: Request) {
     const correlationId = crypto.randomUUID();
     try {
         const session = await enforcePermission('user:profile', 'manage');

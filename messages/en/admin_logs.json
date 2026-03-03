@@ -1,0 +1,165 @@
+{
+  "title": "Logs & Audit Explorer",
+  "stats": {
+    "total": "Total Logs",
+    "recent": "last 100",
+    "errors": "Critical Errors"
+  },
+  "tabs": {
+    "system": "System Logs",
+    "audit": "Audit Trail"
+  },
+  "actions": {
+    "export": "Export",
+    "live": "Live",
+    "refresh": "Refresh"
+  },
+  "filters": {
+    "search_logs": "Search logs (message, source...)",
+    "search_audit": "Search audit (user, action...)",
+    "all_users": "All Users",
+    "all_tenants": "All Organizations"
+  },
+  "table": {
+    "timestamp": "Timestamp",
+    "level": "Level",
+    "source": "Source",
+    "message": "Message",
+    "entity": "Entity/User",
+    "trace": "Correlation Trace",
+    "context": "Context",
+    "system": "SYSTEM"
+  },
+  "badges": {
+    "unknown": "Unknown",
+    "prompt": "AI Prompt",
+    "billing": "Billing",
+    "storage": "Storage",
+    "ingest": "Ingestion",
+    "config": "Configuration",
+    "audit_log": "AUDIT LOG",
+    "modified": "MODIFIED"
+  },
+  "status": {
+    "loading": "Loading logs...",
+    "no_results": "No logs found with current filters."
+  },
+  "detail": {
+    "analyze_diff": "Analyze Diff",
+    "close": "Close",
+    "message": "Detailed Message",
+    "stack": "Stack Trace (Error)",
+    "json": "Technical Details (JSON)",
+    "integrity": "Integrity Verification",
+    "diff_title": "Entity Changes",
+    "property": "Property",
+    "previous": "Previous State",
+    "next": "New State",
+    "initial_creation": "Initial Creation",
+    "initial_desc": "This entry represents the creation of the object. No previous state.",
+    "snapshot": "Full Object Snapshot",
+    "responsable": "Responsible",
+    "ip_origin": "Origin IP",
+    "correlation": "Correlation",
+    "view_trace": "View Trace",
+    "user_agent": "User Agent Context",
+    "admin_auth": "Admin Authority",
+    "secure_agent": "SECURE AGENT"
+  },
+  "page": {
+    "title": "System Logs",
+    "subtitle": "Monitor system health and compliance audit trail."
+  },
+  "levels": {
+    "all": "ALL",
+    "error": "ERROR",
+    "warn": "WARN",
+    "info": "INFO",
+    "debug": "DEBUG"
+  },
+  "explorer": {
+    "title": "Log Explorer",
+    "subtitle": "Real-time technical monitoring of the platform.",
+    "autoRefreshOn": "Auto-refresh ON",
+    "autoRefreshOff": "Auto-refresh OFF",
+    "refresh": "Refresh",
+    "searchLabel": "Quick Search",
+    "searchPlaceholder": "Message, action or correlation_id...",
+    "levelLabel": "Level",
+    "levelAll": "All levels",
+    "table": {
+      "time": "Time",
+      "level": "Level",
+      "sourceAction": "Source / Action",
+      "message": "Message",
+      "action": "Action"
+    },
+    "loading": "Loading logs...",
+    "noResults": "No logs found with current filters.",
+    "showing": "Showing {count} of hundreds of events.",
+    "page": "Page {current} of {total}",
+    "levels": {
+      "ERROR": "Error",
+      "WARN": "Warning",
+      "INFO": "Info",
+      "DEBUG": "Debug"
+    }
+  },
+  "audit": {
+    "title": "Audit Log",
+    "table": {
+      "title": "Audit Events",
+      "subtitle": "Industrial feed of operations and security",
+      "timestamp": "Timestamp",
+      "source": "Source",
+      "action": "Action",
+      "level": "Level",
+      "duration": "Duration",
+      "correlation": "Correlation ID",
+      "empty": "No events recorded matching the filters."
+    },
+    "filters": {
+      "search_placeholder": "Search by message, action, correlationId or user email...",
+      "all": "ALL",
+      "errors_only": "Errors Only"
+    }
+  },
+  "highlight": "Audit",
+  "subtitle": "Real-time activity monitoring, security, and business rule validation.",
+  "config_button": "Config Audit",
+  "export_button": "Export Logs",
+  "metrics": {
+    "total_cases": "Requests (Total)",
+    "accumulated": "Accumulated on platform",
+    "sla_violations": "SLA Incidents",
+    "last_30d": "Last 30 days",
+    "tokens_consumed": "Tokens Consumed",
+    "llm_inference": "Active LLM Inference",
+    "rag_faithfulness": "Technical Intelligence Reliability",
+    "hallucination_score": "Hallucination Score"
+  },
+  "empty_state": {
+    "title": "Activate the audit monitor",
+    "description": "Use the level or source filters or the search bar to load the logs. Choose \"ALL\" to see recent general activity.",
+    "load_all": "Load All"
+  },
+  "loading": "Loading metrics...",
+  "error": "Error",
+  "error_desc": "Could not load metrics.",
+  "health": {
+    "title": "System Health",
+    "errors_24h": "{count} errors (24h)"
+  },
+  "rag": {
+    "title": "Technical Intelligence Precision",
+    "samples": "Sampling of {count} queries"
+  },
+  "tokens": {
+    "title": "Tokens (30d)",
+    "total": "Total accumulated consumption"
+  },
+  "savings": {
+    "title": "Estimated Savings",
+    "hours": "{count} hours saved"
+  }
+}

@@ -45,42 +45,25 @@ export class TranslationSyncService {
         const flat = I18nObjectUtils.flattenObject(messages);
 
         const operations = Object.entries(flat).map(([key, value]) => {
-            if (!key) return null;
+            if (!key || key.startsWith('$') || key === '$') {
+                console.warn(`[TranslationSyncService] Skipping invalid key: "${key}"`);
+                return null;
+            }
             return {
                 updateOne: {
                     filter: { key, locale, tenantId },
-                    update: [
-                        {
-                            $set: {
-                                value: {
-                                    $cond: {
-                                        if: { $eq: ["$isCustomized", true] },
-                                        then: "$value",
-                                        else: value
-                                    }
-                                },
-                                locale,
-                                namespace: key.split('.')[0] || 'common',
-                                isObsolete: false,
-                                lastUpdated: {
-                                    $cond: {
-                                        if: { $eq: ["$isCustomized", true] },
-                                        then: "$lastUpdated",
-                                        else: new Date()
-                                    }
-                                },
-                                updatedBy: {
-                                    $cond: {
-                                        if: { $eq: ["$isCustomized", true] },
-                                        then: "$updatedBy",
-                                        else: "SYSTEM_SYNC"
-                                    }
-                                },
-                                tenantId,
-                                isCustomized: { $ifNull: ["$isCustomized", false] }
-                            }
+                    update: {
+                        $set: {
+                            value,
+                            locale,
+                            namespace: key.split('.')[0] || 'common',
+                            isObsolete: false,
+                            lastUpdated: new Date(),
+                            updatedBy: "SYSTEM_SYNC",
+                            tenantId,
+                            isCustomized: false
                         }
-                    ],
+                    },
                     upsert: true
                 }
             };
@@ -103,7 +86,7 @@ export class TranslationSyncService {
         if (dbDocs.length === 0) return { exported: 0, files: [] };
 
         const nested = I18nObjectUtils.flatToNested(
-            Object.fromEntries(dbDocs.map(d => [d.key, d.value]))
+            Object.fromEntries(dbDocs.map((d: any) => [d.key, d.value]))
         );
 
         const baseDir = path.join(process.cwd(), 'messages', locale);
@@ -118,12 +101,12 @@ export class TranslationSyncService {
 
             if (fs.existsSync(filePath)) {
                 const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                finalContent = I18nObjectUtils.deepMerge(existing, content);
+                finalContent = I18nObjectUtils.deepMerge(existing as Record<string, unknown>, content as Record<string, unknown>);
             }
 
             fs.writeFileSync(filePath, JSON.stringify(finalContent, null, 2), 'utf8');
             exportedFiles.push(`${ns}.json`);
-            totalKeys += I18nObjectUtils.countLeafKeys(finalContent);
+            totalKeys += I18nObjectUtils.countLeafKeys(finalContent as Record<string, unknown>);
         }
 
         return { exported: totalKeys, files: exportedFiles };

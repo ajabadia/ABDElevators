@@ -1,0 +1,313 @@
+{
+  "title": "Inteligencia",
+  "highlight": "Soberana",
+  "subtitle": "Monitoriza el descubrimiento autónomo de patrones y gobierna la red de conocimiento federado.",
+  "loading": "Iniciando Motor Soberano...",
+  "dashboard": {
+    "no_data_title": "Datos de Inteligencia no disponibles",
+    "no_data_desc": "Parece que aún no hay suficientes interacciones para generar métricas colectivas o hay un problema de conexión.",
+    "retry": "Reintentar Conexión",
+    "semantic_density": "Densidad Semántica",
+    "nodes_relations": "Nodos + Relaciones",
+    "learnings": "Aprendizajes",
+    "corrections": "Correcciones",
+    "precision": "{val}% Precisión",
+    "automated_tasks": "Tareas Auto",
+    "no_intervention": "Sin intervención",
+    "mins_per_order": "{val}min/ped",
+    "estimated_roi": "ROI Estimado",
+    "accumulated_savings": "Ahorro acumulado",
+    "optimization": "Optimización",
+    "accuracy_evolution_title": "Evolución de Precisión (System Agent)",
+    "accuracy_evolution_desc": "Aprendizaje continuo basado en feedback humano.",
+    "learning_focus_title": "Focos de Aprendizaje",
+    "learning_focus_desc": "Entidades con más correcciones."
+  },
+  "metrics": {
+    "total_patterns": "Total Patrones",
+    "total_patterns_trend": "+5 (simulado)",
+    "validated_insights": "Hallazgos Validados",
+    "avg_confidence": "{percent}% confianza media",
+    "network_reach": "Alcance de Red",
+    "network_reach_value": "Global",
+    "network_reach_desc": "Compartición cross-tenant activa"
+  },
+  "charts": {
+    "discovery_title": "Tendencias de Descubrimiento",
+    "discovery_desc": "Nuevos patrones descubiertos autónomamente en el tiempo.",
+    "topics_title": "Temas en Tendencia",
+    "topics_desc": "Palabras clave técnicas más frecuentes.",
+    "no_topics": "Aún no hay temas en tendencia."
+  },
+  "table": {
+    "title": "Registro Global de Conocimiento",
+    "desc": "Modera y revisa los patrones descubiertos por el Motor Soberano.",
+    "archive_success": "Patrón archivado correctamente",
+    "archive_error": "Error al archivar el patrón",
+    "fetch_error": "Error al cargar datos de inteligencia",
+    "archive_confirm": "¿Estás seguro de que quieres archivar este patrón? Ya no aparecerá en las búsquedas RAG.",
+    "problemVector": "Vector Problema",
+    "solutionVector": "Vector Solución",
+    "confidence": "Confianza",
+    "validations": "Validaciones",
+    "keywords": "Palabras Clave",
+    "actions": "Acciones",
+    "empty": "Aún no se han descubierto patrones autónomos."
+  },
+  "messages": {
+    "retry_success": "Reubicación en cola activa exitosa.",
+    "delete_success": "Trabajo purgado del sistema."
+  },
+  "jobs": {
+    "title": "Reliability Dashboard",
+    "subtitle": "Infraestructura BullMQ & Gestión de Dead Letter Queue (DLQ).",
+    "table": {
+      "id": "ID de Trabajo",
+      "type": "Tipo de Proceso",
+      "status": "Estado Actual",
+      "duration": "Tiempo Ejecución",
+      "failed_reason": "Traza de Error",
+      "actions": "Acciones"
+    }
+  },
+  "actions": {
+    "retry": "Reintento Manual",
+    "delete": "Purgar de la Cola",
+    "details": "Ver Stack Trace",
+    "refresh": "Actualizar Lista"
+  },
+  "monitor": "Agent Monitor",
+  "status": {
+    "active": "Activo",
+    "waiting": "En espera",
+    "completed": "Completado",
+    "delayed": "Retrasado",
+    "failed": "Fallido (DLQ)"
+  },
+  "support": {
+    "title": "Consola de Soporte Industrial",
+    "subtitle": "Gestiona consultas técnicas y derivaciones del sistema.",
+    "actions": {
+      "refresh": "Refrescar",
+      "reply": "Responder a Cliente",
+      "assign": "Asignar a...",
+      "resolve": "Marcar como Resuelto",
+      "close": "Cerrar Permanentemente"
+    },
+    "status": {
+      "OPEN": "Abierto",
+      "IN_PROGRESS": "En Progreso",
+      "RESOLVED": "Resuelto",
+      "CLOSED": "Cerrado"
+    }
+  },
+  "placeholder_desc": "--xxx---xxx--",
+  "stats": {
+    "open": "Tickets Abiertos",
+    "pending": "Esperando Respuesta",
+    "resolved": "Resueltos (30d)"
+  },
+  "priority": {
+    "URGENT": "Urgente",
+    "HIGH": "Crítica",
+    "LOW": "Baja",
+    "MEDIUM": "Media"
+  },
+  "no_keys": "No hay llaves activas",
+  "no_keys_desc": "Cree una nueva llave de API para comenzar a integrar sus sistemas externos con nuestra plataforma.",
+  "revoke_confirm": "¿Está seguro de que desea revocar esta llave? Las aplicaciones que la usen dejarán de funcionar inmediatamente.",
+  "revoke_success": "Llave revocada con éxito",
+  "created": "Creada {distance}",
+  "last_used": "Último uso: {distance}",
+  "revoke_btn": "Revocar Llave",
+  "error_name": "Asigne un nombre a la llave",
+  "error_permissions": "Seleccione al menos un permiso",
+  "copied": "Copiado",
+  "create_success": "Llave de API creada con éxito",
+  "new_key": "Generar Nueva Llave",
+  "api_keys": {
+    "title": "Gestión de Acceso API",
+    "subtitle": "Administre llaves de API para integraciones externas (ERP, CRM, IoT).",
+    "status": {
+      "active": "ACTIVA",
+      "revoked": "REVOCADA",
+      "deactivated_msg": "{name} ha sido desactivada.",
+      "revoke_error": "Error al revocar la llave"
+    }
+  },
+  "space_restriction": "Restricción de Espacio (Opcional)",
+  "select_space": "Seleccione un espacio (Global por defecto)",
+  "global_space": "Global (Todos los espacios accesibles)",
+  "space_restriction_desc": "Las llaves restringidas solo pueden realizar consultas RAG dentro del espacio seleccionado.",
+  "scopes": "Alcances (Permisos)",
+  "save_warning": "¡Guarde esta llave ahora!",
+  "save_warning_desc": "Esta es la única vez que le mostraremos la llave de API completa. Si la pierde, deberá generar una nueva.",
+  "copy_toast": "Copiado al portapapeles",
+  "active_keys": "Llaves Activas",
+  "error_title": "Error",
+  "unknown_error": "Error desconocido",
+  "error_creating": "Error al crear la llave",
+  "key_name_label": "Nombre de la Llave",
+  "key_name_placeholder": "Ej: Integración ERP Prod",
+  "close_btn": "Cerrar",
+  "space_label": "ESPACIO",
+  "welcome": "Bienvenido, {name}",
+  "user_dashboard": {
+    "subtitle": "¿Qué te gustaría hacer hoy?",
+    "stats": {
+      "documents": "Documentos Subizados",
+      "queries": "Consultas Realizadas",
+      "accuracy": "Respuestas Precisas",
+      "time": "Tiempo Promedio",
+      "change_week": "+{count} esta semana",
+      "change_today": "+{count} hoy",
+      "change_month": "+{percent}% vs. mes pasado",
+      "change_faster": "-{time} más rápido"
+    },
+    "actions": {
+      "upload": {
+        "title": "Subir Manual Técnico",
+        "desc": "Añade PDFs, esquemas o documentos de mantenimiento"
+      },
+      "search": {
+        "title": "Buscar Información",
+        "desc": "Pregunta sobre procedimientos, códigos de error o especificaciones"
+      },
+      "history": {
+        "title": "Historial de Consultas",
+        "desc": "Revisa tus búsquedas anteriores y respuestas guardadas"
+      }
+    }
+  },
+  "sections": {
+    "activity": "Actividad Reciente",
+    "help": "Centro de Ayuda",
+    "view_all": "Ver todo el historial",
+    "contact": "Contactar Soporte"
+  },
+  "empty": {
+    "title": "Aún no hay actividad",
+    "desc": "Sube tu primer documento o haz una consulta para empezar."
+  },
+  "help": {
+    "upload": {
+      "title": "¿Cómo subo documentos?",
+      "desc": "Guía paso a paso para cargar PDFs"
+    },
+    "search": {
+      "title": "Hacer mejores preguntas",
+      "desc": "Tips para consultas más precisas"
+    }
+  },
+  "spaces": {
+    "title": "Gestión de Espacios",
+    "subtitle": "Configura la organización de tu base de conocimiento por industrias, equipos y tenants.",
+    "highlight": "Jerárquica",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    }
+  },
+  "search_placeholder": "Buscar espacios...",
+  "types": {
+    "PERSONAL": "Personal",
+    "TEAM": "Equipo",
+    "INDUSTRY": "Industria",
+    "GLOBAL": "Global",
+    "TENANT": "Tenant"
+  },
+  "new": "Nuevo Espacio",
+  "visibility": {
+    "INTERNAL": "Interno",
+    "PRIVATE": "Privado",
+    "RESTRICTED": "Restringido",
+    "PUBLIC": "Público"
+  },
+  "hub": {
+    "title": "Centro de Informes",
+    "subtitle": "Generación y gestión de informes técnicos industriales",
+    "generateNew": "Generar Nuevo Informe",
+    "noReports": "No hay informes generados recientemente.",
+    "recordsFound": "{count} informes encontrados",
+    "searchPlaceholder": "Buscar por nombre de informe...",
+    "download": "Descargar PDF",
+    "share": "Compartir",
+    "tableHeaders": {
+      "name": "Nombre del Informe",
+      "type": "Tipo",
+      "date": "Fecha",
+      "technician": "Técnico",
+      "actions": "Acciones"
+    }
+  },
+  "templates": {
+    "audit": "Auditoría de Cumplimiento",
+    "auditDesc": "Verifica normativas y estándares de seguridad",
+    "inspection": "Inspección Técnica",
+    "inspectionDesc": "Detalle técnico de componentes y estado",
+    "ragQuality": "Calidad RAG",
+    "ragQualityDesc": "Evaluación de fiabilidad y contexto",
+    "entityLlm": "Análisis de Entidad (LLM)",
+    "entityLlmDesc": "Análisis profundo de activos específicos",
+    "workflow": "Rendimiento de Workflow",
+    "workflowDesc": "Eficiencia y cuellos de botella"
+  },
+  "generate": {
+    "title": "Configurar Nuevo Informe",
+    "selectTemplate": "Seleccionar Plantilla",
+    "dateRange": "Rango de Fechas",
+    "includeSources": "Incluir Fuentes",
+    "generating": "Generando Informe...",
+    "downloadPdf": "Descargar PDF",
+    "sendEmail": "Enviar por Email",
+    "success": "Informe generado exitosamente",
+    "error": "Error al generar el informe"
+  },
+  "schedules": {
+    "title": "Programación de Informes",
+    "subtitle": "Automatice la generación y envío de informes periódicos.",
+    "create": "Nueva Programación",
+    "edit": "Editar Programación",
+    "list": {
+      "name": "Nombre",
+      "template": "Plantilla",
+      "frequency": "Frecuencia",
+      "nextRun": "Próxima Ejecución",
+      "recipients": "Destinatarios",
+      "status": "Estado",
+      "enabled": "Activo",
+      "disabled": "Inactivo"
+    },
+    "form": {
+      "name": "Nombre de la Tarea",
+      "template": "Tipo de Informe",
+      "recipients": "Correos Destinatarios (separar por comas)",
+      "frequency": "Frecuencia de Envío",
+      "cron": "Expresión Cron Personalizada",
+      "cron_help": "Ejemplo: 0 8 * * 1 (Lunes a las 8:00)",
+      "freq_options": {
+        "daily": "Diario (08:00)",
+        "weekly": "Semanal (Lunes 08:00)",
+        "monthly": "Mensual (Día 1 08:00)",
+        "custom": "Personalizado"
+      }
+    },
+    "toast": {
+      "created": "Programación creada correctamente",
+      "updated": "Programación actualizada",
+      "deleted": "Programación eliminada"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Automatización"
+  },
+  "checklists": {
+    "title": "Checklists",
+    "subtitle": "Cumplimiento"
+  },
+  "intelligence": {
+    "title": "Intelligence",
+    "subtitle": "IA Hub"
+  }
+}

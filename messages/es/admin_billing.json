@@ -1,0 +1,456 @@
+{
+  "title": "Control de Consumo",
+  "subtitle": "Monitorización de recursos industriales y facturación.",
+  "plan_label": "Plan {tier}",
+  "loading": "Sincronizando métricas...",
+  "error_loading": "Error cargando métricas",
+  "unknown_error": "Error desconocido",
+  "retry": "Reintentar",
+  "empty_state": "No hay datos de consumo disponibles.",
+  "auto_on": "Auto ON",
+  "auto_off": "Auto OFF",
+  "tabs": {
+    "metrics": "Métricas de Uso",
+    "billing": "Facturas y Pagos"
+  },
+  "metrics": {
+    "reports": {
+      "label": "Informes / Pedidos",
+      "desc": "Informes generados"
+    },
+    "tokens": {
+      "label": "IA Generativa",
+      "desc": "Tokens Gemini consumidos"
+    },
+    "storage": {
+      "label": "Almacenamiento",
+      "desc": "Espacio en Cloudinary"
+    },
+    "search": {
+      "label": "RAG Search",
+      "desc": "Búsquedas vectoriales"
+    }
+  },
+  "savings": {
+    "title": "Ahorro Inteligente por Deduplicación",
+    "desc": "Gracias a la tecnología de hashing MD5, evitamos el re-procesamiento de documentos idénticos.",
+    "tokens": "Tokens Ahorrados",
+    "efficiency": "Eficiencia de Ingesta"
+  },
+  "multilingual": {
+    "title": "Búsquedas Multilingües",
+    "label": "Vectores Latentes (Shadow)"
+  },
+  "activity": {
+    "title": "Registro de Actividad",
+    "limit": "Últimos 20 eventos",
+    "table": {
+      "date": "Fecha",
+      "type": "Tipo",
+      "resource": "Recurso",
+      "amount": "Cantidad"
+    }
+  },
+  "billing": {
+    "title": "Datos de Facturación",
+    "desc": "Configura los datos fiscales para tus facturas.",
+    "fields": {
+      "fiscal_name": "Razón Social",
+      "tax_id": "CIF/NIF",
+      "address": "Dirección"
+    },
+    "not_configured": "No configurado",
+    "edit": "Editar Datos",
+    "dialog": {
+      "title": "Editar Datos Fiscales",
+      "desc": "Estos datos aparecerán en tu próxima factura.",
+      "fiscal_name_label": "Razón Social (Empresa)",
+      "tax_id_label": "CIF / VAT ID",
+      "address_label": "Dirección Fiscal",
+      "saving": "Guardando...",
+      "save": "Guardar Cambios"
+    },
+    "contracts": {
+      "title": "Contratos",
+      "subtitle": "Gestiona tus contratos de servicio y documentos legales.",
+      "metadata": {
+        "title": "Contratos - Facturación",
+        "description": "Ver y gestionar tus contratos."
+      },
+      "table": {
+        "search_placeholder": "Buscar contratos...",
+        "tenant": "Inquilino",
+        "plan": "Plan",
+        "override": "Override",
+        "usage": "Uso",
+        "mrr": "MRR",
+        "status": "Estado",
+        "actions": "Acciones",
+        "loading": "Cargando contratos...",
+        "loading_error": "No se pudieron cargar los contratos",
+        "empty": "No se encontraron contratos",
+        "custom_badge": "PERSONALIZADO",
+        "unlimited": "Ilimitado",
+        "open_menu": "Abrir menú"
+      },
+      "status": {
+        "active": "ACTIVO",
+        "past_due": "VENCIDO",
+        "blocked": "BLOQUEADO",
+        "trial": "PRUEBA"
+      },
+      "actions": {
+        "edit": "Editar Contrato",
+        "invoices": "Ver Facturas",
+        "upcoming_title": "Próxima Funcionalidad",
+        "upcoming_desc": "Esta funcionalidad estará disponible pronto."
+      },
+      "edit": {
+        "title": "Editar Configuración de Contrato",
+        "description": "Ajusta el plan y límites personalizados para {name} (ID: {id})",
+        "plan_label": "Plan de Suscripción",
+        "plan_desc": "El plan define las tarifas base y cuotas por defecto.",
+        "plans": {
+          "basic": "Básico Business",
+          "free": "Prueba Gratuita",
+          "enterprise": "Corporativo",
+          "pro": "Profesional"
+        },
+        "tokens_desc": "0 para usar el valor por defecto del plan.",
+        "warning_desc": "Modificar estos límites afecta directamente a la capacidad operativa del cliente y a su próxima factura.",
+        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+        "warning_title": "Cambio Crítico de Cuotas",
+        "overrides_title": "Límites Personalizados (Overrides)",
+        "tokens_label": "Límite de Tokens (Mes)",
+        "storage_label": "Límite de Almacenamiento (Bytes)",
+        "success_desc": "Se ha guardado la configuración para {name}",
+        "success": "Contrato Actualizado",
+        "cancel": "Cancelar",
+        "save": "Guardar Cambios",
+        "error_updating": "Error al actualizar el contrato",
+        "spaces_tenant_label": "Límite Espacios (Tenant)",
+        "spaces_tenant_desc": "Límite TOTAL de espacios en el tenant (0 = default del plan)",
+        "spaces_user_label": "Límite Espacios (Usuario)",
+        "spaces_user_desc": "Límite de espacios por cada usuario (0 = default del plan)"
+      }
+    },
+    "invoice": {
+      "title": "Próxima Factura",
+      "closing": "Cierre estimado: {date}",
+      "tier_estimate": "Estimación Pro Tier",
+      "download_preview": "Descargar Preview PDF",
+      "success_desc": "El PDF se ha generado correctamente.",
+      "generating": "Generando PDF...",
+      "success": "Factura Descargada",
+      "error": "Error",
+      "error_desc": "No se pudo generar la factura."
+    },
+    "subscription": {
+      "title": "Plan de Suscripción"
+    },
+    "format": {
+      "zero_bytes": "0 Bytes"
+    },
+    "alerts": {
+      "blocked": "Bloqueo Activo: {details}"
+    }
+  },
+  "invoice": {
+    "title": "Próxima Factura",
+    "closing": "Cierre estimado: {date}",
+    "tier_estimate": "Estimación Pro Tier",
+    "manual_mode": "Modo Facturación Manual",
+    "download_preview": "Descargar Preview PDF",
+    "generating": "Generando PDF...",
+    "success": "Factura Descargada",
+    "success_desc": "El PDF se ha generado correctamente.",
+    "error": "Error",
+    "error_desc": "No se pudo generar la factura."
+  },
+  "subscription": {
+    "title": "Plan de Suscripción"
+  },
+  "alerts": {
+    "blocked": "Bloqueo Activo: {details}"
+  },
+  "format": {
+    "zero_bytes": "0 Bytes"
+  },
+  "charts": {
+    "tokens_title": "Tendencia de Consumo AI",
+    "tokens_desc": "Visualización del consumo de tokens y eficiencia de caché en los últimos 15 días."
+  },
+  "contracts": {
+    "subtitle": "Configura planes, límites personalizados (overrides) y reglas de facturación para cada tenant.",
+    "title": "Gestión de Contratos ('Casos')",
+    "table": {
+      "override": "Override",
+      "plan": "Plan Base",
+      "tenant": "Tenant",
+      "usage": "Uso (Tokens / Storage)",
+      "mrr": "MRR (Est.)",
+      "status": "Estado",
+      "actions": "Acciones",
+      "loading": "Cargando contratos...",
+      "empty": "No se encontraron resultados",
+      "search_placeholder": "Buscar tenant..."
+    },
+    "status": {
+      "blocked": "BLOQUEADO",
+      "past_due": "VENCIDO",
+      "active": "ACTIVO"
+    },
+    "edit": {
+      "title": "Editar Contrato",
+      "plan_label": "Plan Base",
+      "overrides_title": "Overrides (Límites Personalizados)",
+      "description": "Configuración personalizada para {name} ({id})",
+      "plan_desc": "El plan define las tarifas base y funcionalidades.",
+      "storage_desc": "1 GB = 1073741824 Bytes.",
+      "save": "Guardar Cambios",
+      "success_desc": "Se han aplicado los cambios para {name}",
+      "tokens_desc": "0 o vacío = Sin límite (Enterprise). Ej: 1000000",
+      "cancel": "cancelar",
+      "warning_desc": "Modificar estos límites afectará inmediatamente a la capacidad de operación del inquilino.",
+      "storage_label": "Límite Almacenamiento (Bytes)",
+      "tokens_label": "Límite Tokens Mensuales",
+      "warning_title": "Atención",
+      "success": "Contrato actualizado"
+    },
+    "actions": {
+      "invoices": "Ver Facturas",
+      "edit": "Editar Contrato"
+    }
+  },
+  "fields": {
+    "address": "Dirección",
+    "tax_id": "CIF/NIF",
+    "fiscal_name": "Razón Social"
+  },
+  "not_configured": "No configurado",
+  "desc": "Configura los datos fiscales para tus facturas.",
+  "dialog": {
+    "title": "Editar Datos Fiscales",
+    "desc": "Estos datos aparecerán en tu próxima factura.",
+    "saving": "Guardando...",
+    "fiscal_name_label": "Razón Social (Empresa)",
+    "tax_id_label": "CIF / VAT ID",
+    "save": "Guardar Cambios",
+    "address_label": "Dirección Fiscal"
+  },
+  "edit": "Editar Datos",
+  "invoices": {
+    "title": "Facturas",
+    "subtitle": "Historial de pagos y facturas descargables.",
+    "history_title": "Historial de Facturación",
+    "history_desc": "Todas las facturas emitidas para tu organización.",
+    "table": {
+      "id": "ID Factura",
+      "date": "Fecha",
+      "amount": "Importe",
+      "status": "Estado",
+      "actions": "Acciones",
+      "download": "PDF"
+    },
+    "status": {
+      "PAID": "PAGADO",
+      "PENDING": "PENDIENTE"
+    }
+  },
+  "plan": {
+    "title": "Tu Plan",
+    "subtitle": "Gestiona tu nivel de suscripción y capacidades.",
+    "current_badge": "Plan Actual",
+    "month": "/mes",
+    "actions": {
+      "current": "Tu Plan Actual",
+      "contact": "Contactar Ventas",
+      "upgrade": "Mejorar Plan"
+    },
+    "features": {
+      "reports": "Informes/mes",
+      "storage": "Almacenamiento",
+      "support": "Soporte",
+      "users": "Usuarios",
+      "rag": "RAG Avanzado",
+      "unlimited": "Ilimitado",
+      "sla": "SLA Garantizado",
+      "account_manager": "Gestor de Cuenta",
+      "sso": "SSO & Audit Logs",
+      "on_premise": "Opción On-premise"
+    }
+  },
+  "page": {
+    "title": "Facturación & Consumo",
+    "subtitle": "Control centralizado de recursos industriales y métricas de plataforma.",
+    "metadata_title": "Facturación y Consumo | ABD RAG Platform",
+    "metadata_desc": "Gestión de recursos y facturación SaaS."
+  },
+  "plan_selector": {
+    "current_badge": "Plan Actual",
+    "active": "Activo",
+    "select": "Seleccionar",
+    "per_month": "/mes",
+    "plan_updated": "¡Plan Actualizado!",
+    "plan_changed_to": "Plan cambiado a {plan} correctamente.",
+    "change_error": "Error al cambiar plan",
+    "change_error_desc": "Ocurrió un error inesperado al procesar el cambio manual.",
+    "proration_title": "Nota sobre Prorrateo:",
+    "proration_desc": "Al cambiar de plan, el tiempo no disfrutado de tu plan actual se convierte automáticamente en crédito que se aplicará a tu próxima factura. El nuevo plan se activa de forma inmediata."
+  },
+  "simulator": {
+    "title": "Simulador de Costes",
+    "description": "Simula el impacto financiero de un cambio de plan en tu facturación.",
+    "current_subscription": "Suscripción Actual",
+    "current_plan": "Plan Actual",
+    "days_used": "Días consumidos en el ciclo",
+    "of_days": "de {total} días",
+    "new_subscription": "Nueva Suscripción",
+    "new_plan": "Nuevo Plan",
+    "billing_cycle": "Ciclo de Facturación",
+    "monthly": "Mensual",
+    "yearly": "Anual (-17%)",
+    "credit_unused": "Crédito por tiempo no usado ({plan}):",
+    "new_plan_cost": "Coste del Nuevo Plan ({plan}):",
+    "usage_projection": "Proyección de Uso Real",
+    "based_on_tokens": "Basado en tu consumo mensual de {tokens} tokens",
+    "estimated_ai": "Gastos de IA Est.",
+    "total_now": "Total a pagar ahora:",
+    "variable_note": "* El total NO incluye los gastos variables por consumo de IA proyectados ({amount})",
+    "charge_immediate": "Cargo inmediato",
+    "credit_account": "Crédito en cuenta",
+    "loading_usage": "Analizando consumo histórico para sincronizar el simulador..."
+  },
+  "tab": {
+    "plan_current": "Plan Actual",
+    "plan_active": "Activo",
+    "free_trial_desc": "Estás disfrutando del periodo de prueba gratuito.",
+    "subscription_renewed": "Suscripción renovada mensualmente.",
+    "change_plan": "Cambiar Plan",
+    "plans_and_prices": "Planes y Precios",
+    "plans_select_desc": "Selecciona el plan que mejor se adapte a tus necesidades.",
+    "calculating_stripe": "Calculando prorrateo exacto con Stripe...",
+    "processing": "Procesando...",
+    "confirm_subscribe": "Confirmar y Suscribirse",
+    "tokens_ia": "Tokens IA (Generativo)",
+    "storage_rag": "Almacenamiento (RAG)",
+    "vector_searches": "Búsquedas Vectoriales",
+    "api_calls": "Llamadas API",
+    "limit_badge": "Límite",
+    "overage_badge": "Exceso",
+    "fiscal_identity": "Identidad Fiscal",
+    "fiscal_name_label": "Razón Social / Nombre Fiscal",
+    "fiscal_name_placeholder": "Ej: ABD Elevadores S.L.",
+    "tax_id_label": "CIF / NIF / VAT ID",
+    "tax_id_placeholder": "Ej: B12345678",
+    "invoice_reception": "Recepción de Facturas",
+    "channel_label": "Canal Preferente",
+    "channel_email": "Correo Electrónico",
+    "channel_postal": "Correo Postal",
+    "channel_in_app": "Sólo descarga en App",
+    "channel_xml_edi": "Intercambio XML / EDI",
+    "billing_email_label": "Email de Facturación",
+    "billing_email_placeholder": "facturacion@empresa.com",
+    "file_format_label": "Formato de Archivo",
+    "format_pdf": "PDF (Firmado Digitalmente)",
+    "format_xml": "XML Facturae",
+    "format_csv": "CSV / Excel",
+    "format_paper": "Papel (Físico)",
+    "shipping_address": "Dirección de Envío",
+    "street_label": "Calle y Número",
+    "city_label": "Ciudad",
+    "postal_code_label": "Cód. Postal",
+    "country_label": "País",
+    "billing_address": "Dirección de Facturación",
+    "billing_address_same": "Igual que la dirección de envío activo.",
+    "billing_street_label": "Calle y Número (Fact.)",
+    "e_invoice_cert": "Certificación de Factura Electrónica",
+    "e_invoice_compliance": "Cumplimos con la Ley Crea y Crece para el intercambio seguro de facturas XML.",
+    "edi_info": "Información EDI"
+  },
+  "planActive": "Tu Plan Actual",
+  "planCurrent": "Tu Plan Actual",
+  "perMonth": "/mes",
+  "contactSupport": "Contactar Ventas",
+  "selectPlan": "Seleccionar Plan",
+  "simulation": {
+    "title": "Resumen de la Simulación",
+    "creditApplied": "Crédito Aplicado",
+    "newPlanCost": "Coste del Nuevo Plan",
+    "totalDueNow": "Total a Pagar Ahora",
+    "nextBillingDate": "Próxima fecha de facturación"
+  },
+  "billing_hub": {
+    "title": "Centro de Facturación",
+    "subtitle": "Visión consolidada de métricas de uso, contratos y facturas recurrentes."
+  },
+  "sections": {
+    "usage": {
+      "title": "Métricas de Uso",
+      "description": "Revisión en tiempo real de consumo de tokens, almacenamiento y búsquedas."
+    },
+    "contracts": {
+      "title": "Gestión de Contratos",
+      "description": "Administración de planes corporativos, límites y personalizaciones por cliente."
+    },
+    "invoices": {
+      "title": "Facturas y Pagos",
+      "description": "Historial detallado de facturación y seguimiento de pagos pendientes."
+    },
+    "plan": {
+      "title": "Estado del Plan",
+      "description": "Configuración del plan base y cuotas industriales de la organización."
+    }
+  },
+  "billing_usage": {
+    "title": "Consumo y Métricas",
+    "subtitle": "Monitoriza el uso de recursos de tu plan en tiempo real.",
+    "alerts": {
+      "critical_title": "Atención: Cuota cercana al límite",
+      "blocked": "El recurso \"{resource}\" ha superado tu cuota. Actualiza tu plan para continuar.",
+      "warning": "El recurso \"{resource}\" está al {percentage}% de uso. Considera actualizar tu plan.",
+      "ok_title": "Todo en orden",
+      "ok_description": "Tu consumo está dentro de los límites del plan. Sin riesgo de bloqueo este mes.",
+      "error_title": "Error cargando métricas",
+      "retry": "Reintentar",
+      "error_unexpected": "Respuesta inesperada del servidor"
+    }
+  },
+  "export_report": "Exportar Informe",
+  "manage_plan": "Gestionar Plan",
+  "tokens": {
+    "title": "Inteligencia Técnica (Tokens)",
+    "limit": "de {limit} disponibles"
+  },
+  "storage": {
+    "title": "Almacenamiento",
+    "limit": "de {limit} disponibles"
+  },
+  "searches": {
+    "title": "Búsquedas Semánticas",
+    "limit": "de {limit} disponibles"
+  },
+  "users": {
+    "title": "Usuarios Activos",
+    "limit": "de {limit} permitidos"
+  },
+  "roi": {
+    "title": "ROI Estimado (30 días)",
+    "description": "Ahorro acumulado por automatización IA vs. gestión manual",
+    "saved_hours": "Horas Ahorradas",
+    "estimated_savings": "Ahorro Estimado",
+    "efficiency": "Eficiencia",
+    "breakdown": {
+      "analysis": "Análisis: {count}",
+      "searches": "Búsquedas: {count}",
+      "dedup": "Dedup: {count}"
+    }
+  },
+  "plan_status": {
+    "title": "Estado del Plan",
+    "subscription": "Suscripción: {status}",
+    "current_plan": "Plan Actual",
+    "manage": "Gestionar Suscripción"
+  },
+  "loading_label": "Cargando métricas de uso"
+}

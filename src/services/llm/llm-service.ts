@@ -202,7 +202,13 @@ export async function callGeminiMini(
     session?: TenantSession | ClientSession
 ): Promise<string> {
     CallGeminiMiniSchema.parse({ prompt, tenantId, options: { ...options, correlationId: options.correlationId } });
-    return callGeminiDynamic(prompt, tenantId, options, session);
+    const { PromptRunner } = await import('@/lib/llm-core/PromptRunner');
+    return PromptRunner.call({
+        prompt,
+        tenantId,
+        correlationId: options.correlationId,
+        options
+    });
 }
 
 /**
@@ -213,11 +219,15 @@ export async function callGeminiPro(
     tenantId: string,
     options: { correlationId: string; temperature?: number; model?: string; maxTokens?: number }
 ): Promise<string> {
-    const config = await AiModelManager.getTenantAiConfig({ user: { tenantId, role: 'SYSTEM' } } as any);
-    return callGemini(prompt, tenantId, options.correlationId, {
-        ...options,
-        model: options.model || config.defaultModel,
-        maxTokens: options.maxTokens || 4096
+    const { PromptRunner } = await import('@/lib/llm-core/PromptRunner');
+    return PromptRunner.call({
+        prompt,
+        tenantId,
+        correlationId: options.correlationId,
+        options: {
+            ...options,
+            maxTokens: options.maxTokens || 4096
+        }
     });
 }
 
@@ -409,6 +419,11 @@ export async function callGemini(
         model?: string;
     }
 ): Promise<string> {
-    const response = await callGeminiExtended(prompt, tenantId, correlationId, options);
-    return response.text;
+    const { PromptRunner } = await import('@/lib/llm-core/PromptRunner');
+    return PromptRunner.call({
+        prompt,
+        tenantId,
+        correlationId,
+        options
+    });
 }

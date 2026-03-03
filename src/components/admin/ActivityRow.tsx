@@ -8,8 +8,8 @@ interface ActivityRowProps {
 }
 
 export function ActivityRow({ activity }: ActivityRowProps) {
-    const isError = activity.nivel === 'ERROR';
-    const isWarn = activity.nivel === 'WARN';
+    const isError = activity.level === 'ERROR';
+    const isWarn = activity.level === 'WARN';
 
     return (
         <div className="flex items-center gap-6 p-5 hover:bg-muted/50 transition-all group cursor-default">
@@ -18,12 +18,12 @@ export function ActivityRow({ activity }: ActivityRowProps) {
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{activity.origen}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{activity.source}</p>
                     <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                     <p className="text-[10px] font-bold text-muted-foreground font-mono">{new Date(activity.timestamp).toLocaleTimeString()}</p>
                 </div>
                 <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                    {activity.mensaje}
+                    {activity.message}
                 </p>
             </div>
             <div className="flex items-center gap-4">

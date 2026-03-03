@@ -9,7 +9,7 @@ import { HubPage, HubSection } from "@/components/ui/hub-page";
  * Migrated to generic HubPage component in FASE 222B.
  */
 export default function PermissionsHubPage() {
-    const t = useTranslations("admin.guardian");
+    const t = useTranslations('admin_superadmin');
 
     const sections: HubSection[] = [
         {

@@ -16,7 +16,7 @@ interface PromptGlobalHistoryProps {
 }
 
 export const PromptGlobalHistory: React.FC<PromptGlobalHistoryProps> = ({ onClose }) => {
-    const t = useTranslations('admin.prompts');
+    const t = useTranslations('admin_prompts');
     const [search, setSearch] = useState('');
 
     // 1. Gestión de datos con hook genérico

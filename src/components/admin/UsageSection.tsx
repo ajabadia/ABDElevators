@@ -13,7 +13,7 @@ interface UsageSectionProps {
  * Usage Section for Admin Dashboard (Phase 105 Hygiene)
  */
 export const UsageSection: React.FC<UsageSectionProps> = ({ stats, isSuperAdmin }) => {
-    const t = useTranslations('admin.dashboard');
+    const t = useTranslations('admin_analytics');
 
     return (
         <ContentCard

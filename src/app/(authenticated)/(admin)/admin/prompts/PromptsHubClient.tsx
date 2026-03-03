@@ -69,7 +69,7 @@ import { useFormModal } from '@/hooks/useFormModal';
  * 📝 Prompts Hub Client Component
  */
 export function PromptsHubClient() {
-    const t = useTranslations('admin.prompts');
+    const t = useTranslations('admin_prompts');
     const modal = useFormModal<PromptWithInfo>();
     const [searchQuery, setSearchQuery] = useState('');
     const [tenantFilter, setTenantFilter] = useState('all');

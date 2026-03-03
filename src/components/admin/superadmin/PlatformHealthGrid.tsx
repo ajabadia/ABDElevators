@@ -17,7 +17,7 @@ interface PlatformHealthGridProps {
 }
 
 export function PlatformHealthGrid({ metrics }: PlatformHealthGridProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <div className="space-y-8">

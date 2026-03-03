@@ -31,7 +31,7 @@ export function SimplifiedSearchBox({
     isAdvancedOpen,
     className
 }: SimplifiedSearchBoxProps) {
-    const t = useTranslations("admin.knowledge");
+    const t = useTranslations('admin_knowledge');
 
     return (
         <div className={cn("w-full space-y-4", className)}>

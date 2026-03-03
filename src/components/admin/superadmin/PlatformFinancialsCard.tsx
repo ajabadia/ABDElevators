@@ -11,7 +11,7 @@ interface PlatformFinancialsCardProps {
 }
 
 export function PlatformFinancialsCard({ metrics }: PlatformFinancialsCardProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <Card className="rounded-3xl border-none shadow-sm bg-emerald-900 text-white overflow-hidden relative">

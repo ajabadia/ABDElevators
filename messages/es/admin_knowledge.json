@@ -1,0 +1,348 @@
+{
+  "title": "Gestión del",
+  "highlight": "Corpus Técnico",
+  "subtitle": "Sube y gestiona los manuales que alimentan el sistema de Inteligencia Técnica.",
+  "analyzeFlow": {
+    "suggestionsLabel": "Sugerencias Inteligentes",
+    "generatingSuggestions": "Generando sugerencias inteligentes...",
+    "analyzing": "Analizando...",
+    "analyzeWait": "Esto podría tardar unos segundos.",
+    "sourcesLabel": "Fuentes Técnicas Utilizadas"
+  },
+  "expertMode": {
+    "generatingSuggestions": "Generando sugerencias inteligentes...",
+    "moreContext": "Ver más contexto"
+  },
+  "tabs": {
+    "assets": "Gestión de Activos",
+    "explorer": "Explorador Semántico",
+    "audit": "Auditoría de Ingesta",
+    "ai": "Consulta IA"
+  },
+  "actions": {
+    "upload": "Ingestar Documento",
+    "refresh": "Refrescar Corpus",
+    "export": "Exportar Chunks",
+    "sim_btn": "Simular Búsqueda"
+  },
+  "assets": {
+    "table": {
+      "file": "Documento",
+      "type": "Tipo / Industria",
+      "status": "Estado Ingesta",
+      "date": "Fecha",
+      "actions": "Acciones"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "processing": "Procesando",
+      "completed": "Completado",
+      "failed": "Fallido"
+    },
+    "actions": {
+      "retry": "Reintentar Ingesta",
+      "delete": "Eliminar Activo",
+      "view_chunks": "Ver Fragmentos"
+    }
+  },
+  "explorer_h2": "Documentación Técnica",
+  "explorer_subtitle": "Explora la biblioteca de documentos o realiza consultas a la Inteligencia Artificial.",
+  "stats": {
+    "total": "Total Chunks",
+    "arch": "Arquitectura",
+    "langs": "Idiomas Indexados",
+    "backend": "Estado Backend",
+    "synced": "Sincronizado con Atlas"
+  },
+  "simulator": {
+    "title": "Simulador de Análisis / Depurador",
+    "subtitle": "Simula una consulta real para ver qué información recuperaría el motor híbrido y con qué grado de relevancia.",
+    "placeholder": "Escribe una consulta técnica (ej: 'fallo en circuito de seguridad A3')..."
+  },
+  "filters": {
+    "title": "Filtros de Exploración",
+    "query_placeholder": "Buscar texto, modelo o archivo...",
+    "lang_label": "Idioma",
+    "lang_all": "Todos los idiomas",
+    "type_label": "Tipo de Indexación",
+    "type_all": "Todo el contenido",
+    "type_original": "Originales",
+    "type_shadow": "Shadow Chunks (Traducciones)",
+    "method_label": "Método de Recuperación",
+    "method_exact": "Búsqueda Exacta",
+    "method_semantic": "Semántica (IA)"
+  },
+  "view": {
+    "showing": "Mostrando {count} de {total} fragmentos técnicos encontrados",
+    "loading": "Cargando inteligencia técnica...",
+    "empty_title": "No se encontraron fragmentos",
+    "empty_subtitle": "Intenta ajustar los filtros de búsqueda.",
+    "chunk_shadow": "Traducción",
+    "chunk_original": "Original",
+    "chunk_model": "Modelo",
+    "chunk_type": "Tipo",
+    "auto_trans": "Traducción Automática",
+    "dual_mechanism": "Mecanismo Dual-Index",
+    "dual_desc": "Este fragmento permite encontrar el documento original buscando en Español, aunque el manual sea Alemán/Inglés.",
+    "prev": "Anterior",
+    "next": "Siguiente"
+  },
+  "brain": {
+    "title": "Asistente de Inteligencia Técnica",
+    "description": "Haz consultas técnicas complejas. Nuestra IA buscará en manuales, verificará la veracidad de la información y te dará una respuesta de alta fidelidad técnica.",
+    "placeholder": "Ej: ¿Protocolo de rescate en manual Otis 2000?",
+    "thinking": "Pensando...",
+    "submit": "Consultar",
+    "investigating": "El agente está investigando...",
+    "investigating_desc": "Recuperando documentos, validando contra alucinaciones y redactando solución.",
+    "verified_badge": "Respuesta Verificada",
+    "hide_trace": "Ocultar proceso",
+    "show_trace": "Ver razonamiento de la IA",
+    "trace_title": "Proceso de Pensamiento Agéntico",
+    "trace_footer": "Conclusión generada tras verificación multietapa.",
+    "sources_title": "Fuentes Técnicas Utilizadas",
+    "manual_label": "Manual Técnico",
+    "score_label": "Puntuación",
+    "examples": {
+      "torque": {
+        "title": "Consultar Torque",
+        "desc": "Verificar valores oficiales de manuales.",
+        "query": "¿Cuál es el par de apriete para cables de tracción Otis?"
+      },
+      "safety": {
+        "title": "Seguridad Foso",
+        "desc": "Protocolos de seguridad críticos.",
+        "query": "Procedimiento de bypass puerta de foso Schindler"
+      },
+      "quantum": {
+        "title": "Puertas Quantum",
+        "desc": "Ajustes precisos de componentes.",
+        "query": "Configuración potenciómetro Quantum P1"
+      }
+    }
+  },
+  "brain_federated": {
+    "title": "Sugerencias de Inteligencia Colectiva",
+    "investigating": "Consultando fuentes federadas...",
+    "match": "Coincidencia"
+  },
+  "federated": {
+    "investigating": "Investigando...",
+    "match": "Coincidencia",
+    "title": "Búsqueda Federada"
+  },
+  "dashboard_title": "Gobernanza de Calidad RAG",
+  "dashboard_desc": "Monitorea la fidelidad, relevancia y precisión de las respuestas del motor agentico.",
+  "loading": "Cargando métricas de calidad...",
+  "latest_sessions": "Basado en {count} últimas sesiones",
+  "critical_count": "{count} Análisis Críticos",
+  "critical_warning": {
+    "title": "Atención Técnica Requerida (Confianza Baja)",
+    "desc": "Los siguientes pedidos han sido marcados con una confianza inferior al 70%. Requieren validación humana."
+  },
+  "default_filename": "Análisis PDF",
+  "review": "Revisar",
+  "metrics": {
+    "faithfulness": {
+      "label": "Faithfulness (Fidelidad)",
+      "desc": "¿La respuesta está basada en los documentos?"
+    },
+    "relevance": {
+      "label": "Answer Relevance",
+      "desc": "¿La respuesta resuelve realmente la duda?"
+    },
+    "precision": {
+      "label": "Context Precision",
+      "desc": "Calidad de los fragmentos recuperados."
+    }
+  },
+  "charts": {
+    "evolution_title": "Evolución de Calidad",
+    "evolution_desc": "Tendencia histórica de métricas RAG en los últimos análisis."
+  },
+  "history": {
+    "title": "Historial de Evaluaciones",
+    "desc": "Registro detallado de la calidad de generación.",
+    "show_trace": "Ver Trace",
+    "hide_trace": "Ocultar Trace",
+    "trace_terminal": "AGENT_TRACE_TERMINAL v2.0",
+    "trace_end": "--- FIN DEL TRACE ---",
+    "empty": "No hay evaluaciones registradas aún.",
+    "empty_desc": "Usa el buscador RAG para generar datos."
+  },
+  "trace": {
+    "actions": {
+      "audit": "Auditar Decisión"
+    }
+  },
+  "page": {
+    "title": "Gobernanza i18n",
+    "highlight": "Internacionalización",
+    "subtitle": "Gestión maestra de traducciones y localización asistida por IA.",
+    "syncBtn": "Sincronizar L4 → DB",
+    "newKeyBtn": "Nueva Llave",
+    "searchPlaceholder": "Busca por llave o texto...",
+    "syncAllBtn": "Sincronizar todos los idiomas",
+    "exportBtn": "Exportar a JSON",
+    "exportSuccessTitle": "Exportación Exitosa",
+    "exportSuccessDesc": "Las traducciones se han persistido en los archivos locales.",
+    "allFilter": "TODOS",
+    "syncToDbBtn": "Sincronización hacia BD",
+    "syncToFileBtn": "Sincronización hacia archivos JSON",
+    "filterMissing": "Ver solo faltantes"
+  },
+  "languages": {
+    "es": "Español",
+    "en": "Inglés"
+  },
+  "table": {
+    "keyHeader": "Clave",
+    "primaryLabel": "Idioma Principal",
+    "secondaryLabel": "Idioma Secundario",
+    "info_tooltip": "Ver detalles técnicos y debug de esta llave",
+    "autoTranslateBtn": "Traducir Faltantes",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "empty": "Vacío",
+    "missing": "Faltante",
+    "noResults": "No se encontraron traducciones con estos filtros",
+    "totalLabels": "{count} claves encontradas",
+    "notifications": {
+      "aiSuccessTitle": "IA: Traducción completada",
+      "aiSuccessDesc": "Se han generado las traducciones faltantes.",
+      "upToDateTitle": "Todo al día",
+      "upToDateDesc": "No hay llaves faltantes en este idioma.",
+      "syncCompletedTitle": "Sincronización completada",
+      "syncNoChanges": "No se detectaron discrepancias entre JSON y BD.",
+      "syncSuccessTitle": "Sincronización Exitosa",
+      "syncSuccessDetail": "{added} nuevas, {updated} actualizadas.",
+      "syncErrorTitle": "Error de sincronización",
+      "syncErrorDesc": "Error al sincronizar con la base de datos",
+      "exportCompletedTitle": "Exportación completada",
+      "exportNoChanges": "Los archivos JSON ya están sincronizados con la BD.",
+      "exportSuccessDetail": "{added} nuevas, {updated} actualizadas en JSON.",
+      "exportErrorTitle": "Error de exportación",
+      "exportErrorDesc": "Error al exportar a archivos locales",
+      "saveSuccess": "Traducción actualizada correctamente.",
+      "syncSuccessDesc": "Los archivos locales han sido volcados a la base de datos.",
+      "batch_translate_progress": "Iniciando IA: {current}/{total}...",
+      "batch_translate_chunk": "Traduciendo lote {current}/{total} ({count} llaves)...",
+      "batch_success_title": "Traducción completada",
+      "batch_success_desc": "Se tradujeron {count} llaves correctamente.",
+      "batch_error_title": "Error de traducción masiva",
+      "batch_error_interrupted": "Proceso interrumpido: El lote {batch} falló.",
+      "batch_error_generic": "Error durante la traducción masiva"
+    }
+  },
+  "api_docs": {
+    "loading": "Iniciando Portal Técnico...",
+    "title": "Portal de Documentación API",
+    "subtitle": "Especificación técnica interactiva (OAS 3.0) para integradores.",
+    "card_title": "Especificación de Plataforma RAG ABD",
+    "error_loading": "No se pudo cargar la definición de la API."
+  },
+  "buttons": {
+    "downloadBackup": "Descargar Backup Completo (.zip)",
+    "generatingZip": "Generando ZIP...",
+    "generateCertificate": "Generar Certificado de Eliminación (PDF)",
+    "signingPdf": "Firmando PDF...",
+    "requestDeletion": "Solicitar Eliminación Permanente de Tenant",
+    "manualAdminRequest": "Petición manual de Administrador"
+  },
+  "toasts": {
+    "backupDownloaded": "Backup Descargado",
+    "certificateGenerated": "Certificado Generado",
+    "backupSuccess": "Tu paquete de conocimiento ha sido exportado exitosamente.",
+    "backupError": "No se pudo generar el backup.",
+    "certificateSuccess": "El certificado legal PDF ha sido descargado.",
+    "error": "Error",
+    "certificateError": "No se pudo generar el certificado."
+  },
+  "aiGovernance": {
+    "title": "Gobernanza de IA (EU AI Act)",
+    "description": "Supervisión de modelos, categorización de riesgos y transparencia según la normativa europea.",
+    "registryTitle": "Registro de Modelos",
+    "registryDesc": "Listado de LLMs y servicios de embeddings autorizados.",
+    "riskTitle": "Categorización de Riesgo",
+    "riskDesc": "Nivel de criticidad de las implementaciones de IA.",
+    "auditTitle": "Métricas de Transparencia",
+    "auditDesc": "Evidencia de calidad y fidelidad de las respuestas.",
+    "model": "Modelo",
+    "provider": "Proveedor",
+    "status": "Estado de Auditoría",
+    "lastUpdate": "Última Validación",
+    "riskLevels": {
+      "unacceptable": "Inaceptable",
+      "high": "Alto",
+      "limited": "Limitado",
+      "minimal": "Mínimo"
+    },
+    "euRisk": "Riesgo EU",
+    "governed": "Gobernado",
+    "complianceNoteHtml": "<strong>Nota de Cumplimiento:</strong> Esta implementación RAG se clasifica como <strong>riesgo {risk}</strong> ya que proporciona asistencia técnica y recuperación de información sin toma de decisiones automatizada."
+  },
+  "documentTypes": {
+    "page": {
+      "title": "Tipos de Documento",
+      "subtitle": "Configura las categorías de documentos técnicos para RAG."
+    },
+    "table": {
+      "name": "Nombre",
+      "scope": "Alcance",
+      "description": "Descripción",
+      "status": "Estado",
+      "created": "Creado",
+      "actions": "Acciones",
+      "industries": "Industrias"
+    }
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "scope": {
+    "GLOBAL": "Global (Todos los Tenants)",
+    "INDUSTRY": "Específico por Industria",
+    "TENANT": "Específico del Tenant"
+  },
+  "form": {
+    "newType": "Nuevo Tipo",
+    "editTitle": "Editar Tipo de Documento",
+    "createTitle": "Crear Nuevo Tipo de Documento",
+    "name": "Nombre",
+    "namePlaceholder": "Ej: Controlador, Motor, etc.",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Opcional",
+    "scope": "Alcance (SuperAdmin)",
+    "scopeTenant": "Específico del Tenant",
+    "scopeGlobal": "Global (Todos los Tenants)",
+    "scopeIndustry": "Específico por Industria",
+    "industries": "Industrias (Multi-selección)",
+    "industriesHelp": "Mantén Ctrl/Cmd para seleccionar múltiples.",
+    "cancel": "Cancelar",
+    "saveChanges": "Guardar Cambios",
+    "create": "Crear",
+    "saving": "Guardando...",
+    "creating": "Creando..."
+  },
+  "empty": "No hay tipos de documento configurados.",
+  "deleteConfirm": "¿Estás seguro de que quieres eliminar este tipo de documento?",
+  "toast": {
+    "created": "Tipo de documento creado correctamente",
+    "updated": "Tipo de documento actualizado correctamente",
+    "deleted": "Tipo de documento eliminado"
+  },
+  "all": "Todas",
+  "multilingual": {
+    "title": "Búsquedas Multilingües"
+  },
+  "label": "Vectores Latentes (Shadow)",
+  "knowledge_governance": {
+    "title": "Gobierno de Conocimiento & IA"
+  },
+  "desc": "Auditoría y control de políticas sobre decisiones autónomas.",
+  "empty_title": "Sin actividad reciente",
+  "empty_desc": "No se han registrado acciones de IA bajo supervisión de gobierno.",
+  "confidence": "Confianza",
+  "in_entity": "en"
+}

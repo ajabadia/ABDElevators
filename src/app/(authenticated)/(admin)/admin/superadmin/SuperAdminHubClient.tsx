@@ -24,7 +24,7 @@ import { EvolutionDashboard } from '@/components/admin/superadmin/EvolutionDashb
  * 🏰 SuperAdmin Hub Client Component
  */
 export function SuperAdminHubClient() {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     // Core Data Fetching
     const { data: metrics, isLoading, refresh: refreshMetrics } = useApiItem<any>({ endpoint: '/api/admin/superadmin/metrics' });

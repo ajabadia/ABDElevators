@@ -21,10 +21,12 @@ description: Audita y corrige la implementación de internacionalización (i18n)
 ### Fase 1: Auditoría i18n
 1. **Detección de Hardcoding**: Buscar textos literales en JSX o atributos (`placeholder`, `title`, etc.).
 2. **Estructura de Namespacing**: 
-   - No usar llaves planas. Usar jerarquía: `[namespace].[component/page].[key]`.
-   - **REGLA DE ESTRUCTURA**: Secciones globales (ej: `spaces`, `security`, `search`, `admin`) DEBEN residir dentro del objeto raíz `"common"` para garantizar un namespacing consistente (`common.spaces.*`).
-   - **PREVENCIÓN DE COLISIONES**: No puede existir una llave que sea a la vez un string y un objeto padre. Ej: No tener `common.spaces: "..."` si existen `common.spaces.title`. Esto causa `TypeError` en el frontend.
-   - Ejemplo: `common.spaces.table.title`.
+    - No usar llaves planas. Usar jerarquía: `[namespace].[component/page].[key]`.
+    - **REGLA DE ESTRUCTURA (ERA 9)**:
+      - Secciones globales de administración DEBEN segmentarse en archivos `admin_[feature].json` (ej: `admin_users.json`, `admin_workflows.json`) para evitar archivos monolíticos.
+      - Otros módulos globales (ej: `security`, `search`) DEBEN residir dentro del objeto raíz `"common"` para garantizar un namespacing consistente (`common.security.*`).
+    - **PREVENCIÓN DE COLISIONES**: No puede existir una llave que sea a la vez un string y un objeto padre. Ej: No tener `common.spaces: "..."` si existen `common.spaces.title`. Esto causa `TypeError` en el frontend.
+    - Ejemplo: `admin_users.invite_modal.title`.
 3. **Verificación de hook**: Asegurar uso de `useTranslations('namespace')` para scoping correcto.
 4. **Terminología Profesional**: 
    - **CRÍTICO**: Asegurar que NO se usen términos técnicos de desarrollo como "RAG", "Vector", "Explorer", "Agentic", "Simulator".

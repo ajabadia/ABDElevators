@@ -13,7 +13,7 @@ interface AnomaliesWidgetProps {
 }
 
 export function AnomaliesWidget({ anomalyData, isLoadingAnomalies }: AnomaliesWidgetProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <Card className="rounded-3xl border-none shadow-sm bg-slate-50/50 h-full">

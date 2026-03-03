@@ -1,1 +1,0 @@
-src/app/api/core/entities/[type]/route.ts(58,98): error TS2339: Property 'toArray' does not exist on type 'Promise<WithId<Document>[]>'.

@@ -16,7 +16,7 @@ import { ContentCard } from "@/components/ui/content-card";
  */
 export default async function ConfigsChecklistPage() {
     await enforcePermission('admin:checklist-configs', 'manage');
-    const t = await getTranslations('admin.checklists');
+    const t = await getTranslations('admin_configurator');
 
     return (
         <PageContainer>

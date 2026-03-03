@@ -17,7 +17,7 @@ import { useTranslations } from 'next-intl';
  * de checklists dinámicos.
  */
 export const ChecklistConfigList: React.FC = () => {
-    const t = useTranslations('admin.checklists');
+    const t = useTranslations('admin_configurator');
 
     // 1. Carga de datos con hook genérico
     const { data: configs, isLoading, refresh } = useApiList<ChecklistConfig>({

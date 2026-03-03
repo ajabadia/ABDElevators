@@ -65,7 +65,7 @@ interface LogEntry {
 }
 
 export function AuditClient() {
-    const t = useTranslations("admin.audit");
+    const t = useTranslations('admin_logs');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [levelFilter, setLevelFilter] = useState('');

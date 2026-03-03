@@ -11,7 +11,7 @@ interface KnowledgeHealthCardProps {
 }
 
 export function KnowledgeHealthCard({ knowledge }: KnowledgeHealthCardProps) {
-    const t = useTranslations('admin.superadmin');
+    const t = useTranslations('admin_superadmin');
 
     return (
         <Card className="rounded-3xl border-none shadow-sm bg-slate-50/50 h-full">

@@ -1,0 +1,456 @@
+{
+  "title": "Consumption Control",
+  "subtitle": "Monitoring of industrial resources and billing.",
+  "plan_label": "{tier} Plan",
+  "loading": "Synchronizing metrics...",
+  "error_loading": "Error loading metrics",
+  "unknown_error": "Unknown error",
+  "retry": "Retry",
+  "empty_state": "No consumption data available.",
+  "auto_on": "Auto ON",
+  "auto_off": "Auto OFF",
+  "tabs": {
+    "metrics": "Usage Metrics",
+    "billing": "Invoices & Payments"
+  },
+  "metrics": {
+    "reports": {
+      "label": "Reports / Orders",
+      "desc": "Reports generated"
+    },
+    "tokens": {
+      "label": "Generative AI",
+      "desc": "Gemini tokens consumed"
+    },
+    "storage": {
+      "label": "Storage",
+      "desc": "Cloudinary space"
+    },
+    "search": {
+      "label": "RAG Search",
+      "desc": "Vector searches"
+    }
+  },
+  "savings": {
+    "title": "Smart Deduplication Savings",
+    "desc": "Thanks to MD5 hashing technology, we avoid re-processing identical documents.",
+    "tokens": "Tokens Saved",
+    "efficiency": "Ingestion Efficiency"
+  },
+  "multilingual": {
+    "title": "Multilingual Searches",
+    "label": "Latent Vectors (Shadow)"
+  },
+  "activity": {
+    "title": "Activity Log",
+    "limit": "Last 20 events",
+    "table": {
+      "date": "Date",
+      "type": "Type",
+      "resource": "Resource",
+      "amount": "Amount"
+    }
+  },
+  "billing": {
+    "title": "Billing Data",
+    "desc": "Configure the fiscal data for your invoices.",
+    "fields": {
+      "fiscal_name": "Fiscal Name",
+      "tax_id": "VAT ID / Tax ID",
+      "address": "Address"
+    },
+    "not_configured": "Not configured",
+    "edit": "Edit Data",
+    "dialog": {
+      "title": "Edit Fiscal Data",
+      "desc": "This data will appear in your next invoice.",
+      "fiscal_name_label": "Fiscal Name (Company)",
+      "tax_id_label": "VAT ID / Tax ID",
+      "address_label": "Fiscal Address",
+      "saving": "Saving...",
+      "save": "Save Changes"
+    },
+    "contracts": {
+      "title": "Contracts",
+      "subtitle": "Manage your service contracts and legal documents.",
+      "metadata": {
+        "title": "Contracts - Billing",
+        "description": "View and manage your contracts."
+      },
+      "table": {
+        "search_placeholder": "Search contracts...",
+        "tenant": "Tenant",
+        "plan": "Plan",
+        "override": "Override",
+        "usage": "Usage",
+        "mrr": "MRR",
+        "status": "Status",
+        "actions": "Actions",
+        "loading": "Loading contracts...",
+        "loading_error": "Could not load contracts",
+        "empty": "No contracts found",
+        "custom_badge": "CUSTOM",
+        "unlimited": "Unlimited",
+        "open_menu": "Open menu"
+      },
+      "status": {
+        "active": "ACTIVE",
+        "past_due": "PAST DUE",
+        "blocked": "BLOCKED",
+        "trial": "PRUEBA"
+      },
+      "actions": {
+        "edit": "Edit Contract",
+        "invoices": "View Invoices",
+        "upcoming_title": "Upcoming Feature",
+        "upcoming_desc": "This feature will be available soon."
+      },
+      "edit": {
+        "title": "[PENDING_TRANSLATION]",
+        "description": "[PENDING_TRANSLATION]",
+        "plan_label": "[PENDING_TRANSLATION]",
+        "plan_desc": "[PENDING_TRANSLATION]",
+        "plans": {
+          "basic": "[PENDING_TRANSLATION]",
+          "free": "Prueba Gratuita",
+          "enterprise": "Corporativo",
+          "pro": "Profesional"
+        },
+        "tokens_desc": "[PENDING_TRANSLATION]",
+        "warning_desc": "[PENDING_TRANSLATION]",
+        "storage_desc": "Override de almacenamiento en bytes (0 = default del plan)",
+        "warning_title": "[PENDING_TRANSLATION]",
+        "overrides_title": "[PENDING_TRANSLATION]",
+        "tokens_label": "[PENDING_TRANSLATION]",
+        "storage_label": "[PENDING_TRANSLATION]",
+        "success_desc": "[PENDING_TRANSLATION]",
+        "success": "Contrato Actualizado",
+        "cancel": "Cancelar",
+        "save": "Guardar Cambios",
+        "error_updating": "[PENDING_TRANSLATION]",
+        "spaces_tenant_label": "[PENDING_TRANSLATION]",
+        "spaces_tenant_desc": "[PENDING_TRANSLATION]",
+        "spaces_user_label": "[PENDING_TRANSLATION]",
+        "spaces_user_desc": "[PENDING_TRANSLATION]"
+      }
+    },
+    "invoice": {
+      "title": "Next Invoice",
+      "closing": "Estimated closing: {date}",
+      "tier_estimate": "Pro Tier Estimate",
+      "download_preview": "Download Preview PDF",
+      "generating": "Generating PDF...",
+      "success": "Invoice Downloaded",
+      "success_desc": "The PDF has been generated successfully.",
+      "error": "Error",
+      "error_desc": "Could not generate the invoice."
+    },
+    "subscription": {
+      "title": "Subscription Plan"
+    },
+    "alerts": {
+      "blocked": "Active Block: {details}"
+    },
+    "format": {
+      "zero_bytes": "0 Bytes"
+    }
+  },
+  "invoice": {
+    "title": "Next Invoice",
+    "closing": "Estimated closing: {date}",
+    "tier_estimate": "Pro Tier Estimate",
+    "manual_mode": "Manual Billing Mode",
+    "download_preview": "Download Preview PDF",
+    "generating": "Generating PDF...",
+    "success": "Invoice Downloaded",
+    "success_desc": "The PDF has been generated successfully.",
+    "error": "Error",
+    "error_desc": "Could not generate the invoice."
+  },
+  "subscription": {
+    "title": "Subscription Plan"
+  },
+  "alerts": {
+    "blocked": "Active Block: {details}"
+  },
+  "format": {
+    "zero_bytes": "0 Bytes"
+  },
+  "charts": {
+    "tokens_title": "AI Consumption Trends",
+    "tokens_desc": "[PENDING_TRANSLATION]"
+  },
+  "contracts": {
+    "edit": {
+      "warning_title": "Atention",
+      "title": "Editar Contrato",
+      "plan_label": "Plan Base",
+      "overrides_title": "[PENDING_TRANSLATION]",
+      "description": "[PENDING_TRANSLATION]",
+      "plan_desc": "[PENDING_TRANSLATION]",
+      "storage_desc": "1 GB = 1073741824 Bytes.",
+      "save": "Guardar Cambios",
+      "success_desc": "[PENDING_TRANSLATION]",
+      "tokens_desc": "[PENDING_TRANSLATION]",
+      "cancel": "cancelar",
+      "warning_desc": "[PENDING_TRANSLATION]",
+      "storage_label": "[PENDING_TRANSLATION]",
+      "tokens_label": "[PENDING_TRANSLATION]",
+      "success": "Contrato actualizado"
+    },
+    "subtitle": "[PENDING_TRANSLATION]",
+    "title": "[PENDING_TRANSLATION]",
+    "table": {
+      "override": "Override",
+      "plan": "Plan Base",
+      "tenant": "Tenant",
+      "usage": "Uso (Tokens / Storage)",
+      "mrr": "MRR (Est.)",
+      "status": "Estado",
+      "actions": "Acciones",
+      "loading": "Cargando contratos...",
+      "empty": "No se encontraron resultados",
+      "search_placeholder": "Buscar tenant..."
+    },
+    "status": {
+      "blocked": "BLOQUEADO",
+      "past_due": "VENCIDO",
+      "active": "ACTIVO"
+    },
+    "actions": {
+      "invoices": "Ver Facturas",
+      "edit": "Editar Contrato"
+    }
+  },
+  "desc": "Configure the fiscal data for your invoices.",
+  "fields": {
+    "fiscal_name": "Fiscal Name",
+    "tax_id": "VAT ID / Tax ID",
+    "address": "Address"
+  },
+  "not_configured": "Not configured",
+  "edit": "Edit Data",
+  "dialog": {
+    "title": "Edit Fiscal Data",
+    "desc": "This data will appear in your next invoice.",
+    "fiscal_name_label": "Fiscal Name (Company)",
+    "tax_id_label": "VAT ID / Tax ID",
+    "address_label": "Fiscal Address",
+    "saving": "Saving...",
+    "save": "Save Changes"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "subtitle": "Payment history and downloadable invoices.",
+    "history_title": "Billing History",
+    "history_desc": "All invoices issued to your organization.",
+    "table": {
+      "id": "Invoice ID",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "actions": "Actions",
+      "download": "PDF"
+    },
+    "status": {
+      "PAID": "PAID",
+      "PENDING": "PENDING"
+    }
+  },
+  "plan": {
+    "title": "Your Plan",
+    "subtitle": "Manage your subscription tier and capabilities.",
+    "current_badge": "Current Plan",
+    "month": "/month",
+    "actions": {
+      "current": "Your Current Plan",
+      "contact": "Contact Sales",
+      "upgrade": "Upgrade Plan"
+    },
+    "features": {
+      "reports": "Reports/mo",
+      "storage": "Storage",
+      "support": "Support",
+      "users": "Users",
+      "rag": "Advanced RAG",
+      "unlimited": "Unlimited",
+      "sla": "Guaranteed SLA",
+      "account_manager": "Account Manager",
+      "sso": "SSO & Audit Logs",
+      "on_premise": "On-premise option"
+    }
+  },
+  "plan_selector": {
+    "current_badge": "Current Plan",
+    "active": "Active",
+    "select": "Select",
+    "per_month": "/mo",
+    "plan_updated": "Plan Updated!",
+    "plan_changed_to": "Plan changed to {plan} successfully.",
+    "change_error": "Error changing plan",
+    "change_error_desc": "An unexpected error occurred while processing the manual change.",
+    "proration_title": "Proration Notice:",
+    "proration_desc": "When changing plans, the unused time on your current plan is automatically converted to credit that will be applied to your next invoice. The new plan is activated immediately."
+  },
+  "simulator": {
+    "title": "Cost Simulator",
+    "description": "Simulate the financial impact of a plan change on your billing.",
+    "current_subscription": "Current Subscription",
+    "current_plan": "Current Plan",
+    "days_used": "Days used in cycle",
+    "of_days": "of {total} days",
+    "new_subscription": "New Subscription",
+    "new_plan": "New Plan",
+    "billing_cycle": "Billing Cycle",
+    "monthly": "Monthly",
+    "yearly": "Yearly (-17%)",
+    "credit_unused": "Credit for unused time ({plan}):",
+    "new_plan_cost": "New Plan Cost ({plan}):",
+    "usage_projection": "Real Usage Projection",
+    "based_on_tokens": "Based on your monthly usage of {tokens} tokens",
+    "estimated_ai": "Est. AI Costs",
+    "total_now": "Total due now:",
+    "variable_note": "* Total does NOT include variable projected AI consumption costs ({amount})",
+    "charge_immediate": "Immediate charge",
+    "credit_account": "Account credit",
+    "loading_usage": "Analyzing historical consumption to sync simulator..."
+  },
+  "tab": {
+    "plan_current": "Current Plan",
+    "plan_active": "Active",
+    "free_trial_desc": "You are enjoying the free trial period.",
+    "subscription_renewed": "Subscription renewed monthly.",
+    "change_plan": "Change Plan",
+    "plans_and_prices": "Plans & Pricing",
+    "plans_select_desc": "Select the plan that best fits your needs.",
+    "calculating_stripe": "Calculating exact proration with Stripe...",
+    "processing": "Processing...",
+    "confirm_subscribe": "Confirm & Subscribe",
+    "tokens_ia": "AI Tokens (Generative)",
+    "storage_rag": "Storage (RAG)",
+    "vector_searches": "Vector Searches",
+    "api_calls": "API Calls",
+    "limit_badge": "Limit",
+    "overage_badge": "Overage",
+    "fiscal_identity": "Fiscal Identity",
+    "fiscal_name_label": "Company / Fiscal Name",
+    "fiscal_name_placeholder": "Ex: ABD Elevators Ltd.",
+    "tax_id_label": "Tax ID / VAT ID",
+    "tax_id_placeholder": "Ex: GB123456789",
+    "invoice_reception": "Invoice Reception",
+    "channel_label": "Preferred Channel",
+    "channel_email": "Email",
+    "channel_postal": "Postal Mail",
+    "channel_in_app": "In-App download only",
+    "channel_xml_edi": "XML / EDI Exchange",
+    "billing_email_label": "Billing Email",
+    "billing_email_placeholder": "billing@company.com",
+    "file_format_label": "File Format",
+    "format_pdf": "PDF (Digitally Signed)",
+    "format_xml": "XML Invoice",
+    "format_csv": "CSV / Excel",
+    "format_paper": "Paper (Physical)",
+    "shipping_address": "Shipping Address",
+    "street_label": "Street & Number",
+    "city_label": "City",
+    "postal_code_label": "Postal Code",
+    "country_label": "Country",
+    "billing_address": "Billing Address",
+    "billing_address_same": "Same as shipping address.",
+    "billing_street_label": "Street & Number (Billing)",
+    "e_invoice_cert": "Electronic Invoice Certification",
+    "e_invoice_compliance": "We comply with electronic invoicing standards for secure XML invoice exchange.",
+    "edi_info": "EDI Information"
+  },
+  "planActive": "Your Current Plan",
+  "planCurrent": "Your Current Plan",
+  "perMonth": "/month",
+  "contactSupport": "Contact Sales",
+  "selectPlan": "Select Plan",
+  "simulation": {
+    "title": "Simulation Summary",
+    "creditApplied": "Credit Applied",
+    "newPlanCost": "New Plan Cost",
+    "totalDueNow": "Total Due Now",
+    "nextBillingDate": "Next billing date"
+  },
+  "page": {
+    "title": "[PENDING_TRANSLATION]",
+    "subtitle": "[PENDING_TRANSLATION]",
+    "metadata_title": "[PENDING_TRANSLATION]",
+    "metadata_desc": "[PENDING_TRANSLATION]"
+  },
+  "billing_hub": {
+    "title": "Billing Hub",
+    "subtitle": "Consolidated view of usage metrics, contracts, and recurring invoices."
+  },
+  "sections": {
+    "usage": {
+      "title": "Usage Metrics",
+      "description": "Real-time control of tokens, storage, and semantic searches."
+    },
+    "contracts": {
+      "title": "Contract Management",
+      "description": "Administration of plans, limits, and custom overrides per organization."
+    },
+    "invoices": {
+      "title": "Invoices & Payments",
+      "description": "History of generated invoices and payment status tracking."
+    },
+    "plan": {
+      "title": "Plan Status",
+      "description": "Configuration of organization base plan and industrial quotas."
+    }
+  },
+  "billing_usage": {
+    "title": "Consumption & Metrics",
+    "subtitle": "Monitor your resource usage in real-time.",
+    "alerts": {
+      "critical_title": "Attention: Quota limit reached",
+      "blocked": "The resource \"{resource}\" has exceeded your quota. Upgrade your plan to continue.",
+      "warning": "The resource \"{resource}\" is at {percentage}% usage. Consider upgrading your plan.",
+      "ok_title": "Everything in order",
+      "ok_description": "Your consumption is within plan limits. No risk of blocking this month.",
+      "error_title": "Error loading metrics",
+      "retry": "Retry",
+      "error_unexpected": "Unexpected server response"
+    }
+  },
+  "export_report": "Export Report",
+  "manage_plan": "Manage Plan",
+  "tokens": {
+    "title": "Technical Insights (Tokens)",
+    "limit": "of {limit} available"
+  },
+  "storage": {
+    "title": "Storage",
+    "limit": "of {limit} available"
+  },
+  "searches": {
+    "title": "Semantic Searches",
+    "limit": "of {limit} available"
+  },
+  "users": {
+    "title": "Active Users",
+    "limit": "of {limit} allowed"
+  },
+  "roi": {
+    "title": "Estimated ROI (30 days)",
+    "description": "Accumulated savings from AI automation vs. manual management",
+    "saved_hours": "Hours Saved",
+    "estimated_savings": "Estimated Savings",
+    "efficiency": "Efficiency",
+    "breakdown": {
+      "analysis": "Analysis: {count}",
+      "searches": "Searches: {count}",
+      "dedup": "Dedup: {count}"
+    }
+  },
+  "plan_status": {
+    "title": "Plan Status",
+    "subscription": "Subscription: {status}",
+    "current_plan": "Current Plan",
+    "manage": "Manage Subscription"
+  },
+  "loading_label": "Loading usage metrics"
+}

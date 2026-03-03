@@ -67,7 +67,7 @@ function getObjectDiff(prev: any, next: any): Record<string, { prev: any, next: 
 }
 
 export default function LogExplorer() {
-    const t = useTranslations('admin.logs');
+    const t = useTranslations('admin_logs');
     // 1. Filtros y Estados UI
     const [viewMode, setViewMode] = useState<'LOGS' | 'AUDIT'>('LOGS');
     const { filters, setFilter, clearFilters, activeFilters } = useFilterState({

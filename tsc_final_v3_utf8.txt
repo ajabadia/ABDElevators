@@ -1,1 +1,0 @@
-﻿src/app/api/admin/tenants/route.ts(107,50): error TS2339: Property 'colors' does not exist on type '{}'.

@@ -1109,3 +1109,19 @@ CONFIGURACIÓN (Admin Hub):
 3. **Zero Trust APIs**: Ningún endpoint accesible sin `enforcePermission` explícito
 4. **Typing as Documentation**: Los tipos reemplazan comentarios — `: any` es un comentario que dice "no sé"
 5. **Progressive Testing**: Empezar por módulos críticos, expandir cobertura con cada fase futura
+
+---
+
+#### 🧪 FASE 243: AGENTIC RELIABILITY & PROTOCOL REFINEMENT
+
+**Status:** `[COMPLETED ✅]` | **Prioridad:** ALTA | **Estimación:** 2-3 días
+
+**Objetivo:** Consolidar la robustez del motor agéntico y la integridad de los datos de configuración (i18n, prompts) tras la expansión de la ERA 9.
+
+**Tareas:**
+- [x] **243.1: Cleanup de Entorno**: Eliminación de reportes temporales `/coverage` (Post-auditoría). ✅
+- [x] **243.2: i18n Hygiene (admin.json)**: Sanitización, ordenación y corrección de codificación en el archivo de 88KB. ✅
+- [x] **243.3: AI Runner Consolidation**: Unificación de la lógica de ejecución de IA bajo el estándar de `PromptRunner`. ✅
+- [x] **243.4: Ingest Recovery Audit**: Mejora en la trazabilidad de fallos de ingesta asíncrona. ✅
+
+**Criterio de aceptación:** `admin.json` organizado y libre de artefactos. Zero runners de IA redundantes. Roadmap actualizado.

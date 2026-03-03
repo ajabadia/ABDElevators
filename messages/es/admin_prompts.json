@@ -1,0 +1,132 @@
+{
+  "messages": {
+    "save_success": "Prompt guardado correctamente",
+    "promote_success": "Promovido con éxito",
+    "promote_desc": "El prompt ha sido copiado al entorno de producción.",
+    "no_prompts": "No se encontraron prompts con los filtros actuales.",
+    "delete_success": "Prompt archivado correctamente.",
+    "create_success": "Nuevo prompt registrado en el sistema.",
+    "error_loading": "Error al cargar la lista de prompts",
+    "error_saving": "Error al guardar el prompt",
+    "sync_success_title": "Gobernanza Sincronizada",
+    "sync_success": "Sincronización finalizada: {created} creados, {updated} actualizados, {errors} errores.",
+    "sync_error": "Error al sincronizar prompts desde el código."
+  },
+  "title": "Gobernanza de Prompts",
+  "subtitle": "Gestiona las directivas maestras y el comportamiento de la IA por industria.",
+  "sync": "Sincronizar desde Código",
+  "actions": {
+    "history": "Historial Global",
+    "promote": "Promover a PROD",
+    "sync": "Sincronizar desde Código",
+    "clear_filters": "Limpiar Filtros",
+    "create_first": "Crear mi primer Prompt",
+    "edit": "Editar",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "save": "Guardar Prompt",
+    "view": "Ver",
+    "delete": "Eliminar",
+    "simulate": "Simular",
+    "rollback": "Restaurar"
+  },
+  "new_prompt": "Nuevo Prompt",
+  "search_placeholder": "Buscar por clave, nombre o categoría...",
+  "filters": {
+    "all": "Todos los Prompts",
+    "organization": "Filtrar por Organización",
+    "industry": "Filtrar por Industria"
+  },
+  "info": {
+    "multi_vertical": "Los prompts marcados como 'ELEVATORS' solo afectan a esa industria."
+  },
+  "sync_modal": {
+    "title": "¿Ejecutar Sincronización Global?",
+    "description": "Esta acción escarpeará todos los prompts maestros en {codePath} y los cargará en la base de datos para este tenant.",
+    "governance": "Gobernanza:",
+    "governance_desc": "Si un prompt en la DB tiene una versión mayor que el código, no será sobrescrito. Los prompts nuevos serán creados automáticamente.",
+    "cancel": "Cancelar",
+    "confirm": "Sincronizar ahora"
+  },
+  "industries": {
+    "all": "Filtro por Industria",
+    "GENERIC": "Genérico",
+    "ELEVATORS": "Ascensores",
+    "LEGAL": "Legal",
+    "BANKING": "Banca",
+    "INSURANCE": "Seguros",
+    "IT": "IT",
+    "MEDICAL": "Médico"
+  },
+  "editor_placeholder_title": "Editor de Prompts Maestros",
+  "editor_placeholder_desc": "Selecciona un prompt de la lista o crea uno nuevo para empezar a editar.",
+  "editor": {
+    "rollback_confirm": "¿Estás seguro de que deseas restaurar esta versión?",
+    "configuration": "Configuración",
+    "simulation": "Simulación",
+    "metadata": "Metadatos",
+    "key": "Clave",
+    "placeholder": {
+      "key": "EJ: ANALISIS_TECNICO",
+      "name": "Nombre descriptivo",
+      "template": "Escribe aquí la directiva de la IA..."
+    },
+    "name": "Nombre",
+    "industry": "Industria (Vertical)",
+    "model": "Modelo",
+    "category": "Categoría",
+    "template": "Plantilla",
+    "variables": "Variables del Sistema",
+    "change_reason": "Motivo del cambio",
+    "template_title": "Plantilla de Ingeniería",
+    "load_example": "Cargar Ejemplo",
+    "chars": "chars",
+    "tips_title": "Consejos de Prompting:",
+    "tip_1": "Usa doble llave {{variable}} para inyectar datos dinámicos.",
+    "tip_2": "Define claramente el rol de la IA (ej: \"Actúa como un experto en...\") al inicio.",
+    "tip_3": "Solicita el formato de salida deseado de forma explícita (JSON, Markdown, etc)."
+  },
+  "history": {
+    "title": "Audit Log Global",
+    "subtitle": "Seguimiento maestro de cambios en directivas de IA",
+    "search": "Buscar por prompt, clave o motivo...",
+    "records": "Registros",
+    "version": "V"
+  },
+  "variables": {
+    "title": "Variables Dinámicas",
+    "add_btn": "Añadir Variable",
+    "name_placeholder": "Nombre var",
+    "desc_placeholder": "Descripción de la variable...",
+    "empty": "Sin variables configuradas",
+    "types": {
+      "string": "Texto",
+      "number": "Número",
+      "boolean": "Booleano",
+      "json": "JSON"
+    }
+  },
+  "system": "Sistema",
+  "no_records": "No se encontraron registros en el historial",
+  "by": "Por",
+  "reason": "Motivo",
+  "date": "Fecha",
+  "tabs": {
+    "active": "Prompts Activos",
+    "testing": "Testing / Borradores"
+  },
+  "form": {
+    "key": "Clave Interna",
+    "is_active": "Establecer como versión activa",
+    "tags": "Etiquetas",
+    "title": "Título Descriptivo",
+    "version": "Versión Semántica",
+    "content": "Contenido del System Prompt"
+  },
+  "table": {
+    "prompt": "Prompt",
+    "version": "Versión",
+    "last_modified": "Última Modificación",
+    "status": "Estado Actual"
+  }
+}
