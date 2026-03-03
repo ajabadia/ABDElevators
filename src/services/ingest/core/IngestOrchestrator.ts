@@ -73,6 +73,21 @@ export class IngestOrchestrator {
             throw new AppError('CONFLICT', 409, `Task ${docId} marked as DEAD after ${attempts} failed attempts.`);
         }
 
+        // 1.5. Self-Healing Tier 1: Handle Partial States (Phase 249)
+        const isPartial = ['STORED_NO_INDEX', 'INDEXED_NO_STORAGE', 'PARTIAL'].includes(currentState);
+        if (isPartial) {
+            await logEvento({
+                level: 'INFO',
+                source: 'INGEST_ORCHESTRATOR',
+                action: 'PARTIAL_STATE_RECOVERY',
+                message: `Transitioning doc ${docId} from partial state ${currentState} to PROCESSING`,
+                correlationId,
+                tenantId: options.tenantId
+            });
+            // Reset to PENDING so transition to PROCESSING is valid
+            currentState = 'PENDING';
+        }
+
         const nextState: IngestState = 'PROCESSING';
 
         try {
@@ -100,8 +115,9 @@ export class IngestOrchestrator {
 
             // 3. Execute Analysis (Delegating to IngestService for now)
             const result = await IngestService.executeAnalysis(docId, {
-                ...options,
-                isEnrichment: !!options.isEnrichment
+                ...options as any,
+                isEnrichment: !!options.isEnrichment,
+                correlationId
             });
 
             // 4. Persistence of Costs & Final State

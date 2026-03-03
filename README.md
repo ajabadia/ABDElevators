@@ -204,6 +204,7 @@ src/
 - ✅ **Guardian ABAC Enforcement Sweep (Phase 236)**: Extensión de la protección Guardian V3 a todas las APIs de uso diario (Core, Facturación, Perfiles), garantizando el aislamiento total multi-tenant.
 - ✅ **Guardian Enforcement Sweep (Phase 244)**: Blindaje sistemático y monitoreo de performance del 100% de la superficie de la API (195 rutas). Asegura que cada endpoint cumple con los estándares de seguridad ABAC V3 y observabilidad industrial.
 - ✅ **Systematic Hygiene & Zero-Any Core (Phase 233)**: Barrido fundacional de todas las rutas de la plataforma uniendo (1) Aislamiento Multi-tenant DB, (2) UI/UX Hub Consolidation, (3) i18n Hardcode Purge, y (4) Strict Typing de la suite completa. El sistema compila con `tsc --noEmit` a cero errores.
+- ✅ **Architecture Hardening Tier 1 (Phase 249)**: Implementación de `PartialStateRecoveryWorker` para recuperación automática de estados parciales, evolución de la DLQ con auto-retry funcional y robustecimiento del `IngestOrchestrator`.
 
 ## 🔧 Scripts Disponibles
 

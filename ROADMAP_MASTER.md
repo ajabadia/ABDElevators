@@ -13,8 +13,9 @@
 - **Core Status:** ✅ **STABLE** - Massive TypeScript Cleanup & Namespace Migration Complete.
 - - [X] **Compliance Status:** 🛡️ **FASE 176 COMPLETED** - Strategic Audit Implementation (Security Hardening & IA)
 - - [X] **UX Status:** 🎨 **FASE 176 COMPLETED** - Hub-based Navigation Organization
-- **Recent Ship**: **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**, **FASE 242: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING**, **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
-- **Project Status**: **ERA 9: SYMPHONY** in progress. 100% Monitoring and Security coverage achieved across 195 API routes (Phase 244).
+- **Recent Ship**: **FASE 248: UX MICRO-SURGERY & SUPPORT i18n**, **FASE 244: GUARDIAN SWEEP (100% API HARDENING)**, **FASE 242: DOCUMENTATION REFRESH & DEVELOPER ONBOARDING**, **FASE 241: i18n REPAIR & BOM PURGE**, **FASE 240: EDGE RUNTIME COMPATIBILITY (crypto)**, **FASE 239: TEST INFRASTRUCTURE & CORE UNIT TESTS**, **FASE 238: STRICT TYPING SWEEP (src/services)**, **FASE 236: GUARDIAN ENFORCEMENT SWEEP**, **FASE 234: MIDDLEWARE HARDENING**, **FASE 233: BATCH AUDIT & SYSTEMATIC HYGIENE**, **FASE 232: VERTICAL ARCHITECTURE & TECH HYGIENE**, **FASE 231: INFRA & ADMIN i18n**, **FASE 230: GOVERNANCE & AUDIT i18n**, **FASE 229: KNOWLEDGE & INGEST i18n**, **FASE 228: WORKFLOW i18n**, **FASE 227: DEBUG BATCH i18n**, **FASE 226: SECURITY i18n**, **FASE 225: OBSERVABILITY i18n**, **FASE 223: OBSERVABILITY HUB i18n**.
+- **Project Status**: **ERA 9: SYMPHONY** in progress. Tier 1 Hardening (FASE 249) COMPLETED.
+- **Recent Context**: ✅ Architecture Hardening Tier 1 verified 2026-03-03.
 - **Critical Issue:** ✅ PHASE 140 RESOLVED - Missing Rate Limiting & Log Vulnerabilities.
 - **Architecture Review:** FASE 129-155 (Knowledge Graph Evolution + Enterprise Maturity + UX Standardization)
 
@@ -795,6 +796,30 @@ CONFIGURACIÓN (Admin Hub):
 
 ---
 
+#### 🚀 FASE 248: UX MICRO-SURGERY & SUPPORT i18n
+**Status:** `[COMPLETED ✅]` | **Prioridad:** ALTA | **Estimación:** 2 días
+
+**Objetivo:** Mejorar la experiencia de usuario en puntos críticos y completar la internacionalización del módulo de soporte.
+
+- [X] **248.1: Unified Empty States**: Rediseño de vistas vacías en `KnowledgeAssetsManager` y `TicketsDashboard` con CTAs claros. ✅
+- [X] **248.2: Contextual Tooltips**: Implementación de tooltips informativos en campos clave de formularios de ingesta y creación de tickets. ✅
+- [X] **248.3: Support Module i18n**: Internacionalización completa de todos los textos visibles en `/support` y `/admin/support`. ✅
+- [X] **248.4: Loading Skeletons**: Añadir esqueletos de carga en tablas y dashboards para mejorar la percepción de rendimiento. ✅
+
+---
+
+#### 🚀 FASE 249: ARCHITECTURE HARDENING TIER 1 (COMPLETADO ✅)
+**Status:** `[COMPLETADO ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 1 día
+
+**Objetivo:** Implementar la auto-recuperación de estados parciales de ingesta y robustecer la DLQ con auto-retry.
+
+- [X] **249.1: PartialStateRecoveryWorker**: Worker para recuperar `STORED_NO_INDEX`, `INDEXED_NO_STORAGE` y `PARTIAL`. ✅
+- [X] **249.2: DLQ Auto-Retry**: Evolucionar `retryJob` para encolado real y añadir auto-retry programado. ✅
+- [X] **249.3: IngestOrchestrator Integration**: Unificar la lógica de detección de stuck y recuperación parcial. ✅
+- [X] **249.4: Idempotency Audit**: Asegurar que re-indexación y re-upload son safe-upserts. ✅
+
+---
+
 #### 🚀 FASE 240: EDGE RUNTIME COMPATIBILITY & SYSTEM HYGIENE
 **Status:** `[COMPLETED ✅]` | **Prioridad:** CRÍTICA | **Estimación:** 2 días
 
@@ -1194,7 +1219,7 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 #### 🎨 FASE 248: UX MICRO-SURGERY (Post ERA 6 Polish)
-**Status:** `[PENDIENTE 🟡]` | **Prioridad:** ALTA | **Completado:** ---
+**Status:** `[EJECUCIÓN 🔵]` | **Prioridad:** ALTA | **Completado:** 40%
 
 **Objetivo:** Cirugía fina de usabilidad post ERA-6. La macroestructura (navegación, flujos, feedback) ya está resuelta. Esta fase se centra en microdetalles: densidad visual, microcopys orientados a tarea, guía contextual consistente, accesibilidad de teclado y aislamiento de demos.
 
@@ -1203,11 +1228,16 @@ CONFIGURACIÓN (Admin Hub):
 ---
 
 ##### 248.0: A11Y & TECLADO (P0 — Crítico para Compliance)
+**Status:** `[COMPLETADO ✅]`
 **Objetivo:** Garantizar operabilidad completa por teclado y cumplimiento WCAG 2.1 AA en flujos core.
 
-- [ ] **248.0.1: Audit de `aria-label` en botones icónicos**
-  - **Qué hacer:** Buscar todos los `<Button variant="ghost" size="icon">` y `<Button size="icon">` que NO tengan `aria-label`.
-  - **Comando de audit:** `grep -rn 'size="icon"' src/components/ src/app/ --include="*.tsx" | grep -v 'aria-label'`
+- [x] **248.0.1: Audit de `aria-label` en botones icónicos** (Completado en MyDocuments, Search, Analyze, Notifications)
+- [x] **248.0.2: CMD+K Consistency** (Refactorizado CommandMenu para incluir temas y navegación completa)
+- [x] **248.0.3: Confirmaciones destructivas** (Añadido window.confirm en MyDocuments delete)
+
+##### 248.1: DENSIDAD VISUAL (P1)
+**Status:** `[EJECUCIÓN 🔵]`
+**Objetivo:** Optimizar el espacio en pantalla para usuarios expertos, reduciendo tamaños de fuente secundarios y estandarizando componentes de baja densidad.
   - **Fix:** Añadir `aria-label` descriptivo en cada caso (ej: `aria-label={t('download_document', { name: doc.name })}`).
   - **Archivos probables:** `src/components/shared/`, `src/app/(protected)/my-documents/`, `src/app/(protected)/admin/knowledge/assets/`.
   - **Skill recomendado:** `i18n-a11y-auditor`.

@@ -1,6 +1,8 @@
 import { logEvento } from '@/lib/logger';
 import { getTenantCollection, TenantSession } from '@/lib/db-tenant';
 import { ObjectId } from 'mongodb';
+import { IngestService } from '../IngestService';
+import crypto from 'crypto';
 
 /**
  * Dead Letter Queue - Stores failed jobs after max retries
@@ -132,17 +134,63 @@ export class DeadLetterQueue {
             }
         );
 
-        await logEvento({
-            level: 'INFO',
-            source: 'DEAD_LETTER_QUEUE',
-            action: 'JOB_RETRIED',
-            message: `Job ${job.jobType} retried manually by ${retryBy}`,
-            correlationId: job.correlationId,
-            tenantId,
-            details: { jobId, docId: job.docId }
-        });
+        // IMPORTANT: Re-trigger the job real execution
+        const correlationId = job.correlationId || `retry-${crypto.randomUUID()}`;
 
-        return { success: true, message: 'Job marked for retry. Process it via re-ingestion.' };
+        try {
+            await logEvento({
+                level: 'INFO',
+                source: 'DEAD_LETTER_QUEUE',
+                action: 'JOB_RETRIED',
+                message: `Job ${job.jobType} retried manually by ${retryBy}`,
+                correlationId,
+                tenantId,
+                details: { jobId, docId: job.docId }
+            });
+
+            // We call IngestService.executeAnalysis directly as a retry mechanism
+            await IngestService.executeAnalysis(job.docId, {
+                correlationId,
+                userEmail: retryBy,
+                ...job.jobData
+            });
+
+        } catch (error: any) {
+            await logEvento({
+                level: 'ERROR',
+                source: 'DEAD_LETTER_QUEUE',
+                action: 'JOB_RETRIED_FAILED',
+                message: `Manual retry failed for job ${jobId}: ${error.message}`,
+                correlationId,
+                tenantId,
+                details: { jobId, error: error.message }
+            });
+            throw error;
+        }
+
+        return { success: true, message: 'Job retry initiated. Check logs for status.' };
+    }
+
+    /**
+     * Process Auto-Retries (Periodic detection of transient failures)
+     */
+    static async processAutoRetries(session?: TenantSession | null): Promise<void> {
+        const collection = await getTenantCollection('dead_letter_queue', session);
+
+        const candidates = await collection.find({
+            resolved: false,
+            retryCount: { $lt: 5 },
+            failureReason: { $regex: /timeout|rate limit|overloaded/i }
+        }, { limit: 10 }) as unknown as DeadLetterJob[];
+
+        for (const job of candidates) {
+            await this.retryJob(
+                (job as any)._id.toString(),
+                job.tenantId,
+                'SYSTEM_AUTO_RETRY',
+                session
+            ).catch(err => console.error(`[AUTO-RETRY FAIL] ${job.docId}`, err));
+        }
     }
 
     /**

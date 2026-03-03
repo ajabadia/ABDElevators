@@ -1,57 +1,38 @@
 import { withPerformanceSLA } from '@/lib/interceptors/performance-interceptor';
 import { NextRequest, NextResponse } from 'next/server';
 import { SelfHealingService } from '@/services/ops/self-healing-service';
-import { logEvento } from '@/lib/logger';
+import { PartialStateRecoveryWorker } from '@/services/ingest/recovery/PartialStateRecoveryWorker';
+import { DeadLetterQueue } from '@/services/ingest/recovery/DeadLetterQueue';
+import { handleApiError } from '@/lib/errors';
 
-/**
- * ⏰ Cron Job: Self-Healing Knowledge Assets (Phase 110)
- * Triggered periodically to audit and heal the knowledge base.
- * Security: CRON_SECRET header validation.
- */
-async function POST_internal (req: NextRequest) {
+async function POST_internal(req: NextRequest) {
     const correlationId = crypto.randomUUID();
-    const cronSecret = req.headers.get('x-cron-secret');
+    const authHeader = req.headers.get('authorization') || req.headers.get('x-cron-secret');
 
-    // Security check - Allow local dev or secret header
-    if (process.env.NODE_ENV === 'production' && cronSecret !== process.env.CRON_SECRET) {
+    if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}` && authHeader !== process.env.CRON_SECRET) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        await logEvento({
-            level: 'INFO',
-            source: 'CRON_SELF_HEALING',
-            action: 'START',
-            message: 'Starting scheduled self-healing audit',
-            correlationId
-        });
+        // 1. Audit Expired Assets (Tier 0)
+        const expiredResult = await SelfHealingService.auditExpiredAssets(correlationId);
 
-        const result = await SelfHealingService.auditExpiredAssets(correlationId);
+        // 2. Partial State Recovery (Tier 1 - Phase 249)
+        const partialRecoveryResult = await PartialStateRecoveryWorker.runRecovery();
+
+        // 3. DLQ Auto-Retry (Tier 1 - Phase 249)
+        await DeadLetterQueue.processAutoRetries();
 
         return NextResponse.json({
             success: true,
-            processed: result.processed,
-            updated: result.updated,
-            correlationId
+            correlationId,
+            expired: expiredResult,
+            partialRecovery: partialRecoveryResult,
+            dlqRetriesInitiated: true
         });
     } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorStack = error instanceof Error ? error.stack : undefined;
-        await logEvento({
-            level: 'ERROR',
-            source: 'CRON_SELF_HEALING',
-            action: 'FAILED',
-            message: `Cron job failed: ${errorMessage}`,
-            correlationId,
-            details: { stack: errorStack }
-        });
-
-        return NextResponse.json({
-            success: false,
-            error: errorMessage,
-            correlationId
-        }, { status: 500 });
+        return handleApiError(error, 'CRON_SELF_HEALING', correlationId);
     }
 }
 
-export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cron/self-healing', thresholdMs: 1000 });
+export const POST = withPerformanceSLA(POST_internal, { endpoint: 'POST /api/cron/self-healing', thresholdMs: 30000 });

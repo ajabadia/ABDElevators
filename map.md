@@ -1,6 +1,6 @@
 # 🗺️ Application Map & Architecture Registry
 **Last Audit:** 2026-03-03 (ERA 9 — Hardened & Tested)
-**Status:** Full 195-route security and performance sweep complete (FASE 244). 100% API coverage for both `enforcePermission` and `withPerformanceSLA`. Core refactoring (FASE 246) and Test Suites (FASE 247) implemented.
+**Status:** Full 195-route security and performance sweep complete (FASE 244). Tier 1 Hardening (FASE 249), Core refactoring (FASE 246) and Test Suites (FASE 247) implemented.
 **Routes:** 101 `page.tsx` | 44 Canónicas | 30 No Documentadas | 7 Redirects | 1 Placeholder | 0 DEPRECATED zombi
 
 ## 🧠 Site Structure (Mermaid)
